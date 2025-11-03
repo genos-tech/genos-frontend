@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import LinkIcon from "@mui/icons-material/Link";
 import { Box, Button, IconButton, Input, Snackbar, Stack, Tooltip, Typography } from "@mui/joy";
+import { useEffect, useState } from "react";
 
 import { GitHubIcon } from "../../../../../../assets/GithubIcon";
 import { TaskProps } from "../../../../../../types/tasks";
@@ -155,11 +155,11 @@ export const DynamicURLManager = (props: DynamicURLManagerProps) => {
             {links.map((link) => (
                 <LinkDisplay
                     key={link.id}
-                    link={link}
                     editingId={editingId}
+                    link={link}
+                    onDelete={handleDeleteLink}
                     onEdit={setEditingId}
                     onSave={handleEditLink}
-                    onDelete={handleDeleteLink}
                 />
             ))}
 

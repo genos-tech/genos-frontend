@@ -28,15 +28,15 @@ import {
     SuggestionMenuController,
     useCreateBlockNote,
 } from "@blocknote/react";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import SendIcon from "@mui/icons-material/Send";
-import { Box, IconButton, Tooltip } from "@mui/joy";
+import { Box, IconButton } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
 import { addThreadMessage } from "../../features/chat/services/addThreadMessage";
 import { getFirstLine } from "../../features/chat/utils/common";
+import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
@@ -60,6 +60,7 @@ type BnThreadEditorProps = {
     UIM: UIStateManagementState;
     numEditorLines: number;
     setNumEditorLines: (value: number) => void;
+    CM: ChatManagementState;
 };
 export const BnThreadEditor = (props: BnThreadEditorProps) => {
     const {
@@ -73,6 +74,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
         UIM,
         numEditorLines,
         setNumEditorLines,
+        CM,
     } = props;
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
@@ -89,14 +91,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
-            mention: CreateMentionSpec(
-                TEM.teamMemberProfiles,
-                socket,
-                myself,
-                setMyself,
-                UIM,
-                setCurrentChat
-            ),
+            mention: CreateMentionSpec(TEM.teamMemberProfiles, socket, myself, setMyself, UIM, CM),
         },
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks

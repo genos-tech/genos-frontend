@@ -1,14 +1,14 @@
-import { useEffect, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import { Divider, Sheet } from "@mui/joy";
+import { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
-import { ChatProps } from "../../../../types/chat";
 import { TaskNoteMetaProps, TaskNoteProps } from "../../../../types/notes";
 import {
     AttachmentFileProps,
@@ -37,9 +37,7 @@ type TaskPreviewProps = {
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     setCurrentProject: (value: ProjectProps) => void;
-    setIsMainChatVisible?: (value: boolean) => void;
     setOpenCreateProject: (value: boolean) => void;
-    setCurrentMainChat: (chat: ChatProps) => void;
     setIsTaskNoteVisible?: (value: boolean) => void;
     handleCreateNewTaskNote: (
         parentNoteId: number | null,
@@ -53,19 +51,10 @@ type TaskPreviewProps = {
     setTeamProjects: (value: ProjectProps[]) => void;
     taskNoteMeta: TaskNoteMetaProps[];
     setIsTaskVisibleInNote?: (value: boolean) => void;
-    moveToSpecificChat: (
-        chatType: number,
-        chatId: number,
-        threadId: number,
-        openTaskNoteInChat: boolean,
-        openThreadTaskPreview: boolean,
-        setOpeningService: (service: number) => void,
-        setCurrentPreviewTaskId: (id: number) => void,
-        setCurrentProject: (project: any) => void
-    ) => void;
     UIM: UIStateManagementState;
     TM: TaskManagementState;
     TEM: TeamManagementState;
+    CM: ChatManagementState;
 };
 
 export const TaskPreview = (props: TaskPreviewProps) => {
@@ -74,9 +63,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         myself,
         setMyself,
         setCurrentProject,
-        setIsMainChatVisible,
         setOpenCreateProject,
-        setCurrentMainChat,
         setIsTaskNoteVisible,
         handleCreateNewTaskNote,
         setCurrentTaskNote,
@@ -85,10 +72,10 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         setTeamProjects,
         taskNoteMeta,
         setIsTaskVisibleInNote,
-        moveToSpecificChat,
         TM,
         UIM,
         TEM,
+        CM,
     } = props;
     const { accessToken } = useAuth();
     const [taskClosed, setTaskClosed] = useState(false);
@@ -395,21 +382,19 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                     }}
                 >
                     <TaskTitleBlock
+                        CM={CM}
                         handleCreateNewTaskNote={handleCreateNewTaskNote}
                         isPreviewMode={true}
                         isTaskNoteVisible={isTaskNoteVisible}
-                        moveToSpecificChat={moveToSpecificChat}
                         myself={myself}
-                        UIM={UIM}
                         setCurrentProject={setCurrentProject}
-                        setTaskContent={setTmpCurrentTaskContent}
                         setCurrentTaskNote={setCurrentTaskNote}
-                        setIsMainChatVisible={setIsMainChatVisible}
                         setIsTaskNoteVisible={setIsTaskNoteVisible}
                         setIsTaskVisibleInNote={setIsTaskVisibleInNote}
                         setOpenCreateProject={setOpenCreateProject}
                         setOpenCreateTag={TM.setOpenCreateTag}
                         setTaskClosed={setTaskClosed}
+                        setTaskContent={setTmpCurrentTaskContent}
                         setTaskStatusUpdated={setTaskStatusUpdated}
                         setTaskTitle={setTaskTitle}
                         setTaskUpdated={setTaskUpdated}
@@ -417,12 +402,14 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         taskNotes={taskNotes}
                         taskTitle={taskTitle}
                         TM={TM}
+                        UIM={UIM}
                     />
 
                     <Divider sx={{ mt: 1, mb: 1 }} />
 
                     <TaskMainBlock
                         assignee={assignee}
+                        CM={CM}
                         isOpenProjectList={isOpenProjectList}
                         isOpenTagList={isOpenTagList}
                         isOpenTeamMembersList={isOpenTeamMembersList}
@@ -431,7 +418,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         projectTags={projectTags}
                         reporter={reporter}
                         setAssignee={setAssignee}
-                        setCurrentMainChat={setCurrentMainChat}
                         setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
                         setCurrentProject={setCurrentProject}
                         setIsOpenProjectList={setIsOpenProjectList}
@@ -445,62 +431,61 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         setTaskUpdated={setTaskUpdated}
                         socket={socket}
                         taskContent={tmpCurrentTaskContent}
-                        TEM={TEM}
                         teamProjects={teamProjects}
+                        TEM={TEM}
                         UIM={UIM}
                     />
 
                     <Divider sx={{ mt: 1, mb: 1 }} />
 
                     <TaskCustomBarBlock
-                        taskContent={tmpCurrentTaskContent}
                         setTaskContent={setTmpCurrentTaskContent}
                         setTaskStatusUpdated={setTaskStatusUpdated}
                         setTaskUpdated={setTaskUpdated}
                         taskBodySaved={taskBodySaved}
+                        taskContent={tmpCurrentTaskContent}
                     />
 
                     <TaskBodyBlock
                         key={`TaskBodyBlock-${tmpCurrentTaskContent.id}`}
                         body={body}
+                        CM={CM}
                         myself={myself}
                         setBody={setBody}
-                        setCurrentChat={setCurrentMainChat}
                         setMyself={setMyself}
-                        UIM={UIM}
                         setTaskBodyEdited={setTaskBodyEdited}
                         setTaskBodySaved={setTaskBodySaved}
                         socket={socket}
                         taskId={tmpCurrentTaskContent.id}
                         TEM={TEM}
+                        UIM={UIM}
                     />
 
                     <Divider sx={{ mt: 2 }} />
 
                     <TaskSubTasksBlock
+                        CM={CM}
                         currentPreviewTaskId={TM.currentPreviewTaskId}
                         currentTaskContent={tmpCurrentTaskContent}
                         myself={myself}
-                        setCurrentMainChat={setCurrentMainChat}
                         setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
                         setCurrentProject={setCurrentProject}
+                        setIsCreatingTask={TM.setIsCreatingTask}
+                        setIsTaskHomeVisible={TM.setIsTaskHomeVisible}
                         setMyself={setMyself}
                         socket={socket}
                         TEM={TEM}
                         UIM={UIM}
-                        setIsCreatingTask={TM.setIsCreatingTask}
-                        setIsTaskHomeVisible={TM.setIsTaskHomeVisible}
                     />
 
                     <TaskTabBlock
+                        CM={CM}
                         currentPreviewTaskId={TM.currentPreviewTaskId}
                         editTargetComment={editTargetComment}
                         handleCreateNewTaskNote={handleCreateNewTaskNote}
                         isCommentUpdated={TM.isTaskCommentUpdated}
                         isInEdit={isInEdit}
                         myself={myself}
-                        setCurrentChat={setCurrentMainChat}
-                        setCurrentMainChat={setCurrentMainChat}
                         setCurrentTaskNote={setCurrentTaskNote}
                         setDeletedAttachmentId={setDeletedAttachmentId}
                         setEditTargetComment={setEditTargetComment}
@@ -508,7 +493,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         setIsInEdit={setIsInEdit}
                         setIsTaskNoteVisible={setIsTaskNoteVisible}
                         setMyself={setMyself}
-                        UIM={UIM}
                         setTabIndex={setTabIndex}
                         setTaskCommentLines={setTaskCommentLines}
                         setTaskComments={setTaskComments}
@@ -524,6 +508,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         TEM={TEM}
                         TM={TM}
                         tmpCurrentTaskContent={tmpCurrentTaskContent}
+                        UIM={UIM}
                         uploadedFiles={uploadedFiles}
                     />
                 </Sheet>

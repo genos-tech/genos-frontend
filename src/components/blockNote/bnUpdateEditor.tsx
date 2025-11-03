@@ -28,12 +28,12 @@ import {
     SuggestionMenuController,
     useCreateBlockNote,
 } from "@blocknote/react";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import { Box, IconButton, Tooltip } from "@mui/joy";
+import { Box, IconButton } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
+import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
@@ -54,11 +54,10 @@ type BnUpdateEditorProps = {
     message: MessageProps;
     isInEdit: boolean;
     setIsInEdit: (value: boolean) => void;
-    setCurrentChat: (chat: ChatProps) => void;
-    isSubChatVisible: boolean;
     UIM: UIStateManagementState;
     numEditorLines: number;
     setNumEditorLines: (value: number) => void;
+    CM: ChatManagementState;
 };
 export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
     const {
@@ -70,11 +69,10 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
         message,
         isInEdit,
         setIsInEdit,
-        setCurrentChat,
-        isSubChatVisible,
         UIM,
         numEditorLines,
         setNumEditorLines,
+        CM,
     } = props;
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
@@ -91,14 +89,7 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
-            mention: CreateMentionSpec(
-                TEM.teamMemberProfiles,
-                socket,
-                myself,
-                setMyself,
-                UIM,
-                setCurrentChat
-            ),
+            mention: CreateMentionSpec(TEM.teamMemberProfiles, socket, myself, setMyself, UIM, CM),
         },
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
@@ -179,7 +170,7 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
         if (editorRef.current) {
             const dynamicHeight: number = Math.min(
                 Math.min(Math.max(numEditorLines - 8, 0), 10) * 20 + 200,
-                isSubChatVisible === true ? 290 : 500
+                CM.isSubChatVisible === true ? 290 : 500
             );
             editorRef.current.style.setProperty("--chat-editor-height", `${dynamicHeight}px`);
         }

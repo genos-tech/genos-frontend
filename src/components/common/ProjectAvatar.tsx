@@ -1,14 +1,15 @@
-import { useState } from "react";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import { Avatar, Box } from "@mui/joy";
+import { useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { ModalProjectProfile } from "../../features/admin/components/modals/ModalProjectProfile";
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
+import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
-import { AllChatProps, ChatProps } from "../../types/chat";
+import { AllChatProps } from "../../types/chat";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
@@ -19,22 +20,11 @@ type ProjectAvatarProps = {
     setMyself: (value: UserProps) => void;
     avatarSize?: number;
     pmChat: AllChatProps;
-    funcSetAllChats: () => Promise<void>;
-    setCurrentMainChat: (chat: ChatProps) => void;
+    CM: ChatManagementState;
     UIM: UIStateManagementState;
 };
 export const ProjectAvatar = (props: ProjectAvatarProps) => {
-    const {
-        TEM,
-        socket,
-        myself,
-        setMyself,
-        avatarSize,
-        pmChat,
-        funcSetAllChats,
-        setCurrentMainChat,
-        UIM,
-    } = props;
+    const { TEM, socket, myself, setMyself, avatarSize, pmChat, CM, UIM } = props;
     const [openModalProjectProfile, setOpenModalProjectProfile] = useState<boolean>(false);
     const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
     const [avatarUserId, setAvatarUserId] = useState<string | undefined>(undefined);
@@ -57,30 +47,29 @@ export const ProjectAvatar = (props: ProjectAvatarProps) => {
             </Box>
 
             <ModalProjectProfile
-                funcSetAllChats={funcSetAllChats}
+                CM={CM}
                 myself={myself}
                 openModalProjectProfile={openModalProjectProfile}
                 pmChat={pmChat}
                 setAvatarUserId={setAvatarUserId}
-                setCurrentMainChat={setCurrentMainChat}
                 setMyself={setMyself}
-                UIM={UIM}
                 setOpenModalProjectProfile={setOpenModalProjectProfile}
                 setOpenUserProfile={setOpenUserProfile}
                 socket={socket}
                 TEM={TEM}
+                UIM={UIM}
             />
 
             {avatarUserId && (
                 <UserProfile
+                    CM={CM}
                     isYou={false}
                     myself={myself}
                     openUserProfile={openUserProfile}
-                    setCurrentMainChat={setCurrentMainChat}
                     setMyself={setMyself}
-                    UIM={UIM}
                     setOpenUserProfile={setOpenUserProfile}
                     socket={socket}
+                    UIM={UIM}
                     user={TEM.teamMemberProfiles[avatarUserId]}
                 />
             )}

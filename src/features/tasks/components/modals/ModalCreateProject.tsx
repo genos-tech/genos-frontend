@@ -14,7 +14,6 @@ import {
 import { useAuth } from "../../../../context/AuthContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { SignUpResponse, UserProps } from "../../../../types/admin";
-import { ProjectProps } from "../../../../types/tasks";
 import { replaceSpacesWithUnderscore } from "../../../../utils/stringHelper";
 import { joinTeam } from "../../../admin/services/joinTeam";
 import { signUp } from "../../../admin/services/signup";

@@ -31,12 +31,12 @@ export const AppContent = ({
     if (UIM.openingService === 0) {
         return (
             <InboxHome
-                TEM={TEM}
+                CM={CM}
                 IM={IM}
                 myself={myself}
-                CM={CM}
                 setMyself={setMyself}
                 socket={socketInstance}
+                TEM={TEM}
                 UIM={UIM}
             />
         );
@@ -46,6 +46,7 @@ export const AppContent = ({
         return (
             <ChatHome
                 CM={CM}
+                IM={IM}
                 myself={myself}
                 NM={NM}
                 PM={PM}
@@ -53,7 +54,6 @@ export const AppContent = ({
                 socket={socketInstance}
                 TEM={TEM}
                 TM={TM}
-                IM={IM}
                 UIM={UIM}
             />
         );
@@ -62,20 +62,15 @@ export const AppContent = ({
     if (UIM.openingService === 2) {
         return (
             <TaskHome
-                allChats={CM.allChats}
-                funcSetAllChats={CM.funcSetAllChats}
-                moveToSpecificChat={CM.moveToSpecificChat}
+                CM={CM}
+                IM={IM}
                 myself={myself}
                 NM={NM}
                 PM={PM}
-                setAllChats={CM.setAllChats}
-                setCurrentMainChat={CM.setCurrentMainChat}
                 setMyself={setMyself}
                 socket={socketInstance}
                 TEM={TEM}
                 TM={TM}
-                unReadChatAndActivityCounts={CM.unReadChatAndActivityCounts}
-                IM={IM}
                 UIM={UIM}
             />
         );
@@ -85,6 +80,7 @@ export const AppContent = ({
         return (
             <NoteHome
                 CM={CM}
+                IM={IM}
                 myself={myself}
                 NM={NM}
                 PM={PM}
@@ -92,7 +88,6 @@ export const AppContent = ({
                 socket={socketInstance}
                 TEM={TEM}
                 TM={TM}
-                IM={IM}
                 UIM={UIM}
             />
         );

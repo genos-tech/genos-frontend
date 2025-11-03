@@ -49,25 +49,16 @@ export const ThreadPanel = ({
             >
                 {CM.currentThreadChat && (
                     <ThreadPane
-                        currentThreadChat={CM.currentThreadChat}
+                        CM={CM}
                         currentThreadChatId={currentThreadChatId}
                         currentWindowHeight={currentWindowHeight}
-                        flaggedMessages={CM.flaggedMessages}
                         handleCreateNewChatNoteIfNotExist={NM.handleCreateNewChatNoteIfNotExist}
-                        isChatNoteVisibleInChat={CM.isChatNoteVisibleInChat}
                         myself={myself}
-                        setCurrentMainChat={CM.setCurrentMainChat}
-                        setCurrentThreadChat={CM.setCurrentThreadChat}
-                        setFlaggedMessages={CM.setFlaggedMessages}
-                        setIsChatNoteVisibleInChat={CM.setIsChatNoteVisibleInChat}
-                        setIsMainChatVisible={CM.setIsMainChatVisible}
-                        setIsThreadVisible={CM.setIsThreadVisible}
                         setMyself={setMyself}
-                        UIM={UIM}
                         socket={socket}
                         TEM={TEM}
-                        thread={CM.currentThreadChat}
                         TM={TM}
+                        UIM={UIM}
                     />
                 )}
             </Box>

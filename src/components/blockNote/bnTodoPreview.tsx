@@ -24,10 +24,10 @@ import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
-import { ChatProps } from "../../types/chat";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 
 type BnTodoPreviewProps = {
@@ -38,9 +38,9 @@ type BnTodoPreviewProps = {
     body: any[];
     setBody: (text: PartialBlock[] | any[]) => void;
     customClassName?: string;
-    setCurrentChat: (chat: ChatProps) => void;
     UIM: UIStateManagementState;
     setBodyEdited: (value: boolean) => void;
+    CM: ChatManagementState;
 };
 export const BnTodoPreview = (props: BnTodoPreviewProps) => {
     const {
@@ -51,9 +51,9 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
         body,
         setBody,
         customClassName,
-        setCurrentChat,
         UIM,
         setBodyEdited,
+        CM,
     } = props;
     const { mode } = useColorScheme();
     const bnBoxClassName = customClassName
@@ -72,14 +72,7 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
-            mention: CreateMentionSpec(
-                TEM.teamMemberProfiles,
-                socket,
-                myself,
-                setMyself,
-                UIM,
-                setCurrentChat
-            ),
+            mention: CreateMentionSpec(TEM.teamMemberProfiles, socket, myself, setMyself, UIM, CM),
         },
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks

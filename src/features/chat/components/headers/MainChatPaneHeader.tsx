@@ -6,6 +6,7 @@ import SwapVertIcon from "@mui/icons-material/SwapVert";
 import { Badge, IconButton, Stack, Tooltip } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
@@ -13,68 +14,54 @@ import { ChatProps } from "../../../../types/chat";
 import { HeaderUserName } from "./HeaderUserName";
 
 type MainChatPaneHeaderProps = {
-    TEM: TeamManagementState;
-    socket: Socket | null;
-    myself: UserProps;
-    setMyself: (value: UserProps) => void;
     chat: ChatProps;
-    subChat: ChatProps;
-    setCurrentMainChat: (chat: ChatProps) => void;
-    setCurrentSubChat: (chat: ChatProps) => void;
-    isSubChatVisible: boolean;
-    setIsMainChatVisible: (value: boolean) => void;
-    setIsSubChatVisible: (value: boolean) => void;
-    setIsThreadVisible: (value: boolean) => void;
-    setIsTaskPreviewVisible: (value: boolean) => void;
+    incompleteTodoCount: number;
+    isToDoVisible: boolean;
+    myself: UserProps;
     setIsCreatingTask: (value: {
         flag: boolean;
         parentTaskId: number | null;
         rootTaskId: number | null;
     }) => void;
-    UIM: UIStateManagementState;
-    funcSetAllChats: () => Promise<void>;
-    isToDoVisible: boolean;
+    setIsTaskPreviewVisible: (value: boolean) => void;
     setIsToDoVisible: (value: boolean) => void;
-    incompleteTodoCount: number;
+    setMyself: (value: UserProps) => void;
+    UIM: UIStateManagementState;
+    socket: Socket | null;
+    TEM: TeamManagementState;
+    CM: ChatManagementState;
 };
 
 export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
     const {
-        TEM,
-        socket,
-        myself,
-        setMyself,
         chat,
-        subChat,
-        setCurrentMainChat,
-        setCurrentSubChat,
-        isSubChatVisible,
-        setIsSubChatVisible,
-        setIsMainChatVisible,
-        setIsThreadVisible,
-        setIsTaskPreviewVisible,
-        setIsCreatingTask,
-        UIM,
-        funcSetAllChats,
-        setIsToDoVisible,
-        isToDoVisible,
         incompleteTodoCount,
+        isToDoVisible,
+        myself,
+        setIsCreatingTask,
+        setIsTaskPreviewVisible,
+        setIsToDoVisible,
+        setMyself,
+        UIM,
+        socket,
+        TEM,
+        CM,
     } = props;
 
     const isYou: boolean = myself.userId === chat.dmPartnerUser.userId;
 
     const switchSubToMain = () => {
-        if (isSubChatVisible === true) {
-            setCurrentMainChat(subChat);
-            setIsSubChatVisible(false);
+        if (CM.isSubChatVisible === true) {
+            CM.setCurrentMainChat(CM.currentSubChat as ChatProps);
+            CM.setIsSubChatVisible(false);
         } else {
-            setIsMainChatVisible(false);
+            CM.setIsMainChatVisible(false);
         }
     };
 
     const swapChat = () => {
-        setCurrentMainChat(subChat);
-        setCurrentSubChat(chat);
+        CM.setCurrentMainChat(CM.currentSubChat as ChatProps);
+        CM.setCurrentSubChat(chat);
     };
 
     return (
@@ -93,14 +80,13 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
             <Stack direction="row" spacing={{ xs: 1, md: 2 }} sx={{ alignItems: "center" }}>
                 <HeaderUserName
                     chat={chat}
-                    funcSetAllChats={funcSetAllChats}
+                    CM={CM}
                     isYou={isYou}
                     myself={myself}
-                    setCurrentMainChat={setCurrentMainChat}
                     setMyself={setMyself}
-                    UIM={UIM}
                     socket={socket}
                     TEM={TEM}
+                    UIM={UIM}
                 />
             </Stack>
             <Stack direction="row" sx={{ alignItems: "center" }}>
@@ -112,8 +98,8 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                             size="sm"
                             variant="plain"
                             onClick={() => {
-                                setIsMainChatVisible(true);
-                                setIsThreadVisible(false);
+                                CM.setIsMainChatVisible(true);
+                                CM.setIsThreadVisible(false);
                                 setIsTaskPreviewVisible(false);
                                 setIsCreatingTask({
                                     flag: true,
@@ -168,7 +154,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                         </>
                     ) : null}
 
-                    {isSubChatVisible && (
+                    {CM.isSubChatVisible && (
                         <div>
                             <IconButton
                                 color="neutral"

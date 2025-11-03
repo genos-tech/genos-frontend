@@ -13,6 +13,7 @@ import {
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../../types/chat";
 import { createChatGroup } from "../../services/createChatGroup";
@@ -22,20 +23,10 @@ type Props = {
     myself: UserProps;
     open: boolean;
     setOpen: (value: boolean) => void;
-    allChats: AllChatProps[];
-    setAllChats: (value: AllChatProps[]) => void;
-    setCurrentMainChat: (value: ChatProps) => void;
+    CM: ChatManagementState;
 };
 
-export const ModalCreateGM: React.FC<Props> = ({
-    socket,
-    myself,
-    open,
-    setOpen,
-    allChats,
-    setAllChats,
-    setCurrentMainChat,
-}) => {
+export const ModalCreateGM: React.FC<Props> = ({ socket, myself, open, setOpen, CM }) => {
     const { accessToken } = useAuth();
 
     const [isPrivate, setIsPrivate] = useState(true);
@@ -46,13 +37,11 @@ export const ModalCreateGM: React.FC<Props> = ({
             createChatGroup(
                 myself,
                 chatName,
-                allChats,
+                CM,
                 socket,
                 setCreateCGErrorMessage,
                 setOpen,
                 setGroupName,
-                setAllChats,
-                setCurrentMainChat,
                 accessToken ? accessToken : "",
                 isPrivate
             );

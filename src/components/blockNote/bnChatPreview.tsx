@@ -16,10 +16,10 @@ import { Box, IconButton, Modal, ModalDialog, Tooltip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
-import { ChatProps } from "../../types/chat";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
 import { CreateMentionSpec } from "./Mention";
@@ -32,21 +32,11 @@ type BnChatPreviewProps = {
     content: PartialBlock[] | any[];
     isSent: boolean;
     customClassName?: string;
-    setCurrentChat: (chat: ChatProps) => void;
     UIM: UIStateManagementState;
+    CM: ChatManagementState;
 };
 export const BnChatPreview = (props: BnChatPreviewProps) => {
-    const {
-        TEM,
-        myself,
-        setMyself,
-        socket,
-        content,
-        isSent,
-        customClassName,
-        setCurrentChat,
-        UIM,
-    } = props;
+    const { TEM, myself, setMyself, socket, content, isSent, customClassName, UIM, CM } = props;
     const { mode } = useColorScheme();
     const _bnBoxClassName: string = isSent
         ? `bn-message-bubble-box-${mode}-me`
@@ -64,14 +54,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
-            mention: CreateMentionSpec(
-                TEM.teamMemberProfiles,
-                socket,
-                myself,
-                setMyself,
-                UIM,
-                setCurrentChat
-            ),
+            mention: CreateMentionSpec(TEM.teamMemberProfiles, socket, myself, setMyself, UIM, CM),
         },
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks

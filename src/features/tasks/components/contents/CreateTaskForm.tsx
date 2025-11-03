@@ -1,15 +1,15 @@
-import { useEffect, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import { Divider, Sheet } from "@mui/joy";
+import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
-import { ChatProps, ThreadProps } from "../../../../types/chat";
 import { TagListProps, TaskProps } from "../../../../types/tasks";
 import { getFormattedTodayDateStr } from "../../../../utils/dateUtils";
 import { createEmptyTask } from "../../services/createEmptyTask";
@@ -131,53 +131,18 @@ type CreateTaskProps = {
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    currentMainChat?: ChatProps;
-    currentThreadChat?: ThreadProps;
     chatType: number;
-    setIsMainChatVisible?: (value: boolean) => void;
-    isThreadVisible?: boolean;
-    setIsTaskPreviewVisible?: (value: boolean) => void;
     UIM: UIStateManagementState;
-    setCurrentMainChat: (chat: ChatProps) => void;
     parentTaskId: number | null;
     rootTaskId: number | null;
-    setIsTaskHomeVisible?: (value: boolean) => void;
-    isTaskPreviewVisible?: boolean;
-    moveToSpecificChat: (
-        chatType: number,
-        chatId: number,
-        threadId: number,
-        openTaskNoteInChat: boolean,
-        openThreadTaskPreview: boolean,
-        setOpeningService: (service: number) => void,
-        setCurrentPreviewTaskId: (id: number) => void,
-        setCurrentProject: (project: any) => void
-    ) => void;
     PM: ProjectManagementState;
     TM: TaskManagementState;
+    CM: ChatManagementState;
 };
 
 export const CreateTaskForm = (props: CreateTaskProps) => {
-    const {
-        TEM,
-        socket,
-        myself,
-        setMyself,
-        currentMainChat,
-        currentThreadChat,
-        chatType,
-        setIsMainChatVisible,
-        isThreadVisible,
-        setIsTaskPreviewVisible,
-        setIsTaskHomeVisible,
-        setCurrentMainChat,
-        UIM,
-        parentTaskId,
-        rootTaskId,
-        moveToSpecificChat,
-        PM,
-        TM,
-    } = props;
+    const { TEM, socket, myself, setMyself, chatType, CM, UIM, parentTaskId, rootTaskId, PM, TM } =
+        props;
     const { accessToken } = useAuth();
 
     // Init task contents
@@ -207,8 +172,8 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 assignee: myself,
                 reporter: myself,
                 chatType: chatType,
-                chatId: currentMainChat?.chatId || null,
-                threadId: currentThreadChat?.threadId || null,
+                chatId: CM.currentMainChat?.chatId || null,
+                threadId: CM.currentThreadChat?.threadId || null,
                 dueDate: getFormattedTodayDateStr(),
                 status: {
                     code: 0,
@@ -317,16 +282,14 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                     }}
                 >
                     <TaskTitleBlock
+                        CM={CM}
                         handleCreateNewTaskNote={async () => {}}
                         isPreviewMode={false}
-                        moveToSpecificChat={moveToSpecificChat}
                         myself={myself}
                         setCurrentProject={PM.setCurrentProject}
                         setCurrentTaskNote={() => {}}
-                        setIsMainChatVisible={setIsMainChatVisible}
                         setOpenCreateProject={PM.setOpenCreateProject}
                         setOpenCreateTag={TM.setOpenCreateTag}
-                        UIM={UIM}
                         setTaskTitle={setTaskTitle}
                         setTitleErrorOpen={setTitleErrorOpen}
                         taskContent={taskContent}
@@ -335,12 +298,14 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         titleError={titleError}
                         titleErrorOpen={titleErrorOpen}
                         TM={TM}
+                        UIM={UIM}
                     />
 
                     <Divider sx={{ mt: 1, mb: 1 }} />
 
                     <TaskMainBlock
                         assignee={assignee}
+                        CM={CM}
                         isOpenProjectList={isOpenProjectList}
                         isOpenTagList={isOpenTagList}
                         isOpenTeamMembersList={isOpenTeamMembersList}
@@ -349,7 +314,6 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         projectTags={projectTags}
                         reporter={reporter}
                         setAssignee={setAssignee}
-                        setCurrentMainChat={setCurrentMainChat}
                         setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
                         setCurrentProject={PM.setCurrentProject}
                         setIsOpenProjectList={setIsOpenProjectList}
@@ -357,27 +321,27 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         setIsOpenTeamMembersList={setIsOpenTeamMembersList}
                         setMyself={setMyself}
                         setOpenCreateTag={TM.setOpenCreateTag}
-                        UIM={UIM}
                         setReporter={setReporter}
                         setTaskContent={setTaskContent}
                         socket={socket}
                         taskContent={taskContent}
-                        TEM={TEM}
                         teamProjects={PM.teamProjects}
+                        TEM={TEM}
+                        UIM={UIM}
                     />
 
                     <Divider sx={{ mt: 1, mb: 1 }} />
 
                     <TaskCreateBodyBlock
                         body={body}
+                        CM={CM}
                         myself={myself}
                         setBody={setBody}
-                        setCurrentChat={setCurrentMainChat}
                         setMyself={setMyself}
-                        UIM={UIM}
                         socket={socket}
                         taskId={taskContent.id}
                         TEM={TEM}
+                        UIM={UIM}
                     />
 
                     <Divider sx={{ mt: 2 }} />
@@ -391,16 +355,13 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
 
                     <TaskCreateFooter
                         accessToken={accessToken}
-                        currentMainChat={currentMainChat}
-                        currentThreadChat={currentThreadChat}
-                        isThreadVisible={isThreadVisible}
+                        CM={CM}
                         myself={myself}
                         setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
                         setCurrentProject={PM.setCurrentProject}
                         setInitialEmptyTaskId={TM.setInitialEmptyTaskId}
                         setIsCreatingTask={TM.setIsCreatingTask}
                         setIsSubmitted={setIsSubmitted}
-                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
                         setTitleError={setTitleError}
                         setTitleErrorOpen={setTitleErrorOpen}
                         socket={socket}

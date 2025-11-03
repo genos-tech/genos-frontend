@@ -1,9 +1,9 @@
 import { Socket } from "socket.io-client";
 
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
-import { AllChatProps } from "../../../../types/chat";
 import { ModalCreateProject } from "./ModalCreateProject";
 import { ModalCreateTag } from "./ModalCreateTag";
 import { ModalDeleteProject } from "./ModalDeleteProject";
@@ -13,8 +13,7 @@ interface TaskHomeModalsProps {
     myself: UserProps;
     PM: ProjectManagementState;
     TM: TaskManagementState;
-    allChats: AllChatProps[];
-    setAllChats: (value: AllChatProps[]) => void;
+    CM: ChatManagementState;
     socket: Socket | null;
     openJoinProject: {
         flag: boolean;
@@ -46,8 +45,7 @@ export const TaskHomeModals = ({
     myself,
     PM,
     TM,
-    allChats,
-    setAllChats,
+    CM,
     socket,
     openJoinProject,
     setOpenJoinProject,
@@ -58,11 +56,10 @@ export const TaskHomeModals = ({
         <>
             <ModalCreateProject myself={myself} PM={PM} />
             <ModalJoinProject
-                allChats={allChats}
+                CM={CM}
                 loadProjectsAndTasks={PM.loadProjectsAndTasks}
                 myself={myself}
                 openJoinProject={openJoinProject}
-                setAllChats={setAllChats}
                 setCurrentProject={PM.setCurrentProject}
                 setOpenJoinProject={setOpenJoinProject}
                 socket={socket}

@@ -1,5 +1,6 @@
 import { Socket } from "socket.io-client";
 
+import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
@@ -14,23 +15,9 @@ export interface TaskHomeProps {
     socket: Socket | null;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    setCurrentMainChat: (chat: ChatProps) => void;
+    CM: ChatManagementState;
     UIM: UIStateManagementState;
     IM: InboxManagementState;
-    allChats: AllChatProps[];
-    setAllChats: (value: AllChatProps[]) => void;
-    funcSetAllChats: () => Promise<void>;
-    moveToSpecificChat: (
-        chatType: number,
-        chatId: number,
-        threadId: number,
-        openTaskNoteInChat: boolean,
-        openThreadTaskPreview: boolean,
-        setOpeningService: (service: number) => void,
-        setCurrentPreviewTaskId: (id: number) => void,
-        setCurrentProject: (project: any) => void
-    ) => void;
-    unReadChatAndActivityCounts: number;
     NM: NoteManagementState;
     PM: ProjectManagementState;
     TM: TaskManagementState;

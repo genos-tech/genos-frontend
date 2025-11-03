@@ -362,10 +362,7 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                         size="small"
                         variant="outlined"
                         sx={{
-                            backgroundColor: alpha(
-                                color || "#ff2323",
-                                mode === "dark" ? 0.5 : 1
-                            ),
+                            backgroundColor: alpha(color || "#ff2323", mode === "dark" ? 0.5 : 1),
                             color: textColor,
                             fontWeight: "bold",
                             borderRadius: "5px",

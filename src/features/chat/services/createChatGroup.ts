@@ -1,5 +1,6 @@
 import { Socket } from "socket.io-client";
 
+import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps, CreateGMResponse, MessageProps } from "../../../types/chat";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
@@ -18,11 +19,7 @@ const createGroupMessage = [
     { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] },
 ];
 
-const moveToGMChat = async (
-    chat: AllChatProps,
-    isPrivate: boolean,
-    setCurrentMainChat: (chat: ChatProps) => void
-) => {
+const moveToGMChat = async (chat: AllChatProps, isPrivate: boolean, CM: ChatManagementState) => {
     const fetchedMessages: MessageProps[] = await popSpecificMessages(chat.chatId, 2);
     if (fetchedMessages && fetchedMessages.length !== 0) {
         const newChat: ChatProps = {
@@ -38,7 +35,7 @@ const moveToGMChat = async (
             isPrivate: isPrivate,
             profileImagePath: chat.profileImagePath,
         };
-        setCurrentMainChat(newChat);
+        CM.setCurrentMainChat(newChat);
     } else {
         console.error("Failed to fetch thread GM fetchedMessages:", fetchedMessages);
     }
@@ -47,10 +44,8 @@ const moveToGMChat = async (
 const addGMChatAndMessage = async (
     myself: UserProps,
     data: CreateGMResponse,
-    allChats: AllChatProps[],
     isPrivate: boolean,
-    setAllChats: (chat: AllChatProps[]) => void,
-    setCurrentMainChat: (chat: ChatProps) => void
+    CM: ChatManagementState
 ) => {
     const newMessage: MessageProps = {
         chatType: 3,
@@ -82,8 +77,8 @@ const addGMChatAndMessage = async (
     await addChat(newChat, 2);
     await addMessage(newMessage, 2);
 
-    setAllChats([
-        ...allChats,
+    CM.setAllChats([
+        ...CM.allChats,
         {
             chatId: newChat.chatId,
             chatName: newChat.chatName,
@@ -97,19 +92,17 @@ const addGMChatAndMessage = async (
         },
     ]);
 
-    moveToGMChat(newChat, isPrivate, setCurrentMainChat);
+    moveToGMChat(newChat, isPrivate, CM);
 };
 
 export const createChatGroup = async (
     myself: UserProps,
     chatName: string,
-    allChats: AllChatProps[],
+    CM: ChatManagementState,
     socket: Socket | null,
     setCreateCGErrorMessage: (msg: string) => void,
     setOpen: (e: boolean) => void,
     setGroupName: (e: string) => void,
-    setAllChats: (chat: AllChatProps[]) => void,
-    setCurrentMainChat: (chat: ChatProps) => void,
     accessToken: string,
     isPrivate: boolean
 ) => {
@@ -147,7 +140,7 @@ export const createChatGroup = async (
             }
         );
 
-        addGMChatAndMessage(myself, data, allChats, isPrivate, setAllChats, setCurrentMainChat);
+        addGMChatAndMessage(myself, data, isPrivate, CM);
         setOpen(false);
         setCreateCGErrorMessage("");
         setGroupName("");

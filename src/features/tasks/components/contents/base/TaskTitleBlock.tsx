@@ -26,6 +26,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 
 import { useAuth } from "../../../../../context/AuthContext";
+import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../../types/admin";
@@ -47,21 +48,11 @@ type TaskTitleBlockProps = {
     setTitleErrorOpen?: (value: boolean) => void;
     setTaskUpdated?: (value: boolean) => void;
     isPreviewMode: boolean;
-    setIsMainChatVisible?: (value: boolean) => void;
     setTaskContent?: (value: TaskProps) => void;
     setTaskStatusUpdated?: (value: boolean) => void;
     isTaskNoteVisible?: boolean;
     setIsTaskVisibleInNote?: (value: boolean) => void;
-    moveToSpecificChat: (
-        chatType: number,
-        chatId: number,
-        threadId: number,
-        openTaskNoteInChat: boolean,
-        openThreadTaskPreview: boolean,
-        setOpeningService: (service: number) => void,
-        setCurrentPreviewTaskId: (id: number) => void,
-        setCurrentProject: (project: any) => void
-    ) => void;
+    CM: ChatManagementState;
     UIM: UIStateManagementState;
     setCurrentProject: (project: any) => void;
     TM: TaskManagementState;
@@ -88,13 +79,12 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         titleErrorOpen,
         setTitleErrorOpen,
         isPreviewMode,
-        setIsMainChatVisible,
         setTaskContent,
         setTaskStatusUpdated,
         isTaskNoteVisible,
         setIsTaskVisibleInNote,
         setTaskClosed,
-        moveToSpecificChat,
+        CM,
         UIM,
         setCurrentProject,
         TM,
@@ -210,7 +200,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                     taskContent.threadId &&
                                     taskContent.threadId !== null
                                 ) {
-                                    moveToSpecificChat(
+                                    CM.moveToSpecificChat(
                                         taskContent.chatType,
                                         taskContent.chatId,
                                         taskContent.threadId,
@@ -354,9 +344,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 setTaskClosed(true);
                             }
 
-                            if (setIsMainChatVisible) {
-                                setIsMainChatVisible(true);
-                            }
+                            CM.setIsMainChatVisible(true);
 
                             if (TM.setIsTaskPreviewVisible) {
                                 if (isPreviewMode === true) {

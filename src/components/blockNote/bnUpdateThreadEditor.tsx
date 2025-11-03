@@ -28,12 +28,12 @@ import {
     SuggestionMenuController,
     useCreateBlockNote,
 } from "@blocknote/react";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import { Box, IconButton, Tooltip } from "@mui/joy";
+import { Box, IconButton } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
+import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
@@ -58,6 +58,7 @@ type BnUpdateThreadEditorProps = {
     UIM: UIStateManagementState;
     numEditorLines: number;
     setNumEditorLines: (value: number) => void;
+    CM: ChatManagementState;
 };
 export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
     const {
@@ -73,6 +74,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
         UIM,
         numEditorLines,
         setNumEditorLines,
+        CM,
     } = props;
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
@@ -89,14 +91,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
-            mention: CreateMentionSpec(
-                TEM.teamMemberProfiles,
-                socket,
-                myself,
-                setMyself,
-                UIM,
-                setCurrentChat
-            ),
+            mention: CreateMentionSpec(TEM.teamMemberProfiles, socket, myself, setMyself, UIM, CM),
         },
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks

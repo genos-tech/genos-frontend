@@ -5,7 +5,6 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import MoreVert from "@mui/icons-material/MoreVert";
 import NoteAltIcon from "@mui/icons-material/NoteAlt";
 import {
-    Box,
     Chip,
     Dropdown,
     IconButton,
@@ -20,6 +19,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 
 import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
@@ -35,8 +35,7 @@ interface NoteHeaderActionsProps {
     setMyself: (me: UserProps) => void;
     TEM: TeamManagementState;
     socket: any;
-    funcSetAllChats: () => Promise<void>;
-    setCurrentMainChat: (chat: any) => void;
+    CM: ChatManagementState;
     UIM: UIStateManagementState;
     onCreateNewNote: () => void;
     onCreateChildNote: () => void;
@@ -53,8 +52,7 @@ export const NoteHeaderActions = ({
     myself,
     setMyself,
     socket,
-    funcSetAllChats,
-    setCurrentMainChat,
+    CM,
     UIM,
     TEM,
     onCreateNewNote,
@@ -91,14 +89,13 @@ export const NoteHeaderActions = ({
             {noteType === 2 && !isInTaskPage && currentTask && currentTask.id && pmChat && (
                 <Stack direction={"row"} sx={{ mt: "5px" }}>
                     <ProjectAvatar
-                        funcSetAllChats={funcSetAllChats}
+                        CM={CM}
                         myself={myself}
                         pmChat={pmChat}
-                        setCurrentMainChat={setCurrentMainChat}
                         setMyself={setMyself}
-                        UIM={UIM}
                         socket={socket}
                         TEM={TEM}
+                        UIM={UIM}
                     />
 
                     <Tooltip size="sm" title="Open Task on Click" variant="outlined">

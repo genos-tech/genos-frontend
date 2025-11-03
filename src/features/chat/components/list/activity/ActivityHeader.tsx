@@ -1,12 +1,13 @@
-import React from "react";
 import CircleIcon from "@mui/icons-material/Circle";
 import { Box, Stack, Typography } from "@mui/joy";
+import React from "react";
 import { Socket } from "socket.io-client";
 
+import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../../types/admin";
-import { ActivityMessageProps, AllChatProps } from "../../../../../types/chat";
+import { ActivityMessageProps } from "../../../../../types/chat";
 import { extractYYYYMMDDHHMM } from "../../../../../utils/dateUtils";
 import { ActivityAvatar } from "./ActivityAvatar";
 import { ActivityTypeChips } from "./ActivityTypeChips";
@@ -16,13 +17,11 @@ interface ActivityHeaderProps {
     activity: ActivityMessageProps;
     myself: UserProps;
     socket: Socket | null;
-    allChats: AllChatProps[];
-    setCurrentMainChat: (chat: any) => void;
     setMyself: (value: UserProps) => void;
     UIM: UIStateManagementState;
-    funcSetAllChats: () => Promise<void>;
     isYou: boolean;
     chatTypeLookup: { [key: number]: string };
+    CM: ChatManagementState;
 }
 
 export const ActivityHeader: React.FC<ActivityHeaderProps> = ({
@@ -30,28 +29,24 @@ export const ActivityHeader: React.FC<ActivityHeaderProps> = ({
     activity,
     myself,
     socket,
-    allChats,
-    setCurrentMainChat,
     setMyself,
     UIM,
-    funcSetAllChats,
     isYou,
     chatTypeLookup,
+    CM,
 }) => {
     return (
         <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={1.5}>
             <Stack direction="row" spacing={1}>
                 <ActivityAvatar
                     activity={activity}
-                    allChats={allChats}
-                    funcSetAllChats={funcSetAllChats}
+                    CM={CM}
                     isYou={isYou}
                     myself={myself}
-                    setCurrentMainChat={setCurrentMainChat}
                     setMyself={setMyself}
-                    UIM={UIM}
                     socket={socket}
                     TEM={TEM}
+                    UIM={UIM}
                 />
 
                 {activity.chatType !== 3 && activity.chatType !== 4 && (

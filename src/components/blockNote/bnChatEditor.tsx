@@ -28,9 +28,8 @@ import {
     SuggestionMenuController,
     useCreateBlockNote,
 } from "@blocknote/react";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import SendIcon from "@mui/icons-material/Send";
-import { Box, IconButton, Tooltip } from "@mui/joy";
+import { Box, IconButton } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -38,6 +37,7 @@ import { useAuth } from "../../context/AuthContext";
 import { addChat } from "../../features/chat/services/addChat";
 import { addMessage } from "../../features/chat/services/addMessage";
 import { getFirstLine } from "../../features/chat/utils/common";
+import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
@@ -55,10 +55,9 @@ type BnChatEditorProps = {
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
     TEM: TeamManagementState;
+    CM: ChatManagementState;
     chat: ChatProps;
     setCurrentChat: (chat: ChatProps) => void;
-    isSubChatVisible: boolean;
-    funcSetAllChats: () => Promise<void>;
     UIM: UIStateManagementState;
     numEditorLines: number;
     setNumEditorLines: (value: number) => void;
@@ -66,13 +65,12 @@ type BnChatEditorProps = {
 export const BnChatEditor = (props: BnChatEditorProps) => {
     const {
         TEM,
+        CM,
         myself,
         setMyself,
         socket,
         chat,
         setCurrentChat,
-        isSubChatVisible,
-        funcSetAllChats,
         UIM,
         numEditorLines,
         setNumEditorLines,
@@ -92,14 +90,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
-            mention: CreateMentionSpec(
-                TEM.teamMemberProfiles,
-                socket,
-                myself,
-                setMyself,
-                UIM,
-                setCurrentChat
-            ),
+            mention: CreateMentionSpec(TEM.teamMemberProfiles, socket, myself, setMyself, UIM, CM),
         },
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
@@ -178,7 +169,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
         if (editorRef.current) {
             const dynamicHeight: number = Math.min(
                 Math.min(Math.max(numEditorLines - 8, 0), 10) * 20 + 200,
-                isSubChatVisible === true ? 290 : 500
+                CM.isSubChatVisible === true ? 290 : 500
             );
             editorRef.current.style.setProperty("--chat-editor-height", `${dynamicHeight}px`);
         }
@@ -298,7 +289,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                         if (newChat) {
                             await addMessage(latestMessage, newChat.chatType);
                             await addChat(newChat, newChat.chatType);
-                            funcSetAllChats();
+                            await CM.funcSetAllChats();
 
                             editor.replaceBlocks(editor.document, []);
                         }

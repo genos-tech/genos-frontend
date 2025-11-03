@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import {
     Box,
@@ -13,14 +12,15 @@ import {
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
+import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../../components/common/avatarWithStatus";
 import { useAuth } from "../../../../../context/AuthContext";
+import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../../types/admin";
-import { ChatProps } from "../../../../../types/chat";
 import { ProjectProps, TaskProps } from "../../../../../types/tasks";
 import { loadSpecificChildTasks } from "../../../services/loadSpecificChildTasks";
 
@@ -33,7 +33,7 @@ type TaskSubTasksBlockProps = {
     currentTaskContent: TaskProps;
     setCurrentProject: (value: ProjectProps) => void;
     setCurrentPreviewTaskId: (value: number) => void;
-    setCurrentMainChat: (chat: ChatProps) => void;
+    CM: ChatManagementState;
     setIsCreatingTask: (value: {
         flag: boolean;
         parentTaskId: number | null;
@@ -53,7 +53,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
         setCurrentProject,
         setCurrentPreviewTaskId,
         UIM,
-        setCurrentMainChat,
+        CM,
         setIsCreatingTask,
         setIsTaskHomeVisible,
     } = props;
@@ -115,12 +115,12 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                 >
                     <Typography
                         level="title-sm"
+                        startDecorator={<AddIcon />}
                         sx={{
                             alignItems: "center",
                             justifyContent: "center",
                             display: "flex",
                         }}
-                        startDecorator={<AddIcon />}
                     >
                         Sub Task
                     </Typography>
@@ -145,14 +145,14 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                     return (
                                         <ListItem key={`listitem-${id}-${index}`}>
                                             <AvatarWithStatus
+                                                CM={CM}
+                                                myself={myself}
+                                                setMyself={setMyself}
+                                                socket={socket}
+                                                UIM={UIM}
                                                 avatarUser={
                                                     TEM.teamMemberProfiles[assignee.userId]
                                                 }
-                                                myself={myself}
-                                                setCurrentMainChat={setCurrentMainChat}
-                                                setMyself={setMyself}
-                                                UIM={UIM}
-                                                socket={socket}
                                                 isYou={
                                                     myself.userId === assignee.userId
                                                         ? true

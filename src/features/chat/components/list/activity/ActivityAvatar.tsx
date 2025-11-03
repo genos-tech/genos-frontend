@@ -1,28 +1,27 @@
-import React from "react";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import GroupsIcon from "@mui/icons-material/Groups";
 import { Avatar } from "@mui/joy";
+import React from "react";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../../components/common/avatarWithStatus";
 import { GMAvatar } from "../../../../../components/common/GMAvatar";
 import { ProjectAvatar } from "../../../../../components/common/ProjectAvatar";
+import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../../types/admin";
-import { ActivityMessageProps, AllChatProps } from "../../../../../types/chat";
+import { ActivityMessageProps } from "../../../../../types/chat";
 
 interface ActivityAvatarProps {
     activity: ActivityMessageProps;
     myself: UserProps;
     TEM: TeamManagementState;
     socket: Socket | null;
-    allChats: AllChatProps[];
-    setCurrentMainChat: (chat: any) => void;
     setMyself: (value: UserProps) => void;
     UIM: UIStateManagementState;
-    funcSetAllChats: () => Promise<void>;
+    CM: ChatManagementState;
     isYou: boolean;
 }
 
@@ -31,14 +30,12 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
     activity,
     myself,
     socket,
-    allChats,
-    setCurrentMainChat,
     setMyself,
     UIM,
-    funcSetAllChats,
+    CM,
     isYou,
 }) => {
-    const chat = allChats.find(
+    const chat = CM.allChats.find(
         (chat) =>
             chat.chatType === (activity.chatType === 4 ? 3 : activity.chatType) &&
             chat.chatId === activity.chatId
@@ -50,12 +47,12 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
             return (
                 <AvatarWithStatus
                     avatarUser={TEM.teamMemberProfiles[activity.dmPartnerUserId]}
+                    CM={CM}
                     isYou={isYou}
                     myself={myself}
-                    setCurrentMainChat={setCurrentMainChat}
                     setMyself={setMyself}
-                    UIM={UIM}
                     socket={socket}
+                    UIM={UIM}
                 />
             );
         } else {
@@ -68,15 +65,14 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
         if (chat) {
             return (
                 <GMAvatar
-                    funcSetAllChats={funcSetAllChats}
+                    CM={CM}
                     gmChat={chat}
                     isYou={isYou}
                     myself={myself}
-                    setCurrentMainChat={setCurrentMainChat}
                     setMyself={setMyself}
-                    UIM={UIM}
                     socket={socket}
                     TEM={TEM}
+                    UIM={UIM}
                 />
             );
         } else {
@@ -93,14 +89,13 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
         if (chat) {
             return (
                 <ProjectAvatar
-                    funcSetAllChats={funcSetAllChats}
+                    CM={CM}
                     myself={myself}
                     pmChat={chat}
-                    setCurrentMainChat={setCurrentMainChat}
                     setMyself={setMyself}
-                    UIM={UIM}
                     socket={socket}
                     TEM={TEM}
+                    UIM={UIM}
                 />
             );
         } else {
@@ -117,14 +112,13 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
         if (chat) {
             return (
                 <ProjectAvatar
-                    funcSetAllChats={funcSetAllChats}
+                    CM={CM}
                     myself={myself}
                     pmChat={chat}
-                    setCurrentMainChat={setCurrentMainChat}
                     setMyself={setMyself}
-                    UIM={UIM}
                     socket={socket}
                     TEM={TEM}
+                    UIM={UIM}
                 />
             );
         } else {

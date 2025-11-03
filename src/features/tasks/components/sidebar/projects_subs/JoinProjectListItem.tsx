@@ -5,7 +5,6 @@ import { List, ListItem, ListItemContent, Typography } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
 
 import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
-import { ProjectProps } from "../../../../../types/tasks";
 import { Toggler } from "../common";
 
 type JoinProjectListItemProps = {

@@ -1,8 +1,14 @@
-import { useEffect } from "react";
 import { Box, Sheet, useColorScheme } from "@mui/joy";
+import { useEffect } from "react";
 import { VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
+import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { TeamManagementState } from "../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
+import { UserProps } from "../../types/admin";
+import { ChatProps, ThreadProps, ToDoFactProps } from "../../types/chat";
+import { ProjectProps, TaskProps } from "../../types/tasks";
 import { MainChatPaneHeader } from "./components/headers/MainChatPaneHeader";
 import { ChatEditorSection } from "./components/shared/ChatEditorSection";
 import { ErrorSnackbar } from "./components/shared/ErrorSnackbar";
@@ -15,31 +21,16 @@ import {
     calculateVirtuosoSubHight,
 } from "./services/calculateVirtuosoHight";
 import { handleFileDrop } from "./services/handleFileDrop";
-
-import { TeamManagementState } from "../../hooks/common/useTeamManagement";
-import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
-import { UserProps } from "../../types/admin";
-import { ChatProps, FlaggedMessageProps, ThreadProps, ToDoFactProps } from "../../types/chat";
-import { ProjectProps, TaskProps } from "../../types/tasks";
 import { ToDoPane } from "./ToDoPane";
 
 type MessagesPaneProps = {
     TEM: TeamManagementState;
     currentWindowHeight: number;
     paneSizePCT: number;
-    chat: ChatProps;
-    subChat: ChatProps;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
-    currentMainChat: ChatProps;
-    setCurrentMainChat: (chat: ChatProps) => void;
-    setCurrentSubChat: (chat: ChatProps) => void;
-    currentThreadChat?: ThreadProps;
-    setCurrentThreadChat: (chat: ThreadProps) => void;
-    isThreadVisible: boolean;
-    setIsMainChatVisible: (value: boolean) => void;
-    setIsThreadVisible: (value: boolean) => void;
+    CM: ChatManagementState;
     isCreatingTask: {
         flag: boolean;
         parentTaskId: number | null;
@@ -51,11 +42,8 @@ type MessagesPaneProps = {
         rootTaskId: number | null;
     }) => void;
     setIsTaskPreviewVisible: (value: boolean) => void;
-    isSubChatVisible: boolean;
-    setIsSubChatVisible: (value: boolean) => void;
     currentMainChatId: number;
     setCurrentPreviewTask: (value: TaskProps | undefined) => void;
-    funcSetAllChats: () => Promise<void>;
     setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
     setIsToDoVisible: (value: boolean) => void;
@@ -65,67 +53,49 @@ type MessagesPaneProps = {
     isExistingTodaysTodo: boolean;
     setIsExistingTodaysTodo: (value: boolean) => void;
     incompleteTodoCount: number;
-    flaggedMessages: FlaggedMessageProps[];
-    setFlaggedMessages: (value: FlaggedMessageProps[]) => void;
-    showOnlyInCompleteTodos: boolean;
-    setShowOnlyInCompleteTodos: (value: boolean) => void;
     UIM: UIStateManagementState;
 };
 
 export const MessagesPane = (props: MessagesPaneProps) => {
     const {
-        TEM,
-        currentWindowHeight,
-        paneSizePCT,
-        chat,
-        subChat,
-        myself,
-        setMyself,
-        socket,
-        currentMainChat,
-        setCurrentMainChat,
-        setCurrentSubChat,
-        currentThreadChat,
-        setCurrentThreadChat,
-        isThreadVisible,
-        setIsMainChatVisible,
-        setIsTaskPreviewVisible,
-        isCreatingTask,
-        setIsCreatingTask,
-        setIsThreadVisible,
-        isSubChatVisible,
-        setIsSubChatVisible,
         currentMainChatId,
+        currentWindowHeight,
+        incompleteTodoCount,
+        isCreatingTask,
+        isExistingTodaysTodo,
+        isToDoVisible,
+        myself,
+        paneSizePCT,
         setCurrentPreviewTask,
-        funcSetAllChats,
         setCurrentPreviewTaskId,
         setCurrentProject,
-        setIsToDoVisible,
-        isToDoVisible,
-        todos,
-        setTodos,
-        isExistingTodaysTodo,
+        setIsCreatingTask,
         setIsExistingTodaysTodo,
-        incompleteTodoCount,
-        flaggedMessages,
-        setFlaggedMessages,
-        showOnlyInCompleteTodos,
-        setShowOnlyInCompleteTodos,
+        setIsTaskPreviewVisible,
+        setIsToDoVisible,
+        setMyself,
         UIM,
+        setTodos,
+        socket,
+        TEM,
+        todos,
+        CM,
     } = props;
 
     const { mode } = useColorScheme();
 
     // Use shared hooks
-    const messageManagement = useMessageManagement({ chat: currentMainChat });
+    const messageManagement = useMessageManagement({
+        chat: CM.currentMainChat as ChatProps | ThreadProps,
+    });
     const readStatusManagement = useReadStatusManagement({
-        currentChat: currentMainChat,
+        currentChat: CM.currentMainChat as ChatProps | ThreadProps,
         myself,
-        funcSetAllChats,
+        CM,
         isThread: false,
     });
     const scrollManagement = useScrollManagement({
-        currentChat: currentMainChat,
+        currentChat: CM.currentMainChat as ChatProps | ThreadProps,
         indexMap: messageManagement.indexMap,
         isThread: false,
     });
@@ -134,16 +104,18 @@ export const MessagesPane = (props: MessagesPaneProps) => {
     useEffect(() => {
         setTimeout(() => {
             let targetIndex: number;
-            if (currentMainChat.moveToSpecificIndex === undefined) {
-                targetIndex = currentMainChat.messages.length - 1;
+            if (CM.currentMainChat?.moveToSpecificIndex === undefined) {
+                targetIndex = CM.currentMainChat?.messages?.length
+                    ? CM.currentMainChat?.messages?.length - 1
+                    : 0;
             } else if (
                 messageManagement.indexMap &&
-                messageManagement.indexMap[currentMainChat.moveToSpecificIndex] &&
-                currentMainChat.chatId ===
-                    Number(currentMainChat.moveToSpecificIndex?.split("-")[0])
+                messageManagement.indexMap[CM.currentMainChat?.moveToSpecificIndex] &&
+                CM.currentMainChat?.chatId ===
+                    Number(CM.currentMainChat?.moveToSpecificIndex?.split("-")[0])
             ) {
                 targetIndex = Number(
-                    messageManagement.indexMap[currentMainChat.moveToSpecificIndex]
+                    messageManagement.indexMap[CM.currentMainChat?.moveToSpecificIndex]
                 );
             } else {
                 targetIndex = -1;
@@ -161,16 +133,16 @@ export const MessagesPane = (props: MessagesPaneProps) => {
 
     useEffect(() => {
         setTimeout(() => {
-            if (currentMainChat.latestMessage) {
-                readStatusManagement.updateReadStatus(currentMainChat.latestMessage.messageId);
+            if (CM.currentMainChat?.latestMessage) {
+                readStatusManagement.updateReadStatus(CM.currentMainChat?.latestMessage.messageId);
             }
         }, 300);
-    }, [currentMainChat]);
+    }, [CM.currentMainChat]);
 
     const virtuosoHeight =
-        currentMainChat.chatType === 3 || currentMainChat.chatType === 4
+        CM.currentMainChat?.chatType === 3 || CM.currentMainChat?.chatType === 4
             ? 0.95 * window.innerHeight
-            : isSubChatVisible
+            : CM.isSubChatVisible
               ? calculateVirtuosoSubHight(
                     currentWindowHeight,
                     paneSizePCT,
@@ -202,120 +174,105 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                         setErrorOpen={messageManagement.setErrorOpen}
                     />
 
-                    <MainChatPaneHeader
-                        chat={chat}
-                        funcSetAllChats={funcSetAllChats}
-                        incompleteTodoCount={incompleteTodoCount}
-                        isSubChatVisible={isSubChatVisible}
-                        isToDoVisible={isToDoVisible}
-                        myself={myself}
-                        setCurrentMainChat={setCurrentMainChat}
-                        setCurrentSubChat={setCurrentSubChat}
-                        setIsCreatingTask={setIsCreatingTask}
-                        setIsMainChatVisible={setIsMainChatVisible}
-                        setIsSubChatVisible={setIsSubChatVisible}
-                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                        setIsThreadVisible={setIsThreadVisible}
-                        setIsToDoVisible={setIsToDoVisible}
-                        setMyself={setMyself}
-                        UIM={UIM}
-                        socket={socket}
-                        subChat={subChat}
-                        TEM={TEM}
-                    />
+                    {CM.currentMainChat && (
+                        <MainChatPaneHeader
+                            chat={CM.currentMainChat}
+                            CM={CM}
+                            incompleteTodoCount={incompleteTodoCount}
+                            isToDoVisible={isToDoVisible}
+                            myself={myself}
+                            setIsCreatingTask={setIsCreatingTask}
+                            setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                            setIsToDoVisible={setIsToDoVisible}
+                            setMyself={setMyself}
+                            socket={socket}
+                            TEM={TEM}
+                            UIM={UIM}
+                        />
+                    )}
 
                     {/* To-Do Pane for only myself */}
                     {isToDoVisible === true &&
-                        currentMainChat.chatType === 1 &&
-                        currentMainChat.dmPartnerUser.userId === myself.userId && (
+                        CM.currentMainChat?.chatType === 1 &&
+                        CM.currentMainChat?.dmPartnerUser.userId === myself.userId && (
                             <ToDoPane
+                                CM={CM}
                                 currentWindowHeight={currentWindowHeight}
                                 isExistingTodaysTodo={isExistingTodaysTodo}
-                                isSubChatVisible={isSubChatVisible}
                                 myself={myself}
-                                setCurrentChat={setCurrentMainChat}
                                 setIsExistingTodaysTodo={setIsExistingTodaysTodo}
                                 setMyself={setMyself}
-                                UIM={UIM}
                                 setTodos={setTodos}
                                 socket={socket}
                                 TEM={TEM}
                                 todos={todos}
-                                showOnlyInCompleteTodos={showOnlyInCompleteTodos}
-                                setShowOnlyInCompleteTodos={setShowOnlyInCompleteTodos}
+                                UIM={UIM}
                             />
                         )}
 
                     {!(
                         isToDoVisible === true &&
-                        currentMainChat.chatType === 1 &&
-                        currentMainChat.dmPartnerUser.userId === myself.userId
+                        CM.currentMainChat?.chatType === 1 &&
+                        CM.currentMainChat?.dmPartnerUser.userId === myself.userId
                     ) && (
                         <>
                             <MessageListRenderer
-                                chat={chat}
+                                chat={CM.currentMainChat as ChatProps | ThreadProps}
+                                CM={CM}
                                 currentChatId={currentMainChatId}
-                                currentThreadChat={currentThreadChat}
-                                flaggedMessages={flaggedMessages}
                                 height={virtuosoHeight}
                                 indexMap={messageManagement.indexMap}
                                 isCreatingTask={isCreatingTask}
                                 isScrolling={scrollManagement.isScrolling}
                                 isThread={false}
-                                isThreadVisible={isThreadVisible}
                                 messages={messageManagement.messages}
-                                moveToSpecificIndex={currentMainChat.moveToSpecificIndex}
                                 myself={myself}
-                                notMove={currentMainChat.notMove}
-                                setCurrentMainChat={setCurrentMainChat}
                                 setCurrentPreviewTask={setCurrentPreviewTask}
                                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                 setCurrentProject={setCurrentProject}
-                                setCurrentThreadChat={setCurrentThreadChat}
                                 setEditTargetMessage={messageManagement.setEditTargetMessage}
                                 setErrorMessage={messageManagement.setErrorMessage}
                                 setErrorOpen={messageManagement.setErrorOpen}
-                                setFlaggedMessages={setFlaggedMessages}
                                 setIsCreatingTask={setIsCreatingTask}
                                 setIsInEdit={messageManagement.setIsInEdit}
-                                setIsMainChatVisible={setIsMainChatVisible}
                                 setIsScrolling={scrollManagement.setIsScrolling}
                                 setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                setIsThreadVisible={setIsThreadVisible}
                                 setMyself={setMyself}
-                                UIM={UIM}
                                 setVisibleRange={scrollManagement.setVisibleRange}
                                 socket={socket}
                                 TEM={TEM}
+                                UIM={UIM}
                                 visibleRange={scrollManagement.visibleRange}
                                 virtuosoRef={
                                     scrollManagement.virtuosoRef as React.RefObject<VirtuosoHandle>
                                 }
                             />
 
-                            {currentMainChat.chatType !== 3 && currentMainChat.chatType !== 4 && (
-                                <ChatEditorSection
-                                    chat={chat}
-                                    editTargetMessage={messageManagement.editTargetMessage}
-                                    funcSetAllChats={funcSetAllChats}
-                                    isInEdit={messageManagement.isInEdit}
-                                    isSubChatVisible={isSubChatVisible}
-                                    isThread={false}
-                                    myself={myself}
-                                    numEditorLines={messageManagement.numEditorLines}
-                                    setIsInEdit={messageManagement.setIsInEdit}
-                                    setMyself={setMyself}
-                                    setNumEditorLines={messageManagement.setNumEditorLines}
-                                    UIM={UIM}
-                                    socket={socket}
-                                    TEM={TEM}
-                                    setCurrentChat={
-                                        setCurrentMainChat as (
-                                            chat: ChatProps | ThreadProps
-                                        ) => void
-                                    }
-                                />
-                            )}
+                            {CM.currentMainChat?.chatType !== 3 &&
+                                CM.currentMainChat?.chatType !== 4 && (
+                                    <ChatEditorSection
+                                        chat={CM.currentMainChat as ChatProps | ThreadProps}
+                                        CM={CM}
+                                        editTargetMessage={messageManagement.editTargetMessage}
+                                        isInEdit={messageManagement.isInEdit}
+                                        isThread={false}
+                                        myself={myself}
+                                        numEditorLines={messageManagement.numEditorLines}
+                                        setCurrentThreadChat={undefined}
+                                        setIsInEdit={messageManagement.setIsInEdit}
+                                        setMyself={setMyself}
+                                        setNumEditorLines={messageManagement.setNumEditorLines}
+                                        socket={socket}
+                                        TEM={TEM}
+                                        thread={undefined}
+                                        UIM={UIM}
+                                        setCurrentChat={
+                                            CM.setCurrentMainChat as (
+                                                chat: ChatProps | ThreadProps
+                                            ) => void
+                                        }
+                                    />
+                                )}
                         </>
                     )}
                 </Box>

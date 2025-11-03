@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
 import { Box, Sheet, Stack } from "@mui/joy";
+import { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { BnChatPreview } from "../../../../components/blockNote/bnChatPreview";
@@ -7,6 +7,7 @@ import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus
 import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
 import { EmojiReaction } from "../../../../components/emojiInput/EmojiReaction";
 import { useAuth } from "../../../../context/AuthContext";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
@@ -42,9 +43,6 @@ type MessageBubbleProps = {
     isFocused: boolean;
     isSimpleBubble: boolean;
     socket: Socket | null;
-    setIsMainChatVisible: (value: boolean) => void;
-    setIsThreadVisible: (value: boolean) => void;
-    setCurrentThreadChat: (value: ThreadProps) => void;
     isCreatingTask: {
         flag: boolean;
         parentTaskId: number | null;
@@ -58,44 +56,35 @@ type MessageBubbleProps = {
     setIsTaskPreviewVisible: (value: boolean) => void;
     setCurrentPreviewTask: (value: TaskProps | undefined) => void;
     UIM: UIStateManagementState;
-    setCurrentMainChat: (chat: ChatProps) => void;
     setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
     setIsInEdit: (value: boolean) => void;
     setEditTargetMessage: (value: MessageProps) => void;
-    currentMessageIndex: number;
-    flaggedMessages: FlaggedMessageProps[];
-    setFlaggedMessages: (value: FlaggedMessageProps[]) => void;
+    CM: ChatManagementState;
 };
 
 export const MessageBubble = (props: MessageBubbleProps) => {
     const {
-        TEM,
-        myself,
-        setMyself,
-        variant,
         chat,
-        message,
-        isScrolling,
-        isFocused,
-        isSimpleBubble,
-        socket,
-        setIsMainChatVisible,
-        setIsThreadVisible,
-        setCurrentPreviewTask,
-        setIsTaskPreviewVisible,
         isCreatingTask,
-        setIsCreatingTask,
-        setCurrentThreadChat,
-        UIM,
-        setCurrentMainChat,
+        isFocused,
+        isScrolling,
+        isSimpleBubble,
+        message,
+        myself,
+        setCurrentPreviewTask,
         setCurrentPreviewTaskId,
         setCurrentProject,
-        setIsInEdit,
         setEditTargetMessage,
-        currentMessageIndex,
-        flaggedMessages,
-        setFlaggedMessages,
+        setIsCreatingTask,
+        setIsInEdit,
+        setIsTaskPreviewVisible,
+        setMyself,
+        UIM,
+        socket,
+        TEM,
+        variant,
+        CM,
     } = props;
     const isSent = variant === "sent";
     const dtSent = extractYYYYMMDDHHMM(message.tsSent);
@@ -121,8 +110,8 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         loadTask(message.messageId);
 
         // Show thread pane on the right side.
-        setIsMainChatVisible(true);
-        setIsThreadVisible(true);
+        CM.setIsMainChatVisible(true);
+        CM.setIsThreadVisible(true);
         setIsTaskPreviewVisible(false);
         setIsCreatingTask({ ...isCreatingTask, flag: false });
 
@@ -207,7 +196,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                 setCurrentProject(message.project);
                             }
                             if (newThread) {
-                                setCurrentThreadChat(newThread);
+                                CM.setCurrentThreadChat(newThread);
                                 if (newThread.taskExist === true && threadMessages[0].taskId) {
                                     setCurrentPreviewTaskId(threadMessages[0].taskId);
                                 }
@@ -477,8 +466,8 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                     {emojiPickerPositionCalculated === true && (
                         <EmojiPicker
                             pickerBottomPosition={pickerBottomPosition}
-                            pickerRightPosition={pickerRightPosition}
                             pickerLeftPosition={pickerLeftPosition}
+                            pickerRightPosition={pickerRightPosition}
                             setSelectedEmoji={setSelectedEmoji}
                             setShowEmojiPicker={setShowEmojiPicker}
                             showEmojiPicker={showEmojiPicker}
@@ -556,11 +545,11 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                     <BubbleFlagButton
                                         accessToken={accessToken}
                                         currentChat={chat}
-                                        flaggedMessages={flaggedMessages}
+                                        flaggedMessages={CM.flaggedMessages}
                                         message={message}
                                         myself={myself}
-                                        setCurrentChat={setCurrentMainChat}
-                                        setFlaggedMessages={setFlaggedMessages}
+                                        setCurrentChat={CM.setCurrentMainChat}
+                                        setFlaggedMessages={CM.setFlaggedMessages}
                                         threadId={0}
                                     />
 
@@ -577,14 +566,13 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                     {(chat.chatType === 3 || chat.chatType === 4) &&
                                         message.sender.isSystemUser === true && (
                                             <BubbleOpenTaskButton
+                                                CM={CM}
                                                 isCreatingTask={isCreatingTask}
                                                 message={message}
                                                 setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                                 setCurrentProject={setCurrentProject}
                                                 setIsCreatingTask={setIsCreatingTask}
-                                                setIsMainChatVisible={setIsMainChatVisible}
                                                 setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                                setIsThreadVisible={setIsThreadVisible}
                                                 taskId={message.taskId}
                                             />
                                         )}
@@ -596,7 +584,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                 currentChat={chat}
                                                 isThread={false}
                                                 message={message}
-                                                setCurrentChat={setCurrentMainChat}
+                                                setCurrentChat={CM.setCurrentMainChat}
                                                 socket={socket}
                                             />
                                         )}
@@ -612,13 +600,13 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                         <Box sx={{ flex: 1 }}>
                                             <AvatarWithStatus
                                                 chat={chat}
+                                                CM={CM}
                                                 isForBubble={true}
                                                 isYou={isSent}
                                                 myself={myself}
-                                                setCurrentMainChat={setCurrentMainChat}
                                                 setMyself={setMyself}
-                                                UIM={UIM}
                                                 socket={socket}
+                                                UIM={UIM}
                                                 avatarUser={
                                                     isSent
                                                         ? TEM.teamMemberProfiles[myself.userId]
@@ -676,11 +664,11 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                     <BubbleFlagButton
                                                         accessToken={accessToken}
                                                         currentChat={chat}
-                                                        flaggedMessages={flaggedMessages}
+                                                        flaggedMessages={CM.flaggedMessages}
                                                         message={message}
                                                         myself={myself}
-                                                        setCurrentChat={setCurrentMainChat}
-                                                        setFlaggedMessages={setFlaggedMessages}
+                                                        setCurrentChat={CM.setCurrentMainChat}
+                                                        setFlaggedMessages={CM.setFlaggedMessages}
                                                         threadId={0}
                                                     />
 
@@ -702,6 +690,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                         chat.chatType === 4) &&
                                                         message.sender.isSystemUser === true && (
                                                             <BubbleOpenTaskButton
+                                                                CM={CM}
                                                                 isCreatingTask={isCreatingTask}
                                                                 message={message}
                                                                 taskId={message.taskId}
@@ -714,14 +703,8 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                                 setIsCreatingTask={
                                                                     setIsCreatingTask
                                                                 }
-                                                                setIsMainChatVisible={
-                                                                    setIsMainChatVisible
-                                                                }
                                                                 setIsTaskPreviewVisible={
                                                                     setIsTaskPreviewVisible
-                                                                }
-                                                                setIsThreadVisible={
-                                                                    setIsThreadVisible
                                                                 }
                                                             />
                                                         )}
@@ -734,8 +717,10 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                                 currentChat={chat}
                                                                 isThread={false}
                                                                 message={message}
-                                                                setCurrentChat={setCurrentMainChat}
                                                                 socket={socket}
+                                                                setCurrentChat={
+                                                                    CM.setCurrentMainChat
+                                                                }
                                                             />
                                                         )}
                                                 </>
@@ -748,14 +733,14 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             {message.content && message.content.length > 0 && (
                                 <BnChatPreview
                                     key={`${chat.chatId}-${message.messageId}-${chat.chatType}-${message.tsUpdated}`}
+                                    CM={CM}
                                     content={message.content}
                                     isSent={isSent}
                                     myself={myself}
-                                    setCurrentChat={setCurrentMainChat}
                                     setMyself={setMyself}
-                                    UIM={UIM}
                                     socket={socket}
                                     TEM={TEM}
+                                    UIM={UIM}
                                 />
                             )}
                         </Stack>

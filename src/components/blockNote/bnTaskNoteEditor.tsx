@@ -35,7 +35,6 @@ import {
     FormattingToolbar,
     FormattingToolbarController,
     getDefaultReactSlashMenuItems,
-    GridSuggestionMenuController,
     RemoveBlockItem,
     SideMenu,
     SideMenuController,
@@ -51,10 +50,10 @@ import { RiAlertFill } from "react-icons/ri";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
+import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
-import { ChatProps } from "../../types/chat";
 import { TaskNoteProps } from "../../types/notes";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
@@ -75,7 +74,7 @@ type BnTaskNoteEditorProps = {
     setBody: (text: PartialBlock[] | any[]) => void;
     setNoteBodyEdited?: (value: boolean) => void;
     setNoteBodySaved?: (value: boolean) => void;
-    setCurrentChat: (chat: ChatProps) => void;
+    CM: ChatManagementState;
     UIM: UIStateManagementState;
 };
 export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
@@ -89,7 +88,7 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
         setBody,
         setNoteBodyEdited,
         setNoteBodySaved,
-        setCurrentChat,
+        CM,
         UIM,
     } = props;
 
@@ -118,14 +117,7 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
-            mention: CreateMentionSpec(
-                TEM.teamMemberProfiles,
-                socket,
-                myself,
-                setMyself,
-                UIM,
-                setCurrentChat
-            ),
+            mention: CreateMentionSpec(TEM.teamMemberProfiles, socket, myself, setMyself, UIM, CM),
         },
         blockSpecs: {
             ...remainingBlockSpecs,

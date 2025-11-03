@@ -66,15 +66,12 @@ export const TaskPreviewPanel = (props: TaskPreviewPanelProps) => {
                     }}
                 >
                     <TaskPreview
+                        CM={CM}
                         handleCreateNewTaskNote={NM.handleCreateNewTaskNote}
                         isTaskNoteVisible={NM.isTaskNoteVisible}
-                        moveToSpecificChat={CM.moveToSpecificChat}
                         myself={myself}
-                        UIM={UIM}
-                        setCurrentMainChat={CM.setCurrentMainChat}
                         setCurrentProject={PM.setCurrentProject}
                         setCurrentTaskNote={NM.setCurrentTaskNote}
-                        setIsMainChatVisible={CM.setIsMainChatVisible}
                         setIsTaskNoteVisible={NM.setIsTaskNoteVisible}
                         setIsTaskVisibleInNote={NM.setIsTaskVisibleInNote}
                         setMyself={setMyself}
@@ -82,9 +79,10 @@ export const TaskPreviewPanel = (props: TaskPreviewPanelProps) => {
                         setTeamProjects={PM.setTeamProjects}
                         socket={socket}
                         taskNoteMeta={NM.taskNoteMeta}
-                        TEM={TEM}
                         teamProjects={PM.teamProjects}
+                        TEM={TEM}
                         TM={TM}
+                        UIM={UIM}
                     />
                 </Box>
             </Panel>

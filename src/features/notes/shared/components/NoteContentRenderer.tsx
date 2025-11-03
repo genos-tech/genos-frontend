@@ -62,13 +62,13 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
     if (noteType === 1 && NM.currentMyNoteChain) {
         return (
             <MyNoteMain
+                CM={CM}
                 myself={myself}
                 NM={NM}
-                setCurrentChat={CM.setCurrentMainChat}
                 setMyself={setMyself}
-                UIM={UIM}
                 socket={socket}
                 TEM={TEM}
+                UIM={UIM}
             />
         );
     }
@@ -78,40 +78,35 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
         return (
             <>
                 <TaskNoteMain
-                    TEM={TEM}
-                    socket={socket}
-                    myself={myself}
-                    setMyself={setMyself}
-                    UIM={UIM}
-                    setCurrentChat={CM.setCurrentMainChat}
+                    CM={CM}
                     isInTaskPage={false}
-                    setCurrentMainChat={CM.setCurrentMainChat}
-                    allChats={CM.allChats}
-                    funcSetAllChats={CM.funcSetAllChats}
+                    myself={myself}
                     NM={NM}
+                    setMyself={setMyself}
+                    socket={socket}
+                    TEM={TEM}
                     TM={TM}
+                    UIM={UIM}
                 />
 
                 {NM.isTaskVisibleInNote && TM.currentPreviewTask && (
                     <TaskPreview
+                        CM={CM}
                         handleCreateNewTaskNote={NM.handleCreateNewTaskNote}
                         isTaskNoteVisible={NM.isTaskNoteVisible}
-                        moveToSpecificChat={CM.moveToSpecificChat}
                         myself={myself}
-                        UIM={UIM}
-                        setCurrentMainChat={CM.setCurrentMainChat}
                         setCurrentProject={PM.setCurrentProject}
                         setCurrentTaskNote={NM.setCurrentTaskNote}
-                        setIsMainChatVisible={CM.setIsMainChatVisible}
                         setIsTaskNoteVisible={NM.setIsTaskNoteVisible}
                         setMyself={setMyself}
                         setOpenCreateProject={PM.setOpenCreateProject}
                         setTeamProjects={PM.setTeamProjects}
                         socket={socket}
                         taskNoteMeta={NM.taskNoteMeta}
-                        TEM={TEM}
                         teamProjects={PM.teamProjects}
+                        TEM={TEM}
                         TM={TM}
+                        UIM={UIM}
                     />
                 )}
             </>
@@ -129,9 +124,9 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
                 setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
                 setCurrentProject={PM.setCurrentProject}
                 setMyself={setMyself}
-                UIM={UIM}
                 socket={socket}
                 TEM={TEM}
+                UIM={UIM}
             />
         );
     }

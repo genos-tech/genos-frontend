@@ -1,9 +1,10 @@
-import * as React from "react";
 import { ListDivider, ListItem, Stack } from "@mui/joy";
 import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
+import * as React from "react";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../../context/AuthContext";
+import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../../types/admin";
@@ -27,34 +28,25 @@ import { ActivityHeader } from "./ActivityHeader";
 // activityType = {1: message or comment, 2: reaction, 3: mention}
 
 type ChatListItemForActivityProps = ListItemButtonProps & {
-    TEM: TeamManagementState;
-    selectedActivityId: string;
-    setSelectedActivityId: (value: string) => void;
-    socket: Socket | null;
     activity: ActivityMessageProps;
     activityMessages: ActivityMessageProps[];
-    setActivityMessages: (value: ActivityMessageProps[]) => void;
-    myself: UserProps;
-    setMyself: (value: UserProps) => void;
-    allChats: AllChatProps[];
-    currentSubChat?: ChatProps;
-    setCurrentMainChat: (chat: ChatProps) => void;
-    setCurrentSubChat: (chat: ChatProps) => void;
-    setCurrentThreadChat: (value: ThreadProps) => void;
-    setIsMainChatVisible: (value: boolean) => void;
-    setIsThreadVisible: (value: boolean) => void;
-    setIsTaskPreviewVisible: (value: boolean) => void;
-    isTaskPreviewVisible: boolean;
     isCreatingTask: {
         flag: boolean;
         parentTaskId: number | null;
         rootTaskId: number | null;
     };
-    isSubChatVisible: boolean;
-    UIM: UIStateManagementState;
+    isTaskPreviewVisible: boolean;
+    myself: UserProps;
+    selectedActivityId: string;
     setCurrentPreviewTaskId: (value: number) => void;
     setCurrentProject: (value: ProjectProps) => void;
-    funcSetAllChats: () => Promise<void>;
+    setIsTaskPreviewVisible: (value: boolean) => void;
+    setMyself: (value: UserProps) => void;
+    UIM: UIStateManagementState;
+    setSelectedActivityId: (value: string) => void;
+    socket: Socket | null;
+    TEM: TeamManagementState;
+    CM: ChatManagementState;
 };
 
 export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => {
@@ -65,30 +57,21 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         socket,
         activity,
         activityMessages,
-        setActivityMessages,
         myself,
         setMyself,
-        allChats,
-        currentSubChat,
-        setCurrentMainChat,
-        setCurrentSubChat,
-        setCurrentThreadChat,
-        setIsMainChatVisible,
-        setIsThreadVisible,
         setIsTaskPreviewVisible,
         isTaskPreviewVisible,
         isCreatingTask,
-        isSubChatVisible,
         UIM,
         setCurrentProject,
         setCurrentPreviewTaskId,
-        funcSetAllChats,
+        CM,
     } = props;
     const { accessToken } = useAuth();
     const { groupedReactions, updateActivityReadStatus } = useActivityStatus({
         activity,
         activityMessages,
-        setActivityMessages,
+        CM,
         myself,
         accessToken,
     });
@@ -100,7 +83,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         if (activity.chatType === 4) {
             chatType = 3;
         }
-        const currentChat: AllChatProps = allChats.filter(
+        const currentChat: AllChatProps = CM.allChats.filter(
             (chat) => chat.chatType === chatType && chat.chatId === activity.chatId
         )[0];
         const newChat: ChatProps = {
@@ -141,24 +124,24 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         messageUniqueKey: string
     ) => {
         const shouldUseMainChat =
-            isSubChatVisible === false ||
-            `${currentSubChat?.chatId}-${currentSubChat?.chatName}` !==
+            CM.isSubChatVisible === false ||
+            `${CM.currentSubChat?.chatId}-${CM.currentSubChat?.chatName}` !==
                 `${activity.chatId}-${activity.chatName}`;
 
         const shouldUseSubChat =
-            isSubChatVisible === true ||
-            `${currentSubChat?.chatId}-${currentSubChat?.chatName}` ===
+            CM.isSubChatVisible === true ||
+            `${CM.currentSubChat?.chatId}-${CM.currentSubChat?.chatName}` ===
                 `${activity.chatId}-${activity.chatName}`;
 
         const handleMessages = (messages: any) => {
             if (shouldUseMainChat) {
-                setCurrentMainChat(defineNewChat(messages, messageUniqueKey));
+                CM.setCurrentMainChat(defineNewChat(messages, messageUniqueKey));
             } else if (shouldUseSubChat) {
-                setCurrentSubChat(defineNewChat(messages, messageUniqueKey));
+                CM.setCurrentSubChat(defineNewChat(messages, messageUniqueKey));
             }
-            setIsMainChatVisible(true);
+            CM.setIsMainChatVisible(true);
             if (isCreatingTask.flag === true || isTaskPreviewVisible) {
-                setIsThreadVisible(false);
+                CM.setIsThreadVisible(false);
             }
         };
 
@@ -175,15 +158,15 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
     // Handle task comment activity
     const handleTaskCommentActivity = async () => {
         const shouldUseMainChat =
-            isSubChatVisible === false ||
-            `${currentSubChat?.chatId}-${currentSubChat?.chatName}` !==
+            CM.isSubChatVisible === false ||
+            `${CM.currentSubChat?.chatId}-${CM.currentSubChat?.chatName}` !==
                 `${activity.chatId}-${activity.chatName}`;
 
         if (shouldUseMainChat) {
             toggleMessagesPane();
             try {
                 const messages = await popSpecificMessages(activity.chatId, 3);
-                setCurrentMainChat(defineNewChat(messages, activity.messageUniqueKey));
+                CM.setCurrentMainChat(defineNewChat(messages, activity.messageUniqueKey));
 
                 if (activity.projectId) {
                     setCurrentProject({
@@ -192,12 +175,12 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                         projectTags: [],
                     });
                     setCurrentPreviewTaskId(activity.taskId);
-                    setIsThreadVisible(false);
+                    CM.setIsThreadVisible(false);
                     setIsTaskPreviewVisible(true);
                 }
-                setIsMainChatVisible(true);
+                CM.setIsMainChatVisible(true);
                 if (isCreatingTask.flag === true || isTaskPreviewVisible) {
-                    setIsThreadVisible(false);
+                    CM.setIsThreadVisible(false);
                 }
             } catch (error) {
                 console.error(error);
@@ -253,7 +236,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                 }
 
                 if (newThread) {
-                    setCurrentThreadChat(newThread);
+                    CM.setCurrentThreadChat(newThread);
                     if (newThread.taskExist === true && threadMessages[0].taskId) {
                         setCurrentPreviewTaskId(threadMessages[0].taskId);
                     }
@@ -266,7 +249,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                 );
             }
 
-            setIsThreadVisible(true);
+            CM.setIsThreadVisible(true);
         } catch (error) {
             console.error(error);
         }
@@ -317,16 +300,14 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                     <Stack direction="column">
                         <ActivityHeader
                             activity={activity}
-                            allChats={allChats}
                             chatTypeLookup={chatTypeLookup}
-                            funcSetAllChats={funcSetAllChats}
+                            CM={CM}
                             isYou={isYou}
                             myself={myself}
-                            setCurrentMainChat={setCurrentMainChat}
                             setMyself={setMyself}
-                            UIM={UIM}
                             socket={socket}
                             TEM={TEM}
+                            UIM={UIM}
                         />
 
                         <ActivityContent

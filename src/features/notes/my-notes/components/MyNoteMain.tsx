@@ -1,15 +1,15 @@
+import { Stack, TabPanel, Tabs } from "@mui/joy";
 import { useEffect, useState } from "react";
-import { Box, Stack, Tab, TabPanel, Tabs } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { useNoteEditor } from "../../../../hooks/notes/useNoteEditor";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useNoteTabs } from "../../../../hooks/notes/useNoteTabs";
 import { UserProps } from "../../../../types/admin";
-import { ChatProps } from "../../../../types/chat";
 import { MyNoteProps } from "../../../../types/notes";
 import { getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
 import { EmptyState } from "../../shared/components/EmptyState";
@@ -32,14 +32,14 @@ interface MyNoteMainProps {
     setMyself: (me: UserProps) => void;
     /** Function to set the opening service */
     UIM: UIStateManagementState;
-    /** Function to set the current chat */
-    setCurrentChat: (chat: ChatProps) => void;
     /** Note management state and actions */
     NM: NoteManagementState;
+    /** Chat management state and actions */
+    CM: ChatManagementState;
 }
 
 export const MyNoteMain = (props: MyNoteMainProps) => {
-    const { TEM, socket, myself, setMyself, UIM, setCurrentChat, NM } = props;
+    const { TEM, socket, myself, setMyself, UIM, NM, CM } = props;
 
     const { accessToken } = useAuth();
     const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
@@ -138,17 +138,16 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                         />
 
                                         <NoteHeaderActions
+                                            CM={CM}
                                             currentTask={undefined}
-                                            funcSetAllChats={() => Promise.resolve()}
                                             isInTaskPage={false}
                                             myself={myself}
                                             noteType={1}
                                             pmChat={undefined}
-                                            setCurrentMainChat={() => {}}
                                             setMyself={setMyself}
-                                            UIM={UIM}
                                             socket={socket}
                                             TEM={TEM}
+                                            UIM={UIM}
                                             onCloseNotes={() => {}}
                                             onCreateChildNote={handleCreateChildNote}
                                             onCreateNewNote={handleCreateNewNote}
@@ -184,15 +183,15 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                 {NM.currentMyNote && (
                                                     <NoteEditor
                                                         body={noteEditor.body}
+                                                        CM={CM}
                                                         currentMyNote={NM.currentMyNote}
                                                         myself={myself}
                                                         noteBodySaved={noteEditor.noteBodySaved}
-                                                        setCurrentChat={setCurrentChat}
                                                         setMyself={setMyself}
-                                                        UIM={UIM}
                                                         socket={socket}
                                                         TEM={TEM}
                                                         titleInputRef={noteEditor.titleInputRef}
+                                                        UIM={UIM}
                                                         currentMyNoteTitle={
                                                             noteEditor.currentMyNoteTitle
                                                         }

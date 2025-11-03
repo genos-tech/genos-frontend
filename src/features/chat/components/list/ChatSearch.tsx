@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import {
     Autocomplete,
@@ -9,15 +8,17 @@ import {
     Typography,
 } from "@mui/joy";
 import CircularProgress from "@mui/joy/CircularProgress";
+import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
 import { GMAvatar } from "../../../../components/common/GMAvatar";
 import { useAuth } from "../../../../context/AuthContext";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
-import { AllChatProps, ChatProps, SearchListProps } from "../../../../types/chat";
+import { AllChatProps, SearchListProps } from "../../../../types/chat";
 import { loadSearchList } from "../../services/loadChatSearchList";
 import { moveToSelectedChat } from "../../services/moveToChat";
 
@@ -26,14 +27,10 @@ type ChatSearchProps = {
     socket: Socket | null;
     openSearchBox: boolean;
     setOpenSearchBox: (value: boolean) => void;
-    setCurrentMainChat: (value: ChatProps) => void;
-    allChats: AllChatProps[];
-    setAllChats: (value: AllChatProps[]) => void;
     setOpenJoinGM: (value: { flag: boolean; chatId: number; chatName: string }) => void;
-    setCurrentChatPaneType: (value: number) => void;
     TEM: TeamManagementState;
     setMyself: (value: UserProps) => void;
-    funcSetAllChats: () => Promise<void>;
+    CM: ChatManagementState;
     UIM: UIStateManagementState;
 };
 
@@ -43,15 +40,11 @@ export const ChatSearch = (props: ChatSearchProps) => {
         socket,
         openSearchBox,
         setOpenSearchBox,
-        setCurrentMainChat,
-        allChats,
-        setAllChats,
         setOpenJoinGM,
-        setCurrentChatPaneType,
         TEM,
         setMyself,
         UIM,
-        funcSetAllChats,
+        CM,
     } = props;
     const { accessToken } = useAuth();
     const [options, setOptions] = useState<SearchListProps[]>([]);
@@ -91,11 +84,8 @@ export const ChatSearch = (props: ChatSearchProps) => {
                                 value.type === "Group" ? 2 : 1,
                                 value.isPrivate,
                                 value.dmPartnerUser,
-                                allChats,
-                                setCurrentMainChat,
-                                setAllChats,
-                                setOpenSearchBox,
-                                setCurrentChatPaneType
+                                CM,
+                                setOpenSearchBox
                             );
                         } else {
                             // If the user tries to join a new DM (try to make a DM with a new friend),
@@ -163,7 +153,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
                           : option.name
                 }
                 renderOption={(props, option) => {
-                    const gmChat: AllChatProps | undefined = allChats.find(
+                    const gmChat: AllChatProps | undefined = CM.allChats.find(
                         (chat) => chat.chatId === option.id
                     );
                     return (
@@ -176,12 +166,12 @@ export const ChatSearch = (props: ChatSearchProps) => {
                                     {option.type === "People" && (
                                         <AvatarWithStatus
                                             key={`ac-render-option-chatsearch-user-avatar-${option.name}-${option.id}`}
+                                            CM={CM}
                                             isYou={option.dmPartnerUser.userId === myself.userId}
                                             myself={myself}
-                                            setCurrentMainChat={setCurrentMainChat}
                                             setMyself={setMyself}
-                                            UIM={UIM}
                                             socket={socket}
+                                            UIM={UIM}
                                             avatarUser={
                                                 TEM.teamMemberProfiles[option.dmPartnerUser.userId]
                                             }
@@ -189,15 +179,14 @@ export const ChatSearch = (props: ChatSearchProps) => {
                                     )}
                                     {option.type === "Group" && gmChat && (
                                         <GMAvatar
-                                            funcSetAllChats={funcSetAllChats}
+                                            CM={CM}
                                             gmChat={gmChat}
                                             isYou={false}
                                             myself={myself}
-                                            setCurrentMainChat={setCurrentMainChat}
                                             setMyself={setMyself}
-                                            UIM={UIM}
                                             socket={socket}
                                             TEM={TEM}
+                                            UIM={UIM}
                                         />
                                     )}
                                     <Typography level="body-md" sx={{ pt: 0.5, pl: 1 }}>

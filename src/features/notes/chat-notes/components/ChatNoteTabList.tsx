@@ -5,17 +5,10 @@ import { ChatNoteProps } from "../../../../types/notes";
 
 interface ChatNoteTabListProps {
     tabItems: ChatNoteProps[];
-    selectedTabIndex: number;
-    onTabChange: (newValue: number) => void;
     onCloseTab: (tabIndex: number, closingNoteId: number) => Promise<void>;
 }
 
-export const ChatNoteTabList = ({
-    tabItems,
-    selectedTabIndex,
-    onTabChange,
-    onCloseTab,
-}: ChatNoteTabListProps) => {
+export const ChatNoteTabList = ({ tabItems, onCloseTab }: ChatNoteTabListProps) => {
     return (
         <TabList
             sx={{

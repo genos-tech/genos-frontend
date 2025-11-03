@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import { Stack, TabPanel, Tabs } from "@mui/joy";
+import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -179,10 +179,10 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                 setCurrentProject={setCurrentProject}
                                                 setMyself={setMyself}
                                                 setOpenDeleteNote={setOpenDeleteNote}
-                                                UIM={UIM}
                                                 setOpenSearchBox={setOpenSearchBox}
                                                 socket={socket}
                                                 TEM={TEM}
+                                                UIM={UIM}
                                                 onCreateChildNote={handleCreateChildNote}
                                                 onDeleteNote={handleDeleteNote}
                                             />
@@ -194,10 +194,8 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                             onChange={(_, val) => handleTabChange(Number(val))}
                                         >
                                             <ChatNoteTabList
-                                                selectedTabIndex={NM.selectedTabIndex}
                                                 tabItems={NM.tabItems}
                                                 onCloseTab={handleCloseTab}
-                                                onTabChange={handleTabChange}
                                             />
 
                                             {NM.tabItems.map((tabNote, index) => (
@@ -213,13 +211,13 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                     {NM.currentChatNote && chatNoteEditor.body && (
                                                         <ChatNoteEditor
                                                             body={chatNoteEditor.body}
+                                                            CM={CM}
                                                             currentChatNote={NM.currentChatNote}
                                                             myself={myself}
-                                                            setCurrentChat={CM.setCurrentMainChat}
                                                             setMyself={setMyself}
-                                                            UIM={UIM}
                                                             socket={socket}
                                                             TEM={TEM}
+                                                            UIM={UIM}
                                                             currentChatNoteTitle={
                                                                 chatNoteEditor.currentChatNoteTitle
                                                             }

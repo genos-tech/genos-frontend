@@ -1,12 +1,12 @@
-import { useState } from "react";
 import { createReactInlineContentSpec, DefaultReactSuggestionItem } from "@blocknote/react";
 import { Avatar, Box, Typography } from "@mui/joy";
+import { useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
+import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
-import { ChatProps } from "../../types/chat";
 import { PulseDot } from "../utils/PulseDot";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
@@ -18,7 +18,7 @@ export const CreateMentionSpec = (
     myself: UserProps,
     setMyself: (value: UserProps) => void,
     UIM: UIStateManagementState,
-    setCurrentMainChat: (chat: ChatProps) => void
+    CM: ChatManagementState
 ) =>
     createReactInlineContentSpec(
         {
@@ -74,14 +74,14 @@ export const CreateMentionSpec = (
                         </Box>
 
                         <UserProfile
+                            CM={CM}
                             isYou={myself.userId === userId ? true : false}
                             myself={myself}
                             openUserProfile={openUserProfile}
-                            setCurrentMainChat={setCurrentMainChat}
                             setMyself={setMyself}
-                            UIM={UIM}
                             setOpenUserProfile={setOpenUserProfile}
                             socket={socket}
+                            UIM={UIM}
                             user={teamMemberProfiles[userId]}
                         />
                     </>

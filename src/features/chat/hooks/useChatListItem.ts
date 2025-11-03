@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { Socket } from "socket.io-client";
 
-import { useAuth } from "../../../context/AuthContext";
+import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../types/chat";
 import { toggleMessagesPane } from "../../../utils";
@@ -12,9 +11,7 @@ import { updatePinnedChats } from "../services/updatePinnedChats";
 interface UseChatListItemProps {
     chat: AllChatProps;
     myself: UserProps;
-    currentMainChat?: ChatProps;
-    currentSubChat?: ChatProps;
-    isSubChatVisible: boolean;
+    CM: ChatManagementState;
     isTaskPreviewVisible: boolean;
     isCreatingTask: {
         flag: boolean;
@@ -28,9 +25,7 @@ interface UseChatListItemProps {
 export const useChatListItem = ({
     chat,
     myself,
-    currentMainChat,
-    currentSubChat,
-    isSubChatVisible,
+    CM,
     isTaskPreviewVisible,
     isCreatingTask,
     isPinnedChat,
@@ -39,10 +34,10 @@ export const useChatListItem = ({
     const [isPinned, setIsPinned] = useState(chat.isPinned);
 
     const selected =
-        `${currentMainChat?.chatName}-${currentMainChat?.chatId}` ===
+        `${CM.currentMainChat?.chatName}-${CM.currentMainChat?.chatId}` ===
             `${chat.chatName}-${chat.chatId}` ||
-        (isSubChatVisible &&
-            `${currentSubChat?.chatName}-${currentSubChat?.chatId}` ===
+        (CM.isSubChatVisible &&
+            `${CM.currentSubChat?.chatName}-${CM.currentSubChat?.chatId}` ===
                 `${chat.chatName}-${chat.chatId}`);
 
     const isYou = myself.userId === chat.dmPartnerUser.userId;
@@ -66,27 +61,23 @@ export const useChatListItem = ({
         };
     };
 
-    const onClickHandler = (
-        setCurrentMainChat: (chat: ChatProps) => void,
-        setIsMainChatVisible: (value: boolean) => void,
-        setIsThreadVisible: (value: boolean) => void
-    ) => {
+    const onClickHandler = (CM: ChatManagementState) => {
         if (
-            isSubChatVisible === false ||
-            `${currentSubChat?.chatId}-${currentSubChat?.chatName}` !==
+            CM.isSubChatVisible === false ||
+            `${CM.currentSubChat?.chatId}-${CM.currentSubChat?.chatName}` !==
                 `${chat.chatId}-${chat.chatName}`
         ) {
             toggleMessagesPane();
             popSpecificMessages(chat.chatId, chat.chatType)
                 .then((messages) => {
                     const newChat: ChatProps = defineNewChat(messages);
-                    setCurrentMainChat(newChat);
+                    CM.setCurrentMainChat(newChat);
                     addChat(newChat, chat.chatType);
 
-                    setIsMainChatVisible(true);
+                    CM.setIsMainChatVisible(true);
 
                     if (isCreatingTask.flag === true || isTaskPreviewVisible) {
-                        setIsThreadVisible(false);
+                        CM.setIsThreadVisible(false);
                     }
                 })
                 .catch((error) => console.error(error));
@@ -99,27 +90,22 @@ export const useChatListItem = ({
         }
     };
 
-    const splitOpenHandler = (
-        setCurrentSubChat: (chat: ChatProps) => void,
-        setIsMainChatVisible: (value: boolean) => void,
-        setIsThreadVisible: (value: boolean) => void,
-        setIsSubChatVisible: (value: boolean) => void
-    ) => {
+    const splitOpenHandler = (CM: ChatManagementState) => {
         if (
-            `${currentMainChat?.chatId}-${currentMainChat?.chatName}` !==
+            `${CM.currentMainChat?.chatId}-${CM.currentMainChat?.chatName}` !==
             `${chat.chatId}-${chat.chatName}`
         ) {
             toggleMessagesPane();
             popSpecificMessages(chat.chatId, chat.chatType)
                 .then((messages) => {
-                    setCurrentSubChat(defineNewChat(messages));
-                    setIsMainChatVisible(true);
+                    CM.setCurrentSubChat(defineNewChat(messages));
+                    CM.setIsMainChatVisible(true);
                     if (isCreatingTask.flag === true || isTaskPreviewVisible) {
-                        setIsThreadVisible(false);
+                        CM.setIsThreadVisible(false);
                     }
                 })
                 .catch((error) => console.error(error));
-            setIsSubChatVisible(true);
+            CM.setIsSubChatVisible(true);
         }
     };
 

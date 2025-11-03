@@ -1,50 +1,44 @@
-import { useEffect, useRef, useState } from "react";
 import { Box, Button, Stack, Switch, Typography } from "@mui/joy";
+import { useEffect, useRef, useState } from "react";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
+import { useAuth } from "../../context/AuthContext";
+import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { TeamManagementState } from "../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
+import { UserProps } from "../../types/admin";
+import { ToDoFactProps } from "../../types/chat";
 import { TodoBubble } from "./components/bubbles/TodoBubble";
 import { createNewTodo } from "./services/createNewTodo";
 import { defaultTodoContent } from "./utils/defaults";
 
-import { useAuth } from "../../context/AuthContext";
-import { TeamManagementState } from "../../hooks/common/useTeamManagement";
-import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
-import { UserProps } from "../../types/admin";
-import { ChatProps, ToDoFactProps } from "../../types/chat";
-
 type ToDoPaneProps = {
+    CM: ChatManagementState;
     myself: UserProps;
     TEM: TeamManagementState;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
     UIM: UIStateManagementState;
-    setCurrentChat: (chat: ChatProps) => void;
     todos: ToDoFactProps[];
     setTodos: (value: ToDoFactProps[]) => void;
     isExistingTodaysTodo: boolean;
     setIsExistingTodaysTodo: (value: boolean) => void;
-    isSubChatVisible: boolean;
     currentWindowHeight: number;
-    showOnlyInCompleteTodos: boolean;
-    setShowOnlyInCompleteTodos: (value: boolean) => void;
 };
 export const ToDoPane = (props: ToDoPaneProps) => {
     const {
+        CM,
         myself,
         TEM,
         setMyself,
         socket,
         UIM,
-        setCurrentChat,
         todos,
         setTodos,
         isExistingTodaysTodo,
         setIsExistingTodaysTodo,
-        isSubChatVisible,
         currentWindowHeight,
-        showOnlyInCompleteTodos,
-        setShowOnlyInCompleteTodos,
     } = props;
     const { accessToken } = useAuth();
     const [tmpTodos, setTmpTodos] = useState<ToDoFactProps[]>(todos);
@@ -65,12 +59,12 @@ export const ToDoPane = (props: ToDoPaneProps) => {
     };
 
     useEffect(() => {
-        if (showOnlyInCompleteTodos) {
+        if (CM.showOnlyInCompleteTodos) {
             setTmpTodos(todos.filter((todo) => !todo.isCompleted));
         } else {
             setTmpTodos(todos);
         }
-    }, [showOnlyInCompleteTodos, todos]);
+    }, [CM.showOnlyInCompleteTodos, todos]);
 
     const virtuosoRef = useRef<VirtuosoHandle | null>(null);
 
@@ -95,8 +89,8 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                     Add Today's Todo
                 </Button>
                 <Switch
-                    checked={showOnlyInCompleteTodos}
-                    color={showOnlyInCompleteTodos ? "warning" : "neutral"}
+                    checked={CM.showOnlyInCompleteTodos}
+                    color={CM.showOnlyInCompleteTodos ? "warning" : "neutral"}
                     size="sm"
                     variant="soft"
                     slotProps={{
@@ -106,7 +100,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                     component="span"
                                     level="inherit"
                                     sx={{
-                                        ml: showOnlyInCompleteTodos ? "6px" : "22px",
+                                        ml: CM.showOnlyInCompleteTodos ? "6px" : "22px",
                                         fontWeight: "bold",
                                     }}
                                 >
@@ -122,7 +116,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                         "--Switch-trackWidth": "95px",
                         "--Switch-trackHeight": "23px",
                     }}
-                    onChange={() => setShowOnlyInCompleteTodos(!showOnlyInCompleteTodos)}
+                    onChange={() => CM.setShowOnlyInCompleteTodos(!CM.showOnlyInCompleteTodos)}
                 />
             </Stack>
             <Box sx={{ px: 0.3, my: 0.2 }}>
@@ -139,22 +133,22 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                             return (
                                 <TodoBubble
                                     key={`todo-bubble-${todo.todoId}`}
+                                    CM={CM}
                                     currentIndex={index}
                                     isExistingTodaysTodo={isExistingTodaysTodo}
                                     myself={myself}
-                                    setCurrentChat={setCurrentChat}
                                     setMyself={setMyself}
-                                    UIM={UIM}
                                     setTodos={setTodos}
                                     socket={socket}
                                     TEM={TEM}
                                     todo={todo}
                                     todos={tmpTodos}
+                                    UIM={UIM}
                                 />
                             );
                         }}
                         style={{
-                            height: isSubChatVisible
+                            height: CM.isSubChatVisible
                                 ? `${(currentWindowHeight - 150) * 0.43}px`
                                 : `${currentWindowHeight - 150}px`,
                         }}

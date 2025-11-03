@@ -5,6 +5,7 @@ import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { loadSpecificPM } from "../../../../features/chat/services/loadSpecificPM";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../../types/chat";
 import { ProjectProps } from "../../../../types/tasks";
@@ -39,18 +40,16 @@ type Props = {
     }) => void;
     setCurrentProject: (value: ProjectProps) => void;
     loadProjectsAndTasks: (value: number) => Promise<void>;
-    allChats: AllChatProps[];
-    setAllChats: (value: AllChatProps[]) => void;
+    CM: ChatManagementState;
 };
 export const ModalJoinProject: React.FC<Props> = ({
+    CM,
     socket,
     myself,
     openJoinProject,
     setOpenJoinProject,
     setCurrentProject,
     loadProjectsAndTasks,
-    allChats,
-    setAllChats,
 }) => {
     const { accessToken } = useAuth();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -184,7 +183,7 @@ export const ModalJoinProject: React.FC<Props> = ({
                                     await addChat(newChat, newChat.chatType);
                                     await addMessage(newChat.latestMessage, newChat.chatType);
 
-                                    setAllChats([newChat, ...allChats]);
+                                    CM.setAllChats([newChat, ...CM.allChats]);
                                 }
                             })();
                         } else {

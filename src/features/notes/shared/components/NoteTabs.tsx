@@ -1,4 +1,3 @@
-import { useRef } from "react";
 import { PartialBlock } from "@blocknote/core";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
@@ -9,15 +8,16 @@ import {
     FormControl,
     IconButton,
     Input,
-    Stack,
     Tab,
     TabList,
     TabPanel,
     Tabs,
     Tooltip,
 } from "@mui/joy";
+import { useRef } from "react";
 
 import { BnTaskNoteEditor } from "../../../../components/blockNote/bnTaskNoteEditor";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskNoteProps } from "../../../../types/notes";
@@ -32,7 +32,7 @@ interface NoteTabsProps {
     tsBody: string;
     myself: any;
     setBody: (body: PartialBlock[]) => void;
-    setCurrentChat: (chat: any) => void;
+    CM: ChatManagementState;
     setMyself: (me: any) => void;
     setNoteBodyEdited: (edited: boolean) => void;
     setNoteBodySaved: (saved: boolean) => void;
@@ -55,7 +55,7 @@ export const NoteTabs = ({
     tsBody,
     myself,
     setBody,
-    setCurrentChat,
+    CM,
     setMyself,
     setNoteBodyEdited,
     setNoteBodySaved,
@@ -213,16 +213,16 @@ export const NoteTabs = ({
                     {currentTaskNote && (
                         <BnTaskNoteEditor
                             body={body || []}
+                            CM={CM}
                             currentTaskNote={currentTaskNote}
                             myself={myself}
                             setBody={setBody}
-                            setCurrentChat={setCurrentChat}
                             setMyself={setMyself}
                             setNoteBodyEdited={setNoteBodyEdited}
                             setNoteBodySaved={setNoteBodySaved}
-                            UIM={UIM}
                             socket={socket}
                             TEM={TEM}
+                            UIM={UIM}
                         />
                     )}
                 </TabPanel>

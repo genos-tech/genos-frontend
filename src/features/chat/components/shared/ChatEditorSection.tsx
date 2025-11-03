@@ -5,12 +5,14 @@ import { BnChatEditor } from "../../../../components/blockNote/bnChatEditor";
 import { BnThreadEditor } from "../../../../components/blockNote/bnThreadEditor";
 import { BnUpdateEditor } from "../../../../components/blockNote/bnUpdateEditor";
 import { BnUpdateThreadEditor } from "../../../../components/blockNote/bnUpdateThreadEditor";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
 
 interface ChatEditorSectionProps {
+    CM: ChatManagementState;
     isInEdit: boolean;
     editTargetMessage?: MessageProps | ThreadMessageProps;
     chat: ChatProps | ThreadProps;
@@ -23,15 +25,13 @@ interface ChatEditorSectionProps {
     UIM: UIStateManagementState;
     socket: Socket | null;
     TEM: TeamManagementState;
-    funcSetAllChats?: () => Promise<void>;
-    isSubChatVisible?: boolean;
     isThread?: boolean;
     thread?: ThreadProps;
     setCurrentThreadChat?: (chat: ThreadProps) => void;
-    setTargetMessageIndex?: (index: number) => void;
 }
 
 export const ChatEditorSection = ({
+    CM,
     isInEdit,
     editTargetMessage,
     chat,
@@ -44,18 +44,16 @@ export const ChatEditorSection = ({
     UIM,
     socket,
     TEM,
-    funcSetAllChats,
-    isSubChatVisible = false,
     isThread = false,
     thread,
     setCurrentThreadChat,
-    setTargetMessageIndex,
 }: ChatEditorSectionProps) => {
     if (isThread) {
         return (
             <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
                 {isInEdit === true && editTargetMessage && (
                     <BnUpdateThreadEditor
+                        CM={CM}
                         isInEdit={isInEdit}
                         message={editTargetMessage as ThreadMessageProps}
                         myself={myself}
@@ -64,24 +62,25 @@ export const ChatEditorSection = ({
                         setIsInEdit={setIsInEdit}
                         setMyself={setMyself}
                         setNumEditorLines={setNumEditorLines}
-                        UIM={UIM}
                         socket={socket}
                         TEM={TEM}
                         thread={thread!}
+                        UIM={UIM}
                     />
                 )}
                 {isInEdit === false && (
                     <BnThreadEditor
+                        CM={CM}
                         myself={myself}
                         numEditorLines={numEditorLines}
                         setCurrentChat={setCurrentChat as (chat: ChatProps) => void}
                         setCurrentThreadChat={setCurrentThreadChat!}
                         setMyself={setMyself}
                         setNumEditorLines={setNumEditorLines}
-                        UIM={UIM}
                         socket={socket}
                         TEM={TEM}
                         thread={thread!}
+                        UIM={UIM}
                     />
                 )}
             </Box>
@@ -93,33 +92,31 @@ export const ChatEditorSection = ({
             {isInEdit === true && editTargetMessage && (
                 <BnUpdateEditor
                     chat={chat as ChatProps}
+                    CM={CM}
                     isInEdit={isInEdit}
-                    isSubChatVisible={isSubChatVisible}
                     message={editTargetMessage as MessageProps}
                     myself={myself}
                     numEditorLines={numEditorLines}
-                    setCurrentChat={setCurrentChat as (chat: ChatProps) => void}
                     setIsInEdit={setIsInEdit}
                     setMyself={setMyself}
                     setNumEditorLines={setNumEditorLines}
-                    UIM={UIM}
                     socket={socket}
                     TEM={TEM}
+                    UIM={UIM}
                 />
             )}
             {isInEdit === false && (
                 <BnChatEditor
                     chat={chat as ChatProps}
-                    funcSetAllChats={funcSetAllChats!}
-                    isSubChatVisible={isSubChatVisible}
+                    CM={CM}
                     myself={myself}
                     numEditorLines={numEditorLines}
                     setCurrentChat={setCurrentChat as (chat: ChatProps) => void}
                     setMyself={setMyself}
                     setNumEditorLines={setNumEditorLines}
-                    UIM={UIM}
                     socket={socket}
                     TEM={TEM}
+                    UIM={UIM}
                 />
             )}
         </Box>

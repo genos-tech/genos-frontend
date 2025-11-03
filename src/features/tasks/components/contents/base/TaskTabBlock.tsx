@@ -1,4 +1,3 @@
-import React, { useEffect, useRef, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import CommentIcon from "@mui/icons-material/Comment";
@@ -24,15 +23,16 @@ import {
     Typography,
 } from "@mui/joy";
 import Tab, { tabClasses } from "@mui/joy/Tab";
+import React, { useEffect, useRef, useState } from "react";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../../context/AuthContext";
+import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../../types/admin";
-import { ChatProps } from "../../../../../types/chat";
 import { TaskNoteProps } from "../../../../../types/notes";
 import {
     AttachmentFileProps,
@@ -66,7 +66,6 @@ type TaskTabBlockProps = {
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    setCurrentChat: (chat: ChatProps) => void;
     taskContent: TaskProps;
     setTaskContent: (value: TaskProps) => void;
     currentPreviewTaskId: number;
@@ -90,7 +89,6 @@ type TaskTabBlockProps = {
     setCurrentTaskNote: (value: TaskNoteProps) => void;
     editTargetComment: TaskCommentProps | undefined;
     isInEdit: boolean;
-    setCurrentMainChat: (chat: ChatProps) => void;
     setTaskCommentLines: (value: number) => void;
     setTaskComments: (value: TaskCommentProps[]) => void;
     tmpCurrentTaskContent: TaskProps;
@@ -100,6 +98,7 @@ type TaskTabBlockProps = {
     setTabIndex: (value: number) => void;
     TM: TaskManagementState;
     UIM: UIStateManagementState;
+    CM: ChatManagementState;
 };
 export const TaskTabBlock = (props: TaskTabBlockProps) => {
     const { accessToken } = useAuth();
@@ -107,7 +106,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         socket,
         myself,
         setMyself,
-        setCurrentChat,
+        CM,
         UIM,
         uploadedFiles,
         setUploadedFiles,
@@ -127,7 +126,6 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         setCurrentTaskNote,
         editTargetComment,
         isInEdit,
-        setCurrentMainChat,
         setTaskCommentLines,
         setTaskComments,
         tmpCurrentTaskContent,
@@ -475,15 +473,15 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                             return (
                                                 <TaskCommentBubble
                                                     key={`task-comment-${comment.commentId}-${comment.tsUpdated}`}
+                                                    CM={CM}
                                                     comment={comment}
                                                     myself={myself}
-                                                    setCurrentChat={setCurrentChat}
                                                     setEditTargetComment={setEditTargetComment}
                                                     setIsInEdit={setIsInEdit}
                                                     setMyself={setMyself}
-                                                    UIM={UIM}
                                                     socket={socket}
                                                     TEM={TEM}
+                                                    UIM={UIM}
                                                     currentProjectId={
                                                         taskContent.project?.projectId
                                                     }
@@ -503,15 +501,14 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                 </Box>
                             )}
                             <TaskCommentEditorBlock
+                                CM={CM}
                                 editTargetComment={editTargetComment}
                                 isCommentUpdated={TM.isTaskCommentUpdated}
                                 isInEdit={isInEdit}
                                 myself={myself}
-                                setCurrentChat={setCurrentMainChat}
                                 setIsCommentUpdated={TM.setIsTaskCommentUpdated}
                                 setIsInEdit={setIsInEdit}
                                 setMyself={setMyself}
-                                UIM={UIM}
                                 setTaskCommentLines={setTaskCommentLines}
                                 setTaskComments={setTaskComments}
                                 socket={socket}
@@ -519,6 +516,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                 taskCommentLines={taskCommentLines}
                                 taskComments={taskComments}
                                 TEM={TEM}
+                                UIM={UIM}
                             />
                         </>
                     </TabPanel>

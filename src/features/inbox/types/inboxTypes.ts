@@ -22,7 +22,7 @@ export type InboxSectionProps = {
     items: InboxItemProps[];
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    setCurrentChat: (chat: ChatProps) => void;
+    CM: ChatManagementState;
     UIM: UIStateManagementState;
     socket: Socket | null;
     TEM: TeamManagementState;

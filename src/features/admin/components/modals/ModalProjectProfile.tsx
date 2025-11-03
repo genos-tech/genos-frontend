@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from "react";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
@@ -17,10 +16,12 @@ import {
     Tooltip,
     Typography,
 } from "@mui/joy";
+import { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
 import { useAuth } from "../../../../context/AuthContext";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { loadProjectProfile } from "../../../../services/loadProjectProfile";
@@ -40,10 +41,9 @@ type ModalProjectProfileProps = {
     pmChat: AllChatProps;
     openModalProjectProfile: boolean;
     setOpenModalProjectProfile: (value: boolean) => void;
-    funcSetAllChats: () => Promise<void>;
     setAvatarUserId: (value: string) => void;
     setOpenUserProfile: (value: boolean) => void;
-    setCurrentMainChat: (value: ChatProps) => void;
+    CM: ChatManagementState;
     UIM: UIStateManagementState;
 };
 export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
@@ -55,10 +55,9 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
         pmChat,
         openModalProjectProfile,
         setOpenModalProjectProfile,
-        funcSetAllChats,
         setAvatarUserId,
         setOpenUserProfile,
-        setCurrentMainChat,
+        CM,
         UIM,
     } = props;
 
@@ -108,7 +107,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                     },
                     pmChat.chatType
                 );
-                await funcSetAllChats();
+                await CM.funcSetAllChats();
             }
         }
     };
@@ -297,14 +296,12 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                             >
                                                                 <AvatarWithStatus
                                                                     avatarUser={member}
+                                                                    CM={CM}
                                                                     isYou={false}
                                                                     myself={myself}
                                                                     setMyself={setMyself}
                                                                     showNameAndEmail={true}
                                                                     socket={socket}
-                                                                    setCurrentMainChat={
-                                                                        setCurrentMainChat
-                                                                    }
                                                                     UIM={UIM}
                                                                 />
                                                             </ListItemButton>

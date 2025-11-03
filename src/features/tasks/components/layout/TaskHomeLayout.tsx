@@ -4,13 +4,13 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { Socket } from "socket.io-client";
 
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
-import { AllChatProps, ChatProps } from "../../../../types/chat";
 import { TaskNoteMain } from "../../../notes/task-notes/components/TaskNoteMain";
 import { CreateTaskForm } from "../contents/CreateTaskForm";
 import { TaskPreview } from "../contents/TaskPreview";
@@ -29,20 +29,8 @@ interface TaskHomeLayoutProps {
     // Props
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    setCurrentMainChat: (chat: ChatProps) => void;
+    CM: ChatManagementState;
     UIM: UIStateManagementState;
-    allChats: AllChatProps[];
-    funcSetAllChats: () => Promise<void>;
-    moveToSpecificChat: (
-        chatType: number,
-        chatId: number,
-        threadId: number,
-        openTaskNoteInChat: boolean,
-        openThreadTaskPreview: boolean,
-        setOpeningService: (service: number) => void,
-        setCurrentPreviewTaskId: (id: number) => void,
-        setCurrentProject: (project: any) => void
-    ) => void;
     socket: Socket | null;
 
     // Header props
@@ -59,11 +47,8 @@ export const TaskHomeLayout = ({
     NM,
     myself,
     setMyself,
-    setCurrentMainChat,
+    CM,
     UIM,
-    allChats,
-    funcSetAllChats,
-    moveToSpecificChat,
     socket,
     onCreateProject,
     onCreateTag,
@@ -110,24 +95,22 @@ export const TaskHomeLayout = ({
             {TM.isTaskHomeVisible && (
                 <>
                     <TaskHomeHeader
-                        allChats={allChats}
+                        CM={CM}
                         currentProject={PM.currentProject}
-                        funcSetAllChats={funcSetAllChats}
                         myself={myself}
-                        setCurrentMainChat={setCurrentMainChat}
                         setMyself={setMyself}
-                        UIM={UIM}
                         TEM={TEM}
+                        TM={TM}
+                        UIM={UIM}
                         onCloseTaskHome={onCloseTaskHome}
                         onCreateProject={onCreateProject}
                         onCreateTag={onCreateTag}
                         onDeleteProject={onDeleteProject}
-                        TM={TM}
                     />
                     <ProjectTaskTable
                         currentProject={PM.currentProject}
-                        myself={myself}
                         isTaskUpdated={TM.isTaskUpdated}
+                        myself={myself}
                         setTeamMembers={TEM.setTeamMembers}
                         teamMemberProfiles={TEM.teamMemberProfiles}
                         teamMembers={TEM.teamMembers}
@@ -161,20 +144,17 @@ export const TaskHomeLayout = ({
                     }}
                 >
                     <CreateTaskForm
-                        UIM={UIM}
                         chatType={-1}
-                        currentMainChat={undefined}
-                        currentThreadChat={undefined}
-                        moveToSpecificChat={moveToSpecificChat}
+                        CM={CM}
                         myself={myself}
                         parentTaskId={TM.isCreatingTask.parentTaskId}
                         PM={PM}
                         rootTaskId={TM.isCreatingTask.rootTaskId}
-                        setCurrentMainChat={setCurrentMainChat}
                         setMyself={setMyself}
-                        TEM={TEM}
                         socket={socket}
+                        TEM={TEM}
                         TM={TM}
+                        UIM={UIM}
                     />
                 </Box>
             </Panel>
@@ -203,12 +183,10 @@ export const TaskHomeLayout = ({
                     }}
                 >
                     <TaskPreview
+                        CM={CM}
                         handleCreateNewTaskNote={NM.handleCreateNewTaskNote}
                         isTaskNoteVisible={NM.isTaskNoteVisible}
-                        moveToSpecificChat={moveToSpecificChat}
                         myself={myself}
-                        UIM={UIM}
-                        setCurrentMainChat={setCurrentMainChat}
                         setCurrentProject={PM.setCurrentProject}
                         setCurrentTaskNote={NM.setCurrentTaskNote}
                         setIsTaskNoteVisible={NM.setIsTaskNoteVisible}
@@ -217,9 +195,10 @@ export const TaskHomeLayout = ({
                         setTeamProjects={PM.setTeamProjects}
                         socket={socket}
                         taskNoteMeta={NM.taskNoteMeta}
-                        TEM={TEM}
                         teamProjects={PM.teamProjects}
+                        TEM={TEM}
                         TM={TM}
+                        UIM={UIM}
                     />
                 </Box>
             </Panel>
@@ -257,18 +236,15 @@ export const TaskHomeLayout = ({
                     }}
                 >
                     <TaskNoteMain
-                        allChats={allChats}
-                        funcSetAllChats={funcSetAllChats}
+                        CM={CM}
                         isInTaskPage={true}
                         myself={myself}
                         NM={NM}
-                        setCurrentChat={setCurrentMainChat}
-                        setCurrentMainChat={setCurrentMainChat}
                         setMyself={setMyself}
-                        UIM={UIM}
                         socket={socket}
                         TEM={TEM}
                         TM={TM}
+                        UIM={UIM}
                     />
                 </Box>
             </Panel>

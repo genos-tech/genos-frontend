@@ -1,17 +1,17 @@
-import { useEffect, useRef, useState } from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import { Avatar, Box, Card, IconButton, Stack, Tooltip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { BnChatPreview } from "../../../../../../components/blockNote/bnChatPreview";
 import { AvatarWithStatus } from "../../../../../../components/common/avatarWithStatus";
 import { EmojiPicker } from "../../../../../../components/emojiInput/EmojiPicker";
 import { ReactionTaskCommentEmojiDisplay } from "../../../../../../components/emojiInput/ReactionTaskCommentEmojiDisplay";
+import { ChatManagementState } from "../../../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../../../types/admin";
-import { ChatProps } from "../../../../../../types/chat";
 import { ReactionProps } from "../../../../../../types/common";
 import { TaskCommentProps } from "../../../../../../types/tasks";
 import {
@@ -30,7 +30,7 @@ type TaskCommentBubbleProps = {
     currentProjectName?: string;
     setIsInEdit: (value: boolean) => void;
     setEditTargetComment: (value: TaskCommentProps) => void;
-    setCurrentChat: (chat: ChatProps) => void;
+    CM: ChatManagementState;
     UIM: UIStateManagementState;
 };
 export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
@@ -44,7 +44,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
         currentProjectName,
         setIsInEdit,
         setEditTargetComment,
-        setCurrentChat,
+        CM,
         UIM,
     } = props;
     const { mode } = useColorScheme();
@@ -173,14 +173,14 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
         <Box ref={boxRef} sx={{ py: 0.5 }}>
             {emojiPickerPositionCalculated === true && (
                 <EmojiPicker
-                    pickerTopPosition={pickerTopPosition}
                     pickerBottomPosition={pickerBottomPosition}
-                    pickerRightPosition={pickerRightPosition}
                     pickerLeftPosition={pickerLeftPosition}
-                    useFixedPosition={true}
+                    pickerRightPosition={pickerRightPosition}
+                    pickerTopPosition={pickerTopPosition}
                     setSelectedEmoji={setSelectedEmoji}
                     setShowEmojiPicker={setShowEmojiPicker}
                     showEmojiPicker={showEmojiPicker}
+                    useFixedPosition={true}
                 />
             )}
 
@@ -199,13 +199,13 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                         <Stack alignItems="center" direction="row" spacing={1}>
                             <AvatarWithStatus
                                 avatarUser={TEM.teamMemberProfiles[comment.senderId]}
+                                CM={CM}
                                 isForBubble={true}
                                 isYou={myself.userId === comment.senderId ? true : false}
                                 myself={myself}
-                                setCurrentMainChat={setCurrentChat}
                                 setMyself={setMyself}
-                                UIM={UIM}
                                 socket={socket}
+                                UIM={UIM}
                             />
                             <Typography level="title-md">{comment.senderName}</Typography>
                             <Typography
@@ -260,15 +260,15 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                         </Tooltip>
                         <BnChatPreview
                             key={`${comment.taskId}-${comment.commentId}-${comment.tsSent}`}
+                            CM={CM}
                             content={comment.commentBody}
                             customClassName="task-comment-preview"
                             isSent={true}
                             myself={myself}
-                            setCurrentChat={setCurrentChat}
                             setMyself={setMyself}
-                            UIM={UIM}
                             socket={socket}
                             TEM={TEM}
+                            UIM={UIM}
                         />
                     </Card>
                 </Box>

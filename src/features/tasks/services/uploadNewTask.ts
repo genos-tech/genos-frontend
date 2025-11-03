@@ -1,7 +1,7 @@
 import { Socket } from "socket.io-client";
 
+import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { UserProps } from "../../../types/admin";
-import { ChatProps, ThreadProps } from "../../../types/chat";
 import { TaskProps } from "../../../types/tasks";
 import {
     taskCreatedThreadMessageTemplate,
@@ -15,9 +15,7 @@ type uploadTaskProps = {
     socket: Socket | null;
     myself: UserProps;
     taskContent: TaskProps;
-    currentMainChat?: ChatProps;
-    currentThreadChat?: ThreadProps;
-    isThreadVisible: boolean;
+    CM: ChatManagementState;
     accessToken: string;
     setTitleError: (value: string) => void;
     setTitleErrorOpen: (value: boolean) => void;
@@ -29,9 +27,7 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
         socket,
         myself,
         taskContent,
-        currentMainChat,
-        currentThreadChat,
-        isThreadVisible,
+        CM,
         accessToken,
         setTitleError,
         setTitleErrorOpen,
@@ -76,8 +72,8 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                     links: taskContent.links,
                     tags: taskContent.tags,
                     chat_type: taskContent.chatType,
-                    chat_id: currentMainChat?.chatId || null,
-                    thread_id: currentThreadChat?.threadId || null,
+                    chat_id: CM.currentMainChat?.chatId || null,
+                    thread_id: CM.currentThreadChat?.threadId || null,
                     parent_task_id: taskContent.parentTaskId,
                     root_task_id: taskContent.rootTaskId,
                     is_init_task: false,
@@ -209,27 +205,27 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
 
                                 // Messaging for a new task from a thread chat
                                 if (
-                                    isThreadVisible === true &&
-                                    currentMainChat &&
-                                    currentThreadChat &&
-                                    (currentMainChat.chatType === 1 ||
-                                        currentMainChat.chatType === 2) &&
-                                    currentThreadChat.threadId !== null &&
-                                    currentThreadChat.threadId !== 0
+                                    CM.isThreadVisible === true &&
+                                    CM.currentMainChat &&
+                                    CM.currentThreadChat &&
+                                    (CM.currentMainChat.chatType === 1 ||
+                                        CM.currentMainChat.chatType === 2) &&
+                                    CM.currentThreadChat.threadId !== null &&
+                                    CM.currentThreadChat.threadId !== 0
                                 ) {
                                     // Not update message_body, just update task_id here.
                                     socket.emit("message", {
                                         methodType: "PUT",
                                         message: null,
-                                        destCGName: currentMainChat.chatName,
-                                        destCGId: currentMainChat.chatId,
-                                        chatType: currentMainChat.chatType,
-                                        dmPartnerUserId: currentMainChat.dmPartnerUser.userId,
+                                        destCGName: CM.currentMainChat.chatName,
+                                        destCGId: CM.currentMainChat.chatId,
+                                        chatType: CM.currentMainChat.chatType,
+                                        dmPartnerUserId: CM.currentMainChat.dmPartnerUser.userId,
                                         taskId: taskCreateData.task.task_id,
                                         taskStatus: taskCreateData.task.status,
                                         systemUserId: taskContent.project.systemUserId,
-                                        messageIdForPut: currentThreadChat.threadId,
-                                        isPrivate: currentMainChat.isPrivate,
+                                        messageIdForPut: CM.currentThreadChat.threadId,
+                                        isPrivate: CM.currentMainChat.isPrivate,
                                     });
 
                                     socket.emit("thread_message", {
@@ -238,14 +234,14 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                                         rootMessageTSSent: "",
                                         rootMessageSenderId: null,
                                         rootMessageReceiverId: null,
-                                        threadId: currentThreadChat.threadId,
+                                        threadId: CM.currentThreadChat.threadId,
                                         threadMessage: createTaskMessage,
-                                        chatType: currentThreadChat.chatType,
-                                        dmPartnerUserId: currentThreadChat.dmPartnerUser.userId,
+                                        chatType: CM.currentThreadChat.chatType,
+                                        dmPartnerUserId: CM.currentThreadChat.dmPartnerUser.userId,
                                         senderId: taskContent.project.systemUserId,
                                         senderName: taskContent.project.projectName,
-                                        destCGName: currentThreadChat.chatName,
-                                        destCGId: currentThreadChat.chatId,
+                                        destCGName: CM.currentThreadChat.chatName,
+                                        destCGId: CM.currentThreadChat.chatId,
                                         taskId: taskCreateData.task.task_id,
                                         taskStatus: taskCreateData.task.status,
                                         systemUserId: taskContent.project.systemUserId,

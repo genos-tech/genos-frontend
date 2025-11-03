@@ -1,15 +1,15 @@
-import { useCallback, useEffect, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import { Box, IconButton, Stack } from "@mui/joy";
+import { useCallback, useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
-import { AllChatProps, ChatProps } from "../../../../types/chat";
 import { getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
 import { NoteHeaderActions } from "../../shared/components/NoteHeaderActions";
 import { NoteTabs } from "../../shared/components/NoteTabs";
@@ -25,32 +25,16 @@ type TaskNoteMainProps = {
     myself: UserProps;
     setMyself: (me: UserProps) => void;
     UIM: UIStateManagementState;
-    setCurrentChat: (chat: ChatProps) => void;
+    CM: ChatManagementState;
     isInTaskPage: boolean;
     setIsTaskHomeVisible?: (value: boolean) => void;
-    allChats: AllChatProps[];
-    setCurrentMainChat: (chat: ChatProps) => void;
-    funcSetAllChats: () => Promise<void>;
     NM: NoteManagementState;
     TM: TaskManagementState;
 };
 
 export const TaskNoteMain = (props: TaskNoteMainProps) => {
-    const {
-        TEM,
-        socket,
-        myself,
-        setMyself,
-        UIM,
-        setCurrentChat,
-        isInTaskPage,
-        setIsTaskHomeVisible,
-        allChats,
-        setCurrentMainChat,
-        funcSetAllChats,
-        NM,
-        TM,
-    } = props;
+    const { TEM, socket, myself, setMyself, UIM, CM, isInTaskPage, setIsTaskHomeVisible, NM, TM } =
+        props;
 
     const { accessToken } = useAuth();
 
@@ -181,7 +165,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         }
     }, [noteBodySaved, NM, currentTaskNoteTitle]);
 
-    const pmChat = allChats.find(
+    const pmChat = CM.allChats.find(
         (chat) =>
             chat.chatType === 3 &&
             NM.currentTaskNote &&
@@ -258,17 +242,16 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                         )}
 
                         <NoteHeaderActions
+                            CM={CM}
                             currentTask={currentTask}
-                            funcSetAllChats={funcSetAllChats}
                             isInTaskPage={isInTaskPage}
                             myself={myself}
                             noteType={2}
                             pmChat={pmChat}
-                            setCurrentMainChat={setCurrentMainChat}
                             setMyself={setMyself}
-                            UIM={UIM}
                             socket={socket}
                             TEM={TEM}
+                            UIM={UIM}
                             onCloseNotes={handleCloseNotes}
                             onCreateChildNote={handleCreateChildNote}
                             onCreateNewNote={() => {}} // Don't create new task note in task note page
@@ -292,21 +275,21 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
 
                     <NoteTabs
                         body={body}
+                        CM={CM}
                         currentTaskNote={NM.currentTaskNote}
                         currentTaskNoteTitle={currentTaskNoteTitle}
                         myself={myself}
                         noteBodySaved={noteBodySaved}
                         selectedTabIndex={NM.selectedTabIndex}
                         setBody={setBody}
-                        setCurrentChat={setCurrentChat}
                         setMyself={setMyself}
                         setNoteBodyEdited={setNoteBodyEdited}
                         setNoteBodySaved={setNoteBodySaved}
-                        UIM={UIM}
                         socket={socket}
                         tabItems={NM.tabItems}
                         TEM={TEM}
                         tsBody={tsBody}
+                        UIM={UIM}
                         onCloseTab={handleCloseTab}
                         onLoadNote={NM.loadNote}
                         onTitleBlur={handleTitleBlur}

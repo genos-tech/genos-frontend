@@ -86,44 +86,28 @@ export const MainChatPanel = ({
             {/* Chat selected */}
             {CM.currentMainChat && CM.currentMainChat.chatId !== -1 && (
                 <MessagesPane
-                    chat={CM.currentMainChat}
-                    currentMainChat={CM.currentMainChat}
+                    CM={CM}
                     currentMainChatId={currentMainChatId}
-                    currentThreadChat={CM.currentThreadChat}
                     currentWindowHeight={currentWindowHeight}
-                    flaggedMessages={CM.flaggedMessages}
-                    funcSetAllChats={CM.funcSetAllChats}
                     incompleteTodoCount={incompleteTodoCount}
                     isCreatingTask={TM.isCreatingTask}
                     isExistingTodaysTodo={isExistingTodaysTodo}
-                    isSubChatVisible={CM.isSubChatVisible}
-                    isThreadVisible={CM.isThreadVisible}
                     isToDoVisible={isToDoVisible}
                     myself={myself}
                     paneSizePCT={mainChatPanelSize}
-                    setCurrentMainChat={CM.setCurrentMainChat}
                     setCurrentPreviewTask={TM.setCurrentPreviewTask}
                     setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
                     setCurrentProject={PM.setCurrentProject}
-                    setCurrentSubChat={CM.setCurrentSubChat}
-                    setCurrentThreadChat={CM.setCurrentThreadChat}
-                    setFlaggedMessages={CM.setFlaggedMessages}
                     setIsCreatingTask={TM.setIsCreatingTask}
                     setIsExistingTodaysTodo={setIsExistingTodaysTodo}
-                    setIsMainChatVisible={CM.setIsMainChatVisible}
-                    setIsSubChatVisible={CM.setIsSubChatVisible}
                     setIsTaskPreviewVisible={TM.setIsTaskPreviewVisible}
-                    setIsThreadVisible={CM.setIsThreadVisible}
                     setIsToDoVisible={setIsToDoVisible}
                     setMyself={setMyself}
-                    UIM={UIM}
                     setTodos={setTodos}
                     socket={socket}
-                    subChat={CM.currentSubChat ? CM.currentSubChat : CM.currentMainChat}
                     TEM={TEM}
                     todos={todos}
-                    showOnlyInCompleteTodos={CM.showOnlyInCompleteTodos}
-                    setShowOnlyInCompleteTodos={CM.setShowOnlyInCompleteTodos}
+                    UIM={UIM}
                 />
             )}
         </Panel>

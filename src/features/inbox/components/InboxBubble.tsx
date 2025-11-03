@@ -1,13 +1,13 @@
-import { useRef, useState } from "react";
 import { Box, Button, Card, Chip, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { BnChatPreview } from "../../../components/blockNote/bnChatPreview";
+import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../types/admin";
-import { ChatProps } from "../../../types/chat";
 import { InboxItemProps } from "../../../types/common";
 import { extractYYYYMMDDHHMM } from "../../../utils/dateUtils";
 
@@ -56,10 +56,10 @@ type InboxBubbleProps = {
     setMyself: (value: UserProps) => void;
     inboxItem: InboxItemProps;
     UIM: UIStateManagementState;
-    setCurrentChat: (chat: ChatProps) => void;
+    CM: ChatManagementState;
 };
 export const InboxBubble = (props: InboxBubbleProps) => {
-    const { TEM, socket, myself, setMyself, inboxItem, UIM, setCurrentChat } = props;
+    const { TEM, socket, myself, setMyself, inboxItem, UIM, CM } = props;
     const { mode } = useColorScheme();
     const boxRef = useRef<HTMLDivElement>(null);
     const [requestApproved, setRequestApproved] = useState<boolean>(false);
@@ -140,15 +140,15 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                     {inboxItem.itemBody[0].content.length > 0 && (
                         <BnChatPreview
                             key={`${inboxItem.itemType}-${inboxItem.itemId}-${inboxItem.tsSent}`}
+                            CM={CM}
                             content={inboxItem.itemBody}
                             customClassName="inbox-preview"
                             isSent={true}
                             myself={myself}
-                            setCurrentChat={setCurrentChat}
                             setMyself={setMyself}
-                            UIM={UIM}
                             socket={socket}
                             TEM={TEM}
+                            UIM={UIM}
                         />
                     )}
 

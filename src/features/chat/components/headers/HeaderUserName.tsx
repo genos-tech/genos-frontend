@@ -6,6 +6,7 @@ import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus
 import { GMAvatar } from "../../../../components/common/GMAvatar";
 import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
 import { PulseDot } from "../../../../components/utils/PulseDot";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
@@ -17,23 +18,12 @@ type HeaderUserNameProps = {
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     UIM: UIStateManagementState;
-    setCurrentMainChat: (chat: ChatProps) => void;
     chat?: ChatProps;
     isYou: boolean;
-    funcSetAllChats: () => Promise<void>;
+    CM: ChatManagementState;
 };
 export const HeaderUserName = (props: HeaderUserNameProps) => {
-    const {
-        TEM,
-        socket,
-        myself,
-        setMyself,
-        UIM,
-        setCurrentMainChat,
-        chat,
-        isYou,
-        funcSetAllChats,
-    } = props;
+    const { TEM, socket, myself, setMyself, UIM, chat, isYou, CM } = props;
 
     const headerUser: UserProps | undefined = chat
         ? TEM.teamMemberProfiles[chat.dmPartnerUser.userId]
@@ -60,37 +50,35 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                         avatarSize={38}
                         avatarUser={headerUser}
                         chat={chat}
+                        CM={CM}
                         isYou={isYou}
                         myself={myself}
-                        setCurrentMainChat={setCurrentMainChat}
                         setMyself={setMyself}
-                        UIM={UIM}
                         socket={socket}
+                        UIM={UIM}
                     />
                 ) : chat && chat.chatType === 2 ? (
                     <GMAvatar
                         avatarSize={38}
-                        funcSetAllChats={funcSetAllChats}
+                        CM={CM}
                         gmChat={chat}
                         isYou={isYou}
                         myself={myself}
-                        setCurrentMainChat={setCurrentMainChat}
                         setMyself={setMyself}
-                        UIM={UIM}
                         socket={socket}
                         TEM={TEM}
+                        UIM={UIM}
                     />
                 ) : chat && chat.chatType === 3 ? (
                     <ProjectAvatar
                         avatarSize={38}
-                        funcSetAllChats={funcSetAllChats}
+                        CM={CM}
                         myself={myself}
                         pmChat={chat}
-                        setCurrentMainChat={setCurrentMainChat}
                         setMyself={setMyself}
-                        UIM={UIM}
                         socket={socket}
                         TEM={TEM}
+                        UIM={UIM}
                     />
                 ) : undefined}
             </div>

@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import GroupsIcon from "@mui/icons-material/Groups";
@@ -17,14 +16,16 @@ import {
     Tooltip,
     Typography,
 } from "@mui/joy";
+import { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
 import { useAuth } from "../../../../context/AuthContext";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
-import { AllChatProps, ChatProps, GMProfileProps } from "../../../../types/chat";
+import { AllChatProps, GMProfileProps } from "../../../../types/chat";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 import { addChat } from "../../services/addChat";
 import { loadGMProfile } from "../../services/loadGMProfile";
@@ -40,11 +41,10 @@ type ModalGMProfileProps = {
     gmChat: AllChatProps;
     openModalGMProfile: boolean;
     setOpenModalGMProfile: (value: boolean) => void;
-    funcSetAllChats: () => Promise<void>;
     setAvatarUserId: (value: string) => void;
     setOpenUserProfile: (value: boolean) => void;
     UIM: UIStateManagementState;
-    setCurrentMainChat: (value: ChatProps) => void;
+    CM: ChatManagementState;
 };
 export const ModalGMProfile = (props: ModalGMProfileProps) => {
     const {
@@ -55,11 +55,10 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
         gmChat,
         openModalGMProfile,
         setOpenModalGMProfile,
-        funcSetAllChats,
         setAvatarUserId,
         setOpenUserProfile,
         UIM,
-        setCurrentMainChat,
+        CM,
     } = props;
 
     const { accessToken } = useAuth();
@@ -107,7 +106,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                 },
                 gmChat.chatType
             );
-            await funcSetAllChats();
+            await CM.funcSetAllChats();
         }
     };
 
@@ -282,14 +281,12 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                         <ListItemButton sx={{ ml: 2, my: 0.2 }}>
                                                             <AvatarWithStatus
                                                                 avatarUser={member}
+                                                                CM={CM}
                                                                 isYou={false}
                                                                 myself={myself}
                                                                 setMyself={setMyself}
                                                                 showNameAndEmail={true}
                                                                 socket={socket}
-                                                                setCurrentMainChat={
-                                                                    setCurrentMainChat
-                                                                }
                                                                 UIM={UIM}
                                                             />
                                                         </ListItemButton>

@@ -1,33 +1,16 @@
-import { useState } from "react";
 import { Box, CssBaseline } from "@mui/joy";
 import { CssVarsProvider } from "@mui/joy/styles";
+import { useState } from "react";
 
+import { Sidebar } from "../../components/layout/sidebar";
+import { useAuth } from "../../context/AuthContext";
 import { TaskHomeLayout } from "./components/layout/TaskHomeLayout";
 import { TaskHomeModals } from "./components/modals/TaskHomeModals";
 import { useTaskSearch } from "./hooks/useTaskSearch";
 import { TaskHomeProps } from "./types/TaskHomeTypes";
 
-import { Sidebar } from "../../components/layout/sidebar";
-import { useAuth } from "../../context/AuthContext";
-
 export const TaskHome = (props: TaskHomeProps) => {
-    const {
-        TEM,
-        socket,
-        myself,
-        setMyself,
-        setCurrentMainChat,
-        UIM,
-        IM,
-        unReadChatAndActivityCounts,
-        allChats,
-        setAllChats,
-        funcSetAllChats,
-        moveToSpecificChat,
-        NM,
-        PM,
-        TM,
-    } = props;
+    const { TEM, socket, myself, setMyself, UIM, IM, CM, NM, PM, TM } = props;
 
     // Common
     const { accessToken } = useAuth();
@@ -89,29 +72,25 @@ export const TaskHome = (props: TaskHomeProps) => {
             <CssBaseline />
             <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
                 <Sidebar
+                    CM={CM}
+                    IM={IM}
                     myself={myself}
-                    UIM={UIM}
-                    setCurrentMainChat={setCurrentMainChat}
                     setMyself={setMyself}
                     socket={socket}
                     TEM={TEM}
-                    unReadChatAndActivityCounts={unReadChatAndActivityCounts}
-                    IM={IM}
+                    UIM={UIM}
                 />
 
                 <TaskHomeLayout
-                    UIM={UIM}
-                    allChats={allChats}
-                    funcSetAllChats={funcSetAllChats}
-                    moveToSpecificChat={moveToSpecificChat}
+                    CM={CM}
                     myself={myself}
                     NM={NM}
                     PM={PM}
-                    setCurrentMainChat={setCurrentMainChat}
                     setMyself={setMyself}
                     socket={socket}
                     TEM={TEM}
                     TM={TM}
+                    UIM={UIM}
                     onCloseTaskHome={handleCloseTaskHome}
                     onCreateProject={handleCreateProject}
                     onCreateTag={handleCreateTag}
@@ -119,12 +98,11 @@ export const TaskHome = (props: TaskHomeProps) => {
                 />
 
                 <TaskHomeModals
-                    allChats={allChats}
+                    CM={CM}
                     myself={myself}
                     openDeleteProject={openDeleteProject}
                     openJoinProject={openJoinProject}
                     PM={PM}
-                    setAllChats={setAllChats}
                     setOpenDeleteProject={setOpenDeleteProject}
                     setOpenJoinProject={setOpenJoinProject}
                     socket={socket}

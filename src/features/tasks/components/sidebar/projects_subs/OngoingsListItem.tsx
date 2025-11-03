@@ -1,4 +1,3 @@
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import ForwardIcon from "@mui/icons-material/Forward";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
@@ -6,6 +5,7 @@ import { Box, Chip, List, ListItem, ListItemContent, Typography } from "@mui/joy
 import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { TaskMetaTreeNode } from "../../../../../types/tasks";
@@ -171,9 +171,9 @@ const TaskTreeNode = memo(
         const renderToggle = useCallback(
             ({ open, setOpen }: { open: boolean; setOpen: (value: boolean) => void }) => (
                 <TaskNodeButton
-                    node={node}
                     isSelected={isSelected}
                     mode={actualMode}
+                    node={node}
                     onTaskClick={(n) => onTaskClick(n, open, setOpen)}
                     onToggle={() => setOpen(!open)}
                 />
@@ -190,12 +190,12 @@ const TaskTreeNode = memo(
                                 {node.children.map((child) => (
                                     <TaskTreeNode
                                         key={child.taskId}
-                                        node={child}
-                                        rootTaskId={rootTaskId}
                                         currentPreviewTaskId={currentPreviewTaskId}
                                         mode={mode}
-                                        onTaskClick={onTaskClick}
+                                        node={child}
+                                        rootTaskId={rootTaskId}
                                         onCreateSubTask={onCreateSubTask}
+                                        onTaskClick={onTaskClick}
                                     />
                                 ))}
                             </List>
@@ -315,12 +315,12 @@ export const OngoingsListItem = (props: OngoingsListItemProps) => {
                     filteredTaskTree.map((root) => (
                         <TaskTreeNode
                             key={root.taskId}
-                            node={root}
-                            rootTaskId={root.taskId}
                             currentPreviewTaskId={TM.currentPreviewTaskId}
                             mode={mode}
-                            onTaskClick={handleTaskClick}
+                            node={root}
+                            rootTaskId={root.taskId}
                             onCreateSubTask={handleCreateSubTask}
+                            onTaskClick={handleTaskClick}
                         />
                     ))}
             </List>

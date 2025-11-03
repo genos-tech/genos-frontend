@@ -3,6 +3,7 @@ import Autocomplete from "@mui/joy/Autocomplete";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
@@ -22,7 +23,7 @@ type ACTeamUsersProps = {
     setTaskUpdated?: (value: boolean) => void;
     TEM: TeamManagementState;
     socket: Socket | null;
-    setCurrentMainChat: (chat: ChatProps) => void;
+    CM: ChatManagementState;
     UIM: UIStateManagementState;
 };
 export const ACTeamUsers = (props: ACTeamUsersProps) => {
@@ -39,7 +40,7 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
         setTaskUpdated,
         TEM,
         socket,
-        setCurrentMainChat,
+        CM,
         UIM,
     } = props;
 
@@ -67,12 +68,12 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
                                 <AvatarWithStatus
                                     key={`ac-render-option-user-search-avatar-${option.userName}-${option.userId}`}
                                     avatarUser={TEM.teamMemberProfiles[option.userId]}
+                                    CM={CM}
                                     isYou={option.userId === myself.userId}
                                     myself={myself}
-                                    setCurrentMainChat={setCurrentMainChat}
                                     setMyself={setMyself}
-                                    UIM={UIM}
                                     socket={socket}
+                                    UIM={UIM}
                                 />
                                 <Typography level="body-md" sx={{ pt: 0.5, pl: 1 }}>
                                     {option.userEmail === myself.userEmail

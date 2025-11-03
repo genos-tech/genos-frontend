@@ -1,13 +1,12 @@
 import { Box, Stack } from "@mui/joy";
 
+import { Sidebar } from "../../components/layout/sidebar";
 import { InboxHeader } from "./components/InboxHeader";
 import { InboxSection } from "./components/InboxSection";
 import { InboxSectionHeader } from "./components/InboxSectionHeader";
 import { useInboxItems } from "./hooks/useInboxItems";
 import { useInboxScroll } from "./hooks/useInboxScroll";
 import { InboxHomeProps } from "./types/inboxTypes";
-
-import { Sidebar } from "../../components/layout/sidebar";
 
 export const InboxHome = (props: InboxHomeProps) => {
     const { TEM, IM, myself, socket, setMyself, CM, UIM } = props;
@@ -19,14 +18,13 @@ export const InboxHome = (props: InboxHomeProps) => {
     return (
         <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
             <Sidebar
-                TEM={TEM}
+                CM={CM}
+                IM={IM}
                 myself={myself}
-                UIM={UIM}
-                setCurrentMainChat={CM.setCurrentMainChat}
                 setMyself={setMyself}
                 socket={socket}
-                unReadChatAndActivityCounts={CM.unReadChatAndActivityCounts}
-                IM={IM}
+                TEM={TEM}
+                UIM={UIM}
             />
             <Stack sx={{ width: "100%" }}>
                 <InboxHeader />
@@ -45,10 +43,10 @@ export const InboxHome = (props: InboxHomeProps) => {
                     <Stack direction="row" sx={{ height: "93dvh" }}>
                         <InboxSection
                             ref={activityVirtuosoRef}
+                            CM={CM}
                             itemKeyPrefix="inbox-general-items-bubble"
                             items={activityInboxItems}
                             myself={myself}
-                            setCurrentChat={CM.setCurrentMainChat}
                             setMyself={setMyself}
                             socket={socket}
                             TEM={TEM}
@@ -56,14 +54,14 @@ export const InboxHome = (props: InboxHomeProps) => {
                         />
                         <InboxSection
                             ref={requestVirtuosoRef}
+                            CM={CM}
                             itemKeyPrefix="inbox-request-bubble"
                             items={requestInboxItems}
                             myself={myself}
-                            setCurrentChat={CM.setCurrentMainChat}
                             setMyself={setMyself}
-                            UIM={UIM}
                             socket={socket}
                             TEM={TEM}
+                            UIM={UIM}
                         />
                     </Stack>
                 </Box>

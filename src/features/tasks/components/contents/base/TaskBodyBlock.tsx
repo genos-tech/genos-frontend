@@ -3,10 +3,10 @@ import { Box, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { BnTaskPreview } from "../../../../../components/blockNote/bnTaskPreview";
+import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../../types/admin";
-import { ChatProps } from "../../../../../types/chat";
 
 type TaskBodyBlockProps = {
     TEM: TeamManagementState;
@@ -18,7 +18,7 @@ type TaskBodyBlockProps = {
     setBody: (value: PartialBlock[]) => void;
     setTaskBodyEdited: (value: boolean) => void;
     setTaskBodySaved: (value: boolean) => void;
-    setCurrentChat: (chat: ChatProps) => void;
+    CM: ChatManagementState;
     UIM: UIStateManagementState;
 };
 export const TaskBodyBlock = (props: TaskBodyBlockProps) => {
@@ -32,7 +32,7 @@ export const TaskBodyBlock = (props: TaskBodyBlockProps) => {
         setBody,
         setTaskBodyEdited,
         setTaskBodySaved,
-        setCurrentChat,
+        CM,
         UIM,
     } = props;
     return (
@@ -40,16 +40,16 @@ export const TaskBodyBlock = (props: TaskBodyBlockProps) => {
             <Box sx={{ mt: 1 }}>
                 <BnTaskPreview
                     body={body || []}
+                    CM={CM}
                     myself={myself}
                     setBody={setBody}
-                    setCurrentChat={setCurrentChat}
                     setMyself={setMyself}
-                    UIM={UIM}
                     setTaskBodyEdited={setTaskBodyEdited}
                     setTaskBodySaved={setTaskBodySaved}
                     socket={socket}
                     taskId={taskId}
                     TEM={TEM}
+                    UIM={UIM}
                 />
             </Box>
         </Stack>

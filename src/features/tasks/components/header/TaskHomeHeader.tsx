@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -15,14 +14,15 @@ import {
     Tooltip,
     Typography,
 } from "@mui/joy";
+import { useEffect, useState } from "react";
 
 import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
 import { useAuth } from "../../../../context/AuthContext";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
-import { AllChatProps, ChatProps } from "../../../../types/chat";
 import { SearchTeamTasksResponse } from "../../../../types/tasks";
 import { loadTeamTaskList } from "../../services/loadTaskSearchList";
 import { TaskSidebarSearchBox } from "../sidebar/SearchBox";
@@ -30,11 +30,9 @@ import { TaskSidebarSearchBox } from "../sidebar/SearchBox";
 interface TaskHomeHeaderProps {
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    allChats: AllChatProps[];
-    setCurrentMainChat: (chat: ChatProps) => void;
+    CM: ChatManagementState;
     UIM: UIStateManagementState;
     TEM: TeamManagementState;
-    funcSetAllChats: () => Promise<void>;
     currentProject: any;
     onCreateProject: () => void;
     onCreateTag: () => void;
@@ -46,11 +44,9 @@ interface TaskHomeHeaderProps {
 export const TaskHomeHeader = ({
     myself,
     setMyself,
-    allChats,
-    setCurrentMainChat,
+    CM,
     UIM,
     TEM,
-    funcSetAllChats,
     currentProject,
     onCreateProject,
     onCreateTag,
@@ -94,7 +90,7 @@ export const TaskHomeHeader = ({
     }, [loading]);
     // =======================================================================
 
-    const pmChat = allChats.find(
+    const pmChat = CM.allChats.find(
         (chat) => chat.chatType === 3 && currentProject && chat.chatId === currentProject.projectId
     );
 
@@ -124,14 +120,13 @@ export const TaskHomeHeader = ({
                         {pmChat && (
                             <ProjectAvatar
                                 avatarSize={40}
-                                funcSetAllChats={funcSetAllChats}
+                                CM={CM}
                                 myself={myself}
                                 pmChat={pmChat}
-                                setCurrentMainChat={setCurrentMainChat}
                                 setMyself={setMyself}
-                                UIM={UIM}
                                 socket={null}
                                 TEM={TEM}
+                                UIM={UIM}
                             />
                         )}
                         {currentProject?.isPrivate === true ? (

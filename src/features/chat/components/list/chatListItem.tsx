@@ -1,7 +1,7 @@
-import * as React from "react";
-import { memo } from "react";
 import { ListDivider, ListItem, Stack } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
+import * as React from "react";
+import { memo } from "react";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { useChatListItem } from "../../hooks/useChatListItem";
@@ -13,27 +13,18 @@ import { ChatListItemTitle } from "./ChatListItemTitle";
 
 export const ChatListItem = memo((props: ChatListItemProps) => {
     const {
-        TEM,
-        socket,
         chat,
-        myself,
-        setMyself,
-        currentMainChat,
-        currentSubChat,
-        setCurrentMainChat,
-        setCurrentSubChat,
-        setIsMainChatVisible,
-        setIsThreadVisible,
-        isTaskPreviewVisible,
-        isCreatingTask,
-        isSubChatVisible,
-        setIsSubChatVisible,
-        UIM,
-        chatType,
-        funcSetAllChats,
-        isPinnedChat,
         incompleteTodoCount,
+        isCreatingTask,
+        isPinnedChat,
+        myself,
+        isTaskPreviewVisible,
         setIsToDoVisible,
+        setMyself,
+        UIM,
+        socket,
+        TEM,
+        CM,
     } = props;
 
     const { accessToken } = useAuth();
@@ -49,9 +40,7 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
     } = useChatListItem({
         chat,
         myself,
-        currentMainChat,
-        currentSubChat,
-        isSubChatVisible,
+        CM,
         isTaskPreviewVisible,
         isCreatingTask,
         isPinnedChat,
@@ -60,18 +49,13 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
 
     const handlePinClick = (event: React.MouseEvent) => {
         event.stopPropagation();
-        pinChatHandler(chat.chatId, chat.chatType, funcSetAllChats);
+        pinChatHandler(chat.chatId, chat.chatType, CM.funcSetAllChats);
         setIsPinned(!isPinned);
     };
 
     const handleSplitClick = (event: React.MouseEvent) => {
         event.stopPropagation();
-        splitOpenHandler(
-            setCurrentSubChat,
-            setIsMainChatVisible,
-            setIsThreadVisible,
-            setIsSubChatVisible
-        );
+        splitOpenHandler(CM);
     };
 
     const handleTodoClick = () => {
@@ -87,11 +71,7 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                     sx={{ flexDirection: "column", alignItems: "initial", gap: 1 }}
                     variant="soft"
                     onClick={() => {
-                        onClickHandler(
-                            setCurrentMainChat,
-                            setIsMainChatVisible,
-                            setIsThreadVisible
-                        );
+                        onClickHandler(CM);
                         setIsToDoVisible(false);
                     }}
                 >
@@ -106,15 +86,14 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                                 <div>
                                     <ChatListItemAvatar
                                         chat={chat}
-                                        chatType={chatType}
-                                        funcSetAllChats={funcSetAllChats}
+                                        chatType={chat.chatType}
+                                        CM={CM}
                                         isYou={isYou}
                                         myself={myself}
-                                        setCurrentMainChat={setCurrentMainChat}
                                         setMyself={setMyself}
-                                        UIM={UIM}
                                         socket={socket}
                                         TEM={TEM}
+                                        UIM={UIM}
                                     />
                                 </div>
 

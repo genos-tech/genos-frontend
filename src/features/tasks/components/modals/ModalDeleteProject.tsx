@@ -6,7 +6,6 @@ import { useAuth } from "../../../../context/AuthContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { authApi } from "../../../../services/api";
 import { UserProps } from "../../../../types/admin";
-import { ProjectProps } from "../../../../types/tasks";
 
 const disableOpenDeleteModalParams = {
     flag: false,

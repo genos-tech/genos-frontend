@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { useAuth } from "../../../context/AuthContext";
+import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps, ThreadProps } from "../../../types/chat";
 import UpdateReadStatusWorker from "../../../workers/updateReadStatusWorker.ts?worker";
@@ -9,14 +10,14 @@ import { addChat } from "../services/addChat";
 interface UseReadStatusManagementProps {
     currentChat: ChatProps | ThreadProps;
     myself: UserProps;
-    funcSetAllChats: () => Promise<void>;
+    CM: ChatManagementState;
     isThread?: boolean;
 }
 
 export const useReadStatusManagement = ({
+    CM,
     currentChat,
     myself,
-    funcSetAllChats,
     isThread = false,
 }: UseReadStatusManagementProps) => {
     const { accessToken } = useAuth();
@@ -39,7 +40,7 @@ export const useReadStatusManagement = ({
                 lastReadMessageId: lastReadMessageId,
             });
 
-            updateReadStatusWorker.onmessage = (event) => {
+            updateReadStatusWorker.onmessage = async (event) => {
                 if (event.data === "done") {
                     if ((currentChat as ChatProps).lastReadMessageId < lastReadMessageId) {
                         const updatedChat = {
@@ -47,7 +48,7 @@ export const useReadStatusManagement = ({
                             lastReadMessageId: lastReadMessageId,
                         };
                         addChat(updatedChat as AllChatProps, updatedChat.chatType);
-                        funcSetAllChats();
+                        await CM.funcSetAllChats();
                     }
                 } else {
                     console.error("Failed to update read status");

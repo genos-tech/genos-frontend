@@ -66,9 +66,9 @@ export const ChatNotePanel = ({
                     setCurrentPreviewTaskId={TM.setCurrentPreviewTaskId}
                     setCurrentProject={PM.setCurrentProject}
                     setMyself={setMyself}
-                    UIM={UIM}
                     socket={socket}
                     TEM={TEM}
+                    UIM={UIM}
                 />
             </Box>
         </Panel>

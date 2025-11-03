@@ -1,14 +1,15 @@
-import React from "react";
 import { Avatar } from "@mui/joy";
+import React from "react";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
 import { GMAvatar } from "../../../../components/common/GMAvatar";
 import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
-import { AllChatProps, ChatProps } from "../../../../types/chat";
+import { AllChatProps } from "../../../../types/chat";
 
 interface ChatListItemAvatarProps {
     chat: AllChatProps;
@@ -16,11 +17,10 @@ interface ChatListItemAvatarProps {
     isYou: boolean;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    setCurrentMainChat: (chat: ChatProps) => void;
     UIM: UIStateManagementState;
     socket: Socket | null;
     TEM: TeamManagementState;
-    funcSetAllChats: () => Promise<void>;
+    CM: ChatManagementState;
 }
 
 export const ChatListItemAvatar: React.FC<ChatListItemAvatarProps> = ({
@@ -30,10 +30,9 @@ export const ChatListItemAvatar: React.FC<ChatListItemAvatarProps> = ({
     isYou,
     myself,
     setMyself,
-    setCurrentMainChat,
     UIM,
     socket,
-    funcSetAllChats,
+    CM,
 }) => {
     // DM Chat with partner
     if (chatType === 1 && chat.dmPartnerUser.userId !== "") {
@@ -41,12 +40,12 @@ export const ChatListItemAvatar: React.FC<ChatListItemAvatarProps> = ({
             <AvatarWithStatus
                 avatarUser={TEM.teamMemberProfiles[chat.dmPartnerUser.userId]}
                 chat={chat}
+                CM={CM}
                 isYou={isYou}
                 myself={myself}
-                setCurrentMainChat={setCurrentMainChat}
                 setMyself={setMyself}
-                UIM={UIM}
                 socket={socket}
+                UIM={UIM}
             />
         );
     }
@@ -60,15 +59,14 @@ export const ChatListItemAvatar: React.FC<ChatListItemAvatarProps> = ({
     if (chatType === 2) {
         return (
             <GMAvatar
-                funcSetAllChats={funcSetAllChats}
+                CM={CM}
                 gmChat={chat}
                 isYou={isYou}
                 myself={myself}
-                setCurrentMainChat={setCurrentMainChat}
                 setMyself={setMyself}
-                UIM={UIM}
                 socket={socket}
                 TEM={TEM}
+                UIM={UIM}
             />
         );
     }
@@ -77,14 +75,13 @@ export const ChatListItemAvatar: React.FC<ChatListItemAvatarProps> = ({
     if (chatType === 3) {
         return (
             <ProjectAvatar
-                funcSetAllChats={funcSetAllChats}
+                CM={CM}
                 myself={myself}
                 pmChat={chat}
-                setCurrentMainChat={setCurrentMainChat}
                 setMyself={setMyself}
-                UIM={UIM}
                 socket={socket}
                 TEM={TEM}
+                UIM={UIM}
             />
         );
     }

@@ -1,6 +1,6 @@
+import { useEffect, useState } from "react";
 import FlagIcon from "@mui/icons-material/Flag";
 import { Box, IconButton, Tooltip } from "@mui/joy";
-import { useEffect, useState } from "react";
 
 import { FlaggedService } from "../../../../db/services/flagged.service";
 import { UserProps } from "../../../../types/admin";

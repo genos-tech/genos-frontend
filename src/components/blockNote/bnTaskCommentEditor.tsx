@@ -25,17 +25,16 @@ import {
     SuggestionMenuController,
     useCreateBlockNote,
 } from "@blocknote/react";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import SendIcon from "@mui/icons-material/Send";
-import { Box, IconButton, Tooltip } from "@mui/joy";
+import { Box, IconButton } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { taskThreadMessageForCommentAddedTemplate } from "../../features/tasks/utils/TaskMessageTemplate";
+import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
-import { ChatProps } from "../../types/chat";
 import { TaskCommentProps, TaskProps } from "../../types/tasks";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { EmojiPicker } from "../emojiInput/EmojiPicker";
@@ -53,10 +52,10 @@ type BnTaskCommentEditorProps = {
     setTaskComments: (value: TaskCommentProps[]) => void;
     isCommentUpdated: { isUpdate: boolean; scrollToBottom: boolean };
     setIsCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
-    setCurrentChat: (chat: ChatProps) => void;
     UIM: UIStateManagementState;
     taskCommentLines: number;
     setTaskCommentLines: (value: number) => void;
+    CM: ChatManagementState;
 };
 
 export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
@@ -71,10 +70,10 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         setTaskComments,
         isCommentUpdated,
         setIsCommentUpdated,
-        setCurrentChat,
         UIM,
         taskCommentLines,
         setTaskCommentLines,
+        CM,
     } = props;
     const { mode } = useColorScheme();
     const bnBoxClassName: string = `bn-task-comment-box-${mode}`;
@@ -90,14 +89,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
-            mention: CreateMentionSpec(
-                TEM.teamMemberProfiles,
-                socket,
-                myself,
-                setMyself,
-                UIM,
-                setCurrentChat
-            ),
+            mention: CreateMentionSpec(TEM.teamMemberProfiles, socket, myself, setMyself, UIM, CM),
         },
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks

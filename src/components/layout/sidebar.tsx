@@ -1,10 +1,8 @@
-import { useState } from "react";
 import AllInboxIcon from "@mui/icons-material/AllInbox";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import NoteAltIcon from "@mui/icons-material/NoteAlt";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
-import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import {
     Avatar,
     Badge,
@@ -19,6 +17,7 @@ import {
     Typography,
 } from "@mui/joy";
 import ListItemButton, { listItemButtonClasses } from "@mui/joy/ListItemButton";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
@@ -26,11 +25,11 @@ import { PulseDot } from "../../components/utils/PulseDot";
 import { useAuth } from "../../context/AuthContext";
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
 import { TeamDropdown } from "../../features/admin/components/teamDropdown";
+import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { InboxManagementState } from "../../hooks/inbox/useInboxManagement";
-import { Team, UserProps } from "../../types/admin";
-import { ChatProps } from "../../types/chat";
+import { UserProps } from "../../types/admin";
 import { ColorSchemeToggle } from "./colorSchemeToggle";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
@@ -41,22 +40,12 @@ type SidebarProps = {
     socket: Socket | null;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    setCurrentMainChat: (chat: ChatProps) => void;
     IM: InboxManagementState;
-    unReadChatAndActivityCounts: number;
+    CM: ChatManagementState;
     UIM: UIStateManagementState;
 };
 export const Sidebar = (props: SidebarProps) => {
-    const {
-        TEM,
-        socket,
-        myself,
-        setMyself,
-        setCurrentMainChat,
-        IM,
-        unReadChatAndActivityCounts,
-        UIM,
-    } = props;
+    const { TEM, socket, myself, setMyself, IM, CM, UIM } = props;
     const { setAccessToken } = useAuth();
     const navigate = useNavigate();
 
@@ -160,7 +149,7 @@ export const Sidebar = (props: SidebarProps) => {
                     alignItems: "center",
                 }}
             >
-                <TeamDropdown TEM={TEM} myself={myself} setMyself={setMyself} />
+                <TeamDropdown myself={myself} setMyself={setMyself} TEM={TEM} />
                 <ColorSchemeToggle />
             </Box>
 
@@ -187,7 +176,7 @@ export const Sidebar = (props: SidebarProps) => {
                 >
                     <ListItem>
                         <ListItemButton onClick={handleMoveToInbox}>
-                            <Stack direction="column" alignItems="center">
+                            <Stack alignItems="center" direction="column">
                                 <Box
                                     sx={{
                                         display: "flex",
@@ -197,13 +186,13 @@ export const Sidebar = (props: SidebarProps) => {
                                 >
                                     {IM.unReadInboxItemCount > 0 && (
                                         <Badge
+                                            badgeContent={IM.unReadInboxItemCount}
+                                            color="primary"
+                                            size="sm"
                                             anchorOrigin={{
                                                 vertical: "top",
                                                 horizontal: "right",
                                             }}
-                                            badgeContent={IM.unReadInboxItemCount}
-                                            color="primary"
-                                            size="sm"
                                         >
                                             <AllInboxIcon
                                                 sx={{ fontSize: 24 }}
@@ -217,10 +206,10 @@ export const Sidebar = (props: SidebarProps) => {
                                     )}
                                     {IM.unReadInboxItemCount < 1 && (
                                         <AllInboxIcon
+                                            sx={{ fontSize: 24 }}
                                             color={
                                                 UIM.openingService === 0 ? "primary" : "disabled"
                                             }
-                                            sx={{ fontSize: 24 }}
                                         />
                                     )}
                                 </Box>
@@ -230,17 +219,17 @@ export const Sidebar = (props: SidebarProps) => {
                     </ListItem>
                     <ListItem>
                         <ListItemButton onClick={handleMoveToChat}>
-                            <Stack direction="column" alignItems="center">
+                            <Stack alignItems="center" direction="column">
                                 <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
-                                    {unReadChatAndActivityCounts > 0 && (
+                                    {CM.unReadChatAndActivityCounts > 0 && (
                                         <Badge
+                                            badgeContent={CM.unReadChatAndActivityCounts}
+                                            color="primary"
+                                            size="sm"
                                             anchorOrigin={{
                                                 vertical: "top",
                                                 horizontal: "right",
                                             }}
-                                            badgeContent={unReadChatAndActivityCounts}
-                                            color="primary"
-                                            size="sm"
                                         >
                                             <QuestionAnswerRoundedIcon
                                                 sx={{ fontSize: 24 }}
@@ -252,12 +241,12 @@ export const Sidebar = (props: SidebarProps) => {
                                             />
                                         </Badge>
                                     )}
-                                    {unReadChatAndActivityCounts < 1 && (
+                                    {CM.unReadChatAndActivityCounts < 1 && (
                                         <QuestionAnswerRoundedIcon
+                                            sx={{ fontSize: 24 }}
                                             color={
                                                 UIM.openingService === 1 ? "primary" : "disabled"
                                             }
-                                            sx={{ fontSize: 24 }}
                                         />
                                     )}
                                 </Box>
@@ -267,7 +256,7 @@ export const Sidebar = (props: SidebarProps) => {
                     </ListItem>
                     <ListItem>
                         <ListItemButton onClick={handleMoveToTasks}>
-                            <Stack direction="column" alignItems="center">
+                            <Stack alignItems="center" direction="column">
                                 <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
                                     <AssignmentRoundedIcon
                                         color={UIM.openingService === 2 ? "primary" : "disabled"}
@@ -280,7 +269,7 @@ export const Sidebar = (props: SidebarProps) => {
                     </ListItem>
                     <ListItem>
                         <ListItemButton onClick={handleMoveToNote}>
-                            <Stack direction="column" alignItems="center">
+                            <Stack alignItems="center" direction="column">
                                 <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
                                     <NoteAltIcon
                                         color={UIM.openingService === 3 ? "primary" : "disabled"}
@@ -344,15 +333,15 @@ export const Sidebar = (props: SidebarProps) => {
             </Box>
 
             <UserProfile
+                CM={CM}
                 isYou={true}
                 myself={myself}
                 openUserProfile={openUserProfile}
-                setCurrentMainChat={setCurrentMainChat}
                 setMyself={setMyself}
                 setOpenUserProfile={setOpenUserProfile}
                 socket={socket}
-                user={TEM.teamMemberProfiles[myself.userId]}
                 UIM={UIM}
+                user={TEM.teamMemberProfiles[myself.userId]}
             />
         </Sheet>
     );

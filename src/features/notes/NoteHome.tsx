@@ -52,12 +52,12 @@ export const NoteHome = (props: NoteHomeProps) => {
                             myself={myself}
                             NM={NM}
                             noteType={NM.currentNoteType}
-                            UIM={UIM}
                             PM={PM}
                             setMyself={setMyself}
                             socket={socket}
                             TEM={TEM}
                             TM={TM}
+                            UIM={UIM}
                         />
                     </Box>
                 </Panel>
@@ -78,12 +78,12 @@ export const NoteHome = (props: NoteHomeProps) => {
                         myself={myself}
                         NM={NM}
                         noteType={NM.currentNoteType}
-                        UIM={UIM}
                         PM={PM}
                         setMyself={setMyself}
                         socket={socket}
                         TEM={TEM}
                         TM={TM}
+                        UIM={UIM}
                     />
                 </Box>
             </Panel>
@@ -95,14 +95,13 @@ export const NoteHome = (props: NoteHomeProps) => {
             <CssBaseline />
             <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
                 <Sidebar
+                    CM={CM}
+                    IM={IM}
                     myself={myself}
-                    UIM={UIM}
-                    setCurrentMainChat={CM.setCurrentMainChat}
                     setMyself={setMyself}
                     socket={socket}
                     TEM={TEM}
-                    unReadChatAndActivityCounts={CM.unReadChatAndActivityCounts}
-                    IM={IM}
+                    UIM={UIM}
                 />
 
                 <PanelGroup direction="horizontal">
@@ -128,12 +127,12 @@ export const NoteHome = (props: NoteHomeProps) => {
                         CM={CM}
                         myself={myself}
                         NM={NM}
-                        UIM={UIM}
                         PM={PM}
                         setMyself={setMyself}
                         socket={socket}
                         TEM={TEM}
                         TM={TM}
+                        UIM={UIM}
                     />
                 </PanelGroup>
 

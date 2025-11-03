@@ -160,41 +160,39 @@ export const ChatNoteHeader = ({
                         <AvatarWithStatus
                             avatarUser={TEM.teamMemberProfiles[chat.dmPartnerUser.userId]}
                             chat={chat}
+                            CM={CM}
                             isYou={false}
                             myself={myself}
-                            setCurrentMainChat={CM.setCurrentMainChat}
                             setMyself={setMyself}
-                            UIM={UIM}
                             socket={socket}
+                            UIM={UIM}
                         />
                     </Box>
                 )}
                 {chat && chat.chatType === 2 && (
                     <Box sx={{ mt: "2px", mr: "5px" }}>
                         <GMAvatar
-                            funcSetAllChats={CM.funcSetAllChats}
+                            CM={CM}
                             gmChat={chat}
                             isYou={false}
                             myself={myself}
-                            setCurrentMainChat={CM.setCurrentMainChat}
                             setMyself={setMyself}
-                            UIM={UIM}
                             socket={socket}
                             TEM={TEM}
+                            UIM={UIM}
                         />
                     </Box>
                 )}
                 {chat && chat.chatType === 3 && (
                     <Box sx={{ mt: "2px", mr: "5px" }}>
                         <ProjectAvatar
-                            funcSetAllChats={CM.funcSetAllChats}
+                            CM={CM}
                             myself={myself}
                             pmChat={chat}
-                            setCurrentMainChat={CM.setCurrentMainChat}
                             setMyself={setMyself}
-                            UIM={UIM}
                             socket={socket}
                             TEM={TEM}
+                            UIM={UIM}
                         />
                     </Box>
                 )}

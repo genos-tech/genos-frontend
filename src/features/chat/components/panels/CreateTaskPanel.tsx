@@ -57,21 +57,16 @@ export const CreateTaskPanel = ({
             >
                 <CreateTaskForm
                     chatType={CM.currentThreadChat?.chatType || -1}
-                    currentMainChat={CM.currentMainChat}
-                    currentThreadChat={CM.currentThreadChat}
-                    isThreadVisible={CM.isThreadVisible}
-                    moveToSpecificChat={CM.moveToSpecificChat}
+                    CM={CM}
                     myself={myself}
                     parentTaskId={null}
                     PM={PM}
                     rootTaskId={null}
-                    setCurrentMainChat={CM.setCurrentMainChat}
-                    setIsMainChatVisible={CM.setIsMainChatVisible}
                     setMyself={setMyself}
-                    UIM={UIM}
                     socket={socket}
                     TEM={TEM}
                     TM={TM}
+                    UIM={UIM}
                 />
             </Box>
         </Panel>

@@ -1,16 +1,16 @@
-import { useEffect, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import { Box, Chip, Grid, IconButton, List, ListItem, Stack, Tooltip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
+import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../../components/common/avatarWithStatus";
 import { useAuth } from "../../../../../context/AuthContext";
+import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../../types/admin";
-import { ChatProps } from "../../../../../types/chat";
 import { ProjectProps, TagListProps, TaskProps } from "../../../../../types/tasks";
 import { loadSpecificTask } from "../../../services/loadSpecificTask";
 import { ACProjectTags } from "../../autocompletes/ACProjectTags";
@@ -46,7 +46,7 @@ type TaskMainBlockProps = {
     isPreviewMode: boolean;
     setTaskUpdated?: (value: boolean) => void;
     UIM: UIStateManagementState;
-    setCurrentMainChat: (chat: ChatProps) => void;
+    CM: ChatManagementState;
     setCurrentPreviewTaskId: (value: number) => void;
     setTaskStatusUpdated?: (value: boolean) => void;
 };
@@ -75,7 +75,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
         isPreviewMode,
         setTaskUpdated,
         UIM,
-        setCurrentMainChat,
+        CM,
         setCurrentPreviewTaskId,
         setTaskStatusUpdated,
     } = props;
@@ -118,56 +118,56 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         <Typography sx={{ minWidth: "80px" }}>Assignee</Typography>
                         <AvatarWithStatus
                             avatarUser={TEM.teamMemberProfiles[assignee.userId]}
+                            CM={CM}
                             isYou={myself.userId === assignee.userId ? true : false}
                             myself={myself}
-                            setCurrentMainChat={setCurrentMainChat}
                             setMyself={setMyself}
-                            UIM={UIM}
                             socket={socket}
+                            UIM={UIM}
                         />
                         <ACTeamUsers
+                            CM={CM}
                             initialUser={taskContent.assignee}
                             isAssignee={true}
                             isOpenTeamMembersList={isOpenTeamMembersList}
                             myself={myself}
-                            setCurrentMainChat={setCurrentMainChat}
                             setIsOpenTeamMembersList={setIsOpenTeamMembersList}
                             setMyself={setMyself}
-                            UIM={UIM}
                             setTaskContent={setTaskContent}
                             setTaskUpdated={setTaskUpdated}
                             setUser={setAssignee}
                             socket={socket}
                             taskContent={taskContent}
                             TEM={TEM}
+                            UIM={UIM}
                         />
                     </ListItem>
                     <ListItem sx={{ display: "flex", alignItems: "center", width: "100%" }}>
                         <Typography sx={{ minWidth: "80px" }}>Reporter</Typography>
                         <AvatarWithStatus
                             avatarUser={TEM.teamMemberProfiles[reporter.userId]}
+                            CM={CM}
                             isYou={myself.userId === reporter.userId ? true : false}
                             myself={myself}
-                            setCurrentMainChat={setCurrentMainChat}
                             setMyself={setMyself}
-                            UIM={UIM}
                             socket={socket}
+                            UIM={UIM}
                         />
                         <ACTeamUsers
+                            CM={CM}
                             initialUser={taskContent.reporter}
                             isAssignee={false}
                             isOpenTeamMembersList={isOpenTeamMembersList}
                             myself={myself}
-                            setCurrentMainChat={setCurrentMainChat}
                             setIsOpenTeamMembersList={setIsOpenTeamMembersList}
                             setMyself={setMyself}
-                            UIM={UIM}
                             setTaskContent={setTaskContent}
                             setTaskUpdated={setTaskUpdated}
                             setUser={setReporter}
                             socket={socket}
                             taskContent={taskContent}
                             TEM={TEM}
+                            UIM={UIM}
                         />
                     </ListItem>
                     <Grid spacing={2} container>
@@ -272,12 +272,12 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                 <Typography sx={{ pr: "5px" }}>Parent Task</Typography>
                                 <AvatarWithStatus
                                     avatarUser={TEM.teamMemberProfiles[assignee.userId]}
+                                    CM={CM}
                                     isYou={myself.userId === assignee.userId ? true : false}
                                     myself={myself}
-                                    setCurrentMainChat={setCurrentMainChat}
                                     setMyself={setMyself}
-                                    UIM={UIM}
                                     socket={socket}
+                                    UIM={UIM}
                                 />
                                 <IconButton
                                     onClick={() => {

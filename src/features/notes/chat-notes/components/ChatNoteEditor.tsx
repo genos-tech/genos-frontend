@@ -5,6 +5,7 @@ import { Box, Button, FormControl, Input } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { BnChatNoteEditor } from "../../../../components/blockNote/bnChatNoteEditor";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
@@ -21,11 +22,11 @@ interface ChatNoteEditorProps {
     onBodyChange: (newBody: PartialBlock[]) => void;
     setNoteBodyEdited: (edited: boolean) => void;
     setNoteBodySaved: (saved: boolean) => void;
+    CM: ChatManagementState;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
     socket: Socket | null;
     TEM: TeamManagementState;
-    setCurrentChat: (chat: any) => void;
     UIM: UIStateManagementState;
 }
 
@@ -44,7 +45,7 @@ export const ChatNoteEditor = ({
     setMyself,
     socket,
     TEM,
-    setCurrentChat,
+    CM,
     UIM,
 }: ChatNoteEditorProps) => {
     return (
@@ -107,16 +108,16 @@ export const ChatNoteEditor = ({
 
             <BnChatNoteEditor
                 body={body}
+                CM={CM}
                 currentChatNote={currentChatNote}
                 myself={myself}
                 setBody={onBodyChange}
-                setCurrentChat={setCurrentChat}
                 setMyself={setMyself}
                 setNoteBodyEdited={setNoteBodyEdited}
                 setNoteBodySaved={setNoteBodySaved}
-                UIM={UIM}
                 socket={socket}
                 TEM={TEM}
+                UIM={UIM}
             />
         </>
     );

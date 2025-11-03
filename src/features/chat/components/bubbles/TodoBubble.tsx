@@ -1,16 +1,17 @@
-import { useEffect, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
 import { Box, Button, Card, Chip, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { BnTodoPreview } from "../../../../components/blockNote/bnTodoPreview";
 import { useAuth } from "../../../../context/AuthContext";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
-import { ChatProps, ToDoFactProps } from "../../../../types/chat";
+import { ToDoFactProps } from "../../../../types/chat";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 import { updateTodo } from "../../services/updateTodo";
 
@@ -25,7 +26,7 @@ type TodoBubbleProps = {
     todos: ToDoFactProps[];
     setTodos: (value: ToDoFactProps[]) => void;
     UIM: UIStateManagementState;
-    setCurrentChat: (chat: ChatProps) => void;
+    CM: ChatManagementState;
 };
 export const TodoBubble = (props: TodoBubbleProps) => {
     const {
@@ -39,7 +40,7 @@ export const TodoBubble = (props: TodoBubbleProps) => {
         setMyself,
         socket,
         UIM,
-        setCurrentChat,
+        CM,
     } = props;
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
@@ -148,15 +149,15 @@ export const TodoBubble = (props: TodoBubbleProps) => {
                     <BnTodoPreview
                         key={`${todo.todoId}`}
                         body={body}
+                        CM={CM}
                         customClassName="todo-preview"
                         myself={myself}
                         setBody={setBody}
                         setBodyEdited={setBodyEdited}
-                        setCurrentChat={setCurrentChat}
                         setMyself={setMyself}
-                        UIM={UIM}
                         socket={socket}
                         TEM={TEM}
+                        UIM={UIM}
                     />
                 </Card>
             </Box>

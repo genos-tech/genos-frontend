@@ -2,16 +2,11 @@ import { Box, Chip, Stack } from "@mui/joy";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
-import {
-    ChatProps,
-    FlaggedMessageProps,
-    MessageProps,
-    ThreadMessageProps,
-    ThreadProps,
-} from "../../../../types/chat";
+import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
 import { ProjectProps, TaskProps } from "../../../../types/tasks";
 import { extractMMDD, extractYYYYMMDD, getTimeDiffSeconds } from "../../../../utils/dateUtils";
 import { useScrollToBottomOnChatChange } from "../../hooks/messageBubbleHooks";
@@ -20,89 +15,67 @@ import { MessageBubble } from "../bubbles/MessageBubble";
 import { ThreadMessageBubble } from "../bubbles/ThreadMessageBubble";
 
 interface MessageListRendererProps {
-    virtuosoRef: React.RefObject<VirtuosoHandle>;
-    messages: (MessageProps | ThreadMessageProps)[];
     chat: ChatProps | ThreadProps;
-    myself: UserProps;
-    TEM: TeamManagementState;
-    socket: Socket | null;
     currentChatId: number;
-    visibleRange: { startIndex: number; endIndex: number };
-    setVisibleRange: (range: { startIndex: number; endIndex: number }) => void;
-    isScrolling: boolean;
-    setIsScrolling: (scrolling: boolean) => void;
+    height: number;
     indexMap?: { [k: string]: any };
-    moveToSpecificIndex?: string;
-    notMove?: boolean;
-    setErrorMessage: (message: string) => void;
+    isCreatingTask: { flag: boolean; parentTaskId: number | null; rootTaskId: number | null };
+    isScrolling: boolean;
+    isThread: boolean;
+    messages: MessageProps[] | ThreadMessageProps[];
+    myself: UserProps;
+    setCurrentPreviewTask: (task: TaskProps | undefined) => void;
+    setCurrentPreviewTaskId: (taskId: number) => void;
+    setCurrentProject: (project: ProjectProps) => void;
+    setEditTargetMessage: (message: MessageProps | ThreadMessageProps) => void;
+    setErrorMessage: (error: string) => void;
     setErrorOpen: (open: boolean) => void;
-    flaggedMessages: FlaggedMessageProps[];
-    setFlaggedMessages: (messages: FlaggedMessageProps[]) => void;
-    isCreatingTask: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    };
     setIsCreatingTask: (value: {
         flag: boolean;
         parentTaskId: number | null;
         rootTaskId: number | null;
     }) => void;
-    setCurrentPreviewTask: (task: TaskProps | undefined) => void;
-    setCurrentPreviewTaskId: (id: number) => void;
-    setIsTaskPreviewVisible: (visible: boolean) => void;
-    setCurrentProject: (project: ProjectProps) => void;
-    setCurrentMainChat: (chat: ChatProps) => void;
-    setCurrentThreadChat: (chat: ThreadProps) => void;
-    setIsMainChatVisible: (visible: boolean) => void;
-    setIsThreadVisible: (visible: boolean) => void;
-    setMyself: (user: UserProps) => void;
+    setIsInEdit: (value: boolean) => void;
+    setIsScrolling: (value: boolean) => void;
+    setIsTaskPreviewVisible: (value: boolean) => void;
+    setMyself: (value: UserProps) => void;
     UIM: UIStateManagementState;
-    setEditTargetMessage: (message: MessageProps | ThreadMessageProps) => void;
-    setIsInEdit: (edit: boolean) => void;
-    currentThreadChat?: ThreadProps;
-    isThreadVisible?: boolean;
-    isThread?: boolean;
-    height: number;
+    setVisibleRange: (range: { startIndex: number; endIndex: number }) => void;
+    socket: Socket | null;
+    TEM: TeamManagementState;
+    visibleRange: { startIndex: number; endIndex: number };
+    virtuosoRef: React.RefObject<VirtuosoHandle>;
+    CM: ChatManagementState;
 }
 
 export const MessageListRenderer = ({
-    virtuosoRef,
-    messages,
     chat,
-    myself,
-    TEM,
-    socket,
     currentChatId,
-    visibleRange,
-    setVisibleRange,
-    isScrolling,
-    setIsScrolling,
+    height,
     indexMap,
-    moveToSpecificIndex,
-    notMove,
-    setErrorMessage,
-    setErrorOpen,
-    flaggedMessages,
-    setFlaggedMessages,
     isCreatingTask,
-    setIsCreatingTask,
+    isScrolling,
+    isThread,
+    messages,
+    myself,
     setCurrentPreviewTask,
     setCurrentPreviewTaskId,
-    setIsTaskPreviewVisible,
     setCurrentProject,
-    setCurrentMainChat,
-    setCurrentThreadChat,
-    setIsMainChatVisible,
-    setIsThreadVisible,
+    setEditTargetMessage,
+    setErrorMessage,
+    setErrorOpen,
+    setIsCreatingTask,
+    setIsInEdit,
+    setIsScrolling,
+    setIsTaskPreviewVisible,
     setMyself,
     UIM,
-    setEditTargetMessage,
-    setIsInEdit,
-    currentThreadChat,
-    isThreadVisible,
-    isThread = false,
-    height,
+    setVisibleRange,
+    socket,
+    TEM,
+    visibleRange,
+    virtuosoRef,
+    CM,
 }: MessageListRendererProps) => {
     useScrollToBottomOnChatChange(
         virtuosoRef,
@@ -110,8 +83,8 @@ export const MessageListRenderer = ({
         visibleRange.endIndex,
         messages.length - 1,
         indexMap,
-        moveToSpecificIndex,
-        notMove,
+        CM.currentMainChat?.moveToSpecificIndex,
+        CM.currentMainChat?.notMove,
         setErrorMessage,
         setErrorOpen
     );
@@ -193,14 +166,15 @@ export const MessageListRenderer = ({
         if (isThread) {
             return (
                 (message as ThreadMessageProps).messageIdWithChatIdAndThreadId ===
-                moveToSpecificIndex
+                CM.currentMainChat?.moveToSpecificIndex
             );
         }
         return (
-            (message as MessageProps).messageIdWithChatId === moveToSpecificIndex ||
-            (isThreadVisible &&
-                currentThreadChat &&
-                message.messageId === currentThreadChat.threadId) ||
+            (message as MessageProps).messageIdWithChatId ===
+                CM.currentMainChat?.moveToSpecificIndex ||
+            (CM.isThreadVisible &&
+                CM.currentThreadChat &&
+                message.messageId === CM.currentThreadChat.threadId) ||
             false
         );
     };
@@ -242,53 +216,44 @@ export const MessageListRenderer = ({
                             >
                                 {isThread ? (
                                     <ThreadMessageBubble
+                                        CM={CM}
                                         currentMessageIndex={index}
-                                        flaggedMessages={flaggedMessages}
                                         isFocused={isFocused}
                                         isScrolling={isScrolling}
                                         isSimpleBubble={isSimpleBubble}
                                         message={message as ThreadMessageProps}
                                         myself={myself}
-                                        setCurrentMainChat={setCurrentMainChat}
-                                        setCurrentThreadChat={setCurrentThreadChat}
                                         setEditTargetMessage={setEditTargetMessage}
-                                        setFlaggedMessages={setFlaggedMessages}
                                         setIsInEdit={setIsInEdit}
                                         setMyself={setMyself}
-                                        UIM={UIM}
                                         setTargetMessageIndex={() => {}}
                                         socket={socket}
                                         TEM={TEM}
                                         thread={chat as ThreadProps}
+                                        UIM={UIM}
                                         variant={isYou ? "sent" : "received"}
                                     />
                                 ) : (
                                     <MessageBubble
                                         chat={chat as ChatProps}
-                                        currentMessageIndex={index}
-                                        flaggedMessages={flaggedMessages}
+                                        CM={CM}
                                         isCreatingTask={isCreatingTask}
                                         isFocused={isFocused}
                                         isScrolling={isScrolling}
                                         isSimpleBubble={isSimpleBubble}
                                         message={message as MessageProps}
                                         myself={myself}
-                                        setCurrentMainChat={setCurrentMainChat}
                                         setCurrentPreviewTask={setCurrentPreviewTask}
                                         setCurrentPreviewTaskId={setCurrentPreviewTaskId}
                                         setCurrentProject={setCurrentProject}
-                                        setCurrentThreadChat={setCurrentThreadChat}
                                         setEditTargetMessage={setEditTargetMessage}
-                                        setFlaggedMessages={setFlaggedMessages}
                                         setIsCreatingTask={setIsCreatingTask}
                                         setIsInEdit={setIsInEdit}
-                                        setIsMainChatVisible={setIsMainChatVisible}
                                         setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                        setIsThreadVisible={setIsThreadVisible}
                                         setMyself={setMyself}
-                                        UIM={UIM}
                                         socket={socket}
                                         TEM={TEM}
+                                        UIM={UIM}
                                         variant={isYou ? "sent" : "received"}
                                     />
                                 )}

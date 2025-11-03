@@ -21,9 +21,9 @@ import { Socket } from "socket.io-client";
 
 import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
 import { useAuth } from "../../../../context/AuthContext";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
-import { ChatProps } from "../../../../types/chat";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 import { loadDMIdByUserId } from "../../../chat/services/loadDMIdByUserId";
 import { moveToDMChat } from "../../../chat/services/moveToChat";
@@ -42,7 +42,7 @@ type UserProfileProps = {
     user?: UserProps;
     openUserProfile: boolean;
     setOpenUserProfile: (value: boolean) => void;
-    setCurrentMainChat: (chat: ChatProps) => void;
+    CM: ChatManagementState;
     UIM: UIStateManagementState;
 };
 export const UserProfile = (props: UserProfileProps) => {
@@ -54,7 +54,7 @@ export const UserProfile = (props: UserProfileProps) => {
         user,
         openUserProfile,
         setOpenUserProfile,
-        setCurrentMainChat,
+        CM,
         UIM,
     } = props;
 
@@ -389,7 +389,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                 chatId,
                                                 profileUser?.userName,
                                                 profileUser,
-                                                setCurrentMainChat
+                                                CM
                                             );
                                             UIM.setOpeningService(1);
                                             setOpenUserProfile(false);

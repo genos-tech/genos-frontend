@@ -1,8 +1,8 @@
 import { Button, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
+import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { UserProps } from "../../../../../types/admin";
-import { ChatProps, ThreadProps } from "../../../../../types/chat";
 import { ProjectProps, TaskProps } from "../../../../../types/tasks";
 import { deleteEmptyTask } from "../../../services/deleteEmptyTask";
 import { uploadNewTask } from "../../../services/uploadNewTask";
@@ -11,9 +11,7 @@ type TaskCreateFooterProps = {
     socket: Socket | null;
     myself: UserProps;
     accessToken: string | null;
-    currentMainChat?: ChatProps;
-    currentThreadChat?: ThreadProps;
-    isThreadVisible?: boolean;
+    CM: ChatManagementState;
     taskContent: TaskProps;
     taskTitle: string;
     setIsSubmitted: (value: boolean) => void;
@@ -34,9 +32,7 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
         socket,
         myself,
         accessToken,
-        currentMainChat,
-        currentThreadChat,
-        isThreadVisible,
+        CM,
         taskContent,
         taskTitle,
         setIsSubmitted,
@@ -54,9 +50,7 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
             socket: socket,
             myself: myself,
             taskContent: taskContent,
-            currentMainChat: currentMainChat,
-            currentThreadChat: currentThreadChat,
-            isThreadVisible: isThreadVisible || false,
+            CM: CM,
             accessToken: accessToken || "",
             setTitleError: setTitleError,
             setTitleErrorOpen: setTitleErrorOpen,

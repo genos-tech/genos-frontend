@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 
+import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { UserProps } from "../../../types/admin";
 import { ActivityMessageProps } from "../../../types/chat";
 import { GroupedReactionProps, ReactionProps } from "../../../types/common";
@@ -8,7 +9,7 @@ import UpdateActivityReadStatusWorker from "../../../workers/updateActivityReadS
 interface UseActivityStatusProps {
     activity: ActivityMessageProps;
     activityMessages: ActivityMessageProps[];
-    setActivityMessages: (value: ActivityMessageProps[]) => void;
+    CM: ChatManagementState;
     myself: UserProps;
     accessToken: string | null;
 }
@@ -16,7 +17,7 @@ interface UseActivityStatusProps {
 export const useActivityStatus = ({
     activity,
     activityMessages,
-    setActivityMessages,
+    CM,
     myself,
     accessToken,
 }: UseActivityStatusProps) => {
@@ -59,7 +60,7 @@ export const useActivityStatus = ({
                 if (data.error) {
                     console.error("Worker failed:", data.error);
                 } else {
-                    setActivityMessages(data);
+                    CM.setActivityMessages(data);
                 }
             };
             return () => {

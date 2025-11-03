@@ -25,15 +25,14 @@ import {
     SuggestionMenuController,
     useCreateBlockNote,
 } from "@blocknote/react";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import { Box, IconButton, Tooltip } from "@mui/joy";
+import { Box, IconButton } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
-import { ChatProps } from "../../types/chat";
 import { TaskCommentProps } from "../../types/tasks";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { EmojiPicker } from "../emojiInput/EmojiPicker";
@@ -57,10 +56,10 @@ type BnUpdateTaskCommentEditorProps = {
     targetComment: TaskCommentProps;
     isInEdit: boolean;
     setIsInEdit: (value: boolean) => void;
-    setCurrentChat: (chat: ChatProps) => void;
     UIM: UIStateManagementState;
     taskCommentLines: number;
     setTaskCommentLines: (value: number) => void;
+    CM: ChatManagementState;
 };
 
 export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps) => {
@@ -81,10 +80,10 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
         targetComment,
         isInEdit,
         setIsInEdit,
-        setCurrentChat,
         taskCommentLines,
         setTaskCommentLines,
         UIM,
+        CM,
     } = props;
     const { mode } = useColorScheme();
     const bnBoxClassName: string = `bn-task-comment-box-${mode}`;
@@ -100,14 +99,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
-            mention: CreateMentionSpec(
-                TEM.teamMemberProfiles,
-                socket,
-                myself,
-                setMyself,
-                UIM,
-                setCurrentChat
-            ),
+            mention: CreateMentionSpec(TEM.teamMemberProfiles, socket, myself, setMyself, UIM, CM),
         },
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
