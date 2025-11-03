@@ -3,7 +3,7 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import LinkIcon from "@mui/icons-material/Link";
-import { Box, Button, IconButton, Input, Snackbar, Stack, Typography } from "@mui/joy";
+import { Box, Button, IconButton, Input, Snackbar, Stack, Tooltip, Typography } from "@mui/joy";
 
 import { GitHubIcon } from "../../../../../../assets/GithubIcon";
 import { TaskProps } from "../../../../../../types/tasks";
@@ -317,12 +317,16 @@ const LinkDisplay = ({ link, editingId, onEdit, onSave, onDelete }: LinkDisplayP
                     {link.title}
                 </a>
             </Typography>
-            <IconButton color="neutral" size="sm" onClick={() => onEdit(link.id)}>
-                <EditIcon />
-            </IconButton>
-            <IconButton color="danger" size="sm" onClick={() => onDelete(link.id)}>
-                <DeleteIcon />
-            </IconButton>
+            <Tooltip size="sm" title="Edit" variant="outlined">
+                <IconButton color="neutral" size="sm" onClick={() => onEdit(link.id)}>
+                    <EditIcon />
+                </IconButton>
+            </Tooltip>
+            <Tooltip size="sm" title="Delete" variant="outlined">
+                <IconButton color="danger" size="sm" onClick={() => onDelete(link.id)}>
+                    <DeleteIcon />
+                </IconButton>
+            </Tooltip>
         </Stack>
     );
 };
