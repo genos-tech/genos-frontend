@@ -20,27 +20,37 @@ import { ACTaskNotes } from "./autocompletes/ACTaskNotes";
 import { TaskNoteHeader } from "./TaskNoteHeader";
 
 type TaskNoteMainProps = {
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    UIM: UIStateManagementState;
-    CM: ChatManagementState;
+    useUISM: UIStateManagementState;
+    useCM: ChatManagementState;
     isInTaskPage: boolean;
     setIsTaskHomeVisible?: (value: boolean) => void;
-    NM: NoteManagementState;
-    TM: TaskManagementState;
+    useNM: NoteManagementState;
+    useTM: TaskManagementState;
 };
 
 export const TaskNoteMain = (props: TaskNoteMainProps) => {
-    const { TEM, socket, myself, setMyself, UIM, CM, isInTaskPage, setIsTaskHomeVisible, NM, TM } =
-        props;
+    const {
+        useTEM,
+        socket,
+        myself,
+        setMyself,
+        useUISM,
+        useCM,
+        isInTaskPage,
+        setIsTaskHomeVisible,
+        useNM,
+        useTM,
+    } = props;
 
     const { accessToken } = useAuth();
 
     // Local state
     const [currentTaskNoteTitle, setCurrentTaskNoteTitle] = useState<string>(
-        NM.currentTaskNote?.title || ""
+        useNM.currentTaskNote?.title || ""
     );
     const [openSearchBox, setOpenSearchBox] = useState(false);
     const [body, setBody] = useState<PartialBlock[]>();
@@ -50,78 +60,78 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
     // Custom hooks
     const { noteBodyEdited, noteBodySaved, setNoteBodyEdited, setNoteBodySaved, updateNote } =
         useNoteAutoSave({
-            currentTaskNote: NM.currentTaskNote,
+            currentTaskNote: useNM.currentTaskNote,
             currentTaskNoteTitle,
             body,
             myself,
             accessToken: accessToken || "",
-            setTabItems: NM.setTabItems,
-            setTaskNoteMeta: NM.setTaskNoteMeta,
+            setTabItems: useNM.setTabItems,
+            setTaskNoteMeta: useNM.setTaskNoteMeta,
         });
 
     const { currentTask } = useTaskPreview({
-        currentTaskNote: NM.currentTaskNote,
+        currentTaskNote: useNM.currentTaskNote,
         myself,
         accessToken: accessToken || "",
-        setCurrentPreviewTask: TM.setCurrentPreviewTask,
+        setCurrentPreviewTask: useTM.setCurrentPreviewTask,
     });
 
     // Effects
     useEffect(() => {
-        if (NM.currentTaskNote) {
-            setBody(NM.currentTaskNote.body);
+        if (useNM.currentTaskNote) {
+            setBody(useNM.currentTaskNote.body);
             setTsBody(getLocalCurrentTimestamp());
-            setCurrentTaskNoteTitle(NM.currentTaskNote.title);
+            setCurrentTaskNoteTitle(useNM.currentTaskNote.title);
         }
-    }, [NM.currentTaskNote]);
+    }, [useNM.currentTaskNote]);
 
     useEffect(() => {
         setNoteBodySaved(false);
-    }, [NM.selectedTabIndex]);
+    }, [useNM.selectedTabIndex]);
 
     // Event handlers
     const handleCloseTab = useCallback(
         async (tabIndex: number, closingNoteId: number) => {
             const indexOfNextNote = tabIndex === 0 ? 1 : tabIndex - 1;
             const nextTabIndex = Math.max(tabIndex - 1, 0);
-            NM.setTabItems(NM.tabItems.filter((t) => t.noteId !== closingNoteId));
-            await NM.loadNote(
-                NM.tabItems[indexOfNextNote].noteType,
-                NM.tabItems[indexOfNextNote].noteId,
+            useNM.setTabItems(useNM.tabItems.filter((t) => t.noteId !== closingNoteId));
+            await useNM.loadNote(
+                useNM.tabItems[indexOfNextNote].noteType,
+                useNM.tabItems[indexOfNextNote].noteId,
                 nextTabIndex
             );
         },
-        [NM]
+        [useNM]
     );
 
     const handleCreateChildNote = useCallback(() => {
-        if (NM.currentTaskNote) {
-            NM.handleCreateNewTaskNote(
-                NM.currentTaskNote.noteId,
-                NM.currentTaskNote.projectId,
-                NM.currentTaskNote.taskId
+        if (useNM.currentTaskNote) {
+            useNM.handleCreateNewTaskNote(
+                useNM.currentTaskNote.noteId,
+                useNM.currentTaskNote.projectId,
+                useNM.currentTaskNote.taskId
             );
         }
-    }, [NM]);
+    }, [useNM]);
 
     const handleOpenTask = useCallback(() => {
-        NM.setIsTaskVisibleInNote(true);
-    }, [NM]);
+        useNM.setIsTaskVisibleInNote(true);
+    }, [useNM]);
 
     const handleDeleteNote = useCallback(() => {
         setOpenDeleteNote(true);
     }, []);
 
     const handleCloseNotes = useCallback(() => {
-        NM.setIsTaskNoteVisible(false);
+        useNM.setIsTaskNoteVisible(false);
         if (
-            TM.isCreatingTask.flag === false &&
-            TM.isTaskPreviewVisible === false &&
+            useTM.isCreatingTask.flag === false &&
+            useTM.isTaskPreviewVisible === false &&
             setIsTaskHomeVisible
         ) {
             setIsTaskHomeVisible(true);
         }
-    }, [NM, TM, setIsTaskHomeVisible]);
+    }, [useNM, useTM, setIsTaskHomeVisible]);
 
     const handleTitleChange = useCallback((title: string) => {
         setCurrentTaskNoteTitle(title);
@@ -135,45 +145,45 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
     useEffect(() => {
         if (
             noteBodySaved &&
-            NM.currentTaskNote &&
-            currentTaskNoteTitle !== NM.currentTaskNote.title
+            useNM.currentTaskNote &&
+            currentTaskNoteTitle !== useNM.currentTaskNote.title
         ) {
             // Update the note title on the tab
-            NM.setTabItems(
-                NM.tabItems.map((item) =>
-                    item.noteType === NM.currentTaskNote?.noteType &&
-                    item.noteId === NM.currentTaskNote?.noteId
+            useNM.setTabItems(
+                useNM.tabItems.map((item) =>
+                    item.noteType === useNM.currentTaskNote?.noteType &&
+                    item.noteId === useNM.currentTaskNote?.noteId
                         ? { ...item, title: currentTaskNoteTitle }
                         : item
                 )
             );
 
             // Update the note title in the sidebar
-            NM.setTaskNoteMeta(
-                NM.taskNoteMeta.map((item) =>
-                    item.noteType === NM.currentTaskNote?.noteType &&
-                    item.noteId === NM.currentTaskNote?.noteId
+            useNM.setTaskNoteMeta(
+                useNM.taskNoteMeta.map((item) =>
+                    item.noteType === useNM.currentTaskNote?.noteType &&
+                    item.noteId === useNM.currentTaskNote?.noteId
                         ? { ...item, title: currentTaskNoteTitle }
                         : item
                 )
             );
 
-            NM.setCurrentTaskNote({
-                ...NM.currentTaskNote,
+            useNM.setCurrentTaskNote({
+                ...useNM.currentTaskNote,
                 title: currentTaskNoteTitle,
             });
         }
-    }, [noteBodySaved, NM, currentTaskNoteTitle]);
+    }, [noteBodySaved, useNM, currentTaskNoteTitle]);
 
-    const pmChat = CM.allChats.find(
+    const pmChat = useCM.allChats.find(
         (chat) =>
             chat.chatType === 3 &&
-            NM.currentTaskNote &&
-            chat.chatId === NM.currentTaskNote.projectId
+            useNM.currentTaskNote &&
+            chat.chatId === useNM.currentTaskNote.projectId
     );
 
     // Early return for empty state
-    if (NM.tabItems.length === 0 || NM.currentTaskNote === null) {
+    if (useNM.tabItems.length === 0 || useNM.currentTaskNote === null) {
         return (
             <Box
                 sx={{
@@ -201,7 +211,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
 
     return (
         <Stack direction={"column"} sx={{ width: "100%" }}>
-            {body && NM.currentNoteType !== 0 && (
+            {body && useNM.currentNoteType !== 0 && (
                 <>
                     {/* Note Header */}
                     <Stack
@@ -227,15 +237,15 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                                     myself={myself}
                                     openSearchBox={openSearchBox}
                                     setOpenSearchBox={setOpenSearchBox}
-                                    NM={NM}
+                                    useNM={useNM}
                                 />
                             </Box>
                         )}
 
-                        {isInTaskPage === false && <TaskNoteHeader NM={NM} />}
+                        {isInTaskPage === false && <TaskNoteHeader useNM={useNM} />}
 
                         <NoteHeaderActions
-                            CM={CM}
+                            useCM={useCM}
                             currentTask={currentTask}
                             isInTaskPage={isInTaskPage}
                             myself={myself}
@@ -243,8 +253,8 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                             pmChat={pmChat}
                             setMyself={setMyself}
                             socket={socket}
-                            TEM={TEM}
-                            UIM={UIM}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
                             onCloseNotes={handleCloseNotes}
                             onCreateChildNote={handleCreateChildNote}
                             onCreateNewNote={() => {}} // Don't create new task note in task note page
@@ -252,21 +262,21 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                             onOpenTask={handleOpenTask}
                         />
 
-                        {NM.currentTaskNote && (
+                        {useNM.currentTaskNote && (
                             <ModalDeleteTaskNote
                                 handleCloseTab={handleCloseTab}
                                 myself={myself}
                                 openDeleteNote={openDeleteNote}
                                 setOpenDeleteNote={setOpenDeleteNote}
-                                NM={NM}
+                                useNM={useNM}
                             />
                         )}
                     </Stack>
 
                     <NoteTabs
                         body={body}
-                        CM={CM}
-                        NM={NM}
+                        useCM={useCM}
+                        useNM={useNM}
                         currentTaskNoteTitle={currentTaskNoteTitle}
                         myself={myself}
                         noteBodySaved={noteBodySaved}
@@ -275,9 +285,9 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                         setNoteBodyEdited={setNoteBodyEdited}
                         setNoteBodySaved={setNoteBodySaved}
                         socket={socket}
-                        TEM={TEM}
+                        useTEM={useTEM}
                         tsBody={tsBody}
-                        UIM={UIM}
+                        useUISM={useUISM}
                         onCloseTab={handleCloseTab}
                         onTitleBlur={handleTitleBlur}
                         onTitleChange={handleTitleChange}

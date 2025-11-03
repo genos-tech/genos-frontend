@@ -10,12 +10,12 @@ import { ProjectProps } from "../../../../types/tasks";
 type BubbleReplyButtonTypes = {
     message: MessageProps;
     taskId: number | null;
-    PM: ProjectManagementState;
-    CM: ChatManagementState;
-    TM: TaskManagementState;
+    usePM: ProjectManagementState;
+    useCM: ChatManagementState;
+    useTM: TaskManagementState;
 };
 export const BubbleOpenTaskButton = (props: BubbleReplyButtonTypes) => {
-    const { message, taskId, PM, CM, TM } = props;
+    const { message, taskId, usePM, useCM, useTM } = props;
     return (
         <Box sx={{ textAlign: "right" }}>
             <Tooltip size="sm" title="Open Task" variant="outlined">
@@ -28,14 +28,14 @@ export const BubbleOpenTaskButton = (props: BubbleReplyButtonTypes) => {
                     }}
                     onClick={() => {
                         if (taskId !== null) {
-                            CM.setIsMainChatVisible(true);
-                            CM.setIsThreadVisible(false);
-                            TM.setIsTaskPreviewVisible(true);
-                            TM.setIsCreatingTask({ ...TM.isCreatingTask, flag: false });
-                            TM.setCurrentPreviewTaskId(taskId);
+                            useCM.setIsMainChatVisible(true);
+                            useCM.setIsThreadVisible(false);
+                            useTM.setIsTaskPreviewVisible(true);
+                            useTM.setIsCreatingTask({ ...useTM.isCreatingTask, flag: false });
+                            useTM.setCurrentPreviewTaskId(taskId);
 
                             if (message.project && message.project.projectId) {
-                                PM.setCurrentProject(message.project);
+                                usePM.setCurrentProject(message.project);
                             } else {
                                 console.error("Failed to set the current project");
                             }

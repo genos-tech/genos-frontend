@@ -13,7 +13,7 @@ import { UserProps } from "../../../../types/admin";
 import { MyNoteProps } from "../../../../types/notes";
 
 interface NoteEditorProps {
-    NM: NoteManagementState;
+    useNM: NoteManagementState;
     currentMyNoteTitle: string;
     body: PartialBlock[] | undefined;
     titleInputRef: React.RefObject<HTMLInputElement | null>;
@@ -21,28 +21,28 @@ interface NoteEditorProps {
     onTitleChange: (value: string) => void;
     onTitleBlur: () => void;
     onBodyChange: (newBody: PartialBlock[]) => void;
-    CM: ChatManagementState;
+    useCM: ChatManagementState;
     setMyself: (me: UserProps) => void;
-    UIM: UIStateManagementState;
+    useUISM: UIStateManagementState;
     socket: Socket | null;
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     myself: UserProps;
 }
 
 export const NoteEditor = ({
     currentMyNoteTitle,
-    NM,
+    useNM,
     body,
     titleInputRef,
     noteBodySaved,
     onTitleChange,
     onTitleBlur,
     onBodyChange,
-    CM,
+    useCM,
     setMyself,
-    UIM,
+    useUISM,
     socket,
-    TEM,
+    useTEM,
     myself,
 }: NoteEditorProps) => {
     return (
@@ -105,16 +105,16 @@ export const NoteEditor = ({
 
             <BnMyNoteEditor
                 body={body || []}
-                CM={CM}
-                currentMyNote={NM.currentMyNote as MyNoteProps}
+                useCM={useCM}
+                currentMyNote={useNM.currentMyNote as MyNoteProps}
                 myself={myself}
                 setBody={onBodyChange}
                 setMyself={setMyself}
                 setNoteBodyEdited={() => {}} // This will be handled by the hook
                 setNoteBodySaved={() => {}} // This will be handled by the hook
                 socket={socket}
-                TEM={TEM}
-                UIM={UIM}
+                useTEM={useTEM}
+                useUISM={useUISM}
             />
         </>
     );

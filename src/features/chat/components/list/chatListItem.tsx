@@ -19,11 +19,11 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
         myself,
         setIsToDoVisible,
         setMyself,
-        UIM,
+        useUISM,
         socket,
-        TEM,
-        CM,
-        TM,
+        useTEM,
+        useCM,
+        useTM,
     } = props;
 
     const { accessToken } = useAuth();
@@ -39,21 +39,21 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
     } = useChatListItem({
         chat,
         myself,
-        CM,
-        TM,
+        useCM,
+        useTM,
         isPinnedChat,
         accessToken: accessToken || "",
     });
 
     const handlePinClick = (event: React.MouseEvent) => {
         event.stopPropagation();
-        pinChatHandler(chat.chatId, chat.chatType, CM.funcSetAllChats);
+        pinChatHandler(chat.chatId, chat.chatType, useCM.funcSetAllChats);
         setIsPinned(!isPinned);
     };
 
     const handleSplitClick = (event: React.MouseEvent) => {
         event.stopPropagation();
-        splitOpenHandler(CM);
+        splitOpenHandler(useCM);
     };
 
     const handleTodoClick = () => {
@@ -69,7 +69,7 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                     sx={{ flexDirection: "column", alignItems: "initial", gap: 1 }}
                     variant="soft"
                     onClick={() => {
-                        onClickHandler(CM);
+                        onClickHandler(useCM);
                         setIsToDoVisible(false);
                     }}
                 >
@@ -85,13 +85,13 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                                     <ChatListItemAvatar
                                         chat={chat}
                                         chatType={chat.chatType}
-                                        CM={CM}
+                                        useCM={useCM}
                                         isYou={isYou}
                                         myself={myself}
                                         setMyself={setMyself}
                                         socket={socket}
-                                        TEM={TEM}
-                                        UIM={UIM}
+                                        useTEM={useTEM}
+                                        useUISM={useUISM}
                                     />
                                 </div>
 
@@ -99,7 +99,7 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                                     chat={chat}
                                     isYou={isYou}
                                     myself={myself}
-                                    TEM={TEM}
+                                    useTEM={useTEM}
                                 />
                             </Stack>
 

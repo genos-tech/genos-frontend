@@ -45,12 +45,12 @@ type ChatSidebarProps = {
     myself: UserProps;
     setIsToDoVisible: (value: boolean) => void;
     setMyself: (value: UserProps) => void;
-    UIM: UIStateManagementState;
+    useUISM: UIStateManagementState;
     socket: Socket | null;
-    TEM: TeamManagementState;
-    CM: ChatManagementState;
-    TM: TaskManagementState;
-    PM: ProjectManagementState;
+    useTEM: TeamManagementState;
+    useCM: ChatManagementState;
+    useTM: TaskManagementState;
+    usePM: ProjectManagementState;
 };
 
 export const ChatSidebar = (props: ChatSidebarProps) => {
@@ -59,12 +59,12 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
         myself,
         setIsToDoVisible,
         setMyself,
-        UIM,
+        useUISM,
         socket,
-        TEM,
-        CM,
-        TM,
-        PM,
+        useTEM,
+        useCM,
+        useTM,
+        usePM,
     } = props;
     const { mode } = useColorScheme();
     const [openSearchBox, setOpenSearchBox] = useState(false);
@@ -106,7 +106,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
             const lastChatIdStr: string = localStorage.getItem("lastDMChatId") || "";
             if (lastChatIdStr !== "") {
                 lastChatId = parseInt(lastChatIdStr);
-                lastChat = CM.allChats.filter((chat) => chat.chatId === lastChatId)[0];
+                lastChat = useCM.allChats.filter((chat) => chat.chatId === lastChatId)[0];
                 lastChatType = 1;
             }
         }
@@ -114,7 +114,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
             const lastChatIdStr: string = localStorage.getItem("lastGMChatId") || "";
             if (lastChatIdStr !== "") {
                 lastChatId = parseInt(lastChatIdStr);
-                lastChat = CM.allChats.filter((chat) => chat.chatId === lastChatId)[0];
+                lastChat = useCM.allChats.filter((chat) => chat.chatId === lastChatId)[0];
                 lastChatType = 2;
             }
         }
@@ -122,7 +122,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
             const lastChatIdStr: string = localStorage.getItem("lastPMChatId") || "";
             if (lastChatIdStr !== "") {
                 lastChatId = parseInt(lastChatIdStr);
-                lastChat = CM.allChats.filter((chat) => chat.chatId === lastChatId)[0];
+                lastChat = useCM.allChats.filter((chat) => chat.chatId === lastChatId)[0];
                 lastChatType = 3;
             }
         }
@@ -131,7 +131,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
             const lastChatTypeStr: string = localStorage.getItem("lastPinnedChatType") || "";
             if (lastChatIdStr !== "" && lastChatTypeStr !== "") {
                 lastChatId = parseInt(lastChatIdStr);
-                lastChat = CM.allChats.filter((chat) => chat.chatId === lastChatId)[0];
+                lastChat = useCM.allChats.filter((chat) => chat.chatId === lastChatId)[0];
                 lastChatType = parseInt(lastChatTypeStr);
             }
         }
@@ -142,20 +142,20 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 .then((messages: MessageProps[]) => {
                     if (messages.length > 0) {
                         const newChat: ChatProps = defineNewChat(lastChat, messages);
-                        CM.setCurrentMainChat(newChat);
+                        useCM.setCurrentMainChat(newChat);
 
                         // Switch Thread to Main
-                        if (CM.isThreadVisible) {
-                            CM.setIsMainChatVisible(true);
-                            if (TM.isCreatingTask.flag === true || TM.isTaskPreviewVisible) {
-                                CM.setIsThreadVisible(false);
+                        if (useCM.isThreadVisible) {
+                            useCM.setIsMainChatVisible(true);
+                            if (useTM.isCreatingTask.flag === true || useTM.isTaskPreviewVisible) {
+                                useCM.setIsThreadVisible(false);
                             }
                         }
                     }
                 })
                 .catch((error) => console.error(error));
         } else {
-            CM.setCurrentMainChat(defaultChat);
+            useCM.setCurrentMainChat(defaultChat);
         }
     };
 
@@ -172,15 +172,15 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 }}
             >
                 <ChatSearch
-                    CM={CM}
+                    useCM={useCM}
                     myself={myself}
                     openSearchBox={openSearchBox}
                     setMyself={setMyself}
                     setOpenJoinGM={setOpenJoinGM}
                     setOpenSearchBox={setOpenSearchBox}
                     socket={socket}
-                    TEM={TEM}
-                    UIM={UIM}
+                    useTEM={useTEM}
+                    useUISM={useUISM}
                 />
 
                 <ModalJoinGM
@@ -194,7 +194,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     {/* Centered buttons */}
                     <Stack direction="row" flexGrow={1} justifyContent="center" spacing={1}>
                         {/* For DM */}
-                        {CM.unReadChatCounts && (CM.unReadChatCounts[1] || 0) > 0 && (
+                        {useCM.unReadChatCounts && (useCM.unReadChatCounts[1] || 0) > 0 && (
                             <Tooltip
                                 placement="top"
                                 size="sm"
@@ -204,7 +204,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             >
                                 <Badge
                                     anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                                    badgeContent={CM.unReadChatCounts[1]}
+                                    badgeContent={useCM.unReadChatCounts[1]}
                                     color="primary"
                                     size="sm"
                                     sx={{ "& .JoyBadge-badge": { zIndex: 1 } }}
@@ -212,9 +212,11 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                     <IconButton
                                         component="p"
                                         size="sm"
-                                        variant={CM.currentChatPaneType === 1 ? "solid" : "plain"}
+                                        variant={
+                                            useCM.currentChatPaneType === 1 ? "solid" : "plain"
+                                        }
                                         onClick={() => {
-                                            CM.setCurrentChatPaneType(1);
+                                            useCM.setCurrentChatPaneType(1);
                                             localStorage.setItem("currentChatPaneType", "1");
                                             onChatIconClickedHandler(1);
                                         }}
@@ -224,7 +226,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 </Badge>
                             </Tooltip>
                         )}
-                        {!(CM.unReadChatCounts && (CM.unReadChatCounts[1] || 0) > 0) && (
+                        {!(useCM.unReadChatCounts && (useCM.unReadChatCounts[1] || 0) > 0) && (
                             <Tooltip
                                 placement="top"
                                 size="sm"
@@ -235,9 +237,9 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 <IconButton
                                     component="p"
                                     size="sm"
-                                    variant={CM.currentChatPaneType === 1 ? "solid" : "plain"}
+                                    variant={useCM.currentChatPaneType === 1 ? "solid" : "plain"}
                                     onClick={() => {
-                                        CM.setCurrentChatPaneType(1);
+                                        useCM.setCurrentChatPaneType(1);
                                         localStorage.setItem("currentChatPaneType", "1");
                                         onChatIconClickedHandler(1);
                                     }}
@@ -248,7 +250,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         )}
 
                         {/* For GM */}
-                        {CM.unReadChatCounts && (CM.unReadChatCounts[2] || 0) > 0 && (
+                        {useCM.unReadChatCounts && (useCM.unReadChatCounts[2] || 0) > 0 && (
                             <Tooltip
                                 placement="top"
                                 size="sm"
@@ -258,7 +260,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             >
                                 <Badge
                                     anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                                    badgeContent={CM.unReadChatCounts[2]}
+                                    badgeContent={useCM.unReadChatCounts[2]}
                                     color="primary"
                                     size="sm"
                                     sx={{ "& .JoyBadge-badge": { zIndex: 1 } }}
@@ -266,9 +268,11 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                     <IconButton
                                         component="p"
                                         size="sm"
-                                        variant={CM.currentChatPaneType === 2 ? "solid" : "plain"}
+                                        variant={
+                                            useCM.currentChatPaneType === 2 ? "solid" : "plain"
+                                        }
                                         onClick={() => {
-                                            CM.setCurrentChatPaneType(2);
+                                            useCM.setCurrentChatPaneType(2);
                                             localStorage.setItem("currentChatPaneType", "2");
                                             onChatIconClickedHandler(2);
                                         }}
@@ -278,7 +282,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 </Badge>
                             </Tooltip>
                         )}
-                        {!(CM.unReadChatCounts && (CM.unReadChatCounts[2] || 0) > 0) && (
+                        {!(useCM.unReadChatCounts && (useCM.unReadChatCounts[2] || 0) > 0) && (
                             <Tooltip
                                 placement="top"
                                 size="sm"
@@ -289,9 +293,9 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 <IconButton
                                     component="p"
                                     size="sm"
-                                    variant={CM.currentChatPaneType === 2 ? "solid" : "plain"}
+                                    variant={useCM.currentChatPaneType === 2 ? "solid" : "plain"}
                                     onClick={() => {
-                                        CM.setCurrentChatPaneType(2);
+                                        useCM.setCurrentChatPaneType(2);
                                         localStorage.setItem("currentChatPaneType", "2");
                                         onChatIconClickedHandler(2);
                                     }}
@@ -302,7 +306,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         )}
 
                         {/* For PM */}
-                        {CM.unReadChatCounts && (CM.unReadChatCounts[3] || 0) > 0 && (
+                        {useCM.unReadChatCounts && (useCM.unReadChatCounts[3] || 0) > 0 && (
                             <Tooltip
                                 placement="top"
                                 size="sm"
@@ -312,7 +316,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             >
                                 <Badge
                                     anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                                    badgeContent={CM.unReadChatCounts[3]}
+                                    badgeContent={useCM.unReadChatCounts[3]}
                                     color="primary"
                                     size="sm"
                                     sx={{ "& .JoyBadge-badge": { zIndex: 1 } }}
@@ -320,9 +324,11 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                     <IconButton
                                         component="p"
                                         size="sm"
-                                        variant={CM.currentChatPaneType === 3 ? "solid" : "plain"}
+                                        variant={
+                                            useCM.currentChatPaneType === 3 ? "solid" : "plain"
+                                        }
                                         onClick={() => {
-                                            CM.setCurrentChatPaneType(3);
+                                            useCM.setCurrentChatPaneType(3);
                                             localStorage.setItem("currentChatPaneType", "3");
                                             onChatIconClickedHandler(3);
                                         }}
@@ -332,7 +338,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 </Badge>
                             </Tooltip>
                         )}
-                        {!(CM.unReadChatCounts && (CM.unReadChatCounts[3] || 0) > 0) && (
+                        {!(useCM.unReadChatCounts && (useCM.unReadChatCounts[3] || 0) > 0) && (
                             <Tooltip
                                 placement="top"
                                 size="sm"
@@ -343,9 +349,9 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 <IconButton
                                     component="p"
                                     size="sm"
-                                    variant={CM.currentChatPaneType === 3 ? "solid" : "plain"}
+                                    variant={useCM.currentChatPaneType === 3 ? "solid" : "plain"}
                                     onClick={() => {
-                                        CM.setCurrentChatPaneType(3);
+                                        useCM.setCurrentChatPaneType(3);
                                         localStorage.setItem("currentChatPaneType", "3");
                                         onChatIconClickedHandler(3);
                                     }}
@@ -356,7 +362,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         )}
 
                         {/* For Flagged */}
-                        {CM.flaggedMessages.length > 0 && (
+                        {useCM.flaggedMessages.length > 0 && (
                             <Tooltip
                                 placement="top"
                                 size="sm"
@@ -366,7 +372,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             >
                                 <Badge
                                     anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                                    badgeContent={CM.flaggedMessages.length}
+                                    badgeContent={useCM.flaggedMessages.length}
                                     color="primary"
                                     size="sm"
                                     sx={{ "& .JoyBadge-badge": { zIndex: 1 } }}
@@ -374,9 +380,11 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                     <IconButton
                                         component="p"
                                         size="sm"
-                                        variant={CM.currentChatPaneType === 6 ? "solid" : "plain"}
+                                        variant={
+                                            useCM.currentChatPaneType === 6 ? "solid" : "plain"
+                                        }
                                         onClick={() => {
-                                            CM.setCurrentChatPaneType(6);
+                                            useCM.setCurrentChatPaneType(6);
                                             localStorage.setItem("currentChatPaneType", "6");
                                         }}
                                     >
@@ -385,7 +393,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 </Badge>
                             </Tooltip>
                         )}
-                        {!(CM.flaggedMessages.length > 0) && (
+                        {!(useCM.flaggedMessages.length > 0) && (
                             <Tooltip
                                 placement="top"
                                 size="sm"
@@ -396,9 +404,9 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 <IconButton
                                     component="p"
                                     size="sm"
-                                    variant={CM.currentChatPaneType === 6 ? "solid" : "plain"}
+                                    variant={useCM.currentChatPaneType === 6 ? "solid" : "plain"}
                                     onClick={() => {
-                                        CM.setCurrentChatPaneType(6);
+                                        useCM.setCurrentChatPaneType(6);
                                         localStorage.setItem("currentChatPaneType", "6");
                                     }}
                                 >
@@ -408,7 +416,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         )}
 
                         {/* For Activity */}
-                        {CM.unReadActivityMessageCounts > 0 && (
+                        {useCM.unReadActivityMessageCounts > 0 && (
                             <Tooltip
                                 placement="top"
                                 size="sm"
@@ -418,7 +426,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             >
                                 <Badge
                                     anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                                    badgeContent={CM.unReadActivityMessageCounts}
+                                    badgeContent={useCM.unReadActivityMessageCounts}
                                     color="primary"
                                     size="sm"
                                     sx={{
@@ -428,9 +436,11 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                     <IconButton
                                         component="p"
                                         size="sm"
-                                        variant={CM.currentChatPaneType === 5 ? "solid" : "plain"}
+                                        variant={
+                                            useCM.currentChatPaneType === 5 ? "solid" : "plain"
+                                        }
                                         onClick={() => {
-                                            CM.setCurrentChatPaneType(5);
+                                            useCM.setCurrentChatPaneType(5);
                                             localStorage.setItem("currentChatPaneType", "5");
                                         }}
                                     >
@@ -439,7 +449,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 </Badge>
                             </Tooltip>
                         )}
-                        {CM.unReadActivityMessageCounts === 0 && (
+                        {useCM.unReadActivityMessageCounts === 0 && (
                             <Tooltip
                                 placement="top"
                                 size="sm"
@@ -450,9 +460,9 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 <IconButton
                                     component="p"
                                     size="sm"
-                                    variant={CM.currentChatPaneType === 5 ? "solid" : "plain"}
+                                    variant={useCM.currentChatPaneType === 5 ? "solid" : "plain"}
                                     onClick={() => {
-                                        CM.setCurrentChatPaneType(5);
+                                        useCM.setCurrentChatPaneType(5);
                                         localStorage.setItem("currentChatPaneType", "5");
                                     }}
                                 >
@@ -515,17 +525,17 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 </Stack>
 
                 {/* For Direct Messages */}
-                {CM.currentChatPaneType === 1 && (
+                {useCM.currentChatPaneType === 1 && (
                     <Box>
                         <ChatList
-                            PM={PM}
+                            usePM={usePM}
                             chatType={1}
-                            CM={CM}
+                            useCM={useCM}
                             currentActivityMessageType={-1}
                             socket={socket}
-                            TEM={TEM}
-                            UIM={UIM}
-                            TM={TM}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
+                            useTM={useTM}
                             actions={{
                                 setIsToDoVisible,
                             }}
@@ -542,17 +552,17 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 )}
 
                 {/* For Group Messages */}
-                {CM.currentChatPaneType === 2 && (
+                {useCM.currentChatPaneType === 2 && (
                     <Box>
                         <ChatList
-                            PM={PM}
+                            usePM={usePM}
                             chatType={2}
-                            CM={CM}
+                            useCM={useCM}
                             currentActivityMessageType={-1}
                             socket={socket}
-                            TEM={TEM}
-                            UIM={UIM}
-                            TM={TM}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
+                            useTM={useTM}
                             actions={{
                                 setIsToDoVisible,
                             }}
@@ -569,17 +579,17 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 )}
 
                 {/* For PM Chats */}
-                {CM.currentChatPaneType === 3 && (
+                {useCM.currentChatPaneType === 3 && (
                     <Box>
                         <ChatList
-                            PM={PM}
+                            usePM={usePM}
                             chatType={3}
-                            CM={CM}
+                            useCM={useCM}
                             currentActivityMessageType={-1}
                             socket={socket}
-                            TEM={TEM}
-                            UIM={UIM}
-                            TM={TM}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
+                            useTM={useTM}
                             actions={{
                                 setIsToDoVisible,
                             }}
@@ -596,21 +606,21 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 )}
 
                 {/* For Activity Messages */}
-                {CM.currentChatPaneType === 5 && (
+                {useCM.currentChatPaneType === 5 && (
                     <Box>
                         <ActivityDivider
                             currentActivityMessageType={currentActivityMessageType}
                             setCurrentActivityMessageType={setCurrentActivityMessageType}
                         />
                         <ChatList
-                            PM={PM}
+                            usePM={usePM}
                             chatType={5}
-                            CM={CM}
+                            useCM={useCM}
                             currentActivityMessageType={currentActivityMessageType}
                             socket={socket}
-                            TEM={TEM}
-                            UIM={UIM}
-                            TM={TM}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
+                            useTM={useTM}
                             actions={{
                                 setIsToDoVisible,
                             }}
@@ -627,17 +637,17 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 )}
 
                 {/* For Flagged Messages */}
-                {CM.currentChatPaneType === 6 && (
+                {useCM.currentChatPaneType === 6 && (
                     <Box>
                         <ChatList
-                            PM={PM}
+                            usePM={usePM}
                             chatType={6}
-                            CM={CM}
+                            useCM={useCM}
                             currentActivityMessageType={currentActivityMessageType}
                             socket={socket}
-                            TEM={TEM}
-                            UIM={UIM}
-                            TM={TM}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
+                            useTM={useTM}
                             actions={{
                                 setIsToDoVisible,
                             }}
@@ -655,7 +665,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
             </Sheet>
 
             <ModalCreateGM
-                CM={CM}
+                useCM={useCM}
                 myself={myself}
                 open={openCreateGM}
                 setOpen={setOpenCreateGM}

@@ -4,21 +4,21 @@ import { useChatManagement } from "../chats/useChatManagement";
 import { useTaskManagement } from "../tasks/useTaskManagement";
 
 interface UseThreadTaskHandlingProps {
-    CM: any;
-    TM: any;
+    useCM: any;
+    useTM: any;
 }
 
-export const useThreadTaskHandling = ({ CM, TM }: UseThreadTaskHandlingProps) => {
+export const useThreadTaskHandling = ({ useCM, useTM }: UseThreadTaskHandlingProps) => {
     // Handle thread chat task preview
     useEffect(() => {
         // If the thread chat is visible and has a task id, set the current preview task id.
         // This happens when someone created a task in the thread chat.
         if (
-            CM.currentThreadChat &&
-            CM.currentThreadChat.taskId !== null &&
-            CM.isThreadVisible === true
+            useCM.currentThreadChat &&
+            useCM.currentThreadChat.taskId !== null &&
+            useCM.isThreadVisible === true
         ) {
-            TM.setCurrentPreviewTaskId(CM.currentThreadChat.taskId);
+            useTM.setCurrentPreviewTaskId(useCM.currentThreadChat.taskId);
         }
-    }, [CM.currentThreadChat]);
+    }, [useCM.currentThreadChat]);
 };

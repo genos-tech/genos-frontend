@@ -14,66 +14,66 @@ import { useWebSocket } from "./hooks/common/useWebSocket";
 
 export const App = () => {
     // Initialize app with authentication and basic setup
-    const { accessToken, myself, setMyself, UIM, TEM } = useAppInitialization();
+    const { accessToken, myself, setMyself, useUISM, useTEM } = useAppInitialization();
 
     // WebSocket management
-    const { socketInstance } = useWebSocket(accessToken, myself, TEM.currentTeamId);
+    const { socketInstance } = useWebSocket(accessToken, myself, useTEM.currentTeamId);
 
     // Project and task management
-    const { PM, TM } = useProjectTaskManagement({
+    const { usePM, useTM } = useProjectTaskManagement({
         myself,
         accessToken: accessToken || "",
-        currentTeamId: TEM.currentTeamId,
+        currentTeamId: useTEM.currentTeamId,
     });
 
     // Service-specific initialization and management
-    const { NM, CM, IM } = useServiceInitialization({
+    const { useNM, useCM, useIM } = useServiceInitialization({
         myself,
         accessToken: accessToken || "",
-        currentTeamId: TEM.currentTeamId,
-        isLoading: UIM.isLoading,
-        openingService: UIM.openingService,
+        currentTeamId: useTEM.currentTeamId,
+        isLoading: useUISM.isLoading,
+        openingService: useUISM.openingService,
         socketInstance,
     });
 
     // Handle thread task interactions
-    useThreadTaskHandling({ CM, TM });
+    useThreadTaskHandling({ useCM, useTM });
 
     // WebSocket synchronization
     webSocketSync({
-        CM: CM,
+        useCM: useCM,
         accessToken: accessToken,
-        currentPreviewTaskId: TM.currentPreviewTaskId,
-        currentProject: PM.currentProject,
-        funcSetInboxItems: IM.funcSetInboxItems,
-        isLoading: UIM.isLoading,
+        currentPreviewTaskId: useTM.currentPreviewTaskId,
+        currentProject: usePM.currentProject,
+        funcSetInboxItems: useIM.funcSetInboxItems,
+        isLoading: useUISM.isLoading,
         myself: myself,
-        setIsTaskCommentUpdated: TM.setIsTaskCommentUpdated,
-        setIsTaskUpdatedBySomeone: TM.setIsTaskUpdatedBySomeone,
+        setIsTaskCommentUpdated: useTM.setIsTaskCommentUpdated,
+        setIsTaskUpdatedBySomeone: useTM.setIsTaskUpdatedBySomeone,
         socket: socketInstance,
     });
 
-    return UIM.isLoading || CM.currentMainChat === undefined ? (
+    return useUISM.isLoading || useCM.currentMainChat === undefined ? (
         <InitialLoad
             myself={myself}
-            setCurrentMainChat={CM.setCurrentMainChat}
-            setIsLoading={UIM.setIsLoading}
+            setCurrentMainChat={useCM.setCurrentMainChat}
+            setIsLoading={useUISM.setIsLoading}
         />
     ) : (
         <div className="main-container">
             <CssVarsProvider disableTransitionOnChange>
                 <CssBaseline />
                 <AppContent
-                    CM={CM}
-                    IM={IM}
+                    useCM={useCM}
+                    useIM={useIM}
                     myself={myself}
-                    NM={NM}
-                    PM={PM}
+                    useNM={useNM}
+                    usePM={usePM}
                     setMyself={setMyself}
                     socketInstance={socketInstance}
-                    TEM={TEM}
-                    TM={TM}
-                    UIM={UIM}
+                    useTEM={useTEM}
+                    useTM={useTM}
+                    useUISM={useUISM}
                 />
             </CssVarsProvider>
         </div>

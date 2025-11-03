@@ -41,7 +41,7 @@ import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 
 type BnUpdateTaskCommentEditorProps = {
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
@@ -55,16 +55,16 @@ type BnUpdateTaskCommentEditorProps = {
     targetComment: TaskCommentProps;
     isInEdit: boolean;
     setIsInEdit: (value: boolean) => void;
-    UIM: UIStateManagementState;
+    useUISM: UIStateManagementState;
     taskCommentLines: number;
     setTaskCommentLines: (value: number) => void;
-    CM: ChatManagementState;
-    TM: TaskManagementState;
+    useCM: ChatManagementState;
+    useTM: TaskManagementState;
 };
 
 export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps) => {
     const {
-        TEM,
+        useTEM,
         myself,
         setMyself,
         socket,
@@ -80,9 +80,9 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
         setIsInEdit,
         taskCommentLines,
         setTaskCommentLines,
-        UIM,
-        CM,
-        TM,
+        useUISM,
+        useCM,
+        useTM,
     } = props;
     const { mode } = useColorScheme();
     const bnBoxClassName: string = `bn-task-comment-box-${mode}`;
@@ -98,7 +98,14 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
-            mention: CreateMentionSpec(TEM.teamMemberProfiles, socket, myself, setMyself, UIM, CM),
+            mention: CreateMentionSpec(
+                useTEM.teamMemberProfiles,
+                socket,
+                myself,
+                setMyself,
+                useUISM,
+                useCM
+            ),
         },
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
@@ -190,7 +197,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
     }, [selectedEmoji]);
 
     useEffect(() => {
-        if (TM.isTaskCommentUpdated && TM.isTaskCommentUpdated.isUpdate === true && taskId) {
+        if (useTM.isTaskCommentUpdated && useTM.isTaskCommentUpdated.isUpdate === true && taskId) {
             setTaskComments([
                 ...taskComments,
                 {
@@ -205,9 +212,9 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                 },
             ]);
             editor.replaceBlocks(editor.document, []);
-            TM.setIsTaskCommentUpdated({ isUpdate: false, scrollToBottom: false });
+            useTM.setIsTaskCommentUpdated({ isUpdate: false, scrollToBottom: false });
         }
-    }, [TM.isTaskCommentUpdated, taskComments]);
+    }, [useTM.isTaskCommentUpdated, taskComments]);
 
     useEffect(() => {
         if (isInEdit === false) {
@@ -230,7 +237,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                         is_private: isPrivate || false,
                     },
                     (ack: any) => {
-                        TM.setIsTaskCommentUpdated({ isUpdate: true, scrollToBottom: true });
+                        useTM.setIsTaskCommentUpdated({ isUpdate: true, scrollToBottom: true });
                     }
                 );
             }
@@ -373,7 +380,11 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                         getItems={async (query) =>
                             // Gets the mentions menu items
                             filterSuggestionItems(
-                                MentionMenuItems(TEM.teamMemberProfiles, editor, TEM.teamMembers),
+                                MentionMenuItems(
+                                    useTEM.teamMemberProfiles,
+                                    editor,
+                                    useTEM.teamMembers
+                                ),
                                 query
                             )
                         }

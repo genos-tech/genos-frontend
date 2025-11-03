@@ -20,13 +20,13 @@ import {
 
 type TaskFilterMenuProps = {
     isTaskUpdated?: boolean;
-    TM: TaskManagementState;
+    useTM: TaskManagementState;
     predefinedTagsFilters: FilterProps[];
     setCurrentDisplayingTasks: (tasks: TaskTableProps[]) => void;
 };
 
 export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
-    const { isTaskUpdated, TM, predefinedTagsFilters, setCurrentDisplayingTasks } = props;
+    const { isTaskUpdated, useTM, predefinedTagsFilters, setCurrentDisplayingTasks } = props;
     const { mode } = useColorScheme();
 
     // Status filter
@@ -200,7 +200,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     ) => {
         // Apply all filters and set the displaying tasks
         // Filters: status, tags, priority, effort level
-        let filteredTasks = TM.allTasks;
+        let filteredTasks = useTM.allTasks;
 
         // Filter by status
         if (statuses.length === 1) {
@@ -278,7 +278,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
 
     useEffect(() => {
         applyFilters(selectedStatus, selectedTags, selectedPriorities, selectedEffortLevels);
-    }, [TM.allTasks]);
+    }, [useTM.allTasks]);
 
     useEffect(() => {
         if (isTaskUpdated) {

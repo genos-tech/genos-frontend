@@ -13,12 +13,12 @@ interface ChatContextType {
     socket: Socket | null;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    UIM: UIStateManagementState;
-    CM: ChatManagementState;
-    PM: ProjectManagementState;
-    TEM: TeamManagementState;
-    NM: NoteManagementState;
-    TM: TaskManagementState;
+    useUISM: UIStateManagementState;
+    useCM: ChatManagementState;
+    usePM: ProjectManagementState;
+    useTEM: TeamManagementState;
+    useNM: NoteManagementState;
+    useTM: TaskManagementState;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -36,12 +36,12 @@ interface ChatProviderProps {
     socket: Socket | null;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    UIM: UIStateManagementState;
-    CM: ChatManagementState;
-    PM: ProjectManagementState;
-    TEM: TeamManagementState;
-    NM: NoteManagementState;
-    TM: TaskManagementState;
+    useUISM: UIStateManagementState;
+    useCM: ChatManagementState;
+    usePM: ProjectManagementState;
+    useTEM: TeamManagementState;
+    useNM: NoteManagementState;
+    useTM: TaskManagementState;
 }
 
 export const ChatProvider = ({
@@ -49,12 +49,12 @@ export const ChatProvider = ({
     socket,
     myself,
     setMyself,
-    UIM,
-    CM,
-    PM,
-    TEM,
-    NM,
-    TM,
+    useUISM,
+    useCM,
+    usePM,
+    useTEM,
+    useNM,
+    useTM,
 }: ChatProviderProps) => {
     return (
         <ChatContext.Provider
@@ -62,12 +62,12 @@ export const ChatProvider = ({
                 socket,
                 myself,
                 setMyself,
-                UIM,
-                CM,
-                PM,
-                TEM,
-                NM,
-                TM,
+                useUISM,
+                useCM,
+                usePM,
+                useTEM,
+                useNM,
+                useTM,
             }}
         >
             {children}

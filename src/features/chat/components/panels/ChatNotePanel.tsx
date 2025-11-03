@@ -12,27 +12,27 @@ import { UserProps } from "../../../../types/admin";
 import { ChatNoteMain } from "../../../notes/chat-notes/components/ChatNoteMain";
 
 interface ChatNotePanelProps {
-    CM: ChatManagementState;
-    TM: TaskManagementState;
-    PM: ProjectManagementState;
-    TEM: TeamManagementState;
-    NM: NoteManagementState;
+    useCM: ChatManagementState;
+    useTM: TaskManagementState;
+    usePM: ProjectManagementState;
+    useTEM: TeamManagementState;
+    useNM: NoteManagementState;
     myself: UserProps;
     socket: any;
     setMyself: (me: UserProps) => void;
-    UIM: UIStateManagementState;
+    useUISM: UIStateManagementState;
 }
 
 export const ChatNotePanel = ({
-    CM,
-    TM,
-    PM,
-    TEM,
-    NM,
+    useCM,
+    useTM,
+    usePM,
+    useTEM,
+    useNM,
     myself,
     socket,
     setMyself,
-    UIM,
+    useUISM,
 }: ChatNotePanelProps) => {
     const { mode } = useColorScheme();
 
@@ -59,16 +59,16 @@ export const ChatNotePanel = ({
                 }}
             >
                 <ChatNoteMain
-                    CM={CM}
+                    useCM={useCM}
                     isInChatPage={true}
                     myself={myself}
-                    NM={NM}
-                    TM={TM}
-                    PM={PM}
+                    useNM={useNM}
+                    useTM={useTM}
+                    usePM={usePM}
                     setMyself={setMyself}
                     socket={socket}
-                    TEM={TEM}
-                    UIM={UIM}
+                    useTEM={useTEM}
+                    useUISM={useUISM}
                 />
             </Box>
         </Panel>

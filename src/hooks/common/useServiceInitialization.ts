@@ -23,67 +23,67 @@ export const useServiceInitialization = ({
     openingService,
     socketInstance,
 }: UseServiceInitializationProps) => {
-    const NM = useNoteManagement(myself, accessToken);
-    const TM = useTaskManagement(myself, accessToken);
-    const CM = useChatManagement(myself, accessToken);
-    const IM = useInboxManagement();
-    const TEM = useTeamManagement(myself, accessToken);
+    const useNM = useNoteManagement(myself, accessToken);
+    const useTM = useTaskManagement(myself, accessToken);
+    const useCM = useChatManagement(myself, accessToken);
+    const useIM = useInboxManagement();
+    const useTEM = useTeamManagement(myself, accessToken);
 
     // Reset states when team changes
     useEffect(() => {
-        NM.initializeNoteStates();
-        NM.setIsTaskNoteVisible(false);
+        useNM.initializeNoteStates();
+        useNM.setIsTaskNoteVisible(false);
 
-        TM.setAllTasks([]);
-        TM.setIsTaskPreviewVisible(false);
+        useTM.setAllTasks([]);
+        useTM.setIsTaskPreviewVisible(false);
 
-        CM.setIsThreadTaskVisible(false);
-        CM.setIsChatNoteVisibleInChat(false);
-        CM.setIsSubChatVisible(false);
-        CM.setIsThreadVisible(false);
+        useCM.setIsThreadTaskVisible(false);
+        useCM.setIsChatNoteVisibleInChat(false);
+        useCM.setIsSubChatVisible(false);
+        useCM.setIsThreadVisible(false);
     }, [currentTeamId]);
 
     // Handle service-specific initialization
     useEffect(() => {
         if (openingService === 0) {
             // Init all notes
-            NM.setCurrentMyNote(null);
-            NM.setCurrentTaskNote(null);
-            NM.setCurrentChatNote(null);
+            useNM.setCurrentMyNote(null);
+            useNM.setCurrentTaskNote(null);
+            useNM.setCurrentChatNote(null);
         } else if (openingService === 1) {
             // Initialize the task visibility.
-            TM.setIsTaskPreviewVisible(false);
+            useTM.setIsTaskPreviewVisible(false);
 
             // Keep the tabItems when an user changes the page from Notes to other pages.
-            NM.setTmpTabItems(NM.tabItems);
-            NM.setTabItems(NM.tabItems.filter((item) => item.noteType === 3));
+            useNM.setTmpTabItems(useNM.tabItems);
+            useNM.setTabItems(useNM.tabItems.filter((item) => item.noteType === 3));
 
             // Initialize the chat note visibility.
-            if (NM.tabItems.filter((item) => item.noteType === 3).length === 0) {
-                CM.setIsChatNoteVisibleInChat(false);
+            if (useNM.tabItems.filter((item) => item.noteType === 3).length === 0) {
+                useCM.setIsChatNoteVisibleInChat(false);
             }
             // Init all notes
-            NM.setCurrentMyNote(null);
-            NM.setCurrentTaskNote(null);
+            useNM.setCurrentMyNote(null);
+            useNM.setCurrentTaskNote(null);
         } else if (openingService === 2) {
             // Keep the tabItems when an user changes the page from Notes to other pages.
-            NM.setTmpTabItems(NM.tabItems);
-            NM.setTabItems(NM.tabItems.filter((item) => item.noteType === 2));
+            useNM.setTmpTabItems(useNM.tabItems);
+            useNM.setTabItems(useNM.tabItems.filter((item) => item.noteType === 2));
 
             // Initialize the chat note visibility.
-            NM.setIsTaskNoteVisible(false);
+            useNM.setIsTaskNoteVisible(false);
 
             // Init all notes
-            NM.setCurrentMyNote(null);
-            NM.setCurrentTaskNote(null);
-            NM.setCurrentChatNote(null);
+            useNM.setCurrentMyNote(null);
+            useNM.setCurrentTaskNote(null);
+            useNM.setCurrentChatNote(null);
         } else if (openingService === 3) {
             // Keep the tabItems when an user changes the page from Notes to other pages.
-            NM.setTabItems(NM.tmpTabItems);
-            NM.setTmpTabItems([]);
+            useNM.setTabItems(useNM.tmpTabItems);
+            useNM.setTmpTabItems([]);
 
             if (socketInstance) {
-                NM.popInitialNote();
+                useNM.popInitialNote();
             }
         }
     }, [openingService]);
@@ -91,30 +91,30 @@ export const useServiceInitialization = ({
     // Initialize data when loading completes
     useEffect(() => {
         if (isLoading === false) {
-            IM.funcSetInboxItems();
+            useIM.funcSetInboxItems();
 
-            CM.funcSetAllChats();
-            CM.funcSetFlaggedMessages();
-            CM.funcSetActivityMessages();
+            useCM.funcSetAllChats();
+            useCM.funcSetFlaggedMessages();
+            useCM.funcSetActivityMessages();
 
             // Load all team users
-            TEM.funcSetTeamMembers();
+            useTEM.funcSetTeamMembers();
 
             // Load task metadata
-            TM.getTaskMeta();
+            useTM.getTaskMeta();
 
             // Load note metadata
-            NM.getMyNoteMeta();
-            NM.getTaskNoteMeta();
-            NM.getChatNoteMeta();
+            useNM.getMyNoteMeta();
+            useNM.getTaskNoteMeta();
+            useNM.getChatNoteMeta();
         }
     }, [isLoading]);
 
     return {
-        NM,
-        TM,
-        CM,
-        IM,
-        TEM,
+        useNM,
+        useTM,
+        useCM,
+        useIM,
+        useTEM,
     };
 };

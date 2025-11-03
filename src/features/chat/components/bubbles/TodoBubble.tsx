@@ -1,8 +1,8 @@
+import { useEffect, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
 import { Box, Button, Card, Chip, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { BnTodoPreview } from "../../../../components/blockNote/bnTodoPreview";
@@ -20,13 +20,13 @@ type TodoBubbleProps = {
     todo: ToDoFactProps;
     currentIndex: number;
     isExistingTodaysTodo: boolean;
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
     todos: ToDoFactProps[];
     setTodos: (value: ToDoFactProps[]) => void;
-    UIM: UIStateManagementState;
-    CM: ChatManagementState;
+    useUISM: UIStateManagementState;
+    useCM: ChatManagementState;
 };
 export const TodoBubble = (props: TodoBubbleProps) => {
     const {
@@ -36,11 +36,11 @@ export const TodoBubble = (props: TodoBubbleProps) => {
         setTodos,
         currentIndex,
         isExistingTodaysTodo,
-        TEM,
+        useTEM,
         setMyself,
         socket,
-        UIM,
-        CM,
+        useUISM,
+        useCM,
     } = props;
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
@@ -149,15 +149,15 @@ export const TodoBubble = (props: TodoBubbleProps) => {
                     <BnTodoPreview
                         key={`${todo.todoId}`}
                         body={body}
-                        CM={CM}
+                        useCM={useCM}
                         customClassName="todo-preview"
                         myself={myself}
                         setBody={setBody}
                         setBodyEdited={setBodyEdited}
                         setMyself={setMyself}
                         socket={socket}
-                        TEM={TEM}
-                        UIM={UIM}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
                     />
                 </Card>
             </Box>

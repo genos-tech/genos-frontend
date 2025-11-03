@@ -9,11 +9,11 @@ type ACTeamProjectsProps = {
     isOpenProjectList: boolean;
     setIsOpenProjectList: (value: boolean) => void;
     setTaskUpdated?: (value: boolean) => void;
-    PM: ProjectManagementState;
+    usePM: ProjectManagementState;
 };
 export const ACTeamProjects = (props: ACTeamProjectsProps) => {
     const {
-        PM,
+        usePM,
         taskContent,
         setTaskContent,
         isOpenProjectList,
@@ -26,7 +26,7 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
             key={taskContent.id}
             getOptionLabel={(option) => option.projectName}
             isOptionEqualToValue={(option, value) => option.projectId === value.projectId}
-            options={PM.teamProjects}
+            options={usePM.teamProjects}
             size="sm"
             sx={{ width: "100%" }}
             value={taskContent.project?.projectId ? taskContent.project : undefined}
@@ -44,7 +44,7 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
                         tags: [],
                     });
                     if (value.projectId) {
-                        PM.setCurrentProject({
+                        usePM.setCurrentProject({
                             projectId: value.projectId,
                             projectName: value.projectName,
                             projectTags: [],

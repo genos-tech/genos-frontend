@@ -5,17 +5,17 @@ import ListItemButton from "@mui/joy/ListItemButton";
 import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
 
 type NewProjectListItemProps = {
-    PM: ProjectManagementState;
+    usePM: ProjectManagementState;
 };
 export const NewProjectListItem = (props: NewProjectListItemProps) => {
-    const { PM } = props;
+    const { usePM } = props;
     return (
         <ListItem key={"listitem-createProject"}>
             <ListItemButton
                 color="primary"
                 sx={{ overflow: "hidden" }} // ensure children don't overflow
                 onClick={() => {
-                    PM.setOpenCreateProject(true);
+                    usePM.setOpenCreateProject(true);
                 }}
             >
                 <AddIcon />

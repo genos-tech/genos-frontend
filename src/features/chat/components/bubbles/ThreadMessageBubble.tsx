@@ -1,5 +1,5 @@
-import { Box, Sheet, Stack } from "@mui/joy";
 import { useEffect, useRef, useState } from "react";
+import { Box, Sheet, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { BnChatPreview } from "../../../../components/blockNote/bnChatPreview";
@@ -27,7 +27,7 @@ import { BubbleUnderBar } from "./BubbleUnderBar";
 import { BubbleUserName } from "./BubbleUserName";
 
 type threadMessageBubbleProps = {
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
@@ -37,17 +37,17 @@ type threadMessageBubbleProps = {
     isScrolling: boolean;
     isFocused: boolean;
     isSimpleBubble: boolean;
-    UIM: UIStateManagementState;
+    useUISM: UIStateManagementState;
     setIsInEdit: (value: boolean) => void;
     setEditTargetMessage: (value: ThreadMessageProps) => void;
     currentMessageIndex: number;
     setTargetMessageIndex: (value: number) => void;
-    CM: ChatManagementState;
+    useCM: ChatManagementState;
 };
 
 export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
     const {
-        TEM,
+        useTEM,
         myself,
         setMyself,
         socket,
@@ -57,12 +57,12 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
         isScrolling,
         isFocused,
         isSimpleBubble,
-        UIM,
+        useUISM,
         setIsInEdit,
         setEditTargetMessage,
         currentMessageIndex,
         setTargetMessageIndex,
-        CM,
+        useCM,
     } = props;
 
     const { accessToken } = useAuth();
@@ -352,11 +352,11 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                     <BubbleFlagButton
                                         accessToken={accessToken}
                                         currentThreadChat={thread}
-                                        flaggedMessages={CM.flaggedMessages}
+                                        flaggedMessages={useCM.flaggedMessages}
                                         message={message}
                                         myself={myself}
-                                        setCurrentThreadChat={CM.setCurrentThreadChat}
-                                        setFlaggedMessages={CM.setFlaggedMessages}
+                                        setCurrentThreadChat={useCM.setCurrentThreadChat}
+                                        setFlaggedMessages={useCM.setFlaggedMessages}
                                         threadId={thread.threadId}
                                     />
 
@@ -381,7 +381,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                                 currentThreadChat={thread}
                                                 isThread={true}
                                                 message={message}
-                                                setCurrentThreadChat={CM.setCurrentThreadChat}
+                                                setCurrentThreadChat={useCM.setCurrentThreadChat}
                                                 socket={socket}
                                             />
                                         )}
@@ -393,18 +393,18 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                     {message.sender.isSystemUser !== true && (
                                         <Box sx={{ flex: 1 }}>
                                             <AvatarWithStatus
-                                                CM={CM}
+                                                useCM={useCM}
                                                 isForBubble={true}
                                                 isYou={isSent}
                                                 myself={myself}
                                                 setMyself={setMyself}
                                                 socket={socket}
                                                 thread={thread}
-                                                UIM={UIM}
+                                                useUISM={useUISM}
                                                 avatarUser={
                                                     isSent
-                                                        ? TEM.teamMemberProfiles[myself.userId]
-                                                        : TEM.teamMemberProfiles[
+                                                        ? useTEM.teamMemberProfiles[myself.userId]
+                                                        : useTEM.teamMemberProfiles[
                                                               message.sender.userId
                                                           ]
                                                 }
@@ -460,13 +460,15 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                                     <BubbleFlagButton
                                                         accessToken={accessToken}
                                                         currentThreadChat={thread}
-                                                        flaggedMessages={CM.flaggedMessages}
+                                                        flaggedMessages={useCM.flaggedMessages}
                                                         message={message}
                                                         myself={myself}
-                                                        setFlaggedMessages={CM.setFlaggedMessages}
+                                                        setFlaggedMessages={
+                                                            useCM.setFlaggedMessages
+                                                        }
                                                         threadId={thread.threadId}
                                                         setCurrentThreadChat={
-                                                            CM.setCurrentThreadChat
+                                                            useCM.setCurrentThreadChat
                                                         }
                                                     />
 
@@ -496,7 +498,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                                                 message={message}
                                                                 socket={socket}
                                                                 setCurrentThreadChat={
-                                                                    CM.setCurrentThreadChat
+                                                                    useCM.setCurrentThreadChat
                                                                 }
                                                             />
                                                         )}
@@ -510,14 +512,14 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                             {message.content.length > 0 && (
                                 <BnChatPreview
                                     key={`${thread.chatId}-${thread.threadId}-${message.messageId}-${thread.chatType}-${message.tsUpdated}`}
-                                    CM={CM}
+                                    useCM={useCM}
                                     content={message.content}
                                     isSent={isSent}
                                     myself={myself}
                                     setMyself={setMyself}
                                     socket={socket}
-                                    TEM={TEM}
-                                    UIM={UIM}
+                                    useTEM={useTEM}
+                                    useUISM={useUISM}
                                 />
                             )}
                         </Stack>

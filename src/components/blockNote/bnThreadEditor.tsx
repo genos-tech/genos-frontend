@@ -53,28 +53,28 @@ type BnThreadEditorProps = {
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     thread: ThreadProps;
     setCurrentThreadChat: (chat: ThreadProps) => void;
     setCurrentChat: (chat: ChatProps) => void;
-    UIM: UIStateManagementState;
+    useUISM: UIStateManagementState;
     numEditorLines: number;
     setNumEditorLines: (value: number) => void;
-    CM: ChatManagementState;
+    useCM: ChatManagementState;
 };
 export const BnThreadEditor = (props: BnThreadEditorProps) => {
     const {
-        TEM,
+        useTEM,
         myself,
         setMyself,
         socket,
         thread,
         setCurrentThreadChat,
         setCurrentChat,
-        UIM,
+        useUISM,
         numEditorLines,
         setNumEditorLines,
-        CM,
+        useCM,
     } = props;
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
@@ -91,7 +91,14 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
-            mention: CreateMentionSpec(TEM.teamMemberProfiles, socket, myself, setMyself, UIM, CM),
+            mention: CreateMentionSpec(
+                useTEM.teamMemberProfiles,
+                socket,
+                myself,
+                setMyself,
+                useUISM,
+                useCM
+            ),
         },
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
@@ -389,7 +396,11 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                         getItems={async (query) =>
                             // Gets the mentions menu items
                             filterSuggestionItems(
-                                MentionMenuItems(TEM.teamMemberProfiles, editor, TEM.teamMembers),
+                                MentionMenuItems(
+                                    useTEM.teamMemberProfiles,
+                                    editor,
+                                    useTEM.teamMembers
+                                ),
                                 query
                             )
                         }

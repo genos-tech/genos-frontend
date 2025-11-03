@@ -21,11 +21,11 @@ type MainChatPaneHeaderProps = {
     myself: UserProps;
     setIsToDoVisible: (value: boolean) => void;
     setMyself: (value: UserProps) => void;
-    UIM: UIStateManagementState;
+    useUISM: UIStateManagementState;
     socket: Socket | null;
-    TEM: TeamManagementState;
-    CM: ChatManagementState;
-    TM: TaskManagementState;
+    useTEM: TeamManagementState;
+    useCM: ChatManagementState;
+    useTM: TaskManagementState;
 };
 
 export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
@@ -36,27 +36,27 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
         myself,
         setIsToDoVisible,
         setMyself,
-        UIM,
+        useUISM,
         socket,
-        TEM,
-        CM,
-        TM,
+        useTEM,
+        useCM,
+        useTM,
     } = props;
 
     const isYou: boolean = myself.userId === chat.dmPartnerUser.userId;
 
     const switchSubToMain = () => {
-        if (CM.isSubChatVisible === true) {
-            CM.setCurrentMainChat(CM.currentSubChat as ChatProps);
-            CM.setIsSubChatVisible(false);
+        if (useCM.isSubChatVisible === true) {
+            useCM.setCurrentMainChat(useCM.currentSubChat as ChatProps);
+            useCM.setIsSubChatVisible(false);
         } else {
-            CM.setIsMainChatVisible(false);
+            useCM.setIsMainChatVisible(false);
         }
     };
 
     const swapChat = () => {
-        CM.setCurrentMainChat(CM.currentSubChat as ChatProps);
-        CM.setCurrentSubChat(chat);
+        useCM.setCurrentMainChat(useCM.currentSubChat as ChatProps);
+        useCM.setCurrentSubChat(chat);
     };
 
     return (
@@ -75,13 +75,13 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
             <Stack direction="row" spacing={{ xs: 1, md: 2 }} sx={{ alignItems: "center" }}>
                 <HeaderUserName
                     chat={chat}
-                    CM={CM}
+                    useCM={useCM}
                     isYou={isYou}
                     myself={myself}
                     setMyself={setMyself}
                     socket={socket}
-                    TEM={TEM}
-                    UIM={UIM}
+                    useTEM={useTEM}
+                    useUISM={useUISM}
                 />
             </Stack>
             <Stack direction="row" sx={{ alignItems: "center" }}>
@@ -93,10 +93,10 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                             size="sm"
                             variant="plain"
                             onClick={() => {
-                                CM.setIsMainChatVisible(true);
-                                CM.setIsThreadVisible(false);
-                                TM.setIsTaskPreviewVisible(false);
-                                TM.setIsCreatingTask({
+                                useCM.setIsMainChatVisible(true);
+                                useCM.setIsThreadVisible(false);
+                                useTM.setIsTaskPreviewVisible(false);
+                                useTM.setIsCreatingTask({
                                     flag: true,
                                     parentTaskId: null,
                                     rootTaskId: null,
@@ -149,7 +149,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                         </>
                     ) : null}
 
-                    {CM.isSubChatVisible && (
+                    {useCM.isSubChatVisible && (
                         <div>
                             <IconButton
                                 color="neutral"

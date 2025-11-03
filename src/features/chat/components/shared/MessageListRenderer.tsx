@@ -24,21 +24,21 @@ interface MessageListRendererProps {
     isThread: boolean;
     messages: MessageProps[] | ThreadMessageProps[];
     myself: UserProps;
-    PM: ProjectManagementState;
+    usePM: ProjectManagementState;
     setEditTargetMessage: (message: MessageProps | ThreadMessageProps) => void;
     setErrorMessage: (error: string) => void;
     setErrorOpen: (open: boolean) => void;
     setIsInEdit: (value: boolean) => void;
     setIsScrolling: (value: boolean) => void;
     setMyself: (value: UserProps) => void;
-    UIM: UIStateManagementState;
+    useUISM: UIStateManagementState;
     setVisibleRange: (range: { startIndex: number; endIndex: number }) => void;
     socket: Socket | null;
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     visibleRange: { startIndex: number; endIndex: number };
     virtuosoRef: React.RefObject<VirtuosoHandle>;
-    CM: ChatManagementState;
-    TM: TaskManagementState;
+    useCM: ChatManagementState;
+    useTM: TaskManagementState;
 }
 
 export const MessageListRenderer = ({
@@ -50,21 +50,21 @@ export const MessageListRenderer = ({
     isThread,
     messages,
     myself,
-    PM,
+    usePM,
     setEditTargetMessage,
     setErrorMessage,
     setErrorOpen,
     setIsInEdit,
     setIsScrolling,
     setMyself,
-    UIM,
+    useUISM,
     setVisibleRange,
     socket,
-    TEM,
+    useTEM,
     visibleRange,
     virtuosoRef,
-    CM,
-    TM,
+    useCM,
+    useTM,
 }: MessageListRendererProps) => {
     useScrollToBottomOnChatChange(
         virtuosoRef,
@@ -72,8 +72,8 @@ export const MessageListRenderer = ({
         visibleRange.endIndex,
         messages.length - 1,
         indexMap,
-        CM.currentMainChat?.moveToSpecificIndex,
-        CM.currentMainChat?.notMove,
+        useCM.currentMainChat?.moveToSpecificIndex,
+        useCM.currentMainChat?.notMove,
         setErrorMessage,
         setErrorOpen
     );
@@ -155,15 +155,15 @@ export const MessageListRenderer = ({
         if (isThread) {
             return (
                 (message as ThreadMessageProps).messageIdWithChatIdAndThreadId ===
-                CM.currentMainChat?.moveToSpecificIndex
+                useCM.currentMainChat?.moveToSpecificIndex
             );
         }
         return (
             (message as MessageProps).messageIdWithChatId ===
-                CM.currentMainChat?.moveToSpecificIndex ||
-            (CM.isThreadVisible &&
-                CM.currentThreadChat &&
-                message.messageId === CM.currentThreadChat.threadId) ||
+                useCM.currentMainChat?.moveToSpecificIndex ||
+            (useCM.isThreadVisible &&
+                useCM.currentThreadChat &&
+                message.messageId === useCM.currentThreadChat.threadId) ||
             false
         );
     };
@@ -205,7 +205,7 @@ export const MessageListRenderer = ({
                             >
                                 {isThread ? (
                                     <ThreadMessageBubble
-                                        CM={CM}
+                                        useCM={useCM}
                                         currentMessageIndex={index}
                                         isFocused={isFocused}
                                         isScrolling={isScrolling}
@@ -217,29 +217,29 @@ export const MessageListRenderer = ({
                                         setMyself={setMyself}
                                         setTargetMessageIndex={() => {}}
                                         socket={socket}
-                                        TEM={TEM}
+                                        useTEM={useTEM}
                                         thread={chat as ThreadProps}
-                                        UIM={UIM}
+                                        useUISM={useUISM}
                                         variant={isYou ? "sent" : "received"}
                                     />
                                 ) : (
                                     <MessageBubble
                                         chat={chat as ChatProps}
-                                        CM={CM}
+                                        useCM={useCM}
                                         isFocused={isFocused}
                                         isScrolling={isScrolling}
                                         isSimpleBubble={isSimpleBubble}
                                         message={message as MessageProps}
                                         myself={myself}
-                                        PM={PM}
+                                        usePM={usePM}
                                         setEditTargetMessage={setEditTargetMessage}
                                         setIsInEdit={setIsInEdit}
                                         setMyself={setMyself}
                                         socket={socket}
-                                        TEM={TEM}
-                                        UIM={UIM}
+                                        useTEM={useTEM}
+                                        useUISM={useUISM}
                                         variant={isYou ? "sent" : "received"}
-                                        TM={TM}
+                                        useTM={useTM}
                                     />
                                 )}
                             </Stack>

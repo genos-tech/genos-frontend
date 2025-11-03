@@ -46,7 +46,7 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 const django_url = import.meta.env.VITE_DJANGO_URL;
 
 type BnUpdateEditorProps = {
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
@@ -54,14 +54,14 @@ type BnUpdateEditorProps = {
     message: MessageProps;
     isInEdit: boolean;
     setIsInEdit: (value: boolean) => void;
-    UIM: UIStateManagementState;
+    useUISM: UIStateManagementState;
     numEditorLines: number;
     setNumEditorLines: (value: number) => void;
-    CM: ChatManagementState;
+    useCM: ChatManagementState;
 };
 export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
     const {
-        TEM,
+        useTEM,
         myself,
         setMyself,
         socket,
@@ -69,10 +69,10 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
         message,
         isInEdit,
         setIsInEdit,
-        UIM,
+        useUISM,
         numEditorLines,
         setNumEditorLines,
-        CM,
+        useCM,
     } = props;
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
@@ -89,7 +89,14 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
-            mention: CreateMentionSpec(TEM.teamMemberProfiles, socket, myself, setMyself, UIM, CM),
+            mention: CreateMentionSpec(
+                useTEM.teamMemberProfiles,
+                socket,
+                myself,
+                setMyself,
+                useUISM,
+                useCM
+            ),
         },
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
@@ -170,7 +177,7 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
         if (editorRef.current) {
             const dynamicHeight: number = Math.min(
                 Math.min(Math.max(numEditorLines - 8, 0), 10) * 20 + 200,
-                CM.isSubChatVisible === true ? 290 : 500
+                useCM.isSubChatVisible === true ? 290 : 500
             );
             editorRef.current.style.setProperty("--chat-editor-height", `${dynamicHeight}px`);
         }
@@ -346,7 +353,11 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
                         getItems={async (query) =>
                             // Gets the mentions menu items
                             filterSuggestionItems(
-                                MentionMenuItems(TEM.teamMemberProfiles, editor, TEM.teamMembers),
+                                MentionMenuItems(
+                                    useTEM.teamMemberProfiles,
+                                    editor,
+                                    useTEM.teamMembers
+                                ),
                                 query
                             )
                         }

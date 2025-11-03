@@ -4,11 +4,11 @@ import { Box, IconButton, Tab, TabList, Tooltip } from "@mui/joy";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 
 interface NoteTabListProps {
-    NM: NoteManagementState;
+    useNM: NoteManagementState;
     onCloseTab: (tabIndex: number, closingNoteId: number) => void;
 }
 
-export const NoteTabList = ({ NM, onCloseTab }: NoteTabListProps) => {
+export const NoteTabList = ({ useNM, onCloseTab }: NoteTabListProps) => {
     return (
         <TabList
             sx={{
@@ -18,7 +18,7 @@ export const NoteTabList = ({ NM, onCloseTab }: NoteTabListProps) => {
                 "&::-webkit-scrollbar": { display: "none" },
             }}
         >
-            {NM.tabItems.map((tab, index) => (
+            {useNM.tabItems.map((tab, index) => (
                 <Tooltip
                     key={`tab-tooltip-${index}`}
                     size="sm"
@@ -46,7 +46,7 @@ export const NoteTabList = ({ NM, onCloseTab }: NoteTabListProps) => {
                         >
                             {tab.title.length > 14 ? `${tab.title.slice(0, 14)}...` : tab.title}
 
-                            {NM.tabItems.length > 1 && (
+                            {useNM.tabItems.length > 1 && (
                                 <IconButton
                                     color="neutral"
                                     component="span"

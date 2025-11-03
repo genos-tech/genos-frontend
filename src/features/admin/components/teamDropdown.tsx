@@ -17,12 +17,12 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type TeamDropdownProps = {
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
 };
 export const TeamDropdown = (props: TeamDropdownProps) => {
-    const { myself, setMyself, TEM } = props;
+    const { myself, setMyself, useTEM } = props;
     const { accessToken } = useAuth();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [teams, setTeams] = useState<Team[]>([]);
@@ -143,7 +143,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
 
         const formData = new FormData();
         formData.append("team_profile_image", teamProfileImage);
-        formData.append("team_id", TEM.currentTeam.teamId);
+        formData.append("team_id", useTEM.currentTeam.teamId);
 
         const uploadProfileImageResponse = await fetch(`${base_url}/team/profile/image/`, {
             method: "PUT",
@@ -159,8 +159,8 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
             throw new Error("Failed to upload team profile image.");
         } else {
             localStorage.setItem("teamImgPath", uploadProfileImageData.profile_image_file_name);
-            TEM.setCurrentTeam({
-                ...TEM.currentTeam,
+            useTEM.setCurrentTeam({
+                ...useTEM.currentTeam,
                 teamImgPath: uploadProfileImageData.profile_image_file_name,
             });
         }
@@ -174,7 +174,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                 <Tooltip placement="right-start" size="sm" title="Switch Team" variant="outlined">
                     <IconButton sx={{ px: 0.7 }} onClick={handleClick}>
                         <Avatar
-                            src={`${media_url}/${TEM.currentTeam.teamImgPath}`}
+                            src={`${media_url}/${useTEM.currentTeam.teamImgPath}`}
                             variant="outlined"
                             sx={{
                                 borderRadius: 4, // 0 for sharp square, or use theme radius values
@@ -217,7 +217,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                         New Team (TBD)
                     </MenuItem>
 
-                    {myself.userId === TEM.currentTeam.teamOwnerId && (
+                    {myself.userId === useTEM.currentTeam.teamOwnerId && (
                         <Box>
                             <input
                                 ref={inputRef}

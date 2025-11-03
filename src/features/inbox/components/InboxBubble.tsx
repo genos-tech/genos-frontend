@@ -1,6 +1,6 @@
+import { useRef, useState } from "react";
 import { Box, Button, Card, Chip, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { BnChatPreview } from "../../../components/blockNote/bnChatPreview";
@@ -50,16 +50,16 @@ export const getItemBody = (requestType: number, targetName: UserProps) => [
 ];
 
 type InboxBubbleProps = {
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     inboxItem: InboxItemProps;
-    UIM: UIStateManagementState;
-    CM: ChatManagementState;
+    useUISM: UIStateManagementState;
+    useCM: ChatManagementState;
 };
 export const InboxBubble = (props: InboxBubbleProps) => {
-    const { TEM, socket, myself, setMyself, inboxItem, UIM, CM } = props;
+    const { useTEM, socket, myself, setMyself, inboxItem, useUISM, useCM } = props;
     const { mode } = useColorScheme();
     const boxRef = useRef<HTMLDivElement>(null);
     const [requestApproved, setRequestApproved] = useState<boolean>(false);
@@ -140,15 +140,15 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                     {inboxItem.itemBody[0].content.length > 0 && (
                         <BnChatPreview
                             key={`${inboxItem.itemType}-${inboxItem.itemId}-${inboxItem.tsSent}`}
-                            CM={CM}
+                            useCM={useCM}
                             content={inboxItem.itemBody}
                             customClassName="inbox-preview"
                             isSent={true}
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}
-                            TEM={TEM}
-                            UIM={UIM}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
                         />
                     )}
 

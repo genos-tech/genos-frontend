@@ -22,11 +22,11 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 
 type Props = {
     myself: UserProps;
-    PM: ProjectManagementState;
+    usePM: ProjectManagementState;
     setIsNewProjectCreated?: (value: boolean) => void;
 };
 
-export const ModalCreateProject: React.FC<Props> = ({ myself, PM, setIsNewProjectCreated }) => {
+export const ModalCreateProject: React.FC<Props> = ({ myself, usePM, setIsNewProjectCreated }) => {
     const { accessToken } = useAuth();
 
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -112,16 +112,16 @@ export const ModalCreateProject: React.FC<Props> = ({ myself, PM, setIsNewProjec
                             );
 
                             if (prjJoinTeamRes && meJoinTeamRes && createProjectData.project_id) {
-                                PM.setCurrentProject({
+                                usePM.setCurrentProject({
                                     projectId: createProjectData.project_id,
                                     projectName: createProjectData.project_name,
                                     projectTags: [],
                                     systemUserId: createProjectData.project_system_user,
                                 });
-                                PM.setOpenCreateProject(false);
+                                usePM.setOpenCreateProject(false);
                                 if (setIsNewProjectCreated) {
                                     setIsNewProjectCreated(true);
-                                    PM.loadProjectsAndTasks(createProjectData.project_id);
+                                    usePM.loadProjectsAndTasks(createProjectData.project_id);
                                 }
                             } else {
                                 console.error("Failed to add me and/or system_user to the team");
@@ -146,9 +146,9 @@ export const ModalCreateProject: React.FC<Props> = ({ myself, PM, setIsNewProjec
     return (
         <>
             <Modal
-                open={PM.openCreateProject}
+                open={usePM.openCreateProject}
                 sx={{ zIndex: 10010 }}
-                onClose={() => PM.setOpenCreateProject(false)}
+                onClose={() => usePM.setOpenCreateProject(false)}
             >
                 <ModalDialog>
                     <Typography level="h4">Create New Project</Typography>
@@ -181,7 +181,7 @@ export const ModalCreateProject: React.FC<Props> = ({ myself, PM, setIsNewProjec
                             color="danger"
                             component="button"
                             variant="outlined"
-                            onClick={() => PM.setOpenCreateProject(false)}
+                            onClick={() => usePM.setOpenCreateProject(false)}
                         >
                             Cancel
                         </Button>

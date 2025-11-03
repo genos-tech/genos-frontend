@@ -1,6 +1,6 @@
+import { useState } from "react";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import { Avatar, Box } from "@mui/joy";
-import { useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { ModalProjectProfile } from "../../features/admin/components/modals/ModalProjectProfile";
@@ -15,16 +15,16 @@ const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type ProjectAvatarProps = {
     socket: Socket | null;
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     avatarSize?: number;
     pmChat: AllChatProps;
-    CM: ChatManagementState;
-    UIM: UIStateManagementState;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
 };
 export const ProjectAvatar = (props: ProjectAvatarProps) => {
-    const { TEM, socket, myself, setMyself, avatarSize, pmChat, CM, UIM } = props;
+    const { useTEM, socket, myself, setMyself, avatarSize, pmChat, useCM, useUISM } = props;
     const [openModalProjectProfile, setOpenModalProjectProfile] = useState<boolean>(false);
     const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
     const [avatarUserId, setAvatarUserId] = useState<string | undefined>(undefined);
@@ -47,7 +47,7 @@ export const ProjectAvatar = (props: ProjectAvatarProps) => {
             </Box>
 
             <ModalProjectProfile
-                CM={CM}
+                useCM={useCM}
                 myself={myself}
                 openModalProjectProfile={openModalProjectProfile}
                 pmChat={pmChat}
@@ -56,21 +56,21 @@ export const ProjectAvatar = (props: ProjectAvatarProps) => {
                 setOpenModalProjectProfile={setOpenModalProjectProfile}
                 setOpenUserProfile={setOpenUserProfile}
                 socket={socket}
-                TEM={TEM}
-                UIM={UIM}
+                useTEM={useTEM}
+                useUISM={useUISM}
             />
 
             {avatarUserId && (
                 <UserProfile
-                    CM={CM}
+                    useCM={useCM}
                     isYou={false}
                     myself={myself}
                     openUserProfile={openUserProfile}
                     setMyself={setMyself}
                     setOpenUserProfile={setOpenUserProfile}
                     socket={socket}
-                    UIM={UIM}
-                    user={TEM.teamMemberProfiles[avatarUserId]}
+                    useUISM={useUISM}
+                    user={useTEM.teamMemberProfiles[avatarUserId]}
                 />
             )}
         </div>

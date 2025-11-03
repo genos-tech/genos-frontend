@@ -12,27 +12,27 @@ import { UserProps } from "../../../../types/admin";
 import { TaskPreview } from "../../../tasks/components/contents/TaskPreview";
 
 interface TaskPreviewPanelProps {
-    CM: ChatManagementState;
-    TM: TaskManagementState;
-    PM: ProjectManagementState;
-    TEM: TeamManagementState;
-    NM: NoteManagementState;
+    useCM: ChatManagementState;
+    useTM: TaskManagementState;
+    usePM: ProjectManagementState;
+    useTEM: TeamManagementState;
+    useNM: NoteManagementState;
     myself: UserProps;
     socket: any;
     setMyself: (me: UserProps) => void;
-    UIM: UIStateManagementState;
+    useUISM: UIStateManagementState;
 }
 
 export const TaskPreviewPanel = ({
-    CM,
-    TM,
-    PM,
-    TEM,
-    NM,
+    useCM,
+    useTM,
+    usePM,
+    useTEM,
+    useNM,
     myself,
     socket,
     setMyself,
-    UIM,
+    useUISM,
 }: TaskPreviewPanelProps) => {
     const { mode } = useColorScheme();
 
@@ -59,15 +59,15 @@ export const TaskPreviewPanel = ({
                 }}
             >
                 <TaskPreview
-                    CM={CM}
+                    useCM={useCM}
                     myself={myself}
                     setMyself={setMyself}
                     socket={socket}
-                    TEM={TEM}
-                    TM={TM}
-                    UIM={UIM}
-                    NM={NM}
-                    PM={PM}
+                    useTEM={useTEM}
+                    useTM={useTM}
+                    useUISM={useUISM}
+                    useNM={useNM}
+                    usePM={usePM}
                 />
             </Box>
         </Panel>

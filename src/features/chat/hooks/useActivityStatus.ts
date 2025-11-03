@@ -9,7 +9,7 @@ import UpdateActivityReadStatusWorker from "../../../workers/updateActivityReadS
 interface UseActivityStatusProps {
     activity: ActivityMessageProps;
     activityMessages: ActivityMessageProps[];
-    CM: ChatManagementState;
+    useCM: ChatManagementState;
     myself: UserProps;
     accessToken: string | null;
 }
@@ -17,7 +17,7 @@ interface UseActivityStatusProps {
 export const useActivityStatus = ({
     activity,
     activityMessages,
-    CM,
+    useCM,
     myself,
     accessToken,
 }: UseActivityStatusProps) => {
@@ -60,7 +60,7 @@ export const useActivityStatus = ({
                 if (data.error) {
                     console.error("Worker failed:", data.error);
                 } else {
-                    CM.setActivityMessages(data);
+                    useCM.setActivityMessages(data);
                 }
             };
             return () => {

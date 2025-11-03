@@ -25,18 +25,19 @@ import { downloadFile } from "../../utils/downloadUtils";
 import { CreateMentionSpec } from "./Mention";
 
 type BnChatPreviewProps = {
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
     content: PartialBlock[] | any[];
     isSent: boolean;
     customClassName?: string;
-    UIM: UIStateManagementState;
-    CM: ChatManagementState;
+    useUISM: UIStateManagementState;
+    useCM: ChatManagementState;
 };
 export const BnChatPreview = (props: BnChatPreviewProps) => {
-    const { TEM, myself, setMyself, socket, content, isSent, customClassName, UIM, CM } = props;
+    const { useTEM, myself, setMyself, socket, content, isSent, customClassName, useUISM, useCM } =
+        props;
     const { mode } = useColorScheme();
     const _bnBoxClassName: string = isSent
         ? `bn-message-bubble-box-${mode}-me`
@@ -54,7 +55,14 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
-            mention: CreateMentionSpec(TEM.teamMemberProfiles, socket, myself, setMyself, UIM, CM),
+            mention: CreateMentionSpec(
+                useTEM.teamMemberProfiles,
+                socket,
+                myself,
+                setMyself,
+                useUISM,
+                useCM
+            ),
         },
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
@@ -100,7 +108,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
                 data-changing-font-demo // custom font
                 onClick={(e) => {
                     const target = e.target as HTMLElement;
-                    if (target.tagName === "IMG") {
+                    if (target.tagName === "useIMG") {
                         handleImageClick((target as HTMLImageElement).src);
                     }
                 }}

@@ -13,28 +13,28 @@ type TaskCreateFooterProps = {
     socket: Socket | null;
     myself: UserProps;
     accessToken: string | null;
-    CM: ChatManagementState;
+    useCM: ChatManagementState;
     taskContent: TaskProps;
     taskTitle: string;
-    TM: TaskManagementState;
+    useTM: TaskManagementState;
     setIsSubmitted: (value: boolean) => void;
     setTitleError: (value: string) => void;
     setTitleErrorOpen: (value: boolean) => void;
-    PM: ProjectManagementState;
+    usePM: ProjectManagementState;
 };
 export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
     const {
         socket,
         myself,
         accessToken,
-        CM,
+        useCM,
         taskContent,
         taskTitle,
-        TM,
+        useTM,
         setIsSubmitted,
         setTitleError,
         setTitleErrorOpen,
-        PM,
+        usePM,
     } = props;
 
     const DoUploadNewTask = async () => {
@@ -42,21 +42,21 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
             socket: socket,
             myself: myself,
             taskContent: taskContent,
-            CM: CM,
+            useCM: useCM,
             accessToken: accessToken || "",
             setTitleError: setTitleError,
             setTitleErrorOpen: setTitleErrorOpen,
-            setCurrentPreviewTaskId: TM.setCurrentPreviewTaskId,
+            setCurrentPreviewTaskId: useTM.setCurrentPreviewTaskId,
         });
 
         if (taskContent.project && taskContent.project.projectId) {
             localStorage.setItem("lastProjectId", String(taskContent.project.projectId));
-            PM.setCurrentProject(taskContent.project);
+            usePM.setCurrentProject(taskContent.project);
         } else {
             console.error("Failed to set the current project");
         }
 
-        TM.setIsTaskPreviewVisible(true);
+        useTM.setIsTaskPreviewVisible(true);
 
         setIsSubmitted(true);
     };
@@ -69,11 +69,11 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
                 size="sm"
                 variant="outlined"
                 onClick={() => {
-                    if (TM.setIsCreatingTask) {
-                        TM.setIsCreatingTask({
+                    if (useTM.setIsCreatingTask) {
+                        useTM.setIsCreatingTask({
                             flag: false,
                             parentTaskId: null,
-                            rootTaskId: TM.currentPreviewTask?.rootTaskId || null,
+                            rootTaskId: useTM.currentPreviewTask?.rootTaskId || null,
                         });
                     }
 
@@ -82,7 +82,7 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
                             myself: myself,
                             taskId: taskContent.id,
                             accessToken: accessToken,
-                            setInitialEmptyTaskId: TM.setInitialEmptyTaskId,
+                            setInitialEmptyTaskId: useTM.setInitialEmptyTaskId,
                         });
                     }
                 }}

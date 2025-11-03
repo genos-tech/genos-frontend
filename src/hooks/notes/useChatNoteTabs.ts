@@ -8,7 +8,7 @@ export interface ChatNoteTabActions {
 }
 
 export interface UseChatNoteTabsProps {
-    NM: NoteManagementState;
+    useNM: NoteManagementState;
 }
 
 /**
@@ -18,28 +18,32 @@ export interface UseChatNoteTabsProps {
  * @param props - Configuration object for the chat note tabs
  * @returns Object containing tab management actions
  */
-export const useChatNoteTabs = ({ NM }: UseChatNoteTabsProps): ChatNoteTabActions => {
+export const useChatNoteTabs = ({ useNM }: UseChatNoteTabsProps): ChatNoteTabActions => {
     const handleCloseTab = useCallback(
         async (tabIndex: number, closingNoteId: number) => {
             const indexOfNextNote = tabIndex === 0 ? 1 : tabIndex - 1;
             const nextTabIndex = Math.max(tabIndex - 1, 0);
 
-            NM.setTabItems(NM.tabItems.filter((t) => t.noteId !== closingNoteId));
+            useNM.setTabItems(useNM.tabItems.filter((t) => t.noteId !== closingNoteId));
 
-            await NM.loadNote(
-                NM.tabItems[indexOfNextNote].noteType,
-                NM.tabItems[indexOfNextNote].noteId,
+            await useNM.loadNote(
+                useNM.tabItems[indexOfNextNote].noteType,
+                useNM.tabItems[indexOfNextNote].noteId,
                 nextTabIndex
             );
         },
-        [NM]
+        [useNM]
     );
 
     const handleTabChange = useCallback(
         (newValue: number) => {
-            NM.loadNote(NM.tabItems[newValue].noteType, NM.tabItems[newValue].noteId, newValue);
+            useNM.loadNote(
+                useNM.tabItems[newValue].noteType,
+                useNM.tabItems[newValue].noteId,
+                newValue
+            );
         },
-        [NM]
+        [useNM]
     );
 
     return {

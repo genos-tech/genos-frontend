@@ -32,20 +32,21 @@ import { ModalCreateProject } from "../tasks/components/modals/ModalCreateProjec
 import { ModalCreateTag } from "../tasks/components/modals/ModalCreateTag";
 
 type ChatHomeProps = {
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    CM: ChatManagementState;
-    UIM: UIStateManagementState;
-    IM: InboxManagementState;
-    NM: NoteManagementState;
-    PM: ProjectManagementState;
-    TM: TaskManagementState;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
+    useIM: InboxManagementState;
+    useNM: NoteManagementState;
+    usePM: ProjectManagementState;
+    useTM: TaskManagementState;
 };
 
 export const ChatHome = (props: ChatHomeProps) => {
-    const { TEM, socket, myself, setMyself, UIM, IM, CM, NM, PM, TM } = props;
+    const { useTEM, socket, myself, setMyself, useUISM, useIM, useCM, useNM, usePM, useTM } =
+        props;
 
     // Common
     const { mode } = useColorScheme();
@@ -71,60 +72,63 @@ export const ChatHome = (props: ChatHomeProps) => {
     }, [isToDoVisible]);
 
     useEffect(() => {
-        if (CM.currentMainChat) {
-            if (currentMainChatId !== CM.currentMainChat.chatId) {
-                setCurrentMainChatId(CM.currentMainChat.chatId);
+        if (useCM.currentMainChat) {
+            if (currentMainChatId !== useCM.currentMainChat.chatId) {
+                setCurrentMainChatId(useCM.currentMainChat.chatId);
             }
-            if (CM.currentMainChat.project && CM.currentMainChat.project.projectId) {
-                PM.setCurrentProject(CM.currentMainChat.project);
+            if (useCM.currentMainChat.project && useCM.currentMainChat.project.projectId) {
+                usePM.setCurrentProject(useCM.currentMainChat.project);
             }
         }
-    }, [CM.currentMainChat]);
+    }, [useCM.currentMainChat]);
 
     useEffect(() => {
-        if (CM.currentSubChat) {
-            if (CM.currentSubChat !== undefined && currentSubChatId !== CM.currentSubChat.chatId) {
-                setCurrentSubChatId(CM.currentSubChat.chatId);
+        if (useCM.currentSubChat) {
+            if (
+                useCM.currentSubChat !== undefined &&
+                currentSubChatId !== useCM.currentSubChat.chatId
+            ) {
+                setCurrentSubChatId(useCM.currentSubChat.chatId);
             }
-            if (CM.currentSubChat?.project && CM.currentSubChat.project.projectId) {
-                PM.setCurrentProject(CM.currentSubChat.project);
+            if (useCM.currentSubChat?.project && useCM.currentSubChat.project.projectId) {
+                usePM.setCurrentProject(useCM.currentSubChat.project);
             }
         }
-    }, [CM.currentSubChat]);
+    }, [useCM.currentSubChat]);
 
     useEffect(() => {
         if (currentThreadChatId !== -1) {
             setCurrentThreadChatId(currentThreadChatId);
         }
-    }, [CM.currentThreadChat]);
+    }, [useCM.currentThreadChat]);
 
     useEffect(() => {
-        if (TM.currentPreviewTask) {
-            setCurrentThreadChatId(Number(TM.currentPreviewTask.id));
+        if (useTM.currentPreviewTask) {
+            setCurrentThreadChatId(Number(useTM.currentPreviewTask.id));
         }
-    }, [TM.currentPreviewTask]);
+    }, [useTM.currentPreviewTask]);
 
     return (
         <ChatProvider
-            CM={CM}
+            useCM={useCM}
             myself={myself}
-            NM={NM}
-            PM={PM}
+            useNM={useNM}
+            usePM={usePM}
             setMyself={setMyself}
             socket={socket}
-            TEM={TEM}
-            TM={TM}
-            UIM={UIM}
+            useTEM={useTEM}
+            useTM={useTM}
+            useUISM={useUISM}
         >
             <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
                 <Sidebar
-                    CM={CM}
-                    IM={IM}
+                    useCM={useCM}
+                    useIM={useIM}
                     myself={myself}
                     setMyself={setMyself}
                     socket={socket}
-                    TEM={TEM}
-                    UIM={UIM}
+                    useTEM={useTEM}
+                    useUISM={useUISM}
                 />
 
                 <PanelGroup autoSaveId="conditional" direction="horizontal">
@@ -152,49 +156,49 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 }}
                             >
                                 <ChatSidebar
-                                    CM={CM}
+                                    useCM={useCM}
                                     incompleteTodoCount={incompleteTodoCount}
                                     myself={myself}
                                     setIsToDoVisible={setIsToDoVisible}
                                     setMyself={setMyself}
                                     socket={socket}
-                                    TEM={TEM}
-                                    UIM={UIM}
-                                    TM={TM}
-                                    PM={PM}
+                                    useTEM={useTEM}
+                                    useUISM={useUISM}
+                                    useTM={useTM}
+                                    usePM={usePM}
                                 />
                             </Sheet>
                         </Box>
                     </Panel>
 
                     {/* Main Chat and Sub Chat Pane */}
-                    {CM.isMainChatVisible === true && (
+                    {useCM.isMainChatVisible === true && (
                         <>
                             <ResizeHandle key="main-chat-resize-handle" />
                             <Panel id={"2"} maxSize={90} minSize={25} order={2}>
                                 <PanelGroup autoSaveId="conditional" direction="vertical">
                                     {/* Sub Chat Pane */}
-                                    {CM.isSubChatVisible === true && (
+                                    {useCM.isSubChatVisible === true && (
                                         <>
                                             <SubChatPanel
-                                                CM={CM}
+                                                useCM={useCM}
                                                 currentSubChatId={currentSubChatId}
                                                 currentWindowHeight={height}
                                                 incompleteTodoCount={incompleteTodoCount}
                                                 isExistingTodaysTodo={isExistingTodaysTodo}
                                                 isToDoVisible={isToDoVisible}
                                                 myself={myself}
-                                                PM={PM}
+                                                usePM={usePM}
                                                 setIsExistingTodaysTodo={setIsExistingTodaysTodo}
                                                 setMyself={setMyself}
                                                 setSubChatPanelSize={setSubChatPanelSize}
                                                 setTodos={setTodos}
                                                 socket={socket}
                                                 subChatPanelSize={subChatPanelSize}
-                                                TEM={TEM}
-                                                TM={TM}
+                                                useTEM={useTEM}
+                                                useTM={useTM}
                                                 todos={todos}
-                                                UIM={UIM}
+                                                useUISM={useUISM}
                                             />
                                             <ResizeHandle
                                                 key="sub-chat-resize-handle"
@@ -205,7 +209,7 @@ export const ChatHome = (props: ChatHomeProps) => {
 
                                     {/* Main Chat Pane */}
                                     <MainChatPanel
-                                        CM={CM}
+                                        useCM={useCM}
                                         currentMainChatId={currentMainChatId}
                                         currentWindowHeight={height}
                                         incompleteTodoCount={incompleteTodoCount}
@@ -213,17 +217,17 @@ export const ChatHome = (props: ChatHomeProps) => {
                                         isToDoVisible={isToDoVisible}
                                         mainChatPanelSize={mainChatPanelSize}
                                         myself={myself}
-                                        PM={PM}
+                                        usePM={usePM}
                                         setIsExistingTodaysTodo={setIsExistingTodaysTodo}
                                         setIsToDoVisible={setIsToDoVisible}
                                         setMainChatPanelSize={setMainChatPanelSize}
                                         setMyself={setMyself}
                                         setTodos={setTodos}
                                         socket={socket}
-                                        TEM={TEM}
-                                        TM={TM}
+                                        useTEM={useTEM}
+                                        useTM={useTM}
                                         todos={todos}
-                                        UIM={UIM}
+                                        useUISM={useUISM}
                                     />
                                 </PanelGroup>
                             </Panel>
@@ -231,85 +235,85 @@ export const ChatHome = (props: ChatHomeProps) => {
                     )}
 
                     {/* Thread Chat Pane */}
-                    {CM.isThreadVisible === true && CM.currentThreadChat && (
+                    {useCM.isThreadVisible === true && useCM.currentThreadChat && (
                         <>
                             <ResizeHandle key="thread-chat-resize-handle" />
                             <ThreadPanel
-                                CM={CM}
+                                useCM={useCM}
                                 currentThreadChatId={currentThreadChatId}
                                 currentWindowHeight={height}
                                 myself={myself}
-                                NM={NM}
-                                PM={PM}
+                                useNM={useNM}
+                                usePM={usePM}
                                 setMyself={setMyself}
                                 socket={socket}
-                                TEM={TEM}
-                                TM={TM}
-                                UIM={UIM}
+                                useTEM={useTEM}
+                                useTM={useTM}
+                                useUISM={useUISM}
                             />
                         </>
                     )}
 
                     {/* Create Task Pane */}
-                    {TM.isCreatingTask.flag === true && (
+                    {useTM.isCreatingTask.flag === true && (
                         <>
                             <ResizeHandle key="create-task-resize-handle" />
                             <CreateTaskPanel
-                                CM={CM}
+                                useCM={useCM}
                                 myself={myself}
-                                PM={PM}
+                                usePM={usePM}
                                 setMyself={setMyself}
                                 socket={socket}
-                                TEM={TEM}
-                                TM={TM}
-                                UIM={UIM}
-                                NM={NM}
+                                useTEM={useTEM}
+                                useTM={useTM}
+                                useUISM={useUISM}
+                                useNM={useNM}
                             />
                         </>
                     )}
 
                     {/* Task Preview Pane */}
-                    {TM.isTaskPreviewVisible === true && TM.currentPreviewTask && (
+                    {useTM.isTaskPreviewVisible === true && useTM.currentPreviewTask && (
                         <>
                             <ResizeHandle key="task-preview-resize-handle" />
                             <TaskPreviewPanel
-                                CM={CM}
+                                useCM={useCM}
                                 myself={myself}
-                                NM={NM}
-                                PM={PM}
+                                useNM={useNM}
+                                usePM={usePM}
                                 setMyself={setMyself}
                                 socket={socket}
-                                TEM={TEM}
-                                TM={TM}
-                                UIM={UIM}
+                                useTEM={useTEM}
+                                useTM={useTM}
+                                useUISM={useUISM}
                             />
                         </>
                     )}
 
                     {/* Chat Note Pane */}
-                    {CM.isChatNoteVisibleInChat === true && (
+                    {useCM.isChatNoteVisibleInChat === true && (
                         <>
                             <ResizeHandle key="chat-note-resize-handle" />
                             <ChatNotePanel
-                                CM={CM}
+                                useCM={useCM}
                                 myself={myself}
-                                NM={NM}
-                                PM={PM}
+                                useNM={useNM}
+                                usePM={usePM}
                                 setMyself={setMyself}
                                 socket={socket}
-                                TEM={TEM}
-                                TM={TM}
-                                UIM={UIM}
+                                useTEM={useTEM}
+                                useTM={useTM}
+                                useUISM={useUISM}
                             />
                         </>
                     )}
 
                     {/* Select Chat Pane if no pane is visible */}
-                    {CM.isMainChatVisible === false &&
-                        CM.isThreadVisible === false &&
-                        TM.isCreatingTask.flag === false &&
-                        TM.isTaskPreviewVisible === false &&
-                        CM.isChatNoteVisibleInChat === false && (
+                    {useCM.isMainChatVisible === false &&
+                        useCM.isThreadVisible === false &&
+                        useTM.isCreatingTask.flag === false &&
+                        useTM.isTaskPreviewVisible === false &&
+                        useCM.isChatNoteVisibleInChat === false && (
                             <>
                                 <ResizeHandle key="select-chat-resize-handle" />
                                 <SelectChatPanel
@@ -320,10 +324,10 @@ export const ChatHome = (props: ChatHomeProps) => {
                         )}
 
                     {/* Modal for creating a new project */}
-                    <ModalCreateProject myself={myself} PM={PM} />
+                    <ModalCreateProject myself={myself} usePM={usePM} />
 
                     {/* Modal for creating a new tag */}
-                    <ModalCreateTag myself={myself} TM={TM} PM={PM} />
+                    <ModalCreateTag myself={myself} useTM={useTM} usePM={usePM} />
                 </PanelGroup>
 
                 {/* Hover Animation with CSS */}

@@ -11,16 +11,16 @@ import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../types/chat";
 
 export interface TaskHomeProps {
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    CM: ChatManagementState;
-    UIM: UIStateManagementState;
-    IM: InboxManagementState;
-    NM: NoteManagementState;
-    PM: ProjectManagementState;
-    TM: TaskManagementState;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
+    useIM: InboxManagementState;
+    useNM: NoteManagementState;
+    usePM: ProjectManagementState;
+    useTM: TaskManagementState;
 }
 
 export interface TaskHomeState {
@@ -91,10 +91,10 @@ export interface TaskHomeLayoutProps {
     selectedTagForFiltering?: string;
 
     // Management states
-    TEM: TeamManagementState;
-    PM: ProjectManagementState;
-    TM: TaskManagementState;
-    NM: NoteManagementState;
+    useTEM: TeamManagementState;
+    usePM: ProjectManagementState;
+    useTM: TaskManagementState;
+    useNM: NoteManagementState;
 
     // Props
     myself: UserProps;
@@ -124,8 +124,8 @@ export interface TaskHomeLayoutProps {
 
 export interface TaskHomeModalsProps {
     myself: UserProps;
-    PM: ProjectManagementState;
-    TM: TaskManagementState;
+    usePM: ProjectManagementState;
+    useTM: TaskManagementState;
     allChats: AllChatProps[];
     setAllChats: (value: AllChatProps[]) => void;
     socket: Socket | null;

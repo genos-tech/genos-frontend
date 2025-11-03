@@ -9,7 +9,7 @@ interface NoteTypeSectionProps {
     noteType: number;
     icon: ReactNode;
     children: ReactNode;
-    NM: NoteManagementState;
+    useNM: NoteManagementState;
     renderToggle: (
         open: boolean,
         setOpen: (value: boolean) => void,
@@ -22,7 +22,7 @@ export function NoteTypeSection({
     noteType,
     icon,
     children,
-    NM,
+    useNM,
     renderToggle,
 }: NoteTypeSectionProps) {
     return (

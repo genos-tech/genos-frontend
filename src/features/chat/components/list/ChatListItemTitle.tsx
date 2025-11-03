@@ -10,11 +10,11 @@ interface ChatListItemTitleProps {
     chat: AllChatProps;
     isYou: boolean;
     myself: UserProps;
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
 }
 
 export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
-    TEM,
+    useTEM,
     chat,
     isYou,
     myself,
@@ -27,8 +27,8 @@ export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
     const showOthersCustomStatus =
         chat.dmPartnerUser.userId !== "" &&
         myself.userId !== chat.dmPartnerUser.userId &&
-        TEM.teamMemberProfiles[chat.dmPartnerUser.userId] &&
-        TEM.teamMemberProfiles[chat.dmPartnerUser.userId].customStatus !== "";
+        useTEM.teamMemberProfiles[chat.dmPartnerUser.userId] &&
+        useTEM.teamMemberProfiles[chat.dmPartnerUser.userId].customStatus !== "";
 
     return (
         <Box sx={{ pt: "3px" }}>
@@ -64,7 +64,7 @@ export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
                         sx={{ borderRadius: "sm", height: "10px" }}
                         variant="outlined"
                     >
-                        {TEM.teamMemberProfiles[chat.dmPartnerUser.userId].customStatus}
+                        {useTEM.teamMemberProfiles[chat.dmPartnerUser.userId].customStatus}
                     </Chip>
                 )}
             </Stack>

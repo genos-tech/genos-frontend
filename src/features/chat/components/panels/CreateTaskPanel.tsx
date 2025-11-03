@@ -12,27 +12,27 @@ import { UserProps } from "../../../../types/admin";
 import { CreateTaskForm } from "../../../tasks/components/contents/CreateTaskForm";
 
 interface CreateTaskPanelProps {
-    CM: ChatManagementState;
-    TM: TaskManagementState;
-    PM: ProjectManagementState;
-    TEM: TeamManagementState;
+    useCM: ChatManagementState;
+    useTM: TaskManagementState;
+    usePM: ProjectManagementState;
+    useTEM: TeamManagementState;
     myself: UserProps;
     socket: any;
     setMyself: (me: UserProps) => void;
-    UIM: UIStateManagementState;
-    NM: NoteManagementState;
+    useUISM: UIStateManagementState;
+    useNM: NoteManagementState;
 }
 
 export const CreateTaskPanel = ({
-    CM,
-    TM,
-    PM,
-    TEM,
+    useCM,
+    useTM,
+    usePM,
+    useTEM,
     myself,
     socket,
     setMyself,
-    UIM,
-    NM,
+    useUISM,
+    useNM,
 }: CreateTaskPanelProps) => {
     const { mode } = useColorScheme();
 
@@ -59,16 +59,16 @@ export const CreateTaskPanel = ({
                 }}
             >
                 <CreateTaskForm
-                    chatType={CM.currentThreadChat?.chatType || -1}
-                    CM={CM}
+                    chatType={useCM.currentThreadChat?.chatType || -1}
+                    useCM={useCM}
                     myself={myself}
-                    PM={PM}
+                    usePM={usePM}
                     setMyself={setMyself}
                     socket={socket}
-                    TEM={TEM}
-                    TM={TM}
-                    UIM={UIM}
-                    NM={NM}
+                    useTEM={useTEM}
+                    useTM={useTM}
+                    useUISM={useUISM}
+                    useNM={useNM}
                 />
             </Box>
         </Panel>

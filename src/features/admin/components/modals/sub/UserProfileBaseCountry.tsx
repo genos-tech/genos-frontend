@@ -241,7 +241,7 @@ const countries = [
     { code: "CI", label: "Cote d'Ivoire", phone: "225" },
     { code: "CK", label: "Cook Islands", phone: "682" },
     { code: "CL", label: "Chile", phone: "56" },
-    { code: "CM", label: "Cameroon", phone: "237" },
+    { code: "useCM", label: "Cameroon", phone: "237" },
     { code: "CN", label: "China", phone: "86" },
     { code: "CO", label: "Colombia", phone: "57" },
     { code: "CR", label: "Costa Rica", phone: "506" },
@@ -328,7 +328,7 @@ const countries = [
     { code: "ID", label: "Indonesia", phone: "62" },
     { code: "IE", label: "Ireland", phone: "353" },
     { code: "IL", label: "Israel", phone: "972" },
-    { code: "IM", label: "Isle of Man", phone: "44" },
+    { code: "useIM", label: "Isle of Man", phone: "44" },
     { code: "IN", label: "India", phone: "91" },
     {
         code: "IO",

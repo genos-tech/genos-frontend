@@ -18,7 +18,7 @@ type TaskSidebarSearchBoxProps = {
     teamTaskSearchOptions: SearchTeamTasksResponse[];
     setTeamTaskSearchOptions: (value: SearchTeamTasksResponse[]) => void;
     loading: boolean;
-    TM: TaskManagementState;
+    useTM: TaskManagementState;
 };
 export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
     const {
@@ -27,21 +27,21 @@ export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
         teamTaskSearchOptions,
         setTeamTaskSearchOptions,
         loading,
-        TM,
+        useTM,
     } = props;
     const { mode } = useColorScheme();
 
     function onChangeHandler(value: any) {
         if (value !== null) {
             setOpenSearch(false);
-            TM.setCurrentPreviewTaskId(value.taskId);
-            TM.setIsTaskPreviewVisible(true);
+            useTM.setCurrentPreviewTaskId(value.taskId);
+            useTM.setIsTaskPreviewVisible(true);
         }
     }
 
     return (
         <Autocomplete
-            key={`ac-project-tags-${TM.currentPreviewTaskId}`}
+            key={`ac-project-tags-${useTM.currentPreviewTaskId}`}
             aria-label="Search Tasks"
             getOptionLabel={(option) => option.title}
             groupBy={(option) => option.projectName}

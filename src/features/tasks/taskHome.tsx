@@ -1,16 +1,18 @@
+import { useState } from "react";
 import { Box, CssBaseline } from "@mui/joy";
 import { CssVarsProvider } from "@mui/joy/styles";
-import { useState } from "react";
 
-import { Sidebar } from "../../components/layout/sidebar";
-import { useAuth } from "../../context/AuthContext";
 import { TaskHomeLayout } from "./components/layout/TaskHomeLayout";
 import { TaskHomeModals } from "./components/modals/TaskHomeModals";
 import { useTaskSearch } from "./hooks/useTaskSearch";
 import { TaskHomeProps } from "./types/TaskHomeTypes";
 
+import { Sidebar } from "../../components/layout/sidebar";
+import { useAuth } from "../../context/AuthContext";
+
 export const TaskHome = (props: TaskHomeProps) => {
-    const { TEM, socket, myself, setMyself, UIM, IM, CM, NM, PM, TM } = props;
+    const { useTEM, socket, myself, setMyself, useUISM, useIM, useCM, useNM, usePM, useTM } =
+        props;
 
     // Common
     const { accessToken } = useAuth();
@@ -32,7 +34,7 @@ export const TaskHome = (props: TaskHomeProps) => {
     // Search functionality
     const searchHook = useTaskSearch({
         myself,
-        currentProject: PM.currentProject,
+        currentProject: usePM.currentProject,
         accessToken: accessToken || "",
     });
 
@@ -40,31 +42,31 @@ export const TaskHome = (props: TaskHomeProps) => {
     const handleSearchChange = (value: any) => {
         if (value !== null) {
             searchHook.handleSearchClose();
-            TM.setCurrentPreviewTaskId(value.taskId);
-            TM.setIsTaskPreviewVisible(true);
+            useTM.setCurrentPreviewTaskId(value.taskId);
+            useTM.setIsTaskPreviewVisible(true);
         }
     };
 
     const handleCreateProject = () => {
-        PM.setOpenCreateProject(true);
+        usePM.setOpenCreateProject(true);
     };
 
     const handleCreateTag = () => {
-        TM.setOpenCreateTag(true);
+        useTM.setOpenCreateTag(true);
     };
 
     const handleDeleteProject = () => {
-        if (PM.currentProject) {
+        if (usePM.currentProject) {
             setOpenDeleteProject({
                 flag: true,
-                projectId: PM.currentProject.projectId,
-                projectName: PM.currentProject.projectName,
+                projectId: usePM.currentProject.projectId,
+                projectName: usePM.currentProject.projectName,
             });
         }
     };
 
     const handleCloseTaskHome = () => {
-        TM.setIsTaskHomeVisible(false);
+        useTM.setIsTaskHomeVisible(false);
     };
 
     return (
@@ -72,25 +74,25 @@ export const TaskHome = (props: TaskHomeProps) => {
             <CssBaseline />
             <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
                 <Sidebar
-                    CM={CM}
-                    IM={IM}
+                    useCM={useCM}
+                    useIM={useIM}
                     myself={myself}
                     setMyself={setMyself}
                     socket={socket}
-                    TEM={TEM}
-                    UIM={UIM}
+                    useTEM={useTEM}
+                    useUISM={useUISM}
                 />
 
                 <TaskHomeLayout
-                    CM={CM}
+                    useCM={useCM}
                     myself={myself}
-                    NM={NM}
-                    PM={PM}
+                    useNM={useNM}
+                    usePM={usePM}
                     setMyself={setMyself}
                     socket={socket}
-                    TEM={TEM}
-                    TM={TM}
-                    UIM={UIM}
+                    useTEM={useTEM}
+                    useTM={useTM}
+                    useUISM={useUISM}
                     onCloseTaskHome={handleCloseTaskHome}
                     onCreateProject={handleCreateProject}
                     onCreateTag={handleCreateTag}
@@ -98,15 +100,15 @@ export const TaskHome = (props: TaskHomeProps) => {
                 />
 
                 <TaskHomeModals
-                    CM={CM}
+                    useCM={useCM}
                     myself={myself}
                     openDeleteProject={openDeleteProject}
                     openJoinProject={openJoinProject}
-                    PM={PM}
+                    usePM={usePM}
                     setOpenDeleteProject={setOpenDeleteProject}
                     setOpenJoinProject={setOpenJoinProject}
                     socket={socket}
-                    TM={TM}
+                    useTM={useTM}
                 />
 
                 {/* Hover Animation with CSS */}

@@ -26,15 +26,15 @@ import { ChatProps, ThreadProps, ToDoFactProps } from "../../types/chat";
 import { ToDoPane } from "./ToDoPane";
 
 type MessagesPaneProps = {
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     currentWindowHeight: number;
     paneSizePCT: number;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
-    CM: ChatManagementState;
+    useCM: ChatManagementState;
     currentMainChatId: number;
-    PM: ProjectManagementState;
+    usePM: ProjectManagementState;
     setIsToDoVisible: (value: boolean) => void;
     isToDoVisible: boolean;
     todos: ToDoFactProps[];
@@ -42,8 +42,8 @@ type MessagesPaneProps = {
     isExistingTodaysTodo: boolean;
     setIsExistingTodaysTodo: (value: boolean) => void;
     incompleteTodoCount: number;
-    UIM: UIStateManagementState;
-    TM: TaskManagementState;
+    useUISM: UIStateManagementState;
+    useTM: TaskManagementState;
 };
 
 export const MessagesPane = (props: MessagesPaneProps) => {
@@ -55,33 +55,33 @@ export const MessagesPane = (props: MessagesPaneProps) => {
         isToDoVisible,
         myself,
         paneSizePCT,
-        PM,
+        usePM,
         setIsExistingTodaysTodo,
         setIsToDoVisible,
         setMyself,
-        UIM,
+        useUISM,
         setTodos,
         socket,
-        TEM,
+        useTEM,
         todos,
-        CM,
-        TM,
+        useCM,
+        useTM,
     } = props;
 
     const { mode } = useColorScheme();
 
     // Use shared hooks
     const messageManagement = useMessageManagement({
-        chat: CM.currentMainChat as ChatProps | ThreadProps,
+        chat: useCM.currentMainChat as ChatProps | ThreadProps,
     });
     const readStatusManagement = useReadStatusManagement({
-        currentChat: CM.currentMainChat as ChatProps | ThreadProps,
+        currentChat: useCM.currentMainChat as ChatProps | ThreadProps,
         myself,
-        CM,
+        useCM,
         isThread: false,
     });
     const scrollManagement = useScrollManagement({
-        currentChat: CM.currentMainChat as ChatProps | ThreadProps,
+        currentChat: useCM.currentMainChat as ChatProps | ThreadProps,
         indexMap: messageManagement.indexMap,
         isThread: false,
     });
@@ -90,18 +90,18 @@ export const MessagesPane = (props: MessagesPaneProps) => {
     useEffect(() => {
         setTimeout(() => {
             let targetIndex: number;
-            if (CM.currentMainChat?.moveToSpecificIndex === undefined) {
-                targetIndex = CM.currentMainChat?.messages?.length
-                    ? CM.currentMainChat?.messages?.length - 1
+            if (useCM.currentMainChat?.moveToSpecificIndex === undefined) {
+                targetIndex = useCM.currentMainChat?.messages?.length
+                    ? useCM.currentMainChat?.messages?.length - 1
                     : 0;
             } else if (
                 messageManagement.indexMap &&
-                messageManagement.indexMap[CM.currentMainChat?.moveToSpecificIndex] &&
-                CM.currentMainChat?.chatId ===
-                    Number(CM.currentMainChat?.moveToSpecificIndex?.split("-")[0])
+                messageManagement.indexMap[useCM.currentMainChat?.moveToSpecificIndex] &&
+                useCM.currentMainChat?.chatId ===
+                    Number(useCM.currentMainChat?.moveToSpecificIndex?.split("-")[0])
             ) {
                 targetIndex = Number(
-                    messageManagement.indexMap[CM.currentMainChat?.moveToSpecificIndex]
+                    messageManagement.indexMap[useCM.currentMainChat?.moveToSpecificIndex]
                 );
             } else {
                 targetIndex = -1;
@@ -119,16 +119,18 @@ export const MessagesPane = (props: MessagesPaneProps) => {
 
     useEffect(() => {
         setTimeout(() => {
-            if (CM.currentMainChat?.latestMessage) {
-                readStatusManagement.updateReadStatus(CM.currentMainChat?.latestMessage.messageId);
+            if (useCM.currentMainChat?.latestMessage) {
+                readStatusManagement.updateReadStatus(
+                    useCM.currentMainChat?.latestMessage.messageId
+                );
             }
         }, 300);
-    }, [CM.currentMainChat]);
+    }, [useCM.currentMainChat]);
 
     const virtuosoHeight =
-        CM.currentMainChat?.chatType === 3 || CM.currentMainChat?.chatType === 4
+        useCM.currentMainChat?.chatType === 3 || useCM.currentMainChat?.chatType === 4
             ? 0.95 * window.innerHeight
-            : CM.isSubChatVisible
+            : useCM.isSubChatVisible
               ? calculateVirtuosoSubHight(
                     currentWindowHeight,
                     paneSizePCT,
@@ -160,28 +162,28 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                         setErrorOpen={messageManagement.setErrorOpen}
                     />
 
-                    {CM.currentMainChat && (
+                    {useCM.currentMainChat && (
                         <MainChatPaneHeader
-                            chat={CM.currentMainChat}
-                            CM={CM}
+                            chat={useCM.currentMainChat}
+                            useCM={useCM}
                             incompleteTodoCount={incompleteTodoCount}
                             isToDoVisible={isToDoVisible}
                             myself={myself}
                             setIsToDoVisible={setIsToDoVisible}
                             setMyself={setMyself}
                             socket={socket}
-                            TEM={TEM}
-                            UIM={UIM}
-                            TM={TM}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
+                            useTM={useTM}
                         />
                     )}
 
                     {/* To-Do Pane for only myself */}
                     {isToDoVisible === true &&
-                        CM.currentMainChat?.chatType === 1 &&
-                        CM.currentMainChat?.dmPartnerUser.userId === myself.userId && (
+                        useCM.currentMainChat?.chatType === 1 &&
+                        useCM.currentMainChat?.dmPartnerUser.userId === myself.userId && (
                             <ToDoPane
-                                CM={CM}
+                                useCM={useCM}
                                 currentWindowHeight={currentWindowHeight}
                                 isExistingTodaysTodo={isExistingTodaysTodo}
                                 myself={myself}
@@ -189,21 +191,21 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                 setMyself={setMyself}
                                 setTodos={setTodos}
                                 socket={socket}
-                                TEM={TEM}
+                                useTEM={useTEM}
                                 todos={todos}
-                                UIM={UIM}
+                                useUISM={useUISM}
                             />
                         )}
 
                     {!(
                         isToDoVisible === true &&
-                        CM.currentMainChat?.chatType === 1 &&
-                        CM.currentMainChat?.dmPartnerUser.userId === myself.userId
+                        useCM.currentMainChat?.chatType === 1 &&
+                        useCM.currentMainChat?.dmPartnerUser.userId === myself.userId
                     ) && (
                         <>
                             <MessageListRenderer
-                                chat={CM.currentMainChat as ChatProps | ThreadProps}
-                                CM={CM}
+                                chat={useCM.currentMainChat as ChatProps | ThreadProps}
+                                useCM={useCM}
                                 currentChatId={currentMainChatId}
                                 height={virtuosoHeight}
                                 indexMap={messageManagement.indexMap}
@@ -211,7 +213,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                 isThread={false}
                                 messages={messageManagement.messages}
                                 myself={myself}
-                                PM={PM}
+                                usePM={usePM}
                                 setEditTargetMessage={messageManagement.setEditTargetMessage}
                                 setErrorMessage={messageManagement.setErrorMessage}
                                 setErrorOpen={messageManagement.setErrorOpen}
@@ -220,20 +222,20 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                 setMyself={setMyself}
                                 setVisibleRange={scrollManagement.setVisibleRange}
                                 socket={socket}
-                                TEM={TEM}
-                                UIM={UIM}
+                                useTEM={useTEM}
+                                useUISM={useUISM}
                                 visibleRange={scrollManagement.visibleRange}
                                 virtuosoRef={
                                     scrollManagement.virtuosoRef as React.RefObject<VirtuosoHandle>
                                 }
-                                TM={TM}
+                                useTM={useTM}
                             />
 
-                            {CM.currentMainChat?.chatType !== 3 &&
-                                CM.currentMainChat?.chatType !== 4 && (
+                            {useCM.currentMainChat?.chatType !== 3 &&
+                                useCM.currentMainChat?.chatType !== 4 && (
                                     <ChatEditorSection
-                                        chat={CM.currentMainChat as ChatProps | ThreadProps}
-                                        CM={CM}
+                                        chat={useCM.currentMainChat as ChatProps | ThreadProps}
+                                        useCM={useCM}
                                         editTargetMessage={messageManagement.editTargetMessage}
                                         isInEdit={messageManagement.isInEdit}
                                         isThread={false}
@@ -244,11 +246,11 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                         setMyself={setMyself}
                                         setNumEditorLines={messageManagement.setNumEditorLines}
                                         socket={socket}
-                                        TEM={TEM}
+                                        useTEM={useTEM}
                                         thread={undefined}
-                                        UIM={UIM}
+                                        useUISM={useUISM}
                                         setCurrentChat={
-                                            CM.setCurrentMainChat as (
+                                            useCM.setCurrentMainChat as (
                                                 chat: ChatProps | ThreadProps
                                             ) => void
                                         }

@@ -17,7 +17,7 @@ export const setupWebSocketHandlers = (
     setIsTaskUpdatedBySomeone: (value: boolean) => void,
     setIsTaskCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void,
     funcSetInboxItems: () => void,
-    CM: ChatManagementState
+    useCM: ChatManagementState
 ) => {
     socket.on("connect", () => {
         console.log("WS connected");
@@ -42,7 +42,7 @@ export const setupWebSocketHandlers = (
             console.log("chat_message:", message);
             if (message.chatId !== null) {
                 if (message.isThread === true) {
-                    await handleThreadMessage(message, myself, accessToken, CM);
+                    await handleThreadMessage(message, myself, accessToken, useCM);
                 } else {
                     await handleRegularMessage(
                         message,
@@ -50,7 +50,7 @@ export const setupWebSocketHandlers = (
                         currentProject,
                         currentPreviewTaskId,
                         setIsTaskUpdatedBySomeone,
-                        CM,
+                        useCM,
                         socket
                     );
                 }
@@ -64,7 +64,7 @@ export const setupWebSocketHandlers = (
         } else if (message.wsType === "activity") {
             console.log("Got an activity message");
             console.log("activity_message:", message);
-            await handleActivityMessage(message, myself, CM);
+            await handleActivityMessage(message, myself, useCM);
         } else if (message.wsType === "userStatus") {
             const user: UserProps = message.user;
             await addUser(user);

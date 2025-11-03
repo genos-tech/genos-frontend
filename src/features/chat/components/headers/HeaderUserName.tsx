@@ -13,20 +13,20 @@ import { UserProps } from "../../../../types/admin";
 import { ChatProps } from "../../../../types/chat";
 
 type HeaderUserNameProps = {
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    UIM: UIStateManagementState;
+    useUISM: UIStateManagementState;
     chat?: ChatProps;
     isYou: boolean;
-    CM: ChatManagementState;
+    useCM: ChatManagementState;
 };
 export const HeaderUserName = (props: HeaderUserNameProps) => {
-    const { TEM, socket, myself, setMyself, UIM, chat, isYou, CM } = props;
+    const { useTEM, socket, myself, setMyself, useUISM, chat, isYou, useCM } = props;
 
     const headerUser: UserProps | undefined = chat
-        ? TEM.teamMemberProfiles[chat.dmPartnerUser.userId]
+        ? useTEM.teamMemberProfiles[chat.dmPartnerUser.userId]
         : undefined;
     let isOnline: boolean = headerUser
         ? myself.userId === headerUser.userId
@@ -50,35 +50,35 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                         avatarSize={38}
                         avatarUser={headerUser}
                         chat={chat}
-                        CM={CM}
+                        useCM={useCM}
                         isYou={isYou}
                         myself={myself}
                         setMyself={setMyself}
                         socket={socket}
-                        UIM={UIM}
+                        useUISM={useUISM}
                     />
                 ) : chat && chat.chatType === 2 ? (
                     <GMAvatar
                         avatarSize={38}
-                        CM={CM}
+                        useCM={useCM}
                         gmChat={chat}
                         isYou={isYou}
                         myself={myself}
                         setMyself={setMyself}
                         socket={socket}
-                        TEM={TEM}
-                        UIM={UIM}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
                     />
                 ) : chat && chat.chatType === 3 ? (
                     <ProjectAvatar
                         avatarSize={38}
-                        CM={CM}
+                        useCM={useCM}
                         myself={myself}
                         pmChat={chat}
                         setMyself={setMyself}
                         socket={socket}
-                        TEM={TEM}
-                        UIM={UIM}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
                     />
                 ) : undefined}
             </div>
@@ -136,15 +136,16 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                     {chat &&
                         chat.dmPartnerUser.userId !== "" &&
                         myself.userId !== chat.dmPartnerUser.userId &&
-                        TEM.teamMemberProfiles[chat.dmPartnerUser.userId] &&
-                        TEM.teamMemberProfiles[chat.dmPartnerUser.userId].customStatus !== "" && (
+                        useTEM.teamMemberProfiles[chat.dmPartnerUser.userId] &&
+                        useTEM.teamMemberProfiles[chat.dmPartnerUser.userId].customStatus !==
+                            "" && (
                             <Chip
                                 component="h2"
                                 size="md"
                                 sx={{ ml: "3px", borderRadius: "sm" }}
                                 variant="outlined"
                             >
-                                {TEM.teamMemberProfiles[chat.dmPartnerUser.userId].customStatus}
+                                {useTEM.teamMemberProfiles[chat.dmPartnerUser.userId].customStatus}
                             </Chip>
                         )}
                 </Stack>

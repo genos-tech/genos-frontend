@@ -23,14 +23,14 @@ import { ChatProps, ThreadProps, ToDoFactProps } from "../../types/chat";
 import { ToDoPane } from "./ToDoPane";
 
 type MessagesPaneProps = {
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     currentWindowHeight: number;
     paneSizePCT: number;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
     currentSubChatId: number;
-    PM: ProjectManagementState;
+    usePM: ProjectManagementState;
     isToDoVisible: boolean;
     setIsToDoVisible: (value: boolean) => void;
     todos: ToDoFactProps[];
@@ -38,14 +38,14 @@ type MessagesPaneProps = {
     isExistingTodaysTodo: boolean;
     setIsExistingTodaysTodo: (value: boolean) => void;
     incompleteTodoCount: number;
-    UIM: UIStateManagementState;
-    CM: ChatManagementState;
-    TM: TaskManagementState;
+    useUISM: UIStateManagementState;
+    useCM: ChatManagementState;
+    useTM: TaskManagementState;
 };
 
 export const MessagesSubPane = (props: MessagesPaneProps) => {
     const {
-        CM,
+        useCM,
         currentSubChatId,
         currentWindowHeight,
         incompleteTodoCount,
@@ -53,32 +53,32 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
         isToDoVisible,
         myself,
         paneSizePCT,
-        PM,
+        usePM,
         setIsExistingTodaysTodo,
         setIsToDoVisible,
         setMyself,
-        UIM,
+        useUISM,
         setTodos,
         socket,
-        TEM,
+        useTEM,
         todos,
-        TM,
+        useTM,
     } = props;
 
-    if (!CM.currentSubChat) {
+    if (!useCM.currentSubChat) {
         return null;
     }
 
     // Use shared hooks
-    const messageManagement = useMessageManagement({ chat: CM.currentSubChat });
+    const messageManagement = useMessageManagement({ chat: useCM.currentSubChat });
     const readStatusManagement = useReadStatusManagement({
-        currentChat: CM.currentSubChat,
+        currentChat: useCM.currentSubChat,
         myself,
-        CM,
+        useCM,
         isThread: false,
     });
     const scrollManagement = useScrollManagement({
-        currentChat: CM.currentSubChat,
+        currentChat: useCM.currentSubChat,
         indexMap: messageManagement.indexMap,
         isThread: false,
     });
@@ -86,19 +86,19 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
     // Handle read status updates
     useEffect(() => {
         setTimeout(() => {
-            if (CM.currentSubChat) {
+            if (useCM.currentSubChat) {
                 let targetIndex: number;
-                if (CM.currentSubChat.moveToSpecificIndex === undefined) {
-                    targetIndex = CM.currentSubChat.messages.length - 1;
+                if (useCM.currentSubChat.moveToSpecificIndex === undefined) {
+                    targetIndex = useCM.currentSubChat.messages.length - 1;
                 } else if (
-                    CM.currentSubChat.moveToSpecificIndex &&
+                    useCM.currentSubChat.moveToSpecificIndex &&
                     messageManagement.indexMap &&
-                    messageManagement.indexMap[CM.currentSubChat.moveToSpecificIndex] &&
-                    CM.currentSubChat.chatId ===
-                        Number(CM.currentSubChat.moveToSpecificIndex?.split("-")[0])
+                    messageManagement.indexMap[useCM.currentSubChat.moveToSpecificIndex] &&
+                    useCM.currentSubChat.chatId ===
+                        Number(useCM.currentSubChat.moveToSpecificIndex?.split("-")[0])
                 ) {
                     targetIndex = Number(
-                        messageManagement.indexMap[CM.currentSubChat.moveToSpecificIndex]
+                        messageManagement.indexMap[useCM.currentSubChat.moveToSpecificIndex]
                     );
                 } else {
                     targetIndex = -1;
@@ -138,24 +138,24 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                 />
 
                 <SubChatPaneHeader
-                    CM={CM}
+                    useCM={useCM}
                     incompleteTodoCount={incompleteTodoCount}
                     isToDoVisible={isToDoVisible}
                     myself={myself}
                     setIsToDoVisible={setIsToDoVisible}
                     setMyself={setMyself}
                     socket={socket}
-                    TEM={TEM}
-                    UIM={UIM}
-                    TM={TM}
+                    useTEM={useTEM}
+                    useUISM={useUISM}
+                    useTM={useTM}
                 />
 
                 {/* To-Do Pane for only myself */}
                 {isToDoVisible === true &&
-                    CM.currentSubChat.chatType === 1 &&
-                    CM.currentSubChat.dmPartnerUser.userId === myself.userId && (
+                    useCM.currentSubChat.chatType === 1 &&
+                    useCM.currentSubChat.dmPartnerUser.userId === myself.userId && (
                         <ToDoPane
-                            CM={CM}
+                            useCM={useCM}
                             currentWindowHeight={currentWindowHeight}
                             isExistingTodaysTodo={isExistingTodaysTodo}
                             myself={myself}
@@ -163,23 +163,23 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                             setMyself={setMyself}
                             setTodos={setTodos}
                             socket={socket}
-                            TEM={TEM}
+                            useTEM={useTEM}
                             todos={todos}
-                            UIM={UIM}
+                            useUISM={useUISM}
                         />
                     )}
 
                 {!(
                     isToDoVisible === true &&
-                    CM.currentSubChat.chatType === 1 &&
-                    CM.currentSubChat.dmPartnerUser.userId === myself.userId
+                    useCM.currentSubChat.chatType === 1 &&
+                    useCM.currentSubChat.dmPartnerUser.userId === myself.userId
                 ) &&
-                    CM.currentSubChat &&
+                    useCM.currentSubChat &&
                     messageManagement.messages && (
                         <>
                             <MessageListRenderer
-                                chat={CM.currentSubChat}
-                                CM={CM}
+                                chat={useCM.currentSubChat}
+                                useCM={useCM}
                                 currentChatId={currentSubChatId}
                                 height={virtuosoHeight}
                                 indexMap={messageManagement.indexMap}
@@ -187,7 +187,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                                 isThread={false}
                                 messages={messageManagement.messages}
                                 myself={myself}
-                                PM={PM}
+                                usePM={usePM}
                                 setEditTargetMessage={messageManagement.setEditTargetMessage}
                                 setErrorMessage={messageManagement.setErrorMessage}
                                 setErrorOpen={messageManagement.setErrorOpen}
@@ -196,17 +196,17 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                                 setMyself={setMyself}
                                 setVisibleRange={scrollManagement.setVisibleRange}
                                 socket={socket}
-                                TEM={TEM}
-                                UIM={UIM}
+                                useTEM={useTEM}
+                                useUISM={useUISM}
                                 visibleRange={scrollManagement.visibleRange}
                                 virtuosoRef={
                                     scrollManagement.virtuosoRef as React.RefObject<VirtuosoHandle>
                                 }
-                                TM={TM}
+                                useTM={useTM}
                             />
                             <ChatEditorSection
-                                chat={CM.currentSubChat as ChatProps | ThreadProps}
-                                CM={CM}
+                                chat={useCM.currentSubChat as ChatProps | ThreadProps}
+                                useCM={useCM}
                                 editTargetMessage={messageManagement.editTargetMessage}
                                 isInEdit={messageManagement.isInEdit}
                                 isThread={false}
@@ -216,10 +216,12 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                                 setMyself={setMyself}
                                 setNumEditorLines={messageManagement.setNumEditorLines}
                                 socket={socket}
-                                TEM={TEM}
-                                UIM={UIM}
+                                useTEM={useTEM}
+                                useUISM={useUISM}
                                 setCurrentChat={
-                                    CM.setCurrentSubChat as (chat: ChatProps | ThreadProps) => void
+                                    useCM.setCurrentSubChat as (
+                                        chat: ChatProps | ThreadProps
+                                    ) => void
                                 }
                             />
                         </>

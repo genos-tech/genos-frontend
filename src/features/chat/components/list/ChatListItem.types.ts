@@ -15,15 +15,15 @@ export interface ChatListItemProps extends ListItemButtonProps {
     // User data
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    TEM: TeamManagementState;
-    CM: ChatManagementState;
+    useTEM: TeamManagementState;
+    useCM: ChatManagementState;
 
     // UI state
-    TM: TaskManagementState;
+    useTM: TaskManagementState;
 
     // Services
     socket: Socket | null;
-    UIM: UIStateManagementState;
+    useUISM: UIStateManagementState;
 
     // Chat specific
     isPinnedChat: boolean;

@@ -120,7 +120,7 @@ const templateRoleOptions = [
         category: "Executive & Leadership",
         role: "Chief Technology Officer (CTO)",
     },
-    { category: "Executive & Leadership", role: "Chief Marketing Officer (CMO)" },
+    { category: "Executive & Leadership", role: "Chief Marketing Officer (useCMO)" },
     {
         category: "Executive & Leadership",
         role: "Chief Human Resources Officer (CHRO)",

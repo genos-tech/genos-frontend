@@ -25,7 +25,7 @@ export const handleThreadMessage = async (
     newMessage: NewThreadMessageProps,
     myself: UserProps,
     accessToken: string | null,
-    CM: ChatManagementState
+    useCM: ChatManagementState
 ) => {
     const newThreadMessage: ThreadMessageProps = {
         chatType: newMessage.chatType,
@@ -50,14 +50,14 @@ export const handleThreadMessage = async (
 
     if (newMessage.isDeleted) {
         if (
-            CM.currentThreadChat &&
-            newMessage.chatType === CM.currentThreadChat.chatType &&
-            newMessage.chatId === CM.currentThreadChat.chatId &&
-            newMessage.threadId === CM.currentThreadChat.threadId
+            useCM.currentThreadChat &&
+            newMessage.chatType === useCM.currentThreadChat.chatType &&
+            newMessage.chatId === useCM.currentThreadChat.chatId &&
+            newMessage.threadId === useCM.currentThreadChat.threadId
         ) {
-            CM.setCurrentThreadChat({
-                ...CM.currentThreadChat,
-                messages: CM.currentThreadChat.messages.filter(
+            useCM.setCurrentThreadChat({
+                ...useCM.currentThreadChat,
+                messages: useCM.currentThreadChat.messages.filter(
                     (m) => m.messageId !== newMessage.messageId
                 ),
                 notMove: true,
@@ -70,19 +70,19 @@ export const handleThreadMessage = async (
         if (context.fromMe || context.toMe) {
             await addThreadMessage(newThreadMessage, newMessage.chatType);
             if (
-                CM.currentThreadChat &&
-                newMessage.chatId === CM.currentThreadChat.chatId &&
-                newMessage.threadId === CM.currentThreadChat.threadId
+                useCM.currentThreadChat &&
+                newMessage.chatId === useCM.currentThreadChat.chatId &&
+                newMessage.threadId === useCM.currentThreadChat.threadId
             ) {
                 const updatedMessages = await loadSpecificThreadMessages(
                     myself,
-                    CM.currentThreadChat.chatType,
-                    CM.currentThreadChat.chatId,
-                    CM.currentThreadChat.threadId,
+                    useCM.currentThreadChat.chatType,
+                    useCM.currentThreadChat.chatId,
+                    useCM.currentThreadChat.threadId,
                     accessToken
                 );
-                CM.setCurrentThreadChat({
-                    ...CM.currentThreadChat,
+                useCM.setCurrentThreadChat({
+                    ...useCM.currentThreadChat,
                     messages: updatedMessages,
                     notMove: true,
                 });
@@ -96,9 +96,9 @@ export const handleThreadMessage = async (
         await addThreadMessage(newThreadMessage, newMessage.chatType);
 
         if (
-            CM.currentThreadChat &&
-            newMessage.chatId === CM.currentThreadChat.chatId &&
-            newMessage.threadId === CM.currentThreadChat.threadId
+            useCM.currentThreadChat &&
+            newMessage.chatId === useCM.currentThreadChat.chatId &&
+            newMessage.threadId === useCM.currentThreadChat.threadId
         ) {
             const updatedThreadChat: ThreadProps = {
                 chatId: newMessage.chatId,
@@ -109,13 +109,13 @@ export const handleThreadMessage = async (
                 chatType: newMessage.chatType,
                 dmPartnerUser: newMessage.sender,
                 taskId: newThreadMessage.taskId,
-                messages: CM.currentThreadChat
-                    ? [...CM.currentThreadChat.messages, newThreadMessage]
+                messages: useCM.currentThreadChat
+                    ? [...useCM.currentThreadChat.messages, newThreadMessage]
                     : [newThreadMessage],
                 TSLastMessage: newThreadMessage.tsSent,
                 notMove: true,
             };
-            CM.setCurrentThreadChat(updatedThreadChat);
+            useCM.setCurrentThreadChat(updatedThreadChat);
         }
     }
 };
@@ -126,7 +126,7 @@ export const handleRegularMessage = async (
     currentProject: any,
     currentPreviewTaskId: number,
     setIsTaskUpdatedBySomeone: (value: boolean) => void,
-    CM: ChatManagementState,
+    useCM: ChatManagementState,
     socket: Socket
 ) => {
     const newChatMessage: MessageProps = {
@@ -152,16 +152,16 @@ export const handleRegularMessage = async (
     const context = analyzeMessageContext(newMessage, myself);
 
     if (newMessage.isDeleted) {
-        await handleMessageDeletion(newMessage, CM);
+        await handleMessageDeletion(newMessage, useCM);
         return;
     }
 
     await addMessage(newChatMessage, newMessage.chatType);
 
     if (newMessage.chatType === 1) {
-        await handleDMMessage(newMessage, newChatMessage, context, myself, CM, socket);
+        await handleDMMessage(newMessage, newChatMessage, context, myself, useCM, socket);
     } else if (newMessage.chatType === 2) {
-        await handleGMMessage(newMessage, newChatMessage, context, CM);
+        await handleGMMessage(newMessage, newChatMessage, context, useCM);
     } else if (newMessage.chatType === 3) {
         await handlePMMessage(
             newMessage,
@@ -170,12 +170,12 @@ export const handleRegularMessage = async (
             currentProject,
             currentPreviewTaskId,
             setIsTaskUpdatedBySomeone,
-            CM
+            useCM
         );
     }
 };
 
-const handleMessageDeletion = async (newMessage: NewMessageProps, CM: ChatManagementState) => {
+const handleMessageDeletion = async (newMessage: NewMessageProps, useCM: ChatManagementState) => {
     const chatService = new ChatService();
 
     // Delete message from indexedDB based on chat type
@@ -193,25 +193,25 @@ const handleMessageDeletion = async (newMessage: NewMessageProps, CM: ChatManage
 
     // Update current chat if it matches
     if (
-        CM.currentMainChat &&
-        newMessage.chatType === CM.currentMainChat.chatType &&
-        newMessage.chatId === CM.currentMainChat.chatId
+        useCM.currentMainChat &&
+        newMessage.chatType === useCM.currentMainChat.chatType &&
+        newMessage.chatId === useCM.currentMainChat.chatId
     ) {
-        CM.setCurrentMainChat({
-            ...CM.currentMainChat,
-            messages: CM.currentMainChat.messages.filter(
+        useCM.setCurrentMainChat({
+            ...useCM.currentMainChat,
+            messages: useCM.currentMainChat.messages.filter(
                 (m) => m.messageId !== newMessage.messageId
             ),
             notMove: true,
         });
     } else if (
-        CM.currentSubChat &&
-        newMessage.chatType === CM.currentSubChat.chatType &&
-        newMessage.chatId === CM.currentSubChat.chatId
+        useCM.currentSubChat &&
+        newMessage.chatType === useCM.currentSubChat.chatType &&
+        newMessage.chatId === useCM.currentSubChat.chatId
     ) {
-        CM.setCurrentSubChat({
-            ...CM.currentSubChat,
-            messages: CM.currentSubChat.messages.filter(
+        useCM.setCurrentSubChat({
+            ...useCM.currentSubChat,
+            messages: useCM.currentSubChat.messages.filter(
                 (m) => m.messageId !== newMessage.messageId
             ),
             notMove: true,
@@ -224,21 +224,26 @@ const handleDMMessage = async (
     newChatMessage: MessageProps,
     context: any,
     myself: UserProps,
-    CM: ChatManagementState,
+    useCM: ChatManagementState,
     socket: Socket
 ) => {
     const updatedChat = await makeDMUpdatedChat(newMessage, myself);
 
     if (newMessage.isEdited) {
         if (context.fromMe || context.toMe) {
-            updateCurrentChat(updatedChat, CM);
+            updateCurrentChat(updatedChat, useCM);
         }
     } else {
         if (!context.fromMe && context.toMe) {
             if (!newMessage.isReactionUpdated) {
-                await updateAllChat(updatedChat, newChatMessage, CM.allChats, CM.funcSetAllChats);
+                await updateAllChat(
+                    updatedChat,
+                    newChatMessage,
+                    useCM.allChats,
+                    useCM.funcSetAllChats
+                );
             }
-            updateCurrentChat(updatedChat, CM);
+            updateCurrentChat(updatedChat, useCM);
 
             if (newMessage.messageId === 1 && updatedChat.dmPartnerUser) {
                 socket.emit("join", {
@@ -258,9 +263,14 @@ const handleDMMessage = async (
             );
 
             if (!newMessage.isReactionUpdated) {
-                await updateAllChat(newDMChat, newChatMessage, CM.allChats, CM.funcSetAllChats);
+                await updateAllChat(
+                    newDMChat,
+                    newChatMessage,
+                    useCM.allChats,
+                    useCM.funcSetAllChats
+                );
             }
-            CM.setCurrentMainChat(newDMChat);
+            useCM.setCurrentMainChat(newDMChat);
 
             if (newDMChat.dmPartnerUser) {
                 socket.emit("join", {
@@ -278,17 +288,22 @@ const handleGMMessage = async (
     newMessage: NewMessageProps,
     newChatMessage: MessageProps,
     context: any,
-    CM: ChatManagementState
+    useCM: ChatManagementState
 ) => {
     const updatedChat = await makeGMUpdatedChat(newMessage);
 
     if (newMessage.isEdited) {
-        updateCurrentChat(updatedChat, CM);
+        updateCurrentChat(updatedChat, useCM);
     } else if (!context.fromMe) {
-        if (CM.allChats.length > 0 && !newMessage.isReactionUpdated) {
-            await updateAllChat(updatedChat, newChatMessage, CM.allChats, CM.funcSetAllChats);
+        if (useCM.allChats.length > 0 && !newMessage.isReactionUpdated) {
+            await updateAllChat(
+                updatedChat,
+                newChatMessage,
+                useCM.allChats,
+                useCM.funcSetAllChats
+            );
         }
-        updateCurrentChat(updatedChat, CM);
+        updateCurrentChat(updatedChat, useCM);
     }
 };
 
@@ -299,7 +314,7 @@ const handlePMMessage = async (
     currentProject: any,
     currentPreviewTaskId: number,
     setIsTaskUpdatedBySomeone: (value: boolean) => void,
-    CM: ChatManagementState
+    useCM: ChatManagementState
 ) => {
     if (
         currentProject &&
@@ -312,19 +327,24 @@ const handlePMMessage = async (
     const updatedChat = await makePMUpdatedChat(newMessage);
 
     if (newMessage.isEdited) {
-        updateCurrentChat(updatedChat, CM);
+        updateCurrentChat(updatedChat, useCM);
     } else if (!context.fromMe) {
-        if (CM.allChats.length > 0 && !newMessage.isReactionUpdated) {
-            await updateAllChat(updatedChat, newChatMessage, CM.allChats, CM.funcSetAllChats);
+        if (useCM.allChats.length > 0 && !newMessage.isReactionUpdated) {
+            await updateAllChat(
+                updatedChat,
+                newChatMessage,
+                useCM.allChats,
+                useCM.funcSetAllChats
+            );
         }
-        updateCurrentChat(updatedChat, CM);
+        updateCurrentChat(updatedChat, useCM);
     }
 };
 
-const updateCurrentChat = (updatedChat: any, CM: ChatManagementState) => {
-    if (CM.currentMainChat && updatedChat.chatId === CM.currentMainChat.chatId) {
-        CM.setCurrentMainChat(updatedChat);
-    } else if (CM.currentSubChat && updatedChat.chatId === CM.currentSubChat.chatId) {
-        CM.setCurrentSubChat(updatedChat);
+const updateCurrentChat = (updatedChat: any, useCM: ChatManagementState) => {
+    if (useCM.currentMainChat && updatedChat.chatId === useCM.currentMainChat.chatId) {
+        useCM.setCurrentMainChat(updatedChat);
+    } else if (useCM.currentSubChat && updatedChat.chatId === useCM.currentSubChat.chatId) {
+        useCM.setCurrentSubChat(updatedChat);
     }
 };

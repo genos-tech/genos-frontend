@@ -60,16 +60,16 @@ const CHAT_TYPE_LABELS = {
 
 type ChatListItemForFlagMessagesProps = ListItemButtonProps & {
     flaggedMessage: FlaggedMessageProps;
-    CM: ChatManagementState;
-    TEM: TeamManagementState;
+    useCM: ChatManagementState;
+    useTEM: TeamManagementState;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    UIM: UIStateManagementState;
+    useUISM: UIStateManagementState;
     selectedFlaggedMessageId: string;
     setSelectedFlaggedMessageId: (value: string) => void;
     setCurrentProject: (value: ProjectProps) => void;
-    TM: TaskManagementState;
+    useTM: TaskManagementState;
 };
 
 // Helper functions
@@ -126,12 +126,12 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         selectedFlaggedMessageId,
         setCurrentProject,
         setMyself,
-        UIM,
+        useUISM,
         setSelectedFlaggedMessageId,
         socket,
-        TEM,
-        CM,
-        TM,
+        useTEM,
+        useCM,
+        useTM,
     } = props;
     const { accessToken } = useAuth();
 
@@ -152,8 +152,8 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
             setTmpIsFlagged(false);
 
             // Remove from local state
-            CM.setFlaggedMessages(
-                CM.flaggedMessages.filter(
+            useCM.setFlaggedMessages(
+                useCM.flaggedMessages.filter(
                     (message: FlaggedMessageProps) =>
                         message.flaggedMessageId !== flaggedMessage.flaggedMessageId
                 )
@@ -193,19 +193,19 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
             }
 
             // Update current main chat
-            CM.setCurrentMainChat(
+            useCM.setCurrentMainChat(
                 createChatFromMessages(
                     updatedMessages,
                     `${flaggedMessage.chatId}-${flaggedMessage.messageId}`,
                     flaggedMessage,
-                    CM.allChats
+                    useCM.allChats
                 )
             );
 
-            CM.setIsMainChatVisible(true);
+            useCM.setIsMainChatVisible(true);
 
-            if (shouldHideThread(TM.isCreatingTask.flag, TM.isTaskPreviewVisible)) {
-                CM.setIsThreadVisible(false);
+            if (shouldHideThread(useTM.isCreatingTask.flag, useTM.isTaskPreviewVisible)) {
+                useCM.setIsThreadVisible(false);
             }
         } catch (error) {
             console.error("Error updating messages and chat:", error);
@@ -222,7 +222,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
     };
 
     const handleRegularMessage = async () => {
-        const isCurrentChatVisible = isCurrentChat(CM.currentSubChat, flaggedMessage);
+        const isCurrentChatVisible = isCurrentChat(useCM.currentSubChat, flaggedMessage);
 
         try {
             const messages = await popSpecificMessages(
@@ -233,21 +233,21 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                 messages,
                 `${flaggedMessage.chatId}-${flaggedMessage.messageId}`,
                 flaggedMessage,
-                CM.allChats
+                useCM.allChats
             );
 
             toggleMessagesPane();
 
-            if (CM.isSubChatVisible && isCurrentChatVisible) {
-                CM.setCurrentSubChat(newChat);
+            if (useCM.isSubChatVisible && isCurrentChatVisible) {
+                useCM.setCurrentSubChat(newChat);
             } else {
-                CM.setCurrentMainChat(newChat);
+                useCM.setCurrentMainChat(newChat);
             }
 
-            CM.setIsMainChatVisible(true);
+            useCM.setIsMainChatVisible(true);
 
-            if (shouldHideThread(TM.isCreatingTask.flag, TM.isTaskPreviewVisible)) {
-                CM.setIsThreadVisible(false);
+            if (shouldHideThread(useTM.isCreatingTask.flag, useTM.isTaskPreviewVisible)) {
+                useCM.setIsThreadVisible(false);
             }
         } catch (error) {
             console.error("Error handling regular message:", error);
@@ -255,30 +255,30 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
     };
 
     const handleTaskComment = async () => {
-        if (!isCurrentChat(CM.currentSubChat, flaggedMessage)) {
+        if (!isCurrentChat(useCM.currentSubChat, flaggedMessage)) {
             try {
                 const messages = await popSpecificMessages(flaggedMessage.chatId, CHAT_TYPES.PM);
                 const newChat = createChatFromMessages(
                     messages,
                     `${flaggedMessage.chatId}-${flaggedMessage.messageId}`,
                     flaggedMessage,
-                    CM.allChats
+                    useCM.allChats
                 );
 
                 toggleMessagesPane();
-                CM.setCurrentMainChat(newChat);
+                useCM.setCurrentMainChat(newChat);
 
                 if (flaggedMessage.project?.projectId) {
                     setCurrentProject(flaggedMessage.project);
-                    TM.setCurrentPreviewTaskId(flaggedMessage.taskId);
-                    CM.setIsThreadVisible(false);
-                    TM.setIsTaskPreviewVisible(true);
+                    useTM.setCurrentPreviewTaskId(flaggedMessage.taskId);
+                    useCM.setIsThreadVisible(false);
+                    useTM.setIsTaskPreviewVisible(true);
                 }
 
-                CM.setIsMainChatVisible(true);
+                useCM.setIsMainChatVisible(true);
 
-                if (shouldHideThread(TM.isCreatingTask.flag, TM.isTaskPreviewVisible)) {
-                    CM.setIsThreadVisible(false);
+                if (shouldHideThread(useTM.isCreatingTask.flag, useTM.isTaskPreviewVisible)) {
+                    useCM.setIsThreadVisible(false);
                 }
             } catch (error) {
                 console.error("Error handling task comment:", error);
@@ -298,18 +298,18 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
 
             if (threadMessages?.length > 0) {
                 const newThread = createThreadFromMessages(threadMessages);
-                CM.setCurrentThreadChat(newThread);
+                useCM.setCurrentThreadChat(newThread);
 
                 if (flaggedMessage.project?.projectId) {
                     setCurrentProject(flaggedMessage.project);
                 }
 
                 if (newThread.taskExist && threadMessages[0].taskId) {
-                    TM.setCurrentPreviewTaskId(threadMessages[0].taskId);
+                    useTM.setCurrentPreviewTaskId(threadMessages[0].taskId);
                 }
 
                 await handleThreadNavigation();
-                CM.setIsThreadVisible(true);
+                useCM.setIsThreadVisible(true);
             }
         } catch (error) {
             console.error("Error handling thread message:", error);
@@ -342,7 +342,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
     };
 
     const handleThreadNavigation = async () => {
-        const isCurrentChatVisible = isCurrentChat(CM.currentSubChat, flaggedMessage);
+        const isCurrentChatVisible = isCurrentChat(useCM.currentSubChat, flaggedMessage);
 
         try {
             const messages = await popSpecificMessages(
@@ -353,21 +353,21 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                 messages,
                 `${flaggedMessage.chatId}-${flaggedMessage.threadId}-${flaggedMessage.messageId}`,
                 flaggedMessage,
-                CM.allChats
+                useCM.allChats
             );
 
             toggleMessagesPane();
 
-            if (CM.isSubChatVisible && isCurrentChatVisible) {
-                CM.setCurrentSubChat(newChat);
+            if (useCM.isSubChatVisible && isCurrentChatVisible) {
+                useCM.setCurrentSubChat(newChat);
             } else {
-                CM.setCurrentMainChat(newChat);
+                useCM.setCurrentMainChat(newChat);
             }
 
-            CM.setIsMainChatVisible(true);
+            useCM.setIsMainChatVisible(true);
 
-            if (shouldHideThread(TM.isCreatingTask.flag, TM.isTaskPreviewVisible)) {
-                CM.setIsThreadVisible(false);
+            if (shouldHideThread(useTM.isCreatingTask.flag, useTM.isTaskPreviewVisible)) {
+                useCM.setIsThreadVisible(false);
             }
         } catch (error) {
             console.error("Error handling thread navigation:", error);
@@ -389,13 +389,13 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         if (flaggedMessage.dmPartnerUser.userId !== "") {
             return (
                 <AvatarWithStatus
-                    avatarUser={TEM.teamMemberProfiles[flaggedMessage.dmPartnerUser.userId]}
-                    CM={CM}
+                    avatarUser={useTEM.teamMemberProfiles[flaggedMessage.dmPartnerUser.userId]}
+                    useCM={useCM}
                     isYou={isYou}
                     myself={myself}
                     setMyself={setMyself}
                     socket={socket}
-                    UIM={UIM}
+                    useUISM={useUISM}
                 />
             );
         }
@@ -403,7 +403,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
     };
 
     const renderGMAvatar = () => {
-        const chat = CM.allChats.find(
+        const chat = useCM.allChats.find(
             (chat) =>
                 chat.chatType === flaggedMessage.chatType && chat.chatId === flaggedMessage.chatId
         );
@@ -411,14 +411,14 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         if (chat) {
             return (
                 <GMAvatar
-                    CM={CM}
+                    useCM={useCM}
                     gmChat={chat}
                     isYou={isYou}
                     myself={myself}
                     setMyself={setMyself}
                     socket={socket}
-                    TEM={TEM}
-                    UIM={UIM}
+                    useTEM={useTEM}
+                    useUISM={useUISM}
                 />
             );
         }
@@ -430,7 +430,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
     };
 
     const renderProjectAvatar = () => {
-        const chat = CM.allChats.find(
+        const chat = useCM.allChats.find(
             (chat) =>
                 chat.chatType === flaggedMessage.chatType && chat.chatId === flaggedMessage.chatId
         );
@@ -438,13 +438,13 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         if (chat) {
             return (
                 <ProjectAvatar
-                    CM={CM}
+                    useCM={useCM}
                     myself={myself}
                     pmChat={chat}
                     setMyself={setMyself}
                     socket={socket}
-                    TEM={TEM}
-                    UIM={UIM}
+                    useTEM={useTEM}
+                    useUISM={useUISM}
                 />
             );
         }

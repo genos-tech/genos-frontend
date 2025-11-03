@@ -4,7 +4,7 @@ import { NoteTabActions } from "../../features/notes/shared/types/noteEditor";
 import { NoteManagementState } from "./useNoteManagement";
 
 interface UseNoteTabsProps {
-    NM: NoteManagementState;
+    useNM: NoteManagementState;
 }
 
 interface UseNoteTabsReturn extends NoteTabActions {}
@@ -16,40 +16,40 @@ interface UseNoteTabsReturn extends NoteTabActions {}
  * @param props - Configuration object containing note management state
  * @returns Object containing tab management actions
  */
-export const useNoteTabs = ({ NM }: UseNoteTabsProps): UseNoteTabsReturn => {
+export const useNoteTabs = ({ useNM }: UseNoteTabsProps): UseNoteTabsReturn => {
     const handleCloseTab = useCallback(
         async (tabIndex: number, closingNoteId: number) => {
             const indexOfNextNote = tabIndex === 0 ? 1 : tabIndex - 1;
             const nextTabIndex = Math.max(tabIndex - 1, 0);
 
-            NM.setTabItems(NM.tabItems.filter((t) => t.noteId !== closingNoteId));
+            useNM.setTabItems(useNM.tabItems.filter((t) => t.noteId !== closingNoteId));
 
-            if (NM.tabItems.length > 1) {
-                await NM.loadNote(
-                    NM.tabItems[indexOfNextNote].noteType,
-                    NM.tabItems[indexOfNextNote].noteId,
+            if (useNM.tabItems.length > 1) {
+                await useNM.loadNote(
+                    useNM.tabItems[indexOfNextNote].noteType,
+                    useNM.tabItems[indexOfNextNote].noteId,
                     nextTabIndex
                 );
             }
         },
-        [NM]
+        [useNM]
     );
 
     const handleTabChange = useCallback(
         (newValue: number) => {
             if (
-                NM.tabItems[Number(newValue)] &&
-                NM.tabItems[Number(newValue)].noteId &&
-                NM.tabItems[Number(newValue)].noteType
+                useNM.tabItems[Number(newValue)] &&
+                useNM.tabItems[Number(newValue)].noteId &&
+                useNM.tabItems[Number(newValue)].noteType
             ) {
-                NM.loadNote(
-                    NM.tabItems[Number(newValue)].noteType,
-                    NM.tabItems[Number(newValue)].noteId,
+                useNM.loadNote(
+                    useNM.tabItems[Number(newValue)].noteType,
+                    useNM.tabItems[Number(newValue)].noteId,
                     Number(newValue)
                 );
             }
         },
-        [NM]
+        [useNM]
     );
 
     return {

@@ -42,8 +42,8 @@ type UserProfileProps = {
     user?: UserProps;
     openUserProfile: boolean;
     setOpenUserProfile: (value: boolean) => void;
-    CM: ChatManagementState;
-    UIM: UIStateManagementState;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
 };
 export const UserProfile = (props: UserProfileProps) => {
     const {
@@ -54,8 +54,8 @@ export const UserProfile = (props: UserProfileProps) => {
         user,
         openUserProfile,
         setOpenUserProfile,
-        CM,
-        UIM,
+        useCM,
+        useUISM,
     } = props;
 
     const { accessToken } = useAuth();
@@ -389,9 +389,9 @@ export const UserProfile = (props: UserProfileProps) => {
                                                 chatId,
                                                 profileUser?.userName,
                                                 profileUser,
-                                                CM
+                                                useCM
                                             );
-                                            UIM.setOpeningService(1);
+                                            useUISM.setOpeningService(1);
                                             setOpenUserProfile(false);
                                         }
                                     })();

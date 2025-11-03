@@ -1,6 +1,6 @@
+import { useState } from "react";
 import { createReactInlineContentSpec, DefaultReactSuggestionItem } from "@blocknote/react";
 import { Avatar, Box, Typography } from "@mui/joy";
-import { useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
@@ -17,8 +17,8 @@ export const CreateMentionSpec = (
     socket: Socket | null,
     myself: UserProps,
     setMyself: (value: UserProps) => void,
-    UIM: UIStateManagementState,
-    CM: ChatManagementState
+    useUISM: UIStateManagementState,
+    useCM: ChatManagementState
 ) =>
     createReactInlineContentSpec(
         {
@@ -74,14 +74,14 @@ export const CreateMentionSpec = (
                         </Box>
 
                         <UserProfile
-                            CM={CM}
+                            useCM={useCM}
                             isYou={myself.userId === userId ? true : false}
                             myself={myself}
                             openUserProfile={openUserProfile}
                             setMyself={setMyself}
                             setOpenUserProfile={setOpenUserProfile}
                             socket={socket}
-                            UIM={UIM}
+                            useUISM={useUISM}
                             user={teamMemberProfiles[userId]}
                         />
                     </>

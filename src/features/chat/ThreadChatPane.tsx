@@ -23,47 +23,47 @@ import { UserProps } from "../../types/admin";
 import { ChatProps, ThreadProps } from "../../types/chat";
 
 type MessagesPaneProps = {
-    TEM: TeamManagementState;
-    PM: ProjectManagementState;
+    useTEM: TeamManagementState;
+    usePM: ProjectManagementState;
     currentWindowHeight: number;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
     currentThreadChatId: number;
-    UIM: UIStateManagementState;
-    TM: TaskManagementState;
-    CM: ChatManagementState;
-    NM: NoteManagementState;
+    useUISM: UIStateManagementState;
+    useTM: TaskManagementState;
+    useCM: ChatManagementState;
+    useNM: NoteManagementState;
 };
 
 export const ThreadPane = (props: MessagesPaneProps) => {
     const {
-        TEM,
-        PM,
+        useTEM,
+        usePM,
         currentWindowHeight,
         myself,
         setMyself,
         socket,
         currentThreadChatId,
-        UIM,
-        TM,
-        CM,
-        NM,
+        useUISM,
+        useTM,
+        useCM,
+        useNM,
     } = props;
 
     // Use shared hooks
     const messageManagement = useMessageManagement({
-        chat: CM.currentThreadChat as ThreadProps,
+        chat: useCM.currentThreadChat as ThreadProps,
         isThread: true,
     });
     const readStatusManagement = useReadStatusManagement({
-        currentChat: CM.currentThreadChat as ThreadProps,
+        currentChat: useCM.currentThreadChat as ThreadProps,
         myself,
-        CM,
+        useCM,
         isThread: true,
     });
     const scrollManagement = useScrollManagement({
-        currentChat: CM.currentThreadChat as ThreadProps,
+        currentChat: useCM.currentThreadChat as ThreadProps,
         indexMap: messageManagement.indexMap,
         isThread: true,
     });
@@ -71,18 +71,18 @@ export const ThreadPane = (props: MessagesPaneProps) => {
     // Handle read status updates
     useEffect(() => {
         setTimeout(() => {
-            if (CM.currentThreadChat) {
+            if (useCM.currentThreadChat) {
                 let targetIndex: number;
-                if (CM.currentThreadChat?.moveToSpecificIndex === undefined) {
-                    targetIndex = CM.currentThreadChat?.messages.length - 1;
+                if (useCM.currentThreadChat?.moveToSpecificIndex === undefined) {
+                    targetIndex = useCM.currentThreadChat?.messages.length - 1;
                 } else if (
                     messageManagement.indexMap &&
-                    messageManagement.indexMap[CM.currentThreadChat?.moveToSpecificIndex] &&
-                    CM.currentThreadChat?.chatId ===
-                        Number(CM.currentThreadChat?.moveToSpecificIndex?.split("-")[0])
+                    messageManagement.indexMap[useCM.currentThreadChat?.moveToSpecificIndex] &&
+                    useCM.currentThreadChat?.chatId ===
+                        Number(useCM.currentThreadChat?.moveToSpecificIndex?.split("-")[0])
                 ) {
                     targetIndex = Number(
-                        messageManagement.indexMap[CM.currentThreadChat?.moveToSpecificIndex]
+                        messageManagement.indexMap[useCM.currentThreadChat?.moveToSpecificIndex]
                     );
                 } else {
                     targetIndex = -1;
@@ -127,11 +127,11 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                     setErrorOpen={messageManagement.setErrorOpen}
                 />
 
-                <ThreadChatPaneHeader CM={CM} NM={NM} myself={myself} TM={TM} />
+                <ThreadChatPaneHeader useCM={useCM} useNM={useNM} myself={myself} useTM={useTM} />
 
                 <MessageListRenderer
-                    chat={CM.currentThreadChat as ThreadProps}
-                    CM={CM}
+                    chat={useCM.currentThreadChat as ThreadProps}
+                    useCM={useCM}
                     currentChatId={currentThreadChatId}
                     height={virtuosoHeight}
                     indexMap={messageManagement.indexMap}
@@ -139,7 +139,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                     isThread={true}
                     messages={messageManagement.messages}
                     myself={myself}
-                    PM={PM}
+                    usePM={usePM}
                     setEditTargetMessage={messageManagement.setEditTargetMessage}
                     setErrorMessage={messageManagement.setErrorMessage}
                     setErrorOpen={messageManagement.setErrorOpen}
@@ -148,31 +148,33 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                     setMyself={setMyself}
                     setVisibleRange={scrollManagement.setVisibleRange}
                     socket={socket}
-                    TEM={TEM}
-                    UIM={UIM}
+                    useTEM={useTEM}
+                    useUISM={useUISM}
                     virtuosoRef={scrollManagement.virtuosoRef as React.RefObject<VirtuosoHandle>}
                     visibleRange={scrollManagement.visibleRange}
-                    TM={TM}
+                    useTM={useTM}
                 />
 
                 <ChatEditorSection
-                    chat={CM.currentThreadChat as ThreadProps}
-                    CM={CM}
+                    chat={useCM.currentThreadChat as ThreadProps}
+                    useCM={useCM}
                     editTargetMessage={messageManagement.editTargetMessage}
                     isInEdit={messageManagement.isInEdit}
                     isThread={true}
                     myself={myself}
                     numEditorLines={messageManagement.numEditorLines}
-                    setCurrentThreadChat={CM.setCurrentThreadChat as (chat: ThreadProps) => void}
+                    setCurrentThreadChat={
+                        useCM.setCurrentThreadChat as (chat: ThreadProps) => void
+                    }
                     setIsInEdit={messageManagement.setIsInEdit}
                     setMyself={setMyself}
                     setNumEditorLines={messageManagement.setNumEditorLines}
                     socket={socket}
-                    TEM={TEM}
-                    thread={CM.currentThreadChat as ThreadProps}
-                    UIM={UIM}
+                    useTEM={useTEM}
+                    thread={useCM.currentThreadChat as ThreadProps}
+                    useUISM={useUISM}
                     setCurrentChat={
-                        CM.setCurrentThreadChat as (chat: ChatProps | ThreadProps) => void
+                        useCM.setCurrentThreadChat as (chat: ChatProps | ThreadProps) => void
                     }
                 />
             </Sheet>

@@ -128,20 +128,21 @@ const taskContentTemplate: PartialBlock[] = [
 ];
 
 type CreateTaskProps = {
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     chatType: number;
-    UIM: UIStateManagementState;
-    PM: ProjectManagementState;
-    TM: TaskManagementState;
-    CM: ChatManagementState;
-    NM: NoteManagementState;
+    useUISM: UIStateManagementState;
+    usePM: ProjectManagementState;
+    useTM: TaskManagementState;
+    useCM: ChatManagementState;
+    useNM: NoteManagementState;
 };
 
 export const CreateTaskForm = (props: CreateTaskProps) => {
-    const { TEM, socket, myself, setMyself, chatType, CM, UIM, PM, TM, NM } = props;
+    const { useTEM, socket, myself, setMyself, chatType, useCM, useUISM, usePM, useTM, useNM } =
+        props;
     const { accessToken } = useAuth();
 
     // Init task contents
@@ -155,24 +156,24 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     useEffect(() => {
         createEmptyTask({
             myself: myself,
-            projectId: PM.currentProject?.projectId || 0,
+            projectId: usePM.currentProject?.projectId || 0,
             accessToken: accessToken,
-            setInitialEmptyTaskId: TM.setInitialEmptyTaskId,
+            setInitialEmptyTaskId: useTM.setInitialEmptyTaskId,
         });
     }, []);
 
     useEffect(() => {
-        if (TM.initialEmptyTaskId) {
+        if (useTM.initialEmptyTaskId) {
             setTaskContent({
-                id: TM.initialEmptyTaskId,
-                project: PM.currentProject,
+                id: useTM.initialEmptyTaskId,
+                project: usePM.currentProject,
                 title: "",
                 body: taskContentTemplate,
                 assignee: myself,
                 reporter: myself,
                 chatType: chatType,
-                chatId: CM.currentMainChat?.chatId || null,
-                threadId: CM.currentThreadChat?.threadId || null,
+                chatId: useCM.currentMainChat?.chatId || null,
+                threadId: useCM.currentThreadChat?.threadId || null,
                 dueDate: getFormattedTodayDateStr(),
                 status: {
                     code: 0,
@@ -185,11 +186,11 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 tags: [],
                 links: [],
                 attachments: [],
-                parentTaskId: TM.isCreatingTask.parentTaskId,
-                rootTaskId: TM.isCreatingTask.rootTaskId,
+                parentTaskId: useTM.isCreatingTask.parentTaskId,
+                rootTaskId: useTM.isCreatingTask.rootTaskId,
             });
         }
-    }, [TM.initialEmptyTaskId]);
+    }, [useTM.initialEmptyTaskId]);
 
     // Update task title when it changes
     useEffect(() => {
@@ -214,16 +215,16 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     // Update status once task is created
     useEffect(() => {
         if (isSubmitted) {
-            if (TM.setIsCreatingTask) {
-                TM.setIsCreatingTask({
+            if (useTM.setIsCreatingTask) {
+                useTM.setIsCreatingTask({
                     flag: false,
                     parentTaskId: null,
                     rootTaskId: null,
                 });
             }
-            if (TM.setIsNewTaskCreated) {
+            if (useTM.setIsNewTaskCreated) {
                 setTimeout(() => {
-                    TM.setIsNewTaskCreated(true);
+                    useTM.setIsNewTaskCreated(true);
                 }, 500); // wait 500ms to show the new task
             }
         }
@@ -238,7 +239,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         updateTeamMembersOptions({
             myself: myself,
             accessToken: accessToken,
-            setTeamMembers: TEM.setTeamMembers,
+            setTeamMembers: useTEM.setTeamMembers,
         });
     }, [myself, isOpenTeamMembersList]);
 
@@ -248,7 +249,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         updateProjectOptions({
             myself: myself,
             accessToken: accessToken,
-            setTeamProjects: PM.setTeamProjects,
+            setTeamProjects: usePM.setTeamProjects,
         });
     }, [isOpenProjectList]);
 
@@ -256,11 +257,11 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     const [projectTags, setProjectTags] = useState<TagListProps[]>([]);
     const [isOpenTagList, setIsOpenTagList] = useState(false);
     useEffect(() => {
-        if (PM.currentProject) {
+        if (usePM.currentProject) {
             updateTagOptions({
                 myself: myself,
                 accessToken: accessToken,
-                projectId: PM.currentProject.projectId,
+                projectId: usePM.currentProject.projectId,
                 setProjectTags: setProjectTags,
             });
         }
@@ -281,26 +282,26 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                     }}
                 >
                     <TaskTitleBlock
-                        CM={CM}
+                        useCM={useCM}
                         isPreviewMode={false}
                         myself={myself}
-                        PM={PM}
+                        usePM={usePM}
                         setTaskTitle={setTaskTitle}
                         setTitleErrorOpen={setTitleErrorOpen}
                         taskContent={taskContent}
                         taskTitle={taskTitle}
-                        NM={NM}
+                        useNM={useNM}
                         titleError={titleError}
                         titleErrorOpen={titleErrorOpen}
-                        TM={TM}
-                        UIM={UIM}
+                        useTM={useTM}
+                        useUISM={useUISM}
                     />
 
                     <Divider sx={{ mt: 1, mb: 1 }} />
 
                     <TaskMainBlock
                         assignee={assignee}
-                        CM={CM}
+                        useCM={useCM}
                         isOpenProjectList={isOpenProjectList}
                         isOpenTagList={isOpenTagList}
                         isOpenTeamMembersList={isOpenTeamMembersList}
@@ -317,24 +318,24 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         setTaskContent={setTaskContent}
                         socket={socket}
                         taskContent={taskContent}
-                        TEM={TEM}
-                        TM={TM}
-                        UIM={UIM}
-                        PM={PM}
+                        useTEM={useTEM}
+                        useTM={useTM}
+                        useUISM={useUISM}
+                        usePM={usePM}
                     />
 
                     <Divider sx={{ mt: 1, mb: 1 }} />
 
                     <TaskCreateBodyBlock
                         body={body}
-                        CM={CM}
+                        useCM={useCM}
                         myself={myself}
                         setBody={setBody}
                         setMyself={setMyself}
                         socket={socket}
                         taskId={taskContent.id}
-                        TEM={TEM}
-                        UIM={UIM}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
                     />
 
                     <Divider sx={{ mt: 2 }} />
@@ -348,10 +349,10 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
 
                     <TaskCreateFooter
                         accessToken={accessToken}
-                        CM={CM}
-                        TM={TM}
+                        useCM={useCM}
+                        useTM={useTM}
                         myself={myself}
-                        PM={PM}
+                        usePM={usePM}
                         setIsSubmitted={setIsSubmitted}
                         setTitleError={setTitleError}
                         setTitleErrorOpen={setTitleErrorOpen}

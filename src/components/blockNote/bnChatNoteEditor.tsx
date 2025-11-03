@@ -65,21 +65,21 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 const django_url = import.meta.env.VITE_DJANGO_URL;
 
 type BnChatNoteEditorProps = {
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    CM: ChatManagementState;
+    useCM: ChatManagementState;
     currentChatNote: ChatNoteProps;
     body: any[];
     setBody: (text: PartialBlock[] | any[]) => void;
     setNoteBodyEdited?: (value: boolean) => void;
     setNoteBodySaved?: (value: boolean) => void;
-    UIM: UIStateManagementState;
+    useUISM: UIStateManagementState;
 };
 export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
     const {
-        TEM,
+        useTEM,
         socket,
         myself,
         setMyself,
@@ -88,8 +88,8 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
         setBody,
         setNoteBodyEdited,
         setNoteBodySaved,
-        UIM,
-        CM,
+        useUISM,
+        useCM,
     } = props;
 
     const { mode } = useColorScheme();
@@ -117,7 +117,14 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
-            mention: CreateMentionSpec(TEM.teamMemberProfiles, socket, myself, setMyself, UIM, CM),
+            mention: CreateMentionSpec(
+                useTEM.teamMemberProfiles,
+                socket,
+                myself,
+                setMyself,
+                useUISM,
+                useCM
+            ),
         },
         blockSpecs: {
             ...remainingBlockSpecs,
@@ -261,7 +268,7 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
                 }}
                 onClick={(e) => {
                     const target = e.target as HTMLElement;
-                    if (target.tagName === "IMG") {
+                    if (target.tagName === "useIMG") {
                         handleImageClick((target as HTMLImageElement).src);
                     }
                 }}
@@ -350,7 +357,11 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
                     getItems={async (query) =>
                         // Gets the mentions menu items
                         filterSuggestionItems(
-                            MentionMenuItems(TEM.teamMemberProfiles, editor, TEM.teamMembers),
+                            MentionMenuItems(
+                                useTEM.teamMemberProfiles,
+                                editor,
+                                useTEM.teamMembers
+                            ),
                             query
                         )
                     }

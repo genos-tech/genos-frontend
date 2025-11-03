@@ -11,10 +11,10 @@ import { ToDoFactProps } from "../../../../types/chat";
 import { MessagesSubPane } from "../../SubChatPane";
 
 interface SubChatPanelProps {
-    CM: ChatManagementState;
-    TM: TaskManagementState;
-    PM: ProjectManagementState;
-    TEM: TeamManagementState;
+    useCM: ChatManagementState;
+    useTM: TaskManagementState;
+    usePM: ProjectManagementState;
+    useTEM: TeamManagementState;
     myself: UserProps;
     currentSubChatId: number;
     currentWindowHeight: number;
@@ -28,14 +28,14 @@ interface SubChatPanelProps {
     setIsExistingTodaysTodo: (value: boolean) => void;
     socket: any;
     setMyself: (me: UserProps) => void;
-    UIM: UIStateManagementState;
+    useUISM: UIStateManagementState;
 }
 
 export const SubChatPanel = ({
-    CM,
-    TM,
-    PM,
-    TEM,
+    useCM,
+    useTM,
+    usePM,
+    useTEM,
     myself,
     currentSubChatId,
     currentWindowHeight,
@@ -49,7 +49,7 @@ export const SubChatPanel = ({
     setIsExistingTodaysTodo,
     socket,
     setMyself,
-    UIM,
+    useUISM,
 }: SubChatPanelProps) => {
     const { mode } = useColorScheme();
 
@@ -64,7 +64,7 @@ export const SubChatPanel = ({
                 }}
             >
                 <MessagesSubPane
-                    CM={CM}
+                    useCM={useCM}
                     currentSubChatId={currentSubChatId}
                     currentWindowHeight={currentWindowHeight}
                     incompleteTodoCount={incompleteTodoCount}
@@ -77,11 +77,11 @@ export const SubChatPanel = ({
                     setMyself={setMyself}
                     setTodos={setTodos}
                     socket={socket}
-                    TEM={TEM}
+                    useTEM={useTEM}
                     todos={todos}
-                    UIM={UIM}
-                    TM={TM}
-                    PM={PM}
+                    useUISM={useUISM}
+                    useTM={useTM}
+                    usePM={usePM}
                 />
             </Box>
         </Panel>

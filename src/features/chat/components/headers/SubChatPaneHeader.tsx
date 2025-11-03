@@ -14,16 +14,16 @@ import { UserProps } from "../../../../types/admin";
 import { HeaderUserName } from "./HeaderUserName";
 
 type SubChatPaneHeaderProps = {
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    UIM: UIStateManagementState;
-    CM: ChatManagementState;
+    useUISM: UIStateManagementState;
+    useCM: ChatManagementState;
     isToDoVisible: boolean;
     setIsToDoVisible: (value: boolean) => void;
     incompleteTodoCount: number;
-    TM: TaskManagementState;
+    useTM: TaskManagementState;
 };
 
 export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
@@ -33,19 +33,19 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
         myself,
         setIsToDoVisible,
         setMyself,
-        UIM,
+        useUISM,
         socket,
-        TEM,
-        CM,
-        TM,
+        useTEM,
+        useCM,
+        useTM,
     } = props;
 
-    const isYou: boolean = myself.userId === CM.currentSubChat?.dmPartnerUser.userId;
+    const isYou: boolean = myself.userId === useCM.currentSubChat?.dmPartnerUser.userId;
 
     const swapChat = () => {
-        if (CM.currentMainChat && CM.currentSubChat) {
-            CM.setCurrentMainChat(CM.currentSubChat);
-            CM.setCurrentSubChat(CM.currentMainChat);
+        if (useCM.currentMainChat && useCM.currentSubChat) {
+            useCM.setCurrentMainChat(useCM.currentSubChat);
+            useCM.setCurrentSubChat(useCM.currentMainChat);
         }
     };
 
@@ -64,19 +64,20 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
         >
             <Stack direction="row" spacing={{ xs: 1, md: 2 }} sx={{ alignItems: "center" }}>
                 <HeaderUserName
-                    chat={CM.currentSubChat}
-                    CM={CM}
+                    chat={useCM.currentSubChat}
+                    useCM={useCM}
                     isYou={isYou}
                     myself={myself}
                     setMyself={setMyself}
                     socket={socket}
-                    TEM={TEM}
-                    UIM={UIM}
+                    useTEM={useTEM}
+                    useUISM={useUISM}
                 />
             </Stack>
             <Stack direction="row" spacing={0} sx={{ alignItems: "center" }}>
-                {CM.currentSubChat &&
-                    (CM.currentSubChat.chatType === 3 || CM.currentSubChat.chatType === 4) && (
+                {useCM.currentSubChat &&
+                    (useCM.currentSubChat.chatType === 3 ||
+                        useCM.currentSubChat.chatType === 4) && (
                         <Tooltip size="sm" title="Create a new task" variant="outlined">
                             <IconButton
                                 color="neutral"
@@ -84,10 +85,10 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                                 size="sm"
                                 variant="plain"
                                 onClick={() => {
-                                    CM.setIsMainChatVisible(true);
-                                    CM.setIsThreadVisible(false);
-                                    TM.setIsTaskPreviewVisible(false);
-                                    TM.setIsCreatingTask({
+                                    useCM.setIsMainChatVisible(true);
+                                    useCM.setIsThreadVisible(false);
+                                    useTM.setIsTaskPreviewVisible(false);
+                                    useTM.setIsCreatingTask({
                                         flag: true,
                                         parentTaskId: null,
                                         rootTaskId: null,
@@ -155,7 +156,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                             component="a"
                             size="sm"
                             variant="plain"
-                            onClick={() => CM.setIsSubChatVisible(false)}
+                            onClick={() => useCM.setIsSubChatVisible(false)}
                         >
                             <CancelIcon />
                         </IconButton>

@@ -31,29 +31,29 @@ import { TaskSidebarSearchBox } from "../sidebar/SearchBox";
 interface TaskHomeHeaderProps {
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    CM: ChatManagementState;
-    UIM: UIStateManagementState;
-    TEM: TeamManagementState;
-    PM: ProjectManagementState;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
+    useTEM: TeamManagementState;
+    usePM: ProjectManagementState;
     onCreateProject: () => void;
     onCreateTag: () => void;
     onDeleteProject: () => void;
     onCloseTaskHome: () => void;
-    TM: TaskManagementState;
+    useTM: TaskManagementState;
 }
 
 export const TaskHomeHeader = ({
     myself,
     setMyself,
-    CM,
-    UIM,
-    TEM,
-    PM,
+    useCM,
+    useUISM,
+    useTEM,
+    usePM,
     onCreateProject,
     onCreateTag,
     onDeleteProject,
     onCloseTaskHome,
-    TM,
+    useTM,
 }: TaskHomeHeaderProps) => {
     const { accessToken } = useAuth();
 
@@ -91,9 +91,11 @@ export const TaskHomeHeader = ({
     }, [loading]);
     // =======================================================================
 
-    const pmChat = CM.allChats.find(
+    const pmChat = useCM.allChats.find(
         (chat) =>
-            chat.chatType === 3 && PM.currentProject && chat.chatId === PM.currentProject.projectId
+            chat.chatType === 3 &&
+            usePM.currentProject &&
+            chat.chatId === usePM.currentProject.projectId
     );
 
     return (
@@ -122,16 +124,16 @@ export const TaskHomeHeader = ({
                         {pmChat && (
                             <ProjectAvatar
                                 avatarSize={40}
-                                CM={CM}
+                                useCM={useCM}
                                 myself={myself}
                                 pmChat={pmChat}
                                 setMyself={setMyself}
                                 socket={null}
-                                TEM={TEM}
-                                UIM={UIM}
+                                useTEM={useTEM}
+                                useUISM={useUISM}
                             />
                         )}
-                        {PM.currentProject?.isPrivate === true ? (
+                        {usePM.currentProject?.isPrivate === true ? (
                             <LockOutlineIcon
                                 sx={{
                                     ml: "5px",
@@ -149,7 +151,7 @@ export const TaskHomeHeader = ({
                     justifyContent: "center",
                 }}
             >
-                {PM.currentProject?.projectName}
+                {usePM.currentProject?.projectName}
             </Typography>
 
             <Box sx={{ width: "40%" }}>
@@ -159,7 +161,7 @@ export const TaskHomeHeader = ({
                     setOpenSearch={setOpenSearch}
                     setTeamTaskSearchOptions={setTeamTaskSearchOptions}
                     teamTaskSearchOptions={teamTaskSearchOptions}
-                    TM={TM}
+                    useTM={useTM}
                 />
             </Box>
 
@@ -173,7 +175,7 @@ export const TaskHomeHeader = ({
                             fontSize: "15px",
                             paddingRight: "10px",
                         }}
-                        onClick={TM.handleCreateTask}
+                        onClick={useTM.handleCreateTask}
                     >
                         <AddIcon />
                         Task
@@ -210,7 +212,7 @@ export const TaskHomeHeader = ({
                         </MenuItem>
                     </Menu>
                 </Dropdown>
-                {(TM.isTaskPreviewVisible === true || TM.isCreatingTask.flag === true) && (
+                {(useTM.isTaskPreviewVisible === true || useTM.isCreatingTask.flag === true) && (
                     <Tooltip size="sm" title="Close" variant="outlined">
                         <IconButton
                             color="neutral"

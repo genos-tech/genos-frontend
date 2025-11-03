@@ -14,11 +14,11 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 
 type Props = {
     myself: UserProps;
-    PM: ProjectManagementState;
-    TM: TaskManagementState;
+    usePM: ProjectManagementState;
+    useTM: TaskManagementState;
 };
 
-export const ModalCreateTag: React.FC<Props> = ({ myself, PM, TM }) => {
+export const ModalCreateTag: React.FC<Props> = ({ myself, usePM, useTM }) => {
     const { accessToken } = useAuth();
     const [errorTagCreateMessage, setErrorTagCreateMessage] = useState<string | null>(null);
     const [tagName, setTagName] = useState("");
@@ -44,7 +44,7 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, PM, TM }) => {
                 },
                 body: JSON.stringify({
                     team_id: myself.teamId,
-                    project_id: PM.currentProject?.projectId ?? -1,
+                    project_id: usePM.currentProject?.projectId ?? -1,
                     tag_name: tagName,
                     tag_color: selectedColor.chipColor,
                     tag_text_color: selectedColor.textColor,
@@ -57,9 +57,9 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, PM, TM }) => {
                 console.error(data);
                 throw new Error(data.hint || "Tag Creation Failed");
             } else {
-                TM.setOpenCreateTag(false);
+                useTM.setOpenCreateTag(false);
                 setTagName("");
-                TM.setIsNewTagCreated(true);
+                useTM.setIsNewTagCreated(true);
             }
         } catch (error) {
             const errMsg = `${error}`;
@@ -71,9 +71,9 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, PM, TM }) => {
     return (
         <>
             <Modal
-                open={TM.openCreateTag}
+                open={useTM.openCreateTag}
                 sx={{ zIndex: 10010 }}
-                onClose={() => TM.setOpenCreateTag(false)}
+                onClose={() => useTM.setOpenCreateTag(false)}
             >
                 <ModalDialog>
                     <Typography level="h4">Create New Tag</Typography>
@@ -125,7 +125,7 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, PM, TM }) => {
                             color="danger"
                             component="a"
                             variant="outlined"
-                            onClick={() => TM.setOpenCreateTag(false)}
+                            onClick={() => useTM.setOpenCreateTag(false)}
                         >
                             Cancel
                         </Button>

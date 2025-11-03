@@ -23,7 +23,7 @@ import { MyNoteHeader } from "../components/MyNoteHeader";
  */
 interface MyNoteMainProps {
     /** Team member profiles indexed by user ID */
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     /** Socket connection for real-time updates */
     socket: Socket | null;
     /** Current user information */
@@ -31,15 +31,15 @@ interface MyNoteMainProps {
     /** Function to update current user */
     setMyself: (me: UserProps) => void;
     /** Function to set the opening service */
-    UIM: UIStateManagementState;
+    useUISM: UIStateManagementState;
     /** Note management state and actions */
-    NM: NoteManagementState;
+    useNM: NoteManagementState;
     /** Chat management state and actions */
-    CM: ChatManagementState;
+    useCM: ChatManagementState;
 }
 
 export const MyNoteMain = (props: MyNoteMainProps) => {
-    const { TEM, socket, myself, setMyself, UIM, NM, CM } = props;
+    const { useTEM, socket, myself, setMyself, useUISM, useNM, useCM } = props;
 
     const { accessToken } = useAuth();
     const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
@@ -47,23 +47,23 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
 
     // Custom hooks for note management
     const noteEditor = useNoteEditor({
-        currentMyNote: NM.currentMyNote,
+        currentMyNote: useNM.currentMyNote,
         myself,
         accessToken,
         onNoteUpdate: (updatedNote: MyNoteProps) => {
             // Update tab items
-            NM.setTabItems(
-                NM.tabItems.map((item) =>
-                    item.noteType === NM.currentMyNote?.noteType &&
-                    item.noteId === NM.currentMyNote?.noteId
+            useNM.setTabItems(
+                useNM.tabItems.map((item) =>
+                    item.noteType === useNM.currentMyNote?.noteType &&
+                    item.noteId === useNM.currentMyNote?.noteId
                         ? updatedNote
                         : item
                 )
             );
 
             // Update note metadata
-            NM.setMyNoteMeta(
-                NM.myNoteMeta.map((item) =>
+            useNM.setMyNoteMeta(
+                useNM.myNoteMeta.map((item) =>
                     item.noteType === updatedNote.noteType && item.noteId === updatedNote.noteId
                         ? {
                               noteType: updatedNote.noteType,
@@ -78,28 +78,28 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
         },
     });
 
-    const { handleCloseTab, handleTabChange } = useNoteTabs({ NM });
+    const { handleCloseTab, handleTabChange } = useNoteTabs({ useNM });
 
     // Reset note body saved status when the selected tab index changes
     useEffect(() => {
         noteEditor.setNoteBodySaved(false);
-    }, [NM.selectedTabIndex]);
+    }, [useNM.selectedTabIndex]);
 
     // Update timestamp when current note changes
     useEffect(() => {
-        if (NM.currentMyNote) {
+        if (useNM.currentMyNote) {
             setTsBody(getLocalCurrentTimestamp());
         }
-    }, [NM.currentMyNote]);
+    }, [useNM.currentMyNote]);
 
     // Event handlers
     const handleCreateNewNote = () => {
-        NM.handleCreateNewMyNote(null);
+        useNM.handleCreateNewMyNote(null);
     };
 
     const handleCreateChildNote = () => {
-        if (NM.currentMyNote) {
-            NM.handleCreateNewMyNote(NM.currentMyNote.noteId);
+        if (useNM.currentMyNote) {
+            useNM.handleCreateNewMyNote(useNM.currentMyNote.noteId);
         } else {
             console.error("Can't parent note ID to create a child note.");
         }
@@ -111,15 +111,15 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
 
     return (
         <>
-            {(NM.tabItems.length === 0 || NM.currentMyNote === null) && (
+            {(useNM.tabItems.length === 0 || useNM.currentMyNote === null) && (
                 <EmptyState onCreateNewNote={handleCreateNewNote} />
             )}
 
-            {!(NM.tabItems.length === 0 || NM.currentMyNote === null) && (
+            {!(useNM.tabItems.length === 0 || useNM.currentMyNote === null) && (
                 <Stack direction={"column"} sx={{ width: "100%" }}>
                     {noteEditor.body && (
                         <>
-                            {NM.currentNoteType !== 0 && (
+                            {useNM.currentNoteType !== 0 && (
                                 <Stack direction={"column"} sx={{ width: "100%" }}>
                                     <Stack
                                         alignItems="center"
@@ -132,10 +132,10 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                             mb: "5px",
                                         }}
                                     >
-                                        <MyNoteHeader NM={NM} />
+                                        <MyNoteHeader useNM={useNM} />
 
                                         <NoteHeaderActions
-                                            CM={CM}
+                                            useCM={useCM}
                                             currentTask={undefined}
                                             isInTaskPage={false}
                                             myself={myself}
@@ -143,8 +143,8 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                             pmChat={undefined}
                                             setMyself={setMyself}
                                             socket={socket}
-                                            TEM={TEM}
-                                            UIM={UIM}
+                                            useTEM={useTEM}
+                                            useUISM={useUISM}
                                             onCloseNotes={() => {}}
                                             onCreateChildNote={handleCreateChildNote}
                                             onCreateNewNote={handleCreateNewNote}
@@ -155,14 +155,14 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
 
                                     <Tabs
                                         sx={{ width: "100%" }}
-                                        value={NM.selectedTabIndex}
+                                        value={useNM.selectedTabIndex}
                                         onChange={(_, val) => {
                                             handleTabChange(Number(val));
                                         }}
                                     >
-                                        <NoteTabList NM={NM} onCloseTab={handleCloseTab} />
+                                        <NoteTabList useNM={useNM} onCloseTab={handleCloseTab} />
 
-                                        {NM.tabItems.map((tabNote, index) => (
+                                        {useNM.tabItems.map((tabNote, index) => (
                                             <TabPanel
                                                 key={`tab-note-body-${tabNote.noteType}-${tabNote.noteId}-${tsBody}`}
                                                 value={index}
@@ -172,18 +172,18 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                     paddingBottom: "5px",
                                                 }}
                                             >
-                                                {NM.currentMyNote && (
+                                                {useNM.currentMyNote && (
                                                     <NoteEditor
                                                         body={noteEditor.body}
-                                                        CM={CM}
-                                                        NM={NM}
+                                                        useCM={useCM}
+                                                        useNM={useNM}
                                                         myself={myself}
                                                         noteBodySaved={noteEditor.noteBodySaved}
                                                         setMyself={setMyself}
                                                         socket={socket}
-                                                        TEM={TEM}
+                                                        useTEM={useTEM}
                                                         titleInputRef={noteEditor.titleInputRef}
-                                                        UIM={UIM}
+                                                        useUISM={useUISM}
                                                         currentMyNoteTitle={
                                                             noteEditor.currentMyNoteTitle
                                                         }

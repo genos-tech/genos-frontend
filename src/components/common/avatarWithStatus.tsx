@@ -1,5 +1,5 @@
-import { Avatar, Box, Stack, Typography } from "@mui/joy";
 import { useEffect, useState } from "react";
+import { Avatar, Box, Stack, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
@@ -21,9 +21,9 @@ type AvatarWithStatusProps = {
     isForBubble?: boolean;
     chat?: AllChatProps;
     thread?: ThreadProps;
-    CM: ChatManagementState;
+    useCM: ChatManagementState;
     showNameAndEmail?: boolean;
-    UIM: UIStateManagementState;
+    useUISM: UIStateManagementState;
 };
 export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
     const {
@@ -36,9 +36,9 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
         isForBubble,
         chat,
         thread,
-        CM,
+        useCM,
         showNameAndEmail,
-        UIM,
+        useUISM,
     } = props;
     const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
     const _avatarSize = avatarSize || 32;
@@ -128,14 +128,14 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
             </Stack>
 
             <UserProfile
-                CM={CM}
+                useCM={useCM}
                 isYou={isYou}
                 myself={myself}
                 openUserProfile={openUserProfile}
                 setMyself={setMyself}
                 setOpenUserProfile={setOpenUserProfile}
                 socket={socket}
-                UIM={UIM}
+                useUISM={useUISM}
                 user={avatarUser}
             />
         </div>

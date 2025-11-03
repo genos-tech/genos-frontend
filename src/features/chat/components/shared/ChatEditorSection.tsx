@@ -12,7 +12,7 @@ import { UserProps } from "../../../../types/admin";
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
 
 interface ChatEditorSectionProps {
-    CM: ChatManagementState;
+    useCM: ChatManagementState;
     isInEdit: boolean;
     editTargetMessage?: MessageProps | ThreadMessageProps;
     chat: ChatProps | ThreadProps;
@@ -22,16 +22,16 @@ interface ChatEditorSectionProps {
     setIsInEdit: (edit: boolean) => void;
     setMyself: (user: UserProps) => void;
     setNumEditorLines: (lines: number) => void;
-    UIM: UIStateManagementState;
+    useUISM: UIStateManagementState;
     socket: Socket | null;
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     isThread?: boolean;
     thread?: ThreadProps;
     setCurrentThreadChat?: (chat: ThreadProps) => void;
 }
 
 export const ChatEditorSection = ({
-    CM,
+    useCM,
     isInEdit,
     editTargetMessage,
     chat,
@@ -41,9 +41,9 @@ export const ChatEditorSection = ({
     setIsInEdit,
     setMyself,
     setNumEditorLines,
-    UIM,
+    useUISM,
     socket,
-    TEM,
+    useTEM,
     isThread = false,
     thread,
     setCurrentThreadChat,
@@ -53,7 +53,7 @@ export const ChatEditorSection = ({
             <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
                 {isInEdit === true && editTargetMessage && (
                     <BnUpdateThreadEditor
-                        CM={CM}
+                        useCM={useCM}
                         isInEdit={isInEdit}
                         message={editTargetMessage as ThreadMessageProps}
                         myself={myself}
@@ -63,14 +63,14 @@ export const ChatEditorSection = ({
                         setMyself={setMyself}
                         setNumEditorLines={setNumEditorLines}
                         socket={socket}
-                        TEM={TEM}
+                        useTEM={useTEM}
                         thread={thread!}
-                        UIM={UIM}
+                        useUISM={useUISM}
                     />
                 )}
                 {isInEdit === false && (
                     <BnThreadEditor
-                        CM={CM}
+                        useCM={useCM}
                         myself={myself}
                         numEditorLines={numEditorLines}
                         setCurrentChat={setCurrentChat as (chat: ChatProps) => void}
@@ -78,9 +78,9 @@ export const ChatEditorSection = ({
                         setMyself={setMyself}
                         setNumEditorLines={setNumEditorLines}
                         socket={socket}
-                        TEM={TEM}
+                        useTEM={useTEM}
                         thread={thread!}
-                        UIM={UIM}
+                        useUISM={useUISM}
                     />
                 )}
             </Box>
@@ -92,7 +92,7 @@ export const ChatEditorSection = ({
             {isInEdit === true && editTargetMessage && (
                 <BnUpdateEditor
                     chat={chat as ChatProps}
-                    CM={CM}
+                    useCM={useCM}
                     isInEdit={isInEdit}
                     message={editTargetMessage as MessageProps}
                     myself={myself}
@@ -101,22 +101,22 @@ export const ChatEditorSection = ({
                     setMyself={setMyself}
                     setNumEditorLines={setNumEditorLines}
                     socket={socket}
-                    TEM={TEM}
-                    UIM={UIM}
+                    useTEM={useTEM}
+                    useUISM={useUISM}
                 />
             )}
             {isInEdit === false && (
                 <BnChatEditor
                     chat={chat as ChatProps}
-                    CM={CM}
+                    useCM={useCM}
                     myself={myself}
                     numEditorLines={numEditorLines}
                     setCurrentChat={setCurrentChat as (chat: ChatProps) => void}
                     setMyself={setMyself}
                     setNumEditorLines={setNumEditorLines}
                     socket={socket}
-                    TEM={TEM}
-                    UIM={UIM}
+                    useTEM={useTEM}
+                    useUISM={useUISM}
                 />
             )}
         </Box>

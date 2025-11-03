@@ -11,7 +11,7 @@ type Props = {
     myself: UserProps;
     openDeleteNote: boolean;
     setOpenDeleteNote: (value: boolean) => void;
-    NM: NoteManagementState;
+    useNM: NoteManagementState;
     handleCloseTab: (tabIndex: number, closingNoteId: number) => void;
 };
 
@@ -19,7 +19,7 @@ export const ModalDeleteTaskNote: React.FC<Props> = ({
     myself,
     openDeleteNote,
     setOpenDeleteNote,
-    NM,
+    useNM,
     handleCloseTab,
 }) => {
     const { accessToken } = useAuth();
@@ -28,8 +28,8 @@ export const ModalDeleteTaskNote: React.FC<Props> = ({
 
     const handleDeleteNote = async () => {
         let childExist: boolean;
-        const childNotes = NM.taskNoteMeta.filter(
-            (note) => note.parentNoteId === NM.currentTaskNote?.noteId
+        const childNotes = useNM.taskNoteMeta.filter(
+            (note) => note.parentNoteId === useNM.currentTaskNote?.noteId
         );
 
         if (childNotes.length === 0) {
@@ -40,16 +40,16 @@ export const ModalDeleteTaskNote: React.FC<Props> = ({
 
         if (childExist === false) {
             // Delete from backend
-            await deleteTaskNote(myself, NM.currentTaskNote?.noteId as number, accessToken);
+            await deleteTaskNote(myself, useNM.currentTaskNote?.noteId as number, accessToken);
             // Delete from indexedDB
-            await noteService.deleteTaskNote(NM.currentTaskNote?.noteId as number);
+            await noteService.deleteTaskNote(useNM.currentTaskNote?.noteId as number);
             // Delete the deleted noteId from the meta object
-            NM.setTaskNoteMeta(
-                NM.taskNoteMeta.filter(
-                    (note) => note.noteId !== (NM.currentTaskNote?.noteId as number)
+            useNM.setTaskNoteMeta(
+                useNM.taskNoteMeta.filter(
+                    (note) => note.noteId !== (useNM.currentTaskNote?.noteId as number)
                 )
             );
-            handleCloseTab(NM.selectedTabIndex, NM.currentTaskNote?.noteId as number);
+            handleCloseTab(useNM.selectedTabIndex, useNM.currentTaskNote?.noteId as number);
             setOpenDeleteNote(false);
             setErrorMessage(null);
         } else {
@@ -71,7 +71,7 @@ export const ModalDeleteTaskNote: React.FC<Props> = ({
                     <Typography level="h4">
                         Are you sure to delete{" "}
                         <Typography color="danger" level="h3">
-                            {NM.currentTaskNote?.title}
+                            {useNM.currentTaskNote?.title}
                         </Typography>{" "}
                         ?
                     </Typography>

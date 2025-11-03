@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import {
     Autocomplete,
@@ -8,7 +9,6 @@ import {
     Typography,
 } from "@mui/joy";
 import CircularProgress from "@mui/joy/CircularProgress";
-import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
@@ -28,10 +28,10 @@ type ChatSearchProps = {
     openSearchBox: boolean;
     setOpenSearchBox: (value: boolean) => void;
     setOpenJoinGM: (value: { flag: boolean; chatId: number; chatName: string }) => void;
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     setMyself: (value: UserProps) => void;
-    CM: ChatManagementState;
-    UIM: UIStateManagementState;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
 };
 
 export const ChatSearch = (props: ChatSearchProps) => {
@@ -41,10 +41,10 @@ export const ChatSearch = (props: ChatSearchProps) => {
         openSearchBox,
         setOpenSearchBox,
         setOpenJoinGM,
-        TEM,
+        useTEM,
         setMyself,
-        UIM,
-        CM,
+        useUISM,
+        useCM,
     } = props;
     const { accessToken } = useAuth();
     const [options, setOptions] = useState<SearchListProps[]>([]);
@@ -84,7 +84,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
                                 value.type === "Group" ? 2 : 1,
                                 value.isPrivate,
                                 value.dmPartnerUser,
-                                CM,
+                                useCM,
                                 setOpenSearchBox
                             );
                         } else {
@@ -153,7 +153,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
                           : option.name
                 }
                 renderOption={(props, option) => {
-                    const gmChat: AllChatProps | undefined = CM.allChats.find(
+                    const gmChat: AllChatProps | undefined = useCM.allChats.find(
                         (chat) => chat.chatId === option.id
                     );
                     return (
@@ -166,27 +166,29 @@ export const ChatSearch = (props: ChatSearchProps) => {
                                     {option.type === "People" && (
                                         <AvatarWithStatus
                                             key={`ac-render-option-chatsearch-user-avatar-${option.name}-${option.id}`}
-                                            CM={CM}
+                                            useCM={useCM}
                                             isYou={option.dmPartnerUser.userId === myself.userId}
                                             myself={myself}
                                             setMyself={setMyself}
                                             socket={socket}
-                                            UIM={UIM}
+                                            useUISM={useUISM}
                                             avatarUser={
-                                                TEM.teamMemberProfiles[option.dmPartnerUser.userId]
+                                                useTEM.teamMemberProfiles[
+                                                    option.dmPartnerUser.userId
+                                                ]
                                             }
                                         />
                                     )}
                                     {option.type === "Group" && gmChat && (
                                         <GMAvatar
-                                            CM={CM}
+                                            useCM={useCM}
                                             gmChat={gmChat}
                                             isYou={false}
                                             myself={myself}
                                             setMyself={setMyself}
                                             socket={socket}
-                                            TEM={TEM}
-                                            UIM={UIM}
+                                            useTEM={useTEM}
+                                            useUISM={useUISM}
                                         />
                                     )}
                                     <Typography level="body-md" sx={{ pt: 0.5, pl: 1 }}>

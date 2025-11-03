@@ -4,10 +4,10 @@ import { Breadcrumbs, IconButton, Tooltip, Typography } from "@mui/joy";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 
 interface MyNoteHeaderProps {
-    NM: NoteManagementState;
+    useNM: NoteManagementState;
 }
 
-export const MyNoteHeader = ({ NM }: MyNoteHeaderProps) => {
+export const MyNoteHeader = ({ useNM }: MyNoteHeaderProps) => {
     return (
         <Breadcrumbs aria-label="breadcrumbs" separator="›">
             <IconButton
@@ -22,8 +22,8 @@ export const MyNoteHeader = ({ NM }: MyNoteHeaderProps) => {
                 My Notes
             </IconButton>
 
-            {NM.currentMyNoteChain &&
-                NM.currentMyNoteChain.map((node, index) => (
+            {useNM.currentMyNoteChain &&
+                useNM.currentMyNoteChain.map((node, index) => (
                     <Tooltip
                         key={`my-note-tooltip-${index}`}
                         size="sm"
@@ -44,7 +44,7 @@ export const MyNoteHeader = ({ NM }: MyNoteHeaderProps) => {
                                 fontWeight: "bold",
                             }}
                             onClick={() => {
-                                NM.loadNote(1, node.noteId, -1);
+                                useNM.loadNote(1, node.noteId, -1);
                             }}
                         >
                             {node.title.length > 14 ? `${node.title.slice(0, 14)}...` : node.title}

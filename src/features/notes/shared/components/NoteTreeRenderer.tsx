@@ -1,5 +1,5 @@
-import { Box, List, ListItem } from "@mui/joy";
 import { memo, ReactNode } from "react";
+import { Box, List, ListItem } from "@mui/joy";
 
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { BaseNoteTreeNode } from "../types/noteTypes";
@@ -10,7 +10,7 @@ interface NoteTreeRendererProps<T extends BaseNoteTreeNode> {
     timestamp: string;
     currentChain: T[] | undefined;
     noteType: number;
-    NM: NoteManagementState;
+    useNM: NoteManagementState;
     renderToggle: (open: boolean, setOpen: (value: boolean) => void, node: T) => ReactNode;
     createChildNoteList: (node: T) => ReactNode;
 }
@@ -20,14 +20,14 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
     timestamp,
     currentChain,
     noteType,
-    NM,
+    useNM,
     renderToggle,
     createChildNoteList,
 }: NoteTreeRendererProps<T>) {
     const isExpanded =
         currentChain?.some((chainedNote) => chainedNote.noteId === node.noteId) ||
-        NM.tabItems.some((tabNote) =>
-            NM.allNoteIdChains[`${tabNote.noteType}-${tabNote.noteId}`]?.some(
+        useNM.tabItems.some((tabNote) =>
+            useNM.allNoteIdChains[`${tabNote.noteType}-${tabNote.noteId}`]?.some(
                 (chainedNoteId: number) => chainedNoteId === node.noteId
             )
         );
@@ -47,7 +47,7 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                                         key={child.noteId}
                                         createChildNoteList={createChildNoteList}
                                         currentChain={currentChain}
-                                        NM={NM}
+                                        useNM={useNM}
                                         node={child as T}
                                         noteType={noteType}
                                         renderToggle={renderToggle}

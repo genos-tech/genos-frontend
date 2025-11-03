@@ -39,12 +39,12 @@ type Props = {
         isPrivate: boolean;
         systemUserId: string;
     }) => void;
-    PM: ProjectManagementState;
-    CM: ChatManagementState;
+    usePM: ProjectManagementState;
+    useCM: ChatManagementState;
 };
 export const ModalJoinProject: React.FC<Props> = ({
-    CM,
-    PM,
+    useCM,
+    usePM,
     socket,
     myself,
     openJoinProject,
@@ -145,7 +145,7 @@ export const ModalJoinProject: React.FC<Props> = ({
                         );
                     } else {
                         if (openJoinProject.projectId) {
-                            PM.setCurrentProject({
+                            usePM.setCurrentProject({
                                 projectId: openJoinProject.projectId,
                                 projectName: openJoinProject.projectName,
                                 isPrivate: openJoinProject.isPrivate,
@@ -181,7 +181,7 @@ export const ModalJoinProject: React.FC<Props> = ({
                                     await addChat(newChat, newChat.chatType);
                                     await addMessage(newChat.latestMessage, newChat.chatType);
 
-                                    CM.setAllChats([newChat, ...CM.allChats]);
+                                    useCM.setAllChats([newChat, ...useCM.allChats]);
                                 }
                             })();
                         } else {

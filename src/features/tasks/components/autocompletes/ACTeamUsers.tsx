@@ -21,10 +21,10 @@ type ACTeamUsersProps = {
     setIsOpenTeamMembersList: (value: boolean) => void;
     isAssignee: boolean;
     setTaskUpdated?: (value: boolean) => void;
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     socket: Socket | null;
-    CM: ChatManagementState;
-    UIM: UIStateManagementState;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
 };
 export const ACTeamUsers = (props: ACTeamUsersProps) => {
     const {
@@ -38,17 +38,17 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
         setIsOpenTeamMembersList,
         isAssignee,
         setTaskUpdated,
-        TEM,
+        useTEM,
         socket,
-        CM,
-        UIM,
+        useCM,
+        useUISM,
     } = props;
 
     return (
         <Autocomplete
             key={taskContent.id}
             isOptionEqualToValue={(option, value) => option.userId === value.userId}
-            options={TEM.teamMembers}
+            options={useTEM.teamMembers}
             size="sm"
             sx={{ width: "100%" }}
             value={initialUser || myself}
@@ -67,13 +67,13 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
                             <Stack direction="row" spacing={1}>
                                 <AvatarWithStatus
                                     key={`ac-render-option-user-search-avatar-${option.userName}-${option.userId}`}
-                                    avatarUser={TEM.teamMemberProfiles[option.userId]}
-                                    CM={CM}
+                                    avatarUser={useTEM.teamMemberProfiles[option.userId]}
+                                    useCM={useCM}
                                     isYou={option.userId === myself.userId}
                                     myself={myself}
                                     setMyself={setMyself}
                                     socket={socket}
-                                    UIM={UIM}
+                                    useUISM={useUISM}
                                 />
                                 <Typography level="body-md" sx={{ pt: 0.5, pl: 1 }}>
                                     {option.userEmail === myself.userEmail

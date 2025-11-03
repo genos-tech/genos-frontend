@@ -37,13 +37,13 @@ interface ChatNoteHeaderProps {
     isInChatPage: boolean;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    UIM: UIStateManagementState;
-    TM: TaskManagementState;
-    PM: ProjectManagementState;
+    useUISM: UIStateManagementState;
+    useTM: TaskManagementState;
+    usePM: ProjectManagementState;
     socket: Socket | null;
-    TEM: TeamManagementState;
-    CM: ChatManagementState;
-    NM: NoteManagementState;
+    useTEM: TeamManagementState;
+    useCM: ChatManagementState;
+    useNM: NoteManagementState;
     openDeleteNote: boolean;
     setOpenDeleteNote: (open: boolean) => void;
     openSearchBox: boolean;
@@ -58,13 +58,13 @@ export const ChatNoteHeader = ({
     isInChatPage,
     myself,
     setMyself,
-    UIM,
-    TM,
-    PM,
+    useUISM,
+    useTM,
+    usePM,
     socket,
-    TEM,
-    CM,
-    NM,
+    useTEM,
+    useCM,
+    useNM,
     openDeleteNote,
     setOpenDeleteNote,
     openSearchBox,
@@ -85,7 +85,7 @@ export const ChatNoteHeader = ({
                 mb: "5px",
             }}
         >
-            {isInChatPage === true && NM.currentChatNote && (
+            {isInChatPage === true && useNM.currentChatNote && (
                 <Box
                     sx={{
                         ml: "5px",
@@ -97,7 +97,7 @@ export const ChatNoteHeader = ({
                         myself={myself}
                         openSearchBox={openSearchBox}
                         setOpenSearchBox={setOpenSearchBox}
-                        NM={NM}
+                        useNM={useNM}
                     />
                 </Box>
             )}
@@ -115,8 +115,8 @@ export const ChatNoteHeader = ({
                         <QuestionAnswerRoundedIcon sx={{ fontSize: "20px" }} />
                         Chat Notes
                     </IconButton>
-                    {NM.currentChatNoteChain &&
-                        NM.currentChatNoteChain.map((node, index) => (
+                    {useNM.currentChatNoteChain &&
+                        useNM.currentChatNoteChain.map((node, index) => (
                             <Tooltip
                                 key={`chat-note-tooltip-${index}`}
                                 size="sm"
@@ -137,7 +137,7 @@ export const ChatNoteHeader = ({
                                         fontWeight: "bold",
                                     }}
                                     onClick={() => {
-                                        NM.loadNote(3, node.noteId, -1);
+                                        useNM.loadNote(3, node.noteId, -1);
                                     }}
                                 >
                                     {node.title.length > 14
@@ -154,47 +154,47 @@ export const ChatNoteHeader = ({
                 {chat && chat.chatType === 1 && (
                     <Box sx={{ mt: "2px", mr: "5px" }}>
                         <AvatarWithStatus
-                            avatarUser={TEM.teamMemberProfiles[chat.dmPartnerUser.userId]}
+                            avatarUser={useTEM.teamMemberProfiles[chat.dmPartnerUser.userId]}
                             chat={chat}
-                            CM={CM}
+                            useCM={useCM}
                             isYou={false}
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}
-                            UIM={UIM}
+                            useUISM={useUISM}
                         />
                     </Box>
                 )}
                 {chat && chat.chatType === 2 && (
                     <Box sx={{ mt: "2px", mr: "5px" }}>
                         <GMAvatar
-                            CM={CM}
+                            useCM={useCM}
                             gmChat={chat}
                             isYou={false}
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}
-                            TEM={TEM}
-                            UIM={UIM}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
                         />
                     </Box>
                 )}
                 {chat && chat.chatType === 3 && (
                     <Box sx={{ mt: "2px", mr: "5px" }}>
                         <ProjectAvatar
-                            CM={CM}
+                            useCM={useCM}
                             myself={myself}
                             pmChat={chat}
                             setMyself={setMyself}
                             socket={socket}
-                            TEM={TEM}
-                            UIM={UIM}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
                         />
                     </Box>
                 )}
 
                 {/* Action Buttons */}
-                {isInChatPage && NM.currentChatNote && (
+                {isInChatPage && useNM.currentChatNote && (
                     <IconButton
                         color="neutral"
                         component="button"
@@ -219,7 +219,7 @@ export const ChatNoteHeader = ({
                             sx={{ mb: "5px" }}
                             variant="plain"
                             onClick={() => {
-                                UIM.setOpeningService(3);
+                                useUISM.setOpeningService(3);
                             }}
                         >
                             <OpenInNewIcon />
@@ -235,15 +235,15 @@ export const ChatNoteHeader = ({
                             sx={{ mb: "5px" }}
                             variant="plain"
                             onClick={() => {
-                                CM.moveToSpecificChat(
-                                    NM.currentChatNote?.chatType || 0,
-                                    NM.currentChatNote?.chatId || 0,
-                                    NM.currentChatNote?.threadId || 0,
+                                useCM.moveToSpecificChat(
+                                    useNM.currentChatNote?.chatType || 0,
+                                    useNM.currentChatNote?.chatId || 0,
+                                    useNM.currentChatNote?.threadId || 0,
                                     true, // openTaskNoteInChat
                                     false, // openThreadTaskPreview
-                                    UIM.setOpeningService,
-                                    TM.setCurrentPreviewTaskId,
-                                    PM.setCurrentProject
+                                    useUISM.setOpeningService,
+                                    useTM.setCurrentPreviewTaskId,
+                                    usePM.setCurrentProject
                                 );
                             }}
                         >
@@ -289,11 +289,11 @@ export const ChatNoteHeader = ({
                             sx={{ mb: "5px" }}
                             variant="plain"
                             onClick={() => {
-                                CM.setIsChatNoteVisibleInChat(false);
+                                useCM.setIsChatNoteVisibleInChat(false);
 
                                 // Open main chat pane
-                                if (CM.setIsMainChatVisible) {
-                                    CM.setIsMainChatVisible(true);
+                                if (useCM.setIsMainChatVisible) {
+                                    useCM.setIsMainChatVisible(true);
                                 }
                             }}
                         >
@@ -303,13 +303,13 @@ export const ChatNoteHeader = ({
                 )}
 
                 {/* Delete Modal */}
-                {NM.currentChatNote && (
+                {useNM.currentChatNote && (
                     <ModalDeleteChatNote
                         handleCloseTab={handleCloseTab}
                         myself={myself}
                         openDeleteNote={openDeleteNote}
                         setOpenDeleteNote={setOpenDeleteNote}
-                        NM={NM}
+                        useNM={useNM}
                     />
                 )}
             </Stack>

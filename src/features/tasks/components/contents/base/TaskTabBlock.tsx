@@ -84,13 +84,13 @@ type TaskTabBlockProps = {
     setTaskComments: (value: TaskCommentProps[]) => void;
     tmpCurrentTaskContent: TaskProps;
     taskCommentLines: number;
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     tabIndex: number;
     setTabIndex: (value: number) => void;
-    TM: TaskManagementState;
-    UIM: UIStateManagementState;
-    CM: ChatManagementState;
-    NM: NoteManagementState;
+    useTM: TaskManagementState;
+    useUISM: UIStateManagementState;
+    useCM: ChatManagementState;
+    useNM: NoteManagementState;
 };
 export const TaskTabBlock = (props: TaskTabBlockProps) => {
     const { accessToken } = useAuth();
@@ -98,8 +98,8 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         socket,
         myself,
         setMyself,
-        CM,
-        UIM,
+        useCM,
+        useUISM,
         uploadedFiles,
         setUploadedFiles,
         setTaskUpdated,
@@ -119,9 +119,9 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         taskCommentLines,
         tabIndex,
         setTabIndex,
-        TM,
-        TEM,
-        NM,
+        useTM,
+        useTEM,
+        useNM,
     } = props;
 
     const [images, setImages] = useState<FileProps[]>([]);
@@ -273,7 +273,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         setImages([]);
         setTextFiles([]);
         setTabIndex(0);
-    }, [TM.currentPreviewTaskId]);
+    }, [useTM.currentPreviewTaskId]);
 
     useEffect(() => {
         if (isUploadingFilesUpdated === true) {
@@ -346,7 +346,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     useScrollToBottomOnNewTaskComment(
         virtuosoRef as React.RefObject<VirtuosoHandle>,
         taskComments,
-        TM.isTaskCommentUpdated.scrollToBottom
+        useTM.isTaskCommentUpdated.scrollToBottom
     );
 
     // State for modal
@@ -461,15 +461,15 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                             return (
                                                 <TaskCommentBubble
                                                     key={`task-comment-${comment.commentId}-${comment.tsUpdated}`}
-                                                    CM={CM}
+                                                    useCM={useCM}
                                                     comment={comment}
                                                     myself={myself}
                                                     setEditTargetComment={setEditTargetComment}
                                                     setIsInEdit={setIsInEdit}
                                                     setMyself={setMyself}
                                                     socket={socket}
-                                                    TEM={TEM}
-                                                    UIM={UIM}
+                                                    useTEM={useTEM}
+                                                    useUISM={useUISM}
                                                     currentProjectId={
                                                         taskContent.project?.projectId
                                                     }
@@ -489,7 +489,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                 </Box>
                             )}
                             <TaskCommentEditorBlock
-                                CM={CM}
+                                useCM={useCM}
                                 editTargetComment={editTargetComment}
                                 isInEdit={isInEdit}
                                 myself={myself}
@@ -501,9 +501,9 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                 task={tmpCurrentTaskContent}
                                 taskCommentLines={taskCommentLines}
                                 taskComments={taskComments}
-                                TEM={TEM}
-                                UIM={UIM}
-                                TM={TM}
+                                useTEM={useTEM}
+                                useUISM={useUISM}
+                                useTM={useTM}
                             />
                         </>
                     </TabPanel>
@@ -534,10 +534,10 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                             borderRadius: "5px",
                                                         }}
                                                         onClick={() => {
-                                                            if (NM.setIsTaskNoteVisible) {
-                                                                TM.setIsTaskHomeVisible(false);
-                                                                NM.setIsTaskNoteVisible(true);
-                                                                NM.setCurrentTaskNote(taskNote);
+                                                            if (useNM.setIsTaskNoteVisible) {
+                                                                useTM.setIsTaskHomeVisible(false);
+                                                                useNM.setIsTaskNoteVisible(true);
+                                                                useNM.setCurrentTaskNote(taskNote);
                                                             }
                                                         }}
                                                     >
@@ -573,15 +573,15 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                 }}
                                                 onClick={() => {
                                                     if (
-                                                        NM.setIsTaskNoteVisible &&
+                                                        useNM.setIsTaskNoteVisible &&
                                                         taskContent.project
                                                     ) {
-                                                        TM.setIsTaskHomeVisible(false);
-                                                        NM.setIsTaskNoteVisible(true);
-                                                        NM.handleCreateNewTaskNote(
+                                                        useTM.setIsTaskHomeVisible(false);
+                                                        useNM.setIsTaskNoteVisible(true);
+                                                        useNM.handleCreateNewTaskNote(
                                                             null,
                                                             taskContent.project.projectId,
-                                                            TM.currentPreviewTaskId,
+                                                            useTM.currentPreviewTaskId,
                                                             taskContent.title
                                                         );
                                                     } else {
@@ -740,7 +740,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                             }}
                                             onClick={(e) => {
                                                 const target = e.target as HTMLElement;
-                                                if (target.tagName === "IMG") {
+                                                if (target.tagName === "useIMG") {
                                                     handleImageClick(
                                                         (target as HTMLImageElement).src
                                                     );

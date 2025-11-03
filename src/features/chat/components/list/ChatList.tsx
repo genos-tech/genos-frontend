@@ -73,14 +73,14 @@ type ChatListProps = {
     socket: Socket | null;
     chatType: number;
     currentActivityMessageType: number;
-    CM: ChatManagementState;
+    useCM: ChatManagementState;
     state: ChatListState;
     actions: ChatListActions;
     data: ChatListData;
-    UIM: UIStateManagementState;
-    TEM: TeamManagementState;
-    TM: TaskManagementState;
-    PM: ProjectManagementState;
+    useUISM: UIStateManagementState;
+    useTEM: TeamManagementState;
+    useTM: TaskManagementState;
+    usePM: ProjectManagementState;
 };
 
 // Custom hook for managing filtered chats
@@ -144,10 +144,10 @@ const ChatListRenderer = ({
     actions,
     data,
     socket,
-    TEM,
-    UIM,
-    CM,
-    TM,
+    useTEM,
+    useUISM,
+    useCM,
+    useTM,
 }: {
     tmpAllChats: AllChatProps[];
     virtuosoRef: React.RefObject<VirtuosoHandle | null>;
@@ -155,10 +155,10 @@ const ChatListRenderer = ({
     actions: ChatListActions;
     data: ChatListData;
     socket: Socket | null;
-    UIM: UIStateManagementState;
-    TEM: TeamManagementState;
-    CM: ChatManagementState;
-    TM: TaskManagementState;
+    useUISM: UIStateManagementState;
+    useTEM: TeamManagementState;
+    useCM: ChatManagementState;
+    useTM: TaskManagementState;
 }) => (
     <Virtuoso
         ref={virtuosoRef}
@@ -176,16 +176,16 @@ const ChatListRenderer = ({
                         <ChatListItem
                             key={`${chat.chatId}-${chat.chatType}-${chat.chatName}`}
                             chat={chat}
-                            CM={CM}
+                            useCM={useCM}
                             incompleteTodoCount={state.incompleteTodoCount}
                             isPinnedChat={false}
                             myself={data.myself}
                             setIsToDoVisible={actions.setIsToDoVisible}
                             setMyself={data.setMyself}
                             socket={socket}
-                            TEM={TEM}
-                            UIM={UIM}
-                            TM={TM}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
+                            useTM={useTM}
                         />
                     </Stack>
                 </div>
@@ -205,11 +205,11 @@ const ActivityListRenderer = ({
     socket,
     selectedActivityId,
     setSelectedActivityId,
-    CM,
-    UIM,
-    TEM,
-    TM,
-    PM,
+    useCM,
+    useUISM,
+    useTEM,
+    useTM,
+    usePM,
 }: {
     tmpActivityMessages: ActivityMessageProps[];
     activityMessages: ActivityMessageProps[];
@@ -220,11 +220,11 @@ const ActivityListRenderer = ({
     socket: Socket | null;
     selectedActivityId: string;
     setSelectedActivityId: (id: string) => void;
-    UIM: UIStateManagementState;
-    TEM: TeamManagementState;
-    CM: ChatManagementState;
-    TM: TaskManagementState;
-    PM: ProjectManagementState;
+    useUISM: UIStateManagementState;
+    useTEM: TeamManagementState;
+    useCM: ChatManagementState;
+    useTM: TaskManagementState;
+    usePM: ProjectManagementState;
 }) => (
     <Virtuoso
         ref={virtuosoRef}
@@ -243,16 +243,16 @@ const ActivityListRenderer = ({
                             key={`${activityMessage.activityId}-${activityMessage.isRead}`}
                             activity={activityMessage}
                             activityMessages={activityMessages}
-                            CM={CM}
+                            useCM={useCM}
                             myself={data.myself}
                             selectedActivityId={selectedActivityId}
-                            setCurrentProject={PM.setCurrentProject}
+                            setCurrentProject={usePM.setCurrentProject}
                             setMyself={data.setMyself}
                             setSelectedActivityId={setSelectedActivityId}
                             socket={socket}
-                            TEM={TEM}
-                            UIM={UIM}
-                            TM={TM}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
+                            useTM={useTM}
                         />
                     </Stack>
                 </div>
@@ -271,11 +271,11 @@ const FlaggedListRenderer = ({
     socket,
     selectedFlaggedMessageId,
     setSelectedFlaggedMessageId,
-    UIM,
-    TEM,
-    CM,
-    TM,
-    PM,
+    useUISM,
+    useTEM,
+    useCM,
+    useTM,
+    usePM,
 }: {
     tmpFlaggedMessages: FlaggedMessageProps[];
     virtuosoRef: React.RefObject<VirtuosoHandle | null>;
@@ -285,11 +285,11 @@ const FlaggedListRenderer = ({
     socket: Socket | null;
     selectedFlaggedMessageId: string;
     setSelectedFlaggedMessageId: (id: string) => void;
-    UIM: UIStateManagementState;
-    TEM: TeamManagementState;
-    CM: ChatManagementState;
-    TM: TaskManagementState;
-    PM: ProjectManagementState;
+    useUISM: UIStateManagementState;
+    useTEM: TeamManagementState;
+    useCM: ChatManagementState;
+    useTM: TaskManagementState;
+    usePM: ProjectManagementState;
 }) => (
     <Virtuoso
         ref={virtuosoRef}
@@ -306,17 +306,17 @@ const FlaggedListRenderer = ({
                     <Stack direction="row">
                         <ChatListItemForFlagMessages
                             key={`${flaggedMessage.flaggedMessageId}`}
-                            CM={CM}
+                            useCM={useCM}
                             flaggedMessage={flaggedMessage}
                             myself={data.myself}
                             selectedFlaggedMessageId={selectedFlaggedMessageId}
-                            setCurrentProject={PM.setCurrentProject}
+                            setCurrentProject={usePM.setCurrentProject}
                             setMyself={data.setMyself}
                             setSelectedFlaggedMessageId={setSelectedFlaggedMessageId}
                             socket={socket}
-                            TEM={TEM}
-                            UIM={UIM}
-                            TM={TM}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
+                            useTM={useTM}
                         />
                     </Stack>
                 </div>
@@ -333,11 +333,11 @@ export const ChatList = (props: ChatListProps) => {
         state,
         actions,
         data,
-        UIM,
-        TEM,
-        CM,
-        TM,
-        PM,
+        useUISM,
+        useTEM,
+        useCM,
+        useTM,
+        usePM,
     } = props;
 
     // Refs for different chat types
@@ -357,14 +357,14 @@ export const ChatList = (props: ChatListProps) => {
     };
 
     // Custom hooks for filtered data
-    const tmpAllChats = useFilteredChats(CM.allChats, state.showOnlyUnreadItems);
+    const tmpAllChats = useFilteredChats(useCM.allChats, state.showOnlyUnreadItems);
     const tmpActivityMessages = useFilteredActivityMessages(
-        CM.activityMessages,
+        useCM.activityMessages,
         currentActivityMessageType,
         state.showOnlyUnreadItems
     );
     const [tmpFlaggedMessages, setTmpFlaggedMessages] = useState<FlaggedMessageProps[]>(
-        CM.flaggedMessages
+        useCM.flaggedMessages
     );
     const [selectedActivityId, setSelectedActivityId] = useState<string>("");
     const [selectedFlaggedMessageId, setSelectedFlaggedMessageId] = useState<string>("");
@@ -372,34 +372,34 @@ export const ChatList = (props: ChatListProps) => {
     // Scroll hooks
     useScrollToBottomOnChatPaneChange(
         virtuosoDMRef as React.RefObject<VirtuosoHandle>,
-        CM.allChats
+        useCM.allChats
     );
     useScrollToBottomOnChatPaneChange(
         virtuosoGMRef as React.RefObject<VirtuosoHandle>,
-        CM.allChats
+        useCM.allChats
     );
     useScrollToBottomOnChatPaneChange(
         virtuosoPMRef as React.RefObject<VirtuosoHandle>,
-        CM.allChats
+        useCM.allChats
     );
     useScrollToBottomOnChatPaneChange(
         virtuosoPinnedRef as React.RefObject<VirtuosoHandle>,
-        CM.allChats
+        useCM.allChats
     );
     useScrollToBottomOnChatPaneChange(
         virtuosoFlaggedRef as React.RefObject<VirtuosoHandle>,
-        CM.allChats
+        useCM.allChats
     );
     useScrollToBottomOnNewActivity(
         virtuosoActivityRef as React.RefObject<VirtuosoHandle>,
-        CM.activityMessages,
+        useCM.activityMessages,
         true
     );
 
     // Update flagged messages when props change
     useEffect(() => {
-        setTmpFlaggedMessages(CM.flaggedMessages);
-    }, [CM.flaggedMessages]);
+        setTmpFlaggedMessages(useCM.flaggedMessages);
+    }, [useCM.flaggedMessages]);
 
     const renderChatList = () => {
         if (chatType < CHAT_TYPES.ACTIVITY && tmpAllChats.length > 0) {
@@ -407,15 +407,15 @@ export const ChatList = (props: ChatListProps) => {
             return (
                 <ChatListRenderer
                     actions={actions}
-                    CM={CM}
+                    useCM={useCM}
                     data={data}
                     socket={socket}
                     state={state}
-                    TEM={TEM}
+                    useTEM={useTEM}
                     tmpAllChats={tmpAllChats}
-                    UIM={UIM}
+                    useUISM={useUISM}
                     virtuosoRef={virtuosoRef}
-                    TM={TM}
+                    useTM={useTM}
                 />
             );
         }
@@ -427,19 +427,19 @@ export const ChatList = (props: ChatListProps) => {
             return (
                 <ActivityListRenderer
                     actions={actions}
-                    PM={PM}
-                    activityMessages={CM.activityMessages}
-                    CM={CM}
+                    usePM={usePM}
+                    activityMessages={useCM.activityMessages}
+                    useCM={useCM}
                     data={data}
                     selectedActivityId={selectedActivityId}
                     setSelectedActivityId={setSelectedActivityId}
                     socket={socket}
                     state={state}
-                    TEM={TEM}
+                    useTEM={useTEM}
                     tmpActivityMessages={tmpActivityMessages}
-                    UIM={UIM}
+                    useUISM={useUISM}
                     virtuosoRef={virtuosoActivityRef}
-                    TM={TM}
+                    useTM={useTM}
                 />
             );
         }
@@ -451,18 +451,18 @@ export const ChatList = (props: ChatListProps) => {
             return (
                 <FlaggedListRenderer
                     actions={actions}
-                    PM={PM}
-                    CM={CM}
+                    usePM={usePM}
+                    useCM={useCM}
                     data={data}
                     selectedFlaggedMessageId={selectedFlaggedMessageId}
                     setSelectedFlaggedMessageId={setSelectedFlaggedMessageId}
                     socket={socket}
                     state={state}
-                    TEM={TEM}
+                    useTEM={useTEM}
                     tmpFlaggedMessages={tmpFlaggedMessages}
-                    UIM={UIM}
+                    useUISM={useUISM}
                     virtuosoRef={virtuosoFlaggedRef}
-                    TM={TM}
+                    useTM={useTM}
                 />
             );
         }

@@ -9,23 +9,23 @@ import { ChatProps } from "../../../types/chat";
 import { InboxItemProps } from "../../../types/common";
 
 export type InboxHomeProps = {
-    TEM: TeamManagementState;
-    IM: InboxManagementState;
+    useTEM: TeamManagementState;
+    useIM: InboxManagementState;
     myself: UserProps;
     socket: Socket | null;
     setMyself: (me: UserProps) => void;
-    CM: ChatManagementState;
-    UIM: UIStateManagementState;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
 };
 
 export type InboxSectionProps = {
     items: InboxItemProps[];
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    CM: ChatManagementState;
-    UIM: UIStateManagementState;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
     socket: Socket | null;
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     itemKeyPrefix: string;
 };
 

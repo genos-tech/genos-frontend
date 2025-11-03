@@ -12,31 +12,31 @@ import { UserProps } from "../../../../types/admin";
 import { ThreadPane } from "../../ThreadChatPane";
 
 interface ThreadPanelProps {
-    CM: ChatManagementState;
-    TM: TaskManagementState;
-    TEM: TeamManagementState;
-    NM: NoteManagementState;
+    useCM: ChatManagementState;
+    useTM: TaskManagementState;
+    useTEM: TeamManagementState;
+    useNM: NoteManagementState;
     myself: UserProps;
     currentThreadChatId: number;
     currentWindowHeight: number;
     socket: any;
     setMyself: (me: UserProps) => void;
-    UIM: UIStateManagementState;
-    PM: ProjectManagementState;
+    useUISM: UIStateManagementState;
+    usePM: ProjectManagementState;
 }
 
 export const ThreadPanel = ({
-    CM,
-    TM,
-    PM,
-    TEM,
-    NM,
+    useCM,
+    useTM,
+    usePM,
+    useTEM,
+    useNM,
     myself,
     currentThreadChatId,
     currentWindowHeight,
     socket,
     setMyself,
-    UIM,
+    useUISM,
 }: ThreadPanelProps) => {
     const { mode } = useColorScheme();
 
@@ -50,19 +50,19 @@ export const ThreadPanel = ({
                     borderRight: mode === "dark" ? "2px black inset" : "2px lightgrey inset",
                 }}
             >
-                {CM.currentThreadChat && (
+                {useCM.currentThreadChat && (
                     <ThreadPane
-                        CM={CM}
-                        PM={PM}
+                        useCM={useCM}
+                        usePM={usePM}
                         currentThreadChatId={currentThreadChatId}
                         currentWindowHeight={currentWindowHeight}
                         myself={myself}
                         setMyself={setMyself}
                         socket={socket}
-                        TEM={TEM}
-                        TM={TM}
-                        UIM={UIM}
-                        NM={NM}
+                        useTEM={useTEM}
+                        useTM={useTM}
+                        useUISM={useUISM}
+                        useNM={useNM}
                     />
                 )}
             </Box>

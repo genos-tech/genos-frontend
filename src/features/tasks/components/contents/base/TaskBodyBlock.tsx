@@ -9,7 +9,7 @@ import { UIStateManagementState } from "../../../../../hooks/common/useUIStateMa
 import { UserProps } from "../../../../../types/admin";
 
 type TaskBodyBlockProps = {
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
@@ -18,12 +18,12 @@ type TaskBodyBlockProps = {
     setBody: (value: PartialBlock[]) => void;
     setTaskBodyEdited: (value: boolean) => void;
     setTaskBodySaved: (value: boolean) => void;
-    CM: ChatManagementState;
-    UIM: UIStateManagementState;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
 };
 export const TaskBodyBlock = (props: TaskBodyBlockProps) => {
     const {
-        TEM,
+        useTEM,
         myself,
         setMyself,
         socket,
@@ -32,15 +32,15 @@ export const TaskBodyBlock = (props: TaskBodyBlockProps) => {
         setBody,
         setTaskBodyEdited,
         setTaskBodySaved,
-        CM,
-        UIM,
+        useCM,
+        useUISM,
     } = props;
     return (
         <Stack direction={"column"} sx={{ width: "100%" }}>
             <Box sx={{ mt: 1 }}>
                 <BnTaskPreview
                     body={body || []}
-                    CM={CM}
+                    useCM={useCM}
                     myself={myself}
                     setBody={setBody}
                     setMyself={setMyself}
@@ -48,8 +48,8 @@ export const TaskBodyBlock = (props: TaskBodyBlockProps) => {
                     setTaskBodySaved={setTaskBodySaved}
                     socket={socket}
                     taskId={taskId}
-                    TEM={TEM}
-                    UIM={UIM}
+                    useTEM={useTEM}
+                    useUISM={useUISM}
                 />
             </Box>
         </Stack>

@@ -22,12 +22,12 @@ interface ChatNoteEditorProps {
     onBodyChange: (newBody: PartialBlock[]) => void;
     setNoteBodyEdited: (edited: boolean) => void;
     setNoteBodySaved: (saved: boolean) => void;
-    CM: ChatManagementState;
+    useCM: ChatManagementState;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
     socket: Socket | null;
-    TEM: TeamManagementState;
-    UIM: UIStateManagementState;
+    useTEM: TeamManagementState;
+    useUISM: UIStateManagementState;
 }
 
 export const ChatNoteEditor = ({
@@ -44,9 +44,9 @@ export const ChatNoteEditor = ({
     myself,
     setMyself,
     socket,
-    TEM,
-    CM,
-    UIM,
+    useTEM,
+    useCM,
+    useUISM,
 }: ChatNoteEditorProps) => {
     return (
         <>
@@ -108,7 +108,7 @@ export const ChatNoteEditor = ({
 
             <BnChatNoteEditor
                 body={body}
-                CM={CM}
+                useCM={useCM}
                 currentChatNote={currentChatNote}
                 myself={myself}
                 setBody={onBodyChange}
@@ -116,8 +116,8 @@ export const ChatNoteEditor = ({
                 setNoteBodyEdited={setNoteBodyEdited}
                 setNoteBodySaved={setNoteBodySaved}
                 socket={socket}
-                TEM={TEM}
-                UIM={UIM}
+                useTEM={useTEM}
+                useUISM={useUISM}
             />
         </>
     );

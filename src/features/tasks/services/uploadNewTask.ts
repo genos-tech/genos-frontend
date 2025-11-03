@@ -15,7 +15,7 @@ type uploadTaskProps = {
     socket: Socket | null;
     myself: UserProps;
     taskContent: TaskProps;
-    CM: ChatManagementState;
+    useCM: ChatManagementState;
     accessToken: string;
     setTitleError: (value: string) => void;
     setTitleErrorOpen: (value: boolean) => void;
@@ -27,7 +27,7 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
         socket,
         myself,
         taskContent,
-        CM,
+        useCM,
         accessToken,
         setTitleError,
         setTitleErrorOpen,
@@ -72,8 +72,8 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                     links: taskContent.links,
                     tags: taskContent.tags,
                     chat_type: taskContent.chatType,
-                    chat_id: CM.currentMainChat?.chatId || null,
-                    thread_id: CM.currentThreadChat?.threadId || null,
+                    chat_id: useCM.currentMainChat?.chatId || null,
+                    thread_id: useCM.currentThreadChat?.threadId || null,
                     parent_task_id: taskContent.parentTaskId,
                     root_task_id: taskContent.rootTaskId,
                     is_init_task: false,
@@ -205,27 +205,28 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
 
                                 // Messaging for a new task from a thread chat
                                 if (
-                                    CM.isThreadVisible === true &&
-                                    CM.currentMainChat &&
-                                    CM.currentThreadChat &&
-                                    (CM.currentMainChat.chatType === 1 ||
-                                        CM.currentMainChat.chatType === 2) &&
-                                    CM.currentThreadChat.threadId !== null &&
-                                    CM.currentThreadChat.threadId !== 0
+                                    useCM.isThreadVisible === true &&
+                                    useCM.currentMainChat &&
+                                    useCM.currentThreadChat &&
+                                    (useCM.currentMainChat.chatType === 1 ||
+                                        useCM.currentMainChat.chatType === 2) &&
+                                    useCM.currentThreadChat.threadId !== null &&
+                                    useCM.currentThreadChat.threadId !== 0
                                 ) {
                                     // Not update message_body, just update task_id here.
                                     socket.emit("message", {
                                         methodType: "PUT",
                                         message: null,
-                                        destCGName: CM.currentMainChat.chatName,
-                                        destCGId: CM.currentMainChat.chatId,
-                                        chatType: CM.currentMainChat.chatType,
-                                        dmPartnerUserId: CM.currentMainChat.dmPartnerUser.userId,
+                                        destCGName: useCM.currentMainChat.chatName,
+                                        destCGId: useCM.currentMainChat.chatId,
+                                        chatType: useCM.currentMainChat.chatType,
+                                        dmPartnerUserId:
+                                            useCM.currentMainChat.dmPartnerUser.userId,
                                         taskId: taskCreateData.task.task_id,
                                         taskStatus: taskCreateData.task.status,
                                         systemUserId: taskContent.project.systemUserId,
-                                        messageIdForPut: CM.currentThreadChat.threadId,
-                                        isPrivate: CM.currentMainChat.isPrivate,
+                                        messageIdForPut: useCM.currentThreadChat.threadId,
+                                        isPrivate: useCM.currentMainChat.isPrivate,
                                     });
 
                                     socket.emit("thread_message", {
@@ -234,14 +235,15 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                                         rootMessageTSSent: "",
                                         rootMessageSenderId: null,
                                         rootMessageReceiverId: null,
-                                        threadId: CM.currentThreadChat.threadId,
+                                        threadId: useCM.currentThreadChat.threadId,
                                         threadMessage: createTaskMessage,
-                                        chatType: CM.currentThreadChat.chatType,
-                                        dmPartnerUserId: CM.currentThreadChat.dmPartnerUser.userId,
+                                        chatType: useCM.currentThreadChat.chatType,
+                                        dmPartnerUserId:
+                                            useCM.currentThreadChat.dmPartnerUser.userId,
                                         senderId: taskContent.project.systemUserId,
                                         senderName: taskContent.project.projectName,
-                                        destCGName: CM.currentThreadChat.chatName,
-                                        destCGId: CM.currentThreadChat.chatId,
+                                        destCGName: useCM.currentThreadChat.chatName,
+                                        destCGId: useCM.currentThreadChat.chatId,
                                         taskId: taskCreateData.task.task_id,
                                         taskStatus: taskCreateData.task.status,
                                         systemUserId: taskContent.project.systemUserId,

@@ -7,21 +7,21 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 interface ChildNoteCreatorProps {
     node: any;
     timestamp: string;
-    NM: NoteManagementState;
+    useNM: NoteManagementState;
 }
 
 export const ChildNoteCreator = memo(function ChildNoteCreator({
     node,
     timestamp,
-    NM,
+    useNM,
 }: ChildNoteCreatorProps) {
     const handleCreateChildNote = () => {
         if (node.noteType === 1) {
-            NM.handleCreateNewMyNote(node.noteId);
+            useNM.handleCreateNewMyNote(node.noteId);
         } else if (node.noteType === 2) {
-            NM.handleCreateNewTaskNote(node.noteId, node.projectId, node.taskId);
+            useNM.handleCreateNewTaskNote(node.noteId, node.projectId, node.taskId);
         } else if (node.noteType === 3) {
-            NM.handleCreateNewChatNote(
+            useNM.handleCreateNewChatNote(
                 node.noteId,
                 node.chatType,
                 node.chatId,

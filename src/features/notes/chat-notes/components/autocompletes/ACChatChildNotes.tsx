@@ -13,16 +13,16 @@ type ACChatChildNotesProps = {
     myself: UserProps;
     openSearchBox: boolean;
     setOpenSearchBox: (value: boolean) => void;
-    NM: NoteManagementState;
+    useNM: NoteManagementState;
 };
 export const ACChatChildNotes = (props: ACChatChildNotesProps) => {
-    const { myself, openSearchBox, setOpenSearchBox, NM } = props;
+    const { myself, openSearchBox, setOpenSearchBox, useNM } = props;
     const { accessToken } = useAuth();
     const [options, setOptions] = useState<ChatNoteProps[]>([]);
     const loading = openSearchBox && options.length === 0;
 
     const onChangeHandler = async (value: ChatNoteProps) => {
-        NM.setCurrentChatNote(value);
+        useNM.setCurrentChatNote(value);
     };
 
     useEffect(() => {
@@ -35,7 +35,7 @@ export const ACChatChildNotes = (props: ACChatChildNotesProps) => {
         (async () => {
             const loadedUsers: ChatNoteProps[] = await loadChatSubNotes(
                 myself,
-                NM.currentChatNote?.noteId as number,
+                useNM.currentChatNote?.noteId as number,
                 accessToken
             );
 

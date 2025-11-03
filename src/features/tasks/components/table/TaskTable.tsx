@@ -22,12 +22,12 @@ type ProjectTaskTableProps = {
     setTeamMembers: (value: UserProps[]) => void;
     teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
-    PM: ProjectManagementState;
-    TM: TaskManagementState;
+    usePM: ProjectManagementState;
+    useTM: TaskManagementState;
 };
 
 export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
-    const { teamMembers, setTeamMembers, teamMemberProfiles, myself, PM, TM } = props;
+    const { teamMembers, setTeamMembers, teamMemberProfiles, myself, usePM, useTM } = props;
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
     const className = `task-datagrid-${mode}`;
@@ -52,10 +52,10 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
     // Get Project tags
     const [predefinedTagsFilters, setPredefinedTagsFilters] = useState<FilterProps[]>([]);
     const updateTagOptions = async () => {
-        if (TM.allTasks.length > 0) {
+        if (useTM.allTasks.length > 0) {
             const loadedProjectTags: TagListProps[] = await loadProjectTags(
                 myself,
-                TM.allTasks[0].projectId || -1,
+                useTM.allTasks[0].projectId || -1,
                 accessToken
             );
             if (loadedProjectTags.length > 0) {
@@ -88,21 +88,21 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
 
     useEffect(() => {
         updateTagOptions();
-    }, [PM.currentProject, TM.allTasks]);
+    }, [usePM.currentProject, useTM.allTasks]);
 
     // Reset filter
     useEffect(() => {
         apiRef.current.setFilterModel({ items: [] });
-    }, [PM.currentProject]);
+    }, [usePM.currentProject]);
 
     return (
         <ThemeProvider theme={theme}>
             <div style={{ height: "100%", overflow: "hidden", borderRadius: "5px" }}>
                 <TaskFilterMenu
-                    isTaskUpdated={TM.isTaskUpdated}
+                    isTaskUpdated={useTM.isTaskUpdated}
                     predefinedTagsFilters={predefinedTagsFilters}
                     setCurrentDisplayingTasks={setCurrentDisplayingTasks}
-                    TM={TM}
+                    useTM={useTM}
                 />
                 <Box
                     sx={{
@@ -175,15 +175,15 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
                         keepNonExistentRowsSelected
                         onCellClick={(params) => {
                             // setIsTaskPreviewVisible(true);
-                            // TM.setCurrentPreviewTaskId(Number(params.id));
+                            // useTM.setCurrentPreviewTaskId(Number(params.id));
                         }}
                         onCellDoubleClick={(params) => {
-                            // TM.setIsTaskPreviewVisible(true);
+                            // useTM.setIsTaskPreviewVisible(true);
                             // setCurrentPreviewTaskId(Number(params.id));
                         }}
                         onRowClick={(params, event, detail) => {
-                            TM.setIsTaskPreviewVisible(true);
-                            TM.setCurrentPreviewTaskId(Number(params.id));
+                            useTM.setIsTaskPreviewVisible(true);
+                            useTM.setCurrentPreviewTaskId(Number(params.id));
                         }}
                     />
                 </Box>

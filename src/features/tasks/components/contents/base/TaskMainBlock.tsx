@@ -25,7 +25,7 @@ import { DynamicURLManager } from "./sub/DynamicURLManager";
 import { TaskDueDateInput } from "./sub/TaskDueDateInput";
 
 type TaskMainBlockProps = {
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     socket: Socket | null;
     taskContent: TaskProps;
     setTaskContent: (value: TaskProps) => void;
@@ -44,15 +44,15 @@ type TaskMainBlockProps = {
     setIsOpenTagList: (value: boolean) => void;
     isPreviewMode: boolean;
     setTaskUpdated?: (value: boolean) => void;
-    UIM: UIStateManagementState;
-    CM: ChatManagementState;
+    useUISM: UIStateManagementState;
+    useCM: ChatManagementState;
     setTaskStatusUpdated?: (value: boolean) => void;
-    TM: TaskManagementState;
-    PM: ProjectManagementState;
+    useTM: TaskManagementState;
+    usePM: ProjectManagementState;
 };
 export const TaskMainBlock = (props: TaskMainBlockProps) => {
     const {
-        TEM,
+        useTEM,
         socket,
         taskContent,
         setTaskContent,
@@ -71,11 +71,11 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
         setIsOpenTagList,
         isPreviewMode,
         setTaskUpdated,
-        UIM,
-        CM,
-        TM,
+        useUISM,
+        useCM,
+        useTM,
         setTaskStatusUpdated,
-        PM,
+        usePM,
     } = props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
@@ -115,16 +115,16 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     <ListItem sx={{ display: "flex", alignItems: "center", width: "100%" }}>
                         <Typography sx={{ minWidth: "80px" }}>Assignee</Typography>
                         <AvatarWithStatus
-                            avatarUser={TEM.teamMemberProfiles[assignee.userId]}
-                            CM={CM}
+                            avatarUser={useTEM.teamMemberProfiles[assignee.userId]}
+                            useCM={useCM}
                             isYou={myself.userId === assignee.userId ? true : false}
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}
-                            UIM={UIM}
+                            useUISM={useUISM}
                         />
                         <ACTeamUsers
-                            CM={CM}
+                            useCM={useCM}
                             initialUser={taskContent.assignee}
                             isAssignee={true}
                             isOpenTeamMembersList={isOpenTeamMembersList}
@@ -136,23 +136,23 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             setUser={setAssignee}
                             socket={socket}
                             taskContent={taskContent}
-                            TEM={TEM}
-                            UIM={UIM}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
                         />
                     </ListItem>
                     <ListItem sx={{ display: "flex", alignItems: "center", width: "100%" }}>
                         <Typography sx={{ minWidth: "80px" }}>Reporter</Typography>
                         <AvatarWithStatus
-                            avatarUser={TEM.teamMemberProfiles[reporter.userId]}
-                            CM={CM}
+                            avatarUser={useTEM.teamMemberProfiles[reporter.userId]}
+                            useCM={useCM}
                             isYou={myself.userId === reporter.userId ? true : false}
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}
-                            UIM={UIM}
+                            useUISM={useUISM}
                         />
                         <ACTeamUsers
-                            CM={CM}
+                            useCM={useCM}
                             initialUser={taskContent.reporter}
                             isAssignee={false}
                             isOpenTeamMembersList={isOpenTeamMembersList}
@@ -164,8 +164,8 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             setUser={setReporter}
                             socket={socket}
                             taskContent={taskContent}
-                            TEM={TEM}
-                            UIM={UIM}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
                         />
                     </ListItem>
                     <Grid spacing={2} container>
@@ -178,7 +178,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     setTaskContent={setTaskContent}
                                     setTaskUpdated={setTaskUpdated}
                                     taskContent={taskContent}
-                                    PM={PM}
+                                    usePM={usePM}
                                 />
                             </ListItem>
                         </Grid>
@@ -191,7 +191,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                         size="sm"
                                         variant="soft"
                                         onClick={() => {
-                                            TM.setOpenCreateTag(true);
+                                            useTM.setOpenCreateTag(true);
                                         }}
                                     >
                                         <AddIcon />
@@ -268,13 +268,13 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             >
                                 <Typography sx={{ pr: "5px" }}>Parent Task</Typography>
                                 <AvatarWithStatus
-                                    avatarUser={TEM.teamMemberProfiles[assignee.userId]}
-                                    CM={CM}
+                                    avatarUser={useTEM.teamMemberProfiles[assignee.userId]}
+                                    useCM={useCM}
                                     isYou={myself.userId === assignee.userId ? true : false}
                                     myself={myself}
                                     setMyself={setMyself}
                                     socket={socket}
-                                    UIM={UIM}
+                                    useUISM={useUISM}
                                 />
                                 <IconButton
                                     onClick={() => {
@@ -283,13 +283,13 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                             parentTask.project.projectId &&
                                             parentTask.id
                                         ) {
-                                            PM.setCurrentProject({
+                                            usePM.setCurrentProject({
                                                 projectId: parentTask.project.projectId,
                                                 projectName: parentTask.project.projectName,
                                                 projectTags: parentTask.tags,
                                                 systemUserId: parentTask.project.systemUserId,
                                             });
-                                            TM.setCurrentPreviewTaskId(parentTask.id);
+                                            useTM.setCurrentPreviewTaskId(parentTask.id);
                                         } else {
                                             console.error("Failed to set the current project");
                                         }

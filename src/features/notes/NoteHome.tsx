@@ -19,24 +19,25 @@ import { ResizeHandleStyles } from "./shared/components/ResizeHandleStyles";
 import { TaskPreviewPanel } from "./task-notes/components/TaskPreviewPanel";
 
 type NoteHomeProps = {
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    UIM: UIStateManagementState;
-    IM: InboxManagementState;
-    PM: ProjectManagementState;
-    NM: NoteManagementState;
-    CM: ChatManagementState;
-    TM: TaskManagementState;
+    useUISM: UIStateManagementState;
+    useIM: InboxManagementState;
+    usePM: ProjectManagementState;
+    useNM: NoteManagementState;
+    useCM: ChatManagementState;
+    useTM: TaskManagementState;
 };
 export const NoteHome = (props: NoteHomeProps) => {
-    const { TEM, socket, myself, setMyself, UIM, IM, NM, CM, PM, TM } = props;
+    const { useTEM, socket, myself, setMyself, useUISM, useIM, useNM, useCM, usePM, useTM } =
+        props;
 
     const { mode } = useColorScheme();
 
     const renderMainContent = () => {
-        if (NM.currentNoteType === 0) {
+        if (useNM.currentNoteType === 0) {
             return (
                 <Panel id={"2"} maxSize={85} minSize={35} order={2}>
                     <Box
@@ -48,15 +49,15 @@ export const NoteHome = (props: NoteHomeProps) => {
                         }}
                     >
                         <NoteContentRenderer
-                            CM={CM}
+                            useCM={useCM}
                             myself={myself}
-                            NM={NM}
-                            PM={PM}
+                            useNM={useNM}
+                            usePM={usePM}
                             setMyself={setMyself}
                             socket={socket}
-                            TEM={TEM}
-                            TM={TM}
-                            UIM={UIM}
+                            useTEM={useTEM}
+                            useTM={useTM}
+                            useUISM={useUISM}
                         />
                     </Box>
                 </Panel>
@@ -73,15 +74,15 @@ export const NoteHome = (props: NoteHomeProps) => {
                     }}
                 >
                     <NoteContentRenderer
-                        CM={CM}
+                        useCM={useCM}
                         myself={myself}
-                        NM={NM}
-                        PM={PM}
+                        useNM={useNM}
+                        usePM={usePM}
                         setMyself={setMyself}
                         socket={socket}
-                        TEM={TEM}
-                        TM={TM}
-                        UIM={UIM}
+                        useTEM={useTEM}
+                        useTM={useTM}
+                        useUISM={useUISM}
                     />
                 </Box>
             </Panel>
@@ -93,13 +94,13 @@ export const NoteHome = (props: NoteHomeProps) => {
             <CssBaseline />
             <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
                 <Sidebar
-                    CM={CM}
-                    IM={IM}
+                    useCM={useCM}
+                    useIM={useIM}
                     myself={myself}
                     setMyself={setMyself}
                     socket={socket}
-                    TEM={TEM}
-                    UIM={UIM}
+                    useTEM={useTEM}
+                    useUISM={useUISM}
                 />
 
                 <PanelGroup direction="horizontal">
@@ -113,7 +114,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                                     mode === "dark" ? "2px black inset" : "2px lightgrey inset",
                             }}
                         >
-                            <NoteSidebar NM={NM} />
+                            <NoteSidebar useNM={useNM} />
                         </Box>
                     </Panel>
 
@@ -122,15 +123,15 @@ export const NoteHome = (props: NoteHomeProps) => {
                     {renderMainContent()}
 
                     <TaskPreviewPanel
-                        CM={CM}
+                        useCM={useCM}
                         myself={myself}
-                        NM={NM}
-                        PM={PM}
+                        useNM={useNM}
+                        usePM={usePM}
                         setMyself={setMyself}
                         socket={socket}
-                        TEM={TEM}
-                        TM={TM}
-                        UIM={UIM}
+                        useTEM={useTEM}
+                        useTM={useTM}
+                        useUISM={useUISM}
                     />
                 </PanelGroup>
 

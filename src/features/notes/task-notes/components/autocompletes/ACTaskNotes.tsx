@@ -13,16 +13,16 @@ type ACTaskNotesProps = {
     myself: UserProps;
     openSearchBox: boolean;
     setOpenSearchBox: (value: boolean) => void;
-    NM: NoteManagementState;
+    useNM: NoteManagementState;
 };
 export const ACTaskNotes = (props: ACTaskNotesProps) => {
-    const { myself, openSearchBox, setOpenSearchBox, NM } = props;
+    const { myself, openSearchBox, setOpenSearchBox, useNM } = props;
     const { accessToken } = useAuth();
     const [options, setOptions] = useState<TaskNoteProps[]>([]);
     const loading = openSearchBox && options.length === 0;
 
     const onChangeHandler = async (value: TaskNoteProps) => {
-        NM.setCurrentTaskNote(value);
+        useNM.setCurrentTaskNote(value);
     };
 
     useEffect(() => {
@@ -35,8 +35,8 @@ export const ACTaskNotes = (props: ACTaskNotesProps) => {
         (async () => {
             const loadedUsers: TaskNoteProps[] = await loadTaskNotes(
                 myself,
-                NM.currentTaskNote?.projectId as number,
-                NM.currentTaskNote?.taskId as number,
+                useNM.currentTaskNote?.projectId as number,
+                useNM.currentTaskNote?.taskId as number,
                 accessToken
             );
 

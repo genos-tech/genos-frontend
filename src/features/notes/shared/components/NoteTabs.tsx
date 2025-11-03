@@ -23,19 +23,19 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 
 interface NoteTabsProps {
-    NM: NoteManagementState;
+    useNM: NoteManagementState;
     body: PartialBlock[] | undefined;
     noteBodySaved: boolean;
     tsBody: string;
     myself: any;
     setBody: (body: PartialBlock[]) => void;
-    CM: ChatManagementState;
+    useCM: ChatManagementState;
     setMyself: (me: any) => void;
     setNoteBodyEdited: (edited: boolean) => void;
     setNoteBodySaved: (saved: boolean) => void;
-    UIM: UIStateManagementState;
+    useUISM: UIStateManagementState;
     socket: any;
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     onCloseTab: (tabIndex: number, closingNoteId: number) => void;
     onTitleChange: (title: string) => void;
     onTitleBlur: () => void;
@@ -43,19 +43,19 @@ interface NoteTabsProps {
 }
 
 export const NoteTabs = ({
-    NM,
+    useNM,
     body,
     noteBodySaved,
     tsBody,
     myself,
     setBody,
-    CM,
+    useCM,
     setMyself,
     setNoteBodyEdited,
     setNoteBodySaved,
-    UIM,
+    useUISM,
     socket,
-    TEM,
+    useTEM,
     onCloseTab,
     onTitleChange,
     onTitleBlur,
@@ -66,11 +66,11 @@ export const NoteTabs = ({
     return (
         <Tabs
             sx={{ width: "100%" }}
-            value={NM.selectedTabIndex}
+            value={useNM.selectedTabIndex}
             onChange={(_, val) => {
-                NM.loadNote(
-                    NM.tabItems[Number(val)].noteType,
-                    NM.tabItems[Number(val)].noteId,
+                useNM.loadNote(
+                    useNM.tabItems[Number(val)].noteType,
+                    useNM.tabItems[Number(val)].noteId,
                     Number(val)
                 );
             }}
@@ -83,7 +83,7 @@ export const NoteTabs = ({
                     "&::-webkit-scrollbar": { display: "none" },
                 }}
             >
-                {NM.tabItems.map((tab, index) => (
+                {useNM.tabItems.map((tab, index) => (
                     <Tooltip
                         key={`tab-tooltip-${index}`}
                         size="sm"
@@ -113,7 +113,7 @@ export const NoteTabs = ({
                                     ? `${tab.title.slice(0, 14)}...`
                                     : tab.title}
 
-                                {NM.tabItems.length > 1 && (
+                                {useNM.tabItems.length > 1 && (
                                     <IconButton
                                         color="neutral"
                                         component="span"
@@ -134,7 +134,7 @@ export const NoteTabs = ({
                 ))}
             </TabList>
 
-            {NM.tabItems.map((tabNote, index) => (
+            {useNM.tabItems.map((tabNote, index) => (
                 <TabPanel
                     key={`tab-note-body-${tabNote.noteType}-${tabNote.noteId}-${tsBody}`}
                     value={index}
@@ -204,19 +204,19 @@ export const NoteTabs = ({
                             </Button>
                         </Box>
                     )}
-                    {NM.currentTaskNote && (
+                    {useNM.currentTaskNote && (
                         <BnTaskNoteEditor
                             body={body || []}
-                            CM={CM}
-                            currentTaskNote={NM.currentTaskNote}
+                            useCM={useCM}
+                            currentTaskNote={useNM.currentTaskNote}
                             myself={myself}
                             setBody={setBody}
                             setMyself={setMyself}
                             setNoteBodyEdited={setNoteBodyEdited}
                             setNoteBodySaved={setNoteBodySaved}
                             socket={socket}
-                            TEM={TEM}
-                            UIM={UIM}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
                         />
                     )}
                 </TabPanel>

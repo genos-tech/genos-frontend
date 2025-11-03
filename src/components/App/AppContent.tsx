@@ -7,88 +7,88 @@ interface AppContentProps {
     myself: any;
     setMyself: (myself: any) => void;
     socketInstance: any;
-    CM: any;
-    IM: any;
-    NM: any;
-    PM: any;
-    TEM: any;
-    TM: any;
-    UIM: any;
+    useCM: any;
+    useIM: any;
+    useNM: any;
+    usePM: any;
+    useTEM: any;
+    useTM: any;
+    useUISM: any;
 }
 
 export const AppContent = ({
     myself,
     setMyself,
     socketInstance,
-    CM,
-    IM,
-    NM,
-    PM,
-    TEM,
-    TM,
-    UIM,
+    useCM,
+    useIM,
+    useNM,
+    usePM,
+    useTEM,
+    useTM,
+    useUISM,
 }: AppContentProps) => {
-    if (UIM.openingService === 0) {
+    if (useUISM.openingService === 0) {
         return (
             <InboxHome
-                CM={CM}
-                IM={IM}
+                useCM={useCM}
+                useIM={useIM}
                 myself={myself}
                 setMyself={setMyself}
                 socket={socketInstance}
-                TEM={TEM}
-                UIM={UIM}
+                useTEM={useTEM}
+                useUISM={useUISM}
             />
         );
     }
 
-    if (UIM.openingService === 1) {
+    if (useUISM.openingService === 1) {
         return (
             <ChatHome
-                CM={CM}
-                IM={IM}
+                useCM={useCM}
+                useIM={useIM}
                 myself={myself}
-                NM={NM}
-                PM={PM}
+                useNM={useNM}
+                usePM={usePM}
                 setMyself={setMyself}
                 socket={socketInstance}
-                TEM={TEM}
-                TM={TM}
-                UIM={UIM}
+                useTEM={useTEM}
+                useTM={useTM}
+                useUISM={useUISM}
             />
         );
     }
 
-    if (UIM.openingService === 2) {
+    if (useUISM.openingService === 2) {
         return (
             <TaskHome
-                CM={CM}
-                IM={IM}
+                useCM={useCM}
+                useIM={useIM}
                 myself={myself}
-                NM={NM}
-                PM={PM}
+                useNM={useNM}
+                usePM={usePM}
                 setMyself={setMyself}
                 socket={socketInstance}
-                TEM={TEM}
-                TM={TM}
-                UIM={UIM}
+                useTEM={useTEM}
+                useTM={useTM}
+                useUISM={useUISM}
             />
         );
     }
 
-    if (UIM.openingService === 3) {
+    if (useUISM.openingService === 3) {
         return (
             <NoteHome
-                CM={CM}
-                IM={IM}
+                useCM={useCM}
+                useIM={useIM}
                 myself={myself}
-                NM={NM}
-                PM={PM}
+                useNM={useNM}
+                usePM={usePM}
                 setMyself={setMyself}
                 socket={socketInstance}
-                TEM={TEM}
-                TM={TM}
-                UIM={UIM}
+                useTEM={useTEM}
+                useTM={useTM}
+                useUISM={useUISM}
             />
         );
     }

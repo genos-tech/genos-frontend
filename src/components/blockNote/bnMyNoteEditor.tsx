@@ -73,13 +73,13 @@ type BnMyNoteEditorProps = {
     setBody: (text: PartialBlock[] | any[]) => void;
     setNoteBodyEdited?: (value: boolean) => void;
     setNoteBodySaved?: (value: boolean) => void;
-    UIM: UIStateManagementState;
-    TEM: TeamManagementState;
-    CM: ChatManagementState;
+    useUISM: UIStateManagementState;
+    useTEM: TeamManagementState;
+    useCM: ChatManagementState;
 };
 export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
     const {
-        TEM,
+        useTEM,
         myself,
         setMyself,
         socket,
@@ -88,8 +88,8 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
         setBody,
         setNoteBodyEdited,
         setNoteBodySaved,
-        UIM,
-        CM,
+        useUISM,
+        useCM,
     } = props;
 
     const { mode } = useColorScheme();
@@ -117,7 +117,14 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
-            mention: CreateMentionSpec(TEM.teamMemberProfiles, socket, myself, setMyself, UIM, CM),
+            mention: CreateMentionSpec(
+                useTEM.teamMemberProfiles,
+                socket,
+                myself,
+                setMyself,
+                useUISM,
+                useCM
+            ),
         },
         blockSpecs: {
             ...remainingBlockSpecs,
@@ -261,7 +268,7 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                 }}
                 onClick={(e) => {
                     const target = e.target as HTMLElement;
-                    if (target.tagName === "IMG") {
+                    if (target.tagName === "useIMG") {
                         handleImageClick((target as HTMLImageElement).src);
                     }
                 }}
@@ -350,7 +357,11 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                     getItems={async (query) =>
                         // Gets the mentions menu items
                         filterSuggestionItems(
-                            MentionMenuItems(TEM.teamMemberProfiles, editor, TEM.teamMembers),
+                            MentionMenuItems(
+                                useTEM.teamMemberProfiles,
+                                editor,
+                                useTEM.teamMembers
+                            ),
                             query
                         )
                     }

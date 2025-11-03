@@ -50,11 +50,11 @@ type TaskTitleBlockProps = {
     isPreviewMode: boolean;
     setTaskContent?: (value: TaskProps) => void;
     setTaskStatusUpdated?: (value: boolean) => void;
-    CM: ChatManagementState;
-    UIM: UIStateManagementState;
-    TM: TaskManagementState;
-    NM: NoteManagementState;
-    PM: ProjectManagementState;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
+    useTM: TaskManagementState;
+    useNM: NoteManagementState;
+    usePM: ProjectManagementState;
 };
 export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
     const {
@@ -70,11 +70,11 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         setTaskContent,
         setTaskStatusUpdated,
         setTaskClosed,
-        CM,
-        UIM,
-        TM,
-        NM,
-        PM,
+        useCM,
+        useUISM,
+        useTM,
+        useNM,
+        usePM,
     } = props;
 
     const { accessToken } = useAuth();
@@ -170,7 +170,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     </FormControl>
                 </Box>
 
-                {UIM.openingService === 2 && taskContent.threadId !== null && (
+                {useUISM.openingService === 2 && taskContent.threadId !== null && (
                     <Tooltip size="sm" title="Check Thread" variant="outlined">
                         <IconButton
                             color="neutral"
@@ -183,15 +183,15 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                     taskContent.threadId &&
                                     taskContent.threadId !== null
                                 ) {
-                                    CM.moveToSpecificChat(
+                                    useCM.moveToSpecificChat(
                                         taskContent.chatType,
                                         taskContent.chatId,
                                         taskContent.threadId,
                                         false, // openTaskNoteInChat
                                         true, // openThreadTaskPreview
-                                        UIM.setOpeningService,
-                                        TM.setCurrentPreviewTaskId,
-                                        PM.setCurrentProject
+                                        useUISM.setOpeningService,
+                                        useTM.setCurrentPreviewTaskId,
+                                        usePM.setCurrentProject
                                     );
                                 }
                             }}
@@ -212,7 +212,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     <Menu size="sm">
                         <MenuItem
                             onClick={() => {
-                                TM.handleCreateTask();
+                                useTM.handleCreateTask();
                             }}
                         >
                             <AssignmentRoundedIcon />
@@ -225,8 +225,8 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                     taskContent.id !== undefined &&
                                     taskContent.rootTaskId != null
                                 ) {
-                                    if (TM.setIsCreatingTask) {
-                                        TM.setIsCreatingTask({
+                                    if (useTM.setIsCreatingTask) {
+                                        useTM.setIsCreatingTask({
                                             flag: true,
                                             parentTaskId: taskContent.id,
                                             rootTaskId: taskContent.rootTaskId,
@@ -234,7 +234,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                     }
 
                                     // Close task-home when creating a sub task.
-                                    TM.setIsTaskHomeVisible(false);
+                                    useTM.setIsTaskHomeVisible(false);
                                 } else {
                                     console.error("Task ID nod defined error.");
                                 }
@@ -247,14 +247,16 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                         <MenuItem
                             key="open-note"
                             onClick={() => {
-                                if (NM.setIsTaskNoteVisible && taskContent.project) {
-                                    TM.setIsTaskHomeVisible(false);
-                                    NM.setIsTaskNoteVisible(true);
-                                    if (NM.taskNoteMeta.length > 0) {
-                                        NM.setCurrentTaskNote(NM.taskNoteMeta[0] as TaskNoteProps);
+                                if (useNM.setIsTaskNoteVisible && taskContent.project) {
+                                    useTM.setIsTaskHomeVisible(false);
+                                    useNM.setIsTaskNoteVisible(true);
+                                    if (useNM.taskNoteMeta.length > 0) {
+                                        useNM.setCurrentTaskNote(
+                                            useNM.taskNoteMeta[0] as TaskNoteProps
+                                        );
                                     } else {
                                         if (taskContent.project && taskContent.id) {
-                                            NM.handleCreateNewTaskNote(
+                                            useNM.handleCreateNewTaskNote(
                                                 null,
                                                 taskContent.project.projectId,
                                                 taskContent.id,
@@ -275,7 +277,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
 
                         <MenuItem
                             onClick={() => {
-                                TM.setOpenCreateTag(true);
+                                useTM.setOpenCreateTag(true);
                             }}
                         >
                             <LocalOfferIcon />
@@ -284,7 +286,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
 
                         <MenuItem
                             onClick={() => {
-                                PM.setOpenCreateProject(true);
+                                usePM.setOpenCreateProject(true);
                             }}
                         >
                             <AddIcon />
@@ -316,54 +318,57 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                         size="sm"
                         variant="plain"
                         onClick={() => {
-                            if (isPreviewMode === false && TM.setIsCreatingTask) {
-                                TM.setIsCreatingTask({
+                            if (isPreviewMode === false && useTM.setIsCreatingTask) {
+                                useTM.setIsCreatingTask({
                                     flag: false,
                                     parentTaskId: null,
-                                    rootTaskId: TM.currentPreviewTask?.rootTaskId || null,
+                                    rootTaskId: useTM.currentPreviewTask?.rootTaskId || null,
                                 });
                             }
                             if (isPreviewMode === true && setTaskClosed) {
                                 setTaskClosed(true);
                             }
 
-                            CM.setIsMainChatVisible(true);
+                            useCM.setIsMainChatVisible(true);
 
-                            if (TM.setIsTaskPreviewVisible) {
+                            if (useTM.setIsTaskPreviewVisible) {
                                 if (isPreviewMode === true) {
-                                    TM.setIsTaskPreviewVisible(false);
-                                    TM.setCurrentPreviewTaskId(-1);
+                                    useTM.setIsTaskPreviewVisible(false);
+                                    useTM.setCurrentPreviewTaskId(-1);
                                 }
                                 // Open task-home when both task-preview and task-create-form are closed.
                                 if (
-                                    TM.isCreatingTask.flag === false &&
-                                    NM.isTaskNoteVisible === false
+                                    useTM.isCreatingTask.flag === false &&
+                                    useNM.isTaskNoteVisible === false
                                 ) {
-                                    TM.setIsTaskHomeVisible(true);
+                                    useTM.setIsTaskHomeVisible(true);
                                 }
                             }
 
-                            TM.setIsCreatingTask({
+                            useTM.setIsCreatingTask({
                                 flag: false,
                                 parentTaskId: null,
                                 rootTaskId: null,
                             });
                             // Open task-home when both task-preview and task-create-form are closed.
-                            if (TM.isTaskPreviewVisible === false) {
-                                TM.setIsTaskHomeVisible(true);
+                            if (useTM.isTaskPreviewVisible === false) {
+                                useTM.setIsTaskHomeVisible(true);
                             }
 
                             // Close the task preview when the task is visible in the task note.
-                            if (NM.setIsTaskVisibleInNote) {
-                                NM.setIsTaskVisibleInNote(false);
+                            if (useNM.setIsTaskVisibleInNote) {
+                                useNM.setIsTaskVisibleInNote(false);
                             }
 
-                            if (TM.isCreatingTask.flag === true && taskContent.id !== undefined) {
+                            if (
+                                useTM.isCreatingTask.flag === true &&
+                                taskContent.id !== undefined
+                            ) {
                                 deleteEmptyTask({
                                     myself: myself,
                                     taskId: taskContent.id,
                                     accessToken: accessToken,
-                                    setInitialEmptyTaskId: TM.setInitialEmptyTaskId,
+                                    setInitialEmptyTaskId: useTM.setInitialEmptyTaskId,
                                 });
                             }
                         }}

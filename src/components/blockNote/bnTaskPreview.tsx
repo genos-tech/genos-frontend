@@ -64,7 +64,7 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 const django_url = import.meta.env.VITE_DJANGO_URL;
 
 type BnTaskPreviewProps = {
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
@@ -73,12 +73,12 @@ type BnTaskPreviewProps = {
     setBody: (text: PartialBlock[] | any[]) => void;
     setTaskBodyEdited?: (value: boolean) => void;
     setTaskBodySaved?: (value: boolean) => void;
-    CM: ChatManagementState;
-    UIM: UIStateManagementState;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
 };
 export const BnTaskPreview = (props: BnTaskPreviewProps) => {
     const {
-        TEM,
+        useTEM,
         myself,
         setMyself,
         socket,
@@ -87,8 +87,8 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         setBody,
         setTaskBodyEdited,
         setTaskBodySaved,
-        CM,
-        UIM,
+        useCM,
+        useUISM,
     } = props;
 
     const { mode } = useColorScheme();
@@ -116,7 +116,14 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
-            mention: CreateMentionSpec(TEM.teamMemberProfiles, socket, myself, setMyself, UIM, CM),
+            mention: CreateMentionSpec(
+                useTEM.teamMemberProfiles,
+                socket,
+                myself,
+                setMyself,
+                useUISM,
+                useCM
+            ),
         },
         blockSpecs: {
             ...remainingBlockSpecs,
@@ -286,7 +293,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                 }}
                 onClick={(e) => {
                     const target = e.target as HTMLElement;
-                    if (target.tagName === "IMG") {
+                    if (target.tagName === "useIMG") {
                         handleImageClick((target as HTMLImageElement).src);
                     }
                 }}
@@ -370,7 +377,11 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                     getItems={async (query) =>
                         // Gets the mentions menu items
                         filterSuggestionItems(
-                            MentionMenuItems(TEM.teamMemberProfiles, editor, TEM.teamMembers),
+                            MentionMenuItems(
+                                useTEM.teamMemberProfiles,
+                                editor,
+                                useTEM.teamMembers
+                            ),
                             query
                         )
                     }

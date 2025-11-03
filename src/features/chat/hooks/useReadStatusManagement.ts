@@ -10,12 +10,12 @@ import { addChat } from "../services/addChat";
 interface UseReadStatusManagementProps {
     currentChat: ChatProps | ThreadProps;
     myself: UserProps;
-    CM: ChatManagementState;
+    useCM: ChatManagementState;
     isThread?: boolean;
 }
 
 export const useReadStatusManagement = ({
-    CM,
+    useCM,
     currentChat,
     myself,
     isThread = false,
@@ -48,7 +48,7 @@ export const useReadStatusManagement = ({
                             lastReadMessageId: lastReadMessageId,
                         };
                         addChat(updatedChat as AllChatProps, updatedChat.chatType);
-                        await CM.funcSetAllChats();
+                        await useCM.funcSetAllChats();
                     }
                 } else {
                     console.error("Failed to update read status");

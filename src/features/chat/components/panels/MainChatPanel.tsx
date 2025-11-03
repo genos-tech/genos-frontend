@@ -11,10 +11,10 @@ import { ToDoFactProps } from "../../../../types/chat";
 import { MessagesPane } from "../../MainChatPane";
 
 interface MainChatPanelProps {
-    CM: ChatManagementState;
-    TM: TaskManagementState;
-    PM: ProjectManagementState;
-    TEM: TeamManagementState;
+    useCM: ChatManagementState;
+    useTM: TaskManagementState;
+    usePM: ProjectManagementState;
+    useTEM: TeamManagementState;
     myself: UserProps;
     currentMainChatId: number;
     currentWindowHeight: number;
@@ -29,14 +29,14 @@ interface MainChatPanelProps {
     setIsExistingTodaysTodo: (value: boolean) => void;
     socket: any;
     setMyself: (me: UserProps) => void;
-    UIM: UIStateManagementState;
+    useUISM: UIStateManagementState;
 }
 
 export const MainChatPanel = ({
-    CM,
-    TM,
-    PM,
-    TEM,
+    useCM,
+    useTM,
+    usePM,
+    useTEM,
     myself,
     currentMainChatId,
     currentWindowHeight,
@@ -51,14 +51,14 @@ export const MainChatPanel = ({
     setIsExistingTodaysTodo,
     socket,
     setMyself,
-    UIM,
+    useUISM,
 }: MainChatPanelProps) => {
     const { mode } = useColorScheme();
 
     return (
         <Panel id={"4"} maxSize={80} minSize={30} order={4} onResize={setMainChatPanelSize}>
             {/* No chat selected */}
-            {CM.currentMainChat && CM.currentMainChat.chatId === -1 && (
+            {useCM.currentMainChat && useCM.currentMainChat.chatId === -1 && (
                 <Box
                     sx={{
                         height: "100%",
@@ -84,9 +84,9 @@ export const MainChatPanel = ({
             )}
 
             {/* Chat selected */}
-            {CM.currentMainChat && CM.currentMainChat.chatId !== -1 && (
+            {useCM.currentMainChat && useCM.currentMainChat.chatId !== -1 && (
                 <MessagesPane
-                    CM={CM}
+                    useCM={useCM}
                     currentMainChatId={currentMainChatId}
                     currentWindowHeight={currentWindowHeight}
                     incompleteTodoCount={incompleteTodoCount}
@@ -99,11 +99,11 @@ export const MainChatPanel = ({
                     setMyself={setMyself}
                     setTodos={setTodos}
                     socket={socket}
-                    TEM={TEM}
+                    useTEM={useTEM}
                     todos={todos}
-                    UIM={UIM}
-                    TM={TM}
-                    PM={PM}
+                    useUISM={useUISM}
+                    useTM={useTM}
+                    usePM={usePM}
                 />
             )}
         </Panel>

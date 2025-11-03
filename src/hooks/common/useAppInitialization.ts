@@ -10,8 +10,8 @@ import { useUIStateManagement } from "./useUIStateManagement";
 export const useAppInitialization = () => {
     const { accessToken } = useAuth();
     const { myself, setMyself } = useMyself(accessToken);
-    const UIM = useUIStateManagement();
-    const TEM = useTeamManagement(myself, accessToken);
+    const useUISM = useUIStateManagement();
+    const useTEM = useTeamManagement(myself, accessToken);
 
     // Initialize database
     useEffect(() => {
@@ -20,10 +20,10 @@ export const useAppInitialization = () => {
 
     // Initialize current team and setup worker
     useEffect(() => {
-        TEM.initCurrentTeam();
-        if (myself.teamId !== TEM.currentTeamId) {
-            TEM.setCurrentTeamId(myself.teamId);
-            UIM.setIsLoading(true);
+        useTEM.initCurrentTeam();
+        if (myself.teamId !== useTEM.currentTeamId) {
+            useTEM.setCurrentTeamId(myself.teamId);
+            useUISM.setIsLoading(true);
         }
 
         if (myself.userId !== "") {
@@ -36,7 +36,7 @@ export const useAppInitialization = () => {
                 if (data.error) {
                     console.error("Worker failed:", data.error);
                 } else {
-                    TEM.setTeamMemberProfiles(data);
+                    useTEM.setTeamMemberProfiles(data);
                 }
             };
 
@@ -48,7 +48,7 @@ export const useAppInitialization = () => {
                     if (data.error) {
                         console.error("Worker failed:", data.error);
                     } else {
-                        TEM.setTeamMemberProfiles(data);
+                        useTEM.setTeamMemberProfiles(data);
                     }
                 };
             }, 60_000);
@@ -64,7 +64,7 @@ export const useAppInitialization = () => {
         accessToken,
         myself,
         setMyself,
-        UIM,
-        TEM,
+        useUISM,
+        useTEM,
     };
 };

@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
@@ -16,7 +17,6 @@ import {
     Tooltip,
     Typography,
 } from "@mui/joy";
-import { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
@@ -35,7 +35,7 @@ const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type ModalProjectProfileProps = {
     socket: Socket | null;
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     pmChat: AllChatProps;
@@ -43,13 +43,13 @@ type ModalProjectProfileProps = {
     setOpenModalProjectProfile: (value: boolean) => void;
     setAvatarUserId: (value: string) => void;
     setOpenUserProfile: (value: boolean) => void;
-    CM: ChatManagementState;
-    UIM: UIStateManagementState;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
 };
 export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
     const {
         socket,
-        TEM,
+        useTEM,
         myself,
         setMyself,
         pmChat,
@@ -57,8 +57,8 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
         setOpenModalProjectProfile,
         setAvatarUserId,
         setOpenUserProfile,
-        CM,
-        UIM,
+        useCM,
+        useUISM,
     } = props;
 
     const { accessToken } = useAuth();
@@ -107,7 +107,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                     },
                     pmChat.chatType
                 );
-                await CM.funcSetAllChats();
+                await useCM.funcSetAllChats();
             }
         }
     };
@@ -247,7 +247,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                             }}
                                                         >
                                                             {projectProfile
-                                                                ? TEM.teamMemberProfiles[
+                                                                ? useTEM.teamMemberProfiles[
                                                                       projectProfile?.ownerUserId
                                                                   ]?.userName
                                                                 : "N/A"}
@@ -259,7 +259,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                     component="a"
                                                     href={`mailto:${
                                                         projectProfile
-                                                            ? TEM.teamMemberProfiles[
+                                                            ? useTEM.teamMemberProfiles[
                                                                   projectProfile?.ownerUserId
                                                               ]?.userEmail
                                                             : "N/A"
@@ -275,7 +275,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                     }}
                                                 >
                                                     {projectProfile
-                                                        ? TEM.teamMemberProfiles[
+                                                        ? useTEM.teamMemberProfiles[
                                                               projectProfile?.ownerUserId
                                                           ]?.userEmail
                                                         : "N/A"}
@@ -296,13 +296,13 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                             >
                                                                 <AvatarWithStatus
                                                                     avatarUser={member}
-                                                                    CM={CM}
+                                                                    useCM={useCM}
                                                                     isYou={false}
                                                                     myself={myself}
                                                                     setMyself={setMyself}
                                                                     showNameAndEmail={true}
                                                                     socket={socket}
-                                                                    UIM={UIM}
+                                                                    useUISM={useUISM}
                                                                 />
                                                             </ListItemButton>
                                                         )

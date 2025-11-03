@@ -15,20 +15,20 @@ import { TaskPreview } from "../../../tasks/components/contents/TaskPreview";
 type TaskPreviewPanelProps = {
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    UIM: UIStateManagementState;
+    useUISM: UIStateManagementState;
     socket: Socket | null;
-    TEM: TeamManagementState;
-    PM: ProjectManagementState;
-    NM: NoteManagementState;
-    CM: ChatManagementState;
-    TM: TaskManagementState;
+    useTEM: TeamManagementState;
+    usePM: ProjectManagementState;
+    useNM: NoteManagementState;
+    useCM: ChatManagementState;
+    useTM: TaskManagementState;
 };
 
 export const TaskPreviewPanel = (props: TaskPreviewPanelProps) => {
-    const { myself, setMyself, UIM, socket, TEM, PM, NM, CM, TM } = props;
+    const { myself, setMyself, useUISM, socket, useTEM, usePM, useNM, useCM, useTM } = props;
     const { mode } = useColorScheme();
 
-    if (!NM.currentTaskNoteChain || !NM.isTaskVisibleInNote || !TM.currentPreviewTask) {
+    if (!useNM.currentTaskNoteChain || !useNM.isTaskVisibleInNote || !useTM.currentPreviewTask) {
         return null;
     }
 
@@ -66,15 +66,15 @@ export const TaskPreviewPanel = (props: TaskPreviewPanelProps) => {
                     }}
                 >
                     <TaskPreview
-                        CM={CM}
-                        NM={NM}
+                        useCM={useCM}
+                        useNM={useNM}
                         myself={myself}
-                        PM={PM}
+                        usePM={usePM}
                         setMyself={setMyself}
                         socket={socket}
-                        TEM={TEM}
-                        TM={TM}
-                        UIM={UIM}
+                        useTEM={useTEM}
+                        useTM={useTM}
+                        useUISM={useUISM}
                     />
                 </Box>
             </Panel>

@@ -19,7 +19,11 @@ const createGroupMessage = [
     { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] },
 ];
 
-const moveToGMChat = async (chat: AllChatProps, isPrivate: boolean, CM: ChatManagementState) => {
+const moveToGMChat = async (
+    chat: AllChatProps,
+    isPrivate: boolean,
+    useCM: ChatManagementState
+) => {
     const fetchedMessages: MessageProps[] = await popSpecificMessages(chat.chatId, 2);
     if (fetchedMessages && fetchedMessages.length !== 0) {
         const newChat: ChatProps = {
@@ -35,7 +39,7 @@ const moveToGMChat = async (chat: AllChatProps, isPrivate: boolean, CM: ChatMana
             isPrivate: isPrivate,
             profileImagePath: chat.profileImagePath,
         };
-        CM.setCurrentMainChat(newChat);
+        useCM.setCurrentMainChat(newChat);
     } else {
         console.error("Failed to fetch thread GM fetchedMessages:", fetchedMessages);
     }
@@ -45,7 +49,7 @@ const addGMChatAndMessage = async (
     myself: UserProps,
     data: CreateGMResponse,
     isPrivate: boolean,
-    CM: ChatManagementState
+    useCM: ChatManagementState
 ) => {
     const newMessage: MessageProps = {
         chatType: 3,
@@ -77,8 +81,8 @@ const addGMChatAndMessage = async (
     await addChat(newChat, 2);
     await addMessage(newMessage, 2);
 
-    CM.setAllChats([
-        ...CM.allChats,
+    useCM.setAllChats([
+        ...useCM.allChats,
         {
             chatId: newChat.chatId,
             chatName: newChat.chatName,
@@ -92,13 +96,13 @@ const addGMChatAndMessage = async (
         },
     ]);
 
-    moveToGMChat(newChat, isPrivate, CM);
+    moveToGMChat(newChat, isPrivate, useCM);
 };
 
 export const createChatGroup = async (
     myself: UserProps,
     chatName: string,
-    CM: ChatManagementState,
+    useCM: ChatManagementState,
     socket: Socket | null,
     setCreateCGErrorMessage: (msg: string) => void,
     setOpen: (e: boolean) => void,
@@ -140,7 +144,7 @@ export const createChatGroup = async (
             }
         );
 
-        addGMChatAndMessage(myself, data, isPrivate, CM);
+        addGMChatAndMessage(myself, data, isPrivate, useCM);
         setOpen(false);
         setCreateCGErrorMessage("");
         setGroupName("");

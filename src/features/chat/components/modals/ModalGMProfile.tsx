@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import GroupsIcon from "@mui/icons-material/Groups";
@@ -16,7 +17,6 @@ import {
     Tooltip,
     Typography,
 } from "@mui/joy";
-import { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
@@ -34,7 +34,7 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type ModalGMProfileProps = {
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
@@ -43,12 +43,12 @@ type ModalGMProfileProps = {
     setOpenModalGMProfile: (value: boolean) => void;
     setAvatarUserId: (value: string) => void;
     setOpenUserProfile: (value: boolean) => void;
-    UIM: UIStateManagementState;
-    CM: ChatManagementState;
+    useUISM: UIStateManagementState;
+    useCM: ChatManagementState;
 };
 export const ModalGMProfile = (props: ModalGMProfileProps) => {
     const {
-        TEM,
+        useTEM,
         myself,
         setMyself,
         socket,
@@ -57,8 +57,8 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
         setOpenModalGMProfile,
         setAvatarUserId,
         setOpenUserProfile,
-        UIM,
-        CM,
+        useUISM,
+        useCM,
     } = props;
 
     const { accessToken } = useAuth();
@@ -106,7 +106,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                 },
                 gmChat.chatType
             );
-            await CM.funcSetAllChats();
+            await useCM.funcSetAllChats();
         }
     };
 
@@ -236,7 +236,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                             }}
                                                         >
                                                             {gmProfile
-                                                                ? TEM.teamMemberProfiles[
+                                                                ? useTEM.teamMemberProfiles[
                                                                       gmProfile?.ownerUserId
                                                                   ]?.userName
                                                                 : "N/A"}
@@ -248,7 +248,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                     component="a"
                                                     href={`mailto:${
                                                         gmProfile
-                                                            ? TEM.teamMemberProfiles[
+                                                            ? useTEM.teamMemberProfiles[
                                                                   gmProfile?.ownerUserId
                                                               ]?.userEmail
                                                             : "N/A"
@@ -264,7 +264,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                     }}
                                                 >
                                                     {gmProfile
-                                                        ? TEM.teamMemberProfiles[
+                                                        ? useTEM.teamMemberProfiles[
                                                               gmProfile?.ownerUserId
                                                           ]?.userEmail
                                                         : "N/A"}
@@ -281,13 +281,13 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                         <ListItemButton sx={{ ml: 2, my: 0.2 }}>
                                                             <AvatarWithStatus
                                                                 avatarUser={member}
-                                                                CM={CM}
+                                                                useCM={useCM}
                                                                 isYou={false}
                                                                 myself={myself}
                                                                 setMyself={setMyself}
                                                                 showNameAndEmail={true}
                                                                 socket={socket}
-                                                                UIM={UIM}
+                                                                useUISM={useUISM}
                                                             />
                                                         </ListItemButton>
                                                     ))}

@@ -21,16 +21,16 @@ import { ProjectTaskTable } from "../table/TaskTable";
 
 interface TaskHomeLayoutProps {
     // Management states
-    TEM: TeamManagementState;
-    PM: ProjectManagementState;
-    TM: TaskManagementState;
-    NM: NoteManagementState;
+    useTEM: TeamManagementState;
+    usePM: ProjectManagementState;
+    useTM: TaskManagementState;
+    useNM: NoteManagementState;
 
     // Props
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    CM: ChatManagementState;
-    UIM: UIStateManagementState;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
     socket: Socket | null;
 
     // Header props
@@ -41,14 +41,14 @@ interface TaskHomeLayoutProps {
 }
 
 export const TaskHomeLayout = ({
-    TEM,
-    PM,
-    TM,
-    NM,
+    useTEM,
+    usePM,
+    useTM,
+    useNM,
     myself,
     setMyself,
-    CM,
-    UIM,
+    useCM,
+    useUISM,
     socket,
     onCreateProject,
     onCreateTag,
@@ -91,29 +91,29 @@ export const TaskHomeLayout = ({
                 borderRight: mode === "dark" ? "2px black inset" : "2px lightgrey inset",
             }}
         >
-            {TM.isDashboardVisible && <TaskDashboard />}
-            {TM.isTaskHomeVisible && (
+            {useTM.isDashboardVisible && <TaskDashboard />}
+            {useTM.isTaskHomeVisible && (
                 <>
                     <TaskHomeHeader
-                        CM={CM}
-                        PM={PM}
+                        useCM={useCM}
+                        usePM={usePM}
                         myself={myself}
                         setMyself={setMyself}
-                        TEM={TEM}
-                        TM={TM}
-                        UIM={UIM}
+                        useTEM={useTEM}
+                        useTM={useTM}
+                        useUISM={useUISM}
                         onCloseTaskHome={onCloseTaskHome}
                         onCreateProject={onCreateProject}
                         onCreateTag={onCreateTag}
                         onDeleteProject={onDeleteProject}
                     />
                     <ProjectTaskTable
-                        PM={PM}
+                        usePM={usePM}
                         myself={myself}
-                        setTeamMembers={TEM.setTeamMembers}
-                        teamMemberProfiles={TEM.teamMemberProfiles}
-                        teamMembers={TEM.teamMembers}
-                        TM={TM}
+                        setTeamMembers={useTEM.setTeamMembers}
+                        teamMemberProfiles={useTEM.teamMemberProfiles}
+                        teamMembers={useTEM.teamMembers}
+                        useTM={useTM}
                     />
                 </>
             )}
@@ -144,15 +144,15 @@ export const TaskHomeLayout = ({
                 >
                     <CreateTaskForm
                         chatType={-1}
-                        CM={CM}
+                        useCM={useCM}
                         myself={myself}
-                        PM={PM}
+                        usePM={usePM}
                         setMyself={setMyself}
                         socket={socket}
-                        TEM={TEM}
-                        TM={TM}
-                        UIM={UIM}
-                        NM={NM}
+                        useTEM={useTEM}
+                        useTM={useTM}
+                        useUISM={useUISM}
+                        useNM={useNM}
                     />
                 </Box>
             </Panel>
@@ -181,15 +181,15 @@ export const TaskHomeLayout = ({
                     }}
                 >
                     <TaskPreview
-                        CM={CM}
-                        NM={NM}
+                        useCM={useCM}
+                        useNM={useNM}
                         myself={myself}
-                        PM={PM}
+                        usePM={usePM}
                         setMyself={setMyself}
                         socket={socket}
-                        TEM={TEM}
-                        TM={TM}
-                        UIM={UIM}
+                        useTEM={useTEM}
+                        useTM={useTM}
+                        useUISM={useUISM}
                     />
                 </Box>
             </Panel>
@@ -227,15 +227,15 @@ export const TaskHomeLayout = ({
                     }}
                 >
                     <TaskNoteMain
-                        CM={CM}
+                        useCM={useCM}
                         isInTaskPage={true}
                         myself={myself}
-                        NM={NM}
+                        useNM={useNM}
                         setMyself={setMyself}
                         socket={socket}
-                        TEM={TEM}
-                        TM={TM}
-                        UIM={UIM}
+                        useTEM={useTEM}
+                        useTM={useTM}
+                        useUISM={useUISM}
                     />
                 </Box>
             </Panel>
@@ -265,7 +265,7 @@ export const TaskHomeLayout = ({
                             paddingRight: "10px",
                         }}
                         onClick={() => {
-                            PM.setOpenCreateProject(true);
+                            usePM.setOpenCreateProject(true);
                         }}
                     >
                         <AddIcon />
@@ -287,13 +287,18 @@ export const TaskHomeLayout = ({
                         borderRight: mode === "dark" ? "2px black inset" : "2px lightgrey inset",
                     }}
                 >
-                    <TaskSidebar myself={myself} PM={PM} setOpenJoinProject={() => {}} TM={TM} />
+                    <TaskSidebar
+                        myself={myself}
+                        usePM={usePM}
+                        setOpenJoinProject={() => {}}
+                        useTM={useTM}
+                    />
                 </Box>
             </Panel>
 
-            {PM.currentProject && PM.currentProject.projectId ? (
+            {usePM.currentProject && usePM.currentProject.projectId ? (
                 <>
-                    {TM.isTaskHomeVisible && (
+                    {useTM.isTaskHomeVisible && (
                         <>
                             {renderResizeHandle()}
                             <Panel id={"2"} maxSize={80} minSize={30} order={2}>
@@ -302,9 +307,13 @@ export const TaskHomeLayout = ({
                         </>
                     )}
 
-                    {TM.isTaskPreviewVisible && TM.currentPreviewTask && renderTaskPreviewPanel()}
-                    {TM.isCreatingTask.flag && renderCreateTaskPanel()}
-                    {NM.isTaskNoteVisible && NM.currentTaskNoteChain && renderTaskNotePanel()}
+                    {useTM.isTaskPreviewVisible &&
+                        useTM.currentPreviewTask &&
+                        renderTaskPreviewPanel()}
+                    {useTM.isCreatingTask.flag && renderCreateTaskPanel()}
+                    {useNM.isTaskNoteVisible &&
+                        useNM.currentTaskNoteChain &&
+                        renderTaskNotePanel()}
                 </>
             ) : (
                 renderNoProjectPanel()

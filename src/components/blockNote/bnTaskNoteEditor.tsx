@@ -65,7 +65,7 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 const django_url = import.meta.env.VITE_DJANGO_URL;
 
 type BnTaskNoteEditorProps = {
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
@@ -74,12 +74,12 @@ type BnTaskNoteEditorProps = {
     setBody: (text: PartialBlock[] | any[]) => void;
     setNoteBodyEdited?: (value: boolean) => void;
     setNoteBodySaved?: (value: boolean) => void;
-    CM: ChatManagementState;
-    UIM: UIStateManagementState;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
 };
 export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
     const {
-        TEM,
+        useTEM,
         myself,
         setMyself,
         socket,
@@ -88,8 +88,8 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
         setBody,
         setNoteBodyEdited,
         setNoteBodySaved,
-        CM,
-        UIM,
+        useCM,
+        useUISM,
     } = props;
 
     const { mode } = useColorScheme();
@@ -117,7 +117,14 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
-            mention: CreateMentionSpec(TEM.teamMemberProfiles, socket, myself, setMyself, UIM, CM),
+            mention: CreateMentionSpec(
+                useTEM.teamMemberProfiles,
+                socket,
+                myself,
+                setMyself,
+                useUISM,
+                useCM
+            ),
         },
         blockSpecs: {
             ...remainingBlockSpecs,
@@ -261,7 +268,7 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                 }}
                 onClick={(e) => {
                     const target = e.target as HTMLElement;
-                    if (target.tagName === "IMG") {
+                    if (target.tagName === "useIMG") {
                         handleImageClick((target as HTMLImageElement).src);
                     }
                 }}
@@ -346,7 +353,11 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                     getItems={async (query) =>
                         // Gets the mentions menu items
                         filterSuggestionItems(
-                            MentionMenuItems(TEM.teamMemberProfiles, editor, TEM.teamMembers),
+                            MentionMenuItems(
+                                useTEM.teamMemberProfiles,
+                                editor,
+                                useTEM.teamMembers
+                            ),
                             query
                         )
                     }

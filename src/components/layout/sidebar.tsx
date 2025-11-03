@@ -1,3 +1,4 @@
+import { useState } from "react";
 import AllInboxIcon from "@mui/icons-material/AllInbox";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
@@ -17,7 +18,6 @@ import {
     Typography,
 } from "@mui/joy";
 import ListItemButton, { listItemButtonClasses } from "@mui/joy/ListItemButton";
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
@@ -36,16 +36,16 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type SidebarProps = {
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    IM: InboxManagementState;
-    CM: ChatManagementState;
-    UIM: UIStateManagementState;
+    useIM: InboxManagementState;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
 };
 export const Sidebar = (props: SidebarProps) => {
-    const { TEM, socket, myself, setMyself, IM, CM, UIM } = props;
+    const { useTEM, socket, myself, setMyself, useIM, useCM, useUISM } = props;
     const { setAccessToken } = useAuth();
     const navigate = useNavigate();
 
@@ -95,19 +95,19 @@ export const Sidebar = (props: SidebarProps) => {
     };
 
     const handleMoveToInbox = (): void => {
-        UIM.setOpeningService(0);
+        useUISM.setOpeningService(0);
     };
 
     const handleMoveToChat = (): void => {
-        UIM.setOpeningService(1);
+        useUISM.setOpeningService(1);
     };
 
     const handleMoveToTasks = (): void => {
-        UIM.setOpeningService(2);
+        useUISM.setOpeningService(2);
     };
 
     const handleMoveToNote = (): void => {
-        UIM.setOpeningService(3);
+        useUISM.setOpeningService(3);
     };
 
     return (
@@ -149,7 +149,7 @@ export const Sidebar = (props: SidebarProps) => {
                     alignItems: "center",
                 }}
             >
-                <TeamDropdown myself={myself} setMyself={setMyself} TEM={TEM} />
+                <TeamDropdown myself={myself} setMyself={setMyself} useTEM={useTEM} />
                 <ColorSchemeToggle />
             </Box>
 
@@ -184,9 +184,9 @@ export const Sidebar = (props: SidebarProps) => {
                                         p: "5px",
                                     }}
                                 >
-                                    {IM.unReadInboxItemCount > 0 && (
+                                    {useIM.unReadInboxItemCount > 0 && (
                                         <Badge
-                                            badgeContent={IM.unReadInboxItemCount}
+                                            badgeContent={useIM.unReadInboxItemCount}
                                             color="primary"
                                             size="sm"
                                             anchorOrigin={{
@@ -197,18 +197,20 @@ export const Sidebar = (props: SidebarProps) => {
                                             <AllInboxIcon
                                                 sx={{ fontSize: 24 }}
                                                 color={
-                                                    UIM.openingService === 0
+                                                    useUISM.openingService === 0
                                                         ? "primary"
                                                         : "disabled"
                                                 }
                                             />
                                         </Badge>
                                     )}
-                                    {IM.unReadInboxItemCount < 1 && (
+                                    {useIM.unReadInboxItemCount < 1 && (
                                         <AllInboxIcon
                                             sx={{ fontSize: 24 }}
                                             color={
-                                                UIM.openingService === 0 ? "primary" : "disabled"
+                                                useUISM.openingService === 0
+                                                    ? "primary"
+                                                    : "disabled"
                                             }
                                         />
                                     )}
@@ -221,9 +223,9 @@ export const Sidebar = (props: SidebarProps) => {
                         <ListItemButton onClick={handleMoveToChat}>
                             <Stack alignItems="center" direction="column">
                                 <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
-                                    {CM.unReadChatAndActivityCounts > 0 && (
+                                    {useCM.unReadChatAndActivityCounts > 0 && (
                                         <Badge
-                                            badgeContent={CM.unReadChatAndActivityCounts}
+                                            badgeContent={useCM.unReadChatAndActivityCounts}
                                             color="primary"
                                             size="sm"
                                             anchorOrigin={{
@@ -234,18 +236,20 @@ export const Sidebar = (props: SidebarProps) => {
                                             <QuestionAnswerRoundedIcon
                                                 sx={{ fontSize: 24 }}
                                                 color={
-                                                    UIM.openingService === 1
+                                                    useUISM.openingService === 1
                                                         ? "primary"
                                                         : "disabled"
                                                 }
                                             />
                                         </Badge>
                                     )}
-                                    {CM.unReadChatAndActivityCounts < 1 && (
+                                    {useCM.unReadChatAndActivityCounts < 1 && (
                                         <QuestionAnswerRoundedIcon
                                             sx={{ fontSize: 24 }}
                                             color={
-                                                UIM.openingService === 1 ? "primary" : "disabled"
+                                                useUISM.openingService === 1
+                                                    ? "primary"
+                                                    : "disabled"
                                             }
                                         />
                                     )}
@@ -259,7 +263,9 @@ export const Sidebar = (props: SidebarProps) => {
                             <Stack alignItems="center" direction="column">
                                 <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
                                     <AssignmentRoundedIcon
-                                        color={UIM.openingService === 2 ? "primary" : "disabled"}
+                                        color={
+                                            useUISM.openingService === 2 ? "primary" : "disabled"
+                                        }
                                         sx={{ fontSize: 24 }}
                                     />
                                 </Box>
@@ -272,7 +278,9 @@ export const Sidebar = (props: SidebarProps) => {
                             <Stack alignItems="center" direction="column">
                                 <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
                                     <NoteAltIcon
-                                        color={UIM.openingService === 3 ? "primary" : "disabled"}
+                                        color={
+                                            useUISM.openingService === 3 ? "primary" : "disabled"
+                                        }
                                         sx={{ fontSize: 24 }}
                                     />
                                 </Box>
@@ -333,15 +341,15 @@ export const Sidebar = (props: SidebarProps) => {
             </Box>
 
             <UserProfile
-                CM={CM}
+                useCM={useCM}
                 isYou={true}
                 myself={myself}
                 openUserProfile={openUserProfile}
                 setMyself={setMyself}
                 setOpenUserProfile={setOpenUserProfile}
                 socket={socket}
-                UIM={UIM}
-                user={TEM.teamMemberProfiles[myself.userId]}
+                useUISM={useUISM}
+                user={useTEM.teamMemberProfiles[myself.userId]}
             />
         </Sheet>
     );

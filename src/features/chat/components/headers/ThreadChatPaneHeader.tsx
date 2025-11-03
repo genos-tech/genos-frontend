@@ -15,26 +15,26 @@ import { ThreadProps } from "../../../../types/chat";
 
 type ThreadChatPaneHeaderProps = {
     myself: UserProps;
-    CM: ChatManagementState;
-    NM: NoteManagementState;
-    TM: TaskManagementState;
+    useCM: ChatManagementState;
+    useNM: NoteManagementState;
+    useTM: TaskManagementState;
 };
 
 export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
-    const { myself, CM, NM, TM } = props;
+    const { myself, useCM, useNM, useTM } = props;
     const { mode } = useColorScheme();
 
-    const isYou: boolean = myself.userId === CM.currentThreadChat?.dmPartnerUser.userId;
+    const isYou: boolean = myself.userId === useCM.currentThreadChat?.dmPartnerUser.userId;
 
     const dummyThreadChat: ThreadProps = {
-        chatId: CM.currentThreadChat?.chatId as number,
-        chatName: CM.currentThreadChat?.chatName as string,
-        threadId: CM.currentThreadChat?.threadId as number,
-        chatType: CM.currentThreadChat?.chatType as number,
-        dmPartnerUser: CM.currentThreadChat?.dmPartnerUser as UserProps,
-        taskId: CM.currentThreadChat?.taskId as number | null,
+        chatId: useCM.currentThreadChat?.chatId as number,
+        chatName: useCM.currentThreadChat?.chatName as string,
+        threadId: useCM.currentThreadChat?.threadId as number,
+        chatType: useCM.currentThreadChat?.chatType as number,
+        dmPartnerUser: useCM.currentThreadChat?.dmPartnerUser as UserProps,
+        taskId: useCM.currentThreadChat?.taskId as number | null,
         messages: [],
-        TSLastMessage: CM.currentThreadChat?.TSLastMessage as string,
+        TSLastMessage: useCM.currentThreadChat?.TSLastMessage as string,
     };
 
     return (
@@ -68,23 +68,23 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         noWrap
                     >
                         {isYou
-                            ? `${CM.currentThreadChat?.chatName} (you)`
-                            : CM.currentThreadChat?.chatName}
+                            ? `${useCM.currentThreadChat?.chatName} (you)`
+                            : useCM.currentThreadChat?.chatName}
                     </Typography>
                 </div>
             </Stack>
 
             <Stack direction="row" spacing={0.3} sx={{ alignItems: "center" }}>
                 {/* Custom header in PM and DM/GM (having a task) thread */}
-                {(((CM.currentThreadChat?.chatType === 3 ||
-                    CM.currentThreadChat?.chatType === 4) &&
-                    TM.currentPreviewTaskId !== -1) ||
-                    (TM.currentPreviewTaskId !== -1 &&
-                        TM.currentPreviewTask &&
-                        CM.currentThreadChat?.taskExist === true)) && (
+                {(((useCM.currentThreadChat?.chatType === 3 ||
+                    useCM.currentThreadChat?.chatType === 4) &&
+                    useTM.currentPreviewTaskId !== -1) ||
+                    (useTM.currentPreviewTaskId !== -1 &&
+                        useTM.currentPreviewTask &&
+                        useCM.currentThreadChat?.taskExist === true)) && (
                     <>
                         <Chip
-                            key={CM.currentThreadChat?.taskId}
+                            key={useCM.currentThreadChat?.taskId}
                             color="neutral"
                             size="sm"
                             variant="soft"
@@ -93,26 +93,26 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                 fontWeight: "bold",
                             }}
                         >
-                            ID: {CM.currentThreadChat?.taskId || "N/A"}
+                            ID: {useCM.currentThreadChat?.taskId || "N/A"}
                         </Chip>
-                        {TM.currentPreviewTask && (
+                        {useTM.currentPreviewTask && (
                             <>
                                 <Chip
                                     size="sm"
                                     variant="soft"
                                     sx={{
-                                        backgroundColor: TM.currentPreviewTask.status.color
+                                        backgroundColor: useTM.currentPreviewTask.status.color
                                             ? alpha(
-                                                  TM.currentPreviewTask.status.color,
+                                                  useTM.currentPreviewTask.status.color,
                                                   mode === "dark" ? 0.5 : 0.75
                                               )
                                             : "transparent",
-                                        color: TM.currentPreviewTask.status.textColor,
+                                        color: useTM.currentPreviewTask.status.textColor,
                                         fontWeight: "bold",
                                         borderRadius: "5px",
                                     }}
                                 >
-                                    {TM.currentPreviewTask.status.status || "N/A"}
+                                    {useTM.currentPreviewTask.status.status || "N/A"}
                                 </Chip>
                             </>
                         )}
@@ -120,9 +120,9 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                 )}
 
                 {/* Custom header in DM/GM thread */}
-                {CM.currentThreadChat?.chatType !== 3 &&
-                    CM.currentThreadChat?.chatType !== 4 &&
-                    TM.currentPreviewTaskId === -1 && (
+                {useCM.currentThreadChat?.chatType !== 3 &&
+                    useCM.currentThreadChat?.chatType !== 4 &&
+                    useTM.currentPreviewTaskId === -1 && (
                         <>
                             <Tooltip size="sm" title="Create a New Task" variant="outlined">
                                 <IconButton
@@ -131,10 +131,10 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                     size="sm"
                                     variant="plain"
                                     onClick={() => {
-                                        CM.setIsMainChatVisible(true);
-                                        CM.setIsThreadVisible(true);
-                                        TM.setIsTaskPreviewVisible(false);
-                                        TM.setIsCreatingTask({
+                                        useCM.setIsMainChatVisible(true);
+                                        useCM.setIsThreadVisible(true);
+                                        useTM.setIsTaskPreviewVisible(false);
+                                        useTM.setIsCreatingTask({
                                             flag: true,
                                             parentTaskId: null,
                                             rootTaskId: null,
@@ -148,18 +148,18 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     )}
 
                 {!(
-                    CM.currentThreadChat?.chatType !== 3 &&
-                    CM.currentThreadChat?.chatType !== 4 &&
-                    TM.currentPreviewTaskId === -1
+                    useCM.currentThreadChat?.chatType !== 3 &&
+                    useCM.currentThreadChat?.chatType !== 4 &&
+                    useTM.currentPreviewTaskId === -1
                 ) && (
                     <Tooltip size="sm" title="Open Task" variant="outlined">
                         <IconButton
                             size="sm"
                             onClick={() => {
-                                CM.setIsMainChatVisible(false);
-                                CM.setIsThreadVisible(true);
-                                TM.setIsTaskPreviewVisible(true);
-                                TM.setIsCreatingTask({
+                                useCM.setIsMainChatVisible(false);
+                                useCM.setIsThreadVisible(true);
+                                useTM.setIsTaskPreviewVisible(true);
+                                useTM.setIsCreatingTask({
                                     flag: false,
                                     parentTaskId: null,
                                     rootTaskId: null,
@@ -178,17 +178,17 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         size="sm"
                         variant="plain"
                         onClick={() => {
-                            NM.handleCreateNewChatNoteIfNotExist(
-                                CM.currentThreadChat?.chatType as number,
-                                CM.currentThreadChat?.chatId as number,
+                            useNM.handleCreateNewChatNoteIfNotExist(
+                                useCM.currentThreadChat?.chatType as number,
+                                useCM.currentThreadChat?.chatId as number,
                                 true,
-                                CM.currentThreadChat?.threadId as number
+                                useCM.currentThreadChat?.threadId as number
                             );
-                            CM.setIsChatNoteVisibleInChat(true);
-                            CM.setIsMainChatVisible(false);
-                            CM.setIsThreadVisible(true);
-                            TM.setIsTaskPreviewVisible(false);
-                            TM.setIsCreatingTask({ ...TM.isCreatingTask, flag: false });
+                            useCM.setIsChatNoteVisibleInChat(true);
+                            useCM.setIsMainChatVisible(false);
+                            useCM.setIsThreadVisible(true);
+                            useTM.setIsTaskPreviewVisible(false);
+                            useTM.setIsCreatingTask({ ...useTM.isCreatingTask, flag: false });
                         }}
                     >
                         <NoteAltIcon />
@@ -201,9 +201,9 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         size="sm"
                         variant="plain"
                         onClick={() => {
-                            CM.setIsMainChatVisible(true);
-                            CM.setIsThreadVisible(false);
-                            CM.setCurrentThreadChat(dummyThreadChat);
+                            useCM.setIsMainChatVisible(true);
+                            useCM.setIsThreadVisible(false);
+                            useCM.setCurrentThreadChat(dummyThreadChat);
                         }}
                     >
                         <CancelIcon />

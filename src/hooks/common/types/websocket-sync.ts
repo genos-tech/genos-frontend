@@ -14,7 +14,7 @@ export interface WebSocketSyncProps {
     currentPreviewTaskId: number;
     setIsTaskUpdatedBySomeone: (value: boolean) => void;
     setIsTaskCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
-    CM: ChatManagementState;
+    useCM: ChatManagementState;
 }
 
 export interface MessageContext {

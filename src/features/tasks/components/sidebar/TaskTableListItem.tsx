@@ -5,18 +5,18 @@ import ListItemButton from "@mui/joy/ListItemButton";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 
 type TaskTableListItemProps = {
-    TM: TaskManagementState;
+    useTM: TaskManagementState;
 };
 export const TaskTableListItem = (props: TaskTableListItemProps) => {
-    const { TM } = props;
+    const { useTM } = props;
     return (
         <ListItem>
             <ListItemButton
                 color="primary"
-                variant={TM.isTaskHomeVisible === true ? "soft" : "plain"}
+                variant={useTM.isTaskHomeVisible === true ? "soft" : "plain"}
                 onClick={() => {
-                    TM.setIsDashboardVisible(false);
-                    TM.setIsTaskHomeVisible(true);
+                    useTM.setIsDashboardVisible(false);
+                    useTM.setIsTaskHomeVisible(true);
                 }}
             >
                 <TableChartIcon />

@@ -10,7 +10,7 @@ function isInArray<T>(item: T, array: T[]): boolean {
 export const handleActivityMessage = async (
     message: any,
     myself: UserProps,
-    CM: ChatManagementState
+    useCM: ChatManagementState
 ) => {
     const tmpNewActivityMessage: ActivityMessageProps = message;
     let newActivityMessage: ActivityMessageProps | undefined;
@@ -56,7 +56,7 @@ export const handleActivityMessage = async (
 
             if (doUpdateActivityMessage && newActivityMessage) {
                 await addActivityMessage(newActivityMessage);
-                CM.funcSetActivityMessages();
+                useCM.funcSetActivityMessages();
             }
         } else {
             console.log("[IGNORE] Thread, task comment or mention from myself");
@@ -72,7 +72,7 @@ export const handleActivityMessage = async (
             newActivityMessage = tmpNewActivityMessage;
             if (newActivityMessage) {
                 await addActivityMessage(newActivityMessage);
-                CM.funcSetActivityMessages();
+                useCM.funcSetActivityMessages();
             }
         } else {
             console.log("[IGNORE] Reaction to others message or reacted by myself");

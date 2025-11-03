@@ -21,14 +21,14 @@ type Props = {
         projectId: number;
         projectName: string;
     }) => void;
-    PM: ProjectManagementState;
+    usePM: ProjectManagementState;
 };
 
 export const ModalDeleteProject: React.FC<Props> = ({
     myself,
     openDeleteProject,
     setOpenDeleteProject,
-    PM,
+    usePM,
 }) => {
     const { accessToken } = useAuth();
 
@@ -44,10 +44,10 @@ export const ModalDeleteProject: React.FC<Props> = ({
                 const query: string = `team_id=${myself.teamId}&project_id=${openDeleteProject.projectId}`;
                 const res = await api.delete(`/project/?${query}`);
                 if (res.status === 204) {
-                    PM.setCurrentProject(null);
+                    usePM.setCurrentProject(null);
                     setOpenDeleteProject(disableOpenDeleteModalParams);
-                    PM.setTeamProjects(
-                        PM.teamProjects.filter(
+                    usePM.setTeamProjects(
+                        usePM.teamProjects.filter(
                             (project) => project.projectId !== openDeleteProject.projectId
                         )
                     );

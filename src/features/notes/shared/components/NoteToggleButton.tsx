@@ -1,6 +1,6 @@
+import { memo, ReactNode } from "react";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { ListItemButton, ListItemContent, Typography } from "@mui/joy";
-import { memo, ReactNode } from "react";
 
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 
@@ -11,7 +11,7 @@ interface NoteToggleButtonProps {
     node?: any;
     title?: string;
     icon?: ReactNode;
-    NM: NoteManagementState;
+    useNM: NoteManagementState;
     isOuter?: boolean;
 }
 
@@ -22,29 +22,29 @@ export const NoteToggleButton = memo(function NoteToggleButton({
     node,
     title,
     icon,
-    NM,
+    useNM,
     isOuter = false,
 }: NoteToggleButtonProps) {
     const handleClick = () => {
         setOpen(!open);
-        NM.setCurrentNoteType(noteType);
+        useNM.setCurrentNoteType(noteType);
         localStorage.setItem("lastOpenNoteType", String(noteType));
 
         if (node && !isOuter) {
-            NM.loadNote(noteType, node.noteId, -1);
+            useNM.loadNote(noteType, node.noteId, -1);
         }
     };
 
     const isSelected = isOuter
-        ? NM.currentNoteType === noteType
-        : NM.currentNoteType === noteType &&
+        ? useNM.currentNoteType === noteType
+        : useNM.currentNoteType === noteType &&
           node?.noteId ===
               (noteType === 1
-                  ? NM.currentMyNote?.noteId
+                  ? useNM.currentMyNote?.noteId
                   : noteType === 2
-                    ? NM.currentTaskNote?.noteId
+                    ? useNM.currentTaskNote?.noteId
                     : noteType === 3
-                      ? NM.currentChatNote?.noteId
+                      ? useNM.currentChatNote?.noteId
                       : noteType === 4
                         ? 0 // TODO: This is for shared notes.
                         : 0);

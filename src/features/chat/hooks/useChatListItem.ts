@@ -12,8 +12,8 @@ import { updatePinnedChats } from "../services/updatePinnedChats";
 interface UseChatListItemProps {
     chat: AllChatProps;
     myself: UserProps;
-    CM: ChatManagementState;
-    TM: TaskManagementState;
+    useCM: ChatManagementState;
+    useTM: TaskManagementState;
     isPinnedChat: boolean;
     accessToken: string;
 }
@@ -21,18 +21,18 @@ interface UseChatListItemProps {
 export const useChatListItem = ({
     chat,
     myself,
-    CM,
-    TM,
+    useCM,
+    useTM,
     isPinnedChat,
     accessToken,
 }: UseChatListItemProps) => {
     const [isPinned, setIsPinned] = useState(chat.isPinned);
 
     const selected =
-        `${CM.currentMainChat?.chatName}-${CM.currentMainChat?.chatId}` ===
+        `${useCM.currentMainChat?.chatName}-${useCM.currentMainChat?.chatId}` ===
             `${chat.chatName}-${chat.chatId}` ||
-        (CM.isSubChatVisible &&
-            `${CM.currentSubChat?.chatName}-${CM.currentSubChat?.chatId}` ===
+        (useCM.isSubChatVisible &&
+            `${useCM.currentSubChat?.chatName}-${useCM.currentSubChat?.chatId}` ===
                 `${chat.chatName}-${chat.chatId}`);
 
     const isYou = myself.userId === chat.dmPartnerUser.userId;
@@ -56,23 +56,23 @@ export const useChatListItem = ({
         };
     };
 
-    const onClickHandler = (CM: ChatManagementState) => {
+    const onClickHandler = (useCM: ChatManagementState) => {
         if (
-            CM.isSubChatVisible === false ||
-            `${CM.currentSubChat?.chatId}-${CM.currentSubChat?.chatName}` !==
+            useCM.isSubChatVisible === false ||
+            `${useCM.currentSubChat?.chatId}-${useCM.currentSubChat?.chatName}` !==
                 `${chat.chatId}-${chat.chatName}`
         ) {
             toggleMessagesPane();
             popSpecificMessages(chat.chatId, chat.chatType)
                 .then((messages) => {
                     const newChat: ChatProps = defineNewChat(messages);
-                    CM.setCurrentMainChat(newChat);
+                    useCM.setCurrentMainChat(newChat);
                     addChat(newChat, chat.chatType);
 
-                    CM.setIsMainChatVisible(true);
+                    useCM.setIsMainChatVisible(true);
 
-                    if (TM.isCreatingTask.flag === true || TM.isTaskPreviewVisible) {
-                        CM.setIsThreadVisible(false);
+                    if (useTM.isCreatingTask.flag === true || useTM.isTaskPreviewVisible) {
+                        useCM.setIsThreadVisible(false);
                     }
                 })
                 .catch((error) => console.error(error));
@@ -85,22 +85,22 @@ export const useChatListItem = ({
         }
     };
 
-    const splitOpenHandler = (CM: ChatManagementState) => {
+    const splitOpenHandler = (useCM: ChatManagementState) => {
         if (
-            `${CM.currentMainChat?.chatId}-${CM.currentMainChat?.chatName}` !==
+            `${useCM.currentMainChat?.chatId}-${useCM.currentMainChat?.chatName}` !==
             `${chat.chatId}-${chat.chatName}`
         ) {
             toggleMessagesPane();
             popSpecificMessages(chat.chatId, chat.chatType)
                 .then((messages) => {
-                    CM.setCurrentSubChat(defineNewChat(messages));
-                    CM.setIsMainChatVisible(true);
-                    if (TM.isCreatingTask.flag === true || TM.isTaskPreviewVisible) {
-                        CM.setIsThreadVisible(false);
+                    useCM.setCurrentSubChat(defineNewChat(messages));
+                    useCM.setIsMainChatVisible(true);
+                    if (useTM.isCreatingTask.flag === true || useTM.isTaskPreviewVisible) {
+                        useCM.setIsThreadVisible(false);
                     }
                 })
                 .catch((error) => console.error(error));
-            CM.setIsSubChatVisible(true);
+            useCM.setIsSubChatVisible(true);
         }
     };
 

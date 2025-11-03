@@ -54,24 +54,24 @@ type BnChatEditorProps = {
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
-    TEM: TeamManagementState;
-    CM: ChatManagementState;
+    useTEM: TeamManagementState;
+    useCM: ChatManagementState;
     chat: ChatProps;
     setCurrentChat: (chat: ChatProps) => void;
-    UIM: UIStateManagementState;
+    useUISM: UIStateManagementState;
     numEditorLines: number;
     setNumEditorLines: (value: number) => void;
 };
 export const BnChatEditor = (props: BnChatEditorProps) => {
     const {
-        TEM,
-        CM,
+        useTEM,
+        useCM,
         myself,
         setMyself,
         socket,
         chat,
         setCurrentChat,
-        UIM,
+        useUISM,
         numEditorLines,
         setNumEditorLines,
     } = props;
@@ -90,7 +90,14 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
-            mention: CreateMentionSpec(TEM.teamMemberProfiles, socket, myself, setMyself, UIM, CM),
+            mention: CreateMentionSpec(
+                useTEM.teamMemberProfiles,
+                socket,
+                myself,
+                setMyself,
+                useUISM,
+                useCM
+            ),
         },
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
@@ -169,7 +176,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
         if (editorRef.current) {
             const dynamicHeight: number = Math.min(
                 Math.min(Math.max(numEditorLines - 8, 0), 10) * 20 + 200,
-                CM.isSubChatVisible === true ? 290 : 500
+                useCM.isSubChatVisible === true ? 290 : 500
             );
             editorRef.current.style.setProperty("--chat-editor-height", `${dynamicHeight}px`);
         }
@@ -289,7 +296,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                         if (newChat) {
                             await addMessage(latestMessage, newChat.chatType);
                             await addChat(newChat, newChat.chatType);
-                            await CM.funcSetAllChats();
+                            await useCM.funcSetAllChats();
 
                             editor.replaceBlocks(editor.document, []);
                         }
@@ -420,7 +427,11 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                         getItems={async (query) =>
                             // Gets the mentions menu items
                             filterSuggestionItems(
-                                MentionMenuItems(TEM.teamMemberProfiles, editor, TEM.teamMembers),
+                                MentionMenuItems(
+                                    useTEM.teamMemberProfiles,
+                                    editor,
+                                    useTEM.teamMembers
+                                ),
                                 query
                             )
                         }

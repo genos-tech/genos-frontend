@@ -23,10 +23,10 @@ type Props = {
     myself: UserProps;
     open: boolean;
     setOpen: (value: boolean) => void;
-    CM: ChatManagementState;
+    useCM: ChatManagementState;
 };
 
-export const ModalCreateGM: React.FC<Props> = ({ socket, myself, open, setOpen, CM }) => {
+export const ModalCreateGM: React.FC<Props> = ({ socket, myself, open, setOpen, useCM }) => {
     const { accessToken } = useAuth();
 
     const [isPrivate, setIsPrivate] = useState(true);
@@ -37,7 +37,7 @@ export const ModalCreateGM: React.FC<Props> = ({ socket, myself, open, setOpen, 
             createChatGroup(
                 myself,
                 chatName,
-                CM,
+                useCM,
                 socket,
                 setCreateCGErrorMessage,
                 setOpen,

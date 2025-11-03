@@ -46,7 +46,7 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 const django_url = import.meta.env.VITE_DJANGO_URL;
 
 type BnUpdateThreadEditorProps = {
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
@@ -55,14 +55,14 @@ type BnUpdateThreadEditorProps = {
     isInEdit: boolean;
     setIsInEdit: (value: boolean) => void;
     setCurrentChat: (chat: ChatProps) => void;
-    UIM: UIStateManagementState;
+    useUISM: UIStateManagementState;
     numEditorLines: number;
     setNumEditorLines: (value: number) => void;
-    CM: ChatManagementState;
+    useCM: ChatManagementState;
 };
 export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
     const {
-        TEM,
+        useTEM,
         myself,
         setMyself,
         socket,
@@ -71,10 +71,10 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
         isInEdit,
         setIsInEdit,
         setCurrentChat,
-        UIM,
+        useUISM,
         numEditorLines,
         setNumEditorLines,
-        CM,
+        useCM,
     } = props;
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
@@ -91,7 +91,14 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
             // Adds all default inline content.
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
-            mention: CreateMentionSpec(TEM.teamMemberProfiles, socket, myself, setMyself, UIM, CM),
+            mention: CreateMentionSpec(
+                useTEM.teamMemberProfiles,
+                socket,
+                myself,
+                setMyself,
+                useUISM,
+                useCM
+            ),
         },
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
@@ -368,7 +375,11 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                         getItems={async (query) =>
                             // Gets the mentions menu items
                             filterSuggestionItems(
-                                MentionMenuItems(TEM.teamMemberProfiles, editor, TEM.teamMembers),
+                                MentionMenuItems(
+                                    useTEM.teamMemberProfiles,
+                                    editor,
+                                    useTEM.teamMembers
+                                ),
                                 query
                             )
                         }

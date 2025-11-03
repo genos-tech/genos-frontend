@@ -1,7 +1,7 @@
+import { useEffect, useRef, useState } from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import { Avatar, Box, Card, IconButton, Stack, Tooltip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
 import { BnChatPreview } from "../../../../../../components/blockNote/bnChatPreview";
@@ -21,7 +21,7 @@ import {
 } from "../../../../../../utils/dateUtils";
 
 type TaskCommentBubbleProps = {
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
@@ -30,12 +30,12 @@ type TaskCommentBubbleProps = {
     currentProjectName?: string;
     setIsInEdit: (value: boolean) => void;
     setEditTargetComment: (value: TaskCommentProps) => void;
-    CM: ChatManagementState;
-    UIM: UIStateManagementState;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
 };
 export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
     const {
-        TEM,
+        useTEM,
         socket,
         myself,
         setMyself,
@@ -44,8 +44,8 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
         currentProjectName,
         setIsInEdit,
         setEditTargetComment,
-        CM,
-        UIM,
+        useCM,
+        useUISM,
     } = props;
     const { mode } = useColorScheme();
 
@@ -198,14 +198,14 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                     >
                         <Stack alignItems="center" direction="row" spacing={1}>
                             <AvatarWithStatus
-                                avatarUser={TEM.teamMemberProfiles[comment.senderId]}
-                                CM={CM}
+                                avatarUser={useTEM.teamMemberProfiles[comment.senderId]}
+                                useCM={useCM}
                                 isForBubble={true}
                                 isYou={myself.userId === comment.senderId ? true : false}
                                 myself={myself}
                                 setMyself={setMyself}
                                 socket={socket}
-                                UIM={UIM}
+                                useUISM={useUISM}
                             />
                             <Typography level="title-md">{comment.senderName}</Typography>
                             <Typography
@@ -260,15 +260,15 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                         </Tooltip>
                         <BnChatPreview
                             key={`${comment.taskId}-${comment.commentId}-${comment.tsSent}`}
-                            CM={CM}
+                            useCM={useCM}
                             content={comment.commentBody}
                             customClassName="task-comment-preview"
                             isSent={true}
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}
-                            TEM={TEM}
-                            UIM={UIM}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
                         />
                     </Card>
                 </Box>

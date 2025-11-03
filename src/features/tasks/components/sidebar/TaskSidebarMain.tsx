@@ -23,12 +23,12 @@ type TaskSidebarProps = {
         isPrivate: boolean;
         systemUserId: string;
     }) => void;
-    PM: ProjectManagementState;
-    TM: TaskManagementState;
+    usePM: ProjectManagementState;
+    useTM: TaskManagementState;
 };
 
 export const TaskSidebar = (props: TaskSidebarProps) => {
-    const { myself, setOpenJoinProject, PM, TM } = props;
+    const { myself, setOpenJoinProject, usePM, useTM } = props;
     const { accessToken } = useAuth();
 
     // =======================================================================
@@ -66,14 +66,14 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
     // =======================================================================
 
     const updateProjectTags = async () => {
-        if (PM.currentProject && PM.currentProject.projectId) {
+        if (usePM.currentProject && usePM.currentProject.projectId) {
             const loadedProjectTags: TagListProps[] = await loadProjectTags(
                 myself,
-                PM.currentProject.projectId,
+                usePM.currentProject.projectId,
                 accessToken
             );
-            PM.setCurrentProject({
-                ...PM.currentProject,
+            usePM.setCurrentProject({
+                ...usePM.currentProject,
                 projectTags: loadedProjectTags,
             });
         } else {
@@ -99,7 +99,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
 
     useEffect(() => {
         updateRecentTasks();
-    }, [TM.currentPreviewTaskId]);
+    }, [useTM.currentPreviewTaskId]);
 
     useEffect(() => {
         updateProjectTags();
@@ -142,7 +142,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                 setOpenSearch={setOpenSearch}
                 setTeamTaskSearchOptions={setTeamTaskSearchOptions}
                 teamTaskSearchOptions={teamTaskSearchOptions}
-                TM={TM}
+                useTM={useTM}
             />
 
             <Box
@@ -170,15 +170,15 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                         setIsDashboardVisible={setIsDashboardVisible}
                     /> */}
 
-                    <TaskTableListItem TM={TM} />
+                    <TaskTableListItem useTM={useTM} />
 
-                    <RecentsListItem recentTasks={recentTasks} TM={TM} PM={PM} />
+                    <RecentsListItem recentTasks={recentTasks} useTM={useTM} usePM={usePM} />
 
                     <ProjectsListItem
-                        PM={PM}
-                        setIsTaskHomeVisible={TM.setIsTaskHomeVisible}
+                        usePM={usePM}
+                        setIsTaskHomeVisible={useTM.setIsTaskHomeVisible}
                         setOpenJoinProject={setOpenJoinProject}
-                        TM={TM}
+                        useTM={useTM}
                     />
                 </List>
             </Box>

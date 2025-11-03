@@ -8,7 +8,7 @@ import { ProjectManagementState } from "../../../../../hooks/common/useProjectMa
 import { Toggler } from "../common";
 
 type JoinProjectListItemProps = {
-    PM: ProjectManagementState;
+    usePM: ProjectManagementState;
     setOpenJoinProject: (value: {
         flag: boolean;
         projectId: number;
@@ -18,7 +18,7 @@ type JoinProjectListItemProps = {
     }) => void;
 };
 export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
-    const { PM, setOpenJoinProject } = props;
+    const { usePM, setOpenJoinProject } = props;
 
     return (
         <Toggler
@@ -61,7 +61,7 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
             )}
         >
             <List sx={{ gap: 0.5 }}>
-                {PM.teamProjects.map(
+                {usePM.teamProjects.map(
                     ({ projectId, projectName, isPrivate, systemUserId, isJoined }, index) => {
                         return (
                             isJoined === false && (
@@ -69,7 +69,7 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
                                     <ListItemButton
                                         color={"neutral"}
                                         variant={
-                                            projectId === PM.currentProject?.projectId
+                                            projectId === usePM.currentProject?.projectId
                                                 ? "solid"
                                                 : "plain"
                                         }
@@ -99,7 +99,7 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
                                             }
                                             sx={{
                                                 color:
-                                                    projectId === PM.currentProject?.projectId
+                                                    projectId === usePM.currentProject?.projectId
                                                         ? "white"
                                                         : "neutral-500",
                                                 overflow: "hidden",
@@ -119,7 +119,8 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
                     }
                 )}
 
-                {PM.teamProjects.filter((project) => project.isJoined === false).length === 0 && (
+                {usePM.teamProjects.filter((project) => project.isJoined === false).length ===
+                    0 && (
                     <ListItem>
                         <Typography
                             sx={{

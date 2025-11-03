@@ -14,54 +14,54 @@ export const useProjectTaskManagement = ({
     accessToken,
     currentTeamId,
 }: UseProjectTaskManagementProps) => {
-    const PM = useProjectManagement(myself, accessToken, currentTeamId);
-    const TM = useTaskManagement(myself, accessToken);
+    const usePM = useProjectManagement(myself, accessToken, currentTeamId);
+    const useTM = useTaskManagement(myself, accessToken);
 
     // Auto-fetch project tasks when project changes
     useEffect(() => {
         const intervalMs: number = 1000;
         const now = Date.now();
         if (
-            TM.tsLastLoadProjectTasks === undefined ||
-            (TM.tsLastLoadProjectTasks && now - TM.tsLastLoadProjectTasks >= intervalMs)
+            useTM.tsLastLoadProjectTasks === undefined ||
+            (useTM.tsLastLoadProjectTasks && now - useTM.tsLastLoadProjectTasks >= intervalMs)
         ) {
             setTimeout(() => {
                 (async () => {
-                    if (PM.currentProject && PM.currentProject.projectId) {
-                        await TM.fetchProjectTasks(PM.currentProject.projectId);
+                    if (usePM.currentProject && usePM.currentProject.projectId) {
+                        await useTM.fetchProjectTasks(usePM.currentProject.projectId);
                         localStorage.setItem(
                             "lastProjectId",
-                            PM.currentProject.projectId.toString()
+                            usePM.currentProject.projectId.toString()
                         );
                     }
                 })();
             }, 1000);
         }
-    }, [PM.currentProject]);
+    }, [usePM.currentProject]);
 
     // Handle new project creation
     useEffect(() => {
         (async () => {
-            if (PM.currentProject && PM.isNewProjectCreated === true) {
-                TM.fetchProjectTasks(PM.currentProject.projectId);
-                localStorage.setItem("lastProjectId", PM.currentProject.projectId.toString());
+            if (usePM.currentProject && usePM.isNewProjectCreated === true) {
+                useTM.fetchProjectTasks(usePM.currentProject.projectId);
+                localStorage.setItem("lastProjectId", usePM.currentProject.projectId.toString());
             }
         })();
-    }, [PM.isNewProjectCreated]);
+    }, [usePM.isNewProjectCreated]);
 
     // Load updated task when preview changes
     useEffect(() => {
-        if (PM.currentProject) {
-            TM.loadUpdatedTask(PM.currentProject.projectId);
+        if (usePM.currentProject) {
+            useTM.loadUpdatedTask(usePM.currentProject.projectId);
         }
-    }, [TM.currentPreviewTaskId, TM.isNewTaskCreated, TM.isTaskUpdatedBySomeone]);
+    }, [useTM.currentPreviewTaskId, useTM.isNewTaskCreated, useTM.isTaskUpdatedBySomeone]);
 
     // Handle new task creation
     useEffect(() => {
-        if (TM.isNewTaskCreated === true) {
+        if (useTM.isNewTaskCreated === true) {
             setTimeout(() => {
                 (async () => {
-                    await PM.loadProjectsAndTasks(
+                    await usePM.loadProjectsAndTasks(
                         localStorage.getItem("lastProjectId")
                             ? Number(localStorage.getItem("lastProjectId"))
                             : -1
@@ -69,31 +69,31 @@ export const useProjectTaskManagement = ({
                 })();
             }, 500);
         }
-    }, [TM.isNewTaskCreated]);
+    }, [useTM.isNewTaskCreated]);
 
     // Auto-load task when preview ID changes
     useEffect(() => {
-        if (PM.currentProject && TM.currentPreviewTaskId !== -1) {
-            TM.loadTask(PM.currentProject.projectId, TM.currentPreviewTaskId);
+        if (usePM.currentProject && useTM.currentPreviewTaskId !== -1) {
+            useTM.loadTask(usePM.currentProject.projectId, useTM.currentPreviewTaskId);
         }
-    }, [TM.currentPreviewTaskId, PM.currentProject]);
+    }, [useTM.currentPreviewTaskId, usePM.currentProject]);
 
     // Reset task state when team/project changes
     useEffect(() => {
-        if (!PM.currentProject) {
-            TM.setIsTaskPreviewVisible(false);
-            TM.setCurrentPreviewTaskId(-1);
-            TM.setCurrentPreviewTask(undefined);
-            TM.setIsCreatingTask({
+        if (!usePM.currentProject) {
+            useTM.setIsTaskPreviewVisible(false);
+            useTM.setCurrentPreviewTaskId(-1);
+            useTM.setCurrentPreviewTask(undefined);
+            useTM.setIsCreatingTask({
                 flag: false,
                 parentTaskId: null,
                 rootTaskId: null,
             });
         }
-    }, [PM.currentProject]);
+    }, [usePM.currentProject]);
 
     return {
-        PM,
-        TM,
+        usePM,
+        useTM,
     };
 };

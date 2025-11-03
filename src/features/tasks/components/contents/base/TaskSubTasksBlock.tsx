@@ -26,17 +26,17 @@ import { ProjectProps, TaskProps } from "../../../../../types/tasks";
 import { loadSpecificChildTasks } from "../../../services/loadSpecificChildTasks";
 
 type TaskSubTasksBlockProps = {
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     currentTaskContent: TaskProps;
-    CM: ChatManagementState;
-    UIM: UIStateManagementState;
-    TM: TaskManagementState;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
+    useTM: TaskManagementState;
 };
 export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
-    const { TEM, socket, myself, setMyself, currentTaskContent, UIM, CM, TM } = props;
+    const { useTEM, socket, myself, setMyself, currentTaskContent, useUISM, useCM, useTM } = props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const [childTasks, setChildTasks] = useState<TaskProps[]>([]);
@@ -44,7 +44,10 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
     useEffect(() => {
         (async () => {
             // Get the child tasks if exist
-            if (currentTaskContent.project && TM.currentPreviewTaskId === currentTaskContent.id) {
+            if (
+                currentTaskContent.project &&
+                useTM.currentPreviewTaskId === currentTaskContent.id
+            ) {
                 const childTasks: TaskProps[] = await loadSpecificChildTasks(
                     myself,
                     currentTaskContent.project.projectId,
@@ -80,14 +83,14 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                             currentTaskContent.id !== undefined &&
                             currentTaskContent.rootTaskId != null
                         ) {
-                            TM.setIsCreatingTask({
+                            useTM.setIsCreatingTask({
                                 flag: true,
                                 parentTaskId: currentTaskContent.id,
                                 rootTaskId: currentTaskContent.rootTaskId,
                             });
 
                             // Close task-home when creating a sub task.
-                            TM.setIsTaskHomeVisible(false);
+                            useTM.setIsTaskHomeVisible(false);
                         } else {
                             console.error("Task ID nod defined error.");
                         }
@@ -125,13 +128,13 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                     return (
                                         <ListItem key={`listitem-${id}-${index}`}>
                                             <AvatarWithStatus
-                                                CM={CM}
+                                                useCM={useCM}
                                                 myself={myself}
                                                 setMyself={setMyself}
                                                 socket={socket}
-                                                UIM={UIM}
+                                                useUISM={useUISM}
                                                 avatarUser={
-                                                    TEM.teamMemberProfiles[assignee.userId]
+                                                    useTEM.teamMemberProfiles[assignee.userId]
                                                 }
                                                 isYou={
                                                     myself.userId === assignee.userId
@@ -151,7 +154,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                                         //     projectTags: project.projectTags || [],
                                                         //     systemUserId: project.systemUserId,
                                                         // });
-                                                        TM.setCurrentPreviewTaskId(id);
+                                                        useTM.setCurrentPreviewTaskId(id);
                                                     } else {
                                                         console.error(
                                                             "Failed to set the current project"

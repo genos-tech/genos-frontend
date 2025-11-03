@@ -1,12 +1,12 @@
-import { Box, IconButton, List } from "@mui/joy";
 import { forwardRef } from "react";
+import { Box, IconButton, List } from "@mui/joy";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
 import { InboxSectionProps } from "../types/inboxTypes";
 import { InboxBubble } from "./InboxBubble";
 
 export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionProps>(
-    ({ items, myself, setMyself, CM, UIM, socket, TEM, itemKeyPrefix }, ref) => {
+    ({ items, myself, setMyself, useCM, useUISM, socket, useTEM, itemKeyPrefix }, ref) => {
         return (
             <List
                 className="custom-scrollbar"
@@ -32,13 +32,13 @@ export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionProps>(
                             return (
                                 <InboxBubble
                                     key={`${itemKeyPrefix}-${item.itemId}`}
-                                    CM={CM}
+                                    useCM={useCM}
                                     inboxItem={item}
                                     myself={myself}
                                     setMyself={setMyself}
                                     socket={socket}
-                                    TEM={TEM}
-                                    UIM={UIM}
+                                    useTEM={useTEM}
+                                    useUISM={useUISM}
                                 />
                             );
                         }}

@@ -9,32 +9,32 @@ import { UIStateManagementState } from "../../../../../hooks/common/useUIStateMa
 import { UserProps } from "../../../../../types/admin";
 
 type TaskCreateBodyBlockProps = {
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
     taskId: number;
     body: PartialBlock[] | null;
     setBody: (value: PartialBlock[]) => void;
-    CM: ChatManagementState;
-    UIM: UIStateManagementState;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
 };
 export const TaskCreateBodyBlock = (props: TaskCreateBodyBlockProps) => {
-    const { TEM, myself, setMyself, socket, taskId, body, setBody, CM, UIM } = props;
+    const { useTEM, myself, setMyself, socket, taskId, body, setBody, useCM, useUISM } = props;
     return (
         <Stack direction={"column"} sx={{ width: "100%" }}>
             <Box sx={{ mt: 2 }}>
                 <div className="md-content">
                     <BnTaskPreview
                         body={body || []}
-                        CM={CM}
+                        useCM={useCM}
                         myself={myself}
                         setBody={setBody}
                         setMyself={setMyself}
                         socket={socket}
                         taskId={taskId}
-                        TEM={TEM}
-                        UIM={UIM}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
                     />
                 </div>
             </Box>

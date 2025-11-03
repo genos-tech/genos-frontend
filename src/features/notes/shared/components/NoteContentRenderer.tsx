@@ -16,17 +16,17 @@ import { TaskNoteMain } from "../../task-notes/components/TaskNoteMain";
 type NoteContentRendererProps = {
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    UIM: UIStateManagementState;
+    useUISM: UIStateManagementState;
     socket: Socket | null;
-    TEM: TeamManagementState;
-    PM: ProjectManagementState;
-    NM: NoteManagementState;
-    CM: ChatManagementState;
-    TM: TaskManagementState;
+    useTEM: TeamManagementState;
+    usePM: ProjectManagementState;
+    useNM: NoteManagementState;
+    useCM: ChatManagementState;
+    useTM: TaskManagementState;
 };
 
 export const NoteContentRenderer = (props: NoteContentRendererProps) => {
-    const { myself, setMyself, UIM, socket, TEM, PM, NM, CM, TM } = props;
+    const { myself, setMyself, useUISM, socket, useTEM, usePM, useNM, useCM, useTM } = props;
 
     const renderPlaceholder = (message: string) => (
         <Box
@@ -53,52 +53,52 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
     );
 
     // Note Home placeholder
-    if (NM.currentNoteType === 0) {
+    if (useNM.currentNoteType === 0) {
         return renderPlaceholder("(TBD) Note Home");
     }
 
     // My Note
-    if (NM.currentNoteType === 1 && NM.currentMyNoteChain) {
+    if (useNM.currentNoteType === 1 && useNM.currentMyNoteChain) {
         return (
             <MyNoteMain
-                CM={CM}
+                useCM={useCM}
                 myself={myself}
-                NM={NM}
+                useNM={useNM}
                 setMyself={setMyself}
                 socket={socket}
-                TEM={TEM}
-                UIM={UIM}
+                useTEM={useTEM}
+                useUISM={useUISM}
             />
         );
     }
 
     // Task Note
-    if (NM.currentNoteType === 2 && NM.currentTaskNoteChain) {
+    if (useNM.currentNoteType === 2 && useNM.currentTaskNoteChain) {
         return (
             <>
                 <TaskNoteMain
-                    CM={CM}
+                    useCM={useCM}
                     isInTaskPage={false}
                     myself={myself}
-                    NM={NM}
+                    useNM={useNM}
                     setMyself={setMyself}
                     socket={socket}
-                    TEM={TEM}
-                    TM={TM}
-                    UIM={UIM}
+                    useTEM={useTEM}
+                    useTM={useTM}
+                    useUISM={useUISM}
                 />
 
-                {NM.isTaskVisibleInNote && TM.currentPreviewTask && (
+                {useNM.isTaskVisibleInNote && useTM.currentPreviewTask && (
                     <TaskPreview
-                        CM={CM}
-                        NM={NM}
+                        useCM={useCM}
+                        useNM={useNM}
                         myself={myself}
                         setMyself={setMyself}
                         socket={socket}
-                        TEM={TEM}
-                        TM={TM}
-                        UIM={UIM}
-                        PM={PM}
+                        useTEM={useTEM}
+                        useTM={useTM}
+                        useUISM={useUISM}
+                        usePM={usePM}
                     />
                 )}
             </>
@@ -106,25 +106,25 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
     }
 
     // Chat Note
-    if (NM.currentNoteType === 3 && NM.currentChatNoteChain) {
+    if (useNM.currentNoteType === 3 && useNM.currentChatNoteChain) {
         return (
             <ChatNoteMain
-                CM={CM}
+                useCM={useCM}
                 isInChatPage={false}
                 myself={myself}
-                NM={NM}
-                PM={PM}
+                useNM={useNM}
+                usePM={usePM}
                 setMyself={setMyself}
                 socket={socket}
-                TEM={TEM}
-                TM={TM}
-                UIM={UIM}
+                useTEM={useTEM}
+                useTM={useTM}
+                useUISM={useUISM}
             />
         );
     }
 
     // Shared Note placeholder
-    if (NM.currentNoteType === 4) {
+    if (useNM.currentNoteType === 4) {
         return renderPlaceholder("(TBD) Shared Notes");
     }
 

@@ -1,5 +1,5 @@
-import { Avatar } from "@mui/joy";
 import React from "react";
+import { Avatar } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
@@ -17,35 +17,35 @@ interface ChatListItemAvatarProps {
     isYou: boolean;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    UIM: UIStateManagementState;
+    useUISM: UIStateManagementState;
     socket: Socket | null;
-    TEM: TeamManagementState;
-    CM: ChatManagementState;
+    useTEM: TeamManagementState;
+    useCM: ChatManagementState;
 }
 
 export const ChatListItemAvatar: React.FC<ChatListItemAvatarProps> = ({
-    TEM,
+    useTEM,
     chat,
     chatType,
     isYou,
     myself,
     setMyself,
-    UIM,
+    useUISM,
     socket,
-    CM,
+    useCM,
 }) => {
     // DM Chat with partner
     if (chatType === 1 && chat.dmPartnerUser.userId !== "") {
         return (
             <AvatarWithStatus
-                avatarUser={TEM.teamMemberProfiles[chat.dmPartnerUser.userId]}
+                avatarUser={useTEM.teamMemberProfiles[chat.dmPartnerUser.userId]}
                 chat={chat}
-                CM={CM}
+                useCM={useCM}
                 isYou={isYou}
                 myself={myself}
                 setMyself={setMyself}
                 socket={socket}
-                UIM={UIM}
+                useUISM={useUISM}
             />
         );
     }
@@ -59,14 +59,14 @@ export const ChatListItemAvatar: React.FC<ChatListItemAvatarProps> = ({
     if (chatType === 2) {
         return (
             <GMAvatar
-                CM={CM}
+                useCM={useCM}
                 gmChat={chat}
                 isYou={isYou}
                 myself={myself}
                 setMyself={setMyself}
                 socket={socket}
-                TEM={TEM}
-                UIM={UIM}
+                useTEM={useTEM}
+                useUISM={useUISM}
             />
         );
     }
@@ -75,13 +75,13 @@ export const ChatListItemAvatar: React.FC<ChatListItemAvatarProps> = ({
     if (chatType === 3) {
         return (
             <ProjectAvatar
-                CM={CM}
+                useCM={useCM}
                 myself={myself}
                 pmChat={chat}
                 setMyself={setMyself}
                 socket={socket}
-                TEM={TEM}
-                UIM={UIM}
+                useTEM={useTEM}
+                useUISM={useUISM}
             />
         );
     }

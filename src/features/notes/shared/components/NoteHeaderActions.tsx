@@ -33,10 +33,10 @@ interface NoteHeaderActionsProps {
     pmChat: AllChatProps | undefined;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    TEM: TeamManagementState;
+    useTEM: TeamManagementState;
     socket: any;
-    CM: ChatManagementState;
-    UIM: UIStateManagementState;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
     onCreateNewNote: () => void;
     onCreateChildNote: () => void;
     onOpenTask: () => void;
@@ -52,9 +52,9 @@ export const NoteHeaderActions = ({
     myself,
     setMyself,
     socket,
-    CM,
-    UIM,
-    TEM,
+    useCM,
+    useUISM,
+    useTEM,
     onCreateNewNote,
     onCreateChildNote,
     onOpenTask,
@@ -89,13 +89,13 @@ export const NoteHeaderActions = ({
             {noteType === 2 && !isInTaskPage && currentTask && currentTask.id && pmChat && (
                 <Stack direction={"row"} sx={{ mt: "5px" }}>
                     <ProjectAvatar
-                        CM={CM}
+                        useCM={useCM}
                         myself={myself}
                         pmChat={pmChat}
                         setMyself={setMyself}
                         socket={socket}
-                        TEM={TEM}
-                        UIM={UIM}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
                     />
 
                     <Tooltip size="sm" title="Open Task on Click" variant="outlined">

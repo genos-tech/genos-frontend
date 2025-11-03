@@ -12,11 +12,11 @@ import { Toggler } from "./common";
 
 type RecentsListItemProps = {
     recentTasks: SearchTeamTasksResponse[];
-    PM: ProjectManagementState;
-    TM: TaskManagementState;
+    usePM: ProjectManagementState;
+    useTM: TaskManagementState;
 };
 export const RecentsListItem = (props: RecentsListItemProps) => {
-    const { recentTasks, PM, TM } = props;
+    const { recentTasks, usePM, useTM } = props;
     const { mode } = useColorScheme();
 
     return (
@@ -28,7 +28,7 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                         color="primary"
                         onClick={() => {
                             setOpen(!open);
-                            TM.setIsDashboardVisible(false);
+                            useTM.setIsDashboardVisible(false);
                         }}
                     >
                         <AccessTimeIcon />
@@ -70,14 +70,14 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                                         sx={{ overflow: "hidden" }} // ensure children don't overflow
                                         onClick={() => {
                                             if (projectId) {
-                                                PM.setCurrentProject({
+                                                usePM.setCurrentProject({
                                                     projectId: projectId,
                                                     projectName: projectName,
                                                     projectTags: [],
                                                     systemUserId: systemUserId,
                                                 });
-                                                TM.setCurrentPreviewTaskId(taskId);
-                                                TM.setIsTaskPreviewVisible(true);
+                                                useTM.setCurrentPreviewTaskId(taskId);
+                                                useTM.setIsTaskPreviewVisible(true);
                                             } else {
                                                 console.error("Failed to set the current project");
                                             }

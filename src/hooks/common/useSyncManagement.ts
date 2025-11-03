@@ -15,7 +15,7 @@ export const webSocketSync = (props: WebSocketSyncProps) => {
         currentPreviewTaskId,
         setIsTaskUpdatedBySomeone,
         setIsTaskCommentUpdated,
-        CM,
+        useCM,
     } = props;
 
     useEffect(() => {
@@ -33,7 +33,7 @@ export const webSocketSync = (props: WebSocketSyncProps) => {
             setIsTaskUpdatedBySomeone,
             setIsTaskCommentUpdated,
             funcSetInboxItems,
-            CM
+            useCM
         );
 
         return () => {
@@ -42,9 +42,9 @@ export const webSocketSync = (props: WebSocketSyncProps) => {
     }, [
         accessToken,
         isLoading,
-        CM.allChats,
-        CM.currentMainChat,
-        CM.currentSubChat,
-        CM.currentThreadChat,
+        useCM.allChats,
+        useCM.currentMainChat,
+        useCM.currentSubChat,
+        useCM.currentThreadChat,
     ]);
 };

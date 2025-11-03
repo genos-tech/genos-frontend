@@ -11,9 +11,9 @@ import { ModalJoinProject } from "./ModalJoinProject";
 
 interface TaskHomeModalsProps {
     myself: UserProps;
-    PM: ProjectManagementState;
-    TM: TaskManagementState;
-    CM: ChatManagementState;
+    usePM: ProjectManagementState;
+    useTM: TaskManagementState;
+    useCM: ChatManagementState;
     socket: Socket | null;
     openJoinProject: {
         flag: boolean;
@@ -43,9 +43,9 @@ interface TaskHomeModalsProps {
 
 export const TaskHomeModals = ({
     myself,
-    PM,
-    TM,
-    CM,
+    usePM,
+    useTM,
+    useCM,
     socket,
     openJoinProject,
     setOpenJoinProject,
@@ -54,22 +54,22 @@ export const TaskHomeModals = ({
 }: TaskHomeModalsProps) => {
     return (
         <>
-            <ModalCreateProject myself={myself} PM={PM} />
+            <ModalCreateProject myself={myself} usePM={usePM} />
             <ModalJoinProject
-                CM={CM}
+                useCM={useCM}
                 myself={myself}
                 openJoinProject={openJoinProject}
                 setOpenJoinProject={setOpenJoinProject}
                 socket={socket}
-                PM={PM}
+                usePM={usePM}
             />
             <ModalDeleteProject
                 myself={myself}
                 openDeleteProject={openDeleteProject}
-                PM={PM}
+                usePM={usePM}
                 setOpenDeleteProject={setOpenDeleteProject}
             />
-            <ModalCreateTag myself={myself} PM={PM} TM={TM} />
+            <ModalCreateTag myself={myself} usePM={usePM} useTM={useTM} />
         </>
     );
 };

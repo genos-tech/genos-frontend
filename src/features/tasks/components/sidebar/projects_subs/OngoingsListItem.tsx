@@ -15,7 +15,7 @@ import { TaskTreeToggler } from "./TaskTreeToggler";
 
 type OngoingsListItemProps = {
     currentProjectId: number;
-    TM: TaskManagementState;
+    useTM: TaskManagementState;
 };
 
 // Memoized child components for better performance
@@ -148,14 +148,14 @@ const TaskTreeNode = memo(
     ({
         node,
         rootTaskId,
-        TM,
+        useTM,
         mode,
         onTaskClick,
         onCreateSubTask,
     }: {
         node: TaskMetaTreeNode;
         rootTaskId: number;
-        TM: TaskManagementState;
+        useTM: TaskManagementState;
         mode: "light" | "dark" | undefined;
         onTaskClick: (
             node: TaskMetaTreeNode,
@@ -164,7 +164,7 @@ const TaskTreeNode = memo(
         ) => void;
         onCreateSubTask: (taskId: number, rootTaskId: number) => void;
     }) => {
-        const isSelected = TM.currentPreviewTaskId === node.taskId;
+        const isSelected = useTM.currentPreviewTaskId === node.taskId;
         const hasChildren = node.children.length > 0;
         const actualMode = mode || "light";
 
@@ -190,7 +190,7 @@ const TaskTreeNode = memo(
                                 {node.children.map((child) => (
                                     <TaskTreeNode
                                         key={child.taskId}
-                                        TM={TM}
+                                        useTM={useTM}
                                         mode={mode}
                                         node={child}
                                         rootTaskId={rootTaskId}
@@ -217,29 +217,29 @@ const TaskTreeNode = memo(
 TaskTreeNode.displayName = "TaskTreeNode";
 
 export const OngoingsListItem = (props: OngoingsListItemProps) => {
-    const { currentProjectId, TM } = props;
+    const { currentProjectId, useTM } = props;
     const { mode: rawMode } = useColorScheme();
     const mode: "light" | "dark" | undefined = rawMode === "system" ? "light" : rawMode;
 
     const [tmpCurrentTaskChain, setTmpCurrentTaskChain] = useState<TaskMetaTreeNode[]>();
-    const [tmpTaskMetaTree, setTmpTaskMetaTree] = useState<TaskMetaTreeNode[]>(TM.taskMetaTree);
+    const [tmpTaskMetaTree, setTmpTaskMetaTree] = useState<TaskMetaTreeNode[]>(useTM.taskMetaTree);
 
     useEffect(() => {
-        if (TM.currentTaskChain && TM.currentTaskChain.length > 0) {
-            setTmpCurrentTaskChain(TM.currentTaskChain);
+        if (useTM.currentTaskChain && useTM.currentTaskChain.length > 0) {
+            setTmpCurrentTaskChain(useTM.currentTaskChain);
         } else {
             setTmpCurrentTaskChain([]);
         }
-    }, [TM.currentTaskChain]);
+    }, [useTM.currentTaskChain]);
 
     // Only when `taskMetaTree` has been updated with new contents, refresh the Note Chain.
     // `taskMetaTree` has been always updated without any contents change. Is such case,
     // no need to refresh it since it's the same as the tmp one.
     useEffect(() => {
-        if (areObjectsEqual(tmpTaskMetaTree, TM.taskMetaTree) === false) {
-            setTmpTaskMetaTree(TM.taskMetaTree);
+        if (areObjectsEqual(tmpTaskMetaTree, useTM.taskMetaTree) === false) {
+            setTmpTaskMetaTree(useTM.taskMetaTree);
         }
-    }, [TM.taskMetaTree, tmpTaskMetaTree]);
+    }, [useTM.taskMetaTree, tmpTaskMetaTree]);
 
     // Memoize filtered task tree
     const filteredTaskTree = useMemo(
@@ -250,14 +250,14 @@ export const OngoingsListItem = (props: OngoingsListItemProps) => {
     // Memoize callback handlers
     const handleCreateSubTask = useCallback(
         (taskId: number, rootTaskId: number) => {
-            TM.setIsCreatingTask({
+            useTM.setIsCreatingTask({
                 flag: true,
                 parentTaskId: taskId,
                 rootTaskId: rootTaskId,
             });
-            TM.setIsTaskHomeVisible(false);
+            useTM.setIsTaskHomeVisible(false);
         },
-        [TM]
+        [useTM]
     );
 
     const handleTaskClick = useCallback(
@@ -265,15 +265,15 @@ export const OngoingsListItem = (props: OngoingsListItemProps) => {
             if (node.children.length > 0) {
                 setOpen(!open);
             }
-            TM.setIsTaskPreviewVisible(true);
-            TM.setCurrentPreviewTaskId(node.taskId);
+            useTM.setIsTaskPreviewVisible(true);
+            useTM.setCurrentPreviewTaskId(node.taskId);
         },
-        [TM]
+        [useTM]
     );
 
     const handleOuterToggleClick = useCallback(() => {
-        TM.getTaskMeta();
-    }, [TM]);
+        useTM.getTaskMeta();
+    }, [useTM]);
 
     const renderOuterToggle = useCallback(
         ({ open, setOpen }: { open: boolean; setOpen: (value: boolean) => void }) => (
@@ -315,7 +315,7 @@ export const OngoingsListItem = (props: OngoingsListItemProps) => {
                     filteredTaskTree.map((root) => (
                         <TaskTreeNode
                             key={root.taskId}
-                            TM={TM}
+                            useTM={useTM}
                             mode={mode}
                             node={root}
                             rootTaskId={root.taskId}
