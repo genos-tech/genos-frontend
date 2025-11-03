@@ -7,6 +7,7 @@ import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../../components/common/avatarWithStatus";
 import { useAuth } from "../../../../../context/AuthContext";
+import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../../types/admin";
 import { ChatProps } from "../../../../../types/chat";
@@ -22,11 +23,10 @@ import { DynamicURLManager } from "./sub/DynamicURLManager";
 import { TaskDueDateInput } from "./sub/TaskDueDateInput";
 
 type TaskMainBlockProps = {
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     socket: Socket | null;
     taskContent: TaskProps;
     setTaskContent: (value: TaskProps) => void;
-    teamMembers: UserProps[];
     teamProjects: ProjectProps[];
     projectTags: TagListProps[];
     myself: UserProps;
@@ -52,11 +52,10 @@ type TaskMainBlockProps = {
 };
 export const TaskMainBlock = (props: TaskMainBlockProps) => {
     const {
-        teamMemberProfiles,
+        TEM,
         socket,
         taskContent,
         setTaskContent,
-        teamMembers,
         teamProjects,
         projectTags,
         myself,
@@ -118,7 +117,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     <ListItem sx={{ display: "flex", alignItems: "center", width: "100%" }}>
                         <Typography sx={{ minWidth: "80px" }}>Assignee</Typography>
                         <AvatarWithStatus
-                            avatarUser={teamMemberProfiles[assignee.userId]}
+                            avatarUser={TEM.teamMemberProfiles[assignee.userId]}
                             isYou={myself.userId === assignee.userId ? true : false}
                             myself={myself}
                             setCurrentMainChat={setCurrentMainChat}
@@ -140,14 +139,13 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             setUser={setAssignee}
                             socket={socket}
                             taskContent={taskContent}
-                            teamMemberProfiles={teamMemberProfiles}
-                            teamMembers={teamMembers}
+                            TEM={TEM}
                         />
                     </ListItem>
                     <ListItem sx={{ display: "flex", alignItems: "center", width: "100%" }}>
                         <Typography sx={{ minWidth: "80px" }}>Reporter</Typography>
                         <AvatarWithStatus
-                            avatarUser={teamMemberProfiles[reporter.userId]}
+                            avatarUser={TEM.teamMemberProfiles[reporter.userId]}
                             isYou={myself.userId === reporter.userId ? true : false}
                             myself={myself}
                             setCurrentMainChat={setCurrentMainChat}
@@ -169,8 +167,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             setUser={setReporter}
                             socket={socket}
                             taskContent={taskContent}
-                            teamMemberProfiles={teamMemberProfiles}
-                            teamMembers={teamMembers}
+                            TEM={TEM}
                         />
                     </ListItem>
                     <Grid spacing={2} container>
@@ -274,7 +271,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             >
                                 <Typography sx={{ pr: "5px" }}>Parent Task</Typography>
                                 <AvatarWithStatus
-                                    avatarUser={teamMemberProfiles[assignee.userId]}
+                                    avatarUser={TEM.teamMemberProfiles[assignee.userId]}
                                     isYou={myself.userId === assignee.userId ? true : false}
                                     myself={myself}
                                     setCurrentMainChat={setCurrentMainChat}

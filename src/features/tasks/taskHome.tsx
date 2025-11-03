@@ -89,14 +89,12 @@ export const TaskHome = (props: TaskHomeProps) => {
             <CssBaseline />
             <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
                 <Sidebar
-                    currentTeam={TEM.currentTeam}
                     myself={myself}
                     UIM={UIM}
                     setCurrentMainChat={setCurrentMainChat}
-                    setCurrentTeam={TEM.setCurrentTeam}
                     setMyself={setMyself}
                     socket={socket}
-                    teamMemberProfiles={TEM.teamMemberProfiles}
+                    TEM={TEM}
                     unReadChatAndActivityCounts={unReadChatAndActivityCounts}
                     unReadInboxItemCount={unReadInboxItemCount}
                 />

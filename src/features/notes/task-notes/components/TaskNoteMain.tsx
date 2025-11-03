@@ -4,6 +4,7 @@ import { Box, IconButton, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
@@ -19,9 +20,8 @@ import { ACTaskNotes } from "./autocompletes/ACTaskNotes";
 import { TaskNoteHeader } from "./TaskNoteHeader";
 
 type TaskNoteMainProps = {
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     socket: Socket | null;
-    teamMembers: UserProps[];
     myself: UserProps;
     setMyself: (me: UserProps) => void;
     UIM: UIStateManagementState;
@@ -37,9 +37,8 @@ type TaskNoteMainProps = {
 
 export const TaskNoteMain = (props: TaskNoteMainProps) => {
     const {
-        teamMemberProfiles,
+        TEM,
         socket,
-        teamMembers,
         myself,
         setMyself,
         UIM,
@@ -269,7 +268,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                             setMyself={setMyself}
                             UIM={UIM}
                             socket={socket}
-                            teamMemberProfiles={teamMemberProfiles}
+                            TEM={TEM}
                             onCloseNotes={handleCloseNotes}
                             onCreateChildNote={handleCreateChildNote}
                             onCreateNewNote={() => {}} // Don't create new task note in task note page
@@ -306,8 +305,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                         UIM={UIM}
                         socket={socket}
                         tabItems={NM.tabItems}
-                        teamMemberProfiles={teamMemberProfiles}
-                        teamMembers={teamMembers}
+                        TEM={TEM}
                         tsBody={tsBody}
                         onCloseTab={handleCloseTab}
                         onLoadNote={NM.loadNote}

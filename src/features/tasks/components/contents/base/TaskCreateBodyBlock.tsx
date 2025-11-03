@@ -3,17 +3,17 @@ import { Box, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { BnTaskPreview } from "../../../../../components/blockNote/bnTaskPreview";
+import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../../types/admin";
 import { ChatProps } from "../../../../../types/chat";
 import { TaskProps } from "../../../../../types/tasks";
 
 type TaskCreateBodyBlockProps = {
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
-    teamMembers: UserProps[];
     taskId: number;
     body: PartialBlock[] | null;
     setBody: (value: PartialBlock[]) => void;
@@ -21,18 +21,7 @@ type TaskCreateBodyBlockProps = {
     UIM: UIStateManagementState;
 };
 export const TaskCreateBodyBlock = (props: TaskCreateBodyBlockProps) => {
-    const {
-        teamMemberProfiles,
-        myself,
-        setMyself,
-        socket,
-        teamMembers,
-        taskId,
-        body,
-        setBody,
-        setCurrentChat,
-        UIM,
-    } = props;
+    const { TEM, myself, setMyself, socket, taskId, body, setBody, setCurrentChat, UIM } = props;
     return (
         <Stack direction={"column"} sx={{ width: "100%" }}>
             <Box sx={{ mt: 2 }}>
@@ -46,8 +35,7 @@ export const TaskCreateBodyBlock = (props: TaskCreateBodyBlockProps) => {
                         UIM={UIM}
                         socket={socket}
                         taskId={taskId}
-                        teamMemberProfiles={teamMemberProfiles}
-                        teamMembers={teamMembers}
+                        TEM={TEM}
                     />
                 </div>
             </Box>

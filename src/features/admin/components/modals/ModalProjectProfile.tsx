@@ -21,6 +21,7 @@ import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
 import { useAuth } from "../../../../context/AuthContext";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { loadProjectProfile } from "../../../../services/loadProjectProfile";
 import { ProjectProfileProps, UserProps } from "../../../../types/admin";
@@ -33,7 +34,7 @@ const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type ModalProjectProfileProps = {
     socket: Socket | null;
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     pmChat: AllChatProps;
@@ -48,7 +49,7 @@ type ModalProjectProfileProps = {
 export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
     const {
         socket,
-        teamMemberProfiles,
+        TEM,
         myself,
         setMyself,
         pmChat,
@@ -247,7 +248,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                             }}
                                                         >
                                                             {projectProfile
-                                                                ? teamMemberProfiles[
+                                                                ? TEM.teamMemberProfiles[
                                                                       projectProfile?.ownerUserId
                                                                   ]?.userName
                                                                 : "N/A"}
@@ -259,7 +260,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                     component="a"
                                                     href={`mailto:${
                                                         projectProfile
-                                                            ? teamMemberProfiles[
+                                                            ? TEM.teamMemberProfiles[
                                                                   projectProfile?.ownerUserId
                                                               ]?.userEmail
                                                             : "N/A"
@@ -275,7 +276,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                     }}
                                                 >
                                                     {projectProfile
-                                                        ? teamMemberProfiles[
+                                                        ? TEM.teamMemberProfiles[
                                                               projectProfile?.ownerUserId
                                                           ]?.userEmail
                                                         : "N/A"}

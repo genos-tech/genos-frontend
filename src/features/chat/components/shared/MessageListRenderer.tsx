@@ -2,6 +2,7 @@ import { Box, Chip, Stack } from "@mui/joy";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import {
@@ -23,7 +24,7 @@ interface MessageListRendererProps {
     messages: (MessageProps | ThreadMessageProps)[];
     chat: ChatProps | ThreadProps;
     myself: UserProps;
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     socket: Socket | null;
     currentChatId: number;
     visibleRange: { startIndex: number; endIndex: number };
@@ -70,7 +71,7 @@ export const MessageListRenderer = ({
     messages,
     chat,
     myself,
-    teamMemberProfiles,
+    TEM,
     socket,
     currentChatId,
     visibleRange,
@@ -257,7 +258,7 @@ export const MessageListRenderer = ({
                                         UIM={UIM}
                                         setTargetMessageIndex={() => {}}
                                         socket={socket}
-                                        teamMemberProfiles={teamMemberProfiles}
+                                        TEM={TEM}
                                         thread={chat as ThreadProps}
                                         variant={isYou ? "sent" : "received"}
                                     />
@@ -287,7 +288,7 @@ export const MessageListRenderer = ({
                                         setMyself={setMyself}
                                         UIM={UIM}
                                         socket={socket}
-                                        teamMemberProfiles={teamMemberProfiles}
+                                        TEM={TEM}
                                         variant={isYou ? "sent" : "received"}
                                     />
                                 )}

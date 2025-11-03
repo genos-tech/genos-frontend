@@ -94,14 +94,12 @@ export const NoteHome = (props: NoteHomeProps) => {
             <CssBaseline />
             <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
                 <Sidebar
-                    currentTeam={TEM.currentTeam}
                     myself={myself}
                     UIM={UIM}
                     setCurrentMainChat={CM.setCurrentMainChat}
-                    setCurrentTeam={TEM.setCurrentTeam}
                     setMyself={setMyself}
                     socket={socket}
-                    teamMemberProfiles={TEM.teamMemberProfiles}
+                    TEM={TEM}
                     unReadChatAndActivityCounts={CM.unReadChatAndActivityCounts}
                     unReadInboxItemCount={unReadInboxItemCount}
                 />

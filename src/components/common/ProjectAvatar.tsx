@@ -5,6 +5,7 @@ import { Socket } from "socket.io-client";
 
 import { ModalProjectProfile } from "../../features/admin/components/modals/ModalProjectProfile";
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
+import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { AllChatProps, ChatProps } from "../../types/chat";
@@ -13,7 +14,7 @@ const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type ProjectAvatarProps = {
     socket: Socket | null;
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     avatarSize?: number;
@@ -24,8 +25,8 @@ type ProjectAvatarProps = {
 };
 export const ProjectAvatar = (props: ProjectAvatarProps) => {
     const {
+        TEM,
         socket,
-        teamMemberProfiles,
         myself,
         setMyself,
         avatarSize,
@@ -67,7 +68,7 @@ export const ProjectAvatar = (props: ProjectAvatarProps) => {
                 setOpenModalProjectProfile={setOpenModalProjectProfile}
                 setOpenUserProfile={setOpenUserProfile}
                 socket={socket}
-                teamMemberProfiles={teamMemberProfiles}
+                TEM={TEM}
             />
 
             {avatarUserId && (
@@ -80,7 +81,7 @@ export const ProjectAvatar = (props: ProjectAvatarProps) => {
                     UIM={UIM}
                     setOpenUserProfile={setOpenUserProfile}
                     socket={socket}
-                    user={teamMemberProfiles[avatarUserId]}
+                    user={TEM.teamMemberProfiles[avatarUserId]}
                 />
             )}
         </div>

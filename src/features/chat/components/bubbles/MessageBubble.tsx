@@ -7,6 +7,7 @@ import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus
 import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
 import { EmojiReaction } from "../../../../components/emojiInput/EmojiReaction";
 import { useAuth } from "../../../../context/AuthContext";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import {
@@ -31,7 +32,7 @@ import { BubbleUnderBar } from "./BubbleUnderBar";
 import { BubbleUserName } from "./BubbleUserName";
 
 type MessageBubbleProps = {
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     variant: "sent" | "received";
@@ -69,7 +70,7 @@ type MessageBubbleProps = {
 
 export const MessageBubble = (props: MessageBubbleProps) => {
     const {
-        teamMemberProfiles,
+        TEM,
         myself,
         setMyself,
         variant,
@@ -620,8 +621,10 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                 socket={socket}
                                                 avatarUser={
                                                     isSent
-                                                        ? teamMemberProfiles[myself.userId]
-                                                        : teamMemberProfiles[message.sender.userId]
+                                                        ? TEM.teamMemberProfiles[myself.userId]
+                                                        : TEM.teamMemberProfiles[
+                                                              message.sender.userId
+                                                          ]
                                                 }
                                             />
                                         </Box>
@@ -752,7 +755,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                     setMyself={setMyself}
                                     UIM={UIM}
                                     socket={socket}
-                                    teamMemberProfiles={teamMemberProfiles}
+                                    TEM={TEM}
                                 />
                             )}
                         </Stack>

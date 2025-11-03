@@ -24,14 +24,14 @@ import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 
 type BnTodoPreviewProps = {
-    teamMemberProfiles: Record<string, UserProps>;
-    teamMembers: UserProps[];
+    TEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
@@ -44,8 +44,7 @@ type BnTodoPreviewProps = {
 };
 export const BnTodoPreview = (props: BnTodoPreviewProps) => {
     const {
-        teamMemberProfiles,
-        teamMembers,
+        TEM,
         myself,
         setMyself,
         socket,
@@ -74,7 +73,7 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
             mention: CreateMentionSpec(
-                teamMemberProfiles,
+                TEM.teamMemberProfiles,
                 socket,
                 myself,
                 setMyself,
@@ -164,7 +163,7 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
                     getItems={async (query) =>
                         // Gets the mentions menu items
                         filterSuggestionItems(
-                            MentionMenuItems(teamMemberProfiles, editor, teamMembers),
+                            MentionMenuItems(TEM.teamMemberProfiles, editor, TEM.teamMembers),
                             query
                         )
                     }

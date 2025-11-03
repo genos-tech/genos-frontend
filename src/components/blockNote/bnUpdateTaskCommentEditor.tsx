@@ -30,6 +30,7 @@ import { Box, IconButton, Tooltip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
@@ -40,11 +41,10 @@ import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 
 type BnUpdateTaskCommentEditorProps = {
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
-    teamMembers: UserProps[];
     projectId?: number;
     projectName?: string;
     taskId?: number;
@@ -65,11 +65,10 @@ type BnUpdateTaskCommentEditorProps = {
 
 export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps) => {
     const {
-        teamMemberProfiles,
+        TEM,
         myself,
         setMyself,
         socket,
-        teamMembers,
         projectId,
         projectName,
         isPrivate,
@@ -102,7 +101,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
             mention: CreateMentionSpec(
-                teamMemberProfiles,
+                TEM.teamMemberProfiles,
                 socket,
                 myself,
                 setMyself,
@@ -383,7 +382,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                         getItems={async (query) =>
                             // Gets the mentions menu items
                             filterSuggestionItems(
-                                MentionMenuItems(teamMemberProfiles, editor, teamMembers),
+                                MentionMenuItems(TEM.teamMemberProfiles, editor, TEM.teamMembers),
                                 query
                             )
                         }

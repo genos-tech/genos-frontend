@@ -5,6 +5,7 @@ import { Box, Button, FormControl, Input } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { BnMyNoteEditor } from "../../../../components/blockNote/bnMyNoteEditor";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps } from "../../../../types/chat";
@@ -23,8 +24,7 @@ interface NoteEditorProps {
     setMyself: (me: UserProps) => void;
     UIM: UIStateManagementState;
     socket: Socket | null;
-    teamMemberProfiles: Record<string, UserProps>;
-    teamMembers: UserProps[];
+    TEM: TeamManagementState;
     myself: UserProps;
 }
 
@@ -41,8 +41,7 @@ export const NoteEditor = ({
     setMyself,
     UIM,
     socket,
-    teamMemberProfiles,
-    teamMembers,
+    TEM,
     myself,
 }: NoteEditorProps) => {
     return (
@@ -114,8 +113,7 @@ export const NoteEditor = ({
                 setNoteBodySaved={() => {}} // This will be handled by the hook
                 UIM={UIM}
                 socket={socket}
-                teamMemberProfiles={teamMemberProfiles}
-                teamMembers={teamMembers}
+                TEM={TEM}
             />
         </>
     );

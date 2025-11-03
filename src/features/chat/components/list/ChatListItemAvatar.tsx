@@ -5,6 +5,7 @@ import { Socket } from "socket.io-client";
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
 import { GMAvatar } from "../../../../components/common/GMAvatar";
 import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../../types/chat";
@@ -18,11 +19,12 @@ interface ChatListItemAvatarProps {
     setCurrentMainChat: (chat: ChatProps) => void;
     UIM: UIStateManagementState;
     socket: Socket | null;
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     funcSetAllChats: () => Promise<void>;
 }
 
 export const ChatListItemAvatar: React.FC<ChatListItemAvatarProps> = ({
+    TEM,
     chat,
     chatType,
     isYou,
@@ -31,14 +33,13 @@ export const ChatListItemAvatar: React.FC<ChatListItemAvatarProps> = ({
     setCurrentMainChat,
     UIM,
     socket,
-    teamMemberProfiles,
     funcSetAllChats,
 }) => {
     // DM Chat with partner
     if (chatType === 1 && chat.dmPartnerUser.userId !== "") {
         return (
             <AvatarWithStatus
-                avatarUser={teamMemberProfiles[chat.dmPartnerUser.userId]}
+                avatarUser={TEM.teamMemberProfiles[chat.dmPartnerUser.userId]}
                 chat={chat}
                 isYou={isYou}
                 myself={myself}
@@ -67,7 +68,7 @@ export const ChatListItemAvatar: React.FC<ChatListItemAvatarProps> = ({
                 setMyself={setMyself}
                 UIM={UIM}
                 socket={socket}
-                teamMemberProfiles={teamMemberProfiles}
+                TEM={TEM}
             />
         );
     }
@@ -83,7 +84,7 @@ export const ChatListItemAvatar: React.FC<ChatListItemAvatarProps> = ({
                 setMyself={setMyself}
                 UIM={UIM}
                 socket={socket}
-                teamMemberProfiles={teamMemberProfiles}
+                TEM={TEM}
             />
         );
     }

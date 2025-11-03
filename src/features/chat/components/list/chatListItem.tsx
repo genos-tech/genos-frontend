@@ -13,7 +13,7 @@ import { ChatListItemTitle } from "./ChatListItemTitle";
 
 export const ChatListItem = memo((props: ChatListItemProps) => {
     const {
-        teamMemberProfiles,
+        TEM,
         socket,
         chat,
         myself,
@@ -114,7 +114,7 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                                         setMyself={setMyself}
                                         UIM={UIM}
                                         socket={socket}
-                                        teamMemberProfiles={teamMemberProfiles}
+                                        TEM={TEM}
                                     />
                                 </div>
 
@@ -122,7 +122,7 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                                     chat={chat}
                                     isYou={isYou}
                                     myself={myself}
-                                    teamMemberProfiles={teamMemberProfiles}
+                                    TEM={TEM}
                                 />
                             </Stack>
 

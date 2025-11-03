@@ -7,6 +7,7 @@ import { Socket } from "socket.io-client";
 
 import { BnTodoPreview } from "../../../../components/blockNote/bnTodoPreview";
 import { useAuth } from "../../../../context/AuthContext";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps, ToDoFactProps } from "../../../../types/chat";
@@ -18,8 +19,7 @@ type TodoBubbleProps = {
     todo: ToDoFactProps;
     currentIndex: number;
     isExistingTodaysTodo: boolean;
-    teamMemberProfiles: Record<string, UserProps>;
-    teamMembers: UserProps[];
+    TEM: TeamManagementState;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
     todos: ToDoFactProps[];
@@ -35,8 +35,7 @@ export const TodoBubble = (props: TodoBubbleProps) => {
         setTodos,
         currentIndex,
         isExistingTodaysTodo,
-        teamMemberProfiles,
-        teamMembers,
+        TEM,
         setMyself,
         socket,
         UIM,
@@ -157,8 +156,7 @@ export const TodoBubble = (props: TodoBubbleProps) => {
                         setMyself={setMyself}
                         UIM={UIM}
                         socket={socket}
-                        teamMemberProfiles={teamMemberProfiles}
-                        teamMembers={teamMembers}
+                        TEM={TEM}
                     />
                 </Card>
             </Box>

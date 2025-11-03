@@ -14,6 +14,7 @@ import { Socket } from "socket.io-client";
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
 import { GMAvatar } from "../../../../components/common/GMAvatar";
 import { useAuth } from "../../../../context/AuthContext";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps, SearchListProps } from "../../../../types/chat";
@@ -30,7 +31,7 @@ type ChatSearchProps = {
     setAllChats: (value: AllChatProps[]) => void;
     setOpenJoinGM: (value: { flag: boolean; chatId: number; chatName: string }) => void;
     setCurrentChatPaneType: (value: number) => void;
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     setMyself: (value: UserProps) => void;
     funcSetAllChats: () => Promise<void>;
     UIM: UIStateManagementState;
@@ -47,7 +48,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
         setAllChats,
         setOpenJoinGM,
         setCurrentChatPaneType,
-        teamMemberProfiles,
+        TEM,
         setMyself,
         UIM,
         funcSetAllChats,
@@ -182,7 +183,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
                                             UIM={UIM}
                                             socket={socket}
                                             avatarUser={
-                                                teamMemberProfiles[option.dmPartnerUser.userId]
+                                                TEM.teamMemberProfiles[option.dmPartnerUser.userId]
                                             }
                                         />
                                     )}
@@ -196,7 +197,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
                                             setMyself={setMyself}
                                             UIM={UIM}
                                             socket={socket}
-                                            teamMemberProfiles={teamMemberProfiles}
+                                            TEM={TEM}
                                         />
                                     )}
                                     <Typography level="body-md" sx={{ pt: 0.5, pl: 1 }}>

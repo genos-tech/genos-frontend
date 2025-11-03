@@ -51,6 +51,7 @@ import { RiAlertFill } from "react-icons/ri";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
+import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
@@ -65,11 +66,9 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 const django_url = import.meta.env.VITE_DJANGO_URL;
 
 type BnMyNoteEditorProps = {
-    teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
-    teamMembers: UserProps[];
     currentMyNote: MyNoteProps;
     body: any[];
     setBody: (text: PartialBlock[] | any[]) => void;
@@ -77,14 +76,14 @@ type BnMyNoteEditorProps = {
     setNoteBodySaved?: (value: boolean) => void;
     setCurrentChat: (chat: ChatProps) => void;
     UIM: UIStateManagementState;
+    TEM: TeamManagementState;
 };
 export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
     const {
-        teamMemberProfiles,
+        TEM,
         myself,
         setMyself,
         socket,
-        teamMembers,
         currentMyNote,
         body,
         setBody,
@@ -120,7 +119,7 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
             mention: CreateMentionSpec(
-                teamMemberProfiles,
+                TEM.teamMemberProfiles,
                 socket,
                 myself,
                 setMyself,
@@ -359,7 +358,7 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                     getItems={async (query) =>
                         // Gets the mentions menu items
                         filterSuggestionItems(
-                            MentionMenuItems(teamMemberProfiles, editor, teamMembers),
+                            MentionMenuItems(TEM.teamMemberProfiles, editor, TEM.teamMembers),
                             query
                         )
                     }

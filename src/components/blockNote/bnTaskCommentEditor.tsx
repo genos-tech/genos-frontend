@@ -32,6 +32,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { taskThreadMessageForCommentAddedTemplate } from "../../features/tasks/utils/TaskMessageTemplate";
+import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
@@ -42,11 +43,10 @@ import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 
 type BnTaskCommentEditorProps = {
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
-    teamMembers: UserProps[];
     task: TaskProps;
     setTaskUpdated?: (value: boolean) => void;
     taskComments: TaskCommentProps[];
@@ -61,11 +61,10 @@ type BnTaskCommentEditorProps = {
 
 export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     const {
-        teamMemberProfiles,
+        TEM,
         myself,
         setMyself,
         socket,
-        teamMembers,
         task,
         setTaskUpdated,
         taskComments,
@@ -92,7 +91,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
             mention: CreateMentionSpec(
-                teamMemberProfiles,
+                TEM.teamMemberProfiles,
                 socket,
                 myself,
                 setMyself,
@@ -368,7 +367,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                         getItems={async (query) =>
                             // Gets the mentions menu items
                             filterSuggestionItems(
-                                MentionMenuItems(teamMemberProfiles, editor, teamMembers),
+                                MentionMenuItems(TEM.teamMemberProfiles, editor, TEM.teamMembers),
                                 query
                             )
                         }

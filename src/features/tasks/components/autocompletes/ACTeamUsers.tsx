@@ -3,6 +3,7 @@ import Autocomplete from "@mui/joy/Autocomplete";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps } from "../../../../types/chat";
@@ -12,7 +13,6 @@ type ACTeamUsersProps = {
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     initialUser: UserProps;
-    teamMembers: UserProps[];
     taskContent: TaskProps;
     setTaskContent: (value: TaskProps) => void;
     setUser: (value: UserProps) => void;
@@ -20,7 +20,7 @@ type ACTeamUsersProps = {
     setIsOpenTeamMembersList: (value: boolean) => void;
     isAssignee: boolean;
     setTaskUpdated?: (value: boolean) => void;
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     socket: Socket | null;
     setCurrentMainChat: (chat: ChatProps) => void;
     UIM: UIStateManagementState;
@@ -30,7 +30,6 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
         myself,
         setMyself,
         initialUser,
-        teamMembers,
         taskContent,
         setTaskContent,
         setUser,
@@ -38,7 +37,7 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
         setIsOpenTeamMembersList,
         isAssignee,
         setTaskUpdated,
-        teamMemberProfiles,
+        TEM,
         socket,
         setCurrentMainChat,
         UIM,
@@ -48,7 +47,7 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
         <Autocomplete
             key={taskContent.id}
             isOptionEqualToValue={(option, value) => option.userId === value.userId}
-            options={teamMembers}
+            options={TEM.teamMembers}
             size="sm"
             sx={{ width: "100%" }}
             value={initialUser || myself}
@@ -67,7 +66,7 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
                             <Stack direction="row" spacing={1}>
                                 <AvatarWithStatus
                                     key={`ac-render-option-user-search-avatar-${option.userName}-${option.userId}`}
-                                    avatarUser={teamMemberProfiles[option.userId]}
+                                    avatarUser={TEM.teamMemberProfiles[option.userId]}
                                     isYou={option.userId === myself.userId}
                                     myself={myself}
                                     setCurrentMainChat={setCurrentMainChat}

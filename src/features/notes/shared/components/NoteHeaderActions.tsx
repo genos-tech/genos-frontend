@@ -20,6 +20,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 
 import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
@@ -32,11 +33,11 @@ interface NoteHeaderActionsProps {
     pmChat: AllChatProps | undefined;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
+    TEM: TeamManagementState;
     socket: any;
     funcSetAllChats: () => Promise<void>;
     setCurrentMainChat: (chat: any) => void;
     UIM: UIStateManagementState;
-    teamMemberProfiles: Record<string, UserProps>;
     onCreateNewNote: () => void;
     onCreateChildNote: () => void;
     onOpenTask: () => void;
@@ -55,7 +56,7 @@ export const NoteHeaderActions = ({
     funcSetAllChats,
     setCurrentMainChat,
     UIM,
-    teamMemberProfiles,
+    TEM,
     onCreateNewNote,
     onCreateChildNote,
     onOpenTask,
@@ -97,7 +98,7 @@ export const NoteHeaderActions = ({
                         setMyself={setMyself}
                         UIM={UIM}
                         socket={socket}
-                        teamMemberProfiles={teamMemberProfiles}
+                        TEM={TEM}
                     />
 
                     <Tooltip size="sm" title="Open Task on Click" variant="outlined">

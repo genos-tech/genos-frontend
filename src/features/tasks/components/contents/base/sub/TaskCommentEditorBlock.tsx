@@ -3,17 +3,17 @@ import { Socket } from "socket.io-client";
 
 import { BnTaskCommentEditor } from "../../../../../../components/blockNote/bnTaskCommentEditor";
 import { BnUpdateTaskCommentEditor } from "../../../../../../components/blockNote/bnUpdateTaskCommentEditor";
+import { TeamManagementState } from "../../../../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../../../types/admin";
 import { ChatProps } from "../../../../../../types/chat";
 import { TaskCommentProps, TaskProps } from "../../../../../../types/tasks";
-import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";
 
 type TaskCommentEditorBlockProps = {
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
-    teamMembers: UserProps[];
     task: TaskProps;
     taskComments: TaskCommentProps[];
     setTaskComments: (value: TaskCommentProps[]) => void;
@@ -30,11 +30,10 @@ type TaskCommentEditorBlockProps = {
 
 export const TaskCommentEditorBlock = (props: TaskCommentEditorBlockProps) => {
     const {
-        teamMemberProfiles,
+        TEM,
         myself,
         setMyself,
         socket,
-        teamMembers,
         task,
         taskComments,
         setTaskComments,
@@ -71,8 +70,7 @@ export const TaskCommentEditorBlock = (props: TaskCommentEditorBlockProps) => {
                     taskCommentLines={taskCommentLines}
                     taskComments={taskComments}
                     taskId={task.id}
-                    teamMemberProfiles={teamMemberProfiles}
-                    teamMembers={teamMembers}
+                    TEM={TEM}
                 />
             )}
             {isInEdit === false && (
@@ -89,8 +87,7 @@ export const TaskCommentEditorBlock = (props: TaskCommentEditorBlockProps) => {
                     task={task}
                     taskCommentLines={taskCommentLines}
                     taskComments={taskComments}
-                    teamMemberProfiles={teamMemberProfiles}
-                    teamMembers={teamMembers}
+                    TEM={TEM}
                 />
             )}
         </Box>

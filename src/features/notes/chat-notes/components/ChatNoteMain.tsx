@@ -4,6 +4,7 @@ import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { useChatNoteEditor } from "../../../../hooks/notes/useChatNoteEditor";
 import { useChatNoteTabs } from "../../../../hooks/notes/useChatNoteTabs";
@@ -21,11 +22,9 @@ import { ChatNoteTabList } from "./ChatNoteTabList";
  */
 interface ChatNoteMainProps {
     /** Team member profiles indexed by user ID */
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     /** Socket connection for real-time updates */
     socket: Socket | null;
-    /** List of team members */
-    teamMembers: UserProps[];
     /** Current user information */
     myself: UserProps;
     /** Function to update current user */
@@ -46,9 +45,8 @@ interface ChatNoteMainProps {
 
 export const ChatNoteMain = (props: ChatNoteMainProps) => {
     const {
-        teamMemberProfiles,
+        TEM,
         socket,
-        teamMembers,
         myself,
         setMyself,
         UIM,
@@ -184,7 +182,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                 UIM={UIM}
                                                 setOpenSearchBox={setOpenSearchBox}
                                                 socket={socket}
-                                                teamMemberProfiles={teamMemberProfiles}
+                                                TEM={TEM}
                                                 onCreateChildNote={handleCreateChildNote}
                                                 onDeleteNote={handleDeleteNote}
                                             />
@@ -221,8 +219,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                             setMyself={setMyself}
                                                             UIM={UIM}
                                                             socket={socket}
-                                                            teamMemberProfiles={teamMemberProfiles}
-                                                            teamMembers={teamMembers}
+                                                            TEM={TEM}
                                                             currentChatNoteTitle={
                                                                 chatNoteEditor.currentChatNoteTitle
                                                             }

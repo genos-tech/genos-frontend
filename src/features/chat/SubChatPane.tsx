@@ -13,6 +13,7 @@ import { useScrollManagement } from "./hooks/useScrollManagement";
 import { calculateVirtuosoSubHight } from "./services/calculateVirtuosoHight";
 import { handleFileDrop } from "./services/handleFileDrop";
 
+import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { ChatProps, FlaggedMessageProps, ThreadProps, ToDoFactProps } from "../../types/chat";
@@ -20,12 +21,11 @@ import { ProjectProps, TaskProps } from "../../types/tasks";
 import { ToDoPane } from "./ToDoPane";
 
 type MessagesPaneProps = {
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     currentWindowHeight: number;
     paneSizePCT: number;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    teamMembers: UserProps[];
     chat?: ChatProps;
     subChat?: ChatProps;
     socket: Socket | null;
@@ -70,12 +70,11 @@ type MessagesPaneProps = {
 
 export const MessagesSubPane = (props: MessagesPaneProps) => {
     const {
-        teamMemberProfiles,
+        TEM,
         currentWindowHeight,
         paneSizePCT,
         myself,
         setMyself,
-        teamMembers,
         chat,
         subChat,
         socket,
@@ -197,7 +196,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                     UIM={UIM}
                     socket={socket}
                     subChat={subChat}
-                    teamMemberProfiles={teamMemberProfiles}
+                    TEM={TEM}
                 />
 
                 {/* To-Do Pane for only myself */}
@@ -215,8 +214,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                             UIM={UIM}
                             setTodos={setTodos}
                             socket={socket}
-                            teamMemberProfiles={teamMemberProfiles}
-                            teamMembers={teamMembers}
+                            TEM={TEM}
                             todos={todos}
                             showOnlyInCompleteTodos={showOnlyInCompleteTodos}
                             setShowOnlyInCompleteTodos={setShowOnlyInCompleteTodos}
@@ -266,7 +264,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                                 UIM={UIM}
                                 setVisibleRange={scrollManagement.setVisibleRange}
                                 socket={socket}
-                                teamMemberProfiles={teamMemberProfiles}
+                                TEM={TEM}
                                 visibleRange={scrollManagement.visibleRange}
                                 virtuosoRef={
                                     scrollManagement.virtuosoRef as React.RefObject<VirtuosoHandle>
@@ -286,8 +284,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                                 setNumEditorLines={messageManagement.setNumEditorLines}
                                 UIM={UIM}
                                 socket={socket}
-                                teamMemberProfiles={teamMemberProfiles}
-                                teamMembers={teamMembers}
+                                TEM={TEM}
                                 setCurrentChat={
                                     setCurrentSubChat as (chat: ChatProps | ThreadProps) => void
                                 }

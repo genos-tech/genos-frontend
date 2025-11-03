@@ -4,6 +4,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { BnChatPreview } from "../../../components/blockNote/bnChatPreview";
+import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../types/admin";
 import { ChatProps } from "../../../types/chat";
@@ -49,7 +50,7 @@ export const getItemBody = (requestType: number, targetName: UserProps) => [
 ];
 
 type InboxBubbleProps = {
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
@@ -58,8 +59,7 @@ type InboxBubbleProps = {
     setCurrentChat: (chat: ChatProps) => void;
 };
 export const InboxBubble = (props: InboxBubbleProps) => {
-    const { teamMemberProfiles, socket, myself, setMyself, inboxItem, UIM, setCurrentChat } =
-        props;
+    const { TEM, socket, myself, setMyself, inboxItem, UIM, setCurrentChat } = props;
     const { mode } = useColorScheme();
     const boxRef = useRef<HTMLDivElement>(null);
     const [requestApproved, setRequestApproved] = useState<boolean>(false);
@@ -148,7 +148,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                             setMyself={setMyself}
                             UIM={UIM}
                             socket={socket}
-                            teamMemberProfiles={teamMemberProfiles}
+                            TEM={TEM}
                         />
                     )}
 

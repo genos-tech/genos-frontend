@@ -17,6 +17,7 @@ import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../../components/common/avatarWithStatus";
 import { useAuth } from "../../../../../context/AuthContext";
+import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../../types/admin";
 import { ChatProps } from "../../../../../types/chat";
@@ -24,7 +25,7 @@ import { ProjectProps, TaskProps } from "../../../../../types/tasks";
 import { loadSpecificChildTasks } from "../../../services/loadSpecificChildTasks";
 
 type TaskSubTasksBlockProps = {
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
@@ -43,7 +44,7 @@ type TaskSubTasksBlockProps = {
 };
 export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
     const {
-        teamMemberProfiles,
+        TEM,
         socket,
         myself,
         setMyself,
@@ -144,7 +145,9 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                     return (
                                         <ListItem key={`listitem-${id}-${index}`}>
                                             <AvatarWithStatus
-                                                avatarUser={teamMemberProfiles[assignee.userId]}
+                                                avatarUser={
+                                                    TEM.teamMemberProfiles[assignee.userId]
+                                                }
                                                 myself={myself}
                                                 setCurrentMainChat={setCurrentMainChat}
                                                 setMyself={setMyself}

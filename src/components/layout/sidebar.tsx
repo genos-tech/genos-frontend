@@ -26,6 +26,7 @@ import { PulseDot } from "../../components/utils/PulseDot";
 import { useAuth } from "../../context/AuthContext";
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
 import { TeamDropdown } from "../../features/admin/components/teamDropdown";
+import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { Team, UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
@@ -35,9 +36,7 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type SidebarProps = {
-    currentTeam: Team;
-    setCurrentTeam: (value: Team) => void;
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
@@ -48,9 +47,7 @@ type SidebarProps = {
 };
 export const Sidebar = (props: SidebarProps) => {
     const {
-        currentTeam,
-        setCurrentTeam,
-        teamMemberProfiles,
+        TEM,
         socket,
         myself,
         setMyself,
@@ -162,12 +159,7 @@ export const Sidebar = (props: SidebarProps) => {
                     alignItems: "center",
                 }}
             >
-                <TeamDropdown
-                    currentTeam={currentTeam}
-                    myself={myself}
-                    setCurrentTeam={setCurrentTeam}
-                    setMyself={setMyself}
-                />
+                <TeamDropdown TEM={TEM} myself={myself} setMyself={setMyself} />
                 <ColorSchemeToggle />
             </Box>
 
@@ -358,7 +350,7 @@ export const Sidebar = (props: SidebarProps) => {
                 setMyself={setMyself}
                 setOpenUserProfile={setOpenUserProfile}
                 socket={socket}
-                user={teamMemberProfiles[myself.userId]}
+                user={TEM.teamMemberProfiles[myself.userId]}
                 UIM={UIM}
             />
         </Sheet>

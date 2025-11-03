@@ -23,6 +23,7 @@ import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus
 import { GMAvatar } from "../../../../components/common/GMAvatar";
 import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { UserProps } from "../../../../types/admin";
@@ -41,7 +42,7 @@ interface ChatNoteHeaderProps {
     setCurrentPreviewTaskId: (id: number) => void;
     setCurrentProject: (project: any) => void;
     socket: Socket | null;
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     CM: ChatManagementState;
     NM: NoteManagementState;
     openDeleteNote: boolean;
@@ -64,7 +65,7 @@ export const ChatNoteHeader = ({
     setCurrentPreviewTaskId,
     setCurrentProject,
     socket,
-    teamMemberProfiles,
+    TEM,
     CM,
     NM,
     openDeleteNote,
@@ -157,7 +158,7 @@ export const ChatNoteHeader = ({
                 {chat && chat.chatType === 1 && (
                     <Box sx={{ mt: "2px", mr: "5px" }}>
                         <AvatarWithStatus
-                            avatarUser={teamMemberProfiles[chat.dmPartnerUser.userId]}
+                            avatarUser={TEM.teamMemberProfiles[chat.dmPartnerUser.userId]}
                             chat={chat}
                             isYou={false}
                             myself={myself}
@@ -179,7 +180,7 @@ export const ChatNoteHeader = ({
                             setMyself={setMyself}
                             UIM={UIM}
                             socket={socket}
-                            teamMemberProfiles={teamMemberProfiles}
+                            TEM={TEM}
                         />
                     </Box>
                 )}
@@ -193,7 +194,7 @@ export const ChatNoteHeader = ({
                             setMyself={setMyself}
                             UIM={UIM}
                             socket={socket}
-                            teamMemberProfiles={teamMemberProfiles}
+                            TEM={TEM}
                         />
                     </Box>
                 )}

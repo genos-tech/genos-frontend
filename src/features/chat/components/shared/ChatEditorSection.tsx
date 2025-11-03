@@ -5,6 +5,7 @@ import { BnChatEditor } from "../../../../components/blockNote/bnChatEditor";
 import { BnThreadEditor } from "../../../../components/blockNote/bnThreadEditor";
 import { BnUpdateEditor } from "../../../../components/blockNote/bnUpdateEditor";
 import { BnUpdateThreadEditor } from "../../../../components/blockNote/bnUpdateThreadEditor";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
@@ -21,8 +22,7 @@ interface ChatEditorSectionProps {
     setNumEditorLines: (lines: number) => void;
     UIM: UIStateManagementState;
     socket: Socket | null;
-    teamMemberProfiles: Record<string, UserProps>;
-    teamMembers: UserProps[];
+    TEM: TeamManagementState;
     funcSetAllChats?: () => Promise<void>;
     isSubChatVisible?: boolean;
     isThread?: boolean;
@@ -43,8 +43,7 @@ export const ChatEditorSection = ({
     setNumEditorLines,
     UIM,
     socket,
-    teamMemberProfiles,
-    teamMembers,
+    TEM,
     funcSetAllChats,
     isSubChatVisible = false,
     isThread = false,
@@ -67,8 +66,7 @@ export const ChatEditorSection = ({
                         setNumEditorLines={setNumEditorLines}
                         UIM={UIM}
                         socket={socket}
-                        teamMemberProfiles={teamMemberProfiles}
-                        teamMembers={teamMembers}
+                        TEM={TEM}
                         thread={thread!}
                     />
                 )}
@@ -82,8 +80,7 @@ export const ChatEditorSection = ({
                         setNumEditorLines={setNumEditorLines}
                         UIM={UIM}
                         socket={socket}
-                        teamMemberProfiles={teamMemberProfiles}
-                        teamMembers={teamMembers}
+                        TEM={TEM}
                         thread={thread!}
                     />
                 )}
@@ -107,8 +104,7 @@ export const ChatEditorSection = ({
                     setNumEditorLines={setNumEditorLines}
                     UIM={UIM}
                     socket={socket}
-                    teamMemberProfiles={teamMemberProfiles}
-                    teamMembers={teamMembers}
+                    TEM={TEM}
                 />
             )}
             {isInEdit === false && (
@@ -123,8 +119,7 @@ export const ChatEditorSection = ({
                     setNumEditorLines={setNumEditorLines}
                     UIM={UIM}
                     socket={socket}
-                    teamMemberProfiles={teamMemberProfiles}
-                    teamMembers={teamMembers}
+                    TEM={TEM}
                 />
             )}
         </Box>

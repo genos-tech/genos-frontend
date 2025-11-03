@@ -31,14 +31,12 @@ export const AppContent = ({
     if (UIM.openingService === 0) {
         return (
             <InboxHome
-                currentTeam={TEM.currentTeam}
+                TEM={TEM}
                 inboxItems={IM.inboxItems}
                 myself={myself}
                 setCurrentMainChat={CM.setCurrentMainChat}
-                setCurrentTeam={TEM.setCurrentTeam}
                 setMyself={setMyself}
                 socket={socketInstance}
-                teamMemberProfiles={TEM.teamMemberProfiles}
                 unReadChatAndActivityCounts={CM.unReadChatAndActivityCounts}
                 unReadInboxItemCount={IM.unReadInboxItemCount}
                 UIM={UIM}

@@ -18,6 +18,7 @@ import {
 } from "@mui/joy";
 
 import { BnTaskNoteEditor } from "../../../../components/blockNote/bnTaskNoteEditor";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskNoteProps } from "../../../../types/notes";
 
@@ -37,8 +38,7 @@ interface NoteTabsProps {
     setNoteBodySaved: (saved: boolean) => void;
     UIM: UIStateManagementState;
     socket: any;
-    teamMemberProfiles: Record<string, any>;
-    teamMembers: any[];
+    TEM: TeamManagementState;
     onLoadNote: (noteType: number, noteId: number, tabIndex: number) => void;
     onCloseTab: (tabIndex: number, closingNoteId: number) => void;
     onTitleChange: (title: string) => void;
@@ -61,8 +61,7 @@ export const NoteTabs = ({
     setNoteBodySaved,
     UIM,
     socket,
-    teamMemberProfiles,
-    teamMembers,
+    TEM,
     onLoadNote,
     onCloseTab,
     onTitleChange,
@@ -223,8 +222,7 @@ export const NoteTabs = ({
                             setNoteBodySaved={setNoteBodySaved}
                             UIM={UIM}
                             socket={socket}
-                            teamMemberProfiles={teamMemberProfiles}
-                            teamMembers={teamMembers}
+                            TEM={TEM}
                         />
                     )}
                 </TabPanel>

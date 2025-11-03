@@ -69,10 +69,8 @@ export const CreateTaskPanel = ({
                     setIsMainChatVisible={CM.setIsMainChatVisible}
                     setMyself={setMyself}
                     UIM={UIM}
-                    setTeamMembers={TEM.setTeamMembers}
                     socket={socket}
-                    teamMemberProfiles={TEM.teamMemberProfiles}
-                    teamMembers={TEM.teamMembers}
+                    TEM={TEM}
                     TM={TM}
                 />
             </Box>

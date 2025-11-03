@@ -3,6 +3,7 @@ import CircleIcon from "@mui/icons-material/Circle";
 import { Box, Stack, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
+import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../../types/admin";
 import { ActivityMessageProps, AllChatProps } from "../../../../../types/chat";
@@ -11,9 +12,9 @@ import { ActivityAvatar } from "./ActivityAvatar";
 import { ActivityTypeChips } from "./ActivityTypeChips";
 
 interface ActivityHeaderProps {
+    TEM: TeamManagementState;
     activity: ActivityMessageProps;
     myself: UserProps;
-    teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     allChats: AllChatProps[];
     setCurrentMainChat: (chat: any) => void;
@@ -25,9 +26,9 @@ interface ActivityHeaderProps {
 }
 
 export const ActivityHeader: React.FC<ActivityHeaderProps> = ({
+    TEM,
     activity,
     myself,
-    teamMemberProfiles,
     socket,
     allChats,
     setCurrentMainChat,
@@ -50,7 +51,7 @@ export const ActivityHeader: React.FC<ActivityHeaderProps> = ({
                     setMyself={setMyself}
                     UIM={UIM}
                     socket={socket}
-                    teamMemberProfiles={teamMemberProfiles}
+                    TEM={TEM}
                 />
 
                 {activity.chatType !== 3 && activity.chatType !== 4 && (

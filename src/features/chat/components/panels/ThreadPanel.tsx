@@ -65,8 +65,7 @@ export const ThreadPanel = ({
                         setMyself={setMyself}
                         UIM={UIM}
                         socket={socket}
-                        teamMemberProfiles={TEM.teamMemberProfiles}
-                        teamMembers={TEM.teamMembers}
+                        TEM={TEM}
                         thread={CM.currentThreadChat}
                         TM={TM}
                     />

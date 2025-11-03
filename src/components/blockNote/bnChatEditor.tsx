@@ -38,6 +38,7 @@ import { useAuth } from "../../context/AuthContext";
 import { addChat } from "../../features/chat/services/addChat";
 import { addMessage } from "../../features/chat/services/addMessage";
 import { getFirstLine } from "../../features/chat/utils/common";
+import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { AllChatProps, ChatProps, MessageProps } from "../../types/chat";
@@ -50,11 +51,10 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 const django_url = import.meta.env.VITE_DJANGO_URL;
 
 type BnChatEditorProps = {
-    teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
-    teamMembers: UserProps[];
+    TEM: TeamManagementState;
     chat: ChatProps;
     setCurrentChat: (chat: ChatProps) => void;
     isSubChatVisible: boolean;
@@ -65,11 +65,10 @@ type BnChatEditorProps = {
 };
 export const BnChatEditor = (props: BnChatEditorProps) => {
     const {
-        teamMemberProfiles,
+        TEM,
         myself,
         setMyself,
         socket,
-        teamMembers,
         chat,
         setCurrentChat,
         isSubChatVisible,
@@ -94,7 +93,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
             mention: CreateMentionSpec(
-                teamMemberProfiles,
+                TEM.teamMemberProfiles,
                 socket,
                 myself,
                 setMyself,
@@ -430,7 +429,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                         getItems={async (query) =>
                             // Gets the mentions menu items
                             filterSuggestionItems(
-                                MentionMenuItems(teamMemberProfiles, editor, teamMembers),
+                                MentionMenuItems(TEM.teamMemberProfiles, editor, TEM.teamMembers),
                                 query
                             )
                         }

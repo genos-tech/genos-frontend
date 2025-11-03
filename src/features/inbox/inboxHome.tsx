@@ -11,9 +11,7 @@ import { Sidebar } from "../../components/layout/sidebar";
 
 export const InboxHome = (props: InboxHomeProps) => {
     const {
-        currentTeam,
-        setCurrentTeam,
-        teamMemberProfiles,
+        TEM,
         myself,
         socket,
         setMyself,
@@ -31,14 +29,12 @@ export const InboxHome = (props: InboxHomeProps) => {
     return (
         <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
             <Sidebar
-                currentTeam={currentTeam}
+                TEM={TEM}
                 myself={myself}
                 UIM={UIM}
                 setCurrentMainChat={setCurrentMainChat}
-                setCurrentTeam={setCurrentTeam}
                 setMyself={setMyself}
                 socket={socket}
-                teamMemberProfiles={teamMemberProfiles}
                 unReadChatAndActivityCounts={unReadChatAndActivityCounts}
                 unReadInboxItemCount={unReadInboxItemCount}
             />
@@ -65,7 +61,7 @@ export const InboxHome = (props: InboxHomeProps) => {
                             setCurrentChat={setCurrentMainChat}
                             setMyself={setMyself}
                             socket={socket}
-                            teamMemberProfiles={teamMemberProfiles}
+                            TEM={TEM}
                             UIM={UIM}
                         />
                         <InboxSection
@@ -77,7 +73,7 @@ export const InboxHome = (props: InboxHomeProps) => {
                             setMyself={setMyself}
                             UIM={UIM}
                             socket={socket}
-                            teamMemberProfiles={teamMemberProfiles}
+                            TEM={TEM}
                         />
                     </Stack>
                 </Box>

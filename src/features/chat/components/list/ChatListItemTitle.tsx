@@ -2,6 +2,7 @@ import React from "react";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
 import { Box, Chip, Stack, Typography } from "@mui/joy";
 
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 
@@ -9,14 +10,14 @@ interface ChatListItemTitleProps {
     chat: AllChatProps;
     isYou: boolean;
     myself: UserProps;
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
 }
 
 export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
+    TEM,
     chat,
     isYou,
     myself,
-    teamMemberProfiles,
 }) => {
     const showMyCustomStatus =
         chat.dmPartnerUser.userId !== "" &&
@@ -26,8 +27,8 @@ export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
     const showOthersCustomStatus =
         chat.dmPartnerUser.userId !== "" &&
         myself.userId !== chat.dmPartnerUser.userId &&
-        teamMemberProfiles[chat.dmPartnerUser.userId] &&
-        teamMemberProfiles[chat.dmPartnerUser.userId].customStatus !== "";
+        TEM.teamMemberProfiles[chat.dmPartnerUser.userId] &&
+        TEM.teamMemberProfiles[chat.dmPartnerUser.userId].customStatus !== "";
 
     return (
         <Box sx={{ pt: "3px" }}>
@@ -63,7 +64,7 @@ export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
                         sx={{ borderRadius: "sm", height: "10px" }}
                         variant="outlined"
                     >
-                        {teamMemberProfiles[chat.dmPartnerUser.userId].customStatus}
+                        {TEM.teamMemberProfiles[chat.dmPartnerUser.userId].customStatus}
                     </Chip>
                 )}
             </Stack>

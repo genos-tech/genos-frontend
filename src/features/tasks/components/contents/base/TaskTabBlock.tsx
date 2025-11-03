@@ -28,6 +28,7 @@ import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../../context/AuthContext";
+import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../../types/admin";
@@ -65,7 +66,6 @@ type TaskTabBlockProps = {
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    teamMemberProfiles: Record<string, UserProps>;
     setCurrentChat: (chat: ChatProps) => void;
     taskContent: TaskProps;
     setTaskContent: (value: TaskProps) => void;
@@ -95,7 +95,7 @@ type TaskTabBlockProps = {
     setTaskComments: (value: TaskCommentProps[]) => void;
     tmpCurrentTaskContent: TaskProps;
     taskCommentLines: number;
-    teamMembers: UserProps[];
+    TEM: TeamManagementState;
     tabIndex: number;
     setTabIndex: (value: number) => void;
     TM: TaskManagementState;
@@ -107,7 +107,6 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         socket,
         myself,
         setMyself,
-        teamMemberProfiles,
         setCurrentChat,
         UIM,
         uploadedFiles,
@@ -133,10 +132,10 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         setTaskComments,
         tmpCurrentTaskContent,
         taskCommentLines,
-        teamMembers,
         tabIndex,
         setTabIndex,
         TM,
+        TEM,
     } = props;
 
     const [images, setImages] = useState<FileProps[]>([]);
@@ -484,7 +483,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                     setMyself={setMyself}
                                                     UIM={UIM}
                                                     socket={socket}
-                                                    teamMemberProfiles={teamMemberProfiles}
+                                                    TEM={TEM}
                                                     currentProjectId={
                                                         taskContent.project?.projectId
                                                     }
@@ -519,8 +518,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                 task={tmpCurrentTaskContent}
                                 taskCommentLines={taskCommentLines}
                                 taskComments={taskComments}
-                                teamMemberProfiles={teamMemberProfiles}
-                                teamMembers={teamMembers}
+                                TEM={TEM}
                             />
                         </>
                     </TabPanel>

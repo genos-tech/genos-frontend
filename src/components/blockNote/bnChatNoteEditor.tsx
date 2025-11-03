@@ -50,6 +50,7 @@ import { RiAlertFill } from "react-icons/ri";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
+import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
@@ -64,11 +65,10 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 const django_url = import.meta.env.VITE_DJANGO_URL;
 
 type BnChatNoteEditorProps = {
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
+    socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    socket: Socket | null;
-    teamMembers: UserProps[];
     currentChatNote: ChatNoteProps;
     body: any[];
     setBody: (text: PartialBlock[] | any[]) => void;
@@ -79,11 +79,10 @@ type BnChatNoteEditorProps = {
 };
 export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
     const {
-        teamMemberProfiles,
+        TEM,
+        socket,
         myself,
         setMyself,
-        socket,
-        teamMembers,
         currentChatNote,
         body,
         setBody,
@@ -119,7 +118,7 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
             mention: CreateMentionSpec(
-                teamMemberProfiles,
+                TEM.teamMemberProfiles,
                 socket,
                 myself,
                 setMyself,
@@ -358,7 +357,7 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
                     getItems={async (query) =>
                         // Gets the mentions menu items
                         filterSuggestionItems(
-                            MentionMenuItems(teamMemberProfiles, editor, teamMembers),
+                            MentionMenuItems(TEM.teamMemberProfiles, editor, TEM.teamMembers),
                             query
                         )
                     }

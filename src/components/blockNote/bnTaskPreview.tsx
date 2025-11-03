@@ -51,6 +51,7 @@ import { RiAlertFill } from "react-icons/ri";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
+import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
@@ -64,11 +65,10 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 const django_url = import.meta.env.VITE_DJANGO_URL;
 
 type BnTaskPreviewProps = {
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
-    teamMembers: UserProps[];
     taskId: number;
     body: any[];
     setBody: (text: PartialBlock[] | any[]) => void;
@@ -79,12 +79,11 @@ type BnTaskPreviewProps = {
 };
 export const BnTaskPreview = (props: BnTaskPreviewProps) => {
     const {
-        teamMemberProfiles,
+        TEM,
         myself,
         setMyself,
         socket,
         taskId,
-        teamMembers,
         body,
         setBody,
         setTaskBodyEdited,
@@ -119,7 +118,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
             mention: CreateMentionSpec(
-                teamMemberProfiles,
+                TEM.teamMemberProfiles,
                 socket,
                 myself,
                 setMyself,
@@ -379,7 +378,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                     getItems={async (query) =>
                         // Gets the mentions menu items
                         filterSuggestionItems(
-                            MentionMenuItems(teamMemberProfiles, editor, teamMembers),
+                            MentionMenuItems(TEM.teamMemberProfiles, editor, TEM.teamMembers),
                             query
                         )
                     }

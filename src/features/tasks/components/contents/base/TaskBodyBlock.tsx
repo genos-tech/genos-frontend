@@ -3,16 +3,16 @@ import { Box, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { BnTaskPreview } from "../../../../../components/blockNote/bnTaskPreview";
+import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../../types/admin";
 import { ChatProps } from "../../../../../types/chat";
 
 type TaskBodyBlockProps = {
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
-    teamMembers: UserProps[];
     taskId: number;
     body: PartialBlock[] | null;
     setBody: (value: PartialBlock[]) => void;
@@ -23,11 +23,10 @@ type TaskBodyBlockProps = {
 };
 export const TaskBodyBlock = (props: TaskBodyBlockProps) => {
     const {
-        teamMemberProfiles,
+        TEM,
         myself,
         setMyself,
         socket,
-        teamMembers,
         taskId,
         body,
         setBody,
@@ -50,8 +49,7 @@ export const TaskBodyBlock = (props: TaskBodyBlockProps) => {
                     setTaskBodySaved={setTaskBodySaved}
                     socket={socket}
                     taskId={taskId}
-                    teamMemberProfiles={teamMemberProfiles}
-                    teamMembers={teamMembers}
+                    TEM={TEM}
                 />
             </Box>
         </Stack>

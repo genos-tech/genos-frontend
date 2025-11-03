@@ -4,6 +4,7 @@ import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../../context/AuthContext";
+import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../../types/admin";
 import {
@@ -26,9 +27,9 @@ import { ActivityHeader } from "./ActivityHeader";
 // activityType = {1: message or comment, 2: reaction, 3: mention}
 
 type ChatListItemForActivityProps = ListItemButtonProps & {
+    TEM: TeamManagementState;
     selectedActivityId: string;
     setSelectedActivityId: (value: string) => void;
-    teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     activity: ActivityMessageProps;
     activityMessages: ActivityMessageProps[];
@@ -58,9 +59,9 @@ type ChatListItemForActivityProps = ListItemButtonProps & {
 
 export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => {
     const {
+        TEM,
         selectedActivityId,
         setSelectedActivityId,
-        teamMemberProfiles,
         socket,
         activity,
         activityMessages,
@@ -325,7 +326,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                             setMyself={setMyself}
                             UIM={UIM}
                             socket={socket}
-                            teamMemberProfiles={teamMemberProfiles}
+                            TEM={TEM}
                         />
 
                         <ActivityContent

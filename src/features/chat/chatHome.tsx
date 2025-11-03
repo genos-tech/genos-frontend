@@ -117,14 +117,12 @@ export const ChatHome = (props: ChatHomeProps) => {
         >
             <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
                 <Sidebar
-                    currentTeam={TEM.currentTeam}
+                    TEM={TEM}
                     myself={myself}
                     UIM={UIM}
                     setCurrentMainChat={CM.setCurrentMainChat}
-                    setCurrentTeam={TEM.setCurrentTeam}
                     setMyself={setMyself}
                     socket={socket}
-                    teamMemberProfiles={TEM.teamMemberProfiles}
                     unReadChatAndActivityCounts={CM.unReadChatAndActivityCounts}
                     unReadInboxItemCount={unReadInboxItemCount}
                 />
@@ -183,7 +181,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     setMyself={setMyself}
                                     UIM={UIM}
                                     socket={socket}
-                                    teamMemberProfiles={TEM.teamMemberProfiles}
+                                    TEM={TEM}
                                     unReadActivityMessageCounts={CM.unReadActivityMessageCounts}
                                     unReadChatCounts={CM.unReadChatCounts}
                                     currentSubChat={

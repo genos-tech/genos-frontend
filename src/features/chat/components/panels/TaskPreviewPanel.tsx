@@ -71,12 +71,10 @@ export const TaskPreviewPanel = ({
                     setIsTaskNoteVisible={NM.setIsTaskNoteVisible}
                     setMyself={setMyself}
                     setOpenCreateProject={PM.setOpenCreateProject}
-                    setTeamMembers={TEM.setTeamMembers}
                     setTeamProjects={PM.setTeamProjects}
                     socket={socket}
                     taskNoteMeta={NM.taskNoteMeta}
-                    teamMemberProfiles={TEM.teamMemberProfiles}
-                    teamMembers={TEM.teamMembers}
+                    TEM={TEM}
                     teamProjects={PM.teamProjects}
                     TM={TM}
                 />

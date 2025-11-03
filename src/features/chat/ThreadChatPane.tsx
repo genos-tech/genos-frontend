@@ -13,18 +13,18 @@ import { useScrollManagement } from "./hooks/useScrollManagement";
 import { calculateVirtuosoHight } from "./services/calculateVirtuosoHight";
 import { handleFileDrop } from "./services/handleFileDrop";
 
+import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
 import { ChatProps, FlaggedMessageProps, ThreadProps } from "../../types/chat";
 
 type MessagesPaneProps = {
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     currentWindowHeight: number;
     thread: ThreadProps;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    teamMembers: UserProps[];
     socket: Socket | null;
     currentThreadChat: ThreadProps;
     setCurrentThreadChat: (chat: ThreadProps) => void;
@@ -48,12 +48,11 @@ type MessagesPaneProps = {
 
 export const ThreadPane = (props: MessagesPaneProps) => {
     const {
-        teamMemberProfiles,
+        TEM,
         currentWindowHeight,
         thread,
         myself,
         setMyself,
-        teamMembers,
         socket,
         currentThreadChat,
         setCurrentThreadChat,
@@ -187,9 +186,9 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                     UIM={UIM}
                     setVisibleRange={scrollManagement.setVisibleRange}
                     socket={socket}
-                    teamMemberProfiles={teamMemberProfiles}
                     virtuosoRef={scrollManagement.virtuosoRef as React.RefObject<VirtuosoHandle>}
                     visibleRange={scrollManagement.visibleRange}
+                    TEM={TEM}
                 />
 
                 <ChatEditorSection
@@ -207,8 +206,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                     UIM={UIM}
                     setTargetMessageIndex={() => {}}
                     socket={socket}
-                    teamMemberProfiles={teamMemberProfiles}
-                    teamMembers={teamMembers}
+                    TEM={TEM}
                     thread={thread}
                 />
             </Sheet>

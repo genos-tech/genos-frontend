@@ -68,8 +68,7 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
                 setMyself={setMyself}
                 UIM={UIM}
                 socket={socket}
-                teamMemberProfiles={TEM.teamMemberProfiles}
-                teamMembers={TEM.teamMembers}
+                TEM={TEM}
             />
         );
     }
@@ -79,18 +78,17 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
         return (
             <>
                 <TaskNoteMain
-                    allChats={CM.allChats}
-                    funcSetAllChats={CM.funcSetAllChats}
-                    isInTaskPage={false}
+                    TEM={TEM}
+                    socket={socket}
                     myself={myself}
-                    NM={NM}
-                    setCurrentChat={CM.setCurrentMainChat}
-                    setCurrentMainChat={CM.setCurrentMainChat}
                     setMyself={setMyself}
                     UIM={UIM}
-                    socket={socket}
-                    teamMemberProfiles={TEM.teamMemberProfiles}
-                    teamMembers={TEM.teamMembers}
+                    setCurrentChat={CM.setCurrentMainChat}
+                    isInTaskPage={false}
+                    setCurrentMainChat={CM.setCurrentMainChat}
+                    allChats={CM.allChats}
+                    funcSetAllChats={CM.funcSetAllChats}
+                    NM={NM}
                     TM={TM}
                 />
 
@@ -108,12 +106,10 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
                         setIsTaskNoteVisible={NM.setIsTaskNoteVisible}
                         setMyself={setMyself}
                         setOpenCreateProject={PM.setOpenCreateProject}
-                        setTeamMembers={TEM.setTeamMembers}
                         setTeamProjects={PM.setTeamProjects}
                         socket={socket}
                         taskNoteMeta={NM.taskNoteMeta}
-                        teamMemberProfiles={TEM.teamMemberProfiles}
-                        teamMembers={TEM.teamMembers}
+                        TEM={TEM}
                         teamProjects={PM.teamProjects}
                         TM={TM}
                     />
@@ -135,8 +131,7 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
                 setMyself={setMyself}
                 UIM={UIM}
                 socket={socket}
-                teamMemberProfiles={TEM.teamMemberProfiles}
-                teamMembers={TEM.teamMembers}
+                TEM={TEM}
             />
         );
     }

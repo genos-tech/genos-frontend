@@ -6,12 +6,13 @@ import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus
 import { GMAvatar } from "../../../../components/common/GMAvatar";
 import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
 import { PulseDot } from "../../../../components/utils/PulseDot";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps } from "../../../../types/chat";
 
 type HeaderUserNameProps = {
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
@@ -23,7 +24,7 @@ type HeaderUserNameProps = {
 };
 export const HeaderUserName = (props: HeaderUserNameProps) => {
     const {
-        teamMemberProfiles,
+        TEM,
         socket,
         myself,
         setMyself,
@@ -35,7 +36,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
     } = props;
 
     const headerUser: UserProps | undefined = chat
-        ? teamMemberProfiles[chat.dmPartnerUser.userId]
+        ? TEM.teamMemberProfiles[chat.dmPartnerUser.userId]
         : undefined;
     let isOnline: boolean = headerUser
         ? myself.userId === headerUser.userId
@@ -77,7 +78,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                         setMyself={setMyself}
                         UIM={UIM}
                         socket={socket}
-                        teamMemberProfiles={teamMemberProfiles}
+                        TEM={TEM}
                     />
                 ) : chat && chat.chatType === 3 ? (
                     <ProjectAvatar
@@ -89,7 +90,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                         setMyself={setMyself}
                         UIM={UIM}
                         socket={socket}
-                        teamMemberProfiles={teamMemberProfiles}
+                        TEM={TEM}
                     />
                 ) : undefined}
             </div>
@@ -147,15 +148,15 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                     {chat &&
                         chat.dmPartnerUser.userId !== "" &&
                         myself.userId !== chat.dmPartnerUser.userId &&
-                        teamMemberProfiles[chat.dmPartnerUser.userId] &&
-                        teamMemberProfiles[chat.dmPartnerUser.userId].customStatus !== "" && (
+                        TEM.teamMemberProfiles[chat.dmPartnerUser.userId] &&
+                        TEM.teamMemberProfiles[chat.dmPartnerUser.userId].customStatus !== "" && (
                             <Chip
                                 component="h2"
                                 size="md"
                                 sx={{ ml: "3px", borderRadius: "sm" }}
                                 variant="outlined"
                             >
-                                {teamMemberProfiles[chat.dmPartnerUser.userId].customStatus}
+                                {TEM.teamMemberProfiles[chat.dmPartnerUser.userId].customStatus}
                             </Chip>
                         )}
                 </Stack>

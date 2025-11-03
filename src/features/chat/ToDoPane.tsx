@@ -8,14 +8,14 @@ import { createNewTodo } from "./services/createNewTodo";
 import { defaultTodoContent } from "./utils/defaults";
 
 import { useAuth } from "../../context/AuthContext";
+import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { ChatProps, ToDoFactProps } from "../../types/chat";
 
 type ToDoPaneProps = {
     myself: UserProps;
-    teamMemberProfiles: Record<string, UserProps>;
-    teamMembers: UserProps[];
+    TEM: TeamManagementState;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
     UIM: UIStateManagementState;
@@ -32,8 +32,7 @@ type ToDoPaneProps = {
 export const ToDoPane = (props: ToDoPaneProps) => {
     const {
         myself,
-        teamMemberProfiles,
-        teamMembers,
+        TEM,
         setMyself,
         socket,
         UIM,
@@ -148,8 +147,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                     UIM={UIM}
                                     setTodos={setTodos}
                                     socket={socket}
-                                    teamMemberProfiles={teamMemberProfiles}
-                                    teamMembers={teamMembers}
+                                    TEM={TEM}
                                     todo={todo}
                                     todos={tmpTodos}
                                 />

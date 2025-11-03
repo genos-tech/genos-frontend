@@ -5,6 +5,7 @@ import { Box, Button, FormControl, Input } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { BnChatNoteEditor } from "../../../../components/blockNote/bnChatNoteEditor";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatNoteProps } from "../../../../types/notes";
@@ -23,8 +24,7 @@ interface ChatNoteEditorProps {
     myself: UserProps;
     setMyself: (me: UserProps) => void;
     socket: Socket | null;
-    teamMembers: UserProps[];
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     setCurrentChat: (chat: any) => void;
     UIM: UIStateManagementState;
 }
@@ -43,8 +43,7 @@ export const ChatNoteEditor = ({
     myself,
     setMyself,
     socket,
-    teamMembers,
-    teamMemberProfiles,
+    TEM,
     setCurrentChat,
     UIM,
 }: ChatNoteEditorProps) => {
@@ -117,8 +116,7 @@ export const ChatNoteEditor = ({
                 setNoteBodySaved={setNoteBodySaved}
                 UIM={UIM}
                 socket={socket}
-                teamMemberProfiles={teamMemberProfiles}
-                teamMembers={teamMembers}
+                TEM={TEM}
             />
         </>
     );

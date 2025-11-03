@@ -24,6 +24,7 @@ import {
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import {
@@ -45,7 +46,7 @@ import { ChatSearch } from "./ChatSearch";
 import { ActivityDivider } from "./ChatSidebarDividers";
 
 type ChatSidebarProps = {
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     currentChatPaneType: number;
@@ -86,7 +87,7 @@ type ChatSidebarProps = {
 
 export const ChatSidebar = (props: ChatSidebarProps) => {
     const {
-        teamMemberProfiles,
+        TEM,
         myself,
         setMyself,
         currentChatPaneType,
@@ -238,7 +239,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     setOpenJoinGM={setOpenJoinGM}
                     setOpenSearchBox={setOpenSearchBox}
                     socket={socket}
-                    teamMemberProfiles={teamMemberProfiles}
+                    TEM={TEM}
                 />
 
                 <ModalJoinGM
@@ -580,6 +581,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             currentActivityMessageType={-1}
                             socket={socket}
                             UIM={UIM}
+                            TEM={TEM}
                             actions={{
                                 setCurrentMainChat,
                                 setCurrentSubChat,
@@ -594,7 +596,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 funcSetAllChats,
                             }}
                             data={{
-                                teamMemberProfiles,
                                 myself,
                                 setMyself,
                                 allChats: allChats.filter((chat) => chat.chatType === 1),
@@ -624,6 +625,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             currentActivityMessageType={-1}
                             socket={socket}
                             UIM={UIM}
+                            TEM={TEM}
                             actions={{
                                 setCurrentMainChat,
                                 setCurrentSubChat,
@@ -638,7 +640,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 funcSetAllChats,
                             }}
                             data={{
-                                teamMemberProfiles,
                                 myself,
                                 setMyself,
                                 allChats: allChats.filter((chat) => chat.chatType === 2),
@@ -668,6 +669,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             currentActivityMessageType={-1}
                             socket={socket}
                             UIM={UIM}
+                            TEM={TEM}
                             actions={{
                                 setCurrentMainChat,
                                 setCurrentSubChat,
@@ -682,7 +684,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 funcSetAllChats,
                             }}
                             data={{
-                                teamMemberProfiles,
                                 myself,
                                 setMyself,
                                 allChats: allChats.filter((chat) => chat.chatType === 3),
@@ -716,6 +717,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             currentActivityMessageType={currentActivityMessageType}
                             socket={socket}
                             UIM={UIM}
+                            TEM={TEM}
                             actions={{
                                 setCurrentMainChat,
                                 setCurrentSubChat,
@@ -730,7 +732,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 funcSetAllChats,
                             }}
                             data={{
-                                teamMemberProfiles,
                                 myself,
                                 setMyself,
                                 allChats,
@@ -760,6 +761,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             currentActivityMessageType={currentActivityMessageType}
                             socket={socket}
                             UIM={UIM}
+                            TEM={TEM}
                             actions={{
                                 setCurrentMainChat,
                                 setCurrentSubChat,
@@ -774,7 +776,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 funcSetAllChats,
                             }}
                             data={{
-                                teamMemberProfiles,
                                 myself,
                                 setMyself,
                                 allChats,

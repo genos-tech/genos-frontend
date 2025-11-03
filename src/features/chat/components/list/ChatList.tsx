@@ -3,6 +3,7 @@ import { List, Stack } from "@mui/joy";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import {
@@ -77,7 +78,6 @@ interface ChatListActions {
 }
 
 interface ChatListData {
-    teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     allChats: AllChatProps[];
@@ -104,6 +104,7 @@ type ChatListProps = {
     actions: ChatListActions;
     data: ChatListData;
     UIM: UIStateManagementState;
+    TEM: TeamManagementState;
 };
 
 // Custom hook for managing filtered chats
@@ -168,6 +169,7 @@ const ChatListRenderer = ({
     actions,
     data,
     socket,
+    TEM,
     UIM,
 }: {
     tmpAllChats: AllChatProps[];
@@ -178,6 +180,7 @@ const ChatListRenderer = ({
     data: ChatListData;
     socket: Socket | null;
     UIM: UIStateManagementState;
+    TEM: TeamManagementState;
 }) => (
     <Virtuoso
         ref={virtuosoRef}
@@ -215,7 +218,7 @@ const ChatListRenderer = ({
                             setMyself={data.setMyself}
                             UIM={UIM}
                             socket={socket}
-                            teamMemberProfiles={data.teamMemberProfiles}
+                            TEM={TEM}
                         />
                     </Stack>
                 </div>
@@ -236,6 +239,7 @@ const ActivityListRenderer = ({
     selectedActivityId,
     setSelectedActivityId,
     UIM,
+    TEM,
 }: {
     tmpActivityMessages: ActivityMessageProps[];
     activityMessages: ActivityMessageProps[];
@@ -247,6 +251,7 @@ const ActivityListRenderer = ({
     selectedActivityId: string;
     setSelectedActivityId: (id: string) => void;
     UIM: UIStateManagementState;
+    TEM: TeamManagementState;
 }) => (
     <Virtuoso
         ref={virtuosoRef}
@@ -286,7 +291,7 @@ const ActivityListRenderer = ({
                             UIM={UIM}
                             setSelectedActivityId={setSelectedActivityId}
                             socket={socket}
-                            teamMemberProfiles={data.teamMemberProfiles}
+                            TEM={TEM}
                         />
                     </Stack>
                 </div>
@@ -307,6 +312,7 @@ const FlaggedListRenderer = ({
     selectedFlaggedMessageId,
     setSelectedFlaggedMessageId,
     UIM,
+    TEM,
 }: {
     tmpFlaggedMessages: FlaggedMessageProps[];
     flaggedMessages: FlaggedMessageProps[];
@@ -318,6 +324,7 @@ const FlaggedListRenderer = ({
     selectedFlaggedMessageId: string;
     setSelectedFlaggedMessageId: (id: string) => void;
     UIM: UIStateManagementState;
+    TEM: TeamManagementState;
 }) => (
     <Virtuoso
         ref={virtuosoRef}
@@ -357,7 +364,7 @@ const FlaggedListRenderer = ({
                             UIM={UIM}
                             setSelectedFlaggedMessageId={setSelectedFlaggedMessageId}
                             socket={socket}
-                            teamMemberProfiles={data.teamMemberProfiles}
+                            TEM={TEM}
                         />
                     </Stack>
                 </div>
@@ -367,7 +374,7 @@ const FlaggedListRenderer = ({
 );
 
 export const ChatList = (props: ChatListProps) => {
-    const { socket, chatType, currentActivityMessageType, state, actions, data, UIM } = props;
+    const { socket, chatType, currentActivityMessageType, state, actions, data, UIM, TEM } = props;
 
     // Refs for different chat types
     const virtuosoDMRef = useRef<VirtuosoHandle | null>(null);
@@ -443,6 +450,7 @@ export const ChatList = (props: ChatListProps) => {
                     tmpAllChats={tmpAllChats}
                     virtuosoRef={virtuosoRef}
                     UIM={UIM}
+                    TEM={TEM}
                 />
             );
         }
@@ -463,6 +471,7 @@ export const ChatList = (props: ChatListProps) => {
                     tmpActivityMessages={tmpActivityMessages}
                     virtuosoRef={virtuosoActivityRef}
                     UIM={UIM}
+                    TEM={TEM}
                 />
             );
         }
@@ -483,6 +492,7 @@ export const ChatList = (props: ChatListProps) => {
                     tmpFlaggedMessages={tmpFlaggedMessages}
                     virtuosoRef={virtuosoFlaggedRef}
                     UIM={UIM}
+                    TEM={TEM}
                 />
             );
         }

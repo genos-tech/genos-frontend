@@ -6,13 +6,14 @@ import SwapVertIcon from "@mui/icons-material/SwapVert";
 import { Badge, IconButton, Stack, Tooltip } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps } from "../../../../types/chat";
 import { HeaderUserName } from "./HeaderUserName";
 
 type MainChatPaneHeaderProps = {
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
@@ -39,7 +40,7 @@ type MainChatPaneHeaderProps = {
 
 export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
     const {
-        teamMemberProfiles,
+        TEM,
         socket,
         myself,
         setMyself,
@@ -99,7 +100,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                     setMyself={setMyself}
                     UIM={UIM}
                     socket={socket}
-                    teamMemberProfiles={teamMemberProfiles}
+                    TEM={TEM}
                 />
             </Stack>
             <Stack direction="row" sx={{ alignItems: "center" }}>

@@ -1,8 +1,10 @@
-import { Box, Stack, Tab, TabPanel, Tabs } from "@mui/joy";
 import { useEffect, useState } from "react";
+import { Box, Stack, Tab, TabPanel, Tabs } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { useNoteEditor } from "../../../../hooks/notes/useNoteEditor";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useNoteTabs } from "../../../../hooks/notes/useNoteTabs";
@@ -15,18 +17,15 @@ import { NoteEditor } from "../../shared/components/NoteEditor";
 import { NoteHeaderActions } from "../../shared/components/NoteHeaderActions";
 import { NoteTabList } from "../../shared/components/NoteTabList";
 import { MyNoteHeader } from "../components/MyNoteHeader";
-import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 
 /**
  * Props for the MyNoteMain component
  */
 interface MyNoteMainProps {
     /** Team member profiles indexed by user ID */
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     /** Socket connection for real-time updates */
     socket: Socket | null;
-    /** List of team members */
-    teamMembers: UserProps[];
     /** Current user information */
     myself: UserProps;
     /** Function to update current user */
@@ -40,16 +39,7 @@ interface MyNoteMainProps {
 }
 
 export const MyNoteMain = (props: MyNoteMainProps) => {
-    const {
-        teamMemberProfiles,
-        socket,
-        teamMembers,
-        myself,
-        setMyself,
-        UIM,
-        setCurrentChat,
-        NM,
-    } = props;
+    const { TEM, socket, myself, setMyself, UIM, setCurrentChat, NM } = props;
 
     const { accessToken } = useAuth();
     const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
@@ -158,7 +148,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                             setMyself={setMyself}
                                             UIM={UIM}
                                             socket={socket}
-                                            teamMemberProfiles={teamMemberProfiles}
+                                            TEM={TEM}
                                             onCloseNotes={() => {}}
                                             onCreateChildNote={handleCreateChildNote}
                                             onCreateNewNote={handleCreateNewNote}
@@ -201,8 +191,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                                         setMyself={setMyself}
                                                         UIM={UIM}
                                                         socket={socket}
-                                                        teamMemberProfiles={teamMemberProfiles}
-                                                        teamMembers={teamMembers}
+                                                        TEM={TEM}
                                                         titleInputRef={noteEditor.titleInputRef}
                                                         currentMyNoteTitle={
                                                             noteEditor.currentMyNoteTitle

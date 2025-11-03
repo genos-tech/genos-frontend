@@ -5,6 +5,7 @@ import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
@@ -126,9 +127,7 @@ const taskContentTemplate: PartialBlock[] = [
 ];
 
 type CreateTaskProps = {
-    teamMembers: UserProps[];
-    setTeamMembers: (value: UserProps[]) => void;
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
@@ -160,9 +159,7 @@ type CreateTaskProps = {
 
 export const CreateTaskForm = (props: CreateTaskProps) => {
     const {
-        teamMembers,
-        setTeamMembers,
-        teamMemberProfiles,
+        TEM,
         socket,
         myself,
         setMyself,
@@ -277,7 +274,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         updateTeamMembersOptions({
             myself: myself,
             accessToken: accessToken,
-            setTeamMembers: setTeamMembers,
+            setTeamMembers: TEM.setTeamMembers,
         });
     }, [myself, isOpenTeamMembersList]);
 
@@ -365,8 +362,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         setTaskContent={setTaskContent}
                         socket={socket}
                         taskContent={taskContent}
-                        teamMemberProfiles={teamMemberProfiles}
-                        teamMembers={teamMembers}
+                        TEM={TEM}
                         teamProjects={PM.teamProjects}
                     />
 
@@ -381,8 +377,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         UIM={UIM}
                         socket={socket}
                         taskId={taskContent.id}
-                        teamMemberProfiles={teamMemberProfiles}
-                        teamMembers={teamMembers}
+                        TEM={TEM}
                     />
 
                     <Divider sx={{ mt: 2 }} />

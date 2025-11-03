@@ -18,6 +18,7 @@ import {
 
 import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
 import { useAuth } from "../../../../context/AuthContext";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
@@ -32,7 +33,7 @@ interface TaskHomeHeaderProps {
     allChats: AllChatProps[];
     setCurrentMainChat: (chat: ChatProps) => void;
     UIM: UIStateManagementState;
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     funcSetAllChats: () => Promise<void>;
     currentProject: any;
     onCreateProject: () => void;
@@ -48,7 +49,7 @@ export const TaskHomeHeader = ({
     allChats,
     setCurrentMainChat,
     UIM,
-    teamMemberProfiles,
+    TEM,
     funcSetAllChats,
     currentProject,
     onCreateProject,
@@ -130,7 +131,7 @@ export const TaskHomeHeader = ({
                                 setMyself={setMyself}
                                 UIM={UIM}
                                 socket={null}
-                                teamMemberProfiles={teamMemberProfiles}
+                                TEM={TEM}
                             />
                         )}
                         {currentProject?.isPrivate === true ? (

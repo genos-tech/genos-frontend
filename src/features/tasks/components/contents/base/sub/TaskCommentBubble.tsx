@@ -8,6 +8,7 @@ import { BnChatPreview } from "../../../../../../components/blockNote/bnChatPrev
 import { AvatarWithStatus } from "../../../../../../components/common/avatarWithStatus";
 import { EmojiPicker } from "../../../../../../components/emojiInput/EmojiPicker";
 import { ReactionTaskCommentEmojiDisplay } from "../../../../../../components/emojiInput/ReactionTaskCommentEmojiDisplay";
+import { TeamManagementState } from "../../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../../../types/admin";
 import { ChatProps } from "../../../../../../types/chat";
@@ -20,7 +21,7 @@ import {
 } from "../../../../../../utils/dateUtils";
 
 type TaskCommentBubbleProps = {
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
@@ -34,7 +35,7 @@ type TaskCommentBubbleProps = {
 };
 export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
     const {
-        teamMemberProfiles,
+        TEM,
         socket,
         myself,
         setMyself,
@@ -197,7 +198,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                     >
                         <Stack alignItems="center" direction="row" spacing={1}>
                             <AvatarWithStatus
-                                avatarUser={teamMemberProfiles[comment.senderId]}
+                                avatarUser={TEM.teamMemberProfiles[comment.senderId]}
                                 isForBubble={true}
                                 isYou={myself.userId === comment.senderId ? true : false}
                                 myself={myself}
@@ -267,7 +268,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                             setMyself={setMyself}
                             UIM={UIM}
                             socket={socket}
-                            teamMemberProfiles={teamMemberProfiles}
+                            TEM={TEM}
                         />
                     </Card>
                 </Box>

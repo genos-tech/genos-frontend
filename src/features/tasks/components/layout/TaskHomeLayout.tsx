@@ -117,7 +117,7 @@ export const TaskHomeLayout = ({
                         setCurrentMainChat={setCurrentMainChat}
                         setMyself={setMyself}
                         UIM={UIM}
-                        teamMemberProfiles={TEM.teamMemberProfiles}
+                        TEM={TEM}
                         onCloseTaskHome={onCloseTaskHome}
                         onCreateProject={onCreateProject}
                         onCreateTag={onCreateTag}
@@ -172,10 +172,8 @@ export const TaskHomeLayout = ({
                         rootTaskId={TM.isCreatingTask.rootTaskId}
                         setCurrentMainChat={setCurrentMainChat}
                         setMyself={setMyself}
-                        setTeamMembers={TEM.setTeamMembers}
+                        TEM={TEM}
                         socket={socket}
-                        teamMemberProfiles={TEM.teamMemberProfiles}
-                        teamMembers={TEM.teamMembers}
                         TM={TM}
                     />
                 </Box>
@@ -216,12 +214,10 @@ export const TaskHomeLayout = ({
                         setIsTaskNoteVisible={NM.setIsTaskNoteVisible}
                         setMyself={setMyself}
                         setOpenCreateProject={PM.setOpenCreateProject}
-                        setTeamMembers={TEM.setTeamMembers}
                         setTeamProjects={PM.setTeamProjects}
                         socket={socket}
                         taskNoteMeta={NM.taskNoteMeta}
-                        teamMemberProfiles={TEM.teamMemberProfiles}
-                        teamMembers={TEM.teamMembers}
+                        TEM={TEM}
                         teamProjects={PM.teamProjects}
                         TM={TM}
                     />
@@ -271,8 +267,7 @@ export const TaskHomeLayout = ({
                         setMyself={setMyself}
                         UIM={UIM}
                         socket={socket}
-                        teamMemberProfiles={TEM.teamMemberProfiles}
-                        teamMembers={TEM.teamMembers}
+                        TEM={TEM}
                         TM={TM}
                     />
                 </Box>

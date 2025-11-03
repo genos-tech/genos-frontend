@@ -5,11 +5,11 @@ import { Panel } from "react-resizable-panels";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatNoteMain } from "../../../notes/chat-notes/components/ChatNoteMain";
-import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 
 interface ChatNotePanelProps {
     CM: ChatManagementState;
@@ -68,8 +68,7 @@ export const ChatNotePanel = ({
                     setMyself={setMyself}
                     UIM={UIM}
                     socket={socket}
-                    teamMemberProfiles={TEM.teamMemberProfiles}
-                    teamMembers={TEM.teamMembers}
+                    TEM={TEM}
                 />
             </Box>
         </Panel>

@@ -8,6 +8,7 @@ import { Socket } from "socket.io-client";
 import { AvatarWithStatus } from "../../../../../components/common/avatarWithStatus";
 import { GMAvatar } from "../../../../../components/common/GMAvatar";
 import { ProjectAvatar } from "../../../../../components/common/ProjectAvatar";
+import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../../types/admin";
 import { ActivityMessageProps, AllChatProps } from "../../../../../types/chat";
@@ -15,7 +16,7 @@ import { ActivityMessageProps, AllChatProps } from "../../../../../types/chat";
 interface ActivityAvatarProps {
     activity: ActivityMessageProps;
     myself: UserProps;
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     socket: Socket | null;
     allChats: AllChatProps[];
     setCurrentMainChat: (chat: any) => void;
@@ -26,9 +27,9 @@ interface ActivityAvatarProps {
 }
 
 export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
+    TEM,
     activity,
     myself,
-    teamMemberProfiles,
     socket,
     allChats,
     setCurrentMainChat,
@@ -48,7 +49,7 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
         if (activity.dmPartnerUserId !== "") {
             return (
                 <AvatarWithStatus
-                    avatarUser={teamMemberProfiles[activity.dmPartnerUserId]}
+                    avatarUser={TEM.teamMemberProfiles[activity.dmPartnerUserId]}
                     isYou={isYou}
                     myself={myself}
                     setCurrentMainChat={setCurrentMainChat}
@@ -75,7 +76,7 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
                     setMyself={setMyself}
                     UIM={UIM}
                     socket={socket}
-                    teamMemberProfiles={teamMemberProfiles}
+                    TEM={TEM}
                 />
             );
         } else {
@@ -99,7 +100,7 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
                     setMyself={setMyself}
                     UIM={UIM}
                     socket={socket}
-                    teamMemberProfiles={teamMemberProfiles}
+                    TEM={TEM}
                 />
             );
         } else {
@@ -123,7 +124,7 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
                     setMyself={setMyself}
                     UIM={UIM}
                     socket={socket}
-                    teamMemberProfiles={teamMemberProfiles}
+                    TEM={TEM}
                 />
             );
         } else {

@@ -21,6 +21,7 @@ import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
 import { useAuth } from "../../../../context/AuthContext";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps, GMProfileProps } from "../../../../types/chat";
@@ -32,7 +33,7 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type ModalGMProfileProps = {
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
@@ -47,7 +48,7 @@ type ModalGMProfileProps = {
 };
 export const ModalGMProfile = (props: ModalGMProfileProps) => {
     const {
-        teamMemberProfiles,
+        TEM,
         myself,
         setMyself,
         socket,
@@ -236,7 +237,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                             }}
                                                         >
                                                             {gmProfile
-                                                                ? teamMemberProfiles[
+                                                                ? TEM.teamMemberProfiles[
                                                                       gmProfile?.ownerUserId
                                                                   ]?.userName
                                                                 : "N/A"}
@@ -248,7 +249,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                     component="a"
                                                     href={`mailto:${
                                                         gmProfile
-                                                            ? teamMemberProfiles[
+                                                            ? TEM.teamMemberProfiles[
                                                                   gmProfile?.ownerUserId
                                                               ]?.userEmail
                                                             : "N/A"
@@ -264,7 +265,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                     }}
                                                 >
                                                     {gmProfile
-                                                        ? teamMemberProfiles[
+                                                        ? TEM.teamMemberProfiles[
                                                               gmProfile?.ownerUserId
                                                           ]?.userEmail
                                                         : "N/A"}

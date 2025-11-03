@@ -23,6 +23,7 @@ import { GMAvatar } from "../../../../components/common/GMAvatar";
 import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
 import { useAuth } from "../../../../context/AuthContext";
 import { FlaggedService } from "../../../../db/services/flagged.service";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import {
@@ -88,7 +89,7 @@ interface FlaggedMessageActions {
 
 type ChatListItemForFlagMessagesProps = ListItemButtonProps & {
     flaggedMessage: FlaggedMessageProps;
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
@@ -149,7 +150,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
     const {
         selectedFlaggedMessageId,
         setSelectedFlaggedMessageId,
-        teamMemberProfiles,
+        TEM,
         socket,
         flaggedMessage,
         flaggedMessages,
@@ -427,7 +428,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         if (flaggedMessage.dmPartnerUser.userId !== "") {
             return (
                 <AvatarWithStatus
-                    avatarUser={teamMemberProfiles[flaggedMessage.dmPartnerUser.userId]}
+                    avatarUser={TEM.teamMemberProfiles[flaggedMessage.dmPartnerUser.userId]}
                     isYou={isYou}
                     myself={myself}
                     setCurrentMainChat={setCurrentMainChat}
@@ -457,7 +458,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                     setMyself={setMyself}
                     UIM={UIM}
                     socket={socket}
-                    teamMemberProfiles={teamMemberProfiles}
+                    TEM={TEM}
                 />
             );
         }
@@ -484,7 +485,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                     setMyself={setMyself}
                     UIM={UIM}
                     socket={socket}
-                    teamMemberProfiles={teamMemberProfiles}
+                    TEM={TEM}
                 />
             );
         }

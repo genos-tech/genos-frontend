@@ -1,14 +1,13 @@
 import { Socket } from "socket.io-client";
 
+import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
-import { Team, UserProps } from "../../../types/admin";
+import { UserProps } from "../../../types/admin";
 import { ChatProps } from "../../../types/chat";
 import { InboxItemProps } from "../../../types/common";
 
 export type InboxHomeProps = {
-    currentTeam: Team;
-    setCurrentTeam: (value: Team) => void;
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     myself: UserProps;
     socket: Socket | null;
     setMyself: (me: UserProps) => void;
@@ -26,7 +25,7 @@ export type InboxSectionProps = {
     setCurrentChat: (chat: ChatProps) => void;
     UIM: UIStateManagementState;
     socket: Socket | null;
-    teamMemberProfiles: Record<string, UserProps>;
+    TEM: TeamManagementState;
     itemKeyPrefix: string;
 };
 

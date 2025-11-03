@@ -4,6 +4,7 @@ import { Divider, Sheet } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
@@ -32,9 +33,6 @@ import { TaskTabBlock } from "./base/TaskTabBlock";
 import { TaskTitleBlock } from "./base/TaskTitleBlock";
 
 type TaskPreviewProps = {
-    teamMembers: UserProps[];
-    setTeamMembers: (value: UserProps[]) => void;
-    teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
@@ -67,13 +65,11 @@ type TaskPreviewProps = {
     ) => void;
     UIM: UIStateManagementState;
     TM: TaskManagementState;
+    TEM: TeamManagementState;
 };
 
 export const TaskPreview = (props: TaskPreviewProps) => {
     const {
-        teamMembers,
-        setTeamMembers,
-        teamMemberProfiles,
         socket,
         myself,
         setMyself,
@@ -92,6 +88,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         moveToSpecificChat,
         TM,
         UIM,
+        TEM,
     } = props;
     const { accessToken } = useAuth();
     const [taskClosed, setTaskClosed] = useState(false);
@@ -336,7 +333,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         updateTeamMembersOptions({
             myself: myself,
             accessToken: accessToken,
-            setTeamMembers: setTeamMembers,
+            setTeamMembers: TEM.setTeamMembers,
         });
     }, [isOpenTeamMembersList]);
 
@@ -448,8 +445,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         setTaskUpdated={setTaskUpdated}
                         socket={socket}
                         taskContent={tmpCurrentTaskContent}
-                        teamMemberProfiles={teamMemberProfiles}
-                        teamMembers={teamMembers}
+                        TEM={TEM}
                         teamProjects={teamProjects}
                         UIM={UIM}
                     />
@@ -476,8 +472,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         setTaskBodySaved={setTaskBodySaved}
                         socket={socket}
                         taskId={tmpCurrentTaskContent.id}
-                        teamMemberProfiles={teamMemberProfiles}
-                        teamMembers={teamMembers}
+                        TEM={TEM}
                     />
 
                     <Divider sx={{ mt: 2 }} />
@@ -491,7 +486,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         setCurrentProject={setCurrentProject}
                         setMyself={setMyself}
                         socket={socket}
-                        teamMemberProfiles={teamMemberProfiles}
+                        TEM={TEM}
                         UIM={UIM}
                         setIsCreatingTask={TM.setIsCreatingTask}
                         setIsTaskHomeVisible={TM.setIsTaskHomeVisible}
@@ -526,8 +521,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         taskComments={taskComments}
                         taskContent={tmpCurrentTaskContent}
                         taskNotes={taskNotes}
-                        teamMemberProfiles={teamMemberProfiles}
-                        teamMembers={teamMembers}
+                        TEM={TEM}
                         TM={TM}
                         tmpCurrentTaskContent={tmpCurrentTaskContent}
                         uploadedFiles={uploadedFiles}
