@@ -172,11 +172,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
 
                     <TaskTableListItem TM={TM} />
 
-                    <RecentsListItem
-                        recentTasks={recentTasks}
-                        setCurrentProject={PM.setCurrentProject}
-                        TM={TM}
-                    />
+                    <RecentsListItem recentTasks={recentTasks} TM={TM} PM={PM} />
 
                     <ProjectsListItem
                         PM={PM}

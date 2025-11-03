@@ -94,7 +94,6 @@ export const MainChatPanel = ({
                     isToDoVisible={isToDoVisible}
                     myself={myself}
                     paneSizePCT={mainChatPanelSize}
-                    setCurrentProject={PM.setCurrentProject}
                     setIsExistingTodaysTodo={setIsExistingTodaysTodo}
                     setIsToDoVisible={setIsToDoVisible}
                     setMyself={setMyself}
@@ -104,6 +103,7 @@ export const MainChatPanel = ({
                     todos={todos}
                     UIM={UIM}
                     TM={TM}
+                    PM={PM}
                 />
             )}
         </Panel>

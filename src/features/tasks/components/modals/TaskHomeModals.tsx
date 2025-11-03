@@ -57,12 +57,11 @@ export const TaskHomeModals = ({
             <ModalCreateProject myself={myself} PM={PM} />
             <ModalJoinProject
                 CM={CM}
-                loadProjectsAndTasks={PM.loadProjectsAndTasks}
                 myself={myself}
                 openJoinProject={openJoinProject}
-                setCurrentProject={PM.setCurrentProject}
                 setOpenJoinProject={setOpenJoinProject}
                 socket={socket}
+                PM={PM}
             />
             <ModalDeleteProject
                 myself={myself}
@@ -70,7 +69,7 @@ export const TaskHomeModals = ({
                 PM={PM}
                 setOpenDeleteProject={setOpenDeleteProject}
             />
-            <ModalCreateTag currentProject={PM.currentProject} myself={myself} TM={TM} />
+            <ModalCreateTag myself={myself} PM={PM} TM={TM} />
         </>
     );
 };

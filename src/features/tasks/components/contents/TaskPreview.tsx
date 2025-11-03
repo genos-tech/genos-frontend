@@ -5,15 +5,15 @@ import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
-import { TaskNoteMetaProps, TaskNoteProps } from "../../../../types/notes";
+import { TaskNoteProps } from "../../../../types/notes";
 import {
     AttachmentFileProps,
-    ProjectProps,
     TagListProps,
     TaskCommentProps,
     TaskProps,
@@ -37,10 +37,7 @@ type TaskPreviewProps = {
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    setCurrentProject: (value: ProjectProps) => void;
-    setOpenCreateProject: (value: boolean) => void;
-    teamProjects: ProjectProps[];
-    setTeamProjects: (value: ProjectProps[]) => void;
+    PM: ProjectManagementState;
     UIM: UIStateManagementState;
     TM: TaskManagementState;
     TEM: TeamManagementState;
@@ -49,20 +46,7 @@ type TaskPreviewProps = {
 };
 
 export const TaskPreview = (props: TaskPreviewProps) => {
-    const {
-        socket,
-        myself,
-        setMyself,
-        setCurrentProject,
-        setOpenCreateProject,
-        NM,
-        teamProjects,
-        setTeamProjects,
-        TM,
-        UIM,
-        TEM,
-        CM,
-    } = props;
+    const { socket, myself, setMyself, PM, NM, TM, UIM, TEM, CM } = props;
     const { accessToken } = useAuth();
     const [taskClosed, setTaskClosed] = useState(false);
     const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>(
@@ -316,7 +300,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         updateProjectOptions({
             myself: myself,
             accessToken: accessToken,
-            setTeamProjects: setTeamProjects,
+            setTeamProjects: PM.setTeamProjects,
         });
     }, [isOpenProjectList]);
 
@@ -371,8 +355,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         CM={CM}
                         isPreviewMode={true}
                         myself={myself}
-                        setCurrentProject={setCurrentProject}
-                        setOpenCreateProject={setOpenCreateProject}
                         setTaskClosed={setTaskClosed}
                         setTaskContent={setTmpCurrentTaskContent}
                         setTaskStatusUpdated={setTaskStatusUpdated}
@@ -383,6 +365,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         TM={TM}
                         UIM={UIM}
                         NM={NM}
+                        PM={PM}
                     />
 
                     <Divider sx={{ mt: 1, mb: 1 }} />
@@ -398,7 +381,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         projectTags={projectTags}
                         reporter={reporter}
                         setAssignee={setAssignee}
-                        setCurrentProject={setCurrentProject}
                         setIsOpenProjectList={setIsOpenProjectList}
                         setIsOpenTagList={setIsOpenTagList}
                         setIsOpenTeamMembersList={setIsOpenTeamMembersList}
@@ -409,10 +391,10 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         setTaskUpdated={setTaskUpdated}
                         socket={socket}
                         taskContent={tmpCurrentTaskContent}
-                        teamProjects={teamProjects}
                         TEM={TEM}
                         TM={TM}
                         UIM={UIM}
+                        PM={PM}
                     />
 
                     <Divider sx={{ mt: 1, mb: 1 }} />

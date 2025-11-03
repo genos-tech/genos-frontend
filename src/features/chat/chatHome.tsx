@@ -155,13 +155,13 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     CM={CM}
                                     incompleteTodoCount={incompleteTodoCount}
                                     myself={myself}
-                                    setCurrentProject={PM.setCurrentProject}
                                     setIsToDoVisible={setIsToDoVisible}
                                     setMyself={setMyself}
                                     socket={socket}
                                     TEM={TEM}
                                     UIM={UIM}
                                     TM={TM}
+                                    PM={PM}
                                 />
                             </Sheet>
                         </Box>
@@ -240,6 +240,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 currentWindowHeight={height}
                                 myself={myself}
                                 NM={NM}
+                                PM={PM}
                                 setMyself={setMyself}
                                 socket={socket}
                                 TEM={TEM}
@@ -322,7 +323,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                     <ModalCreateProject myself={myself} PM={PM} />
 
                     {/* Modal for creating a new tag */}
-                    <ModalCreateTag currentProject={PM.currentProject} myself={myself} TM={TM} />
+                    <ModalCreateTag myself={myself} TM={TM} PM={PM} />
                 </PanelGroup>
 
                 {/* Hover Animation with CSS */}

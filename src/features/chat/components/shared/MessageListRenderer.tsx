@@ -3,17 +3,17 @@ import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
-import { ProjectProps, TaskProps } from "../../../../types/tasks";
 import { extractMMDD, extractYYYYMMDD, getTimeDiffSeconds } from "../../../../utils/dateUtils";
 import { useScrollToBottomOnChatChange } from "../../hooks/messageBubbleHooks";
 import { handleAtTop } from "../../services/handleBubblePositionAction";
 import { MessageBubble } from "../bubbles/MessageBubble";
 import { ThreadMessageBubble } from "../bubbles/ThreadMessageBubble";
-import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 
 interface MessageListRendererProps {
     chat: ChatProps | ThreadProps;
@@ -24,7 +24,7 @@ interface MessageListRendererProps {
     isThread: boolean;
     messages: MessageProps[] | ThreadMessageProps[];
     myself: UserProps;
-    setCurrentProject: (project: ProjectProps) => void;
+    PM: ProjectManagementState;
     setEditTargetMessage: (message: MessageProps | ThreadMessageProps) => void;
     setErrorMessage: (error: string) => void;
     setErrorOpen: (open: boolean) => void;
@@ -50,7 +50,7 @@ export const MessageListRenderer = ({
     isThread,
     messages,
     myself,
-    setCurrentProject,
+    PM,
     setEditTargetMessage,
     setErrorMessage,
     setErrorOpen,
@@ -231,7 +231,7 @@ export const MessageListRenderer = ({
                                         isSimpleBubble={isSimpleBubble}
                                         message={message as MessageProps}
                                         myself={myself}
-                                        setCurrentProject={setCurrentProject}
+                                        PM={PM}
                                         setEditTargetMessage={setEditTargetMessage}
                                         setIsInEdit={setIsInEdit}
                                         setMyself={setMyself}

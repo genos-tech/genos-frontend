@@ -61,16 +61,13 @@ export const TaskPreviewPanel = ({
                 <TaskPreview
                     CM={CM}
                     myself={myself}
-                    setCurrentProject={PM.setCurrentProject}
                     setMyself={setMyself}
-                    setOpenCreateProject={PM.setOpenCreateProject}
-                    setTeamProjects={PM.setTeamProjects}
                     socket={socket}
-                    teamProjects={PM.teamProjects}
                     TEM={TEM}
                     TM={TM}
                     UIM={UIM}
                     NM={NM}
+                    PM={PM}
                 />
             </Box>
         </Panel>

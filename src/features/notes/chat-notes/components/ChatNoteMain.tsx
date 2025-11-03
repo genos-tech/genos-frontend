@@ -4,6 +4,7 @@ import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { useChatNoteEditor } from "../../../../hooks/notes/useChatNoteEditor";
@@ -37,7 +38,7 @@ interface ChatNoteMainProps {
     /** Function to set the current preview task ID */
     TM: TaskManagementState;
     /** Function to set the current project */
-    setCurrentProject: (project: any) => void;
+    PM: ProjectManagementState;
     /** Note management state and actions */
     NM: NoteManagementState;
     /** Chat management state and actions */
@@ -45,8 +46,7 @@ interface ChatNoteMainProps {
 }
 
 export const ChatNoteMain = (props: ChatNoteMainProps) => {
-    const { TEM, socket, myself, setMyself, UIM, isInChatPage, TM, setCurrentProject, NM, CM } =
-        props;
+    const { TEM, socket, myself, setMyself, UIM, isInChatPage, TM, PM, NM, CM } = props;
 
     const { accessToken } = useAuth();
 
@@ -165,7 +165,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                                 openDeleteNote={openDeleteNote}
                                                 openSearchBox={openSearchBox}
                                                 TM={TM}
-                                                setCurrentProject={setCurrentProject}
+                                                PM={PM}
                                                 setMyself={setMyself}
                                                 setOpenDeleteNote={setOpenDeleteNote}
                                                 setOpenSearchBox={setOpenSearchBox}

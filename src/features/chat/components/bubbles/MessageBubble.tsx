@@ -8,6 +8,7 @@ import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
 import { EmojiReaction } from "../../../../components/emojiInput/EmojiReaction";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
@@ -45,7 +46,7 @@ type MessageBubbleProps = {
     isSimpleBubble: boolean;
     socket: Socket | null;
     UIM: UIStateManagementState;
-    setCurrentProject: (value: ProjectProps) => void;
+    PM: ProjectManagementState;
     setIsInEdit: (value: boolean) => void;
     setEditTargetMessage: (value: MessageProps) => void;
     CM: ChatManagementState;
@@ -60,7 +61,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         isSimpleBubble,
         message,
         myself,
-        setCurrentProject,
+        PM,
         setEditTargetMessage,
         setIsInEdit,
         setMyself,
@@ -178,7 +179,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                 taskExist: threadMessages[0].taskExist,
                             };
                             if (message.project && message.project.projectId) {
-                                setCurrentProject(message.project);
+                                PM.setCurrentProject(message.project);
                             }
                             if (newThread) {
                                 CM.setCurrentThreadChat(newThread);
@@ -553,7 +554,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                             <BubbleOpenTaskButton
                                                 CM={CM}
                                                 message={message}
-                                                setCurrentProject={setCurrentProject}
+                                                PM={PM}
                                                 taskId={message.taskId}
                                                 TM={TM}
                                             />
@@ -676,9 +677,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                                 TM={TM}
                                                                 message={message}
                                                                 taskId={message.taskId}
-                                                                setCurrentProject={
-                                                                    setCurrentProject
-                                                                }
+                                                                PM={PM}
                                                             />
                                                         )}
 

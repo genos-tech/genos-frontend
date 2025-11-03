@@ -6,6 +6,7 @@ import { Socket } from "socket.io-client";
 import { useAuth } from "../../../../context/AuthContext";
 import { loadSpecificPM } from "../../../../features/chat/services/loadSpecificPM";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../../types/chat";
 import { ProjectProps } from "../../../../types/tasks";
@@ -38,18 +39,16 @@ type Props = {
         isPrivate: boolean;
         systemUserId: string;
     }) => void;
-    setCurrentProject: (value: ProjectProps) => void;
-    loadProjectsAndTasks: (value: number) => Promise<void>;
+    PM: ProjectManagementState;
     CM: ChatManagementState;
 };
 export const ModalJoinProject: React.FC<Props> = ({
     CM,
+    PM,
     socket,
     myself,
     openJoinProject,
     setOpenJoinProject,
-    setCurrentProject,
-    loadProjectsAndTasks,
 }) => {
     const { accessToken } = useAuth();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -146,7 +145,7 @@ export const ModalJoinProject: React.FC<Props> = ({
                         );
                     } else {
                         if (openJoinProject.projectId) {
-                            setCurrentProject({
+                            PM.setCurrentProject({
                                 projectId: openJoinProject.projectId,
                                 projectName: openJoinProject.projectName,
                                 isPrivate: openJoinProject.isPrivate,
@@ -154,7 +153,6 @@ export const ModalJoinProject: React.FC<Props> = ({
                                 systemUserId: openJoinProject.systemUserId,
                             });
                             (async () => {
-                                await loadProjectsAndTasks(openJoinProject.projectId);
                                 const loadedChat: ChatProps[] = await loadSpecificPM(
                                     myself.teamId,
                                     myself.teamName,

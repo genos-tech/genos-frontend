@@ -1,24 +1,23 @@
 import Autocomplete from "@mui/joy/Autocomplete";
 
-import { ProjectProps, TaskProps } from "../../../../types/tasks";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { TaskProps } from "../../../../types/tasks";
 
 type ACTeamProjectsProps = {
-    teamProjects: ProjectProps[];
     taskContent: TaskProps;
     setTaskContent: (value: TaskProps) => void;
     isOpenProjectList: boolean;
     setIsOpenProjectList: (value: boolean) => void;
-    setCurrentProject: (value: ProjectProps) => void;
     setTaskUpdated?: (value: boolean) => void;
+    PM: ProjectManagementState;
 };
 export const ACTeamProjects = (props: ACTeamProjectsProps) => {
     const {
-        teamProjects,
+        PM,
         taskContent,
         setTaskContent,
         isOpenProjectList,
         setIsOpenProjectList,
-        setCurrentProject,
         setTaskUpdated,
     } = props;
 
@@ -27,7 +26,7 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
             key={taskContent.id}
             getOptionLabel={(option) => option.projectName}
             isOptionEqualToValue={(option, value) => option.projectId === value.projectId}
-            options={teamProjects}
+            options={PM.teamProjects}
             size="sm"
             sx={{ width: "100%" }}
             value={taskContent.project?.projectId ? taskContent.project : undefined}
@@ -45,7 +44,7 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
                         tags: [],
                     });
                     if (value.projectId) {
-                        setCurrentProject({
+                        PM.setCurrentProject({
                             projectId: value.projectId,
                             projectName: value.projectName,
                             projectTags: [],

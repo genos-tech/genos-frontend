@@ -27,6 +27,7 @@ import { alpha } from "@mui/system";
 
 import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
+import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
@@ -42,7 +43,6 @@ type TaskTitleBlockProps = {
     taskTitle: string;
     setTaskTitle: (value: string) => void;
     setTaskClosed?: (value: boolean) => void;
-    setOpenCreateProject: (value: boolean) => void;
     titleError?: string;
     titleErrorOpen?: boolean;
     setTitleErrorOpen?: (value: boolean) => void;
@@ -52,9 +52,9 @@ type TaskTitleBlockProps = {
     setTaskStatusUpdated?: (value: boolean) => void;
     CM: ChatManagementState;
     UIM: UIStateManagementState;
-    setCurrentProject: (project: any) => void;
     TM: TaskManagementState;
     NM: NoteManagementState;
+    PM: ProjectManagementState;
 };
 export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
     const {
@@ -62,7 +62,6 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         taskContent,
         taskTitle,
         setTaskTitle,
-        setOpenCreateProject,
         setTaskUpdated,
         titleError,
         titleErrorOpen,
@@ -73,9 +72,9 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         setTaskClosed,
         CM,
         UIM,
-        setCurrentProject,
         TM,
         NM,
+        PM,
     } = props;
 
     const { accessToken } = useAuth();
@@ -192,7 +191,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                         true, // openThreadTaskPreview
                                         UIM.setOpeningService,
                                         TM.setCurrentPreviewTaskId,
-                                        setCurrentProject
+                                        PM.setCurrentProject
                                     );
                                 }
                             }}
@@ -285,7 +284,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
 
                         <MenuItem
                             onClick={() => {
-                                setOpenCreateProject(true);
+                                PM.setOpenCreateProject(true);
                             }}
                         >
                             <AddIcon />

@@ -5,6 +5,7 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { DataGrid, useGridApiRef } from "@mui/x-data-grid";
 
 import { useAuth } from "../../../../context/AuthContext";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ProjectProps, TagListProps, TaskTableProps } from "../../../../types/tasks";
@@ -21,12 +22,12 @@ type ProjectTaskTableProps = {
     setTeamMembers: (value: UserProps[]) => void;
     teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
-    currentProject: ProjectProps | null;
+    PM: ProjectManagementState;
     TM: TaskManagementState;
 };
 
 export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
-    const { teamMembers, setTeamMembers, teamMemberProfiles, myself, currentProject, TM } = props;
+    const { teamMembers, setTeamMembers, teamMemberProfiles, myself, PM, TM } = props;
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
     const className = `task-datagrid-${mode}`;
@@ -87,12 +88,12 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
 
     useEffect(() => {
         updateTagOptions();
-    }, [currentProject, TM.allTasks]);
+    }, [PM.currentProject, TM.allTasks]);
 
     // Reset filter
     useEffect(() => {
         apiRef.current.setFilterModel({ items: [] });
-    }, [currentProject]);
+    }, [PM.currentProject]);
 
     return (
         <ThemeProvider theme={theme}>

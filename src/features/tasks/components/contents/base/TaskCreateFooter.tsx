@@ -2,9 +2,10 @@ import { Button, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
+import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../../types/admin";
-import { ProjectProps, TaskProps } from "../../../../../types/tasks";
+import { TaskProps } from "../../../../../types/tasks";
 import { deleteEmptyTask } from "../../../services/deleteEmptyTask";
 import { uploadNewTask } from "../../../services/uploadNewTask";
 
@@ -19,7 +20,7 @@ type TaskCreateFooterProps = {
     setIsSubmitted: (value: boolean) => void;
     setTitleError: (value: string) => void;
     setTitleErrorOpen: (value: boolean) => void;
-    setCurrentProject: (value: ProjectProps) => void;
+    PM: ProjectManagementState;
 };
 export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
     const {
@@ -33,7 +34,7 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
         setIsSubmitted,
         setTitleError,
         setTitleErrorOpen,
-        setCurrentProject,
+        PM,
     } = props;
 
     const DoUploadNewTask = async () => {
@@ -50,7 +51,7 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
 
         if (taskContent.project && taskContent.project.projectId) {
             localStorage.setItem("lastProjectId", String(taskContent.project.projectId));
-            setCurrentProject(taskContent.project);
+            PM.setCurrentProject(taskContent.project);
         } else {
             console.error("Failed to set the current project");
         }

@@ -4,6 +4,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 
 import { useAuth } from "../../../../context/AuthContext";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ProjectProps } from "../../../../types/tasks";
@@ -13,11 +14,11 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 
 type Props = {
     myself: UserProps;
-    currentProject: ProjectProps | null;
+    PM: ProjectManagementState;
     TM: TaskManagementState;
 };
 
-export const ModalCreateTag: React.FC<Props> = ({ myself, currentProject, TM }) => {
+export const ModalCreateTag: React.FC<Props> = ({ myself, PM, TM }) => {
     const { accessToken } = useAuth();
     const [errorTagCreateMessage, setErrorTagCreateMessage] = useState<string | null>(null);
     const [tagName, setTagName] = useState("");
@@ -43,7 +44,7 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, currentProject, TM }) 
                 },
                 body: JSON.stringify({
                     team_id: myself.teamId,
-                    project_id: currentProject?.projectId ?? -1,
+                    project_id: PM.currentProject?.projectId ?? -1,
                     tag_name: tagName,
                     tag_color: selectedColor.chipColor,
                     tag_text_color: selectedColor.textColor,

@@ -19,6 +19,7 @@ import {
 import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
@@ -33,7 +34,7 @@ interface TaskHomeHeaderProps {
     CM: ChatManagementState;
     UIM: UIStateManagementState;
     TEM: TeamManagementState;
-    currentProject: any;
+    PM: ProjectManagementState;
     onCreateProject: () => void;
     onCreateTag: () => void;
     onDeleteProject: () => void;
@@ -47,7 +48,7 @@ export const TaskHomeHeader = ({
     CM,
     UIM,
     TEM,
-    currentProject,
+    PM,
     onCreateProject,
     onCreateTag,
     onDeleteProject,
@@ -91,7 +92,8 @@ export const TaskHomeHeader = ({
     // =======================================================================
 
     const pmChat = CM.allChats.find(
-        (chat) => chat.chatType === 3 && currentProject && chat.chatId === currentProject.projectId
+        (chat) =>
+            chat.chatType === 3 && PM.currentProject && chat.chatId === PM.currentProject.projectId
     );
 
     return (
@@ -129,7 +131,7 @@ export const TaskHomeHeader = ({
                                 UIM={UIM}
                             />
                         )}
-                        {currentProject?.isPrivate === true ? (
+                        {PM.currentProject?.isPrivate === true ? (
                             <LockOutlineIcon
                                 sx={{
                                     ml: "5px",
@@ -147,7 +149,7 @@ export const TaskHomeHeader = ({
                     justifyContent: "center",
                 }}
             >
-                {currentProject?.projectName}
+                {PM.currentProject?.projectName}
             </Typography>
 
             <Box sx={{ width: "40%" }}>

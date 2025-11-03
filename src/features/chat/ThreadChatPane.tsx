@@ -14,6 +14,7 @@ import { calculateVirtuosoHight } from "./services/calculateVirtuosoHight";
 import { handleFileDrop } from "./services/handleFileDrop";
 
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
@@ -23,6 +24,7 @@ import { ChatProps, ThreadProps } from "../../types/chat";
 
 type MessagesPaneProps = {
     TEM: TeamManagementState;
+    PM: ProjectManagementState;
     currentWindowHeight: number;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
@@ -37,6 +39,7 @@ type MessagesPaneProps = {
 export const ThreadPane = (props: MessagesPaneProps) => {
     const {
         TEM,
+        PM,
         currentWindowHeight,
         myself,
         setMyself,
@@ -136,7 +139,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                     isThread={true}
                     messages={messageManagement.messages}
                     myself={myself}
-                    setCurrentProject={() => {}}
+                    PM={PM}
                     setEditTargetMessage={messageManagement.setEditTargetMessage}
                     setErrorMessage={messageManagement.setErrorMessage}
                     setErrorOpen={messageManagement.setErrorOpen}

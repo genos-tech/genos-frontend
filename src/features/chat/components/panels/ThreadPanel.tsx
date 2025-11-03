@@ -3,6 +3,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Panel } from "react-resizable-panels";
 
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
@@ -21,11 +22,13 @@ interface ThreadPanelProps {
     socket: any;
     setMyself: (me: UserProps) => void;
     UIM: UIStateManagementState;
+    PM: ProjectManagementState;
 }
 
 export const ThreadPanel = ({
     CM,
     TM,
+    PM,
     TEM,
     NM,
     myself,
@@ -50,6 +53,7 @@ export const ThreadPanel = ({
                 {CM.currentThreadChat && (
                     <ThreadPane
                         CM={CM}
+                        PM={PM}
                         currentThreadChatId={currentThreadChatId}
                         currentWindowHeight={currentWindowHeight}
                         myself={myself}

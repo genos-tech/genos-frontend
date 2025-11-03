@@ -96,7 +96,7 @@ export const TaskHomeLayout = ({
                 <>
                     <TaskHomeHeader
                         CM={CM}
-                        currentProject={PM.currentProject}
+                        PM={PM}
                         myself={myself}
                         setMyself={setMyself}
                         TEM={TEM}
@@ -108,7 +108,7 @@ export const TaskHomeLayout = ({
                         onDeleteProject={onDeleteProject}
                     />
                     <ProjectTaskTable
-                        currentProject={PM.currentProject}
+                        PM={PM}
                         myself={myself}
                         setTeamMembers={TEM.setTeamMembers}
                         teamMemberProfiles={TEM.teamMemberProfiles}
@@ -184,12 +184,9 @@ export const TaskHomeLayout = ({
                         CM={CM}
                         NM={NM}
                         myself={myself}
-                        setCurrentProject={PM.setCurrentProject}
+                        PM={PM}
                         setMyself={setMyself}
-                        setOpenCreateProject={PM.setOpenCreateProject}
-                        setTeamProjects={PM.setTeamProjects}
                         socket={socket}
-                        teamProjects={PM.teamProjects}
                         TEM={TEM}
                         TM={TM}
                         UIM={UIM}

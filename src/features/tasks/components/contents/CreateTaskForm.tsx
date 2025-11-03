@@ -284,8 +284,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         CM={CM}
                         isPreviewMode={false}
                         myself={myself}
-                        setCurrentProject={PM.setCurrentProject}
-                        setOpenCreateProject={PM.setOpenCreateProject}
+                        PM={PM}
                         setTaskTitle={setTaskTitle}
                         setTitleErrorOpen={setTitleErrorOpen}
                         taskContent={taskContent}
@@ -310,7 +309,6 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         projectTags={projectTags}
                         reporter={reporter}
                         setAssignee={setAssignee}
-                        setCurrentProject={PM.setCurrentProject}
                         setIsOpenProjectList={setIsOpenProjectList}
                         setIsOpenTagList={setIsOpenTagList}
                         setIsOpenTeamMembersList={setIsOpenTeamMembersList}
@@ -319,10 +317,10 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         setTaskContent={setTaskContent}
                         socket={socket}
                         taskContent={taskContent}
-                        teamProjects={PM.teamProjects}
                         TEM={TEM}
                         TM={TM}
                         UIM={UIM}
+                        PM={PM}
                     />
 
                     <Divider sx={{ mt: 1, mb: 1 }} />
@@ -353,7 +351,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         CM={CM}
                         TM={TM}
                         myself={myself}
-                        setCurrentProject={PM.setCurrentProject}
+                        PM={PM}
                         setIsSubmitted={setIsSubmitted}
                         setTitleError={setTitleError}
                         setTitleErrorOpen={setTitleErrorOpen}

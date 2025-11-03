@@ -4,6 +4,7 @@ import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
@@ -51,7 +52,6 @@ interface ChatListState {
 }
 
 interface ChatListActions {
-    setCurrentProject: (value: ProjectProps) => void;
     setIsToDoVisible: (value: boolean) => void;
 }
 
@@ -80,6 +80,7 @@ type ChatListProps = {
     UIM: UIStateManagementState;
     TEM: TeamManagementState;
     TM: TaskManagementState;
+    PM: ProjectManagementState;
 };
 
 // Custom hook for managing filtered chats
@@ -208,6 +209,7 @@ const ActivityListRenderer = ({
     UIM,
     TEM,
     TM,
+    PM,
 }: {
     tmpActivityMessages: ActivityMessageProps[];
     activityMessages: ActivityMessageProps[];
@@ -222,6 +224,7 @@ const ActivityListRenderer = ({
     TEM: TeamManagementState;
     CM: ChatManagementState;
     TM: TaskManagementState;
+    PM: ProjectManagementState;
 }) => (
     <Virtuoso
         ref={virtuosoRef}
@@ -243,7 +246,7 @@ const ActivityListRenderer = ({
                             CM={CM}
                             myself={data.myself}
                             selectedActivityId={selectedActivityId}
-                            setCurrentProject={actions.setCurrentProject}
+                            setCurrentProject={PM.setCurrentProject}
                             setMyself={data.setMyself}
                             setSelectedActivityId={setSelectedActivityId}
                             socket={socket}
@@ -272,6 +275,7 @@ const FlaggedListRenderer = ({
     TEM,
     CM,
     TM,
+    PM,
 }: {
     tmpFlaggedMessages: FlaggedMessageProps[];
     virtuosoRef: React.RefObject<VirtuosoHandle | null>;
@@ -285,6 +289,7 @@ const FlaggedListRenderer = ({
     TEM: TeamManagementState;
     CM: ChatManagementState;
     TM: TaskManagementState;
+    PM: ProjectManagementState;
 }) => (
     <Virtuoso
         ref={virtuosoRef}
@@ -305,7 +310,7 @@ const FlaggedListRenderer = ({
                             flaggedMessage={flaggedMessage}
                             myself={data.myself}
                             selectedFlaggedMessageId={selectedFlaggedMessageId}
-                            setCurrentProject={actions.setCurrentProject}
+                            setCurrentProject={PM.setCurrentProject}
                             setMyself={data.setMyself}
                             setSelectedFlaggedMessageId={setSelectedFlaggedMessageId}
                             socket={socket}
@@ -332,6 +337,7 @@ export const ChatList = (props: ChatListProps) => {
         TEM,
         CM,
         TM,
+        PM,
     } = props;
 
     // Refs for different chat types
@@ -421,6 +427,7 @@ export const ChatList = (props: ChatListProps) => {
             return (
                 <ActivityListRenderer
                     actions={actions}
+                    PM={PM}
                     activityMessages={CM.activityMessages}
                     CM={CM}
                     data={data}
@@ -444,6 +451,7 @@ export const ChatList = (props: ChatListProps) => {
             return (
                 <FlaggedListRenderer
                     actions={actions}
+                    PM={PM}
                     CM={CM}
                     data={data}
                     selectedFlaggedMessageId={selectedFlaggedMessageId}

@@ -8,6 +8,7 @@ import { Socket } from "socket.io-client";
 import { AvatarWithStatus } from "../../../../../components/common/avatarWithStatus";
 import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
+import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
@@ -28,7 +29,6 @@ type TaskMainBlockProps = {
     socket: Socket | null;
     taskContent: TaskProps;
     setTaskContent: (value: TaskProps) => void;
-    teamProjects: ProjectProps[];
     projectTags: TagListProps[];
     myself: UserProps;
     setMyself: (value: UserProps) => void;
@@ -42,13 +42,13 @@ type TaskMainBlockProps = {
     setIsOpenProjectList: (value: boolean) => void;
     isOpenTagList: boolean;
     setIsOpenTagList: (value: boolean) => void;
-    setCurrentProject: (value: ProjectProps) => void;
     isPreviewMode: boolean;
     setTaskUpdated?: (value: boolean) => void;
     UIM: UIStateManagementState;
     CM: ChatManagementState;
     setTaskStatusUpdated?: (value: boolean) => void;
     TM: TaskManagementState;
+    PM: ProjectManagementState;
 };
 export const TaskMainBlock = (props: TaskMainBlockProps) => {
     const {
@@ -56,7 +56,6 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
         socket,
         taskContent,
         setTaskContent,
-        teamProjects,
         projectTags,
         myself,
         setMyself,
@@ -70,13 +69,13 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
         setIsOpenProjectList,
         isOpenTagList,
         setIsOpenTagList,
-        setCurrentProject,
         isPreviewMode,
         setTaskUpdated,
         UIM,
         CM,
         TM,
         setTaskStatusUpdated,
+        PM,
     } = props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
@@ -175,12 +174,11 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                 <Typography sx={{ minWidth: "80px" }}>Project</Typography>
                                 <ACTeamProjects
                                     isOpenProjectList={isOpenProjectList}
-                                    setCurrentProject={setCurrentProject}
                                     setIsOpenProjectList={setIsOpenProjectList}
                                     setTaskContent={setTaskContent}
                                     setTaskUpdated={setTaskUpdated}
                                     taskContent={taskContent}
-                                    teamProjects={teamProjects}
+                                    PM={PM}
                                 />
                             </ListItem>
                         </Grid>
@@ -285,7 +283,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                             parentTask.project.projectId &&
                                             parentTask.id
                                         ) {
-                                            setCurrentProject({
+                                            PM.setCurrentProject({
                                                 projectId: parentTask.project.projectId,
                                                 projectName: parentTask.project.projectName,
                                                 projectTags: parentTask.tags,

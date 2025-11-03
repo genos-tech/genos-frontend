@@ -72,7 +72,6 @@ export const SubChatPanel = ({
                     isToDoVisible={isToDoVisible}
                     myself={myself}
                     paneSizePCT={subChatPanelSize}
-                    setCurrentProject={PM.setCurrentProject}
                     setIsExistingTodaysTodo={setIsExistingTodaysTodo}
                     setIsToDoVisible={() => {}}
                     setMyself={setMyself}
@@ -82,6 +81,7 @@ export const SubChatPanel = ({
                     todos={todos}
                     UIM={UIM}
                     TM={TM}
+                    PM={PM}
                 />
             </Box>
         </Panel>

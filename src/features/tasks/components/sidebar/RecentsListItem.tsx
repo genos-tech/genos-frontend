@@ -5,17 +5,18 @@ import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
-import { ProjectProps, SearchTeamTasksResponse } from "../../../../types/tasks";
+import { SearchTeamTasksResponse } from "../../../../types/tasks";
 import { Toggler } from "./common";
 
 type RecentsListItemProps = {
     recentTasks: SearchTeamTasksResponse[];
-    setCurrentProject: (value: ProjectProps) => void;
+    PM: ProjectManagementState;
     TM: TaskManagementState;
 };
 export const RecentsListItem = (props: RecentsListItemProps) => {
-    const { recentTasks, setCurrentProject, TM } = props;
+    const { recentTasks, PM, TM } = props;
     const { mode } = useColorScheme();
 
     return (
@@ -69,7 +70,7 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                                         sx={{ overflow: "hidden" }} // ensure children don't overflow
                                         onClick={() => {
                                             if (projectId) {
-                                                setCurrentProject({
+                                                PM.setCurrentProject({
                                                     projectId: projectId,
                                                     projectName: projectName,
                                                     projectTags: [],

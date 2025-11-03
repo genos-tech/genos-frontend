@@ -14,12 +14,12 @@ import { calculateVirtuosoSubHight } from "./services/calculateVirtuosoHight";
 import { handleFileDrop } from "./services/handleFileDrop";
 
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
 import { ChatProps, ThreadProps, ToDoFactProps } from "../../types/chat";
-import { ProjectProps, TaskProps } from "../../types/tasks";
 import { ToDoPane } from "./ToDoPane";
 
 type MessagesPaneProps = {
@@ -30,7 +30,7 @@ type MessagesPaneProps = {
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
     currentSubChatId: number;
-    setCurrentProject: (value: ProjectProps) => void;
+    PM: ProjectManagementState;
     isToDoVisible: boolean;
     setIsToDoVisible: (value: boolean) => void;
     todos: ToDoFactProps[];
@@ -53,7 +53,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
         isToDoVisible,
         myself,
         paneSizePCT,
-        setCurrentProject,
+        PM,
         setIsExistingTodaysTodo,
         setIsToDoVisible,
         setMyself,
@@ -187,7 +187,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                                 isThread={false}
                                 messages={messageManagement.messages}
                                 myself={myself}
-                                setCurrentProject={setCurrentProject}
+                                PM={PM}
                                 setEditTargetMessage={messageManagement.setEditTargetMessage}
                                 setErrorMessage={messageManagement.setErrorMessage}
                                 setErrorOpen={messageManagement.setErrorOpen}

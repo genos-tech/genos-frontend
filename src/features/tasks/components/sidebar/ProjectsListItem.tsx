@@ -166,7 +166,7 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
 
                     <JoinProjectListItem PM={PM} setOpenJoinProject={setOpenJoinProject} />
 
-                    <NewProjectListItem setOpenCreateProject={PM.setOpenCreateProject} />
+                    <NewProjectListItem PM={PM} />
                 </List>
             </Toggler>
         </ListItem>

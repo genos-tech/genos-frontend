@@ -24,6 +24,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
@@ -42,7 +43,6 @@ import { ActivityDivider } from "./ChatSidebarDividers";
 type ChatSidebarProps = {
     incompleteTodoCount: number;
     myself: UserProps;
-    setCurrentProject: (value: ProjectProps) => void;
     setIsToDoVisible: (value: boolean) => void;
     setMyself: (value: UserProps) => void;
     UIM: UIStateManagementState;
@@ -50,13 +50,13 @@ type ChatSidebarProps = {
     TEM: TeamManagementState;
     CM: ChatManagementState;
     TM: TaskManagementState;
+    PM: ProjectManagementState;
 };
 
 export const ChatSidebar = (props: ChatSidebarProps) => {
     const {
         incompleteTodoCount,
         myself,
-        setCurrentProject,
         setIsToDoVisible,
         setMyself,
         UIM,
@@ -64,6 +64,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
         TEM,
         CM,
         TM,
+        PM,
     } = props;
     const { mode } = useColorScheme();
     const [openSearchBox, setOpenSearchBox] = useState(false);
@@ -517,6 +518,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 {CM.currentChatPaneType === 1 && (
                     <Box>
                         <ChatList
+                            PM={PM}
                             chatType={1}
                             CM={CM}
                             currentActivityMessageType={-1}
@@ -525,7 +527,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             UIM={UIM}
                             TM={TM}
                             actions={{
-                                setCurrentProject,
                                 setIsToDoVisible,
                             }}
                             data={{
@@ -544,6 +545,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 {CM.currentChatPaneType === 2 && (
                     <Box>
                         <ChatList
+                            PM={PM}
                             chatType={2}
                             CM={CM}
                             currentActivityMessageType={-1}
@@ -552,7 +554,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             UIM={UIM}
                             TM={TM}
                             actions={{
-                                setCurrentProject,
                                 setIsToDoVisible,
                             }}
                             data={{
@@ -571,6 +572,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 {CM.currentChatPaneType === 3 && (
                     <Box>
                         <ChatList
+                            PM={PM}
                             chatType={3}
                             CM={CM}
                             currentActivityMessageType={-1}
@@ -579,7 +581,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             UIM={UIM}
                             TM={TM}
                             actions={{
-                                setCurrentProject,
                                 setIsToDoVisible,
                             }}
                             data={{
@@ -602,6 +603,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             setCurrentActivityMessageType={setCurrentActivityMessageType}
                         />
                         <ChatList
+                            PM={PM}
                             chatType={5}
                             CM={CM}
                             currentActivityMessageType={currentActivityMessageType}
@@ -610,7 +612,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             UIM={UIM}
                             TM={TM}
                             actions={{
-                                setCurrentProject,
                                 setIsToDoVisible,
                             }}
                             data={{
@@ -629,6 +630,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 {CM.currentChatPaneType === 6 && (
                     <Box>
                         <ChatList
+                            PM={PM}
                             chatType={6}
                             CM={CM}
                             currentActivityMessageType={currentActivityMessageType}
@@ -637,7 +639,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             UIM={UIM}
                             TM={TM}
                             actions={{
-                                setCurrentProject,
                                 setIsToDoVisible,
                             }}
                             data={{

@@ -69,12 +69,9 @@ export const TaskPreviewPanel = (props: TaskPreviewPanelProps) => {
                         CM={CM}
                         NM={NM}
                         myself={myself}
-                        setCurrentProject={PM.setCurrentProject}
+                        PM={PM}
                         setMyself={setMyself}
-                        setOpenCreateProject={PM.setOpenCreateProject}
-                        setTeamProjects={PM.setTeamProjects}
                         socket={socket}
-                        teamProjects={PM.teamProjects}
                         TEM={TEM}
                         TM={TM}
                         UIM={UIM}

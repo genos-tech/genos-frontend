@@ -93,15 +93,12 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
                         CM={CM}
                         NM={NM}
                         myself={myself}
-                        setCurrentProject={PM.setCurrentProject}
                         setMyself={setMyself}
-                        setOpenCreateProject={PM.setOpenCreateProject}
-                        setTeamProjects={PM.setTeamProjects}
                         socket={socket}
-                        teamProjects={PM.teamProjects}
                         TEM={TEM}
                         TM={TM}
                         UIM={UIM}
+                        PM={PM}
                     />
                 )}
             </>
@@ -116,7 +113,7 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
                 isInChatPage={false}
                 myself={myself}
                 NM={NM}
-                setCurrentProject={PM.setCurrentProject}
+                PM={PM}
                 setMyself={setMyself}
                 socket={socket}
                 TEM={TEM}

@@ -23,12 +23,12 @@ import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus
 import { GMAvatar } from "../../../../components/common/GMAvatar";
 import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
-import { ChatNoteProps } from "../../../../types/notes";
 import { ModalDeleteChatNote } from "../../chat-notes/modals/ModalDeleteChatNote";
 import { ACChatChildNotes } from "./autocompletes/ACChatChildNotes";
 
@@ -39,7 +39,7 @@ interface ChatNoteHeaderProps {
     setMyself: (me: UserProps) => void;
     UIM: UIStateManagementState;
     TM: TaskManagementState;
-    setCurrentProject: (project: any) => void;
+    PM: ProjectManagementState;
     socket: Socket | null;
     TEM: TeamManagementState;
     CM: ChatManagementState;
@@ -60,7 +60,7 @@ export const ChatNoteHeader = ({
     setMyself,
     UIM,
     TM,
-    setCurrentProject,
+    PM,
     socket,
     TEM,
     CM,
@@ -243,7 +243,7 @@ export const ChatNoteHeader = ({
                                     false, // openThreadTaskPreview
                                     UIM.setOpeningService,
                                     TM.setCurrentPreviewTaskId,
-                                    setCurrentProject
+                                    PM.setCurrentProject
                                 );
                             }}
                         >
