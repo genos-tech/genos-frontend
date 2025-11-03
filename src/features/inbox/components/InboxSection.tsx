@@ -6,19 +6,7 @@ import { InboxSectionProps } from "../types/inboxTypes";
 import { InboxBubble } from "./InboxBubble";
 
 export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionProps>(
-    (
-        {
-            items,
-            myself,
-            setMyself,
-            setCurrentChat,
-            UIM,
-            socket,
-            TEM,
-            itemKeyPrefix,
-        },
-        ref
-    ) => {
+    ({ items, myself, setMyself, setCurrentChat, UIM, socket, TEM, itemKeyPrefix }, ref) => {
         return (
             <List
                 className="custom-scrollbar"

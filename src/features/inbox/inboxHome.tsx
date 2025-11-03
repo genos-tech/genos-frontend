@@ -10,16 +10,7 @@ import { InboxHomeProps } from "./types/inboxTypes";
 import { Sidebar } from "../../components/layout/sidebar";
 
 export const InboxHome = (props: InboxHomeProps) => {
-    const {
-        TEM,
-        IM,
-        myself,
-        socket,
-        setMyself,
-        setCurrentMainChat,
-        unReadChatAndActivityCounts,
-        UIM,
-    } = props;
+    const { TEM, IM, myself, socket, setMyself, CM, UIM } = props;
 
     const { activityInboxItems, requestInboxItems } = useInboxItems(IM.inboxItems);
     const activityVirtuosoRef = useInboxScroll(activityInboxItems);
@@ -31,10 +22,10 @@ export const InboxHome = (props: InboxHomeProps) => {
                 TEM={TEM}
                 myself={myself}
                 UIM={UIM}
-                setCurrentMainChat={setCurrentMainChat}
+                setCurrentMainChat={CM.setCurrentMainChat}
                 setMyself={setMyself}
                 socket={socket}
-                unReadChatAndActivityCounts={unReadChatAndActivityCounts}
+                unReadChatAndActivityCounts={CM.unReadChatAndActivityCounts}
                 IM={IM}
             />
             <Stack sx={{ width: "100%" }}>
@@ -57,7 +48,7 @@ export const InboxHome = (props: InboxHomeProps) => {
                             itemKeyPrefix="inbox-general-items-bubble"
                             items={activityInboxItems}
                             myself={myself}
-                            setCurrentChat={setCurrentMainChat}
+                            setCurrentChat={CM.setCurrentMainChat}
                             setMyself={setMyself}
                             socket={socket}
                             TEM={TEM}
@@ -68,7 +59,7 @@ export const InboxHome = (props: InboxHomeProps) => {
                             itemKeyPrefix="inbox-request-bubble"
                             items={requestInboxItems}
                             myself={myself}
-                            setCurrentChat={setCurrentMainChat}
+                            setCurrentChat={CM.setCurrentMainChat}
                             setMyself={setMyself}
                             UIM={UIM}
                             socket={socket}

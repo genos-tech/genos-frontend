@@ -1,5 +1,6 @@
 import { Socket } from "socket.io-client";
 
+import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
 import { InboxManagementState } from "../../../hooks/inbox/useInboxManagement";
@@ -13,8 +14,7 @@ export type InboxHomeProps = {
     myself: UserProps;
     socket: Socket | null;
     setMyself: (me: UserProps) => void;
-    setCurrentMainChat: (chat: ChatProps) => void;
-    unReadChatAndActivityCounts: number;
+    CM: ChatManagementState;
     UIM: UIStateManagementState;
 };
 

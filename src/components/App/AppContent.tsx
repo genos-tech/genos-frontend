@@ -34,10 +34,9 @@ export const AppContent = ({
                 TEM={TEM}
                 IM={IM}
                 myself={myself}
-                setCurrentMainChat={CM.setCurrentMainChat}
+                CM={CM}
                 setMyself={setMyself}
                 socket={socketInstance}
-                unReadChatAndActivityCounts={CM.unReadChatAndActivityCounts}
                 UIM={UIM}
             />
         );
