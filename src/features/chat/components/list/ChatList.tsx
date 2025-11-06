@@ -71,7 +71,7 @@ const sortAllChatByPinned = (allChats: AllChatProps[]) => {
 
 type ChatListProps = {
     socket: Socket | null;
-    chatType: number;
+    targetChatType: number;
     currentActivityMessageType: number;
     useCM: ChatManagementState;
     state: ChatListState;
@@ -84,25 +84,37 @@ type ChatListProps = {
 };
 
 // Custom hook for managing filtered chats
-const useFilteredChats = (allChats: AllChatProps[], showOnlyUnreadItems: boolean) => {
-    const [tmpAllChats, setTmpAllChats] = useState<AllChatProps[]>(sortAllChatByPinned(allChats));
+const useFilteredChats = (
+    allChats: AllChatProps[],
+    targetChatType: number,
+    showOnlyUnreadItems: boolean
+) => {
+    const [filteredChats, setFilteredChats] = useState<AllChatProps[]>(
+        sortAllChatByPinned(allChats.filter((chat) => chat.chatType === targetChatType))
+    );
 
     useEffect(() => {
         if (showOnlyUnreadItems) {
-            const filteredChats = allChats.filter(
-                (item) =>
-                    item.lastReadMessageId <
-                    (item.latestMessage
-                        ? item.latestMessage.messageId
-                        : item.lastReadMessageId + 1)
-            );
-            setTmpAllChats(sortAllChatByPinned(filteredChats));
+            const filteredChats = allChats
+                .filter((chat) => chat.chatType === targetChatType)
+                .filter(
+                    (item) =>
+                        item.lastReadMessageId <
+                        (item.latestMessage
+                            ? item.latestMessage.messageId
+                            : item.lastReadMessageId + 1)
+                );
+            setFilteredChats(sortAllChatByPinned(filteredChats));
         } else {
-            setTmpAllChats(sortAllChatByPinned([...allChats]));
+            setFilteredChats(
+                sortAllChatByPinned([
+                    ...allChats.filter((chat) => chat.chatType === targetChatType),
+                ])
+            );
         }
     }, [showOnlyUnreadItems, allChats]);
 
-    return tmpAllChats;
+    return filteredChats;
 };
 
 // Custom hook for managing filtered activity messages
@@ -138,7 +150,7 @@ const useFilteredActivityMessages = (
 
 // Component for rendering chat items
 const ChatListRenderer = ({
-    tmpAllChats,
+    targetChats,
     virtuosoRef,
     state,
     actions,
@@ -149,7 +161,7 @@ const ChatListRenderer = ({
     useCM,
     useTM,
 }: {
-    tmpAllChats: AllChatProps[];
+    targetChats: AllChatProps[];
     virtuosoRef: React.RefObject<VirtuosoHandle | null>;
     state: ChatListState;
     actions: ChatListActions;
@@ -167,9 +179,9 @@ const ChatListRenderer = ({
         className="custom-scrollbar"
         initialTopMostItemIndex={0}
         style={{ height: "93dvh" }}
-        totalCount={tmpAllChats.length}
+        totalCount={targetChats.length}
         itemContent={(index) => {
-            const chat = tmpAllChats[index];
+            const chat = targetChats[index];
             return (
                 <div>
                     <Stack direction="row">
@@ -328,7 +340,7 @@ const FlaggedListRenderer = ({
 export const ChatList = (props: ChatListProps) => {
     const {
         socket,
-        chatType,
+        targetChatType,
         currentActivityMessageType,
         state,
         actions,
@@ -357,7 +369,11 @@ export const ChatList = (props: ChatListProps) => {
     };
 
     // Custom hooks for filtered data
-    const tmpAllChats = useFilteredChats(useCM.allChats, state.showOnlyUnreadItems);
+    const targetChats = useFilteredChats(
+        useCM.allChats,
+        targetChatType,
+        state.showOnlyUnreadItems
+    );
     const tmpActivityMessages = useFilteredActivityMessages(
         useCM.activityMessages,
         currentActivityMessageType,
@@ -402,8 +418,8 @@ export const ChatList = (props: ChatListProps) => {
     }, [useCM.flaggedMessages]);
 
     const renderChatList = () => {
-        if (chatType < CHAT_TYPES.ACTIVITY && tmpAllChats.length > 0) {
-            const virtuosoRef = chatTypeLookup[chatType];
+        if (targetChatType < CHAT_TYPES.ACTIVITY && targetChats.length > 0) {
+            const virtuosoRef = chatTypeLookup[targetChatType];
             return (
                 <ChatListRenderer
                     actions={actions}
@@ -412,7 +428,7 @@ export const ChatList = (props: ChatListProps) => {
                     socket={socket}
                     state={state}
                     useTEM={useTEM}
-                    tmpAllChats={tmpAllChats}
+                    targetChats={targetChats}
                     useUISM={useUISM}
                     virtuosoRef={virtuosoRef}
                     useTM={useTM}
@@ -423,7 +439,7 @@ export const ChatList = (props: ChatListProps) => {
     };
 
     const renderActivityList = () => {
-        if (chatType === CHAT_TYPES.ACTIVITY && tmpActivityMessages.length > 0) {
+        if (targetChatType === CHAT_TYPES.ACTIVITY && tmpActivityMessages.length > 0) {
             return (
                 <ActivityListRenderer
                     actions={actions}
@@ -447,7 +463,7 @@ export const ChatList = (props: ChatListProps) => {
     };
 
     const renderFlaggedList = () => {
-        if (chatType === CHAT_TYPES.FLAGGED && tmpFlaggedMessages.length > 0) {
+        if (targetChatType === CHAT_TYPES.FLAGGED && tmpFlaggedMessages.length > 0) {
             return (
                 <FlaggedListRenderer
                     actions={actions}

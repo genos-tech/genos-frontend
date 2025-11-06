@@ -529,7 +529,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     <Box>
                         <ChatList
                             usePM={usePM}
-                            chatType={1}
+                            targetChatType={1}
                             useCM={useCM}
                             currentActivityMessageType={-1}
                             socket={socket}
@@ -556,7 +556,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     <Box>
                         <ChatList
                             usePM={usePM}
-                            chatType={2}
+                            targetChatType={2}
                             useCM={useCM}
                             currentActivityMessageType={-1}
                             socket={socket}
@@ -583,7 +583,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     <Box>
                         <ChatList
                             usePM={usePM}
-                            chatType={3}
+                            targetChatType={3}
                             useCM={useCM}
                             currentActivityMessageType={-1}
                             socket={socket}
@@ -614,7 +614,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         />
                         <ChatList
                             usePM={usePM}
-                            chatType={5}
+                            targetChatType={5}
                             useCM={useCM}
                             currentActivityMessageType={currentActivityMessageType}
                             socket={socket}
@@ -641,7 +641,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     <Box>
                         <ChatList
                             usePM={usePM}
-                            chatType={6}
+                            targetChatType={6}
                             useCM={useCM}
                             currentActivityMessageType={currentActivityMessageType}
                             socket={socket}
