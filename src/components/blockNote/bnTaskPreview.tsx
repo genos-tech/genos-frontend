@@ -293,7 +293,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                 }}
                 onClick={(e) => {
                     const target = e.target as HTMLElement;
-                    if (target.tagName === "useIMG") {
+                    if (target.tagName === "IMG") {
                         handleImageClick((target as HTMLImageElement).src);
                     }
                 }}

@@ -237,6 +237,7 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
     // Custom click handler
     const handleImageClick = (src: string) => {
         setSelectedImage(src);
+        console.log("selectedImage", src);
         setOpened(true);
     };
 
@@ -268,7 +269,7 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                 }}
                 onClick={(e) => {
                     const target = e.target as HTMLElement;
-                    if (target.tagName === "useIMG") {
+                    if (target.tagName === "IMG") {
                         handleImageClick((target as HTMLImageElement).src);
                     }
                 }}
