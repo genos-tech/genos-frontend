@@ -1,4 +1,4 @@
-import CheckNoteExistsWorker from "../../../workers/checkNoteExistsWorker.ts?worker";
+import CheckNoteExistsWorker from "../../../db/workers/checkNoteExistsWorker.ts?worker";
 
 export const checkNoteExists = (noteType: number, noteId: number): Promise<boolean> => {
     return new Promise((resolve, reject) => {

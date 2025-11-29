@@ -1,5 +1,5 @@
 import { UserProps } from "../../../types/admin";
-import PopTeamMembersWorker from "../../../workers/popTeamMembersWorker.ts?worker";
+import PopTeamMembersWorker from "../../../db/workers/popTeamMembersWorker.ts?worker";
 
 export const popTeamMembers = (myself: UserProps): Promise<UserProps[]> => {
     return new Promise((resolve, reject) => {

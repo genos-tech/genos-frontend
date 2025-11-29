@@ -4,7 +4,7 @@ import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../types/chat";
-import { toggleMessagesPane } from "../../../utils";
+import { toggleMessagesPane } from "../../../utils/sidebarUtils";
 import { addChat } from "../services/addChat";
 import { popSpecificMessages } from "../services/popSpecificMessages";
 import { updatePinnedChats } from "../services/updatePinnedChats";

@@ -11,8 +11,8 @@ import {
 import CircularProgress from "@mui/joy/CircularProgress";
 import { Socket } from "socket.io-client";
 
-import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
-import { GMAvatar } from "../../../../components/common/GMAvatar";
+import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";

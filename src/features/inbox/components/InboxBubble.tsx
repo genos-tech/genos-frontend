@@ -3,7 +3,7 @@ import { Box, Button, Card, Chip, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
-import { BnChatPreview } from "../../../components/blockNote/bnChatPreview";
+import { BnChatPreview } from "../../../components/editors/bnChatPreview";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";

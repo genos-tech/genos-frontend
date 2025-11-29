@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { Box, Sheet, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
-import { BnChatPreview } from "../../../../components/blockNote/bnChatPreview";
-import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
-import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
-import { EmojiReaction } from "../../../../components/emojiInput/EmojiReaction";
+import { BnChatPreview } from "../../../../components/editors/bnChatPreview";
+import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { EmojiPicker } from "../../../../components/ui/emoji/EmojiPicker";
+import { EmojiReaction } from "../../../../components/ui/emoji/EmojiReaction";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";

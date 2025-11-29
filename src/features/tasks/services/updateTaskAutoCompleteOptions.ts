@@ -1,6 +1,6 @@
 import { UserProps } from "../../../types/admin";
 import { ProjectProps, TagListProps } from "../../../types/tasks";
-import LoadTeamMemberWorker from "../../../workers/loadTeamMembersWorker.ts?worker";
+import LoadTeamMemberWorker from "../../../db/workers/loadTeamMembersWorker.ts?worker";
 import { loadProjectTags } from "../services/loadProjectTags";
 import { loadTeamProjects } from "../services/loadTeamProjects";
 

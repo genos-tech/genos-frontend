@@ -18,9 +18,9 @@ import {
 import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
 import { Socket } from "socket.io-client";
 
-import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
-import { GMAvatar } from "../../../../components/common/GMAvatar";
-import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
+import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
+import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { useAuth } from "../../../../context/AuthContext";
 import { FlaggedService } from "../../../../db/services/flagged.service";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -37,7 +37,7 @@ import {
     ThreadProps,
 } from "../../../../types/chat";
 import { ProjectProps } from "../../../../types/tasks";
-import { toggleMessagesPane } from "../../../../utils";
+import { toggleMessagesPane } from "../../../../utils/sidebarUtils";
 import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
 import { addMessage } from "../../services/addMessage";
 import { loadSpecificThreadMessages } from "../../services/loadSpecificThreadMessages";

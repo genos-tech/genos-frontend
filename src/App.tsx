@@ -4,7 +4,7 @@ import CssBaseline from "@mui/joy/CssBaseline";
 import { CssVarsProvider } from "@mui/joy/styles";
 
 import { AppContent } from "./components/App/AppContent";
-import { InitialLoad } from "./components/utils/InitialLoad";
+import { InitialLoad } from "./components/ui/misc/InitialLoad";
 import { useAppInitialization } from "./hooks/common/useAppInitialization";
 import { useProjectTaskManagement } from "./hooks/common/useProjectTaskManagement";
 import { useServiceInitialization } from "./hooks/common/useServiceInitialization";

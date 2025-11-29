@@ -16,7 +16,7 @@ import {
     Typography,
 } from "@mui/joy";
 
-import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
+import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";

@@ -4,7 +4,7 @@ import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { UserProps } from "../../../types/admin";
 import { ActivityMessageProps } from "../../../types/chat";
 import { GroupedReactionProps, ReactionProps } from "../../../types/common";
-import UpdateActivityReadStatusWorker from "../../../workers/updateActivityReadStatusWorker.ts?worker";
+import UpdateActivityReadStatusWorker from "../../../db/workers/updateActivityReadStatusWorker.ts?worker";
 
 interface UseActivityStatusProps {
     activity: ActivityMessageProps;

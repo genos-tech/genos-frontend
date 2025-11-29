@@ -4,10 +4,10 @@ import { Avatar, Box, Card, IconButton, Stack, Tooltip, Typography } from "@mui/
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
-import { BnChatPreview } from "../../../../../../components/blockNote/bnChatPreview";
-import { AvatarWithStatus } from "../../../../../../components/common/avatarWithStatus";
-import { EmojiPicker } from "../../../../../../components/emojiInput/EmojiPicker";
-import { ReactionTaskCommentEmojiDisplay } from "../../../../../../components/emojiInput/ReactionTaskCommentEmojiDisplay";
+import { BnChatPreview } from "../../../../../../components/editors/bnChatPreview";
+import { AvatarWithStatus } from "../../../../../../components/ui/avatars/avatarWithStatus";
+import { EmojiPicker } from "../../../../../../components/ui/emoji/EmojiPicker";
+import { ReactionTaskCommentEmojiDisplay } from "../../../../../../components/ui/emoji/ReactionTaskCommentEmojiDisplay";
 import { ChatManagementState } from "../../../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";

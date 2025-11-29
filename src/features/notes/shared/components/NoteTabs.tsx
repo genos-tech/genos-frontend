@@ -16,7 +16,7 @@ import {
     Tooltip,
 } from "@mui/joy";
 
-import { BnTaskNoteEditor } from "../../../../components/blockNote/bnTaskNoteEditor";
+import { BnTaskNoteEditor } from "../../../../components/editors/bnTaskNoteEditor";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";

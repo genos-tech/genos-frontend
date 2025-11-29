@@ -1,4 +1,4 @@
-import CheckKnownChatWorker from "../../../workers/checkKnownChatWorker.ts?worker";
+import CheckKnownChatWorker from "../../../db/workers/checkKnownChatWorker.ts?worker";
 
 export const checkKnownChat = (chatId: number, chatType: number): Promise<boolean> => {
     return new Promise((resolve, reject) => {

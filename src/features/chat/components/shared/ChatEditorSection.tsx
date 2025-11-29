@@ -1,10 +1,10 @@
 import { Box } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
-import { BnChatEditor } from "../../../../components/blockNote/bnChatEditor";
-import { BnThreadEditor } from "../../../../components/blockNote/bnThreadEditor";
-import { BnUpdateEditor } from "../../../../components/blockNote/bnUpdateEditor";
-import { BnUpdateThreadEditor } from "../../../../components/blockNote/bnUpdateThreadEditor";
+import { BnChatEditor } from "../../../../components/editors/bnChatEditor";
+import { BnThreadEditor } from "../../../../components/editors/bnThreadEditor";
+import { BnUpdateEditor } from "../../../../components/editors/bnUpdateEditor";
+import { BnUpdateThreadEditor } from "../../../../components/editors/bnUpdateThreadEditor";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";

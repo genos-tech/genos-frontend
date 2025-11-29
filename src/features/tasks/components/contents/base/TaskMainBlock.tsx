@@ -5,7 +5,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 import { Socket } from "socket.io-client";
 
-import { AvatarWithStatus } from "../../../../../components/common/avatarWithStatus";
+import { AvatarWithStatus } from "../../../../../components/ui/avatars/avatarWithStatus";
 import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";

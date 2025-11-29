@@ -9,7 +9,7 @@ import { alpha } from "@mui/system";
 import { GridColDef, GridRenderCellParams, GridRenderEditCellParams } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 
-import { PulseDot } from "../../../../components/utils/PulseDot";
+import { PulseDot } from "../../../../components/ui/misc/PulseDot";
 import { UserProps } from "../../../../types/admin";
 import { effortLevels, priorities } from "../../utils/taskMeta";
 

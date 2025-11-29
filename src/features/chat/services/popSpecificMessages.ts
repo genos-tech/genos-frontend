@@ -1,5 +1,5 @@
 import { MessageProps } from "../../../types/chat";
-import PopSpecificMessagesWorker from "../../../workers/popSpecificMessagesWorker.ts?worker";
+import PopSpecificMessagesWorker from "../../../db/workers/popSpecificMessagesWorker.ts?worker";
 
 export const popSpecificMessages = (chatId: number, chatType: number): Promise<MessageProps[]> => {
     return new Promise((resolve, reject) => {

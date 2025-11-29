@@ -1,6 +1,6 @@
 import { UserProps } from "../../../types/admin";
 import { ThreadMessageProps } from "../../../types/chat";
-import LoadProjectTasksWorker from "../../../workers/loadProjectTasksWorker.ts?worker";
+import LoadProjectTasksWorker from "../../../db/workers/loadProjectTasksWorker.ts?worker";
 
 export const loadProjectTasks = (
     myself: UserProps,

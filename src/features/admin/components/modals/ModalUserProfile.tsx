@@ -19,7 +19,7 @@ import {
 } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
-import { EmojiPicker } from "../../../../components/emojiInput/EmojiPicker";
+import { EmojiPicker } from "../../../../components/ui/emoji/EmojiPicker";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";

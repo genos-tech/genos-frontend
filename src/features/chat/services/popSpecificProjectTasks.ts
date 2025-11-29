@@ -1,5 +1,5 @@
 import { TaskTableProps } from "../../../types/tasks";
-import PopSpecificProjectTasksWorker from "../../../workers/popSpecificProjectTasksWorker.ts?worker";
+import PopSpecificProjectTasksWorker from "../../../db/workers/popSpecificProjectTasksWorker.ts?worker";
 
 export const popSpecificProjectTasks = (
     projectId: number,

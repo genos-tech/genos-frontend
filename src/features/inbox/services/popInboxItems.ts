@@ -1,5 +1,5 @@
 import { InboxItemProps } from "../../../types/common";
-import PopInboxItemsWorker from "../../../workers/popInboxItemsWorker.ts?worker";
+import PopInboxItemsWorker from "../../../db/workers/popInboxItemsWorker.ts?worker";
 
 export const popInboxItems = (): Promise<InboxItemProps[]> => {
     return new Promise((resolve, reject) => {

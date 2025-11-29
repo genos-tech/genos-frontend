@@ -5,7 +5,7 @@ import { Box, Button, Card, Chip, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
-import { BnTodoPreview } from "../../../../components/blockNote/bnTodoPreview";
+import { BnTodoPreview } from "../../../../components/editors/bnTodoPreview";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";

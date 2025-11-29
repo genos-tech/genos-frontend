@@ -1,4 +1,4 @@
-import AddNoteWorker from "../../../../workers/addNoteWorker.ts?worker";
+import AddNoteWorker from "../../../../db/workers/addNoteWorker.ts?worker";
 
 export const addNote = (noteType: number, note: any): Promise<null> => {
     return new Promise((resolve, reject) => {

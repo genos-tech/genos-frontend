@@ -1,5 +1,5 @@
 import { AllChatProps } from "../../../types/chat";
-import AddChatWorker from "../../../workers/addChatWorker.ts?worker";
+import AddChatWorker from "../../../db/workers/addChatWorker.ts?worker";
 
 export const addChat = (chat: AllChatProps, chatType: number): Promise<null> => {
     return new Promise((resolve, reject) => {

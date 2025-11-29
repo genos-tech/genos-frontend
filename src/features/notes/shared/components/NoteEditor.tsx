@@ -4,7 +4,7 @@ import NoteAltIcon from "@mui/icons-material/NoteAlt";
 import { Box, Button, FormControl, Input } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
-import { BnMyNoteEditor } from "../../../../components/blockNote/bnMyNoteEditor";
+import { BnMyNoteEditor } from "../../../../components/editors/bnMyNoteEditor";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";

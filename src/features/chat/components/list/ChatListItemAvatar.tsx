@@ -2,9 +2,9 @@ import React from "react";
 import { Avatar } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
-import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
-import { GMAvatar } from "../../../../components/common/GMAvatar";
-import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
+import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
+import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";

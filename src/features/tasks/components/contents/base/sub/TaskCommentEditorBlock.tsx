@@ -1,8 +1,8 @@
 import { Box } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
-import { BnTaskCommentEditor } from "../../../../../../components/blockNote/bnTaskCommentEditor";
-import { BnUpdateTaskCommentEditor } from "../../../../../../components/blockNote/bnUpdateTaskCommentEditor";
+import { BnTaskCommentEditor } from "../../../../../../components/editors/bnTaskCommentEditor";
+import { BnUpdateTaskCommentEditor } from "../../../../../../components/editors/bnUpdateTaskCommentEditor";
 import { ChatManagementState } from "../../../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";

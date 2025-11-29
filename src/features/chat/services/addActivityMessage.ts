@@ -1,5 +1,5 @@
 import { ActivityMessageProps } from "../../../types/chat";
-import AddActivityMessageWorker from "../../../workers/addActivityMessageWorker.ts?worker";
+import AddActivityMessageWorker from "../../../db/workers/addActivityMessageWorker.ts?worker";
 
 export const addActivityMessage = (activityMessage: ActivityMessageProps): Promise<null> => {
     return new Promise((resolve, reject) => {

@@ -1,5 +1,5 @@
 import { MessageProps } from "../../../types/chat";
-import AddMessageWorker from "../../../workers/addMessageWorker.ts?worker";
+import AddMessageWorker from "../../../db/workers/addMessageWorker.ts?worker";
 
 export const addMessage = (message: MessageProps, chatType: number): Promise<null> => {
     return new Promise((resolve, reject) => {

@@ -2,7 +2,7 @@ import { AutocompleteOption, ListItemContent, Stack, Typography } from "@mui/joy
 import Autocomplete from "@mui/joy/Autocomplete";
 import { Socket } from "socket.io-client";
 
-import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
+import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";

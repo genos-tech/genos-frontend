@@ -1,5 +1,5 @@
 import { TaskTableProps } from "../../../types/tasks";
-import AddTaskWorker from "../../../workers/addTaskWorker.ts?worker";
+import AddTaskWorker from "../../../db/workers/addTaskWorker.ts?worker";
 
 export const addTask = (task: TaskTableProps): Promise<null> => {
     return new Promise((resolve, reject) => {

@@ -17,7 +17,7 @@ import {
     ThreadProps,
 } from "../../../../../types/chat";
 import { ProjectProps } from "../../../../../types/tasks";
-import { toggleMessagesPane } from "../../../../../utils";
+import { toggleMessagesPane } from "../../../../../utils/sidebarUtils";
 import { getLocalCurrentTimestamp } from "../../../../../utils/dateUtils";
 import { useActivityStatus } from "../../../hooks/useActivityStatus";
 import { loadSpecificThreadMessages } from "../../../services/loadSpecificThreadMessages";

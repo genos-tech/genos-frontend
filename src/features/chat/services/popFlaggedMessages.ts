@@ -1,5 +1,5 @@
 import { FlaggedMessageProps } from "../../../types/chat";
-import PopFlaggedMessagesWorker from "../../../workers/popFlaggedMessagesWorker.ts?worker";
+import PopFlaggedMessagesWorker from "../../../db/workers/popFlaggedMessagesWorker.ts?worker";
 
 export const popFlaggedMessages = (): Promise<FlaggedMessageProps[]> => {
     return new Promise((resolve, reject) => {

@@ -15,7 +15,7 @@ import {
     Typography,
 } from "@mui/joy";
 
-import { PulseDot } from "../../../../../components/utils/PulseDot";
+import { PulseDot } from "../../../../../components/ui/misc/PulseDot";
 import { useAuth } from "../../../../../context/AuthContext";
 import { UserProps } from "../../../../../types/admin";
 import { updateUserProfile } from "../../../services/updateUserProfile";

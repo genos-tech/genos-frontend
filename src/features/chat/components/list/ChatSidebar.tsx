@@ -31,7 +31,7 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps, MessageProps } from "../../../../types/chat";
 import { ProjectProps } from "../../../../types/tasks";
-import { toggleMessagesPane } from "../../../../utils";
+import { toggleMessagesPane } from "../../../../utils/sidebarUtils";
 import { popSpecificMessages } from "../../services/popSpecificMessages";
 import { defaultChat } from "../../utils/defaults";
 import { ModalCreateGM } from "../modals/ModalCreateGM";

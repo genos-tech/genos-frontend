@@ -19,7 +19,7 @@ import {
 } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
-import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
+import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";

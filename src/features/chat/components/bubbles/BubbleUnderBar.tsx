@@ -1,7 +1,7 @@
 import { Box, Button, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
-import { ShowEmojiReaction } from "../../../../components/emojiInput/ShowEmojiReaction";
+import { ShowEmojiReaction } from "../../../../components/ui/emoji/ShowEmojiReaction";
 import { UserProps } from "../../../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../../../types/chat";
 import { ReactionProps } from "../../../../types/common";

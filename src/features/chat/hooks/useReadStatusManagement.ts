@@ -4,7 +4,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps, ThreadProps } from "../../../types/chat";
-import UpdateReadStatusWorker from "../../../workers/updateReadStatusWorker.ts?worker";
+import UpdateReadStatusWorker from "../../../db/workers/updateReadStatusWorker.ts?worker";
 import { addChat } from "../services/addChat";
 
 interface UseReadStatusManagementProps {

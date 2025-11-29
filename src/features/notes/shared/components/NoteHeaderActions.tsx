@@ -18,7 +18,7 @@ import {
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 
-import { ProjectAvatar } from "../../../../components/common/ProjectAvatar";
+import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
