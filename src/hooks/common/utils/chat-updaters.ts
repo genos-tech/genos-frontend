@@ -2,7 +2,6 @@ import { addChat } from "../../../features/chat/services/addChat";
 import { popSpecificMessages } from "../../../features/chat/services/popSpecificMessages";
 import { AllChatProps, ChatProps, MessageProps, NewMessageProps } from "../../../types/chat";
 import { emptyDmPartnerUser } from "../../../utils/defaultProps";
-import { ChatManagementState } from "../../chats/useChatManagement";
 
 export const updateAllChat = async (
     currentChat: ChatProps,

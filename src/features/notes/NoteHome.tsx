@@ -12,10 +12,10 @@ import { InboxManagementState } from "../../hooks/inbox/useInboxManagement";
 import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
-import { NoteContentRenderer } from "./shared/components/NoteContentRenderer";
-import { NoteSidebar } from "./shared/components/NoteSidebar";
-import { ResizeHandle } from "./shared/components/ResizeHandle";
-import { ResizeHandleStyles } from "./shared/components/ResizeHandleStyles";
+import { NoteContentRenderer } from "./shared-notes/components/NoteContentRenderer";
+import { NoteSidebar } from "./shared-notes/components/NoteSidebar";
+import { ResizeHandle } from "./shared-notes/components/ResizeHandle";
+import { ResizeHandleStyles } from "./shared-notes/components/ResizeHandleStyles";
 import { TaskPreviewPanel } from "./task-notes/components/TaskPreviewPanel";
 
 type NoteHomeProps = {

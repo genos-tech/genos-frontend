@@ -5,7 +5,6 @@ import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
 import { InboxManagementState } from "../../../hooks/inbox/useInboxManagement";
 import { UserProps } from "../../../types/admin";
-import { ChatProps } from "../../../types/chat";
 import { InboxItemProps } from "../../../types/common";
 
 export type InboxHomeProps = {

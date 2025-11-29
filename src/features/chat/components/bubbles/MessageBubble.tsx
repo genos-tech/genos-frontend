@@ -13,15 +13,9 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
-import {
-    ChatProps,
-    FlaggedMessageProps,
-    MessageProps,
-    ThreadMessageProps,
-    ThreadProps,
-} from "../../../../types/chat";
+import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
 import { ReactionProps } from "../../../../types/common";
-import { ProjectProps, TaskProps } from "../../../../types/tasks";
+import { TaskProps } from "../../../../types/tasks";
 import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
 import { loadSpecificTaskByThreadId } from "../../../tasks/services/loadSpecificTaskByThreadId";
 import { loadSpecificThreadMessages } from "../../services/loadSpecificThreadMessages";

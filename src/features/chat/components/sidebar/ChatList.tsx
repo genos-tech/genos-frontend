@@ -10,7 +10,6 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ActivityMessageProps, AllChatProps, FlaggedMessageProps } from "../../../../types/chat";
-import { ProjectProps } from "../../../../types/tasks";
 import {
     useScrollToBottomOnChatPaneChange,
     useScrollToBottomOnNewActivity,

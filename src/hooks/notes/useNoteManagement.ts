@@ -6,8 +6,8 @@ import { loadChatNoteMeta } from "../../features/notes/chat-notes/services/loadC
 import { loadChatNotesByChatId } from "../../features/notes/chat-notes/services/loadChatNotesByChatId";
 import { createEmptyMyNote } from "../../features/notes/my-notes/services/createEmptyMyNote";
 import { loadMyNoteMeta } from "../../features/notes/my-notes/services/loadMyNoteMeta";
-import { addNote } from "../../features/notes/shared/services/addNote";
-import { loadSpecificNote } from "../../features/notes/shared/services/loadSpecificNote";
+import { addNote } from "../../features/notes/shared-notes/services/addNote";
+import { loadSpecificNote } from "../../features/notes/shared-notes/services/loadSpecificNote";
 import { createEmptyTaskNote } from "../../features/notes/task-notes/services/createEmptyTaskNote";
 import { loadTaskNoteMeta } from "../../features/notes/task-notes/services/loadTaskNoteMeta";
 import { UserProps } from "../../types/admin";

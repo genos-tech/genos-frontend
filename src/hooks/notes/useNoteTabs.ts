@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 
-import { NoteTabActions } from "../../features/notes/shared/types/noteEditor";
+import { NoteTabActions } from "../../features/notes/shared-notes/types/noteEditor";
 import { NoteManagementState } from "./useNoteManagement";
 
 interface UseNoteTabsProps {

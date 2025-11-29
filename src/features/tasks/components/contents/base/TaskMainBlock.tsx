@@ -13,7 +13,7 @@ import { TeamManagementState } from "../../../../../hooks/common/useTeamManageme
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../../types/admin";
-import { ProjectProps, TagListProps, TaskProps } from "../../../../../types/tasks";
+import { TagListProps, TaskProps } from "../../../../../types/tasks";
 import { loadSpecificTask } from "../../../services/loadSpecificTask";
 import { ACProjectTags } from "../../autocompletes/ACProjectTags";
 import { ACTaskEffortLevel } from "../../autocompletes/ACTaskEffortLevel";

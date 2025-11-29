@@ -15,7 +15,6 @@ import { Socket } from "socket.io-client";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { UserProps } from "../../../../types/admin";
-import { AllChatProps, ChatProps } from "../../../../types/chat";
 import { createChatGroup } from "../../services/createChatGroup";
 
 type Props = {

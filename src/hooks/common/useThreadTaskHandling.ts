@@ -1,8 +1,5 @@
 import { useEffect } from "react";
 
-import { useChatManagement } from "../chats/useChatManagement";
-import { useTaskManagement } from "../tasks/useTaskManagement";
-
 interface UseThreadTaskHandlingProps {
     useCM: any;
     useTM: any;

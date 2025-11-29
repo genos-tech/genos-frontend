@@ -156,8 +156,8 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
             headerClassName: "task-col--header",
             width: 110,
             editable: false,
-            align: "left",
-            headerAlign: "left",
+            align: "center",
+            headerAlign: "center",
             renderCell: (params: GridRenderCellParams) => {
                 return (
                     <>

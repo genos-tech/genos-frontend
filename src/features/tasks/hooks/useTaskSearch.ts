@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { UserProps } from "../../../types/admin";
-import { SearchTeamTasksResponse, TaskType } from "../../../types/tasks";
-import { loadTeamTaskList } from "../services/loadTaskSearchList";
+import { SearchTeamTasksResponse } from "../../../types/tasks";
 
 interface UseTaskSearchProps {
     myself: UserProps;

@@ -22,7 +22,7 @@ import { TeamManagementState } from "../../../../../hooks/common/useTeamManageme
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../../types/admin";
-import { ProjectProps, TaskProps } from "../../../../../types/tasks";
+import { TaskProps } from "../../../../../types/tasks";
 import { loadSpecificChildTasks } from "../../../services/loadSpecificChildTasks";
 
 type TaskSubTasksBlockProps = {

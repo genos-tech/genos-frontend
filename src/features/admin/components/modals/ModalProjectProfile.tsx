@@ -26,7 +26,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { loadProjectProfile } from "../../../../services/loadProjectProfile";
 import { ProjectProfileProps, UserProps } from "../../../../types/admin";
-import { AllChatProps, ChatProps } from "../../../../types/chat";
+import { AllChatProps } from "../../../../types/chat";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 import { addChat } from "../../../chat/services/addChat";
 

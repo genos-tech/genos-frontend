@@ -5,7 +5,6 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { MessageProps } from "../../../../types/chat";
-import { ProjectProps } from "../../../../types/tasks";
 
 type BubbleReplyButtonTypes = {
     message: MessageProps;

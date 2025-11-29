@@ -5,7 +5,6 @@ import { useAuth } from "../../../../context/AuthContext";
 import { NoteService } from "../../../../db/services/note.service";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { UserProps } from "../../../../types/admin";
-import { ChatNoteMetaProps, ChatNoteProps } from "../../../../types/notes";
 import { deleteChatNote } from "../services/deleteChatNote";
 
 type Props = {
