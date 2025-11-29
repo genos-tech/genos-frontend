@@ -1,48 +1,37 @@
-import { Stack, IconButton } from "@mui/joy";
-import AddIcon from "@mui/icons-material/Add";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import CheckIcon from "@mui/icons-material/Check";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import { IconButton, Stack } from "@mui/joy";
 
 import { TaskProps } from "../../../../../types/tasks";
 
 type TaskCustomBarBlockProps = {
-    currentTaskContent: TaskProps;
-    setCurrentTaskContent: (value: TaskProps) => void;
+    taskContent: TaskProps;
+    setTaskContent: (value: TaskProps) => void;
     setTaskUpdated: (value: boolean) => void;
     setTaskStatusUpdated: (value: boolean) => void;
-    setIsCreatingTask?: (value: any) => void;
     taskBodySaved: boolean;
-    setIsTaskHomeVisible?: (value: boolean) => void;
 };
 export const TaskCustomBarBlock = (props: TaskCustomBarBlockProps) => {
-    const {
-        currentTaskContent,
-        setCurrentTaskContent,
-        setTaskUpdated,
-        setTaskStatusUpdated,
-        setIsCreatingTask,
-        taskBodySaved,
-        setIsTaskHomeVisible,
-    } = props;
+    const { taskContent, setTaskContent, setTaskUpdated, setTaskStatusUpdated, taskBodySaved } =
+        props;
 
     return (
         <Stack direction="row" sx={{ width: "100%", alignItems: "center", gap: 1 }}>
             {/* Next Status IconButton */}
-            {currentTaskContent.status.status === "Open" ||
-            currentTaskContent.status.status === "Pending" ? (
+            {taskContent.status.status === "Open" || taskContent.status.status === "Pending" ? (
                 <IconButton
-                    component="p"
-                    variant="outlined"
                     color="warning"
+                    component="p"
                     size="sm"
+                    variant="outlined"
                     sx={{
                         fontSize: "14px",
                         paddingX: "7px",
                     }}
                     onClick={() => {
                         (async () => {
-                            setCurrentTaskContent({
-                                ...currentTaskContent,
+                            setTaskContent({
+                                ...taskContent,
                                 status: {
                                     code: 0,
                                     status: "WIP",
@@ -61,20 +50,20 @@ export const TaskCustomBarBlock = (props: TaskCustomBarBlockProps) => {
             ) : (
                 <div></div>
             )}
-            {currentTaskContent.status.status === "WIP" ? (
+            {taskContent.status.status === "WIP" ? (
                 <IconButton
-                    component="p"
-                    variant="outlined"
                     color="success"
+                    component="p"
                     size="sm"
+                    variant="outlined"
                     sx={{
                         fontSize: "14px",
                         paddingX: "7px",
                     }}
                     onClick={() => {
                         (async () => {
-                            setCurrentTaskContent({
-                                ...currentTaskContent,
+                            setTaskContent({
+                                ...taskContent,
                                 status: {
                                     code: 0,
                                     status: "Closed",
@@ -96,10 +85,10 @@ export const TaskCustomBarBlock = (props: TaskCustomBarBlockProps) => {
 
             {taskBodySaved === true && (
                 <IconButton
-                    component="p"
-                    variant="plain"
                     color="neutral"
+                    component="p"
                     size="sm"
+                    variant="plain"
                     sx={{
                         fontSize: "14px",
                         paddingX: "5px",
@@ -107,44 +96,6 @@ export const TaskCustomBarBlock = (props: TaskCustomBarBlockProps) => {
                 >
                     <CheckIcon sx={{ fontSize: "15px" }} />
                     Saved
-                </IconButton>
-            )}
-
-            {/* Sub Task IconButton aligned to the right */}
-            {currentTaskContent.status.status !== "Deleted" && (
-                <IconButton
-                    component="p"
-                    variant="plain"
-                    size="sm"
-                    sx={{
-                        fontSize: "14px",
-                        paddingX: "7px",
-                        marginLeft: "auto",
-                    }}
-                    onClick={() => {
-                        if (
-                            currentTaskContent.id !== undefined &&
-                            currentTaskContent.rootTaskId != null
-                        ) {
-                            if (setIsCreatingTask) {
-                                setIsCreatingTask({
-                                    flag: true,
-                                    parentTaskId: currentTaskContent.id,
-                                    rootTaskId: currentTaskContent.rootTaskId,
-                                });
-                            }
-
-                            // Close task-home when creating a sub task.
-                            if (setIsTaskHomeVisible) {
-                                setIsTaskHomeVisible(false);
-                            }
-                        } else {
-                            console.error("Task ID nod defined error.");
-                        }
-                    }}
-                >
-                    <AddIcon />
-                    Sub Task
                 </IconButton>
             )}
         </Stack>

@@ -1,61 +1,41 @@
-import { Socket } from "socket.io-client";
-import { alpha } from "@mui/system";
-import { ListItemContent, Chip } from "@mui/joy";
+import { Chip, ListItemContent } from "@mui/joy";
 import Autocomplete from "@mui/joy/Autocomplete";
 import AutocompleteOption from "@mui/joy/AutocompleteOption";
 import { useColorScheme } from "@mui/joy/styles";
+import { alpha } from "@mui/system";
+import { Socket } from "socket.io-client";
 
-import { statuses } from "../../utils/taskMeta";
 import { TaskProps } from "../../../../types/tasks";
+import { statuses } from "../../utils/taskMeta";
 
 type ACTaskStatusProps = {
     socket: Socket | null;
-    taskContents: TaskProps;
-    setTaskContents: (value: TaskProps) => void;
+    taskContent: TaskProps;
+    setTaskContent: (value: TaskProps) => void;
     setTaskUpdated?: (value: boolean) => void;
     setTaskStatusUpdated?: (value: boolean) => void;
 };
 export const ACTaskStatus = (props: ACTaskStatusProps) => {
-    const { socket, taskContents, setTaskContents, setTaskUpdated, setTaskStatusUpdated } = props;
+    const { socket, taskContent, setTaskContent, setTaskUpdated, setTaskStatusUpdated } = props;
 
     const { mode } = useColorScheme();
 
     return (
         <Autocomplete
-            key={taskContents.id}
-            placeholder="Status"
-            multiple
-            options={statuses}
-            value={taskContents ? [taskContents.status] : []}
+            key={taskContent.id}
             getOptionLabel={(option) => option.status || ""}
             isOptionEqualToValue={(option, value) => option.status === value.status}
-            renderTags={(tags, getTagProps) =>
-                tags.slice(-1).map((item, index) => {
-                    const { key, ...tagProps } = getTagProps({ index }); // spread the 'key'
-                    return (
-                        <Chip
-                            key={key} // pass the key directly
-                            variant="soft"
-                            sx={{
-                                backgroundColor: item.color
-                                    ? alpha(item.color, mode === "dark" ? 0.5 : 0.75)
-                                    : "transparent",
-                                color: item.textColor,
-                                fontWeight: "bold",
-                                borderRadius: "5px",
-                            }}
-                            size="sm"
-                        >
-                            {item ? item.status : ""}
-                        </Chip>
-                    );
-                })
-            }
+            options={statuses}
+            placeholder="Status"
+            size="sm"
+            sx={{ width: "100%" }}
+            value={taskContent ? [taskContent.status] : []}
             renderOption={(props, option) => (
                 <AutocompleteOption {...props} key={option.status}>
                     <ListItemContent sx={{ fontSize: "sm" }}>
                         <Chip
                             key={option.status} // pass the key directly
+                            size="sm"
                             variant="soft"
                             sx={{
                                 backgroundColor: option.color
@@ -65,18 +45,40 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
                                 fontWeight: "bold",
                                 borderRadius: "5px",
                             }}
-                            size="sm"
                         >
                             {option.status}
                         </Chip>
                     </ListItemContent>
                 </AutocompleteOption>
             )}
+            renderTags={(tags, getTagProps) =>
+                tags.slice(-1).map((item, index) => {
+                    const { key, ...tagProps } = getTagProps({ index }); // spread the 'key'
+                    return (
+                        <Chip
+                            key={key} // pass the key directly
+                            size="sm"
+                            variant="soft"
+                            sx={{
+                                backgroundColor: item.color
+                                    ? alpha(item.color, mode === "dark" ? 0.5 : 0.75)
+                                    : "transparent",
+                                color: item.textColor,
+                                fontWeight: "bold",
+                                borderRadius: "5px",
+                            }}
+                        >
+                            {item ? item.status : ""}
+                        </Chip>
+                    );
+                })
+            }
+            multiple
             onChange={(event, value) => {
                 if (value !== null && value.length > 0) {
                     (async () => {
-                        setTaskContents({
-                            ...taskContents,
+                        setTaskContent({
+                            ...taskContent,
                             status: value.slice(-1)[0],
                         });
                         if (setTaskStatusUpdated) {
@@ -88,8 +90,6 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
                     })();
                 }
             }}
-            size="sm"
-            sx={{ width: "100%" }}
         />
     );
 };

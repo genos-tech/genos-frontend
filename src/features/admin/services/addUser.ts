@@ -1,5 +1,5 @@
-import AddUserWorker from "../../../workers/addUserWorker.ts?worker";
 import { UserProps } from "../../../types/admin";
+import AddUserWorker from "../../../workers/addUserWorker.ts?worker";
 
 export const addUser = (user: UserProps): Promise<null> => {
     return new Promise((resolve, reject) => {

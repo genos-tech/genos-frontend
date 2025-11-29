@@ -1,11 +1,11 @@
-import { Socket } from "socket.io-client";
-import { useState, useEffect } from "react";
 import { Box, Chip, Tooltip } from "@mui/joy";
+import { useEffect, useState } from "react";
+import { Socket } from "socket.io-client";
 
 import { UserProps } from "../../types/admin";
+import { MessageProps, ThreadMessageProps } from "../../types/chat";
 import { GroupedReactionProps, ReactionProps } from "../../types/common";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
-import { MessageProps, ThreadMessageProps } from "../../types/chat";
 
 export const groupEmojis = (reactions: ReactionProps[]): GroupedReactionProps[] => {
     const map = new Map<string, { count: number; senders: UserProps[] }>();
@@ -242,6 +242,7 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
             {displayed.map(({ senders, emoji, count }, index) => (
                 <Tooltip
                     key={`tooltip-${index}`}
+                    variant="outlined"
                     title={
                         senders
                             .slice(0, 5)
@@ -253,12 +254,18 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
                 >
                     <Chip
                         key={`emoji-chip-${emoji}-${index}`}
+                        color="neutral"
+                        size="sm"
+                        sx={{
+                            fontSize: "0.9rem",
+                            cursor: "pointer",
+                            px: 0.5,
+                            py: 0.5,
+                            mx: 0.2,
+                        }}
                         variant={
                             senders.some((u) => u.userId === myself.userId) ? "solid" : "outlined"
                         }
-                        color="neutral"
-                        size="sm"
-                        sx={{ fontSize: "0.9rem", cursor: "pointer", px: 0.5, py: 0.5, mx: 0.2 }}
                         onClick={() => handleAddReaction(emoji)}
                     >
                         {emoji}
@@ -268,8 +275,12 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
             ))}
 
             {hidden.length > 0 && (
-                <Tooltip title={hidden.map(({ emoji, count }) => `${emoji} ${count}`).join(" ")}>
-                    <Chip size="sm" variant="plain" sx={{ fontSize: "0.8rem" }}>
+                <Tooltip
+                    size="sm"
+                    title={hidden.map(({ emoji, count }) => `${emoji} ${count}`).join(" ")}
+                    variant="outlined"
+                >
+                    <Chip size="sm" sx={{ fontSize: "0.8rem" }} variant="plain">
                         +{hidden.length} more
                     </Chip>
                 </Tooltip>

@@ -1,5 +1,6 @@
-import { Tooltip, Box, IconButton } from "@mui/joy";
 import EditIcon from "@mui/icons-material/Edit";
+import { Box, IconButton, Tooltip } from "@mui/joy";
+
 import { ThreadMessageProps } from "../../../../types/chat";
 
 type BubbleThreadEditButtonTypes = {
@@ -20,15 +21,15 @@ export const BubbleThreadEditButton = (props: BubbleThreadEditButtonTypes) => {
     return (
         <Box sx={{ textAlign: "right" }}>
             <>
-                <Tooltip title="Edit" size="sm">
+                <Tooltip size="sm" title="Edit" variant="outlined">
                     <IconButton
                         size="sm"
+                        sx={{ ml: "0px" }}
                         onClick={() => {
                             setIsInEdit(true);
                             setEditTargetMessage(message);
                             setTargetMessageIndex(currentMessageIndex);
                         }}
-                        sx={{ ml: "0px" }}
                     >
                         <EditIcon />
                     </IconButton>

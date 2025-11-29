@@ -1,24 +1,29 @@
-import { Socket } from "socket.io-client";
-import { useState, useEffect } from "react";
-import { Sheet, Divider } from "@mui/joy";
+import { useEffect, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
+import { Divider, Sheet } from "@mui/joy";
+import { Socket } from "socket.io-client";
 
-import { TaskTitleBlock } from "./base/TaskTitleBlock";
-import { TaskMainBlock } from "./base/TaskMainBlock";
-import { TaskCreateBodyBlock } from "./base/TaskCreateBodyBlock";
-import { TaskCreateFooter } from "./base/TaskCreateFooter";
-import { TaskCreateAttachmentBlock } from "./base/TaskCreateAttachmentBlock";
+import { useAuth } from "../../../../context/AuthContext";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { UserProps } from "../../../../types/admin";
+import { TagListProps, TaskProps } from "../../../../types/tasks";
+import { getFormattedTodayDateStr } from "../../../../utils/dateUtils";
+import { createEmptyTask } from "../../services/createEmptyTask";
 import {
-    updateTeamMembersOptions,
     updateProjectOptions,
     updateTagOptions,
+    updateTeamMembersOptions,
 } from "../../services/updateTaskAutoCompleteOptions";
-import { useAuth } from "../../../../context/AuthContext";
-import { getFormattedTodayDateStr } from "../../../../utils/dateUtils";
-import { UserProps } from "../../../../types/admin";
-import { TaskProps, ProjectProps, TagListProps } from "../../../../types/tasks";
-import { ChatProps, ThreadProps } from "../../../../types/chat";
-import { createEmptyTask } from "../../services/createEmptyTask";
+import { TaskCreateAttachmentBlock } from "./base/TaskCreateAttachmentBlock";
+import { TaskCreateBodyBlock } from "./base/TaskCreateBodyBlock";
+import { TaskCreateFooter } from "./base/TaskCreateFooter";
+import { TaskMainBlock } from "./base/TaskMainBlock";
+import { TaskTitleBlock } from "./base/TaskTitleBlock";
 
 const taskContentTemplate: PartialBlock[] = [
     {
@@ -34,13 +39,21 @@ const taskContentTemplate: PartialBlock[] = [
     },
     {
         type: "paragraph",
-        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        props: {
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
         content: [{ text: "What needs to be done?", type: "text", styles: { code: true } }],
         children: [],
     },
     {
         type: "paragraph",
-        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        props: {
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
         content: [],
         children: [],
     },
@@ -57,13 +70,27 @@ const taskContentTemplate: PartialBlock[] = [
     },
     {
         type: "paragraph",
-        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
-        content: [{ text: "Why is this task needed?", type: "text", styles: { code: true } }],
+        props: {
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
+        content: [
+            {
+                text: "Why is this task needed?",
+                type: "text",
+                styles: { code: true },
+            },
+        ],
         children: [],
     },
     {
         type: "paragraph",
-        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        props: {
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
         content: [],
         children: [],
     },
@@ -80,109 +107,46 @@ const taskContentTemplate: PartialBlock[] = [
     },
     {
         type: "paragraph",
-        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        props: {
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
         content: [{ text: "Any other sharing?", type: "text", styles: { code: true } }],
         children: [],
     },
     {
         type: "paragraph",
-        props: { textColor: "default", textAlignment: "left", backgroundColor: "default" },
+        props: {
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
         content: [],
         children: [],
     },
 ];
 
 type CreateTaskProps = {
-    teamMembers: UserProps[];
-    setTeamMembers: (value: UserProps[]) => void;
-    teamMemberProfiles: Record<string, UserProps>;
+    useTEM: TeamManagementState;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    currentMainChat?: ChatProps;
-    currentThreadChat?: ThreadProps;
     chatType: number;
-    setIsMainChatVisible?: (value: boolean) => void;
-    isThreadVisible?: boolean;
-    setIsTaskPreviewVisible?: (value: boolean) => void;
-    isCreatingTask: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    };
-    setIsCreatingTask: (value: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    }) => void;
-    setIsOpeningTask?: (value: boolean) => void;
-    setOpenCreateProject: (value: boolean) => void;
-    setOpenCreateTag: (value: boolean) => void;
-    currentProject: ProjectProps | null;
-    setCurrentProject: (value: ProjectProps) => void;
-    setCurrentPreviewTaskId: (value: number) => void;
-    isNewTagCreated: boolean;
-    setIsNewTaskCreated?: (value: boolean) => void;
-    setOpeningService: (service: number) => void;
-    setCurrentMainChat: (chat: ChatProps) => void;
-    parentTaskId: number | null;
-    rootTaskId: number | null;
-    setIsTaskHomeVisible?: (value: boolean) => void;
-    isTaskPreviewVisible?: boolean;
-    teamProjects: ProjectProps[];
-    setTeamProjects: (value: ProjectProps[]) => void;
-    initialEmptyTaskId?: number;
-    setInitialEmptyTaskId: (value: number | undefined) => void;
-    moveToSpecificChat: (
-        chatType: number,
-        chatId: number,
-        threadId: number,
-        openTaskNoteInChat: boolean,
-        openThreadTaskPreview: boolean
-    ) => void;
-    openingService: number;
+    useUISM: UIStateManagementState;
+    usePM: ProjectManagementState;
+    useTM: TaskManagementState;
+    useCM: ChatManagementState;
+    useNM: NoteManagementState;
 };
 
 export const CreateTaskForm = (props: CreateTaskProps) => {
-    const {
-        teamMembers,
-        setTeamMembers,
-        teamMemberProfiles,
-        socket,
-        myself,
-        setMyself,
-        currentMainChat,
-        currentThreadChat,
-        chatType,
-        setIsMainChatVisible,
-        isThreadVisible,
-        setIsTaskPreviewVisible,
-        isCreatingTask,
-        setIsOpeningTask,
-        setIsCreatingTask,
-        setOpenCreateProject,
-        setOpenCreateTag,
-        currentProject,
-        setCurrentProject,
-        setCurrentPreviewTaskId,
-        setIsNewTaskCreated,
-        setOpeningService,
-        setCurrentMainChat,
-        parentTaskId,
-        rootTaskId,
-        setIsTaskHomeVisible,
-        isTaskPreviewVisible,
-        teamProjects,
-        setTeamProjects,
-        initialEmptyTaskId,
-        setInitialEmptyTaskId,
-        moveToSpecificChat,
-        openingService,
-    } = props;
+    const { useTEM, socket, myself, setMyself, chatType, useCM, useUISM, usePM, useTM, useNM } =
+        props;
     const { accessToken } = useAuth();
 
     // Init task contents
-    const [taskContents, setTaskContents] = useState<TaskProps>();
+    const [taskContent, setTaskContent] = useState<TaskProps>();
     const [taskTitle, setTaskTitle] = useState<string>("");
     const [body, setBody] = useState<PartialBlock[]>(taskContentTemplate);
     const [assignee, setAssignee] = useState<UserProps>(myself);
@@ -192,43 +156,47 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     useEffect(() => {
         createEmptyTask({
             myself: myself,
-            projectId: currentProject?.projectId || 0,
+            projectId: usePM.currentProject?.projectId || 0,
             accessToken: accessToken,
-            setInitialEmptyTaskId: setInitialEmptyTaskId,
+            setInitialEmptyTaskId: useTM.setInitialEmptyTaskId,
         });
     }, []);
 
     useEffect(() => {
-        if (initialEmptyTaskId) {
-            setTaskContents({
-                id: initialEmptyTaskId,
-                project: currentProject,
+        if (useTM.initialEmptyTaskId) {
+            setTaskContent({
+                id: useTM.initialEmptyTaskId,
+                project: usePM.currentProject,
                 title: "",
                 body: taskContentTemplate,
                 assignee: myself,
                 reporter: myself,
                 chatType: chatType,
-                chatId: currentMainChat?.chatId || null,
-                threadId: currentThreadChat?.threadId || null,
+                chatId: useCM.currentMainChat?.chatId || null,
+                threadId: useCM.currentThreadChat?.threadId || null,
                 dueDate: getFormattedTodayDateStr(),
-                status: { code: 0, status: "Open", color: "#0044c2", textColor: "white" },
+                status: {
+                    code: 0,
+                    status: "Open",
+                    color: "#0044c2",
+                    textColor: "white",
+                },
                 priority: { code: -1, priority: "", color: "", textColor: "" },
                 effortLevel: { code: -1, level: "", color: "", textColor: "" },
                 tags: [],
-                githubLink: { url: "", title: "" },
-                generalLink: { url: "", title: "" },
+                links: [],
                 attachments: [],
-                parentTaskId: parentTaskId,
-                rootTaskId: rootTaskId,
+                parentTaskId: useTM.isCreatingTask.parentTaskId,
+                rootTaskId: useTM.isCreatingTask.rootTaskId,
             });
         }
-    }, [initialEmptyTaskId]);
+    }, [useTM.initialEmptyTaskId]);
 
     // Update task title when it changes
     useEffect(() => {
-        if (taskContents && taskTitle !== "") {
-            setTaskContents({
-                ...taskContents,
+        if (taskContent && taskTitle !== "") {
+            setTaskContent({
+                ...taskContent,
                 title: taskTitle,
             });
         }
@@ -236,9 +204,9 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
 
     // Update task body when it changes
     useEffect(() => {
-        if (taskContents && body.length > 0) {
-            setTaskContents({
-                ...taskContents,
+        if (taskContent && body.length > 0) {
+            setTaskContent({
+                ...taskContent,
                 body: body,
             });
         }
@@ -247,21 +215,16 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     // Update status once task is created
     useEffect(() => {
         if (isSubmitted) {
-            if (setIsCreatingTask) {
-                setIsCreatingTask({
+            if (useTM.setIsCreatingTask) {
+                useTM.setIsCreatingTask({
                     flag: false,
                     parentTaskId: null,
                     rootTaskId: null,
                 });
             }
-
-            if (setIsOpeningTask) {
-                setIsOpeningTask(true);
-            }
-
-            if (setIsNewTaskCreated) {
+            if (useTM.setIsNewTaskCreated) {
                 setTimeout(() => {
-                    setIsNewTaskCreated(true);
+                    useTM.setIsNewTaskCreated(true);
                 }, 500); // wait 500ms to show the new task
             }
         }
@@ -276,7 +239,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         updateTeamMembersOptions({
             myself: myself,
             accessToken: accessToken,
-            setTeamMembers: setTeamMembers,
+            setTeamMembers: useTEM.setTeamMembers,
         });
     }, [myself, isOpenTeamMembersList]);
 
@@ -286,7 +249,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         updateProjectOptions({
             myself: myself,
             accessToken: accessToken,
-            setTeamProjects: setTeamProjects,
+            setTeamProjects: usePM.setTeamProjects,
         });
     }, [isOpenProjectList]);
 
@@ -294,11 +257,11 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     const [projectTags, setProjectTags] = useState<TagListProps[]>([]);
     const [isOpenTagList, setIsOpenTagList] = useState(false);
     useEffect(() => {
-        if (currentProject) {
+        if (usePM.currentProject) {
             updateTagOptions({
                 myself: myself,
                 accessToken: accessToken,
-                projectId: currentProject.projectId,
+                projectId: usePM.currentProject.projectId,
                 setProjectTags: setProjectTags,
             });
         }
@@ -306,7 +269,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
 
     return (
         <>
-            {taskContents && taskContents.id && (
+            {taskContent && taskContent.id && (
                 <Sheet
                     className="custom-scrollbar"
                     variant="outlined"
@@ -319,98 +282,83 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                     }}
                 >
                     <TaskTitleBlock
+                        useCM={useCM}
+                        isPreviewMode={false}
                         myself={myself}
-                        taskContents={taskContents}
-                        taskTitle={taskTitle}
+                        usePM={usePM}
                         setTaskTitle={setTaskTitle}
-                        setIsCreatingTask={setIsCreatingTask}
-                        setOpenCreateProject={setOpenCreateProject}
-                        setOpenCreateTag={setOpenCreateTag}
+                        setTitleErrorOpen={setTitleErrorOpen}
+                        taskContent={taskContent}
+                        taskTitle={taskTitle}
+                        useNM={useNM}
                         titleError={titleError}
                         titleErrorOpen={titleErrorOpen}
-                        setTitleErrorOpen={setTitleErrorOpen}
-                        isPreviewMode={false}
-                        setIsMainChatVisible={setIsMainChatVisible}
-                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                        setIsTaskHomeVisible={setIsTaskHomeVisible}
-                        isTaskPreviewVisible={isTaskPreviewVisible}
-                        isCreatingTask={isCreatingTask}
-                        setInitialEmptyTaskId={setInitialEmptyTaskId}
-                        moveToSpecificChat={moveToSpecificChat}
-                        openingService={openingService}
+                        useTM={useTM}
+                        useUISM={useUISM}
                     />
 
                     <Divider sx={{ mt: 1, mb: 1 }} />
 
                     <TaskMainBlock
-                        teamMemberProfiles={teamMemberProfiles}
-                        socket={socket}
-                        taskContents={taskContents}
-                        setTaskContents={setTaskContents}
-                        teamMembers={teamMembers}
-                        teamProjects={teamProjects}
-                        projectTags={projectTags}
-                        myself={myself}
-                        setMyself={setMyself}
                         assignee={assignee}
-                        setAssignee={setAssignee}
-                        reporter={reporter}
-                        setReporter={setReporter}
-                        isOpenTeamMembersList={isOpenTeamMembersList}
-                        setIsOpenTeamMembersList={setIsOpenTeamMembersList}
+                        useCM={useCM}
                         isOpenProjectList={isOpenProjectList}
-                        setIsOpenProjectList={setIsOpenProjectList}
                         isOpenTagList={isOpenTagList}
-                        setIsOpenTagList={setIsOpenTagList}
-                        setOpenCreateTag={setOpenCreateTag}
-                        setCurrentProject={setCurrentProject}
+                        isOpenTeamMembersList={isOpenTeamMembersList}
                         isPreviewMode={false}
-                        setOpeningService={setOpeningService}
-                        setCurrentMainChat={setCurrentMainChat}
-                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                        myself={myself}
+                        projectTags={projectTags}
+                        reporter={reporter}
+                        setAssignee={setAssignee}
+                        setIsOpenProjectList={setIsOpenProjectList}
+                        setIsOpenTagList={setIsOpenTagList}
+                        setIsOpenTeamMembersList={setIsOpenTeamMembersList}
+                        setMyself={setMyself}
+                        setReporter={setReporter}
+                        setTaskContent={setTaskContent}
+                        socket={socket}
+                        taskContent={taskContent}
+                        useTEM={useTEM}
+                        useTM={useTM}
+                        useUISM={useUISM}
+                        usePM={usePM}
                     />
 
                     <Divider sx={{ mt: 1, mb: 1 }} />
 
                     <TaskCreateBodyBlock
-                        teamMemberProfiles={teamMemberProfiles}
+                        body={body}
+                        useCM={useCM}
                         myself={myself}
+                        setBody={setBody}
                         setMyself={setMyself}
                         socket={socket}
-                        teamMembers={teamMembers}
-                        taskId={taskContents.id}
-                        body={body}
-                        setBody={setBody}
-                        setCurrentChat={setCurrentMainChat}
-                        setOpeningService={setOpeningService}
+                        taskId={taskContent.id}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
                     />
 
                     <Divider sx={{ mt: 2 }} />
 
                     <TaskCreateAttachmentBlock
-                        taskContents={taskContents}
-                        setTaskContents={setTaskContents}
+                        setTaskContent={setTaskContent}
+                        taskContent={taskContent}
                     />
 
                     <Divider sx={{ m: 2 }} />
 
                     <TaskCreateFooter
-                        socket={socket}
-                        myself={myself}
                         accessToken={accessToken}
-                        currentMainChat={currentMainChat}
-                        currentThreadChat={currentThreadChat}
-                        isThreadVisible={isThreadVisible}
-                        taskContents={taskContents}
-                        taskTitle={taskTitle}
+                        useCM={useCM}
+                        useTM={useTM}
+                        myself={myself}
+                        usePM={usePM}
                         setIsSubmitted={setIsSubmitted}
                         setTitleError={setTitleError}
                         setTitleErrorOpen={setTitleErrorOpen}
-                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                        setIsCreatingTask={setIsCreatingTask}
-                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                        setCurrentProject={setCurrentProject}
-                        setInitialEmptyTaskId={setInitialEmptyTaskId}
+                        socket={socket}
+                        taskContent={taskContent}
+                        taskTitle={taskTitle}
                     />
                 </Sheet>
             )}

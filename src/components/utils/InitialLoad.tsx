@@ -1,11 +1,11 @@
-import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { CircularProgress, Typography, Box, Button } from "@mui/joy";
+import { Box, Button, CircularProgress, Typography } from "@mui/joy";
+import { useNavigate } from "react-router-dom";
 
+import { useAuth } from "../../context/AuthContext";
 import { loadInitialData } from "../../services/loadInitialData";
 import { UserProps } from "../../types/admin";
 import { ChatProps } from "../../types/chat";
-import { useAuth } from "../../context/AuthContext";
 
 type InitialLoadProps = {
     myself: UserProps;
@@ -51,8 +51,8 @@ export const InitialLoad = (props: InitialLoadProps) => {
                         Your token might be already expired...
                     </Typography>
                     <Button
-                        variant="outlined"
                         sx={{ mt: "10px" }}
+                        variant="outlined"
                         onClick={() => {
                             navigate("/SignIn");
                         }}

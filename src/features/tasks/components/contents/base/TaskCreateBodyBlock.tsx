@@ -1,52 +1,40 @@
-import { Socket } from "socket.io-client";
-import { Box, Stack } from "@mui/joy";
 import { PartialBlock } from "@blocknote/core";
+import { Box, Stack } from "@mui/joy";
+import { Socket } from "socket.io-client";
 
 import { BnTaskPreview } from "../../../../../components/blockNote/bnTaskPreview";
+import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
+import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../../types/admin";
-import { ChatProps } from "../../../../../types/chat";
-import { TaskProps } from "../../../../../types/tasks";
 
 type TaskCreateBodyBlockProps = {
-    teamMemberProfiles: Record<string, UserProps>;
+    useTEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
-    teamMembers: UserProps[];
     taskId: number;
     body: PartialBlock[] | null;
     setBody: (value: PartialBlock[]) => void;
-    setCurrentChat: (chat: ChatProps) => void;
-    setOpeningService: (value: number) => void;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
 };
 export const TaskCreateBodyBlock = (props: TaskCreateBodyBlockProps) => {
-    const {
-        teamMemberProfiles,
-        myself,
-        setMyself,
-        socket,
-        teamMembers,
-        taskId,
-        body,
-        setBody,
-        setCurrentChat,
-        setOpeningService,
-    } = props;
+    const { useTEM, myself, setMyself, socket, taskId, body, setBody, useCM, useUISM } = props;
     return (
         <Stack direction={"column"} sx={{ width: "100%" }}>
             <Box sx={{ mt: 2 }}>
                 <div className="md-content">
                     <BnTaskPreview
-                        teamMemberProfiles={teamMemberProfiles}
+                        body={body || []}
+                        useCM={useCM}
                         myself={myself}
+                        setBody={setBody}
                         setMyself={setMyself}
                         socket={socket}
-                        teamMembers={teamMembers}
                         taskId={taskId}
-                        body={body || []}
-                        setBody={setBody}
-                        setCurrentChat={setCurrentChat}
-                        setOpeningService={setOpeningService}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
                     />
                 </div>
             </Box>

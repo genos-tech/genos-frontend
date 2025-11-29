@@ -1,17 +1,18 @@
-import { getLatestDMChat, getLatestGMChat, getLatestPMChat } from "../db/crud";
+import { ChatService } from "../db/services/chat.service";
 
 self.onmessage = async (event) => {
     const chatType: number = event.data.chatType;
 
     if (chatType !== undefined && chatType !== null) {
-        var latestChat = null;
+        let latestChat = null;
+        const chatService = new ChatService();
 
         if (chatType === 1) {
-            latestChat = await getLatestDMChat();
+            latestChat = await chatService.getLatestDMChat();
         } else if (chatType === 2) {
-            latestChat = await getLatestGMChat();
+            latestChat = await chatService.getLatestGMChat();
         } else if (chatType === 3) {
-            latestChat = await getLatestPMChat();
+            latestChat = await chatService.getLatestPMChat();
         }
 
         if (latestChat) {

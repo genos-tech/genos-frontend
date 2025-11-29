@@ -1,27 +1,20 @@
+import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import LockOutlineIcon from "@mui/icons-material/LockOutline";
+import WorkIcon from "@mui/icons-material/Work";
 import { List, ListItem, ListItemContent, Typography } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
-import WorkIcon from "@mui/icons-material/Work";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import AccountTreeIcon from "@mui/icons-material/AccountTree";
-import LockOutlineIcon from "@mui/icons-material/LockOutline";
 
-import { ProjectProps, TaskMetaTreeNode, TaskTableProps } from "../../../../types/tasks";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { Toggler } from "./common";
-import { OngoingsListItem } from "./projects_subs/OngoingsListItem";
-import { TagsListItem } from "./projects_subs/TagsListItem";
 import { JoinProjectListItem } from "./projects_subs/JoinProjectListItem";
 import { NewProjectListItem } from "./projects_subs/NewProjectListItem";
+import { OngoingsListItem } from "./projects_subs/OngoingsListItem";
 
 type ProjectsListItemProps = {
-    teamProjects: ProjectProps[];
-    setCurrentProject: (value: ProjectProps) => void;
+    usePM: ProjectManagementState;
     setIsTaskHomeVisible: (value: boolean) => void;
-    setOngoingTasks: (value: TaskTableProps[]) => void;
-    setClosedTasks: (value: TaskTableProps[]) => void;
-    setDeletedTasks: (value: TaskTableProps[]) => void;
-    currentProject?: ProjectProps | null;
-    loadProjectsAndTasks: (value: number) => Promise<void>;
-    setOpenCreateProject: (value: boolean) => void;
     setOpenJoinProject: (value: {
         flag: boolean;
         projectId: number;
@@ -29,42 +22,10 @@ type ProjectsListItemProps = {
         isPrivate: boolean;
         systemUserId: string;
     }) => void;
-    setSelectedTagForFiltering: (value: string) => void;
-    setFilterBy: (value: number) => void;
-    taskMetaTree: TaskMetaTreeNode[];
-    currentTaskChain?: TaskMetaTreeNode[];
-    currentPreviewTaskId: number;
-    setCurrentFilterName: (value: string) => void;
-    setIsTaskPreviewVisible: (value: boolean) => void;
-    setCurrentPreviewTaskId: (value: number) => void;
-    setIsCreatingTask: (value: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    }) => void;
+    useTM: TaskManagementState;
 };
 export const ProjectsListItem = (props: ProjectsListItemProps) => {
-    const {
-        teamProjects,
-        setCurrentProject,
-        setIsTaskHomeVisible,
-        setOngoingTasks,
-        setClosedTasks,
-        setDeletedTasks,
-        currentProject,
-        loadProjectsAndTasks,
-        setOpenCreateProject,
-        setOpenJoinProject,
-        setSelectedTagForFiltering,
-        setFilterBy,
-        taskMetaTree,
-        currentTaskChain,
-        currentPreviewTaskId,
-        setCurrentFilterName,
-        setIsTaskPreviewVisible,
-        setCurrentPreviewTaskId,
-        setIsCreatingTask,
-    } = props;
+    const { usePM, setIsTaskHomeVisible, setOpenJoinProject, useTM } = props;
 
     return (
         <ListItem nested>
@@ -106,7 +67,7 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                 )}
             >
                 <List>
-                    {teamProjects.map(
+                    {usePM.teamProjects.map(
                         (
                             {
                                 projectId,
@@ -126,8 +87,9 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                         renderToggle={({ open, setOpen }) => (
                                             <ListItemButton
                                                 color={"primary"}
+                                                sx={{ overflow: "hidden" }} // ensure children don't overflow
                                                 variant={
-                                                    projectId === currentProject?.projectId
+                                                    projectId === usePM.currentProject?.projectId
                                                         ? "soft"
                                                         : "plain"
                                                 }
@@ -137,16 +99,19 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
 
                                                     // Only if the clicked project id is not the same as the current one,
                                                     // reset the project (and load tasks in the downstream step.)
-                                                    if (projectId !== currentProject?.projectId) {
+                                                    if (
+                                                        projectId !==
+                                                        usePM.currentProject?.projectId
+                                                    ) {
                                                         // Reset the task table...
-                                                        setOngoingTasks([]);
-                                                        setClosedTasks([]);
-                                                        setDeletedTasks([]);
+                                                        useTM.setAllTasks([]);
                                                         (async () => {
-                                                            await loadProjectsAndTasks(projectId);
+                                                            await usePM.loadProjectsAndTasks(
+                                                                projectId
+                                                            );
                                                             // This will be executed in the loadProjectsAndTasks,
                                                             // but somehow this needs to update the task table...
-                                                            setCurrentProject({
+                                                            usePM.setCurrentProject({
                                                                 projectId: projectId,
                                                                 projectName: projectName,
                                                                 projectTags: projectTags,
@@ -154,13 +119,8 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                                 systemUserId: systemUserId,
                                                             });
                                                         })();
-                                                    } else {
-                                                        console.error(
-                                                            "Failed to set the current project"
-                                                        );
                                                     }
                                                 }}
-                                                sx={{ overflow: "hidden" }} // ensure children don't overflow
                                             >
                                                 <AccountTreeIcon />
 
@@ -169,13 +129,13 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                 ) : null}
 
                                                 <Typography
-                                                    noWrap
                                                     sx={{
                                                         overflow: "hidden",
                                                         textOverflow: "ellipsis",
                                                         whiteSpace: "nowrap",
                                                         width: "100%", // take full width of button
                                                     }}
+                                                    noWrap
                                                 >
                                                     {projectName}
                                                 </Typography>
@@ -196,24 +156,7 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                         <List>
                                             <OngoingsListItem
                                                 currentProjectId={projectId}
-                                                projectTags={projectTags}
-                                                taskMetaTree={taskMetaTree}
-                                                currentTaskChain={currentTaskChain}
-                                                currentPreviewTaskId={currentPreviewTaskId}
-                                                setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                                                setCurrentProject={setCurrentProject}
-                                                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                                                setIsCreatingTask={setIsCreatingTask}
-                                                setIsTaskHomeVisible={setIsTaskHomeVisible}
-                                            />
-                                            <TagsListItem
-                                                projectId={projectId}
-                                                currentProject={currentProject}
-                                                setSelectedTagForFiltering={
-                                                    setSelectedTagForFiltering
-                                                }
-                                                setFilterBy={setFilterBy}
-                                                setCurrentFilterName={setCurrentFilterName}
+                                                useTM={useTM}
                                             />
                                         </List>
                                     </Toggler>
@@ -222,13 +165,9 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                         }
                     )}
 
-                    <JoinProjectListItem
-                        teamProjects={teamProjects}
-                        currentProject={currentProject}
-                        setOpenJoinProject={setOpenJoinProject}
-                    />
+                    <JoinProjectListItem usePM={usePM} setOpenJoinProject={setOpenJoinProject} />
 
-                    <NewProjectListItem setOpenCreateProject={setOpenCreateProject} />
+                    <NewProjectListItem usePM={usePM} />
                 </List>
             </Toggler>
         </ListItem>

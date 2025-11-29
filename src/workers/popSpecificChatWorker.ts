@@ -1,5 +1,5 @@
-import { STORES } from "../db/conf";
-import { getSpecificDataWithIndex } from "../db/crud";
+import { STORES } from "../db/config";
+import { ChatRepository } from "../db/repositories";
 
 const storeNameLookup: { [key: number]: string } = {
     1: STORES.DM_CHATS,
@@ -12,10 +12,8 @@ self.onmessage = async (event) => {
     const chatType: number = event.data.chatType;
 
     if (chatId && chatType !== undefined) {
-        const chat = await getSpecificDataWithIndex({
-            storeName: storeNameLookup[chatType],
-            chatId: chatId,
-        });
+        const chatRepository = new ChatRepository(storeNameLookup[chatType]);
+        const chat = await chatRepository.getChat(chatId);
 
         if (chat) {
             self.postMessage(chat);

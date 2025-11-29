@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { VirtuosoHandle } from "react-virtuoso";
+
 import { ActivityMessageProps, AllChatProps } from "../../../types/chat";
 
 export const useScrollToBottomOnNewMessage = (
@@ -42,16 +43,22 @@ export const useScrollToBottomOnChatChange = (
         } else {
             setTimeout(() => {
                 if (indexMap && moveToSpecificIndex) {
-                    console.log("indexMap[moveToSpecificIndex]:", indexMap[moveToSpecificIndex]);
                     if (indexMap[moveToSpecificIndex]) {
                         virtuoso.scrollToIndex({
                             index: indexMap[moveToSpecificIndex],
                         });
-                    } else {
+                    } else if (
+                        indexMap.length > 0 &&
+                        Object.keys(indexMap)[0][0] !== moveToSpecificIndex[0]
+                    ) {
                         if (setErrorMessage && setErrorOpen) {
                             setErrorMessage("The message has been deleted.");
                             setErrorOpen(true);
                         }
+                    } else {
+                        console.warn("moveToSpecificIndex not found in indexMap");
+                        // console.warn("indexMap:", indexMap);
+                        // console.warn("moveToSpecificIndex:", moveToSpecificIndex);
                     }
                 } else {
                     virtuoso.scrollToIndex({

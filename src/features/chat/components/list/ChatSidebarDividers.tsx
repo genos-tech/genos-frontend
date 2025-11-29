@@ -1,0 +1,214 @@
+import AddIcon from "@mui/icons-material/Add";
+import { Button, IconButton, Stack, Typography } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
+
+export const PinnedDivider = () => {
+    const { mode } = useColorScheme();
+    return (
+        <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+                backgroundColor: mode === "dark" ? "black" : "rgb(217, 217, 217)",
+                py: 0.7,
+                justifyContent: "center",
+                alignItems: "center",
+                mt: "3px",
+            }}
+        >
+            <Typography
+                component="h1"
+                sx={{
+                    fontSize: 14,
+                }}
+            >
+                Pinned Messages
+            </Typography>
+        </Stack>
+    );
+};
+
+type GMDividerProps = {
+    setOpenCreateGM: (value: boolean) => void;
+};
+export const GMDivider = (props: GMDividerProps) => {
+    const { setOpenCreateGM } = props;
+    const { mode } = useColorScheme();
+    return (
+        <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+                backgroundColor: mode === "dark" ? "black" : "rgb(217, 217, 217)",
+                justifyContent: "center",
+                alignItems: "center",
+                mt: "3px",
+            }}
+        >
+            <Typography
+                component="h1"
+                sx={{
+                    fontSize: 14,
+                }}
+            >
+                GM Chats
+            </Typography>
+            <IconButton
+                color="neutral"
+                component="a"
+                size="sm"
+                variant="plain"
+                onClick={() => setOpenCreateGM(true)}
+            >
+                <AddIcon />
+            </IconButton>
+        </Stack>
+    );
+};
+
+export const DMDivider = () => {
+    const { mode } = useColorScheme();
+    return (
+        <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+                backgroundColor: mode === "dark" ? "black" : "rgb(217, 217, 217)",
+                py: 0.55,
+                justifyContent: "center",
+                alignItems: "center",
+                mt: "3px",
+            }}
+        >
+            <Typography
+                component="h1"
+                sx={{
+                    fontSize: 14,
+                }}
+            >
+                Direct Messages
+            </Typography>
+        </Stack>
+    );
+};
+
+export const PMDivider = () => {
+    const { mode } = useColorScheme();
+    return (
+        <Stack
+            direction="row"
+            spacing={1}
+            sx={{
+                backgroundColor: mode === "dark" ? "black" : "rgb(217, 217, 217)",
+                py: 0.7,
+                justifyContent: "center",
+                alignItems: "center",
+                mt: "3px",
+            }}
+        >
+            <Typography
+                component="h1"
+                sx={{
+                    fontSize: 14,
+                }}
+            >
+                Project Updates
+            </Typography>
+        </Stack>
+    );
+};
+
+type ActivityDividerProps = {
+    currentActivityMessageType: number;
+    setCurrentActivityMessageType: (value: number) => void;
+};
+export const ActivityDivider = (props: ActivityDividerProps) => {
+    const { currentActivityMessageType, setCurrentActivityMessageType } = props;
+
+    return (
+        <Stack
+            direction="column"
+            spacing={1}
+            sx={{
+                justifyContent: "center",
+                alignItems: "center",
+                my: "3px",
+                mr: "120px",
+            }}
+        >
+            <Stack direction={"row"} flexWrap="wrap" spacing={0.5}>
+                <Button
+                    component="p"
+                    size="sm"
+                    sx={{ fontSize: "12px", my: "1px", py: "3px", px: "5px" }}
+                    variant={currentActivityMessageType === 0 ? "soft" : "outlined"}
+                    onClick={() => {
+                        setCurrentActivityMessageType(0);
+                    }}
+                >
+                    All
+                </Button>
+                <Button
+                    component="p"
+                    size="sm"
+                    sx={{ fontSize: "12px", my: "1px", py: "3px", px: "5px" }}
+                    variant={currentActivityMessageType === 3 ? "soft" : "outlined"}
+                    onClick={() => {
+                        if (currentActivityMessageType !== 3) {
+                            setCurrentActivityMessageType(3);
+                        } else {
+                            setCurrentActivityMessageType(0);
+                        }
+                    }}
+                >
+                    Mention
+                </Button>
+                <Button
+                    component="p"
+                    size="sm"
+                    sx={{ fontSize: "12px", my: "1px", py: "3px", px: "5px" }}
+                    variant={currentActivityMessageType === 1 ? "soft" : "outlined"}
+                    onClick={() => {
+                        if (currentActivityMessageType !== 1) {
+                            setCurrentActivityMessageType(1);
+                        } else {
+                            setCurrentActivityMessageType(0);
+                        }
+                    }}
+                >
+                    Thread
+                </Button>
+                <Button
+                    component="p"
+                    size="sm"
+                    sx={{ fontSize: "12px", my: "1px", py: "3px", px: "5px" }}
+                    variant={currentActivityMessageType === 4 ? "soft" : "outlined"}
+                    onClick={() => {
+                        if (currentActivityMessageType !== 4) {
+                            setCurrentActivityMessageType(4);
+                        } else {
+                            setCurrentActivityMessageType(0);
+                        }
+                    }}
+                >
+                    Reaction
+                </Button>
+                <Button
+                    component="p"
+                    size="sm"
+                    sx={{ fontSize: "12px", my: "1px", py: "3px", px: "5px" }}
+                    variant={currentActivityMessageType === 2 ? "soft" : "outlined"}
+                    onClick={() => {
+                        if (currentActivityMessageType !== 2) {
+                            setCurrentActivityMessageType(2);
+                        } else {
+                            setCurrentActivityMessageType(0);
+                        }
+                    }}
+                >
+                    Task
+                </Button>
+            </Stack>
+        </Stack>
+    );
+};

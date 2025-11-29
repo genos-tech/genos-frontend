@@ -1,4 +1,5 @@
 import { PartialBlock } from "@blocknote/core";
+
 import { UserProps } from "./admin";
 
 export type GroupedReactionProps = {
@@ -14,6 +15,10 @@ export type ReactionProps = {
     tsSent: string;
 };
 
+// itemType:0 : Activity message
+// itemType:1 : Join team request
+// itemType:2 : Join project request
+// itemType:3 : Join gm request
 export type InboxItemProps = {
     itemId: number;
     itemBody: PartialBlock[] | any[];

@@ -1,16 +1,17 @@
-import { checkIsKnownDMChat, checkIsKnownGMChat, checkIsKnownPMChat } from "../db/utils";
+import { ChatService } from "../db/services/chat.service";
 
 self.onmessage = async (event) => {
     const chatId: number = event.data.chatId;
     const chatType: number = event.data.chatType;
 
-    var isKnown: boolean;
+    let isKnown: boolean;
+    const chatService = new ChatService();
     if (chatType === 1) {
-        isKnown = await checkIsKnownDMChat(chatId);
+        isKnown = await chatService.isKnownDMChat(chatId);
     } else if (chatType === 2) {
-        isKnown = await checkIsKnownGMChat(chatId);
+        isKnown = await chatService.isKnownGMChat(chatId);
     } else if (chatType === 3) {
-        isKnown = await checkIsKnownPMChat(chatId);
+        isKnown = await chatService.isKnownPMChat(chatId);
     } else {
         isKnown = false;
     }

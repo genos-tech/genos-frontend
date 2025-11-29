@@ -1,13 +1,17 @@
-import axios from "axios";
 import React, { useState } from "react";
-import { Modal, ModalDialog, Alert, Stack, Button, Typography } from "@mui/joy";
+import { Alert, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
+import axios from "axios";
 
-import { UserProps } from "../../../../types/admin";
-import { ProjectProps } from "../../../../types/tasks";
 import { useAuth } from "../../../../context/AuthContext";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { authApi } from "../../../../services/api";
+import { UserProps } from "../../../../types/admin";
 
-const disableOpenDeleteModalParams = { flag: false, projectId: -1, projectName: "" };
+const disableOpenDeleteModalParams = {
+    flag: false,
+    projectId: -1,
+    projectName: "",
+};
 
 type Props = {
     myself: UserProps;
@@ -17,18 +21,14 @@ type Props = {
         projectId: number;
         projectName: string;
     }) => void;
-    setCurrentProject: (value: ProjectProps | null) => void;
-    teamProjects: ProjectProps[];
-    setTeamProjects: (value: ProjectProps[]) => void;
+    usePM: ProjectManagementState;
 };
 
 export const ModalDeleteProject: React.FC<Props> = ({
     myself,
     openDeleteProject,
     setOpenDeleteProject,
-    setCurrentProject,
-    teamProjects,
-    setTeamProjects,
+    usePM,
 }) => {
     const { accessToken } = useAuth();
 
@@ -44,10 +44,10 @@ export const ModalDeleteProject: React.FC<Props> = ({
                 const query: string = `team_id=${myself.teamId}&project_id=${openDeleteProject.projectId}`;
                 const res = await api.delete(`/project/?${query}`);
                 if (res.status === 204) {
-                    setCurrentProject(null);
+                    usePM.setCurrentProject(null);
                     setOpenDeleteProject(disableOpenDeleteModalParams);
-                    setTeamProjects(
-                        teamProjects.filter(
+                    usePM.setTeamProjects(
+                        usePM.teamProjects.filter(
                             (project) => project.projectId !== openDeleteProject.projectId
                         )
                     );
@@ -71,14 +71,14 @@ export const ModalDeleteProject: React.FC<Props> = ({
     return (
         <>
             <Modal
-                sx={{ zIndex: 10010 }}
                 open={openDeleteProject.flag}
+                sx={{ zIndex: 10010 }}
                 onClose={() => setOpenDeleteProject(disableOpenDeleteModalParams)}
             >
                 <ModalDialog>
                     <Typography level="h4">
                         Are you sure to delete{" "}
-                        <Typography level="h3" color="danger">
+                        <Typography color="danger" level="h3">
                             {openDeleteProject.projectName}
                         </Typography>{" "}
                         ?
@@ -88,14 +88,14 @@ export const ModalDeleteProject: React.FC<Props> = ({
                     )}
                     <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: "center" }}>
                         <Button
-                            component="button"
                             color="neutral"
+                            component="button"
                             variant="outlined"
                             onClick={() => setOpenDeleteProject(disableOpenDeleteModalParams)}
                         >
                             Cancel
                         </Button>
-                        <Button component="button" color="danger" onClick={handleDeleteProject}>
+                        <Button color="danger" component="button" onClick={handleDeleteProject}>
                             Delete
                         </Button>
                     </Stack>

@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 
-import LoadInboxWorker from "../workers/loadInboxWorker.ts?worker";
+import { defaultChat } from "../features/chat/utils/defaults";
+import { UserProps } from "../types/admin";
+import { ChatProps, MessageProps } from "../types/chat";
 import LoadActivityHistoryWorker from "../workers/loadActivityHistoryWorker.ts?worker";
 import LoadDMHistoryWorker from "../workers/loadDMHistoryWorker.ts?worker";
 import LoadGMHistoryWorker from "../workers/loadGMHistoryWorker.ts?worker";
+import LoadInboxWorker from "../workers/loadInboxWorker.ts?worker";
 import LoadPMHistoryWorker from "../workers/loadPMHistoryWorker.ts?worker";
 import LoadTeamMemberWorker from "../workers/loadTeamMembersWorker.ts?worker";
 import PopSpecificChatWorker from "../workers/popSpecificChatWorker.ts?worker";
 import PopSpecificMessagesWorker from "../workers/popSpecificMessagesWorker.ts?worker";
-import { UserProps } from "../types/admin";
-import { ChatProps, MessageProps } from "../types/chat";
-import { defaultChat } from "../features/chat/utils/defaults";
 
 export const loadInitialData = (
     myself: UserProps,
@@ -49,7 +49,10 @@ export const loadInitialData = (
     useEffect(() => {
         if (accessToken && myself.userId !== "" && myself.userName !== "") {
             const loadActivityHistoryWorker = new LoadActivityHistoryWorker();
-            loadActivityHistoryWorker.postMessage({ myself: myself, accessToken: accessToken });
+            loadActivityHistoryWorker.postMessage({
+                myself: myself,
+                accessToken: accessToken,
+            });
             loadActivityHistoryWorker.onmessage = (event) => {
                 if (event.data === "done") {
                     setIsActivityHistoryLoaded(true);
@@ -68,7 +71,10 @@ export const loadInitialData = (
     useEffect(() => {
         if (accessToken && myself.userId !== "" && myself.userName !== "") {
             const loadDMHistoryWorker = new LoadDMHistoryWorker();
-            loadDMHistoryWorker.postMessage({ myself: myself, accessToken: accessToken });
+            loadDMHistoryWorker.postMessage({
+                myself: myself,
+                accessToken: accessToken,
+            });
             loadDMHistoryWorker.onmessage = (event) => {
                 if (event.data === "done") {
                     setIsDMHistoryLoaded(true);
@@ -87,7 +93,10 @@ export const loadInitialData = (
     useEffect(() => {
         if (accessToken && myself.userId !== "" && myself.userName !== "") {
             const loadGMHistoryWorker = new LoadGMHistoryWorker();
-            loadGMHistoryWorker.postMessage({ myself: myself, accessToken: accessToken });
+            loadGMHistoryWorker.postMessage({
+                myself: myself,
+                accessToken: accessToken,
+            });
             loadGMHistoryWorker.onmessage = (event) => {
                 if (event.data === "done") {
                     setIsGMHistoryLoaded(true);
@@ -106,7 +115,10 @@ export const loadInitialData = (
     useEffect(() => {
         if (accessToken && myself.userId !== "" && myself.userName !== "") {
             const loadPMHistoryWorker = new LoadPMHistoryWorker();
-            loadPMHistoryWorker.postMessage({ myself: myself, accessToken: accessToken });
+            loadPMHistoryWorker.postMessage({
+                myself: myself,
+                accessToken: accessToken,
+            });
             loadPMHistoryWorker.onmessage = (event) => {
                 if (event.data === "done") {
                     setIsPMHistoryLoaded(true);
@@ -125,7 +137,10 @@ export const loadInitialData = (
     useEffect(() => {
         if (accessToken && myself.userId !== "" && myself.userName !== "") {
             const loadTeamMembersWorker = new LoadTeamMemberWorker();
-            loadTeamMembersWorker.postMessage({ myself: myself, accessToken: accessToken });
+            loadTeamMembersWorker.postMessage({
+                myself: myself,
+                accessToken: accessToken,
+            });
             loadTeamMembersWorker.onmessage = (event) => {
                 if (event.data) {
                     setIsTeamMembersLoaded(true);

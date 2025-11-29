@@ -1,40 +1,32 @@
 import React, { useState } from "react";
 import {
+    Alert,
+    Box,
+    Button,
+    Checkbox,
+    Input,
     Modal,
     ModalDialog,
-    Alert,
     Stack,
-    Button,
-    Input,
     Typography,
-    Checkbox,
-    Box,
 } from "@mui/joy";
 
-import { signUp } from "../../../admin/services/signup";
-import { joinTeam } from "../../../admin/services/joinTeam";
-import { UserProps, SignUpResponse } from "../../../../types/admin";
-import { ProjectProps } from "../../../../types/tasks";
 import { useAuth } from "../../../../context/AuthContext";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { SignUpResponse, UserProps } from "../../../../types/admin";
 import { replaceSpacesWithUnderscore } from "../../../../utils/stringHelper";
+import { joinTeam } from "../../../admin/services/joinTeam";
+import { signUp } from "../../../admin/services/signup";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 type Props = {
     myself: UserProps;
-    openCreateProject: boolean;
-    setOpenCreateProject: (value: boolean) => void;
-    setCurrentProject: (value: ProjectProps) => void;
+    usePM: ProjectManagementState;
     setIsNewProjectCreated?: (value: boolean) => void;
 };
 
-export const ModalCreateProject: React.FC<Props> = ({
-    myself,
-    openCreateProject,
-    setOpenCreateProject,
-    setCurrentProject,
-    setIsNewProjectCreated,
-}) => {
+export const ModalCreateProject: React.FC<Props> = ({ myself, usePM, setIsNewProjectCreated }) => {
     const { accessToken } = useAuth();
 
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -120,15 +112,16 @@ export const ModalCreateProject: React.FC<Props> = ({
                             );
 
                             if (prjJoinTeamRes && meJoinTeamRes && createProjectData.project_id) {
-                                setCurrentProject({
+                                usePM.setCurrentProject({
                                     projectId: createProjectData.project_id,
                                     projectName: createProjectData.project_name,
                                     projectTags: [],
                                     systemUserId: createProjectData.project_system_user,
                                 });
-                                setOpenCreateProject(false);
+                                usePM.setOpenCreateProject(false);
                                 if (setIsNewProjectCreated) {
                                     setIsNewProjectCreated(true);
+                                    usePM.loadProjectsAndTasks(createProjectData.project_id);
                                 }
                             } else {
                                 console.error("Failed to add me and/or system_user to the team");
@@ -153,14 +146,15 @@ export const ModalCreateProject: React.FC<Props> = ({
     return (
         <>
             <Modal
+                open={usePM.openCreateProject}
                 sx={{ zIndex: 10010 }}
-                open={openCreateProject}
-                onClose={() => setOpenCreateProject(false)}
+                onClose={() => usePM.setOpenCreateProject(false)}
             >
                 <ModalDialog>
                     <Typography level="h4">Create New Project</Typography>
                     <Input
                         placeholder="Unique project name"
+                        sx={{ mt: 1 }}
                         value={projectName}
                         onChange={(e) => setProjectName(e.target.value)}
                         onKeyDown={(e) => {
@@ -168,16 +162,15 @@ export const ModalCreateProject: React.FC<Props> = ({
                                 handleCreateProject();
                             }
                         }}
-                        sx={{ mt: 1 }}
                     />
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                         <Checkbox
-                            label="🔒 Private Project"
-                            color="neutral"
-                            variant="soft"
                             checked={isPrivate}
-                            onChange={(e) => setIsPrivate(e.target.checked)}
+                            color="neutral"
+                            label="🔒 Private Project"
                             sx={{ mt: 1 }}
+                            variant="soft"
+                            onChange={(e) => setIsPrivate(e.target.checked)}
                         />
                     </Box>
                     {errorMessage && errorMessage !== "" && (
@@ -185,18 +178,18 @@ export const ModalCreateProject: React.FC<Props> = ({
                     )}
                     <Stack direction="row" spacing={1} sx={{ justifyContent: "flex-end" }}>
                         <Button
-                            component="button"
                             color="danger"
+                            component="button"
                             variant="outlined"
-                            onClick={() => setOpenCreateProject(false)}
+                            onClick={() => usePM.setOpenCreateProject(false)}
                         >
                             Cancel
                         </Button>
                         <Button
-                            component="button"
                             color="primary"
-                            onClick={handleCreateProject}
+                            component="button"
                             disabled={!projectName.trim()}
+                            onClick={handleCreateProject}
                         >
                             Create
                         </Button>

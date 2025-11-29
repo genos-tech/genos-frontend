@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { Modal, ModalDialog, Alert, Stack, Button, Input, Typography } from "@mui/joy";
+import { Alert, Button, Input, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
 
-import { UserProps } from "../../../../types/admin";
 import { useAuth } from "../../../../context/AuthContext";
+import { UserProps } from "../../../../types/admin";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -65,14 +65,15 @@ export const ModalCreateTeam: React.FC<Props> = ({
     return (
         <>
             <Modal
-                sx={{ zIndex: 10010 }}
                 open={openCreateTeam}
+                sx={{ zIndex: 10010 }}
                 onClose={() => setOpenCreateTeam(false)}
             >
                 <ModalDialog>
                     <Typography level="h4">Create New Team</Typography>
                     <Input
                         placeholder="Unique team name"
+                        sx={{ mt: 1 }}
                         value={teamName}
                         onChange={(e) => setTeamName(e.target.value)}
                         onKeyDown={(e) => {
@@ -80,15 +81,14 @@ export const ModalCreateTeam: React.FC<Props> = ({
                                 handleCreateTeam();
                             }
                         }}
-                        sx={{ mt: 1 }}
                     />
                     {errorMessage && errorMessage !== "" && (
                         <Alert color="danger">{errorMessage}</Alert>
                     )}
                     <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: "flex-end" }}>
                         <Button
-                            component="a"
                             color="danger"
+                            component="a"
                             variant="outlined"
                             onClick={() => setOpenCreateTeam(false)}
                         >
@@ -96,8 +96,8 @@ export const ModalCreateTeam: React.FC<Props> = ({
                         </Button>
                         <Button
                             component="a"
-                            onClick={handleCreateTeam}
                             disabled={!teamName.trim()}
+                            onClick={handleCreateTeam}
                         >
                             Create
                         </Button>

@@ -1,4 +1,4 @@
-import { getTeamMembers } from "../db/crud";
+import { UserService } from "../db/services/user.service";
 import { UserProps } from "../types/admin";
 import { getLocalCurrentTimestamp } from "../utils/dateUtils";
 
@@ -22,7 +22,8 @@ const checkIsOnline = (
 self.onmessage = async (event) => {
     try {
         const myself: UserProps = event.data.myself;
-        const teamMembers: UserProps[] = await getTeamMembers(myself.teamId);
+        const userService = new UserService();
+        const teamMembers: UserProps[] = await userService.getTeamMembers(myself.teamId);
 
         const allUsers: Record<string, UserProps> = {};
 

@@ -1,63 +1,64 @@
-import { Socket } from "socket.io-client";
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import EditIcon from "@mui/icons-material/Edit";
+import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import {
-    Modal,
-    ModalDialog,
     Avatar,
     Box,
+    Button,
+    Card,
     FormControl,
     FormLabel,
-    Button,
     IconButton,
-    Stack,
-    Typography,
-    Card,
-    Tooltip,
     ListItemButton,
+    Modal,
+    ModalDialog,
+    Stack,
+    Tooltip,
+    Typography,
 } from "@mui/joy";
-import EditIcon from "@mui/icons-material/Edit";
-import AccountTreeIcon from "@mui/icons-material/AccountTree";
-import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
+import { Socket } from "socket.io-client";
 
-import { UserProps, ProjectProfileProps } from "../../../../types/admin";
-import { AllChatProps, ChatProps } from "../../../../types/chat";
-import { useAuth } from "../../../../context/AuthContext";
-import { addChat } from "../../../chat/services/addChat";
-import { loadProjectProfile } from "../../../../services/loadProjectProfile";
-import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
+import { useAuth } from "../../../../context/AuthContext";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { loadProjectProfile } from "../../../../services/loadProjectProfile";
+import { ProjectProfileProps, UserProps } from "../../../../types/admin";
+import { AllChatProps, ChatProps } from "../../../../types/chat";
+import { extractYYYYMMDD } from "../../../../utils/dateUtils";
+import { addChat } from "../../../chat/services/addChat";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type ModalProjectProfileProps = {
     socket: Socket | null;
-    teamMemberProfiles: Record<string, UserProps>;
+    useTEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     pmChat: AllChatProps;
     openModalProjectProfile: boolean;
     setOpenModalProjectProfile: (value: boolean) => void;
-    funcSetAllChats: () => Promise<void>;
     setAvatarUserId: (value: string) => void;
     setOpenUserProfile: (value: boolean) => void;
-    setCurrentMainChat: (value: ChatProps) => void;
-    setOpeningService: (value: number) => void;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
 };
 export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
     const {
         socket,
-        teamMemberProfiles,
+        useTEM,
         myself,
         setMyself,
         pmChat,
         openModalProjectProfile,
         setOpenModalProjectProfile,
-        funcSetAllChats,
         setAvatarUserId,
         setOpenUserProfile,
-        setCurrentMainChat,
-        setOpeningService,
+        useCM,
+        useUISM,
     } = props;
 
     const { accessToken } = useAuth();
@@ -106,7 +107,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                     },
                     pmChat.chatType
                 );
-                await funcSetAllChats();
+                await useCM.funcSetAllChats();
             }
         }
     };
@@ -126,8 +127,8 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
         <>
             <Modal
                 open={openModalProjectProfile}
-                onClose={() => setOpenModalProjectProfile(false)}
                 sx={{ zIndex: 10001 }}
+                onClose={() => setOpenModalProjectProfile(false)}
             >
                 <ModalDialog>
                     <Box sx={{ flex: 1, width: "1000px" }}>
@@ -146,7 +147,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                     px: 3,
                                 }}
                             >
-                                <Typography level="h2" component="h1" sx={{ mt: 1, mb: 1 }}>
+                                <Typography component="h1" level="h2" sx={{ mt: 1, mb: 1 }}>
                                     Project Profile - {pmChat.chatName}
                                 </Typography>
                             </Box>
@@ -175,8 +176,8 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                         }}
                                     >
                                         <Avatar
-                                            sx={{ width: 180, height: 180, fontSize: "50px" }}
                                             src={`${media_url}/${pmChat.profileImagePath}`}
+                                            sx={{ width: 180, height: 180, fontSize: "50px" }}
                                         >
                                             <AccountTreeIcon sx={{ fontSize: 100 }} />
                                         </Avatar>
@@ -189,14 +190,19 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                             }}
                                         >
                                             <input
-                                                type="file"
+                                                ref={inputRef}
                                                 accept=".jpg,.jpeg,.png,image/jpeg,image/png"
                                                 multiple={false}
-                                                ref={inputRef}
-                                                onChange={handleSelectedFiles}
                                                 style={{ display: "none" }}
+                                                type="file"
+                                                onChange={handleSelectedFiles}
                                             />
-                                            <Tooltip title="EDIT (TBD)" sx={{ zIndex: 9000 }}>
+                                            <Tooltip
+                                                size="sm"
+                                                sx={{ zIndex: 9000 }}
+                                                title="EDIT (TBD)"
+                                                variant="outlined"
+                                            >
                                                 <IconButton
                                                     variant="soft"
                                                     onClick={() => {
@@ -219,8 +225,8 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                 <FormControl>
                                                     <FormLabel>Owner</FormLabel>
                                                     <Button
-                                                        variant="plain"
                                                         color="neutral"
+                                                        variant="plain"
                                                         sx={{
                                                             justifyContent: "flex-start", // left align the content
                                                         }}
@@ -241,7 +247,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                             }}
                                                         >
                                                             {projectProfile
-                                                                ? teamMemberProfiles[
+                                                                ? useTEM.teamMemberProfiles[
                                                                       projectProfile?.ownerUserId
                                                                   ]?.userName
                                                                 : "N/A"}
@@ -253,7 +259,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                     component="a"
                                                     href={`mailto:${
                                                         projectProfile
-                                                            ? teamMemberProfiles[
+                                                            ? useTEM.teamMemberProfiles[
                                                                   projectProfile?.ownerUserId
                                                               ]?.userEmail
                                                             : "N/A"
@@ -269,7 +275,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                     }}
                                                 >
                                                     {projectProfile
-                                                        ? teamMemberProfiles[
+                                                        ? useTEM.teamMemberProfiles[
                                                               projectProfile?.ownerUserId
                                                           ]?.userEmail
                                                         : "N/A"}
@@ -285,21 +291,18 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                     {projectProfile?.projectMembers.map(
                                                         (member) => (
                                                             <ListItemButton
+                                                                key={`project-member-${member.userId}`}
                                                                 sx={{ ml: 2, my: 0.2 }}
                                                             >
                                                                 <AvatarWithStatus
-                                                                    isYou={false}
-                                                                    setOpeningService={
-                                                                        setOpeningService
-                                                                    }
-                                                                    setCurrentMainChat={
-                                                                        setCurrentMainChat
-                                                                    }
                                                                     avatarUser={member}
+                                                                    useCM={useCM}
+                                                                    isYou={false}
                                                                     myself={myself}
                                                                     setMyself={setMyself}
-                                                                    socket={socket}
                                                                     showNameAndEmail={true}
+                                                                    socket={socket}
+                                                                    useUISM={useUISM}
                                                                 />
                                                             </ListItemButton>
                                                         )
@@ -311,11 +314,11 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                 <FormControl>
                                                     <FormLabel>Is Private</FormLabel>
                                                     <Button
+                                                        disabled={true}
                                                         variant="plain"
                                                         sx={{
                                                             justifyContent: "flex-start", // left align the content
                                                         }}
-                                                        disabled={true}
                                                     >
                                                         <Typography
                                                             fontWeight={"bold"}
@@ -333,11 +336,11 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                 <FormControl>
                                                     <FormLabel>Created Date</FormLabel>
                                                     <Button
+                                                        disabled={true}
                                                         variant="plain"
                                                         sx={{
                                                             justifyContent: "flex-start", // left align the content
                                                         }}
-                                                        disabled={true}
                                                     >
                                                         <Typography
                                                             fontWeight={"bold"}

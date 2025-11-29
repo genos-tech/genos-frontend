@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
-import { Button, Stack, Typography, Chip, Autocomplete } from "@mui/joy";
+import { useEffect, useState } from "react";
+import { Autocomplete, Button, Chip, Stack, Typography } from "@mui/joy";
+
+import { useAuth } from "../../../../../context/AuthContext";
 import { UserProps } from "../../../../../types/admin";
 import { updateUserProfile } from "../../../services/updateUserProfile";
-import { useAuth } from "../../../../../context/AuthContext";
 
 type UserProfileRoleProps = {
     myself: UserProps;
@@ -35,10 +36,13 @@ export const UserProfileRole = (props: UserProfileRoleProps) => {
             {openRoleEditor === true && (
                 <Stack direction={"row"} spacing={0.3}>
                     <Autocomplete
+                        getOptionLabel={(option) => option.role}
+                        groupBy={(option) => option.category}
+                        isOptionEqualToValue={(option, value) => option.role === value.role}
                         open={open}
-                        onOpen={() => setOpen(true)}
-                        onClose={() => setOpen(false)} // this fires on outside click
+                        options={templateRoleOptions}
                         placeholder="Choose a role"
+                        sx={{ width: 300 }}
                         slotProps={{
                             input: {
                                 autoComplete: "new-password", // disable autocomplete and autofill
@@ -49,12 +53,9 @@ export const UserProfileRole = (props: UserProfileRoleProps) => {
                                 },
                             },
                         }}
-                        sx={{ width: 300 }}
-                        options={templateRoleOptions}
                         autoHighlight
-                        getOptionLabel={(option) => option.role}
-                        isOptionEqualToValue={(option, value) => option.role === value.role}
-                        groupBy={(option) => option.category}
+                        onClose={() => setOpen(false)} // this fires on outside click
+                        onOpen={() => setOpen(true)}
                         onChange={(event, value) => {
                             if (value) {
                                 setOpenRoleEditor(false);
@@ -74,9 +75,9 @@ export const UserProfileRole = (props: UserProfileRoleProps) => {
                         }}
                     />
                     <Chip
-                        variant="outlined"
-                        size="sm"
                         color="danger"
+                        size="sm"
+                        variant="outlined"
                         sx={{
                             borderRadius: "sm",
                             fontWeight: "bold",
@@ -92,16 +93,16 @@ export const UserProfileRole = (props: UserProfileRoleProps) => {
 
             {openRoleEditor === false && (
                 <Button
-                    variant="plain"
                     color="neutral"
+                    variant="plain"
+                    sx={{
+                        width: "400px",
+                        justifyContent: "flex-start", // left align the content
+                    }}
                     onClick={() => {
                         if (myself.userId === user?.userId) {
                             setOpenRoleEditor(true);
                         }
-                    }}
-                    sx={{
-                        width: "400px",
-                        justifyContent: "flex-start", // left align the content
                     }}
                 >
                     <Typography fontWeight="bold">{roleValue}</Typography>
@@ -115,9 +116,15 @@ const templateRoleOptions = [
     { category: "Executive & Leadership", role: "Chief Executive Officer (CEO)" },
     { category: "Executive & Leadership", role: "Chief Operating Officer (COO)" },
     { category: "Executive & Leadership", role: "Chief Financial Officer (CFO)" },
-    { category: "Executive & Leadership", role: "Chief Technology Officer (CTO)" },
-    { category: "Executive & Leadership", role: "Chief Marketing Officer (CMO)" },
-    { category: "Executive & Leadership", role: "Chief Human Resources Officer (CHRO)" },
+    {
+        category: "Executive & Leadership",
+        role: "Chief Technology Officer (CTO)",
+    },
+    { category: "Executive & Leadership", role: "Chief Marketing Officer (useCMO)" },
+    {
+        category: "Executive & Leadership",
+        role: "Chief Human Resources Officer (CHRO)",
+    },
     { category: "Executive & Leadership", role: "Chief Data Officer (CDO)" },
     { category: "Executive & Leadership", role: "Chief Product Officer (CPO)" },
     { category: "Executive & Leadership", role: "Managing Director" },
@@ -127,7 +134,10 @@ const templateRoleOptions = [
     { category: "Technology & Engineering", role: "Data Engineer" },
     { category: "Technology & Engineering", role: "Data Scientist" },
     { category: "Technology & Engineering", role: "Machine Learning Engineer" },
-    { category: "Technology & Engineering", role: "Site Reliability Engineer (SRE)" },
+    {
+        category: "Technology & Engineering",
+        role: "Site Reliability Engineer (SRE)",
+    },
     { category: "Technology & Engineering", role: "Cloud Architect" },
     { category: "Technology & Engineering", role: "Security Engineer" },
     { category: "Technology & Engineering", role: "DevOps Engineer" },
@@ -177,9 +187,18 @@ const templateRoleOptions = [
 
     { category: "Human Resources & People", role: "HR Manager" },
     { category: "Human Resources & People", role: "Recruiter" },
-    { category: "Human Resources & People", role: "Talent Acquisition Specialist" },
-    { category: "Human Resources & People", role: "Learning & Development Specialist" },
-    { category: "Human Resources & People", role: "Compensation & Benefits Analyst" },
+    {
+        category: "Human Resources & People",
+        role: "Talent Acquisition Specialist",
+    },
+    {
+        category: "Human Resources & People",
+        role: "Learning & Development Specialist",
+    },
+    {
+        category: "Human Resources & People",
+        role: "Compensation & Benefits Analyst",
+    },
     { category: "Human Resources & People", role: "HR Business Partner" },
     { category: "Human Resources & People", role: "Employee Relations Manager" },
 
@@ -203,7 +222,10 @@ const templateRoleOptions = [
     { category: "Healthcare & Life Sciences", role: "Doctor" },
     { category: "Healthcare & Life Sciences", role: "Nurse" },
     { category: "Healthcare & Life Sciences", role: "Pharmacist" },
-    { category: "Healthcare & Life Sciences", role: "Research Scientist (Biotech)" },
+    {
+        category: "Healthcare & Life Sciences",
+        role: "Research Scientist (Biotech)",
+    },
     { category: "Healthcare & Life Sciences", role: "Clinical Trial Manager" },
     { category: "Healthcare & Life Sciences", role: "Healthcare Administrator" },
     { category: "Healthcare & Life Sciences", role: "Public Health Specialist" },
@@ -222,7 +244,10 @@ const templateRoleOptions = [
     { category: "Manufacturing & Industry", role: "Mechanical Engineer" },
     { category: "Manufacturing & Industry", role: "Electrical Engineer" },
     { category: "Manufacturing & Industry", role: "Production Manager" },
-    { category: "Manufacturing & Industry", role: "Quality Assurance Specialist" },
+    {
+        category: "Manufacturing & Industry",
+        role: "Quality Assurance Specialist",
+    },
     { category: "Manufacturing & Industry", role: "Industrial Designer" },
     { category: "Manufacturing & Industry", role: "Plant Manager" },
     { category: "Manufacturing & Industry", role: "Maintenance Technician" },
@@ -238,8 +263,14 @@ const templateRoleOptions = [
     { category: "Emerging & Future Roles", role: "AI Ethics Officer" },
     { category: "Emerging & Future Roles", role: "Sustainability Manager" },
     { category: "Emerging & Future Roles", role: "ESG Analyst" },
-    { category: "Emerging & Future Roles", role: "Diversity & Inclusion Manager" },
-    { category: "Emerging & Future Roles", role: "Crypto / Blockchain Specialist" },
+    {
+        category: "Emerging & Future Roles",
+        role: "Diversity & Inclusion Manager",
+    },
+    {
+        category: "Emerging & Future Roles",
+        role: "Crypto / Blockchain Specialist",
+    },
     { category: "Emerging & Future Roles", role: "Robotics Engineer" },
     { category: "Emerging & Future Roles", role: "Climate Risk Consultant" },
 

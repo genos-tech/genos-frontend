@@ -78,7 +78,7 @@ export default function useScript(src: string): UseScriptStatus {
         scriptNode.addEventListener("error", setStateFromEvent);
 
         // Remove event listeners on cleanup
-        // eslint-disable-next-line consistent-return
+
         return () => {
             if (scriptNode) {
                 scriptNode.removeEventListener("load", setStateFromEvent);

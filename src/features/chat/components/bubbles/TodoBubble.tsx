@@ -1,30 +1,32 @@
-import { useState, useRef, useEffect } from "react";
-import { Box, Chip, Card, Button, Stack } from "@mui/joy";
+import { useEffect, useRef, useState } from "react";
+import { PartialBlock } from "@blocknote/core";
+import DoneAllIcon from "@mui/icons-material/DoneAll";
+import { Box, Button, Card, Chip, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
-import DoneAllIcon from "@mui/icons-material/DoneAll";
 
-import { UserProps } from "../../../../types/admin";
-import { ChatProps, ToDoFactProps } from "../../../../types/chat";
 import { BnTodoPreview } from "../../../../components/blockNote/bnTodoPreview";
-import { extractYYYYMMDD } from "../../../../utils/dateUtils";
-import { PartialBlock } from "@blocknote/core";
-import { updateTodo } from "../../services/updateTodo";
 import { useAuth } from "../../../../context/AuthContext";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { UserProps } from "../../../../types/admin";
+import { ToDoFactProps } from "../../../../types/chat";
+import { extractYYYYMMDD } from "../../../../utils/dateUtils";
+import { updateTodo } from "../../services/updateTodo";
 
 type TodoBubbleProps = {
     myself: UserProps;
     todo: ToDoFactProps;
     currentIndex: number;
     isExistingTodaysTodo: boolean;
-    teamMemberProfiles: Record<string, UserProps>;
-    teamMembers: UserProps[];
+    useTEM: TeamManagementState;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
     todos: ToDoFactProps[];
     setTodos: (value: ToDoFactProps[]) => void;
-    setOpeningService: (value: number) => void;
-    setCurrentChat: (chat: ChatProps) => void;
+    useUISM: UIStateManagementState;
+    useCM: ChatManagementState;
 };
 export const TodoBubble = (props: TodoBubbleProps) => {
     const {
@@ -34,12 +36,11 @@ export const TodoBubble = (props: TodoBubbleProps) => {
         setTodos,
         currentIndex,
         isExistingTodaysTodo,
-        teamMemberProfiles,
-        teamMembers,
+        useTEM,
         setMyself,
         socket,
-        setOpeningService,
-        setCurrentChat,
+        useUISM,
+        useCM,
     } = props;
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
@@ -51,7 +52,10 @@ export const TodoBubble = (props: TodoBubbleProps) => {
 
     // Send updated task to the backend when task is updated
     const sendUpdatedTodo = async () => {
-        const updatedTodo = await updateTodo(accessToken, myself, { ...todo, todoContent: body });
+        const updatedTodo = await updateTodo(accessToken, myself, {
+            ...todo,
+            todoContent: body,
+        });
         setTodos(todos.map((todo) => (todo.todoId === updatedTodo.todoId ? updatedTodo : todo)));
 
         // reset the bodyEdited
@@ -84,7 +88,7 @@ export const TodoBubble = (props: TodoBubbleProps) => {
             ref={boxRef}
             sx={{
                 py: 0.5,
-                px: 15,
+                px: "7%",
                 height: "100%",
             }}
         >
@@ -97,14 +101,10 @@ export const TodoBubble = (props: TodoBubbleProps) => {
                         flexDirection: "column",
                     }}
                 >
-                    <Stack direction="row" alignItems="center">
+                    <Stack alignItems="center" direction="row">
                         <Chip
                             key={`todo-bubble-chip-${todo.todoId}`}
-                            variant={
-                                currentIndex === 0 && isExistingTodaysTodo === true
-                                    ? "solid"
-                                    : "soft"
-                            }
+                            size="md"
                             color={
                                 currentIndex === 0 && isExistingTodaysTodo === true
                                     ? "primary"
@@ -115,27 +115,31 @@ export const TodoBubble = (props: TodoBubbleProps) => {
                                 borderRadius: "5px",
                                 fontWeight: "bold",
                             }}
-                            size="md"
+                            variant={
+                                currentIndex === 0 && isExistingTodaysTodo === true
+                                    ? "solid"
+                                    : "soft"
+                            }
                         >
                             {extractYYYYMMDD(todo.tsCreatedAt)}
                         </Chip>
 
                         <Chip
-                            variant="soft"
                             color={todo.isCompleted ? "success" : "neutral"}
                             size="md"
-                            sx={{ marginLeft: "-37px" }}
                             startDecorator={todo.isCompleted ? <DoneAllIcon /> : null}
+                            sx={{ marginLeft: "-37px" }}
+                            variant="soft"
                         >
                             {todo.isCompleted ? "Completed" : "Incomplete"}
                         </Chip>
 
                         <Button
-                            variant="outlined"
                             color="primary"
+                            disabled={bodyEdited === false}
                             size="sm"
                             sx={{ marginLeft: "auto", fontSize: "12px" }}
-                            disabled={bodyEdited === false}
+                            variant="outlined"
                             onClick={() => sendUpdatedTodo()}
                         >
                             {bodyEdited ? "Save" : "Saved"}
@@ -143,18 +147,17 @@ export const TodoBubble = (props: TodoBubbleProps) => {
                     </Stack>
 
                     <BnTodoPreview
-                        customClassName="todo-preview"
-                        teamMemberProfiles={teamMemberProfiles}
-                        teamMembers={teamMembers}
-                        myself={myself}
-                        setMyself={setMyself}
-                        socket={socket}
                         key={`${todo.todoId}`}
                         body={body}
+                        useCM={useCM}
+                        customClassName="todo-preview"
+                        myself={myself}
                         setBody={setBody}
                         setBodyEdited={setBodyEdited}
-                        setCurrentChat={setCurrentChat}
-                        setOpeningService={setOpeningService}
+                        setMyself={setMyself}
+                        socket={socket}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
                     />
                 </Card>
             </Box>

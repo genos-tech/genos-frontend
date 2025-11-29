@@ -1,17 +1,17 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
+    Autocomplete,
+    AutocompleteOption,
+    Button,
+    Chip,
     ListItemContent,
     ListItemDecorator,
-    AutocompleteOption,
-    Autocomplete,
-    Typography,
     Stack,
-    Chip,
-    Button,
+    Typography,
 } from "@mui/joy";
 
-import { UserProps } from "../../../../../types/admin";
 import { useAuth } from "../../../../../context/AuthContext";
+import { UserProps } from "../../../../../types/admin";
 import { updateUserProfile } from "../../../services/updateUserProfile";
 
 const defaultCountry = {
@@ -57,26 +57,13 @@ export const UserProfileBaseCountry = (props: UserProfileBaseCountryProps) => {
             {openCountryEditor === true && (
                 <Stack direction={"row"} spacing={0.3}>
                     <Autocomplete
-                        open={open}
-                        onOpen={() => setOpen(true)}
-                        onClose={() => setOpen(false)} // this fires on outside click
-                        placeholder="Choose a country"
-                        slotProps={{
-                            input: {
-                                autoComplete: "new-password", // disable autocomplete and autofill
-                            },
-                            listbox: {
-                                sx: {
-                                    zIndex: 10001, // Put the autocomplete to the front
-                                },
-                            },
-                        }}
-                        sx={{ width: 300 }}
-                        options={countries}
-                        autoHighlight
                         getOptionLabel={(option) => option.label}
-                        value={defaultCountry}
                         isOptionEqualToValue={(option, value) => option.code === value.code}
+                        open={open}
+                        options={countries}
+                        placeholder="Choose a country"
+                        sx={{ width: 300 }}
+                        value={defaultCountry}
                         renderOption={(props, option) => {
                             // @ts-ignore
                             const { key, ..._props } = props;
@@ -84,11 +71,11 @@ export const UserProfileBaseCountry = (props: UserProfileBaseCountryProps) => {
                                 <AutocompleteOption key={option.code} {..._props}>
                                     <ListItemDecorator>
                                         <img
-                                            loading="lazy"
-                                            width="20"
-                                            srcSet={`https://flagcdn.com/w40/${option.code.toLowerCase()}.png 2x`}
-                                            src={`https://flagcdn.com/w20/${option.code.toLowerCase()}.png`}
                                             alt=""
+                                            loading="lazy"
+                                            src={`https://flagcdn.com/w20/${option.code.toLowerCase()}.png`}
+                                            srcSet={`https://flagcdn.com/w40/${option.code.toLowerCase()}.png 2x`}
+                                            width="20"
                                         />
                                     </ListItemDecorator>
                                     <ListItemContent sx={{ fontSize: "sm" }}>
@@ -100,6 +87,19 @@ export const UserProfileBaseCountry = (props: UserProfileBaseCountryProps) => {
                                 </AutocompleteOption>
                             );
                         }}
+                        slotProps={{
+                            input: {
+                                autoComplete: "new-password", // disable autocomplete and autofill
+                            },
+                            listbox: {
+                                sx: {
+                                    zIndex: 10001, // Put the autocomplete to the front
+                                },
+                            },
+                        }}
+                        autoHighlight
+                        onClose={() => setOpen(false)} // this fires on outside click
+                        onOpen={() => setOpen(true)}
                         onChange={(event, value) => {
                             if (value) {
                                 setOpenCountryEditor(false);
@@ -119,9 +119,9 @@ export const UserProfileBaseCountry = (props: UserProfileBaseCountryProps) => {
                         }}
                     />
                     <Chip
-                        variant="outlined"
-                        size="sm"
                         color="danger"
+                        size="sm"
+                        variant="outlined"
                         sx={{
                             borderRadius: "sm",
                             fontWeight: "bold",
@@ -137,16 +137,16 @@ export const UserProfileBaseCountry = (props: UserProfileBaseCountryProps) => {
 
             {openCountryEditor === false && (
                 <Button
-                    variant="plain"
                     color="neutral"
+                    variant="plain"
+                    sx={{
+                        width: "400px",
+                        justifyContent: "flex-start", // left align the content
+                    }}
                     onClick={() => {
                         if (myself.userId === user?.userId) {
                             setOpenCountryEditor(true);
                         }
-                    }}
-                    sx={{
-                        width: "400px",
-                        justifyContent: "flex-start", // left align the content
                     }}
                 >
                     <Typography fontWeight="bold">{countryValue}</Typography>
@@ -241,7 +241,7 @@ const countries = [
     { code: "CI", label: "Cote d'Ivoire", phone: "225" },
     { code: "CK", label: "Cook Islands", phone: "682" },
     { code: "CL", label: "Chile", phone: "56" },
-    { code: "CM", label: "Cameroon", phone: "237" },
+    { code: "useCM", label: "Cameroon", phone: "237" },
     { code: "CN", label: "China", phone: "86" },
     { code: "CO", label: "Colombia", phone: "57" },
     { code: "CR", label: "Costa Rica", phone: "506" },
@@ -328,7 +328,7 @@ const countries = [
     { code: "ID", label: "Indonesia", phone: "62" },
     { code: "IE", label: "Ireland", phone: "353" },
     { code: "IL", label: "Israel", phone: "972" },
-    { code: "IM", label: "Isle of Man", phone: "44" },
+    { code: "useIM", label: "Isle of Man", phone: "44" },
     { code: "IN", label: "India", phone: "91" },
     {
         code: "IO",

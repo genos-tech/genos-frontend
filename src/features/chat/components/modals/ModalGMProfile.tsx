@@ -1,63 +1,64 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import EditIcon from "@mui/icons-material/Edit";
+import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
+import GroupsIcon from "@mui/icons-material/Groups";
 import {
-    Modal,
-    ModalDialog,
     Avatar,
     Box,
+    Button,
+    Card,
     FormControl,
     FormLabel,
-    Button,
     IconButton,
-    Stack,
-    Typography,
-    Card,
-    Tooltip,
     ListItemButton,
+    Modal,
+    ModalDialog,
+    Stack,
+    Tooltip,
+    Typography,
 } from "@mui/joy";
-import EditIcon from "@mui/icons-material/Edit";
-import GroupsIcon from "@mui/icons-material/Groups";
-import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
+import { Socket } from "socket.io-client";
 
-import { UserProps } from "../../../../types/admin";
-import { AllChatProps, ChatProps, GMProfileProps } from "../../../../types/chat";
+import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
 import { useAuth } from "../../../../context/AuthContext";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { UserProps } from "../../../../types/admin";
+import { AllChatProps, GMProfileProps } from "../../../../types/chat";
+import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 import { addChat } from "../../services/addChat";
 import { loadGMProfile } from "../../services/loadGMProfile";
-import { extractYYYYMMDD } from "../../../../utils/dateUtils";
-import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
-import { Socket } from "socket.io-client";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type ModalGMProfileProps = {
-    teamMemberProfiles: Record<string, UserProps>;
+    useTEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
     gmChat: AllChatProps;
     openModalGMProfile: boolean;
     setOpenModalGMProfile: (value: boolean) => void;
-    funcSetAllChats: () => Promise<void>;
     setAvatarUserId: (value: string) => void;
     setOpenUserProfile: (value: boolean) => void;
-    setOpeningService: (value: number) => void;
-    setCurrentMainChat: (value: ChatProps) => void;
+    useUISM: UIStateManagementState;
+    useCM: ChatManagementState;
 };
 export const ModalGMProfile = (props: ModalGMProfileProps) => {
     const {
-        teamMemberProfiles,
+        useTEM,
         myself,
         setMyself,
         socket,
         gmChat,
         openModalGMProfile,
         setOpenModalGMProfile,
-        funcSetAllChats,
         setAvatarUserId,
         setOpenUserProfile,
-        setOpeningService,
-        setCurrentMainChat,
+        useUISM,
+        useCM,
     } = props;
 
     const { accessToken } = useAuth();
@@ -99,10 +100,13 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
             throw new Error("Failed to upload user profile image.");
         } else {
             addChat(
-                { ...gmChat, profileImagePath: uploadProfileImageData.profile_image_file_name },
+                {
+                    ...gmChat,
+                    profileImagePath: uploadProfileImageData.profile_image_file_name,
+                },
                 gmChat.chatType
             );
-            await funcSetAllChats();
+            await useCM.funcSetAllChats();
         }
     };
 
@@ -118,8 +122,8 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
         <>
             <Modal
                 open={openModalGMProfile}
-                onClose={() => setOpenModalGMProfile(false)}
                 sx={{ zIndex: 10001 }}
+                onClose={() => setOpenModalGMProfile(false)}
             >
                 <ModalDialog>
                     <Box sx={{ flex: 1, width: "1000px" }}>
@@ -138,7 +142,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                     px: 3,
                                 }}
                             >
-                                <Typography level="h2" component="h1" sx={{ mt: 1, mb: 1 }}>
+                                <Typography component="h1" level="h2" sx={{ mt: 1, mb: 1 }}>
                                     GM Profile - {gmChat.chatName}
                                 </Typography>
                             </Box>
@@ -167,8 +171,8 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                         }}
                                     >
                                         <Avatar
-                                            sx={{ width: 180, height: 180, fontSize: "50px" }}
                                             src={`${media_url}/${gmChat.profileImagePath}`}
+                                            sx={{ width: 180, height: 180, fontSize: "50px" }}
                                         >
                                             <GroupsIcon sx={{ fontSize: 100 }} />
                                         </Avatar>
@@ -181,14 +185,19 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                             }}
                                         >
                                             <input
-                                                type="file"
+                                                ref={inputRef}
                                                 accept=".jpg,.jpeg,.png,image/jpeg,image/png"
                                                 multiple={false}
-                                                ref={inputRef}
-                                                onChange={handleSelectedFiles}
                                                 style={{ display: "none" }}
+                                                type="file"
+                                                onChange={handleSelectedFiles}
                                             />
-                                            <Tooltip title="EDIT (TBD)" sx={{ zIndex: 9000 }}>
+                                            <Tooltip
+                                                size="sm"
+                                                sx={{ zIndex: 9000 }}
+                                                title="EDIT (TBD)"
+                                                variant="outlined"
+                                            >
                                                 <IconButton
                                                     variant="soft"
                                                     onClick={handleButtonClick}
@@ -205,8 +214,8 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                 <FormControl>
                                                     <FormLabel>Owner</FormLabel>
                                                     <Button
-                                                        variant="plain"
                                                         color="neutral"
+                                                        variant="plain"
                                                         sx={{
                                                             justifyContent: "flex-start", // left align the content
                                                         }}
@@ -227,7 +236,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                             }}
                                                         >
                                                             {gmProfile
-                                                                ? teamMemberProfiles[
+                                                                ? useTEM.teamMemberProfiles[
                                                                       gmProfile?.ownerUserId
                                                                   ]?.userName
                                                                 : "N/A"}
@@ -239,7 +248,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                     component="a"
                                                     href={`mailto:${
                                                         gmProfile
-                                                            ? teamMemberProfiles[
+                                                            ? useTEM.teamMemberProfiles[
                                                                   gmProfile?.ownerUserId
                                                               ]?.userEmail
                                                             : "N/A"
@@ -255,7 +264,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                     }}
                                                 >
                                                     {gmProfile
-                                                        ? teamMemberProfiles[
+                                                        ? useTEM.teamMemberProfiles[
                                                               gmProfile?.ownerUserId
                                                           ]?.userEmail
                                                         : "N/A"}
@@ -271,18 +280,14 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                     {gmProfile?.gmMembers.map((member) => (
                                                         <ListItemButton sx={{ ml: 2, my: 0.2 }}>
                                                             <AvatarWithStatus
-                                                                isYou={false}
-                                                                setOpeningService={
-                                                                    setOpeningService
-                                                                }
-                                                                setCurrentMainChat={
-                                                                    setCurrentMainChat
-                                                                }
                                                                 avatarUser={member}
+                                                                useCM={useCM}
+                                                                isYou={false}
                                                                 myself={myself}
                                                                 setMyself={setMyself}
-                                                                socket={socket}
                                                                 showNameAndEmail={true}
+                                                                socket={socket}
+                                                                useUISM={useUISM}
                                                             />
                                                         </ListItemButton>
                                                     ))}
@@ -293,11 +298,11 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                 <FormControl>
                                                     <FormLabel>Is Private</FormLabel>
                                                     <Button
+                                                        disabled={true}
                                                         variant="plain"
                                                         sx={{
                                                             justifyContent: "flex-start", // left align the content
                                                         }}
-                                                        disabled={true}
                                                     >
                                                         <Typography
                                                             fontWeight={"bold"}
@@ -312,11 +317,11 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                 <FormControl>
                                                     <FormLabel>Created Date</FormLabel>
                                                     <Button
+                                                        disabled={true}
                                                         variant="plain"
                                                         sx={{
                                                             justifyContent: "flex-start", // left align the content
                                                         }}
-                                                        disabled={true}
                                                     >
                                                         <Typography
                                                             fontWeight={"bold"}

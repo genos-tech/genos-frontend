@@ -7,10 +7,10 @@ interface CircleIconProps {
 export const CircleIcon: React.FC<CircleIconProps> = ({ number }) => {
     return (
         <Badge
-            variant="solid"
-            size="lg"
-            color="primary"
             badgeContent={number}
+            color="primary"
+            size="lg"
+            variant="solid"
             sx={{
                 width: 40,
                 height: 40,

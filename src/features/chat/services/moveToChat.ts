@@ -1,14 +1,15 @@
 import { Socket } from "socket.io-client";
 
-import { defaultDmPartner } from "./constants";
-import { defineNewChat } from "../services/defineNewChat";
-import { checkKnownChat } from "../services/checkKnownChat";
+import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
+import { UserProps } from "../../../types/admin";
+import { AllChatProps, ChatProps, MessageProps } from "../../../types/chat";
+import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { addChat } from "../services/addChat";
 import { addMessage } from "../services/addMessage";
+import { checkKnownChat } from "../services/checkKnownChat";
+import { defineNewChat } from "../services/defineNewChat";
 import { popSpecificMessages } from "../services/popSpecificMessages";
-import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
-import { UserProps } from "../../../types/admin";
-import { MessageProps, AllChatProps, ChatProps } from "../../../types/chat";
+import { defaultDmPartner } from "./constants";
 import { loadSpecificGM } from "./loadSpecificGM";
 
 export const moveToDMChat = async (
@@ -16,7 +17,7 @@ export const moveToDMChat = async (
     chatId: number,
     chatName: string,
     dmPartnerUser: UserProps,
-    setCurrentMainChat: (chat: ChatProps) => void
+    useCM: ChatManagementState
 ) => {
     if (chatId === -1 && socket !== null) {
         socket.emit("join", {
@@ -29,7 +30,7 @@ export const moveToDMChat = async (
 
     const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, 1);
     if (fetchedMessages) {
-        setCurrentMainChat(
+        useCM.setCurrentMainChat(
             defineNewChat(chatId, chatName, 1, dmPartnerUser, fetchedMessages, false)
         );
     } else {
@@ -41,12 +42,12 @@ export const moveToGMChat = async (
     chatId: number,
     chatName: string,
     isPrivate: boolean,
-    setCurrentMainChat: (chat: ChatProps) => void
+    useCM: ChatManagementState
 ) => {
     const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, 2);
     if (fetchedMessages) {
         console.log("move to gm:", fetchedMessages[fetchedMessages.length - 1]);
-        setCurrentMainChat(
+        useCM.setCurrentMainChat(
             defineNewChat(chatId, chatName, 2, defaultDmPartner, fetchedMessages, isPrivate)
         );
     } else {
@@ -55,7 +56,10 @@ export const moveToGMChat = async (
 };
 
 const joinedMessage = [
-    { type: "paragraph", content: [{ type: "text", text: "Has joined", styles: {} }] },
+    {
+        type: "paragraph",
+        content: [{ type: "text", text: "Has joined", styles: {} }],
+    },
     { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] },
 ];
 
@@ -68,11 +72,8 @@ export const moveToSelectedChat = async (
     chatType: number,
     isPrivate: boolean,
     dmPartnerUser: UserProps,
-    allChats: AllChatProps[],
-    setCurrentMainChat: (value: ChatProps) => void,
-    setAllChats: (value: AllChatProps[]) => void,
-    setOpenSearchBox: (value: boolean) => void,
-    setCurrentChatPaneType: (value: number) => void
+    useCM: ChatManagementState,
+    setOpenSearchBox: (value: boolean) => void
 ) => {
     try {
         // Check if the chat is known / already joined.
@@ -127,8 +128,8 @@ export const moveToSelectedChat = async (
                         await addChat(chat, chat.chatType);
                         await addMessage(message, chat.chatType);
 
-                        setCurrentMainChat({ ...chat, messages: [message] });
-                        setAllChats([chat, ...allChats]);
+                        useCM.setCurrentMainChat({ ...chat, messages: [message] });
+                        useCM.setAllChats([chat, ...useCM.allChats]);
                     }
 
                     // For GM
@@ -164,8 +165,8 @@ export const moveToSelectedChat = async (
                             await addChat(newChat, newChat.chatType);
                             await addMessage(newChat.latestMessage, newChat.chatType);
 
-                            setCurrentMainChat({ ...newChat, messages: sortedMessages });
-                            setAllChats([newChat, ...allChats]);
+                            useCM.setCurrentMainChat({ ...newChat, messages: sortedMessages });
+                            useCM.setAllChats([newChat, ...useCM.allChats]);
                         }
                     }
                 }
@@ -173,13 +174,13 @@ export const moveToSelectedChat = async (
         } else {
             // If the chat is known, move to the chat.
             if (chatType === 1) {
-                moveToDMChat(socket, chatId, chatName, dmPartnerUser, setCurrentMainChat);
+                moveToDMChat(socket, chatId, chatName, dmPartnerUser, useCM);
             } else {
-                moveToGMChat(chatId, chatName, isPrivate, setCurrentMainChat);
+                moveToGMChat(chatId, chatName, isPrivate, useCM);
             }
         }
 
-        setCurrentChatPaneType(chatType);
+        useCM.setCurrentChatPaneType(chatType);
     } catch (error) {
         console.error("Worker error:", error);
     }

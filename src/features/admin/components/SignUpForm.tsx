@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
     Alert,
     Box,
@@ -8,17 +7,18 @@ import {
     FormControl,
     FormLabel,
     GlobalStyles,
-    Link,
     Input,
-    Typography,
+    Link,
     Stack,
+    Typography,
 } from "@mui/joy";
 import { CssVarsProvider } from "@mui/joy/styles";
+import { useNavigate } from "react-router-dom";
 
+import { SignUpResponse } from "../../../types/admin";
+import { signUp } from "../services/signup";
 import { AdminBackground } from "./Background";
 import { AdminHeader } from "./Header";
-import { signUp } from "../services/signup";
-import { SignUpResponse } from "../../../types/admin";
 
 interface FormElements extends HTMLFormControlsCollection {
     userName: HTMLInputElement;
@@ -138,26 +138,26 @@ export const SignUpForm = () => {
                             >
                                 <FormControl required>
                                     <FormLabel>Name</FormLabel>
-                                    <Input type="name" name="userName" />
+                                    <Input name="userName" type="name" />
                                 </FormControl>
 
                                 <FormControl required>
                                     <FormLabel>Email</FormLabel>
-                                    <Input type="email" name="email" />
+                                    <Input name="email" type="email" />
                                 </FormControl>
 
                                 <FormControl required>
                                     <FormLabel>Password</FormLabel>
-                                    <Input type="password" name="password" />
+                                    <Input name="password" type="password" />
                                 </FormControl>
 
                                 <FormControl required>
                                     <FormLabel>Confirm Password</FormLabel>
-                                    <Input type="password" name="confirm_password" />
+                                    <Input name="confirm_password" type="password" />
                                 </FormControl>
 
                                 <Stack sx={{ gap: 4, mt: 2 }}>
-                                    <Button type="submit" fullWidth variant="soft">
+                                    <Button type="submit" variant="soft" fullWidth>
                                         Sign up
                                     </Button>
                                 </Stack>

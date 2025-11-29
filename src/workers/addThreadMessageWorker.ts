@@ -1,21 +1,19 @@
-import { STORES } from "../db/conf";
-import { addData } from "../db/crud";
-import { MessageProps } from "../types/chat";
-
-const storeNameLookup: { [key: number]: string } = {
-    1: STORES.DM_THREAD_MESSAGES,
-    2: STORES.GM_THREAD_MESSAGES,
-    3: STORES.PM_THREAD_MESSAGES,
-};
+import { ChatService } from "../db/services/chat.service";
+import { ThreadMessageProps } from "../types/chat";
 
 self.onmessage = async (event) => {
-    const threadMessage: MessageProps = event.data.threadMessage;
+    const message: ThreadMessageProps = event.data.threadMessage;
     const chatType: number = event.data.chatType;
 
-    await addData({
-        storeName: storeNameLookup[chatType],
-        data: threadMessage,
-    });
+    const chatService = new ChatService();
+
+    if (chatType === 1) {
+        await chatService.addDMThreadMessage(message);
+    } else if (chatType === 2) {
+        await chatService.addGMThreadMessage(message);
+    } else if (chatType === 3) {
+        await chatService.addPMThreadMessage(message);
+    }
 
     self.postMessage("done");
 

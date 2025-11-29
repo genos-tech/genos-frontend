@@ -1,15 +1,14 @@
-import { List, ListItem, ListItemContent, Typography } from "@mui/joy";
-import ListItemButton from "@mui/joy/ListItemButton";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
 import LoginIcon from "@mui/icons-material/Login";
+import { List, ListItem, ListItemContent, Typography } from "@mui/joy";
+import ListItemButton from "@mui/joy/ListItemButton";
 
-import { ProjectProps } from "../../../../../types/tasks";
+import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
 import { Toggler } from "../common";
 
 type JoinProjectListItemProps = {
-    teamProjects: ProjectProps[];
-    currentProject?: ProjectProps | null;
+    usePM: ProjectManagementState;
     setOpenJoinProject: (value: {
         flag: boolean;
         projectId: number;
@@ -19,7 +18,7 @@ type JoinProjectListItemProps = {
     }) => void;
 };
 export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
-    const { teamProjects, currentProject, setOpenJoinProject } = props;
+    const { usePM, setOpenJoinProject } = props;
 
     return (
         <Toggler
@@ -35,7 +34,6 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
                     <LoginIcon />
                     <ListItemContent>
                         <Typography
-                            noWrap
                             sx={{
                                 fontSize: "15px",
                                 overflow: "hidden",
@@ -43,6 +41,7 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
                                 whiteSpace: "nowrap",
                                 width: "100%", // take full width of button
                             }}
+                            noWrap
                         >
                             Join Project
                         </Typography>
@@ -62,7 +61,7 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
             )}
         >
             <List sx={{ gap: 0.5 }}>
-                {teamProjects.map(
+                {usePM.teamProjects.map(
                     ({ projectId, projectName, isPrivate, systemUserId, isJoined }, index) => {
                         return (
                             isJoined === false && (
@@ -70,7 +69,7 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
                                     <ListItemButton
                                         color={"neutral"}
                                         variant={
-                                            projectId === currentProject?.projectId
+                                            projectId === usePM.currentProject?.projectId
                                                 ? "solid"
                                                 : "plain"
                                         }
@@ -89,18 +88,6 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
                                         }} // ensure children don't overflow
                                     >
                                         <Typography
-                                            noWrap
-                                            sx={{
-                                                color:
-                                                    projectId === currentProject?.projectId
-                                                        ? "white"
-                                                        : "neutral-500",
-                                                overflow: "hidden",
-                                                textOverflow: "ellipsis",
-                                                whiteSpace: "nowrap",
-                                                width: "100%", // take full width of button
-                                                ml: "35px",
-                                            }}
                                             startDecorator={
                                                 isPrivate ? (
                                                     <LockOutlineIcon
@@ -110,6 +97,18 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
                                                     />
                                                 ) : undefined
                                             }
+                                            sx={{
+                                                color:
+                                                    projectId === usePM.currentProject?.projectId
+                                                        ? "white"
+                                                        : "neutral-500",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
+                                                width: "100%", // take full width of button
+                                                ml: "35px",
+                                            }}
+                                            noWrap
                                         >
                                             {projectName}
                                         </Typography>
@@ -118,6 +117,24 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
                             )
                         );
                     }
+                )}
+
+                {usePM.teamProjects.filter((project) => project.isJoined === false).length ===
+                    0 && (
+                    <ListItem>
+                        <Typography
+                            sx={{
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                                width: "100%",
+                                ml: "40px",
+                            }}
+                            noWrap
+                        >
+                            No projects to join
+                        </Typography>
+                    </ListItem>
                 )}
             </List>
         </Toggler>

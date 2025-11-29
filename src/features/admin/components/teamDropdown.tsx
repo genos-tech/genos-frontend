@@ -1,29 +1,28 @@
-import { useState, useRef, useEffect } from "react";
-import { IconButton, Menu, MenuItem, Dropdown, Avatar, Tooltip, Box } from "@mui/joy";
+import { useEffect, useRef, useState } from "react";
 import AcUnitIcon from "@mui/icons-material/AcUnit";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
+import { Avatar, Box, Dropdown, IconButton, Menu, MenuItem, Tooltip } from "@mui/joy";
 
-import { loadMyTeams } from "../services/loadMyTeams";
-import { joinTeam } from "../services/joinTeam";
+import { useAuth } from "../../../context/AuthContext";
+import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
+import { CreateDMResponse, Team, UserProps } from "../../../types/admin";
+import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { createDMChat } from "../../chat/services/createDMChat";
 import { sendDMMessage } from "../../chat/services/sendDMMessage";
-import { useAuth } from "../../../context/AuthContext";
-import { UserProps } from "../../../types/admin";
-import { Team, CreateDMResponse } from "../../../types/admin";
-import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
+import { joinTeam } from "../services/joinTeam";
+import { loadMyTeams } from "../services/loadMyTeams";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type TeamDropdownProps = {
-    currentTeam: Team;
-    setCurrentTeam: (value: Team) => void;
+    useTEM: TeamManagementState;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
 };
 export const TeamDropdown = (props: TeamDropdownProps) => {
-    const { myself, setMyself, currentTeam, setCurrentTeam } = props;
+    const { myself, setMyself, useTEM } = props;
     const { accessToken } = useAuth();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [teams, setTeams] = useState<Team[]>([]);
@@ -46,7 +45,10 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                         type: "paragraph",
                         content: [{ type: "text", text: "Has joined", styles: {} }],
                     },
-                    { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] },
+                    {
+                        type: "paragraph",
+                        content: [{ type: "text", text: "", styles: {} }],
+                    },
                 ];
 
                 await sendDMMessage(
@@ -141,7 +143,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
 
         const formData = new FormData();
         formData.append("team_profile_image", teamProfileImage);
-        formData.append("team_id", currentTeam.teamId);
+        formData.append("team_id", useTEM.currentTeam.teamId);
 
         const uploadProfileImageResponse = await fetch(`${base_url}/team/profile/image/`, {
             method: "PUT",
@@ -157,8 +159,8 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
             throw new Error("Failed to upload team profile image.");
         } else {
             localStorage.setItem("teamImgPath", uploadProfileImageData.profile_image_file_name);
-            setCurrentTeam({
-                ...currentTeam,
+            useTEM.setCurrentTeam({
+                ...useTEM.currentTeam,
                 teamImgPath: uploadProfileImageData.profile_image_file_name,
             });
         }
@@ -169,10 +171,10 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
     return (
         <div className="flex items-center space-x-2">
             <Dropdown>
-                <Tooltip title="Switch Team" placement="right-start">
+                <Tooltip placement="right-start" size="sm" title="Switch Team" variant="outlined">
                     <IconButton sx={{ px: 0.7 }} onClick={handleClick}>
                         <Avatar
-                            src={`${media_url}/${currentTeam.teamImgPath}`}
+                            src={`${media_url}/${useTEM.currentTeam.teamImgPath}`}
                             variant="outlined"
                             sx={{
                                 borderRadius: 4, // 0 for sharp square, or use theme radius values
@@ -185,21 +187,21 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                     </IconButton>
                 </Tooltip>
                 <Menu
-                    className="custom-scrollbar"
-                    size="sm"
                     ref={dropdownRef}
-                    sx={{ zIndex: 10001, overflow: "scroll", maxHeight: "300px" }}
                     anchorEl={anchorEl}
+                    className="custom-scrollbar"
                     open={Boolean(anchorEl)}
+                    size="sm"
+                    sx={{ zIndex: 10001, overflow: "scroll", maxHeight: "300px" }}
                     onClose={handleClose}
                 >
                     {teams.map((team) => (
                         <MenuItem
                             key={team.teamName}
+                            variant={team.teamId === myself.teamId ? "solid" : "plain"}
                             onClick={() => {
                                 handleClicked(team.teamId, team.teamName);
                             }}
-                            variant={team.teamId === myself.teamId ? "solid" : "plain"}
                         >
                             <AcUnitIcon />
                             {team.teamName}
@@ -215,15 +217,15 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                         New Team (TBD)
                     </MenuItem>
 
-                    {myself.userId === currentTeam.teamOwnerId && (
+                    {myself.userId === useTEM.currentTeam.teamOwnerId && (
                         <Box>
                             <input
-                                type="file"
+                                ref={inputRef}
                                 accept=".jpg,.jpeg,.png,image/jpeg,image/png"
                                 multiple={false}
-                                ref={inputRef}
-                                onChange={handleSelectedFiles}
                                 style={{ display: "none" }}
+                                type="file"
+                                onChange={handleSelectedFiles}
                             />
                             <MenuItem
                                 key={"editTeamProfileImage"}

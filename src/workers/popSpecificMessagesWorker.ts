@@ -1,5 +1,5 @@
-import { STORES } from "../db/conf";
-import { messageIdWithChatId } from "../db/crud";
+import { STORES } from "../db/config";
+import { MessageRepository } from "../db/repositories";
 
 const storeNameLookup: { [key: number]: string } = {
     1: STORES.DM_MESSAGES,
@@ -12,10 +12,9 @@ self.onmessage = async (event) => {
     const chatType: number = event.data.chatType;
 
     if (chatId && chatType !== undefined) {
-        const messages = await messageIdWithChatId({
-            storeName: storeNameLookup[chatType],
-            chatId: chatId,
-        });
+        const messageRepository = new MessageRepository(storeNameLookup[chatType]);
+        const messages = await messageRepository.getMessagesByChatId(chatType, chatId);
+
         // Sort messages by tsSent in ascending order
         const sortedMessages = [...messages].sort((a, b) => {
             return Number(a.messageId) - Number(b.messageId);

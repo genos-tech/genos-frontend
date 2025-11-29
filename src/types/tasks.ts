@@ -1,4 +1,5 @@
 import { PartialBlock } from "@blocknote/core";
+
 import { UserProps } from "./admin";
 import { ReactionProps } from "./common";
 
@@ -97,14 +98,12 @@ export type TaskProps = {
     effortLevel: TaskEffortLevelProps;
     tags: TagListProps[];
     concatTags?: string;
-    githubLink: {
+    links: {
+        id: string;
         url: string;
         title: string;
-    };
-    generalLink: {
-        url: string;
-        title: string;
-    };
+        isGitHub: boolean;
+    }[];
     attachments: AttachmentFileProps[];
     parentTaskId: number | null;
     rootTaskId: number | null;
@@ -139,6 +138,7 @@ export type TaskType = {
 };
 
 export type TaskTypesProps = {
+    all: TaskType;
     ongoing: TaskType;
     closed: TaskType;
     deleted: TaskType;
@@ -167,7 +167,6 @@ export type ImageSizeProps = {
     width: number;
     height: number;
 };
-
 
 export type TaskMetaProps = {
     taskId: number;

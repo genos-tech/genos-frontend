@@ -1,25 +1,23 @@
 {
-  "files": [],
-  "references": [
-    {
-      "path": "./tsconfig.app.json"
+    "files": [],
+    "references": [
+        {
+            "path": "./tsconfig.app.json"
+        },
+        {
+            "path": "./tsconfig.node.json"
+        }
+    ],
+    "compilerOptions": {
+        "forceConsistentCasingInFileNames": true,
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["./src/*"]
+        },
+        "noUnusedLocals": false,
+        "noUnusedParameters": false
     },
-    {
-      "path": "./tsconfig.node.json"
+    "scripts": {
+        "build": "vite build"
     }
-  ],
-  "compilerOptions": {
-    "forceConsistentCasingInFileNames": true,
-    "baseUrl": ".",
-    "paths": {
-      "@/*": [
-        "./src/*"
-      ]
-    },
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-  },
-  "scripts": {
-    "build": "vite build"
-  }
 }

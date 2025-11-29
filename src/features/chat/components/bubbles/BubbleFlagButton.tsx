@@ -1,9 +1,9 @@
-import { Tooltip, Box, IconButton } from "@mui/joy";
-import FlagIcon from "@mui/icons-material/Flag";
-import { updateFlagMessage } from "../../services/updateFlagMessage";
-import { UserProps } from "../../../../types/admin";
 import { useEffect, useState } from "react";
-import { addMessage } from "../../services/addMessage";
+import FlagIcon from "@mui/icons-material/Flag";
+import { Box, IconButton, Tooltip } from "@mui/joy";
+
+import { FlaggedService } from "../../../../db/services/flagged.service";
+import { UserProps } from "../../../../types/admin";
 import {
     ChatProps,
     FlaggedMessageProps,
@@ -12,8 +12,8 @@ import {
     ThreadProps,
 } from "../../../../types/chat";
 import { addFlaggedMessage } from "../../services/addFlaggedMessage";
-import { deleteData } from "../../../../db/crud";
-import { STORES } from "../../../../db/conf";
+import { addMessage } from "../../services/addMessage";
+import { updateFlagMessage } from "../../services/updateFlagMessage";
 import { getFirstLine } from "../../utils/common";
 
 type BubbleFlagButtonTypes = {
@@ -49,10 +49,10 @@ export const BubbleFlagButton = (props: BubbleFlagButtonTypes) => {
 
     return (
         <Box sx={{ textAlign: "right" }}>
-            <Tooltip title={tmpIsFlagged ? "Unflag" : "Flag"} size="sm">
+            <Tooltip size="sm" title={tmpIsFlagged ? "Unflag" : "Flag"} variant="outlined">
                 <IconButton
-                    size="sm"
                     color={tmpIsFlagged ? "danger" : "neutral"}
+                    size="sm"
                     onClick={() => {
                         // If the message is not a thread message,
                         // we need to update the message in the indexedDB.
@@ -111,12 +111,12 @@ export const BubbleFlagButton = (props: BubbleFlagButtonTypes) => {
                                 ]);
                             } else {
                                 // Delete the flagged message from the indexedDB
-                                deleteData({
-                                    storeName: STORES.FLAGGED_MESSAGES,
-                                    key: `${currentChat.chatType}-${currentChat.chatId}-${0}-${
+                                const flaggedService = new FlaggedService();
+                                flaggedService.deleteFlaggedMessage(
+                                    `${currentChat.chatType}-${currentChat.chatId}-${0}-${
                                         message.messageId
-                                    }`,
-                                });
+                                    }`
+                                );
 
                                 // Delete the unflagged message from the flaggedMessages array
                                 setFlaggedMessages(
@@ -183,10 +183,10 @@ export const BubbleFlagButton = (props: BubbleFlagButtonTypes) => {
                                 ]);
                             } else {
                                 // Delete the flagged message from the indexedDB
-                                deleteData({
-                                    storeName: STORES.FLAGGED_MESSAGES,
-                                    key: `${currentThreadChat.chatType}-${currentThreadChat.chatId}-${threadId}-${message.messageId}`,
-                                });
+                                const flaggedService = new FlaggedService();
+                                flaggedService.deleteFlaggedMessage(
+                                    `${currentThreadChat.chatType}-${currentThreadChat.chatId}-${threadId}-${message.messageId}`
+                                );
 
                                 setFlaggedMessages(
                                     flaggedMessages.filter(

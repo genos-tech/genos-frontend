@@ -1,14 +1,11 @@
-import { STORES } from "../db/conf";
-import { addData } from "../db/crud";
+import { TaskRepository } from "../db/repositories";
 import { TaskTableProps } from "../types/tasks";
 
 self.onmessage = async (event) => {
-    const task: TaskTableProps = event.data.task;
+    const taskData: TaskTableProps = event.data.task;
 
-    await addData({
-        storeName: STORES.TASKS,
-        data: task,
-    });
+    const taskRepo = new TaskRepository();
+    await taskRepo.put(taskData);
 
     self.postMessage("done");
 

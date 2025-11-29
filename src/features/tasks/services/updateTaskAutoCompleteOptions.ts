@@ -1,8 +1,8 @@
-import { loadTeamProjects } from "../services/loadTeamProjects";
-import { loadProjectTags } from "../services/loadProjectTags";
 import { UserProps } from "../../../types/admin";
 import { ProjectProps, TagListProps } from "../../../types/tasks";
 import LoadTeamMemberWorker from "../../../workers/loadTeamMembersWorker.ts?worker";
+import { loadProjectTags } from "../services/loadProjectTags";
+import { loadTeamProjects } from "../services/loadTeamProjects";
 
 // update team members options
 type UpdateTeamMembersOptions = {
@@ -13,7 +13,10 @@ type UpdateTeamMembersOptions = {
 export const updateTeamMembersOptions = async (props: UpdateTeamMembersOptions) => {
     const { myself, accessToken, setTeamMembers } = props;
     const loadTeamMembersWorker = new LoadTeamMemberWorker();
-    loadTeamMembersWorker.postMessage({ myself: myself, accessToken: accessToken });
+    loadTeamMembersWorker.postMessage({
+        myself: myself,
+        accessToken: accessToken,
+    });
     loadTeamMembersWorker.onmessage = (event) => {
         if (event.data) {
             setTeamMembers(event.data);

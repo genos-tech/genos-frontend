@@ -1,11 +1,10 @@
-import { Socket } from "socket.io-client";
 import React, { useState } from "react";
-import { Modal, ModalDialog, Alert, Stack, Button, Typography } from "@mui/joy";
+import { Alert, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
+import { Socket } from "socket.io-client";
 
-import { deleteMessage } from "../../services/deleteMessage";
+import { ChatService } from "../../../../db/services/chat.service";
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
-import { deleteData } from "../../../../db/crud";
-import { STORES } from "../../../../db/conf";
+import { deleteMessage } from "../../services/deleteMessage";
 import { deleteThreadMessage } from "../../services/deleteThreadMessage";
 
 type Props = {
@@ -34,6 +33,7 @@ export const ModalDeleteMessage: React.FC<Props> = ({
     setCurrentThreadChat,
 }) => {
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const chatService = new ChatService();
 
     const handleDeleteMessage = async () => {
         if (message) {
@@ -50,20 +50,11 @@ export const ModalDeleteMessage: React.FC<Props> = ({
 
                     // Delete message from indexedDB
                     if (message.chatType === 1) {
-                        deleteData({
-                            storeName: STORES.DM_THREAD_MESSAGES,
-                            key: `${message.chatId}-${message.messageId}`,
-                        });
+                        await chatService.deleteDMThreadMessage(message.chatId, message.messageId);
                     } else if (message.chatType === 2) {
-                        deleteData({
-                            storeName: STORES.GM_THREAD_MESSAGES,
-                            key: `${message.chatId}-${message.messageId}`,
-                        });
+                        await chatService.deleteGMThreadMessage(message.chatId, message.messageId);
                     } else if (message.chatType === 3) {
-                        deleteData({
-                            storeName: STORES.PM_THREAD_MESSAGES,
-                            key: `${message.chatId}-${message.messageId}`,
-                        });
+                        await chatService.deletePMThreadMessage(message.chatId, message.messageId);
                     }
 
                     // Delete message from the pane/message array
@@ -104,20 +95,11 @@ export const ModalDeleteMessage: React.FC<Props> = ({
 
                     // Delete message from indexedDB
                     if (message.chatType === 1) {
-                        deleteData({
-                            storeName: STORES.DM_MESSAGES,
-                            key: `${message.chatId}-${message.messageId}`,
-                        });
+                        await chatService.deleteDMMessage(message.chatId, message.messageId);
                     } else if (message.chatType === 2) {
-                        deleteData({
-                            storeName: STORES.GM_MESSAGES,
-                            key: `${message.chatId}-${message.messageId}`,
-                        });
+                        await chatService.deleteGMMessage(message.chatId, message.messageId);
                     } else if (message.chatType === 3) {
-                        deleteData({
-                            storeName: STORES.PM_MESSAGES,
-                            key: `${message.chatId}-${message.messageId}`,
-                        });
+                        await chatService.deletePMMessage(message.chatId, message.messageId);
                     }
 
                     // Delete message from the pane/message array
@@ -150,8 +132,8 @@ export const ModalDeleteMessage: React.FC<Props> = ({
     return (
         <>
             <Modal
-                sx={{ zIndex: 10010 }}
                 open={openDeleteMessage}
+                sx={{ zIndex: 10010 }}
                 onClose={() => setOpenDeleteMessage(false)}
             >
                 <ModalDialog>
@@ -163,16 +145,16 @@ export const ModalDeleteMessage: React.FC<Props> = ({
                     )}
                     <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: "center" }}>
                         <Button
-                            component="button"
                             color="neutral"
+                            component="button"
                             variant="outlined"
                             onClick={() => setOpenDeleteMessage(false)}
                         >
                             Cancel
                         </Button>
                         <Button
-                            component="button"
                             color="danger"
+                            component="button"
                             onClick={() => {
                                 handleDeleteMessage();
                             }}

@@ -1,17 +1,14 @@
-import { STORES } from "../db/conf";
-import { getData } from "../db/crud";
+import { UserService } from "../db/services/user.service";
 
 self.onmessage = async (event) => {
     const userId: number = event.data.userId;
 
     if (userId) {
-        const chat = await getData({
-            storeName: STORES.USER_INFO,
-            key: userId,
-        });
+        const userService = new UserService();
+        const user = await userService.getUser(userId.toString());
 
-        if (chat) {
-            self.postMessage(chat);
+        if (user) {
+            self.postMessage(user);
         } else {
             self.postMessage(null);
         }

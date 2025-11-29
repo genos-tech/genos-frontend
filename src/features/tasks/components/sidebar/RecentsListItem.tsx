@@ -1,28 +1,22 @@
-import { alpha } from "@mui/system";
-import { List, ListItem, ListItemContent, Typography, Chip } from "@mui/joy";
-import ListItemButton from "@mui/joy/ListItemButton";
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import { Chip, List, ListItem, ListItemContent, Typography } from "@mui/joy";
+import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
+import { alpha } from "@mui/system";
 
-import { ProjectProps, SearchTeamTasksResponse } from "../../../../types/tasks";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { SearchTeamTasksResponse } from "../../../../types/tasks";
 import { Toggler } from "./common";
 
 type RecentsListItemProps = {
     recentTasks: SearchTeamTasksResponse[];
-    setIsDashboardVisible: (value: boolean) => void;
-    setCurrentProject: (value: ProjectProps) => void;
-    setCurrentPreviewTaskId: (value: number) => void;
-    setIsTaskPreviewVisible: (value: boolean) => void;
+    usePM: ProjectManagementState;
+    useTM: TaskManagementState;
 };
 export const RecentsListItem = (props: RecentsListItemProps) => {
-    const {
-        recentTasks,
-        setIsDashboardVisible,
-        setCurrentProject,
-        setCurrentPreviewTaskId,
-        setIsTaskPreviewVisible,
-    } = props;
+    const { recentTasks, usePM, useTM } = props;
     const { mode } = useColorScheme();
 
     return (
@@ -34,7 +28,7 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                         color="primary"
                         onClick={() => {
                             setOpen(!open);
-                            setIsDashboardVisible(false);
+                            useTM.setIsDashboardVisible(false);
                         }}
                     >
                         <AccessTimeIcon />
@@ -73,49 +67,50 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                             return (
                                 <ListItem key={`recent-task-${taskId}`}>
                                     <ListItemButton
+                                        sx={{ overflow: "hidden" }} // ensure children don't overflow
                                         onClick={() => {
                                             if (projectId) {
-                                                setCurrentProject({
+                                                usePM.setCurrentProject({
                                                     projectId: projectId,
                                                     projectName: projectName,
                                                     projectTags: [],
                                                     systemUserId: systemUserId,
                                                 });
-                                                setCurrentPreviewTaskId(taskId);
-                                                setIsTaskPreviewVisible(true);
+                                                useTM.setCurrentPreviewTaskId(taskId);
+                                                useTM.setIsTaskPreviewVisible(true);
                                             } else {
                                                 console.error("Failed to set the current project");
                                             }
                                         }}
-                                        sx={{ overflow: "hidden" }} // ensure children don't overflow
                                     >
                                         <Chip
                                             key={`recent-task-project-chip-${taskId}`}
-                                            variant="outlined"
                                             color="neutral"
+                                            size="sm"
+                                            variant="outlined"
                                             sx={{
                                                 borderRadius: "5px",
                                                 fontWeight: "bold",
                                                 marginX: "-10px",
                                             }}
-                                            size="sm"
                                         >
                                             {projectName.toUpperCase().slice(0, 2)}
                                         </Chip>
                                         <Chip
                                             key={`recent-task-chip-${taskId}`}
-                                            variant="soft"
                                             color="neutral"
+                                            size="sm"
+                                            variant="soft"
                                             sx={{
                                                 borderRadius: "5px",
                                                 fontWeight: "bold",
                                             }}
-                                            size="sm"
                                         >
                                             ID: {taskId || "N/A"}
                                         </Chip>
                                         <Chip
                                             key={`status-chip-${taskId}-${index}`} // pass the key directly
+                                            size="sm"
                                             variant="soft"
                                             sx={{
                                                 backgroundColor: status.color
@@ -129,12 +124,10 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                                                 borderRadius: "5px",
                                                 marginX: "-10px",
                                             }}
-                                            size="sm"
                                         >
                                             {`${status.status}`}
                                         </Chip>
                                         <Typography
-                                            noWrap
                                             sx={{
                                                 overflow: "hidden",
                                                 textOverflow: "ellipsis",
@@ -142,6 +135,7 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                                                 width: "100%", // take full width of button
                                                 fontSize: "15px",
                                             }}
+                                            noWrap
                                         >
                                             {title}
                                         </Typography>

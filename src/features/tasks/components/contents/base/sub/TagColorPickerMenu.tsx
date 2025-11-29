@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Menu, MenuItem, IconButton, ListItemDecorator } from "@mui/joy";
 import PaletteIcon from "@mui/icons-material/Palette";
+import { IconButton, ListItemDecorator, Menu, MenuItem } from "@mui/joy";
 
 import { TagColorOption } from "../../../../../../types/tasks";
 
@@ -82,23 +82,23 @@ export const ColorPickerMenu: React.FC<ColorPickerMenuProps> = ({ onSelectColor 
     return (
         <>
             <IconButton
-                size="sm"
-                onClick={handleOpen}
-                variant="outlined"
                 color="neutral"
+                size="sm"
                 sx={{ ml: "5px" }}
+                variant="outlined"
+                onClick={handleOpen}
             >
                 <PaletteIcon />
             </IconButton>
 
             <Menu
-                className="custom-scrollbar"
                 anchorEl={anchorEl}
+                className="custom-scrollbar"
                 open={Boolean(anchorEl)}
-                onClose={handleClose}
-                onBlur={handleClose}
                 placement="bottom-start"
                 sx={{ zIndex: 10010, maxHeight: "300px", overflowY: "scroll" }}
+                onBlur={handleClose}
+                onClose={handleClose}
             >
                 {COLORS.map((color) => (
                     <MenuItem key={color.value} onClick={() => handleSelect(color)}>

@@ -1,21 +1,20 @@
-import { STORES } from "../db/conf";
-import { addData } from "../db/crud";
+import { ChatRepositoryFactory } from "../db/repositories";
 import { MessageProps } from "../types/chat";
-
-const storeNameLookup: { [key: number]: string } = {
-    1: STORES.DM_MESSAGES,
-    2: STORES.GM_MESSAGES,
-    3: STORES.PM_MESSAGES,
-};
 
 self.onmessage = async (event) => {
     const message: MessageProps = event.data.message;
     const chatType: number = event.data.chatType;
 
-    await addData({
-        storeName: storeNameLookup[chatType],
-        data: message,
-    });
+    if (chatType === 1) {
+        const dmMessageRepo = ChatRepositoryFactory.createDMMessageRepository();
+        await dmMessageRepo.put(message);
+    } else if (chatType === 2) {
+        const gmMessageRepo = ChatRepositoryFactory.createGMMessageRepository();
+        await gmMessageRepo.put(message);
+    } else if (chatType === 3) {
+        const pmMessageRepo = ChatRepositoryFactory.createPMMessageRepository();
+        await pmMessageRepo.put(message);
+    }
 
     self.postMessage("done");
 

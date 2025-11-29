@@ -1,13 +1,15 @@
-import { Socket } from "socket.io-client";
-import { useState, useRef } from "react";
-import { Box, Chip, Typography, Card, Button, Stack } from "@mui/joy";
+import { useRef, useState } from "react";
+import { Box, Button, Card, Chip, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { Socket } from "socket.io-client";
 
+import { BnChatPreview } from "../../../components/blockNote/bnChatPreview";
+import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
+import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../types/admin";
 import { InboxItemProps } from "../../../types/common";
 import { extractYYYYMMDDHHMM } from "../../../utils/dateUtils";
-import { BnChatPreview } from "../../../components/blockNote/bnChatPreview";
-import { ChatProps } from "../../../types/chat";
 
 const requestNameLookUp: { [key: number]: string } = {
     1: "team",
@@ -48,24 +50,16 @@ export const getItemBody = (requestType: number, targetName: UserProps) => [
 ];
 
 type InboxBubbleProps = {
-    teamMemberProfiles: Record<string, UserProps>;
+    useTEM: TeamManagementState;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     inboxItem: InboxItemProps;
-    setOpeningService: (service: number) => void;
-    setCurrentChat: (chat: ChatProps) => void;
+    useUISM: UIStateManagementState;
+    useCM: ChatManagementState;
 };
 export const InboxBubble = (props: InboxBubbleProps) => {
-    const {
-        teamMemberProfiles,
-        socket,
-        myself,
-        setMyself,
-        inboxItem,
-        setOpeningService,
-        setCurrentChat,
-    } = props;
+    const { useTEM, socket, myself, setMyself, inboxItem, useUISM, useCM } = props;
     const { mode } = useColorScheme();
     const boxRef = useRef<HTMLDivElement>(null);
     const [requestApproved, setRequestApproved] = useState<boolean>(false);
@@ -91,18 +85,18 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                         flexDirection: "column",
                     }}
                 >
-                    <Stack direction="row" alignItems="center">
+                    <Stack alignItems="center" direction="row">
                         {inboxItem.itemType === 1 && (
                             <Chip
                                 key={`inbox-bubble-chip-${inboxItem.itemId}-${inboxItem.tsSent}`}
-                                variant="soft"
                                 color="neutral"
+                                size="md"
+                                variant="soft"
                                 sx={{
                                     marginRight: "auto",
                                     borderRadius: "5px",
                                     fontWeight: "bold",
                                 }}
-                                size="md"
                             >
                                 Team Request
                             </Chip>
@@ -110,14 +104,14 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                         {inboxItem.itemType === 2 && (
                             <Chip
                                 key={`inbox-bubble-chip-${inboxItem.itemId}-${inboxItem.tsSent}`}
-                                variant="soft"
                                 color="neutral"
+                                size="md"
+                                variant="soft"
                                 sx={{
                                     marginRight: "auto",
                                     borderRadius: "5px",
                                     fontWeight: "bold",
                                 }}
-                                size="md"
                             >
                                 Project Request
                             </Chip>
@@ -125,36 +119,36 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                         {inboxItem.itemType === 3 && (
                             <Chip
                                 key={`inbox-bubble-chip-${inboxItem.itemId}-${inboxItem.tsSent}`}
-                                variant="soft"
                                 color="neutral"
+                                size="md"
+                                variant="soft"
                                 sx={{
                                     marginRight: "auto",
                                     borderRadius: "5px",
                                     fontWeight: "bold",
                                 }}
-                                size="md"
                             >
                                 GM Request
                             </Chip>
                         )}
 
-                        <Typography level="body-xs" fontWeight="bold">
+                        <Typography fontWeight="bold" level="body-xs">
                             {extractYYYYMMDDHHMM(inboxItem.tsSent)}
                         </Typography>
                     </Stack>
 
                     {inboxItem.itemBody[0].content.length > 0 && (
                         <BnChatPreview
+                            key={`${inboxItem.itemType}-${inboxItem.itemId}-${inboxItem.tsSent}`}
+                            useCM={useCM}
+                            content={inboxItem.itemBody}
                             customClassName="inbox-preview"
-                            teamMemberProfiles={teamMemberProfiles}
+                            isSent={true}
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}
-                            key={`${inboxItem.itemType}-${inboxItem.itemId}-${inboxItem.tsSent}`}
-                            content={inboxItem.itemBody}
-                            isSent={true}
-                            setCurrentChat={setCurrentChat}
-                            setOpeningService={setOpeningService}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
                         />
                     )}
 
@@ -164,11 +158,11 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                         (inboxItem.isRead === true || requestApproved === true) && (
                             <Button
                                 key={`inbox-approved-button-${inboxItem.itemType}-${inboxItem.itemId}`}
-                                variant="outlined"
                                 color="neutral"
+                                disabled={true}
                                 size="sm"
                                 sx={{ width: "100px", alignSelf: "flex-end" }}
-                                disabled={true}
+                                variant="outlined"
                             >
                                 Approved
                             </Button>
@@ -180,9 +174,9 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                         requestApproved === false && (
                             <Button
                                 key={`inbox-approve-button-${inboxItem.itemType}-${inboxItem.itemId}`}
-                                variant="soft"
                                 size="sm"
                                 sx={{ width: "100px", alignSelf: "flex-end" }}
+                                variant="soft"
                                 onClick={() => {
                                     if (socket && inboxItem.itemType === 1) {
                                         socket.emit("approve_join_team_request", {

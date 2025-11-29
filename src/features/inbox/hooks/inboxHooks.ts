@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { VirtuosoHandle } from "react-virtuoso";
+
 import { InboxItemProps } from "../../../types/common";
 
 export const useScrollToBottomOnNewItem = (

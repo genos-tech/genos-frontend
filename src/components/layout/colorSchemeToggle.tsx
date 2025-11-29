@@ -1,9 +1,9 @@
-import * as React from "react";
-import { useColorScheme } from "@mui/joy/styles";
-import IconButton, { IconButtonProps } from "@mui/joy/IconButton";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import { Tooltip } from "@mui/joy";
+import IconButton, { IconButtonProps } from "@mui/joy/IconButton";
+import { useColorScheme } from "@mui/joy/styles";
+import * as React from "react";
 
 export const ColorSchemeToggle = (props: IconButtonProps) => {
     const { onClick, sx, ...other } = props;
@@ -14,25 +14,17 @@ export const ColorSchemeToggle = (props: IconButtonProps) => {
     }, []);
     if (!mounted) {
         return (
-            <IconButton size="sm" variant="outlined" color="neutral" {...other} sx={sx} disabled />
+            <IconButton color="neutral" size="sm" variant="outlined" {...other} sx={sx} disabled />
         );
     }
     return (
-        <Tooltip title="Switch Theme" placement="right-start">
+        <Tooltip placement="right-start" size="sm" title="Switch Theme" variant="outlined">
             <IconButton
+                color="neutral"
                 data-screenshot="toggle-mode"
                 size="sm"
                 variant="outlined"
-                color="neutral"
                 {...other}
-                onClick={(event) => {
-                    if (mode === "light") {
-                        setMode("dark");
-                    } else {
-                        setMode("light");
-                    }
-                    onClick?.(event);
-                }}
                 sx={[
                     mode === "dark"
                         ? { "& > *:first-of-type": { display: "none" } }
@@ -42,6 +34,14 @@ export const ColorSchemeToggle = (props: IconButtonProps) => {
                         : { "& > *:last-of-type": { display: "initial" } },
                     ...(Array.isArray(sx) ? sx : [sx]),
                 ]}
+                onClick={(event) => {
+                    if (mode === "light") {
+                        setMode("dark");
+                    } else {
+                        setMode("light");
+                    }
+                    onClick?.(event);
+                }}
             >
                 <DarkModeRoundedIcon />
                 <LightModeIcon />

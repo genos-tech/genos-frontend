@@ -1,24 +1,25 @@
+import AddIcon from "@mui/icons-material/Add";
 import { ListItem, Typography } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
-import AddIcon from "@mui/icons-material/Add";
+
+import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
 
 type NewProjectListItemProps = {
-    setOpenCreateProject: (value: boolean) => void;
+    usePM: ProjectManagementState;
 };
 export const NewProjectListItem = (props: NewProjectListItemProps) => {
-    const { setOpenCreateProject } = props;
+    const { usePM } = props;
     return (
         <ListItem key={"listitem-createProject"}>
             <ListItemButton
                 color="primary"
-                onClick={() => {
-                    setOpenCreateProject(true);
-                }}
                 sx={{ overflow: "hidden" }} // ensure children don't overflow
+                onClick={() => {
+                    usePM.setOpenCreateProject(true);
+                }}
             >
                 <AddIcon />
                 <Typography
-                    noWrap
                     sx={{
                         fontSize: "15px",
                         overflow: "hidden",
@@ -26,6 +27,7 @@ export const NewProjectListItem = (props: NewProjectListItemProps) => {
                         whiteSpace: "nowrap",
                         width: "100%", // take full width of button
                     }}
+                    noWrap
                 >
                     New Project
                 </Typography>

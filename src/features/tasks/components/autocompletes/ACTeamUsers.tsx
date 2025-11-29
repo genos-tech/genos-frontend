@@ -1,52 +1,57 @@
-import { Socket } from "socket.io-client";
-import { Stack, Typography, ListItemContent, AutocompleteOption } from "@mui/joy";
+import { AutocompleteOption, ListItemContent, Stack, Typography } from "@mui/joy";
 import Autocomplete from "@mui/joy/Autocomplete";
+import { Socket } from "socket.io-client";
 
-import { UserProps } from "../../../../types/admin";
-import { TaskProps } from "../../../../types/tasks";
-import { ChatProps } from "../../../../types/chat";
 import { AvatarWithStatus } from "../../../../components/common/avatarWithStatus";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { UserProps } from "../../../../types/admin";
+import { ChatProps } from "../../../../types/chat";
+import { TaskProps } from "../../../../types/tasks";
 
 type ACTeamUsersProps = {
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     initialUser: UserProps;
-    teamMembers: UserProps[];
-    taskContents: TaskProps;
-    setTaskContents: (value: TaskProps) => void;
+    taskContent: TaskProps;
+    setTaskContent: (value: TaskProps) => void;
     setUser: (value: UserProps) => void;
     isOpenTeamMembersList: boolean;
     setIsOpenTeamMembersList: (value: boolean) => void;
     isAssignee: boolean;
     setTaskUpdated?: (value: boolean) => void;
-    teamMemberProfiles: Record<string, UserProps>;
+    useTEM: TeamManagementState;
     socket: Socket | null;
-    setCurrentMainChat: (chat: ChatProps) => void;
-    setOpeningService: (service: number) => void;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
 };
 export const ACTeamUsers = (props: ACTeamUsersProps) => {
     const {
         myself,
         setMyself,
         initialUser,
-        teamMembers,
-        taskContents,
-        setTaskContents,
+        taskContent,
+        setTaskContent,
         setUser,
         isOpenTeamMembersList,
         setIsOpenTeamMembersList,
         isAssignee,
         setTaskUpdated,
-        teamMemberProfiles,
+        useTEM,
         socket,
-        setCurrentMainChat,
-        setOpeningService,
+        useCM,
+        useUISM,
     } = props;
 
     return (
         <Autocomplete
-            key={taskContents.id}
-            options={teamMembers}
+            key={taskContent.id}
+            isOptionEqualToValue={(option, value) => option.userId === value.userId}
+            options={useTEM.teamMembers}
+            size="sm"
+            sx={{ width: "100%" }}
+            value={initialUser || myself}
             getOptionLabel={(option) =>
                 option.userEmail === myself.userEmail
                     ? `${option.userName} (You) - ${option.userEmail}`
@@ -62,13 +67,13 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
                             <Stack direction="row" spacing={1}>
                                 <AvatarWithStatus
                                     key={`ac-render-option-user-search-avatar-${option.userName}-${option.userId}`}
-                                    avatarUser={teamMemberProfiles[option.userId]}
+                                    avatarUser={useTEM.teamMemberProfiles[option.userId]}
+                                    useCM={useCM}
+                                    isYou={option.userId === myself.userId}
                                     myself={myself}
                                     setMyself={setMyself}
                                     socket={socket}
-                                    setCurrentMainChat={setCurrentMainChat}
-                                    isYou={option.userId === myself.userId}
-                                    setOpeningService={setOpeningService}
+                                    useUISM={useUISM}
                                 />
                                 <Typography level="body-md" sx={{ pt: 0.5, pl: 1 }}>
                                     {option.userEmail === myself.userEmail
@@ -80,21 +85,20 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
                     </AutocompleteOption>
                 );
             }}
-            value={initialUser || myself}
-            isOptionEqualToValue={(option, value) => option.userId === value.userId}
+            onOpen={() => setIsOpenTeamMembersList(!isOpenTeamMembersList)}
             onChange={(event, value) => {
                 if (value !== null) {
                     if (isAssignee) {
-                        setTaskContents({
-                            ...taskContents,
+                        setTaskContent({
+                            ...taskContent,
                             assignee: value,
                         });
                         if (setTaskUpdated) {
                             setTaskUpdated(true);
                         }
                     } else {
-                        setTaskContents({
-                            ...taskContents,
+                        setTaskContent({
+                            ...taskContent,
                             reporter: value,
                         });
                         if (setTaskUpdated) {
@@ -104,9 +108,6 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
                     setUser(value);
                 }
             }}
-            onOpen={() => setIsOpenTeamMembersList(!isOpenTeamMembersList)}
-            size="sm"
-            sx={{ width: "100%" }}
         />
     );
 };

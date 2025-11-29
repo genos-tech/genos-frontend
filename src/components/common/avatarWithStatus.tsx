@@ -1,11 +1,12 @@
-import { Socket } from "socket.io-client";
 import { useEffect, useState } from "react";
-import { Box, Avatar, Typography, Stack } from "@mui/joy";
+import { Avatar, Box, Stack, Typography } from "@mui/joy";
+import { Socket } from "socket.io-client";
 
-import { AllChatProps, ChatProps } from "../../types/chat";
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
+import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
-import { ThreadProps } from "../../types/chat";
+import { AllChatProps, ThreadProps } from "../../types/chat";
 import { PulseDot } from "../utils/PulseDot";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
@@ -20,9 +21,9 @@ type AvatarWithStatusProps = {
     isForBubble?: boolean;
     chat?: AllChatProps;
     thread?: ThreadProps;
-    setOpeningService: (service: number) => void;
-    setCurrentMainChat: (chat: ChatProps) => void;
+    useCM: ChatManagementState;
     showNameAndEmail?: boolean;
+    useUISM: UIStateManagementState;
 };
 export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
     const {
@@ -35,9 +36,9 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
         isForBubble,
         chat,
         thread,
-        setOpeningService,
-        setCurrentMainChat,
+        useCM,
         showNameAndEmail,
+        useUISM,
     } = props;
     const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
     const _avatarSize = avatarSize || 32;
@@ -48,8 +49,8 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
                 ? true
                 : false
             : avatarUser.isOnline === true && avatarUser.isOfflineForced !== "true"
-            ? true
-            : false
+              ? true
+              : false
         : false;
 
     const setAvatarImg = (): string => {
@@ -71,16 +72,16 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
         <div>
             <Stack direction="row" spacing={1}>
                 <Box
+                    height={_avatarSize}
                     position="relative"
                     width={_avatarSize}
-                    height={_avatarSize}
                     onClick={() => setOpenUserProfile(true)}
                 >
                     {chat && (
                         <Avatar
                             size="sm"
-                            sx={{ width: _avatarSize, height: _avatarSize }}
                             src={`${media_url}/${avatarImg}`}
+                            sx={{ width: _avatarSize, height: _avatarSize }}
                         >
                             {chat.chatType === 1 || isForBubble === true
                                 ? avatarUser?.userName[0].toUpperCase()
@@ -90,8 +91,8 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
                     {thread && (
                         <Avatar
                             size="sm"
-                            sx={{ width: _avatarSize, height: _avatarSize }}
                             src={`${media_url}/${avatarImg}`}
+                            sx={{ width: _avatarSize, height: _avatarSize }}
                         >
                             {thread.chatType === 1 || isForBubble === true
                                 ? avatarUser?.userName[0].toUpperCase()
@@ -101,13 +102,13 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
                     {chat === undefined && thread === undefined && (
                         <Avatar
                             size="sm"
-                            sx={{ width: _avatarSize, height: _avatarSize }}
                             src={`${media_url}/${avatarImg}`}
+                            sx={{ width: _avatarSize, height: _avatarSize }}
                         >
                             {avatarUser?.userName[0].toUpperCase()}
                         </Avatar>
                     )}
-                    <Box position="absolute" bottom={0} right={0} width={12} height={17}>
+                    <Box bottom={0} height={17} position="absolute" right={0} width={12}>
                         <PulseDot color={isOnline === true ? "#4caf50" : "#999"} />
                     </Box>
                 </Box>
@@ -127,15 +128,15 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
             </Stack>
 
             <UserProfile
-                socket={socket}
-                myself={myself}
-                setMyself={setMyself}
+                useCM={useCM}
                 isYou={isYou}
-                user={avatarUser}
+                myself={myself}
                 openUserProfile={openUserProfile}
+                setMyself={setMyself}
                 setOpenUserProfile={setOpenUserProfile}
-                setCurrentMainChat={setCurrentMainChat}
-                setOpeningService={setOpeningService}
+                socket={socket}
+                useUISM={useUISM}
+                user={avatarUser}
             />
         </div>
     );

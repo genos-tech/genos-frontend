@@ -1,11 +1,11 @@
-import { STORES } from "../db/conf";
-import { messageIdWithChatId } from "../db/crud";
+import { FlaggedRepository } from "../db/repositories";
 import { FlaggedMessageProps } from "../types/chat";
 
 self.onmessage = async (event) => {
-    const flaggedMessages: FlaggedMessageProps[] = await messageIdWithChatId({
-        storeName: STORES.FLAGGED_MESSAGES,
-    });
+    const flaggedRepository = new FlaggedRepository();
+    const result = await flaggedRepository.getAll();
+    const flaggedMessages: FlaggedMessageProps[] =
+        result.success && result.data ? result.data : [];
 
     // Filter and then sort messages by tsSent in desc
     const sortedFlaggedMessages = [...flaggedMessages].sort(

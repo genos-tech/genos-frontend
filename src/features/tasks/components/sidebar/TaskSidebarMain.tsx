@@ -1,34 +1,21 @@
-import { useState, useEffect } from "react";
-import { GlobalStyles, Box, Divider, List, Sheet } from "@mui/joy";
+import { useEffect, useState } from "react";
+import { Box, Divider, GlobalStyles, List, Sheet } from "@mui/joy";
 import { listItemButtonClasses } from "@mui/joy/ListItemButton";
 
-import { loadTeamTaskList } from "../../services/loadTaskSearchList";
-import { loadProjectTags } from "../../services/loadProjectTags";
 import { useAuth } from "../../../../context/AuthContext";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
-import {
-    ProjectProps,
-    TagListProps,
-    SearchTeamTasksResponse,
-    TaskTableProps,
-    TaskMetaTreeNode,
-} from "../../../../types/tasks";
+import { SearchTeamTasksResponse, TagListProps } from "../../../../types/tasks";
+import { loadProjectTags } from "../../services/loadProjectTags";
+import { loadTeamTaskList } from "../../services/loadTaskSearchList";
+import { ProjectsListItem } from "./ProjectsListItem";
+import { RecentsListItem } from "./RecentsListItem";
 import { TaskSidebarSearchBox } from "./SearchBox";
 import { TaskTableListItem } from "./TaskTableListItem";
-import { RecentsListItem } from "./RecentsListItem";
-import { ProjectsListItem } from "./ProjectsListItem";
 
 type TaskSidebarProps = {
     myself: UserProps;
-    setIsDashboardVisible: (value: boolean) => void;
-    taskTableVisible: boolean;
-    setTaskTableVisible: (value: boolean) => void;
-    setIsTaskPreviewVisible: (value: boolean) => void;
-    currentProject?: ProjectProps | null;
-    setCurrentProject: (value: ProjectProps) => void;
-    currentPreviewTaskId: number;
-    setCurrentPreviewTaskId: (value: number) => void;
-    setOpenCreateProject: (value: boolean) => void;
     setOpenJoinProject: (value: {
         flag: boolean;
         projectId: number;
@@ -36,50 +23,12 @@ type TaskSidebarProps = {
         isPrivate: boolean;
         systemUserId: string;
     }) => void;
-    setIsTaskHomeVisible: (value: boolean) => void;
-    setFilterBy: (value: number) => void;
-    setSelectedTagForFiltering: (value: string) => void;
-    teamProjects: ProjectProps[];
-    loadProjectsAndTasks: (value: number) => Promise<void>;
-    setOngoingTasks: (value: TaskTableProps[]) => void;
-    setClosedTasks: (value: TaskTableProps[]) => void;
-    setDeletedTasks: (value: TaskTableProps[]) => void;
-    taskMetaTree: TaskMetaTreeNode[];
-    currentTaskChain?: TaskMetaTreeNode[];
-    setCurrentFilterName: (value: string) => void;
-    setIsCreatingTask: (value: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    }) => void;
+    usePM: ProjectManagementState;
+    useTM: TaskManagementState;
 };
 
 export const TaskSidebar = (props: TaskSidebarProps) => {
-    const {
-        myself,
-        setIsDashboardVisible,
-        taskTableVisible,
-        setTaskTableVisible,
-        setIsTaskPreviewVisible,
-        currentProject,
-        setCurrentProject,
-        currentPreviewTaskId,
-        setCurrentPreviewTaskId,
-        setOpenCreateProject,
-        setOpenJoinProject,
-        setIsTaskHomeVisible,
-        setFilterBy,
-        setSelectedTagForFiltering,
-        teamProjects,
-        loadProjectsAndTasks,
-        setOngoingTasks,
-        setClosedTasks,
-        setDeletedTasks,
-        taskMetaTree,
-        currentTaskChain,
-        setCurrentFilterName,
-        setIsCreatingTask,
-    } = props;
+    const { myself, setOpenJoinProject, usePM, useTM } = props;
     const { accessToken } = useAuth();
 
     // =======================================================================
@@ -114,17 +63,19 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
             active = false;
         };
     }, [loading]);
-
     // =======================================================================
 
     const updateProjectTags = async () => {
-        if (currentProject && currentProject.projectId) {
+        if (usePM.currentProject && usePM.currentProject.projectId) {
             const loadedProjectTags: TagListProps[] = await loadProjectTags(
                 myself,
-                currentProject.projectId,
+                usePM.currentProject.projectId,
                 accessToken
             );
-            setCurrentProject({ ...currentProject, projectTags: loadedProjectTags });
+            usePM.setCurrentProject({
+                ...usePM.currentProject,
+                projectTags: loadedProjectTags,
+            });
         } else {
             console.error("Failed to set the current project");
         }
@@ -148,7 +99,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
 
     useEffect(() => {
         updateRecentTasks();
-    }, [currentPreviewTaskId]);
+    }, [useTM.currentPreviewTaskId]);
 
     useEffect(() => {
         updateProjectTags();
@@ -172,8 +123,6 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                 display: "flex",
                 flexDirection: "column",
                 gap: 2,
-                borderRight: "1px solid",
-                borderColor: "divider",
             }}
         >
             <GlobalStyles
@@ -188,14 +137,12 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
             />
 
             <TaskSidebarSearchBox
-                currentPreviewTaskId={currentPreviewTaskId}
+                loading={loading}
                 openSearch={openSearch}
                 setOpenSearch={setOpenSearch}
-                teamTaskSearchOptions={teamTaskSearchOptions}
                 setTeamTaskSearchOptions={setTeamTaskSearchOptions}
-                loading={loading}
-                setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                setIsTaskPreviewVisible={setIsTaskPreviewVisible}
+                teamTaskSearchOptions={teamTaskSearchOptions}
+                useTM={useTM}
             />
 
             <Box
@@ -220,45 +167,18 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                     }}
                 >
                     {/* <DashboardListItem
-                        setTaskTableVisible={setTaskTableVisible}
                         setIsDashboardVisible={setIsDashboardVisible}
                     /> */}
 
-                    <TaskTableListItem
-                        taskTableVisible={taskTableVisible}
-                        setTaskTableVisible={setTaskTableVisible}
-                        setIsDashboardVisible={setIsDashboardVisible}
-                        setIsTaskHomeVisible={setIsTaskHomeVisible}
-                    />
+                    <TaskTableListItem useTM={useTM} />
 
-                    <RecentsListItem
-                        recentTasks={recentTasks}
-                        setIsDashboardVisible={setIsDashboardVisible}
-                        setCurrentProject={setCurrentProject}
-                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                    />
+                    <RecentsListItem recentTasks={recentTasks} useTM={useTM} usePM={usePM} />
 
                     <ProjectsListItem
-                        teamProjects={teamProjects}
-                        setCurrentProject={setCurrentProject}
-                        setIsTaskHomeVisible={setIsTaskHomeVisible}
-                        setOngoingTasks={setOngoingTasks}
-                        setClosedTasks={setClosedTasks}
-                        setDeletedTasks={setDeletedTasks}
-                        currentProject={currentProject}
-                        loadProjectsAndTasks={loadProjectsAndTasks}
-                        setOpenCreateProject={setOpenCreateProject}
+                        usePM={usePM}
+                        setIsTaskHomeVisible={useTM.setIsTaskHomeVisible}
                         setOpenJoinProject={setOpenJoinProject}
-                        setSelectedTagForFiltering={setSelectedTagForFiltering}
-                        setFilterBy={setFilterBy}
-                        taskMetaTree={taskMetaTree}
-                        currentTaskChain={currentTaskChain}
-                        currentPreviewTaskId={currentPreviewTaskId}
-                        setCurrentFilterName={setCurrentFilterName}
-                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                        setIsCreatingTask={setIsCreatingTask}
+                        useTM={useTM}
                     />
                 </List>
             </Box>

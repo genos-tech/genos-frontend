@@ -1,87 +1,45 @@
-import { alpha } from "@mui/system";
-import { useState, useEffect } from "react";
-import { Box, List, ListItem, ListItemContent, Typography, Chip } from "@mui/joy";
-import ListItemButton from "@mui/joy/ListItemButton";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import ForwardIcon from "@mui/icons-material/Forward";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import { Box, Chip, List, ListItem, ListItemContent, Typography } from "@mui/joy";
+import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
+import { alpha } from "@mui/system";
 
-import { ProjectProps, TagListProps, TaskMetaTreeNode } from "../../../../../types/tasks";
+import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
+import { TaskMetaTreeNode } from "../../../../../types/tasks";
+import { areObjectsEqual } from "../../../../../utils/objectHandler";
 import { Toggler } from "../common";
 import { TaskTreeToggler } from "./TaskTreeToggler";
-import { areObjectsEqual } from "../../../../../utils/objectHandler";
 
 type OngoingsListItemProps = {
-    taskMetaTree: TaskMetaTreeNode[];
     currentProjectId: number;
-    currentTaskChain?: TaskMetaTreeNode[];
-    currentPreviewTaskId: number;
-    setIsTaskPreviewVisible: (value: boolean) => void;
-    setCurrentProject: (value: ProjectProps) => void;
-    setCurrentPreviewTaskId: (value: number) => void;
-    projectTags: TagListProps[];
-    setIsCreatingTask: (value: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    }) => void;
-    setIsTaskHomeVisible: (value: boolean) => void;
+    useTM: TaskManagementState;
 };
-export const OngoingsListItem = (props: OngoingsListItemProps) => {
-    const {
-        taskMetaTree,
-        currentProjectId,
-        currentTaskChain,
-        currentPreviewTaskId,
-        setIsTaskPreviewVisible,
-        setCurrentProject,
-        setCurrentPreviewTaskId,
-        projectTags,
-        setIsCreatingTask,
-        setIsTaskHomeVisible,
-    } = props;
-    const { mode } = useColorScheme();
 
-    const [tmpCurrentTaskChain, setTmpCurrentTaskChain] = useState<TaskMetaTreeNode[]>();
-    const [tmpTaskMetaTree, setTmpTaskMetaTree] = useState<TaskMetaTreeNode[]>(taskMetaTree);
-    useEffect(() => {
-        if (currentTaskChain && currentTaskChain.length > 0) {
-            setTmpCurrentTaskChain(currentTaskChain);
-        } else {
-            setTmpCurrentTaskChain([]);
-        }
-    }, [currentTaskChain]);
-
-    // Only when `taskMetaTree` has been updated with new contents, refresh the Note Chain.
-    // `taskMetaTree` has been always updated without any contents change. Is such case,
-    // no need to refresh it since it's the same as the tmp one.
-    useEffect(() => {
-        if (areObjectsEqual(tmpTaskMetaTree, taskMetaTree) === false) {
-            setTmpTaskMetaTree(taskMetaTree);
-        }
-    }, [taskMetaTree]);
-
-    const createChildNoteList = (node: any) => (
+// Memoized child components for better performance
+const AddSubTaskButton = memo(
+    ({
+        node,
+        rootTaskId,
+        onCreateSubTask,
+    }: {
+        node: TaskMetaTreeNode;
+        rootTaskId: number;
+        onCreateSubTask: (taskId: number, rootTaskId: number) => void;
+    }) => (
         <Box key={`my-note-box-${node.taskId}`}>
-            <ListItem nested key={`my-note-${node.taskId}`}>
+            <ListItem key={`my-note-${node.taskId}`} nested>
                 <ListItemButton
-                    variant="plain"
                     sx={{ ml: "20px", mr: "8px", pl: "20px" }}
-                    onClick={() => {
-                        setIsCreatingTask({
-                            flag: true,
-                            parentTaskId: node.taskId,
-                            rootTaskId: node.rootTaskId,
-                        });
-
-                        // Close task-home when creating a sub task.
-                        setIsTaskHomeVisible(false);
-                    }}
+                    variant="plain"
+                    onClick={() => onCreateSubTask(node.taskId, rootTaskId)}
                 >
                     <ListItemContent>
                         <Typography
                             level="title-sm"
+                            startDecorator={<AddIcon />}
                             sx={{
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
@@ -89,7 +47,6 @@ export const OngoingsListItem = (props: OngoingsListItemProps) => {
                                 width: "100%",
                                 justifyContent: "right",
                             }}
-                            startDecorator={<AddIcon />}
                         >
                             Sub Task
                         </Typography>
@@ -97,158 +54,275 @@ export const OngoingsListItem = (props: OngoingsListItemProps) => {
                 </ListItemButton>
             </ListItem>
         </Box>
-    );
+    )
+);
+AddSubTaskButton.displayName = "AddSubTaskButton";
 
-    const renderTaskTree = (node: TaskMetaTreeNode) => (
-        <Box key={`my-note-box-${node.taskId}`}>
-            {tmpCurrentTaskChain && (
-                <ListItem nested key={`my-note-${node.taskId}`}>
-                    <TaskTreeToggler
-                        renderToggle={({ open, setOpen }) =>
-                            innerRenderToggleListItemButton(open, setOpen, node)
-                        }
+const TaskNodeButton = memo(
+    ({
+        node,
+        isSelected,
+        mode,
+        onTaskClick,
+        onToggle,
+    }: {
+        node: TaskMetaTreeNode;
+        isSelected: boolean;
+        mode: "light" | "dark";
+        onTaskClick: (node: TaskMetaTreeNode) => void;
+        onToggle: () => void;
+    }) => {
+        const handleClick = useCallback(() => {
+            onTaskClick(node);
+        }, [node, onTaskClick]);
+
+        const handleToggleClick = useCallback(
+            (e: React.MouseEvent) => {
+                e.stopPropagation();
+                onToggle();
+            },
+            [onToggle]
+        );
+
+        return (
+            <ListItemButton
+                selected={isSelected}
+                sx={{ ml: "45px", mr: "8px", pl: "20px" }}
+                variant="plain"
+                onClick={handleClick}
+            >
+                <Chip
+                    color="neutral"
+                    size="sm"
+                    variant="soft"
+                    sx={{
+                        marginRight: "1px",
+                        borderRadius: "5px",
+                        fontWeight: "bold",
+                    }}
+                >
+                    ID: {node.taskId}
+                </Chip>
+                <Chip
+                    size="sm"
+                    variant="soft"
+                    sx={{
+                        backgroundColor: node.status.color
+                            ? alpha(node.status.color, mode === "dark" ? 0.5 : 0.75)
+                            : "transparent",
+                        color: node.status.textColor,
+                        fontWeight: "bold",
+                        borderRadius: "5px",
+                        marginX: "-10px",
+                    }}
+                >
+                    {`${node.status.status}`}
+                </Chip>
+                <ListItemContent>
+                    <Typography
+                        level="title-sm"
+                        sx={{
+                            ml: "5px",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                        }}
+                        noWrap
                     >
-                        {node.children.length > 0 && tmpCurrentTaskChain && (
-                            <List>{node.children.map((child) => renderTaskTree(child))}</List>
+                        {node.title}
+                    </Typography>
+                </ListItemContent>
+                <KeyboardArrowDownIcon
+                    sx={{
+                        transform: "none",
+                    }}
+                    onClick={handleToggleClick}
+                />
+            </ListItemButton>
+        );
+    }
+);
+TaskNodeButton.displayName = "TaskNodeButton";
+
+const TaskTreeNode = memo(
+    ({
+        node,
+        rootTaskId,
+        useTM,
+        mode,
+        onTaskClick,
+        onCreateSubTask,
+    }: {
+        node: TaskMetaTreeNode;
+        rootTaskId: number;
+        useTM: TaskManagementState;
+        mode: "light" | "dark" | undefined;
+        onTaskClick: (
+            node: TaskMetaTreeNode,
+            open: boolean,
+            setOpen: (value: boolean) => void
+        ) => void;
+        onCreateSubTask: (taskId: number, rootTaskId: number) => void;
+    }) => {
+        const isSelected = useTM.currentPreviewTaskId === node.taskId;
+        const hasChildren = node.children.length > 0;
+        const actualMode = mode || "light";
+
+        const renderToggle = useCallback(
+            ({ open, setOpen }: { open: boolean; setOpen: (value: boolean) => void }) => (
+                <TaskNodeButton
+                    isSelected={isSelected}
+                    mode={actualMode}
+                    node={node}
+                    onTaskClick={(n) => onTaskClick(n, open, setOpen)}
+                    onToggle={() => setOpen(!open)}
+                />
+            ),
+            [node, isSelected, actualMode, onTaskClick]
+        );
+
+        return (
+            <Box key={`my-note-box-${node.taskId}`}>
+                <ListItem key={`my-note-${node.taskId}`} nested>
+                    <TaskTreeToggler renderToggle={renderToggle}>
+                        {hasChildren ? (
+                            <List>
+                                {node.children.map((child) => (
+                                    <TaskTreeNode
+                                        key={child.taskId}
+                                        useTM={useTM}
+                                        mode={mode}
+                                        node={child}
+                                        rootTaskId={rootTaskId}
+                                        onCreateSubTask={onCreateSubTask}
+                                        onTaskClick={onTaskClick}
+                                    />
+                                ))}
+                            </List>
+                        ) : (
+                            <List>
+                                <AddSubTaskButton
+                                    node={node}
+                                    rootTaskId={rootTaskId}
+                                    onCreateSubTask={onCreateSubTask}
+                                />
+                            </List>
                         )}
-                        {node.children.length === 0 && <List>{createChildNoteList(node)}</List>}
                     </TaskTreeToggler>
                 </ListItem>
-            )}
-        </Box>
+            </Box>
+        );
+    }
+);
+TaskTreeNode.displayName = "TaskTreeNode";
+
+export const OngoingsListItem = (props: OngoingsListItemProps) => {
+    const { currentProjectId, useTM } = props;
+    const { mode: rawMode } = useColorScheme();
+    const mode: "light" | "dark" | undefined = rawMode === "system" ? "light" : rawMode;
+
+    const [tmpCurrentTaskChain, setTmpCurrentTaskChain] = useState<TaskMetaTreeNode[]>();
+    const [tmpTaskMetaTree, setTmpTaskMetaTree] = useState<TaskMetaTreeNode[]>(useTM.taskMetaTree);
+
+    useEffect(() => {
+        if (useTM.currentTaskChain && useTM.currentTaskChain.length > 0) {
+            setTmpCurrentTaskChain(useTM.currentTaskChain);
+        } else {
+            setTmpCurrentTaskChain([]);
+        }
+    }, [useTM.currentTaskChain]);
+
+    // Only when `taskMetaTree` has been updated with new contents, refresh the Note Chain.
+    // `taskMetaTree` has been always updated without any contents change. Is such case,
+    // no need to refresh it since it's the same as the tmp one.
+    useEffect(() => {
+        if (areObjectsEqual(tmpTaskMetaTree, useTM.taskMetaTree) === false) {
+            setTmpTaskMetaTree(useTM.taskMetaTree);
+        }
+    }, [useTM.taskMetaTree, tmpTaskMetaTree]);
+
+    // Memoize filtered task tree
+    const filteredTaskTree = useMemo(
+        () => tmpTaskMetaTree.filter((root) => root.project.projectId === currentProjectId),
+        [tmpTaskMetaTree, currentProjectId]
     );
 
-    const outerRenderToggleListItemButton = (
-        ongoingsTitle: string,
-        open: boolean,
-        setOpen: (value: boolean) => void
-    ) => (
-        <ListItemButton
-            color="neutral"
-            sx={{ ml: "45px", mr: "8px", pl: "30px" }}
-            onClick={() => {
+    // Memoize callback handlers
+    const handleCreateSubTask = useCallback(
+        (taskId: number, rootTaskId: number) => {
+            useTM.setIsCreatingTask({
+                flag: true,
+                parentTaskId: taskId,
+                rootTaskId: rootTaskId,
+            });
+            useTM.setIsTaskHomeVisible(false);
+        },
+        [useTM]
+    );
+
+    const handleTaskClick = useCallback(
+        (node: TaskMetaTreeNode, open: boolean, setOpen: (value: boolean) => void) => {
+            if (node.children.length > 0) {
                 setOpen(!open);
-            }}
-        >
-            <ListItemContent>
-                <Typography
-                    level="title-sm"
-                    sx={{
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                    }}
-                    startDecorator={<ForwardIcon />}
-                >
-                    {ongoingsTitle}
-                </Typography>
-            </ListItemContent>
-            <KeyboardArrowDownIcon
-                sx={[
-                    open
-                        ? {
-                              transform: "rotate(180deg)",
-                          }
-                        : {
-                              transform: "none",
-                          },
-                ]}
-            />
-        </ListItemButton>
+            }
+            useTM.setIsTaskPreviewVisible(true);
+            useTM.setCurrentPreviewTaskId(node.taskId);
+        },
+        [useTM]
     );
 
-    const innerRenderToggleListItemButton = (
-        open: boolean,
-        setOpen: (value: boolean) => void,
-        node: any
-    ) => (
-        <ListItemButton
-            selected={currentPreviewTaskId === node.taskId ? true : false}
-            variant="plain"
-            sx={{ ml: "45px", mr: "8px", pl: "20px" }}
-            onClick={() => {
-                // Only open the task if it's not already open.
-                if (open === false) {
-                    setOpen(!open);
-                }
+    const handleOuterToggleClick = useCallback(() => {
+        useTM.getTaskMeta();
+    }, [useTM]);
 
-                setIsTaskPreviewVisible(true);
-
-                setCurrentProject({ ...node.project, projectTags: projectTags });
-                setCurrentPreviewTaskId(node.taskId);
-            }}
-        >
-            <Chip
-                key={`id-chip-${node.taskId}`} // pass the key directly
-                variant="soft"
+    const renderOuterToggle = useCallback(
+        ({ open, setOpen }: { open: boolean; setOpen: (value: boolean) => void }) => (
+            <ListItemButton
                 color="neutral"
-                sx={{
-                    marginRight: "1px",
-                    borderRadius: "5px",
-                    fontWeight: "bold",
-                }}
-                size="sm"
-            >
-                ID: {node.taskId}
-            </Chip>
-            <Chip
-                key={`status-chip-${node.taskId}`} // pass the key directly
-                variant="soft"
-                sx={{
-                    backgroundColor: node.status.color
-                        ? alpha(node.status.color, mode === "dark" ? 0.5 : 0.75)
-                        : "transparent",
-                    color: node.status.textColor,
-                    fontWeight: "bold",
-                    borderRadius: "5px",
-                    marginX: "-10px",
-                }}
-                size="sm"
-            >
-                {`${node.status.status}`}
-            </Chip>
-            <ListItemContent>
-                <Typography
-                    noWrap
-                    level="title-sm"
-                    sx={{
-                        ml: "5px",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                    }}
-                >
-                    {node.title}
-                </Typography>
-            </ListItemContent>
-            <KeyboardArrowDownIcon
+                sx={{ ml: "45px", mr: "8px", pl: "30px" }}
                 onClick={() => {
+                    handleOuterToggleClick();
                     setOpen(!open);
                 }}
-                sx={[
-                    open
-                        ? {
-                              transform: "rotate(180deg)",
-                          }
-                        : {
-                              transform: "none",
-                          },
-                ]}
-            />
-        </ListItemButton>
+            >
+                <ListItemContent>
+                    <Typography
+                        level="title-sm"
+                        startDecorator={<ForwardIcon />}
+                        sx={{
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                        }}
+                    >
+                        Ongoings
+                    </Typography>
+                </ListItemContent>
+                <KeyboardArrowDownIcon
+                    sx={{
+                        transform: open ? "rotate(180deg)" : "none",
+                    }}
+                />
+            </ListItemButton>
+        ),
+        [handleOuterToggleClick]
     );
 
     return (
-        <Toggler
-            defaultExpanded={false}
-            renderToggle={({ open, setOpen }) =>
-                outerRenderToggleListItemButton("Ongoings", open, setOpen)
-            }
-        >
+        <Toggler defaultExpanded={false} renderToggle={renderOuterToggle}>
             <List>
-                {tmpTaskMetaTree
-                    .filter((root) => root.project.projectId === currentProjectId)
-                    .map((root) => renderTaskTree(root))}
+                {tmpCurrentTaskChain &&
+                    filteredTaskTree.map((root) => (
+                        <TaskTreeNode
+                            key={root.taskId}
+                            useTM={useTM}
+                            mode={mode}
+                            node={root}
+                            rootTaskId={root.taskId}
+                            onCreateSubTask={handleCreateSubTask}
+                            onTaskClick={handleTaskClick}
+                        />
+                    ))}
             </List>
         </Toggler>
     );

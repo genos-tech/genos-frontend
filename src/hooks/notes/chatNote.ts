@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { ChatNoteMetaTreeNode, ChatNoteProps, ChatNoteMetaProps } from "../../types/notes";
+
+import { ChatNoteMetaProps, ChatNoteMetaTreeNode, ChatNoteProps } from "../../types/notes";
 
 function areArraysEqualByJSON<T>(arr1: T[], arr2: T[]): boolean {
     return JSON.stringify(arr1) === JSON.stringify(arr2);

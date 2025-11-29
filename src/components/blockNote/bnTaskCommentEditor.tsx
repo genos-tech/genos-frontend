@@ -1,79 +1,78 @@
-import { Socket } from "socket.io-client";
-import { useState, useEffect, useRef } from "react";
-import { useColorScheme } from "@mui/joy/styles";
-import { Box, IconButton, Tooltip } from "@mui/joy";
-import SendIcon from "@mui/icons-material/Send";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import { en } from "@blocknote/core/locales";
-import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
+import "../../App.css";
+
+import { useEffect, useRef, useState } from "react";
 import { codeBlock } from "@blocknote/code-block";
+import {
+    BlockNoteSchema,
+    defaultBlockSpecs,
+    defaultInlineContentSpecs,
+    filterSuggestionItems,
+} from "@blocknote/core";
+import { en } from "@blocknote/core/locales";
+import { BlockNoteView } from "@blocknote/mantine";
 import {
     BasicTextStyleButton,
     BlockTypeSelect,
     ColorStyleButton,
     CreateLinkButton,
+    DefaultReactSuggestionItem,
     FileCaptionButton,
     FileReplaceButton,
     FormattingToolbar,
-    useCreateBlockNote,
-    DefaultReactSuggestionItem,
-    SuggestionMenuController,
     getDefaultReactSlashMenuItems,
+    SuggestionMenuController,
+    useCreateBlockNote,
 } from "@blocknote/react";
-import {
-    BlockNoteSchema,
-    defaultInlineContentSpecs,
-    filterSuggestionItems,
-    defaultBlockSpecs,
-} from "@blocknote/core";
+import SendIcon from "@mui/icons-material/Send";
+import { Box, IconButton } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
+import { Socket } from "socket.io-client";
 
-import { CustomEmojiToolbar } from "./customEmojiToolbar";
-import { CreateMentionSpec, MentionMenuItems } from "./Mention";
-import { EmojiPicker } from "../emojiInput/EmojiPicker";
+import { taskThreadMessageForCommentAddedTemplate } from "../../features/tasks/utils/TaskMessageTemplate";
+import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { TeamManagementState } from "../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
+import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
 import { TaskCommentProps, TaskProps } from "../../types/tasks";
-import { ChatProps } from "../../types/chat";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
-import { taskThreadMessageForCommentAddedTemplate } from "../../features/tasks/utils/TaskMessageTemplate";
-import "../../App.css";
+import { EmojiPicker } from "../emojiInput/EmojiPicker";
+import { CustomEmojiToolbar } from "./customEmojiToolbar";
+import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 
 type BnTaskCommentEditorProps = {
-    teamMemberProfiles: Record<string, UserProps>;
+    useTEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
-    teamMembers: UserProps[];
     task: TaskProps;
     setTaskUpdated?: (value: boolean) => void;
     taskComments: TaskCommentProps[];
     setTaskComments: (value: TaskCommentProps[]) => void;
-    isCommentUpdated: { isUpdate: boolean; scrollToBottom: boolean };
-    setIsCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
-    setCurrentChat: (chat: ChatProps) => void;
-    setOpeningService: (value: number) => void;
+    useUISM: UIStateManagementState;
     taskCommentLines: number;
     setTaskCommentLines: (value: number) => void;
+    useCM: ChatManagementState;
+    useTM: TaskManagementState;
 };
 
 export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     const {
-        teamMemberProfiles,
+        useTEM,
         myself,
         setMyself,
         socket,
-        teamMembers,
         task,
         setTaskUpdated,
         taskComments,
         setTaskComments,
-        isCommentUpdated,
-        setIsCommentUpdated,
-        setCurrentChat,
-        setOpeningService,
+        useUISM,
         taskCommentLines,
         setTaskCommentLines,
+        useCM,
+        useTM,
     } = props;
     const { mode } = useColorScheme();
     const bnBoxClassName: string = `bn-task-comment-box-${mode}`;
@@ -90,12 +89,12 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
             mention: CreateMentionSpec(
-                teamMemberProfiles,
+                useTEM.teamMemberProfiles,
                 socket,
                 myself,
                 setMyself,
-                setOpeningService,
-                setCurrentChat
+                useUISM,
+                useCM
             ),
         },
         blockSpecs: {
@@ -182,7 +181,11 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     }, [selectedEmoji]);
 
     useEffect(() => {
-        if (isCommentUpdated && isCommentUpdated.isUpdate === true && task.id) {
+        if (
+            useTM.isTaskCommentUpdated &&
+            useTM.isTaskCommentUpdated.isUpdate === true &&
+            task.id
+        ) {
             setTaskComments([
                 ...taskComments,
                 {
@@ -197,9 +200,9 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                 },
             ]);
             editor.replaceBlocks(editor.document, []);
-            setIsCommentUpdated({ isUpdate: false, scrollToBottom: false });
+            useTM.setIsTaskCommentUpdated({ isUpdate: false, scrollToBottom: false });
         }
-    }, [isCommentUpdated, taskComments]);
+    }, [useTM.isTaskCommentUpdated, taskComments]);
 
     useEffect(() => {
         editor.replaceBlocks(editor.document, []);
@@ -219,7 +222,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                         is_private: task.project?.isPrivate || false,
                     },
                     (ack: any) => {
-                        setIsCommentUpdated({ isUpdate: true, scrollToBottom: true });
+                        useTM.setIsTaskCommentUpdated({ isUpdate: true, scrollToBottom: true });
                     }
                 );
 
@@ -263,19 +266,19 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     return (
         <Box ref={boxRef}>
             <EmojiPicker
-                showEmojiPicker={showEmojiPicker}
-                setShowEmojiPicker={setShowEmojiPicker}
-                setSelectedEmoji={setSelectedEmoji}
                 pickerBottomPosition={pickerBottomPosition}
                 pickerRightPosition={pickerRightPosition}
+                setSelectedEmoji={setSelectedEmoji}
+                setShowEmojiPicker={setShowEmojiPicker}
+                showEmojiPicker={showEmojiPicker}
             />
-            <Box sx={{ position: "relative" }} className={bnBoxClassName} ref={editorRef}>
+            <Box ref={editorRef} className={bnBoxClassName} sx={{ position: "relative" }}>
                 <BlockNoteView
                     className="bn-box"
                     editor={editor}
+                    formattingToolbar={false}
                     sideMenu={false} // false for Chat/comment, true for Task content
                     theme={mode === "dark" ? "dark" : "light"}
-                    formattingToolbar={false}
                     data-changing-font-demo // custom font
                     onBlur={() => {
                         if (setTaskUpdated) {
@@ -293,26 +296,10 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                         }
                     }}
                 >
-                    <Tooltip title="Edit in Modal (TBD)">
-                        <IconButton
-                            size="sm"
-                            color="neutral"
-                            variant="plain"
-                            sx={{
-                                position: "absolute",
-                                top: "5%",
-                                right: "1%",
-                                zIndex: 1,
-                                p: 0.7,
-                            }}
-                        >
-                            <OpenInNewIcon />
-                        </IconButton>
-                    </Tooltip>
-
                     <IconButton
-                        size="sm"
                         color="success"
+                        disabled={editorDocLength < 2}
+                        size="sm"
                         variant="solid"
                         sx={{
                             position: "absolute",
@@ -321,7 +308,6 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                             zIndex: 1,
                             p: 0.7,
                         }}
-                        disabled={editorDocLength < 2}
                         onClick={sendComment}
                     >
                         <SendIcon sx={{ mr: "3px" }} />
@@ -345,20 +331,20 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                             <FileReplaceButton key={"replaceFileButton"} />
 
                             <BasicTextStyleButton
-                                basicTextStyle={"bold"}
                                 key={"boldStyleButton"}
+                                basicTextStyle={"bold"}
                             />
                             <BasicTextStyleButton
-                                basicTextStyle={"italic"}
                                 key={"italicStyleButton"}
+                                basicTextStyle={"italic"}
                             />
                             <BasicTextStyleButton
-                                basicTextStyle={"underline"}
                                 key={"underlineStyleButton"}
+                                basicTextStyle={"underline"}
                             />
                             <BasicTextStyleButton
-                                basicTextStyle={"strike"}
                                 key={"strikeStyleButton"}
+                                basicTextStyle={"strike"}
                             />
                             {/* Extra button to toggle code styles */}
                             <BasicTextStyleButton
@@ -383,7 +369,11 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                         getItems={async (query) =>
                             // Gets the mentions menu items
                             filterSuggestionItems(
-                                MentionMenuItems(teamMemberProfiles, editor, teamMembers),
+                                MentionMenuItems(
+                                    useTEM.teamMemberProfiles,
+                                    editor,
+                                    useTEM.teamMembers
+                                ),
                                 query
                             )
                         }

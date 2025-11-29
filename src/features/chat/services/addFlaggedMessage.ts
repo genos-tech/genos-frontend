@@ -1,5 +1,5 @@
-import AddFlaggedMessageWorker from "../../../workers/addFlaggedMessageWorker.ts?worker";
 import { FlaggedMessageProps } from "../../../types/chat";
+import AddFlaggedMessageWorker from "../../../workers/addFlaggedMessageWorker.ts?worker";
 
 export const addFlaggedMessage = (message: FlaggedMessageProps): Promise<null> => {
     return new Promise((resolve, reject) => {

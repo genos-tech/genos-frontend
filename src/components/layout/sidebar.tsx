@@ -1,63 +1,51 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Socket } from "socket.io-client";
+import AllInboxIcon from "@mui/icons-material/AllInbox";
+import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
+import NoteAltIcon from "@mui/icons-material/NoteAlt";
+import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import {
-    GlobalStyles,
     Avatar,
+    Badge,
     Box,
     Divider,
+    GlobalStyles,
     List,
     ListItem,
     Sheet,
-    Badge,
+    Stack,
     Tooltip,
+    Typography,
 } from "@mui/joy";
 import ListItemButton, { listItemButtonClasses } from "@mui/joy/ListItemButton";
-import AllInboxIcon from "@mui/icons-material/AllInbox";
-import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
-import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
-import NoteAltIcon from "@mui/icons-material/NoteAlt";
-import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
-import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
+import { useNavigate } from "react-router-dom";
+import { Socket } from "socket.io-client";
 
-import { ColorSchemeToggle } from "./colorSchemeToggle";
-import { useAuth } from "../../context/AuthContext";
-import { TeamDropdown } from "../../features/admin/components/teamDropdown";
-import { Team, UserProps } from "../../types/admin";
-import { ChatProps } from "../../types/chat";
-import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
 import { PulseDot } from "../../components/utils/PulseDot";
+import { useAuth } from "../../context/AuthContext";
+import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
+import { TeamDropdown } from "../../features/admin/components/teamDropdown";
+import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { TeamManagementState } from "../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
+import { InboxManagementState } from "../../hooks/inbox/useInboxManagement";
+import { UserProps } from "../../types/admin";
+import { ColorSchemeToggle } from "./colorSchemeToggle";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type SidebarProps = {
-    currentTeam: Team;
-    setCurrentTeam: (value: Team) => void;
-    teamMemberProfiles: Record<string, UserProps>;
+    useTEM: TeamManagementState;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
-    openingService: number;
-    setOpeningService: (service: number) => void;
-    setCurrentMainChat: (chat: ChatProps) => void;
-    unReadInboxItemCount: number;
-    unReadChatAndActivityCounts: number;
+    useIM: InboxManagementState;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
 };
 export const Sidebar = (props: SidebarProps) => {
-    const {
-        currentTeam,
-        setCurrentTeam,
-        teamMemberProfiles,
-        socket,
-        myself,
-        setMyself,
-        openingService,
-        setOpeningService,
-        setCurrentMainChat,
-        unReadInboxItemCount,
-        unReadChatAndActivityCounts,
-    } = props;
+    const { useTEM, socket, myself, setMyself, useIM, useCM, useUISM } = props;
     const { setAccessToken } = useAuth();
     const navigate = useNavigate();
 
@@ -107,19 +95,19 @@ export const Sidebar = (props: SidebarProps) => {
     };
 
     const handleMoveToInbox = (): void => {
-        setOpeningService(0);
+        useUISM.setOpeningService(0);
     };
 
     const handleMoveToChat = (): void => {
-        setOpeningService(1);
+        useUISM.setOpeningService(1);
     };
 
     const handleMoveToTasks = (): void => {
-        setOpeningService(2);
+        useUISM.setOpeningService(2);
     };
 
     const handleMoveToNote = (): void => {
-        setOpeningService(3);
+        useUISM.setOpeningService(3);
     };
 
     return (
@@ -153,13 +141,15 @@ export const Sidebar = (props: SidebarProps) => {
                     },
                 })}
             />
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 1, alignItems: "center" }}>
-                <TeamDropdown
-                    currentTeam={currentTeam}
-                    setCurrentTeam={setCurrentTeam}
-                    myself={myself}
-                    setMyself={setMyself}
-                />
+            <Box
+                sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 1,
+                    alignItems: "center",
+                }}
+            >
+                <TeamDropdown myself={myself} setMyself={setMyself} useTEM={useTEM} />
                 <ColorSchemeToggle />
             </Box>
 
@@ -185,8 +175,8 @@ export const Sidebar = (props: SidebarProps) => {
                     }}
                 >
                     <ListItem>
-                        <Tooltip title="Inbox" placement="right-start">
-                            <ListItemButton onClick={handleMoveToInbox}>
+                        <ListItemButton onClick={handleMoveToInbox}>
+                            <Stack alignItems="center" direction="column">
                                 <Box
                                     sx={{
                                         display: "flex",
@@ -194,83 +184,109 @@ export const Sidebar = (props: SidebarProps) => {
                                         p: "5px",
                                     }}
                                 >
-                                    {unReadInboxItemCount > 0 && (
+                                    {useIM.unReadInboxItemCount > 0 && (
                                         <Badge
-                                            badgeContent={unReadInboxItemCount}
+                                            badgeContent={useIM.unReadInboxItemCount}
                                             color="primary"
                                             size="sm"
-                                            anchorOrigin={{ vertical: "top", horizontal: "right" }}
+                                            anchorOrigin={{
+                                                vertical: "top",
+                                                horizontal: "right",
+                                            }}
                                         >
                                             <AllInboxIcon
-                                                color={
-                                                    openingService === 0 ? "primary" : "disabled"
-                                                }
                                                 sx={{ fontSize: 24 }}
+                                                color={
+                                                    useUISM.openingService === 0
+                                                        ? "primary"
+                                                        : "disabled"
+                                                }
                                             />
                                         </Badge>
                                     )}
-                                    {unReadInboxItemCount < 1 && (
+                                    {useIM.unReadInboxItemCount < 1 && (
                                         <AllInboxIcon
-                                            color={openingService === 0 ? "primary" : "disabled"}
                                             sx={{ fontSize: 24 }}
+                                            color={
+                                                useUISM.openingService === 0
+                                                    ? "primary"
+                                                    : "disabled"
+                                            }
                                         />
                                     )}
                                 </Box>
-                            </ListItemButton>
-                        </Tooltip>
+                                <Typography level="body-xs">Inbox</Typography>
+                            </Stack>
+                        </ListItemButton>
                     </ListItem>
                     <ListItem>
-                        <Tooltip title="Chats" placement="right-start">
-                            <ListItemButton onClick={handleMoveToChat}>
+                        <ListItemButton onClick={handleMoveToChat}>
+                            <Stack alignItems="center" direction="column">
                                 <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
-                                    {unReadChatAndActivityCounts > 0 && (
+                                    {useCM.unReadChatAndActivityCounts > 0 && (
                                         <Badge
-                                            badgeContent={unReadChatAndActivityCounts}
+                                            badgeContent={useCM.unReadChatAndActivityCounts}
                                             color="primary"
                                             size="sm"
-                                            anchorOrigin={{ vertical: "top", horizontal: "right" }}
+                                            anchorOrigin={{
+                                                vertical: "top",
+                                                horizontal: "right",
+                                            }}
                                         >
                                             <QuestionAnswerRoundedIcon
-                                                color={
-                                                    openingService === 1 ? "primary" : "disabled"
-                                                }
                                                 sx={{ fontSize: 24 }}
+                                                color={
+                                                    useUISM.openingService === 1
+                                                        ? "primary"
+                                                        : "disabled"
+                                                }
                                             />
                                         </Badge>
                                     )}
-                                    {unReadChatAndActivityCounts < 1 && (
+                                    {useCM.unReadChatAndActivityCounts < 1 && (
                                         <QuestionAnswerRoundedIcon
-                                            color={openingService === 1 ? "primary" : "disabled"}
                                             sx={{ fontSize: 24 }}
+                                            color={
+                                                useUISM.openingService === 1
+                                                    ? "primary"
+                                                    : "disabled"
+                                            }
                                         />
                                     )}
                                 </Box>
-                            </ListItemButton>
-                        </Tooltip>
+                                <Typography level="body-xs">Chats</Typography>
+                            </Stack>
+                        </ListItemButton>
                     </ListItem>
                     <ListItem>
-                        <Tooltip title="Tasks" placement="right-start">
-                            <ListItemButton onClick={handleMoveToTasks}>
+                        <ListItemButton onClick={handleMoveToTasks}>
+                            <Stack alignItems="center" direction="column">
                                 <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
                                     <AssignmentRoundedIcon
-                                        color={openingService === 2 ? "primary" : "disabled"}
+                                        color={
+                                            useUISM.openingService === 2 ? "primary" : "disabled"
+                                        }
                                         sx={{ fontSize: 24 }}
                                     />
                                 </Box>
-                            </ListItemButton>
-                        </Tooltip>
+                                <Typography level="body-xs">Tasks</Typography>
+                            </Stack>
+                        </ListItemButton>
                     </ListItem>
                     <ListItem>
-                        <Tooltip title="Notes" placement="right-start">
-                            <ListItemButton onClick={handleMoveToNote}>
+                        <ListItemButton onClick={handleMoveToNote}>
+                            <Stack alignItems="center" direction="column">
                                 <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
                                     <NoteAltIcon
-                                        color={openingService === 3 ? "primary" : "disabled"}
+                                        color={
+                                            useUISM.openingService === 3 ? "primary" : "disabled"
+                                        }
                                         sx={{ fontSize: 24 }}
                                     />
                                 </Box>
-                            </ListItemButton>
-                        </Tooltip>
+                                <Typography level="body-xs">Notes</Typography>
+                            </Stack>
+                        </ListItemButton>
                     </ListItem>
                 </List>
                 <List
@@ -284,7 +300,7 @@ export const Sidebar = (props: SidebarProps) => {
                     }}
                 >
                     {/* <ListItem>
-                        <Tooltip title="Settings" placement="right-start">
+                        <Tooltip variant="outlined"  title="Settings" placement="right-start">
                             <ListItemButton>
                                 <SettingsRoundedIcon sx={{ fontSize: 24 }} />
                             </ListItemButton>
@@ -292,7 +308,12 @@ export const Sidebar = (props: SidebarProps) => {
                     </ListItem> */}
 
                     <ListItem sx={{ mt: 1 }}>
-                        <Tooltip title="Sign out" placement="right-start">
+                        <Tooltip
+                            placement="right-start"
+                            size="sm"
+                            title="Sign out"
+                            variant="outlined"
+                        >
                             <ListItemButton onClick={handleLogout}>
                                 <LogoutRoundedIcon sx={{ fontSize: 24 }} />
                             </ListItemButton>
@@ -303,27 +324,32 @@ export const Sidebar = (props: SidebarProps) => {
 
             <Divider />
 
-            <Box onClick={() => setOpenUserProfile(true)} sx={{ pl: "12px" }}>
-                <Tooltip title="Open User Profile" placement="right-start">
-                    <Avatar variant="solid" size="sm" src={`${media_url}/${myself.avatarImgPath}`}>
+            <Box sx={{ pl: "12px" }} onClick={() => setOpenUserProfile(true)}>
+                <Tooltip
+                    placement="right-start"
+                    size="sm"
+                    title="Open My Profile"
+                    variant="outlined"
+                >
+                    <Avatar size="sm" src={`${media_url}/${myself.avatarImgPath}`} variant="solid">
                         {myself.userName[0].toUpperCase()}
                     </Avatar>
                 </Tooltip>
-                <Box position="absolute" bottom={0} right={0} width={24} height={33}>
+                <Box bottom={0} height={33} position="absolute" right={0} width={24}>
                     <PulseDot color={myself?.isOfflineForced !== "true" ? "#4caf50" : "#999"} />
                 </Box>
             </Box>
 
             <UserProfile
-                socket={socket}
-                myself={myself}
-                setMyself={setMyself}
+                useCM={useCM}
                 isYou={true}
-                user={teamMemberProfiles[myself.userId]}
+                myself={myself}
                 openUserProfile={openUserProfile}
+                setMyself={setMyself}
                 setOpenUserProfile={setOpenUserProfile}
-                setCurrentMainChat={setCurrentMainChat}
-                setOpeningService={setOpeningService}
+                socket={socket}
+                useUISM={useUISM}
+                user={useTEM.teamMemberProfiles[myself.userId]}
             />
         </Sheet>
     );

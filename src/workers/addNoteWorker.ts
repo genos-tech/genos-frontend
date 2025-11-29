@@ -1,25 +1,19 @@
-import { STORES } from "../db/conf";
-import { addData } from "../db/crud";
+import { NoteRepositoryFactory } from "../db/repositories";
+import { ChatNoteProps, MyNoteProps, TaskNoteProps } from "../types/notes";
 
 self.onmessage = async (event) => {
     const noteType: number = event.data.noteType;
-    const note: any = event.data.note;
+    const note: MyNoteProps | TaskNoteProps | ChatNoteProps = event.data.note;
 
     if (noteType === 1) {
-        await addData({
-            storeName: STORES.PERSONAL_NOTES,
-            data: note,
-        });
+        const personalNoteRepo = NoteRepositoryFactory.createPersonalNoteRepository();
+        await personalNoteRepo.put(note);
     } else if (noteType === 2) {
-        await addData({
-            storeName: STORES.TASK_NOTES,
-            data: note,
-        });
+        const taskNoteRepo = NoteRepositoryFactory.createTaskNoteRepository();
+        await taskNoteRepo.put(note);
     } else if (noteType === 3) {
-        await addData({
-            storeName: STORES.CHAT_NOTES,
-            data: note,
-        });
+        const chatNoteRepo = NoteRepositoryFactory.createChatNoteRepository();
+        await chatNoteRepo.put(note);
     }
 
     self.postMessage("done");

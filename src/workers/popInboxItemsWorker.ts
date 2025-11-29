@@ -1,11 +1,10 @@
-import { STORES } from "../db/conf";
-import { messageIdWithChatId } from "../db/crud";
+import { InboxRepository } from "../db/repositories";
 import { InboxItemProps } from "../types/common";
 
 self.onmessage = async (event) => {
-    const inboxItems: InboxItemProps[] = await messageIdWithChatId({
-        storeName: STORES.INBOX,
-    });
+    const inboxRepository = new InboxRepository();
+    const result = await inboxRepository.getAll();
+    const inboxItems: InboxItemProps[] = result.success && result.data ? result.data : [];
 
     // Sort messages by tsSent
     const sortedInboxItems = inboxItems.sort((a, b) => {

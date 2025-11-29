@@ -1,86 +1,89 @@
-import { alpha } from "@mui/system";
-import { ListItemContent, Chip } from "@mui/joy";
+import { Chip, ListItemContent } from "@mui/joy";
 import Autocomplete from "@mui/joy/Autocomplete";
 import AutocompleteOption from "@mui/joy/AutocompleteOption";
 import { useColorScheme } from "@mui/joy/styles";
+import { alpha } from "@mui/system";
 
-import { priorities } from "../../utils/taskMeta";
 import { TaskProps } from "../../../../types/tasks";
+import { priorities } from "../../utils/taskMeta";
 
 type ACTaskPriorityProps = {
-    taskContents: TaskProps;
-    setTaskContents: (value: TaskProps) => void;
+    taskContent: TaskProps;
+    setTaskContent: (value: TaskProps) => void;
     setTaskUpdated?: (value: boolean) => void;
 };
 export const ACTaskPriority = (props: ACTaskPriorityProps) => {
-    const { taskContents, setTaskContents, setTaskUpdated } = props;
+    const { taskContent, setTaskContent, setTaskUpdated } = props;
 
     const { mode } = useColorScheme();
 
     return (
         <Autocomplete
-            key={taskContents.id}
-            placeholder="Priority"
-            multiple
-            options={priorities}
+            key={taskContent.id}
             getOptionLabel={(option) => option.priority || ""}
-            value={
-                taskContents &&
-                taskContents.priority.priority !== null &&
-                taskContents.priority.priority !== ""
-                    ? [taskContents.priority]
-                    : []
-            }
             isOptionEqualToValue={(option, value) => option.priority === value.priority}
-            renderTags={(tags, getTagProps) =>
-                tags.slice(-1).map((item, index) => {
-                    const { key, ...tagProps } = getTagProps({ index }); // spread the 'key'
-                    return (
-                        <Chip
-                            key={key} // pass the key directly
-                            variant="soft"
-                            sx={{
-                                backgroundColor: item.color
-                                    ? alpha(item.color, mode === "dark" ? 0.5 : 0.75)
-                                    : "transparent",
-                                color: item.textColor,
-                                fontWeight: "bold",
-                                borderRadius: "5px",
-                            }}
-                            size="sm"
-                        >
-                            {item.priority}
-                        </Chip>
-                    );
-                })
-            }
+            openOnFocus={true}
+            options={priorities}
+            placeholder="Priority"
+            size="sm"
+            sx={{ width: "100%" }}
             renderOption={(props, option) => (
                 <AutocompleteOption {...props} key={option.priority}>
                     <ListItemContent sx={{ fontSize: "sm" }}>
                         <Chip
                             key={option.priority} // pass the key directly
+                            size="sm"
                             variant="soft"
                             sx={{
                                 backgroundColor: option.color
-                                    ? alpha(option.color, mode === "dark" ? 0.5 : 0.75)
+                                    ? alpha(option.color, mode === "dark" ? 0.5 : 1)
                                     : "transparent",
                                 color: option.textColor,
                                 fontWeight: "bold",
                                 borderRadius: "5px",
                             }}
-                            size="sm"
                         >
                             {option.priority}
                         </Chip>
                     </ListItemContent>
                 </AutocompleteOption>
             )}
+            renderTags={(tags, getTagProps) =>
+                tags.slice(-1).map((item, index) => {
+                    const { key, ...tagProps } = getTagProps({ index }); // spread the 'key'
+                    return (
+                        <Chip
+                            key={key} // pass the key directly
+                            size="sm"
+                            variant="soft"
+                            sx={{
+                                backgroundColor: item.color
+                                    ? alpha(item.color, mode === "dark" ? 0.5 : 1)
+                                    : "transparent",
+                                color: item.textColor,
+                                fontWeight: "bold",
+                                borderRadius: "5px",
+                            }}
+                        >
+                            {item.priority}
+                        </Chip>
+                    );
+                })
+            }
+            value={
+                taskContent &&
+                taskContent.priority.priority !== null &&
+                taskContent.priority.priority !== ""
+                    ? [taskContent.priority]
+                    : []
+            }
+            multiple
             onChange={(event, value) => {
                 if (value !== null) {
                     if (value.length > 0) {
                         (async () => {
-                            setTaskContents({
-                                ...taskContents,
+                            setTaskContent({
+                                ...taskContent,
                                 priority: value.slice(-1)[0],
                             });
                             if (setTaskUpdated) {
@@ -89,8 +92,8 @@ export const ACTaskPriority = (props: ACTaskPriorityProps) => {
                         })();
                     } else {
                         (async () => {
-                            setTaskContents({
-                                ...taskContents,
+                            setTaskContent({
+                                ...taskContent,
                                 priority: {
                                     code: 0,
                                     priority: null,
@@ -105,9 +108,6 @@ export const ACTaskPriority = (props: ACTaskPriorityProps) => {
                     }
                 }
             }}
-            size="sm"
-            sx={{ width: "100%" }}
-            openOnFocus={true}
         />
     );
 };

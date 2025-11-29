@@ -1,47 +1,53 @@
-import { Button, Stack, Input } from "@mui/joy";
+import { Button, Input, Stack, useColorScheme } from "@mui/joy";
 
-import { getFormattedDateStr, getFormattedTodayDateStr } from "../../../../../../utils/dateUtils";
 import { TaskProps } from "../../../../../../types/tasks";
+import { getFormattedDateStr, getFormattedTodayDateStr } from "../../../../../../utils/dateUtils";
 
 type TaskDueDateInputProps = {
-    taskContents: TaskProps;
-    setTaskContents: (value: TaskProps) => void;
+    taskContent: TaskProps;
+    setTaskContent: (value: TaskProps) => void;
     setTaskUpdated?: (value: boolean) => void;
 };
 export const TaskDueDateInput = (props: TaskDueDateInputProps) => {
-    const { taskContents, setTaskContents, setTaskUpdated } = props;
-
+    const { taskContent, setTaskContent, setTaskUpdated } = props;
+    const { mode } = useColorScheme();
     return (
-        <Stack direction="row" spacing={1.5} justifyContent="center" alignItems="center">
+        <Stack alignItems="center" direction="row" justifyContent="center" spacing={1.5}>
             <Input
-                type="date"
                 color="neutral"
-                variant="outlined"
                 size="sm"
-                value={taskContents.dueDate ? taskContents.dueDate : ""}
+                type="date"
+                value={taskContent.dueDate ? taskContent.dueDate : ""}
+                variant="outlined"
+                slotProps={{
+                    input: {
+                        min: getFormattedTodayDateStr(),
+                    },
+                }}
+                sx={{
+                    "& input::-webkit-calendar-picker-indicator": {
+                        filter: mode === "dark" ? "invert()" : "none",
+                        cursor: "pointer",
+                    },
+                }}
                 onChange={(e) => {
-                    setTaskContents({
-                        ...taskContents,
+                    setTaskContent({
+                        ...taskContent,
                         dueDate: getFormattedDateStr(new Date(e.target.value)),
                     });
                     if (setTaskUpdated) {
                         setTaskUpdated(true);
                     }
                 }}
-                slotProps={{
-                    input: {
-                        min: getFormattedTodayDateStr(),
-                    },
-                }}
             />
             <Button
-                component="a"
-                variant="outlined"
                 color="neutral"
+                component="a"
                 size="sm"
+                variant="outlined"
                 onClick={() => {
-                    setTaskContents({
-                        ...taskContents,
+                    setTaskContent({
+                        ...taskContent,
                         dueDate: "",
                     });
                     if (setTaskUpdated) {

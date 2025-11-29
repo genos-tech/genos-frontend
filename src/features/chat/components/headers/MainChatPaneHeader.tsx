@@ -1,79 +1,62 @@
-import { Socket } from "socket.io-client";
-import { Badge, IconButton, Stack, Tooltip } from "@mui/joy";
-import SwapVertIcon from "@mui/icons-material/SwapVert";
-import ChecklistIcon from "@mui/icons-material/Checklist";
-import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
-import MoreVert from "@mui/icons-material/MoreVert";
 import CancelIcon from "@mui/icons-material/Cancel";
+import ChecklistIcon from "@mui/icons-material/Checklist";
 import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
+import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
+import SwapVertIcon from "@mui/icons-material/SwapVert";
+import { Badge, IconButton, Stack, Tooltip } from "@mui/joy";
+import { Socket } from "socket.io-client";
 
-import { HeaderUserName } from "./HeaderUserName";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps } from "../../../../types/chat";
+import { HeaderUserName } from "./HeaderUserName";
 
 type MainChatPaneHeaderProps = {
-    teamMemberProfiles: Record<string, UserProps>;
-    socket: Socket | null;
-    myself: UserProps;
-    setMyself: (value: UserProps) => void;
     chat: ChatProps;
-    subChat: ChatProps;
-    setCurrentMainChat: (chat: ChatProps) => void;
-    setCurrentSubChat: (chat: ChatProps) => void;
-    isSubChatVisible: boolean;
-    setIsMainChatVisible: (value: boolean) => void;
-    setIsSubChatVisible: (value: boolean) => void;
-    setIsThreadVisible: (value: boolean) => void;
-    setIsTaskPreviewVisible: (value: boolean) => void;
-    setIsCreatingTask: (value: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    }) => void;
-    setOpeningService: (value: number) => void;
-    funcSetAllChats: () => Promise<void>;
-    isToDoVisible: boolean;
-    setIsToDoVisible: (value: boolean) => void;
     incompleteTodoCount: number;
+    isToDoVisible: boolean;
+    myself: UserProps;
+    setIsToDoVisible: (value: boolean) => void;
+    setMyself: (value: UserProps) => void;
+    useUISM: UIStateManagementState;
+    socket: Socket | null;
+    useTEM: TeamManagementState;
+    useCM: ChatManagementState;
+    useTM: TaskManagementState;
 };
 
 export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
     const {
-        teamMemberProfiles,
-        socket,
-        myself,
-        setMyself,
         chat,
-        subChat,
-        setCurrentMainChat,
-        setCurrentSubChat,
-        isSubChatVisible,
-        setIsSubChatVisible,
-        setIsMainChatVisible,
-        setIsThreadVisible,
-        setIsTaskPreviewVisible,
-        setIsCreatingTask,
-        setOpeningService,
-        funcSetAllChats,
-        setIsToDoVisible,
-        isToDoVisible,
         incompleteTodoCount,
+        isToDoVisible,
+        myself,
+        setIsToDoVisible,
+        setMyself,
+        useUISM,
+        socket,
+        useTEM,
+        useCM,
+        useTM,
     } = props;
 
     const isYou: boolean = myself.userId === chat.dmPartnerUser.userId;
 
     const switchSubToMain = () => {
-        if (isSubChatVisible === true) {
-            setCurrentMainChat(subChat);
-            setIsSubChatVisible(false);
+        if (useCM.isSubChatVisible === true) {
+            useCM.setCurrentMainChat(useCM.currentSubChat as ChatProps);
+            useCM.setIsSubChatVisible(false);
         } else {
-            setIsMainChatVisible(false);
+            useCM.setIsMainChatVisible(false);
         }
     };
 
     const swapChat = () => {
-        setCurrentMainChat(subChat);
-        setCurrentSubChat(chat);
+        useCM.setCurrentMainChat(useCM.currentSubChat as ChatProps);
+        useCM.setCurrentSubChat(chat);
     };
 
     return (
@@ -91,73 +74,72 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
         >
             <Stack direction="row" spacing={{ xs: 1, md: 2 }} sx={{ alignItems: "center" }}>
                 <HeaderUserName
-                    teamMemberProfiles={teamMemberProfiles}
-                    socket={socket}
+                    chat={chat}
+                    useCM={useCM}
+                    isYou={isYou}
                     myself={myself}
                     setMyself={setMyself}
-                    setOpeningService={setOpeningService}
-                    setCurrentMainChat={setCurrentMainChat}
-                    chat={chat}
-                    isYou={isYou}
-                    funcSetAllChats={funcSetAllChats}
+                    socket={socket}
+                    useTEM={useTEM}
+                    useUISM={useUISM}
                 />
             </Stack>
-            <Stack spacing={1} direction="row" sx={{ alignItems: "center" }}>
+            <Stack direction="row" sx={{ alignItems: "center" }}>
                 {(chat.chatType === 3 || chat.chatType === 4) && (
-                    <Tooltip title="Create a new task" size="sm">
+                    <Tooltip size="sm" title="Create a new task" variant="outlined">
                         <IconButton
+                            color="neutral"
                             component="a"
                             size="sm"
                             variant="plain"
-                            color="neutral"
                             onClick={() => {
-                                setIsMainChatVisible(true);
-                                setIsThreadVisible(false);
-                                setIsTaskPreviewVisible(false);
-                                setIsCreatingTask({
+                                useCM.setIsMainChatVisible(true);
+                                useCM.setIsThreadVisible(false);
+                                useTM.setIsTaskPreviewVisible(false);
+                                useTM.setIsCreatingTask({
                                     flag: true,
                                     parentTaskId: null,
                                     rootTaskId: null,
                                 });
                             }}
-                            sx={{ px: "10px" }}
                         >
                             <PlaylistAddIcon />
-                            New Task
                         </IconButton>
                     </Tooltip>
                 )}
 
-                <Stack spacing={0.5} direction="row" sx={{ alignItems: "center" }}>
+                <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
                     {isYou === true ? (
                         <>
                             {isToDoVisible === true ? (
-                                <Tooltip title="DM" size="sm">
+                                <Tooltip size="sm" title="Back to DM" variant="outlined">
                                     <IconButton
+                                        color="neutral"
                                         component="a"
                                         size="sm"
                                         variant="plain"
-                                        color="neutral"
                                         onClick={() => setIsToDoVisible(false)}
                                     >
                                         <QuestionAnswerIcon />
                                     </IconButton>
                                 </Tooltip>
                             ) : (
-                                <Tooltip title="To-Do" size="sm">
+                                <Tooltip size="sm" title="To-Do" variant="outlined">
                                     <Badge
+                                        anchorOrigin={{ vertical: "top", horizontal: "right" }}
                                         badgeContent={incompleteTodoCount}
                                         color="primary"
                                         size="sm"
-                                        anchorOrigin={{ vertical: "top", horizontal: "right" }}
                                         sx={{ "& .JoyBadge-badge": { zIndex: 1 }, mt: 1 }}
                                     >
                                         <IconButton
+                                            color="neutral"
                                             component="a"
                                             size="sm"
                                             variant="plain"
-                                            color="neutral"
-                                            onClick={() => setIsToDoVisible(true)}
+                                            onClick={() => {
+                                                setIsToDoVisible(true);
+                                            }}
                                         >
                                             <ChecklistIcon />
                                         </IconButton>
@@ -167,13 +149,13 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                         </>
                     ) : null}
 
-                    {isSubChatVisible && (
+                    {useCM.isSubChatVisible && (
                         <div>
                             <IconButton
+                                color="neutral"
                                 component="a"
                                 size="sm"
                                 variant="plain"
-                                color="neutral"
                                 onClick={() => swapChat()}
                             >
                                 <SwapVertIcon />
@@ -181,18 +163,12 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                         </div>
                     )}
 
-                    <Tooltip title="More Options">
-                        <IconButton component="a" size="sm" variant="plain" color="neutral">
-                            <MoreVert />
-                        </IconButton>
-                    </Tooltip>
-
-                    <Tooltip title="Close">
+                    <Tooltip size="sm" title="Close" variant="outlined">
                         <IconButton
+                            color="neutral"
                             component="a"
                             size="sm"
                             variant="plain"
-                            color="neutral"
                             onClick={() => switchSubToMain()}
                         >
                             <CancelIcon />

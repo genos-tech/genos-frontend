@@ -1,38 +1,40 @@
 import Autocomplete from "@mui/joy/Autocomplete";
 
-import { ProjectProps, TaskProps } from "../../../../types/tasks";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { TaskProps } from "../../../../types/tasks";
 
 type ACTeamProjectsProps = {
-    teamProjects: ProjectProps[];
-    taskContents: TaskProps;
-    setTaskContents: (value: TaskProps) => void;
+    taskContent: TaskProps;
+    setTaskContent: (value: TaskProps) => void;
     isOpenProjectList: boolean;
     setIsOpenProjectList: (value: boolean) => void;
-    setCurrentProject: (value: ProjectProps) => void;
     setTaskUpdated?: (value: boolean) => void;
+    usePM: ProjectManagementState;
 };
 export const ACTeamProjects = (props: ACTeamProjectsProps) => {
     const {
-        teamProjects,
-        taskContents,
-        setTaskContents,
+        usePM,
+        taskContent,
+        setTaskContent,
         isOpenProjectList,
         setIsOpenProjectList,
-        setCurrentProject,
         setTaskUpdated,
     } = props;
 
     return (
         <Autocomplete
-            key={taskContents.id}
-            options={teamProjects}
+            key={taskContent.id}
             getOptionLabel={(option) => option.projectName}
-            value={taskContents.project?.projectId ? taskContents.project : undefined}
             isOptionEqualToValue={(option, value) => option.projectId === value.projectId}
+            options={usePM.teamProjects}
+            size="sm"
+            sx={{ width: "100%" }}
+            value={taskContent.project?.projectId ? taskContent.project : undefined}
+            onOpen={() => setIsOpenProjectList(!isOpenProjectList)}
             onChange={(event, value) => {
                 if (value !== null) {
-                    setTaskContents({
-                        ...taskContents,
+                    setTaskContent({
+                        ...taskContent,
                         project: {
                             projectId: value.projectId,
                             projectName: value.projectName,
@@ -42,7 +44,7 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
                         tags: [],
                     });
                     if (value.projectId) {
-                        setCurrentProject({
+                        usePM.setCurrentProject({
                             projectId: value.projectId,
                             projectName: value.projectName,
                             projectTags: [],
@@ -56,9 +58,6 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
                     }
                 }
             }}
-            onOpen={() => setIsOpenProjectList(!isOpenProjectList)}
-            size="sm"
-            sx={{ width: "100%" }}
         />
     );
 };

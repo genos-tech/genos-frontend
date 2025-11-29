@@ -1,10 +1,10 @@
-import { alpha } from "@mui/system";
-import { Box, Typography, Stack, Chip } from "@mui/joy";
+import { Box, Chip, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { alpha } from "@mui/system";
 
 import { UserProps } from "../../../../types/admin";
-import { statuses } from "../../../tasks/utils/taskMeta";
 import { extractMMDDHHMMSSs } from "../../../../utils/dateUtils";
+import { statuses } from "../../../tasks/utils/taskMeta";
 
 type BubbleUserNameTypes = {
     isSimpleBubble: boolean;
@@ -40,16 +40,16 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
     return (
         <Box sx={{ flex: 1 }}>
             <Stack
+                alignItems="left"
                 direction="column"
                 justifyContent={isSent ? "flex-end" : "flex-start"}
-                alignItems="left"
             >
                 {/* Task update message bubble */}
                 {sender.isSystemUser === true && (
                     <>
                         <Typography
-                            level="body-sm"
                             component="span"
+                            level="body-sm"
                             sx={[
                                 {
                                     marginTop: "3px",
@@ -72,14 +72,14 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                                 <>
                                     <Chip
                                         key={taskId}
-                                        variant="soft"
                                         color="neutral"
+                                        size="lg"
+                                        variant="soft"
                                         sx={{
                                             marginRight: taskStatusDetails ? "5px" : "7px",
                                             borderRadius: "5px",
                                             fontWeight: "bold",
                                         }}
-                                        size="lg"
                                     >
                                         ID: {taskId || "N/A"}
                                     </Chip>
@@ -129,8 +129,8 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                     <>
                         {isSimpleBubble === false && (
                             <Typography
-                                level="body-md"
                                 component="span"
+                                level="body-md"
                                 sx={[
                                     { lineHeight: 1.5, marginRight: "10px" },
                                     isSent

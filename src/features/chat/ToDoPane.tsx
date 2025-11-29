@@ -1,49 +1,48 @@
-import { Socket } from "socket.io-client";
-import { useRef, useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Box, Button, Stack, Switch, Typography } from "@mui/joy";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
+import { Socket } from "socket.io-client";
 
-import { UserProps } from "../../types/admin";
-import { useAuth } from "../../context/AuthContext";
-import { ChatProps, ToDoFactProps } from "../../types/chat";
 import { TodoBubble } from "./components/bubbles/TodoBubble";
 import { createNewTodo } from "./services/createNewTodo";
 import { defaultTodoContent } from "./utils/defaults";
 
+import { useAuth } from "../../context/AuthContext";
+import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { TeamManagementState } from "../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
+import { UserProps } from "../../types/admin";
+import { ToDoFactProps } from "../../types/chat";
+
 type ToDoPaneProps = {
+    useCM: ChatManagementState;
     myself: UserProps;
-    teamMemberProfiles: Record<string, UserProps>;
-    teamMembers: UserProps[];
+    useTEM: TeamManagementState;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
-    setOpeningService: (value: number) => void;
-    setCurrentChat: (chat: ChatProps) => void;
+    useUISM: UIStateManagementState;
     todos: ToDoFactProps[];
     setTodos: (value: ToDoFactProps[]) => void;
     isExistingTodaysTodo: boolean;
     setIsExistingTodaysTodo: (value: boolean) => void;
-    isSubChatVisible: boolean;
     currentWindowHeight: number;
 };
 export const ToDoPane = (props: ToDoPaneProps) => {
     const {
+        useCM,
         myself,
-        teamMemberProfiles,
-        teamMembers,
+        useTEM,
         setMyself,
         socket,
-        setOpeningService,
-        setCurrentChat,
+        useUISM,
         todos,
         setTodos,
         isExistingTodaysTodo,
         setIsExistingTodaysTodo,
-        isSubChatVisible,
         currentWindowHeight,
     } = props;
     const { accessToken } = useAuth();
     const [tmpTodos, setTmpTodos] = useState<ToDoFactProps[]>(todos);
-    const [showOnlyInCompleteTodos, setShowOnlyInCompleteTodos] = useState(false);
 
     const handleCreateNewTodo = async () => {
         const todoContent = await createNewTodo(
@@ -61,38 +60,40 @@ export const ToDoPane = (props: ToDoPaneProps) => {
     };
 
     useEffect(() => {
-        if (showOnlyInCompleteTodos) {
+        if (useCM.showOnlyInCompleteTodos) {
             setTmpTodos(todos.filter((todo) => !todo.isCompleted));
         } else {
             setTmpTodos(todos);
         }
-    }, [showOnlyInCompleteTodos, todos]);
+    }, [useCM.showOnlyInCompleteTodos, todos]);
 
     const virtuosoRef = useRef<VirtuosoHandle | null>(null);
 
     return (
         <Box sx={{ height: "100dvh" }}>
             <Stack
-                direction="row"
                 alignItems="center"
+                direction="row"
                 justifyContent="center"
                 sx={{ position: "relative" }}
             >
                 <Button
-                    variant="soft"
                     color="primary"
                     disabled={isExistingTodaysTodo}
-                    onClick={handleCreateNewTodo}
+                    variant="soft"
                     sx={{
                         mt: 2,
                         mb: 1.5,
                     }}
+                    onClick={handleCreateNewTodo}
                 >
                     Add Today's Todo
                 </Button>
                 <Switch
-                    checked={showOnlyInCompleteTodos}
-                    onChange={() => setShowOnlyInCompleteTodos(!showOnlyInCompleteTodos)}
+                    checked={useCM.showOnlyInCompleteTodos}
+                    color={useCM.showOnlyInCompleteTodos ? "warning" : "neutral"}
+                    size="sm"
+                    variant="soft"
                     slotProps={{
                         track: {
                             children: (
@@ -100,7 +101,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                     component="span"
                                     level="inherit"
                                     sx={{
-                                        ml: showOnlyInCompleteTodos ? "6px" : "22px",
+                                        ml: useCM.showOnlyInCompleteTodos ? "6px" : "22px",
                                         fontWeight: "bold",
                                     }}
                                 >
@@ -109,8 +110,6 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                             ),
                         },
                     }}
-                    size="sm"
-                    variant="soft"
                     sx={{
                         position: "absolute",
                         right: "30px",
@@ -118,42 +117,43 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                         "--Switch-trackWidth": "95px",
                         "--Switch-trackHeight": "23px",
                     }}
-                    color={showOnlyInCompleteTodos ? "warning" : "neutral"}
+                    onChange={() =>
+                        useCM.setShowOnlyInCompleteTodos(!useCM.showOnlyInCompleteTodos)
+                    }
                 />
             </Stack>
             <Box sx={{ px: 0.3, my: 0.2 }}>
                 {tmpTodos.length > 0 && (
                     <Virtuoso
                         ref={virtuosoRef}
-                        className="custom-scrollbar"
-                        style={{
-                            height: isSubChatVisible
-                                ? `${(currentWindowHeight - 150) * 0.43}px`
-                                : `${currentWindowHeight - 150}px`,
-                        }}
-                        totalCount={tmpTodos.length}
-                        initialTopMostItemIndex={0}
-                        atTopThreshold={64}
                         atBottomThreshold={128}
+                        atTopThreshold={64}
+                        className="custom-scrollbar"
+                        initialTopMostItemIndex={0}
+                        totalCount={tmpTodos.length}
                         itemContent={(index) => {
                             const todo = tmpTodos[index];
                             return (
                                 <TodoBubble
                                     key={`todo-bubble-${todo.todoId}`}
+                                    useCM={useCM}
                                     currentIndex={index}
                                     isExistingTodaysTodo={isExistingTodaysTodo}
                                     myself={myself}
-                                    todo={todo}
-                                    teamMemberProfiles={teamMemberProfiles}
-                                    teamMembers={teamMembers}
                                     setMyself={setMyself}
-                                    socket={socket}
-                                    todos={tmpTodos}
                                     setTodos={setTodos}
-                                    setOpeningService={setOpeningService}
-                                    setCurrentChat={setCurrentChat}
+                                    socket={socket}
+                                    useTEM={useTEM}
+                                    todo={todo}
+                                    todos={tmpTodos}
+                                    useUISM={useUISM}
                                 />
                             );
+                        }}
+                        style={{
+                            height: useCM.isSubChatVisible
+                                ? `${(currentWindowHeight - 150) * 0.43}px`
+                                : `${currentWindowHeight - 150}px`,
                         }}
                     />
                 )}

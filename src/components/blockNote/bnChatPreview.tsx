@@ -1,49 +1,43 @@
-import { Socket } from "socket.io-client";
-import { Box, Modal, ModalDialog, IconButton, Tooltip } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
+
+import { useState } from "react";
+import { codeBlock } from "@blocknote/code-block";
+import {
+    BlockNoteSchema,
+    defaultBlockSpecs,
+    defaultInlineContentSpecs,
+    PartialBlock,
+} from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
 import { useCreateBlockNote } from "@blocknote/react";
-import {
-    PartialBlock,
-    BlockNoteSchema,
-    defaultInlineContentSpecs,
-    defaultBlockSpecs,
-} from "@blocknote/core";
-import { codeBlock } from "@blocknote/code-block";
 import DownloadIcon from "@mui/icons-material/Download";
+import { Box, IconButton, Modal, ModalDialog, Tooltip } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
+import { Socket } from "socket.io-client";
 
-import { CreateMentionSpec } from "./Mention";
+import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { TeamManagementState } from "../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
-import { ChatProps } from "../../types/chat";
-import { useState } from "react";
-import { downloadFile } from "../../utils/downloadUtils";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
+import { downloadFile } from "../../utils/downloadUtils";
+import { CreateMentionSpec } from "./Mention";
 
 type BnChatPreviewProps = {
-    teamMemberProfiles: Record<string, UserProps>;
+    useTEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
     content: PartialBlock[] | any[];
     isSent: boolean;
     customClassName?: string;
-    setCurrentChat: (chat: ChatProps) => void;
-    setOpeningService: (value: number) => void;
+    useUISM: UIStateManagementState;
+    useCM: ChatManagementState;
 };
 export const BnChatPreview = (props: BnChatPreviewProps) => {
-    const {
-        teamMemberProfiles,
-        myself,
-        setMyself,
-        socket,
-        content,
-        isSent,
-        customClassName,
-        setCurrentChat,
-        setOpeningService,
-    } = props;
+    const { useTEM, myself, setMyself, socket, content, isSent, customClassName, useUISM, useCM } =
+        props;
     const { mode } = useColorScheme();
     const _bnBoxClassName: string = isSent
         ? `bn-message-bubble-box-${mode}-me`
@@ -62,12 +56,12 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
             mention: CreateMentionSpec(
-                teamMemberProfiles,
+                useTEM.teamMemberProfiles,
                 socket,
                 myself,
                 setMyself,
-                setOpeningService,
-                setCurrentChat
+                useUISM,
+                useCM
             ),
         },
         blockSpecs: {
@@ -103,11 +97,11 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
         <Box className={bnBoxClassName} sx={{ px: "10px" }}>
             <BlockNoteView
                 className="bn-box"
-                editor={editor}
                 editable={false}
+                editor={editor}
+                filePanel={false}
                 formattingToolbar={false}
                 linkToolbar={false}
-                filePanel={false}
                 sideMenu={false}
                 slashMenu={false}
                 tableHandles={false}
@@ -120,22 +114,24 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
                 }}
             ></BlockNoteView>
 
-            <Modal sx={{ zIndex: 10010 }} open={opened} onClose={() => setOpened(false)}>
+            <Modal open={opened} sx={{ zIndex: 10010 }} onClose={() => setOpened(false)}>
                 <ModalDialog>
                     {selectedImage ? (
                         <Box>
-                            <img src={selectedImage} alt="preview" />
+                            <img alt="preview" src={selectedImage} />
                             <Tooltip
-                                placement="top"
-                                title="Download"
-                                sx={{ zIndex: 10010 }}
                                 component="div"
+                                placement="top"
+                                size="sm"
+                                sx={{ zIndex: 10010 }}
+                                title="Download"
+                                variant="outlined"
                             >
                                 <IconButton
-                                    onClick={() => handleDownload(selectedImage)}
                                     color="neutral"
-                                    variant="solid"
                                     sx={{ position: "absolute", top: "10px", right: "10px" }}
+                                    variant="solid"
+                                    onClick={() => handleDownload(selectedImage)}
                                 >
                                     <DownloadIcon />
                                 </IconButton>

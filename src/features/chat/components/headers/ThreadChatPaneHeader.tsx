@@ -1,78 +1,40 @@
-import { alpha } from "@mui/system";
-import { Tooltip, Stack, Typography, IconButton, Chip } from "@mui/joy";
-import CancelIcon from "@mui/icons-material/Cancel";
-import ReplyIcon from "@mui/icons-material/Reply";
-import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
-import { useColorScheme } from "@mui/joy/styles";
+import CancelIcon from "@mui/icons-material/Cancel";
 import NoteAltIcon from "@mui/icons-material/NoteAlt";
+import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
+import ReplyIcon from "@mui/icons-material/Reply";
+import { Chip, IconButton, Stack, Tooltip, Typography } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
+import { alpha } from "@mui/system";
 
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ThreadProps } from "../../../../types/chat";
-import { TaskProps } from "../../../../types/tasks";
 
 type ThreadChatPaneHeaderProps = {
     myself: UserProps;
-    thread: ThreadProps;
-    setCurrentThreadChat: (chat: ThreadProps) => void;
-    setIsMainChatVisible: (chat: boolean) => void;
-    setIsThreadVisible: (value: boolean) => void;
-    setIsTaskPreviewVisible: (value: boolean) => void;
-    isTaskPreviewVisible: boolean;
-    isCreatingTask: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    };
-    setIsCreatingTask: (value: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    }) => void;
-    setIsOpeningTask?: (value: boolean) => void;
-    currentPreviewTask?: TaskProps;
-    currentPreviewTaskId: number;
-    isChatNoteVisible: boolean;
-    setIsChatNoteVisible: (value: boolean) => void;
-    handleCreateNewChatNoteIfNotExist: (
-        chatType: number,
-        chatId: number,
-        isThread: boolean,
-        threadId: number
-    ) => Promise<void>;
+    useCM: ChatManagementState;
+    useNM: NoteManagementState;
+    useTM: TaskManagementState;
 };
 
 export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
-    const {
-        myself,
-        thread,
-        setCurrentThreadChat,
-        setIsMainChatVisible,
-        setIsThreadVisible,
-        setIsTaskPreviewVisible,
-        isTaskPreviewVisible,
-        isCreatingTask,
-        setIsOpeningTask,
-        setIsCreatingTask,
-        currentPreviewTask,
-        currentPreviewTaskId,
-        isChatNoteVisible,
-        setIsChatNoteVisible,
-        handleCreateNewChatNoteIfNotExist,
-    } = props;
+    const { myself, useCM, useNM, useTM } = props;
     const { mode } = useColorScheme();
 
-    const isYou: boolean = myself.userId === thread.dmPartnerUser.userId;
+    const isYou: boolean = myself.userId === useCM.currentThreadChat?.dmPartnerUser.userId;
 
     const dummyThreadChat: ThreadProps = {
-        chatId: thread.chatId,
-        chatName: thread.chatName,
-        threadId: thread.threadId,
-        chatType: thread.chatType,
-        dmPartnerUser: thread.dmPartnerUser,
-        taskId: thread.taskId,
+        chatId: useCM.currentThreadChat?.chatId as number,
+        chatName: useCM.currentThreadChat?.chatName as string,
+        threadId: useCM.currentThreadChat?.threadId as number,
+        chatType: useCM.currentThreadChat?.chatType as number,
+        dmPartnerUser: useCM.currentThreadChat?.dmPartnerUser as UserProps,
+        taskId: useCM.currentThreadChat?.taskId as number | null,
         messages: [],
-        TSLastMessage: thread.TSLastMessage,
+        TSLastMessage: useCM.currentThreadChat?.TSLastMessage as string,
     };
 
     return (
@@ -90,11 +52,11 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
         >
             <Stack direction="row" spacing={{ xs: 0.5, md: 0.5 }} sx={{ alignItems: "center" }}>
                 <Chip
-                    size="lg"
-                    variant="solid"
                     color="neutral"
+                    size="lg"
                     startDecorator={<ReplyIcon />}
                     sx={{ borderRadius: "4px" }}
+                    variant="solid"
                 >
                     Thread
                 </Chip>
@@ -102,53 +64,55 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                 <div>
                     <Typography
                         component="h2"
-                        noWrap
                         sx={{ fontWeight: "lg", fontSize: "lg", pl: "5px" }}
+                        noWrap
                     >
-                        {isYou ? `${thread?.chatName} (you)` : thread?.chatName}
+                        {isYou
+                            ? `${useCM.currentThreadChat?.chatName} (you)`
+                            : useCM.currentThreadChat?.chatName}
                     </Typography>
                 </div>
             </Stack>
 
-            <Stack spacing={0.3} direction="row" sx={{ alignItems: "center" }}>
+            <Stack direction="row" spacing={0.3} sx={{ alignItems: "center" }}>
                 {/* Custom header in PM and DM/GM (having a task) thread */}
-                {(((thread.chatType === 3 || thread.chatType === 4) &&
-                    currentPreviewTaskId !== -1) ||
-                    (isTaskPreviewVisible === false &&
-                        currentPreviewTaskId !== -1 &&
-                        currentPreviewTask &&
-                        thread.taskExist === true)) && (
+                {(((useCM.currentThreadChat?.chatType === 3 ||
+                    useCM.currentThreadChat?.chatType === 4) &&
+                    useTM.currentPreviewTaskId !== -1) ||
+                    (useTM.currentPreviewTaskId !== -1 &&
+                        useTM.currentPreviewTask &&
+                        useCM.currentThreadChat?.taskExist === true)) && (
                     <>
                         <Chip
-                            key={thread.taskId}
-                            variant="soft"
+                            key={useCM.currentThreadChat?.taskId}
                             color="neutral"
+                            size="sm"
+                            variant="soft"
                             sx={{
                                 borderRadius: "5px",
                                 fontWeight: "bold",
                             }}
-                            size="lg"
                         >
-                            ID: {thread.taskId || "N/A"}
+                            ID: {useCM.currentThreadChat?.taskId || "N/A"}
                         </Chip>
-                        {currentPreviewTask && (
+                        {useTM.currentPreviewTask && (
                             <>
                                 <Chip
-                                    size="lg"
+                                    size="sm"
                                     variant="soft"
                                     sx={{
-                                        backgroundColor: currentPreviewTask.status.color
+                                        backgroundColor: useTM.currentPreviewTask.status.color
                                             ? alpha(
-                                                  currentPreviewTask.status.color,
+                                                  useTM.currentPreviewTask.status.color,
                                                   mode === "dark" ? 0.5 : 0.75
                                               )
                                             : "transparent",
-                                        color: currentPreviewTask.status.textColor,
+                                        color: useTM.currentPreviewTask.status.textColor,
                                         fontWeight: "bold",
                                         borderRadius: "5px",
                                     }}
                                 >
-                                    {currentPreviewTask.status.status || "N/A"}
+                                    {useTM.currentPreviewTask.status.status || "N/A"}
                                 </Chip>
                             </>
                         )}
@@ -156,52 +120,50 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                 )}
 
                 {/* Custom header in DM/GM thread */}
-                {thread.chatType !== 3 && thread.chatType !== 4 && currentPreviewTaskId === -1 && (
-                    <>
-                        <Tooltip title="New Task" size="sm">
-                            <IconButton
-                                component="a"
-                                size="sm"
-                                variant="plain"
-                                color="neutral"
-                                onClick={() => {
-                                    setIsMainChatVisible(true);
-                                    setIsThreadVisible(true);
-                                    setIsTaskPreviewVisible(false);
-                                    setIsCreatingTask({
-                                        flag: true,
-                                        parentTaskId: null,
-                                        rootTaskId: null,
-                                    });
-                                }}
-                                sx={{ px: "10px" }}
-                            >
-                                <PlaylistAddIcon />
-                            </IconButton>
-                        </Tooltip>
-                    </>
-                )}
+                {useCM.currentThreadChat?.chatType !== 3 &&
+                    useCM.currentThreadChat?.chatType !== 4 &&
+                    useTM.currentPreviewTaskId === -1 && (
+                        <>
+                            <Tooltip size="sm" title="Create a New Task" variant="outlined">
+                                <IconButton
+                                    color="neutral"
+                                    component="a"
+                                    size="sm"
+                                    variant="plain"
+                                    onClick={() => {
+                                        useCM.setIsMainChatVisible(true);
+                                        useCM.setIsThreadVisible(true);
+                                        useTM.setIsTaskPreviewVisible(false);
+                                        useTM.setIsCreatingTask({
+                                            flag: true,
+                                            parentTaskId: null,
+                                            rootTaskId: null,
+                                        });
+                                    }}
+                                >
+                                    <PlaylistAddIcon />
+                                </IconButton>
+                            </Tooltip>
+                        </>
+                    )}
 
                 {!(
-                    thread.chatType !== 3 &&
-                    thread.chatType !== 4 &&
-                    currentPreviewTaskId === -1
+                    useCM.currentThreadChat?.chatType !== 3 &&
+                    useCM.currentThreadChat?.chatType !== 4 &&
+                    useTM.currentPreviewTaskId === -1
                 ) && (
-                    <Tooltip title="Open Task" size="sm">
+                    <Tooltip size="sm" title="Open Task" variant="outlined">
                         <IconButton
                             size="sm"
                             onClick={() => {
-                                setIsMainChatVisible(false);
-                                setIsThreadVisible(true);
-                                setIsTaskPreviewVisible(true);
-                                setIsCreatingTask({
+                                useCM.setIsMainChatVisible(false);
+                                useCM.setIsThreadVisible(true);
+                                useTM.setIsTaskPreviewVisible(true);
+                                useTM.setIsCreatingTask({
                                     flag: false,
                                     parentTaskId: null,
                                     rootTaskId: null,
                                 });
-                                if (setIsOpeningTask) {
-                                    setIsOpeningTask(true);
-                                }
                             }}
                         >
                             <AssignmentRoundedIcon />
@@ -209,42 +171,39 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     </Tooltip>
                 )}
 
-                <Tooltip title="Open Note" size="sm">
+                <Tooltip size="sm" title="Open Note" variant="outlined">
                     <IconButton
+                        color="neutral"
                         component="a"
                         size="sm"
                         variant="plain"
-                        color="neutral"
                         onClick={() => {
-                            handleCreateNewChatNoteIfNotExist(
-                                thread.chatType,
-                                thread.chatId,
+                            useNM.handleCreateNewChatNoteIfNotExist(
+                                useCM.currentThreadChat?.chatType as number,
+                                useCM.currentThreadChat?.chatId as number,
                                 true,
-                                thread.threadId
+                                useCM.currentThreadChat?.threadId as number
                             );
-                            setIsChatNoteVisible(true);
-                            setIsMainChatVisible(false);
-                            setIsThreadVisible(true);
-                            setIsTaskPreviewVisible(false);
-                            setIsCreatingTask({ ...isCreatingTask, flag: false });
-                            if (setIsOpeningTask) {
-                                setIsOpeningTask(false);
-                            }
+                            useCM.setIsChatNoteVisibleInChat(true);
+                            useCM.setIsMainChatVisible(false);
+                            useCM.setIsThreadVisible(true);
+                            useTM.setIsTaskPreviewVisible(false);
+                            useTM.setIsCreatingTask({ ...useTM.isCreatingTask, flag: false });
                         }}
                     >
                         <NoteAltIcon />
                     </IconButton>
                 </Tooltip>
 
-                <Tooltip title="Close" size="sm">
+                <Tooltip size="sm" title="Close" variant="outlined">
                     <IconButton
+                        color="neutral"
                         size="sm"
                         variant="plain"
-                        color="neutral"
                         onClick={() => {
-                            setIsMainChatVisible(true);
-                            setIsThreadVisible(false);
-                            setCurrentThreadChat(dummyThreadChat);
+                            useCM.setIsMainChatVisible(true);
+                            useCM.setIsThreadVisible(false);
+                            useCM.setCurrentThreadChat(dummyThreadChat);
                         }}
                     >
                         <CancelIcon />

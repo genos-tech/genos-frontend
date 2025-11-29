@@ -1,95 +1,95 @@
-import { Socket } from "socket.io-client";
-import { useState, useEffect } from "react";
-import { Box, ModalDialog, Modal, Tooltip, IconButton } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
-import { en } from "@blocknote/core/locales";
-import { BlockNoteView } from "@blocknote/mantine";
-import { codeBlock } from "@blocknote/code-block";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
+import "../../App.css";
+
+import { useEffect, useState } from "react";
+import { codeBlock } from "@blocknote/code-block";
 import {
-    BasicTextStyleButton,
-    BlockTypeSelect,
-    ColorStyleButton,
-    CreateLinkButton,
-    FileCaptionButton,
-    FileReplaceButton,
-    FormattingToolbar,
-    TextAlignButton,
-    FormattingToolbarController,
-    useCreateBlockNote,
-    DefaultReactSuggestionItem,
-    SuggestionMenuController,
-    getDefaultReactSlashMenuItems,
+    BlockNoteSchema,
+    defaultBlockSpecs,
+    defaultInlineContentSpecs,
+    filterSuggestionItems,
+    PartialBlock,
+} from "@blocknote/core";
+import { en } from "@blocknote/core/locales";
+import { BlockNoteView } from "@blocknote/mantine";
+import {
     AddCommentButton,
     AddTiptapCommentButton,
+    BasicTextStyleButton,
+    BlockColorsItem,
+    BlockTypeSelect,
+    BlockTypeSelectItem,
+    blockTypeSelectItems,
+    ColorStyleButton,
+    CreateLinkButton,
+    DefaultReactSuggestionItem,
+    DragHandleMenu,
+    DragHandleMenuProps,
+    FileCaptionButton,
     FileDeleteButton,
     FileDownloadButton,
     FilePreviewButton,
     FileRenameButton,
-    TableCellMergeButton,
-    blockTypeSelectItems,
-    BlockTypeSelectItem,
-    GridSuggestionMenuController,
+    FileReplaceButton,
+    FormattingToolbar,
+    FormattingToolbarController,
+    getDefaultReactSlashMenuItems,
+    RemoveBlockItem,
     SideMenu,
     SideMenuController,
-    BlockColorsItem,
-    DragHandleMenu,
-    DragHandleMenuProps,
-    RemoveBlockItem,
+    SuggestionMenuController,
+    TableCellMergeButton,
+    TextAlignButton,
+    useCreateBlockNote,
 } from "@blocknote/react";
-import {
-    BlockNoteSchema,
-    defaultInlineContentSpecs,
-    filterSuggestionItems,
-    defaultBlockSpecs,
-    PartialBlock,
-} from "@blocknote/core";
-import { RiAlertFill } from "react-icons/ri";
 import DownloadIcon from "@mui/icons-material/Download";
+import { Box, IconButton, Modal, ModalDialog, Tooltip } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
+import { RiAlertFill } from "react-icons/ri";
+import { Socket } from "socket.io-client";
 
+import { useAuth } from "../../context/AuthContext";
+import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { TeamManagementState } from "../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
+import { UserProps } from "../../types/admin";
+import { TaskNoteProps } from "../../types/notes";
+import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
+import { downloadFile } from "../../utils/downloadUtils";
+import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 import { Alert } from "./sub/Alert";
 import { ResetBlockTypeItem } from "./sub/ResetBlockTypeItem";
-import { CreateMentionSpec, MentionMenuItems } from "./Mention";
-import { UserProps } from "../../types/admin";
-import { ChatProps } from "../../types/chat";
-import "../../App.css";
-import { TaskNoteProps } from "../../types/notes";
-import { useAuth } from "../../context/AuthContext";
-import { downloadFile } from "../../utils/downloadUtils";
-import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const django_url = import.meta.env.VITE_DJANGO_URL;
 
 type BnTaskNoteEditorProps = {
-    teamMemberProfiles: Record<string, UserProps>;
+    useTEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
-    teamMembers: UserProps[];
     currentTaskNote: TaskNoteProps;
     body: any[];
     setBody: (text: PartialBlock[] | any[]) => void;
     setNoteBodyEdited?: (value: boolean) => void;
     setNoteBodySaved?: (value: boolean) => void;
-    setCurrentChat: (chat: ChatProps) => void;
-    setOpeningService: (value: number) => void;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
 };
 export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
     const {
-        teamMemberProfiles,
+        useTEM,
         myself,
         setMyself,
         socket,
-        teamMembers,
         currentTaskNote,
         body,
         setBody,
         setNoteBodyEdited,
         setNoteBodySaved,
-        setCurrentChat,
-        setOpeningService,
+        useCM,
+        useUISM,
     } = props;
 
     const { mode } = useColorScheme();
@@ -118,12 +118,12 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
             mention: CreateMentionSpec(
-                teamMemberProfiles,
+                useTEM.teamMemberProfiles,
                 socket,
                 myself,
                 setMyself,
-                setOpeningService,
-                setCurrentChat
+                useUISM,
+                useCM
             ),
         },
         blockSpecs: {
@@ -248,15 +248,24 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
     };
 
     return (
-        <Box sx={{ position: "relative" }} className={bnBoxClassName}>
+        <Box className={bnBoxClassName} sx={{ position: "relative" }}>
             <BlockNoteView
                 className="bn-box"
                 editor={editor}
-                sideMenu={false}
                 emojiPicker={false}
-                theme={mode === "dark" ? "dark" : "light"}
                 formattingToolbar={false}
+                sideMenu={false}
+                theme={mode === "dark" ? "dark" : "light"}
                 data-changing-font-demo // custom font
+                onChange={() => {
+                    setBody(editor.document);
+                    if (setNoteBodyEdited) {
+                        setNoteBodyEdited(true);
+                        if (setNoteBodySaved) {
+                            setNoteBodySaved(false);
+                        }
+                    }
+                }}
                 onClick={(e) => {
                     const target = e.target as HTMLElement;
                     if (target.tagName === "IMG") {
@@ -267,15 +276,6 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                     if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
                         if (editor.document.length > 1) {
                             //Auto saving logic here
-                        }
-                    }
-                }}
-                onChange={() => {
-                    setBody(editor.document);
-                    if (setNoteBodyEdited) {
-                        setNoteBodyEdited(true);
-                        if (setNoteBodySaved) {
-                            setNoteBodySaved(false);
                         }
                     }
                 }}
@@ -304,33 +304,33 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                             />
 
                             <BasicTextStyleButton
-                                basicTextStyle={"bold"}
                                 key={"boldStyleButton"}
+                                basicTextStyle={"bold"}
                             />
                             <BasicTextStyleButton
-                                basicTextStyle={"italic"}
                                 key={"italicStyleButton"}
+                                basicTextStyle={"italic"}
                             />
                             <BasicTextStyleButton
-                                basicTextStyle={"underline"}
                                 key={"underlineStyleButton"}
+                                basicTextStyle={"underline"}
                             />
                             <BasicTextStyleButton
-                                basicTextStyle={"strike"}
                                 key={"strikeStyleButton"}
+                                basicTextStyle={"strike"}
                             />
                             <BasicTextStyleButton
                                 key={"codeStyleButton"}
                                 basicTextStyle={"code"}
                             />
-                            <TextAlignButton textAlignment={"left"} key={"textAlignLeftButton"} />
+                            <TextAlignButton key={"textAlignLeftButton"} textAlignment={"left"} />
                             <TextAlignButton
-                                textAlignment={"center"}
                                 key={"textAlignCenterButton"}
+                                textAlignment={"center"}
                             />
                             <TextAlignButton
-                                textAlignment={"right"}
                                 key={"textAlignRightButton"}
+                                textAlignment={"right"}
                             />
                             <ColorStyleButton key={"colorStyleButton"} />
                             <CreateLinkButton key={"createLinkButton"} />
@@ -353,7 +353,11 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                     getItems={async (query) =>
                         // Gets the mentions menu items
                         filterSuggestionItems(
-                            MentionMenuItems(teamMemberProfiles, editor, teamMembers),
+                            MentionMenuItems(
+                                useTEM.teamMemberProfiles,
+                                editor,
+                                useTEM.teamMembers
+                            ),
                             query
                         )
                     }
@@ -367,22 +371,24 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                 />
             </BlockNoteView>
 
-            <Modal sx={{ zIndex: 10010 }} open={opened} onClose={() => setOpened(false)}>
+            <Modal open={opened} sx={{ zIndex: 10010 }} onClose={() => setOpened(false)}>
                 <ModalDialog>
                     {selectedImage ? (
                         <Box>
-                            <img src={selectedImage} alt="preview" />
+                            <img alt="preview" src={selectedImage} />
                             <Tooltip
-                                placement="top"
-                                title="Download"
-                                sx={{ zIndex: 10010 }}
                                 component="div"
+                                placement="top"
+                                size="sm"
+                                sx={{ zIndex: 10010 }}
+                                title="Download"
+                                variant="outlined"
                             >
                                 <IconButton
-                                    onClick={() => handleDownload(selectedImage)}
                                     color="neutral"
-                                    variant="solid"
                                     sx={{ position: "absolute", top: "10px", right: "10px" }}
+                                    variant="solid"
+                                    onClick={() => handleDownload(selectedImage)}
                                 >
                                     <DownloadIcon />
                                 </IconButton>

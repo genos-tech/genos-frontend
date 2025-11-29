@@ -1,41 +1,32 @@
 import React, { useState } from "react";
 import {
+    Alert,
+    Box,
+    Button,
+    Checkbox,
+    Input,
     Modal,
     ModalDialog,
-    Alert,
     Stack,
-    Button,
-    Input,
     Typography,
-    Checkbox,
-    Box,
 } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
-import { createChatGroup } from "../../services/createChatGroup";
 import { useAuth } from "../../../../context/AuthContext";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../../types/chat";
+import { createChatGroup } from "../../services/createChatGroup";
 
 type Props = {
     socket: Socket | null;
     myself: UserProps;
     open: boolean;
     setOpen: (value: boolean) => void;
-    allChats: AllChatProps[];
-    setAllChats: (value: AllChatProps[]) => void;
-    setCurrentMainChat: (value: ChatProps) => void;
+    useCM: ChatManagementState;
 };
 
-export const ModalCreateGM: React.FC<Props> = ({
-    socket,
-    myself,
-    open,
-    setOpen,
-    allChats,
-    setAllChats,
-    setCurrentMainChat,
-}) => {
+export const ModalCreateGM: React.FC<Props> = ({ socket, myself, open, setOpen, useCM }) => {
     const { accessToken } = useAuth();
 
     const [isPrivate, setIsPrivate] = useState(true);
@@ -46,13 +37,11 @@ export const ModalCreateGM: React.FC<Props> = ({
             createChatGroup(
                 myself,
                 chatName,
-                allChats,
+                useCM,
                 socket,
                 setCreateCGErrorMessage,
                 setOpen,
                 setGroupName,
-                setAllChats,
-                setCurrentMainChat,
                 accessToken ? accessToken : "",
                 isPrivate
             );
@@ -61,11 +50,12 @@ export const ModalCreateGM: React.FC<Props> = ({
 
     return (
         <>
-            <Modal open={open} onClose={() => setOpen(false)} sx={{ zIndex: 10000 }}>
+            <Modal open={open} sx={{ zIndex: 10000 }} onClose={() => setOpen(false)}>
                 <ModalDialog>
                     <Typography level="h4">Create New Group</Typography>
                     <Input
                         placeholder="Enter group name"
+                        sx={{ mt: 1 }}
                         value={chatName}
                         onChange={(e) => setGroupName(e.target.value)}
                         onKeyDown={(e) => {
@@ -73,16 +63,15 @@ export const ModalCreateGM: React.FC<Props> = ({
                                 handleCreateGroup();
                             }
                         }}
-                        sx={{ mt: 1 }}
                     />
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                         <Checkbox
-                            label="🔒 Private Project"
-                            color="neutral"
-                            variant="soft"
                             checked={isPrivate}
-                            onChange={(e) => setIsPrivate(e.target.checked)}
+                            color="neutral"
+                            label="🔒 Private Project"
                             sx={{ mt: 1 }}
+                            variant="soft"
+                            onChange={(e) => setIsPrivate(e.target.checked)}
                         />
                     </Box>
                     {CreateCGErrorMessage && CreateCGErrorMessage !== "" && (
@@ -90,17 +79,17 @@ export const ModalCreateGM: React.FC<Props> = ({
                     )}
                     <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: "flex-end" }}>
                         <Button
+                            color="danger"
                             component="a"
                             variant="outlined"
-                            color="danger"
                             onClick={() => setOpen(false)}
                         >
                             Cancel
                         </Button>
                         <Button
                             component="a"
-                            onClick={handleCreateGroup}
                             disabled={!chatName.trim()}
+                            onClick={handleCreateGroup}
                         >
                             Create
                         </Button>

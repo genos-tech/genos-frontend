@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { VirtuosoHandle } from "react-virtuoso";
+
 import { TaskCommentProps } from "../../../types/tasks";
 
 export const useScrollToBottomOnNewTaskComment = (

@@ -1,30 +1,24 @@
-import { alpha } from "@mui/system";
 import React, { useState } from "react";
-import { Modal, ModalDialog, Alert, Stack, Button, Input, Box, Chip, Typography } from "@mui/joy";
+import { Alert, Box, Button, Chip, Input, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { alpha } from "@mui/system";
 
-import { ColorPickerMenu } from "../contents/base/sub/TagColorPickerMenu";
+import { useAuth } from "../../../../context/AuthContext";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ProjectProps } from "../../../../types/tasks";
-import { useAuth } from "../../../../context/AuthContext";
+import { ColorPickerMenu } from "../contents/base/sub/TagColorPickerMenu";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
 type Props = {
     myself: UserProps;
-    currentProject: ProjectProps | null;
-    openCreateTag: boolean;
-    setOpenCreateTag: (value: boolean) => void;
-    setIsNewTagCreated: (value: boolean) => void;
+    usePM: ProjectManagementState;
+    useTM: TaskManagementState;
 };
 
-export const ModalCreateTag: React.FC<Props> = ({
-    myself,
-    currentProject,
-    openCreateTag,
-    setOpenCreateTag,
-    setIsNewTagCreated,
-}) => {
+export const ModalCreateTag: React.FC<Props> = ({ myself, usePM, useTM }) => {
     const { accessToken } = useAuth();
     const [errorTagCreateMessage, setErrorTagCreateMessage] = useState<string | null>(null);
     const [tagName, setTagName] = useState("");
@@ -50,7 +44,7 @@ export const ModalCreateTag: React.FC<Props> = ({
                 },
                 body: JSON.stringify({
                     team_id: myself.teamId,
-                    project_id: currentProject?.projectId ?? -1,
+                    project_id: usePM.currentProject?.projectId ?? -1,
                     tag_name: tagName,
                     tag_color: selectedColor.chipColor,
                     tag_text_color: selectedColor.textColor,
@@ -63,9 +57,9 @@ export const ModalCreateTag: React.FC<Props> = ({
                 console.error(data);
                 throw new Error(data.hint || "Tag Creation Failed");
             } else {
-                setOpenCreateTag(false);
+                useTM.setOpenCreateTag(false);
                 setTagName("");
-                setIsNewTagCreated(true);
+                useTM.setIsNewTagCreated(true);
             }
         } catch (error) {
             const errMsg = `${error}`;
@@ -77,9 +71,9 @@ export const ModalCreateTag: React.FC<Props> = ({
     return (
         <>
             <Modal
+                open={useTM.openCreateTag}
                 sx={{ zIndex: 10010 }}
-                open={openCreateTag}
-                onClose={() => setOpenCreateTag(false)}
+                onClose={() => useTM.setOpenCreateTag(false)}
             >
                 <ModalDialog>
                     <Typography level="h4">Create New Tag</Typography>
@@ -128,14 +122,14 @@ export const ModalCreateTag: React.FC<Props> = ({
                     )}
                     <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: "flex-end" }}>
                         <Button
+                            color="danger"
                             component="a"
                             variant="outlined"
-                            color="danger"
-                            onClick={() => setOpenCreateTag(false)}
+                            onClick={() => useTM.setOpenCreateTag(false)}
                         >
                             Cancel
                         </Button>
-                        <Button component="a" onClick={handleCreateTag} disabled={!tagName.trim()}>
+                        <Button component="a" disabled={!tagName.trim()} onClick={handleCreateTag}>
                             Create
                         </Button>
                     </Stack>

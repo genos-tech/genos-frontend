@@ -1,58 +1,59 @@
-import { Socket } from "socket.io-client";
-import { Box } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
-import { BlockNoteView } from "@blocknote/mantine";
-import {
-    BasicTextStyleButton,
-    ColorStyleButton,
-    CreateLinkButton,
-    FormattingToolbarController,
-    FormattingToolbar,
-    useCreateBlockNote,
-    SuggestionMenuController,
-    BlockTypeSelect,
-} from "@blocknote/react";
+
 import {
     BlockNoteSchema,
+    defaultBlockSpecs,
     defaultInlineContentSpecs,
     filterSuggestionItems,
-    defaultBlockSpecs,
     PartialBlock,
 } from "@blocknote/core";
 import { en } from "@blocknote/core/locales";
+import { BlockNoteView } from "@blocknote/mantine";
+import {
+    BasicTextStyleButton,
+    BlockTypeSelect,
+    ColorStyleButton,
+    CreateLinkButton,
+    FormattingToolbar,
+    FormattingToolbarController,
+    SuggestionMenuController,
+    useCreateBlockNote,
+} from "@blocknote/react";
+import { Box } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
+import { Socket } from "socket.io-client";
 
-import { CreateMentionSpec, MentionMenuItems } from "./Mention";
+import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { TeamManagementState } from "../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
-import { ChatProps } from "../../types/chat";
+import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 
 type BnTodoPreviewProps = {
-    teamMemberProfiles: Record<string, UserProps>;
-    teamMembers: UserProps[];
+    useTEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
     body: any[];
     setBody: (text: PartialBlock[] | any[]) => void;
     customClassName?: string;
-    setCurrentChat: (chat: ChatProps) => void;
-    setOpeningService: (value: number) => void;
+    useUISM: UIStateManagementState;
     setBodyEdited: (value: boolean) => void;
+    useCM: ChatManagementState;
 };
 export const BnTodoPreview = (props: BnTodoPreviewProps) => {
     const {
-        teamMemberProfiles,
-        teamMembers,
+        useTEM,
         myself,
         setMyself,
         socket,
         body,
         setBody,
         customClassName,
-        setCurrentChat,
-        setOpeningService,
+        useUISM,
         setBodyEdited,
+        useCM,
     } = props;
     const { mode } = useColorScheme();
     const bnBoxClassName = customClassName
@@ -72,12 +73,12 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
             mention: CreateMentionSpec(
-                teamMemberProfiles,
+                useTEM.teamMemberProfiles,
                 socket,
                 myself,
                 setMyself,
-                setOpeningService,
-                setCurrentChat
+                useUISM,
+                useCM
             ),
         },
         blockSpecs: {
@@ -110,11 +111,11 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
         <Box className={bnBoxClassName} sx={{ px: "10px" }}>
             <BlockNoteView
                 className="bn-box"
-                editor={editor}
                 editable={true}
+                editor={editor}
+                filePanel={false}
                 formattingToolbar={false}
                 linkToolbar={false}
-                filePanel={false}
                 sideMenu={false}
                 slashMenu={false}
                 tableHandles={false}
@@ -130,20 +131,20 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
                             <BlockTypeSelect key={"blockTypeSelect"} />
 
                             <BasicTextStyleButton
-                                basicTextStyle={"bold"}
                                 key={"boldStyleButton"}
+                                basicTextStyle={"bold"}
                             />
                             <BasicTextStyleButton
-                                basicTextStyle={"italic"}
                                 key={"italicStyleButton"}
+                                basicTextStyle={"italic"}
                             />
                             <BasicTextStyleButton
-                                basicTextStyle={"underline"}
                                 key={"underlineStyleButton"}
+                                basicTextStyle={"underline"}
                             />
                             <BasicTextStyleButton
-                                basicTextStyle={"strike"}
                                 key={"strikeStyleButton"}
+                                basicTextStyle={"strike"}
                             />
                             {/* Extra button to toggle code styles */}
                             <BasicTextStyleButton
@@ -162,7 +163,11 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
                     getItems={async (query) =>
                         // Gets the mentions menu items
                         filterSuggestionItems(
-                            MentionMenuItems(teamMemberProfiles, editor, teamMembers),
+                            MentionMenuItems(
+                                useTEM.teamMemberProfiles,
+                                editor,
+                                useTEM.teamMembers
+                            ),
                             query
                         )
                     }

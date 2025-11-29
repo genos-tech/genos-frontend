@@ -1,86 +1,68 @@
-import { alpha } from "@mui/system";
+import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import {
-    ListItemContent,
     Autocomplete,
     AutocompleteOption,
-    CircularProgress,
     Chip,
+    CircularProgress,
+    ListItemContent,
 } from "@mui/joy";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import { useColorScheme } from "@mui/joy/styles";
+import { alpha } from "@mui/system";
 
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { SearchTeamTasksResponse } from "../../../../types/tasks";
 
 type TaskSidebarSearchBoxProps = {
-    currentPreviewTaskId: number;
     openSearch: boolean;
     setOpenSearch: (value: boolean) => void;
     teamTaskSearchOptions: SearchTeamTasksResponse[];
     setTeamTaskSearchOptions: (value: SearchTeamTasksResponse[]) => void;
     loading: boolean;
-    setCurrentPreviewTaskId: (value: number) => void;
-    setIsTaskPreviewVisible: (value: boolean) => void;
+    useTM: TaskManagementState;
 };
 export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
     const {
-        currentPreviewTaskId,
         openSearch,
         setOpenSearch,
         teamTaskSearchOptions,
         setTeamTaskSearchOptions,
         loading,
-        setCurrentPreviewTaskId,
-        setIsTaskPreviewVisible,
+        useTM,
     } = props;
     const { mode } = useColorScheme();
 
     function onChangeHandler(value: any) {
         if (value !== null) {
             setOpenSearch(false);
-            setCurrentPreviewTaskId(value.taskId);
-            setIsTaskPreviewVisible(true);
+            useTM.setCurrentPreviewTaskId(value.taskId);
+            useTM.setIsTaskPreviewVisible(true);
         }
     }
 
     return (
         <Autocomplete
-            key={`ac-project-tags-${currentPreviewTaskId}`}
-            sx={{ width: "100%" }}
-            placeholder={"Search"}
-            variant="soft"
-            open={openSearch}
-            onOpen={() => {
-                setOpenSearch(true);
-                // Reset the team task search options to load them again
-                setTeamTaskSearchOptions([]);
-            }}
-            onClose={() => {
-                setOpenSearch(false);
-            }}
-            isOptionEqualToValue={(option, value) => option.taskId === value.taskId}
+            key={`ac-project-tags-${useTM.currentPreviewTaskId}`}
+            aria-label="Search Tasks"
             getOptionLabel={(option) => option.title}
-            renderTags={(tags, getTagProps) =>
-                tags.map((item, index) => {
-                    const { key, ...tagProps } = getTagProps({ index }); // spread the 'key'
-                    return (
-                        <Chip
-                            key={`ac-taskhome-search-task-chip-${key}`}
-                            variant="soft"
-                            sx={{
-                                backgroundColor: alpha(
-                                    item.status.color || "#0044c2",
-                                    mode === "dark" ? 0.5 : 0.75
-                                ),
-                                color: item.status.textColor,
-                                fontWeight: "bold",
-                                borderRadius: "5px",
-                            }}
-                            size="sm"
-                        >
-                            {item.status.status}
-                        </Chip>
-                    );
-                })
+            groupBy={(option) => option.projectName}
+            isOptionEqualToValue={(option, value) => option.taskId === value.taskId}
+            loading={loading}
+            open={openSearch}
+            options={teamTaskSearchOptions}
+            placeholder={"Search Tasks"}
+            size="sm"
+            startDecorator={<SearchRoundedIcon />}
+            sx={{ width: "100%" }}
+            variant="soft"
+            endDecorator={
+                loading ? (
+                    <CircularProgress
+                        size="sm"
+                        sx={{
+                            bgcolor: "background.surface",
+                        }}
+                    />
+                ) : null
             }
             renderOption={(props, option) => (
                 <AutocompleteOption {...props} key={`ac-taskhome-search-task-${option.taskId}`}>
@@ -95,14 +77,15 @@ export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
                     >
                         <Chip
                             key={`ac-taskhome-search-task-id-chip-${option.taskId}`}
-                            variant="outlined"
                             color="neutral"
                             size="sm"
+                            variant="outlined"
                         >
                             ID:{option.taskId}
                         </Chip>
                         <Chip
                             key={`ac-taskhome-search-task-chip-${option.taskId}`}
+                            size="sm"
                             variant="soft"
                             sx={{
                                 backgroundColor: alpha(
@@ -114,7 +97,6 @@ export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
                                 borderRadius: "5px",
                                 m: "3px",
                             }}
-                            size="sm"
                         >
                             {option.status.status}
                         </Chip>
@@ -122,17 +104,28 @@ export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
                     </ListItemContent>
                 </AutocompleteOption>
             )}
-            options={teamTaskSearchOptions}
-            loading={loading}
-            endDecorator={
-                loading ? (
-                    <CircularProgress
-                        size="sm"
-                        sx={{
-                            bgcolor: "background.surface",
-                        }}
-                    />
-                ) : null
+            renderTags={(tags, getTagProps) =>
+                tags.map((item, index) => {
+                    const { key, ...tagProps } = getTagProps({ index }); // spread the 'key'
+                    return (
+                        <Chip
+                            key={`ac-taskhome-search-task-chip-${key}`}
+                            size="sm"
+                            variant="soft"
+                            sx={{
+                                backgroundColor: alpha(
+                                    item.status.color || "#0044c2",
+                                    mode === "dark" ? 0.5 : 0.75
+                                ),
+                                color: item.status.textColor,
+                                fontWeight: "bold",
+                                borderRadius: "5px",
+                            }}
+                        >
+                            {item.status.status}
+                        </Chip>
+                    );
+                })
             }
             slotProps={{
                 listbox: {
@@ -142,10 +135,14 @@ export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
                 },
             }}
             onChange={(event, value) => onChangeHandler(value)}
-            size="sm"
-            startDecorator={<SearchRoundedIcon />}
-            aria-label="Search"
-            groupBy={(option) => option.projectName}
+            onClose={() => {
+                setOpenSearch(false);
+            }}
+            onOpen={() => {
+                setOpenSearch(true);
+                // Reset the team task search options to load them again
+                setTeamTaskSearchOptions([]);
+            }}
         />
     );
 };

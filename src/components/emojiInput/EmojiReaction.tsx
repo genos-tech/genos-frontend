@@ -1,12 +1,12 @@
-import { Socket } from "socket.io-client";
-import { useState, useEffect } from "react";
-import { Box, Button, IconButton, Tooltip } from "@mui/joy";
 import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
+import { Box, Button, IconButton, Tooltip } from "@mui/joy";
+import { useEffect, useState } from "react";
+import { Socket } from "socket.io-client";
 
 import { UserProps } from "../../types/admin";
+import { MessageProps, ThreadMessageProps } from "../../types/chat";
 import { GroupedReactionProps, ReactionProps } from "../../types/common";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
-import { MessageProps, ThreadMessageProps } from "../../types/chat";
 
 export const groupEmojis = (reactions: ReactionProps[]): GroupedReactionProps[] => {
     const map = new Map<string, { count: number; senders: UserProps[] }>();
@@ -245,35 +245,35 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
                             {baseEmojiList.map((emoji, index) => (
                                 <Button
                                     key={`default-emoji-${index}`}
-                                    onClick={() => handleAddReaction(emoji)}
-                                    variant="plain"
                                     size="sm"
+                                    variant="plain"
                                     sx={{
                                         minWidth: "auto",
                                         paddingX: "4px",
                                         paddingY: "0",
                                         fontSize: "16px",
                                     }}
+                                    onClick={() => handleAddReaction(emoji)}
                                 >
                                     {emoji}
                                 </Button>
                             ))}
                         </>
                     )}
-                    <Tooltip size="sm" title="React">
+                    <Tooltip size="sm" title="React" variant="outlined">
                         <IconButton
                             key={`emoji-icon-${message.messageId}`}
-                            onClick={() => {
-                                setShowEmojiPicker(true);
-                            }}
-                            variant="plain"
                             size="sm"
+                            variant="plain"
                             sx={{
                                 minWidth: "auto",
                                 paddingX: "4px",
                                 paddingY: "0",
                                 fontSize: "16px",
                                 fontWeight: "bold",
+                            }}
+                            onClick={() => {
+                                setShowEmojiPicker(true);
                             }}
                         >
                             <SentimentSatisfiedAltIcon sx={{ fontSize: "24px" }} />

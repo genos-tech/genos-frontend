@@ -1,11 +1,14 @@
-import { useState, useEffect, useRef } from "react";
-import { Socket } from "socket.io-client";
-import { Box, IconButton, Tooltip } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
+
+import { useEffect, useRef, useState } from "react";
 import { codeBlock } from "@blocknote/code-block";
+import {
+    BlockNoteSchema,
+    defaultBlockSpecs,
+    defaultInlineContentSpecs,
+    filterSuggestionItems,
+} from "@blocknote/core";
 import { en } from "@blocknote/core/locales";
 import { BlockNoteView } from "@blocknote/mantine";
 import {
@@ -13,67 +16,63 @@ import {
     BlockTypeSelect,
     ColorStyleButton,
     CreateLinkButton,
+    DefaultReactSuggestionItem,
     FileCaptionButton,
+    FileDeleteButton,
+    FileDownloadButton,
+    FilePreviewButton,
+    FileRenameButton,
     FileReplaceButton,
     FormattingToolbar,
-    useCreateBlockNote,
-    DefaultReactSuggestionItem,
-    SuggestionMenuController,
     getDefaultReactSlashMenuItems,
-    FileRenameButton,
-    FilePreviewButton,
-    FileDownloadButton,
-    FileDeleteButton,
+    SuggestionMenuController,
+    useCreateBlockNote,
 } from "@blocknote/react";
-import {
-    BlockNoteSchema,
-    defaultInlineContentSpecs,
-    filterSuggestionItems,
-    defaultBlockSpecs,
-} from "@blocknote/core";
+import { Box, IconButton } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
+import { Socket } from "socket.io-client";
 
-import { CreateMentionSpec, MentionMenuItems } from "./Mention";
-import { CustomEmojiToolbar } from "./customEmojiToolbar";
-import { EmojiPicker } from "../emojiInput/EmojiPicker";
+import { useAuth } from "../../context/AuthContext";
+import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { TeamManagementState } from "../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { ChatProps, MessageProps } from "../../types/chat";
-import { useAuth } from "../../context/AuthContext";
+import { EmojiPicker } from "../emojiInput/EmojiPicker";
+import { CustomEmojiToolbar } from "./customEmojiToolbar";
+import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const django_url = import.meta.env.VITE_DJANGO_URL;
 
 type BnUpdateEditorProps = {
-    teamMemberProfiles: Record<string, UserProps>;
+    useTEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
-    teamMembers: UserProps[];
     chat: ChatProps;
     message: MessageProps;
     isInEdit: boolean;
     setIsInEdit: (value: boolean) => void;
-    setCurrentChat: (chat: ChatProps) => void;
-    isSubChatVisible: boolean;
-    setOpeningService: (value: number) => void;
+    useUISM: UIStateManagementState;
     numEditorLines: number;
     setNumEditorLines: (value: number) => void;
+    useCM: ChatManagementState;
 };
 export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
     const {
-        teamMemberProfiles,
+        useTEM,
         myself,
         setMyself,
         socket,
-        teamMembers,
         chat,
         message,
         isInEdit,
         setIsInEdit,
-        setCurrentChat,
-        isSubChatVisible,
-        setOpeningService,
+        useUISM,
         numEditorLines,
         setNumEditorLines,
+        useCM,
     } = props;
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
@@ -91,12 +90,12 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
             ...defaultInlineContentSpecs,
             // Adds the mention tag.
             mention: CreateMentionSpec(
-                teamMemberProfiles,
+                useTEM.teamMemberProfiles,
                 socket,
                 myself,
                 setMyself,
-                setOpeningService,
-                setCurrentChat
+                useUISM,
+                useCM
             ),
         },
         blockSpecs: {
@@ -178,7 +177,7 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
         if (editorRef.current) {
             const dynamicHeight: number = Math.min(
                 Math.min(Math.max(numEditorLines - 8, 0), 10) * 20 + 200,
-                isSubChatVisible === true ? 290 : 500
+                useCM.isSubChatVisible === true ? 290 : 500
             );
             editorRef.current.style.setProperty("--chat-editor-height", `${dynamicHeight}px`);
         }
@@ -236,17 +235,17 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
     return (
         <Box>
             <EmojiPicker
-                showEmojiPicker={showEmojiPicker}
-                setShowEmojiPicker={setShowEmojiPicker}
                 setSelectedEmoji={setSelectedEmoji}
+                setShowEmojiPicker={setShowEmojiPicker}
+                showEmojiPicker={showEmojiPicker}
             />
-            <Box sx={{ position: "relative" }} className={bnBoxClassName} ref={editorRef}>
+            <Box ref={editorRef} className={bnBoxClassName} sx={{ position: "relative" }}>
                 <BlockNoteView
                     className="bn-box"
                     editor={editor}
+                    formattingToolbar={false}
                     sideMenu={false} // false for Chat/comment, true for Task content
                     theme={mode === "dark" ? "dark" : "light"}
-                    formattingToolbar={false}
                     data-changing-font-demo // custom font
                     onChange={() => {
                         const comments: any[] = editor.document;
@@ -260,26 +259,10 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
                         }
                     }}
                 >
-                    <Tooltip title="Edit in Modal (TBD)">
-                        <IconButton
-                            size="sm"
-                            color="neutral"
-                            variant="plain"
-                            sx={{
-                                position: "absolute",
-                                top: "5%",
-                                right: "1%",
-                                zIndex: 1,
-                                p: 0.7,
-                            }}
-                        >
-                            <OpenInNewIcon />
-                        </IconButton>
-                    </Tooltip>
-
                     <IconButton
-                        size="sm"
                         color="success"
+                        disabled={editorDocLength < 2}
+                        size="sm"
                         variant="solid"
                         sx={{
                             position: "absolute",
@@ -288,7 +271,6 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
                             zIndex: 1,
                             p: 0.7,
                         }}
-                        disabled={editorDocLength < 2}
                         onClick={async () => {
                             sendUpdatedMessage();
                             setIsInEdit(false);
@@ -298,8 +280,8 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
                     </IconButton>
 
                     <IconButton
-                        size="sm"
                         color="danger"
+                        size="sm"
                         variant="outlined"
                         sx={{
                             position: "absolute",
@@ -327,20 +309,20 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
                             <BlockTypeSelect key={"blockTypeSelect"} />
 
                             <BasicTextStyleButton
-                                basicTextStyle={"bold"}
                                 key={"boldStyleButton"}
+                                basicTextStyle={"bold"}
                             />
                             <BasicTextStyleButton
-                                basicTextStyle={"italic"}
                                 key={"italicStyleButton"}
+                                basicTextStyle={"italic"}
                             />
                             <BasicTextStyleButton
-                                basicTextStyle={"underline"}
                                 key={"underlineStyleButton"}
+                                basicTextStyle={"underline"}
                             />
                             <BasicTextStyleButton
-                                basicTextStyle={"strike"}
                                 key={"strikeStyleButton"}
+                                basicTextStyle={"strike"}
                             />
                             {/* Extra button to toggle code styles */}
                             <BasicTextStyleButton
@@ -371,7 +353,11 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
                         getItems={async (query) =>
                             // Gets the mentions menu items
                             filterSuggestionItems(
-                                MentionMenuItems(teamMemberProfiles, editor, teamMembers),
+                                MentionMenuItems(
+                                    useTEM.teamMemberProfiles,
+                                    editor,
+                                    useTEM.teamMembers
+                                ),
                                 query
                             )
                         }

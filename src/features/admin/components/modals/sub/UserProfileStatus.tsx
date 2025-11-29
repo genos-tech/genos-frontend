@@ -1,24 +1,24 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import ArrowDropDown from "@mui/icons-material/ArrowDropDown";
+import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
 import {
     Box,
-    IconButton,
-    Stack,
-    Typography,
+    Button,
     Chip,
     Dropdown,
+    IconButton,
     Input,
     Menu,
-    MenuItem,
     MenuButton,
-    Button,
+    MenuItem,
+    Stack,
+    Typography,
 } from "@mui/joy";
-import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
-import ArrowDropDown from "@mui/icons-material/ArrowDropDown";
 
 import { PulseDot } from "../../../../../components/utils/PulseDot";
+import { useAuth } from "../../../../../context/AuthContext";
 import { UserProps } from "../../../../../types/admin";
 import { updateUserProfile } from "../../../services/updateUserProfile";
-import { useAuth } from "../../../../../context/AuthContext";
 
 const templateCustomStatueOptions = [
     "🧠 In the Zone",
@@ -88,7 +88,6 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                 component="div"
                 fontSize={28}
                 fontWeight="bold"
-                noWrap
                 endDecorator={
                     <Stack direction={"row"} spacing={0.5}>
                         <Dropdown>
@@ -102,12 +101,13 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                                 }}
                             >
                                 <Chip
-                                    variant="plain"
-                                    size="md"
                                     color="neutral"
-                                    sx={{
-                                        borderRadius: "sm",
-                                        fontSize: "16px",
+                                    size="md"
+                                    variant="plain"
+                                    slotProps={{
+                                        root: {
+                                            component: "span",
+                                        },
                                     }}
                                     startDecorator={
                                         <Box sx={{ ml: "-5px" }}>
@@ -118,17 +118,16 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                                                             ? "#4caf50"
                                                             : "#999"
                                                         : profileUser?.isOnline === true &&
-                                                          profileUser?.isOfflineForced !== "true"
-                                                        ? "#4caf50"
-                                                        : "#999"
+                                                            profileUser?.isOfflineForced !== "true"
+                                                          ? "#4caf50"
+                                                          : "#999"
                                                 }
                                             />
                                         </Box>
                                     }
-                                    slotProps={{
-                                        root: {
-                                            component: "span",
-                                        },
+                                    sx={{
+                                        borderRadius: "sm",
+                                        fontSize: "16px",
                                     }}
                                 >
                                     {myself.userId === profileUser?.userId
@@ -136,9 +135,9 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                                             ? "Online"
                                             : "Offline (Forced)"
                                         : profileUser?.isOnline === true &&
-                                          profileUser?.isOfflineForced !== "true"
-                                        ? "Online"
-                                        : "Offline"}
+                                            profileUser?.isOfflineForced !== "true"
+                                          ? "Online"
+                                          : "Offline"}
                                 </Chip>
                             </MenuButton>
                             {myself.userId === profileUser?.userId && (
@@ -157,6 +156,7 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                                             localStorage.setItem("isOfflineForced", "false");
                                         }}
                                     >
+                                        <PulseDot color={"#4caf50"} />
                                         Set Online
                                     </MenuItem>
                                     <MenuItem
@@ -173,6 +173,7 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                                             localStorage.setItem("isOfflineForced", "true");
                                         }}
                                     >
+                                        <PulseDot color={"#999"} />
                                         Set Always Offline
                                     </MenuItem>
                                 </Menu>
@@ -183,10 +184,10 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                             <>
                                 {openCustomStatusEditor === false && (
                                     <Chip
-                                        variant="outlined"
-                                        size="lg"
                                         color="neutral"
+                                        size="lg"
                                         sx={{ borderRadius: "sm" }}
+                                        variant="outlined"
                                         onClick={() => {
                                             setOpenCustomStatusEditor(true);
                                         }}
@@ -203,10 +204,10 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                             <>
                                 {openCustomStatusEditor === false && (
                                     <Chip
-                                        variant="outlined"
-                                        size="lg"
                                         color="neutral"
+                                        size="lg"
                                         sx={{ borderRadius: "sm" }}
+                                        variant="outlined"
                                         onClick={() => {}}
                                     >
                                         {customStatusValue !== "Update Status" &&
@@ -220,7 +221,7 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
 
                         {/* Update custom status */}
                         {openCustomStatusEditor === true && (
-                            <Stack direction={"row"} spacing={0.5} justifyContent={"center"}>
+                            <Stack direction={"row"} justifyContent={"center"} spacing={0.5}>
                                 <IconButton
                                     variant="outlined"
                                     onClick={() => {
@@ -255,26 +256,27 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                                     </Menu>
                                 </Dropdown>
                                 <Input
-                                    size="sm"
                                     placeholder="Set your status…"
-                                    variant="outlined"
-                                    value={newStatus}
+                                    size="sm"
                                     sx={{ width: "200px" }}
+                                    value={newStatus}
+                                    variant="outlined"
                                     onChange={(e) => setNewStatus(e.target.value)}
                                 />
                             </Stack>
                         )}
                     </Stack>
                 }
+                noWrap
             >
                 {profileUser?.userName}
             </Typography>
             {openCustomStatusEditor === true && (
-                <Stack direction={"row"} spacing={0.5} justifyContent={"center"}>
+                <Stack direction={"row"} justifyContent={"center"} spacing={0.5}>
                     <Button
-                        variant="outlined"
-                        size="md"
                         color="danger"
+                        size="md"
+                        variant="outlined"
                         sx={{
                             borderRadius: "sm",
                             fontWeight: "bold",
@@ -299,9 +301,9 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                         RESET
                     </Button>
                     <Button
-                        variant="outlined"
-                        size="md"
                         color="neutral"
+                        size="md"
+                        variant="outlined"
                         sx={{
                             borderRadius: "sm",
                             fontWeight: "bold",
@@ -313,9 +315,9 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                         CANCEL
                     </Button>
                     <Button
-                        variant="soft"
-                        size="md"
                         color="primary"
+                        size="md"
+                        variant="soft"
                         sx={{
                             borderRadius: "sm",
                             fontWeight: "bold",

@@ -1,43 +1,53 @@
-import { Socket } from "socket.io-client";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import AddIcon from "@mui/icons-material/Add";
+import CloseIcon from "@mui/icons-material/Close";
+import CommentIcon from "@mui/icons-material/Comment";
+import DownloadIcon from "@mui/icons-material/Download";
+import FolderIcon from "@mui/icons-material/Folder";
+import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
+import InsertPhotoIcon from "@mui/icons-material/InsertPhoto";
+import NoteAltIcon from "@mui/icons-material/NoteAlt";
 import {
     Box,
-    Typography,
     IconButton,
-    Tabs,
-    TabList,
-    TabPanel,
-    ListItemDecorator,
-    Stack,
     List,
     ListItem,
     ListItemButton,
-    Tooltip,
-    ModalDialog,
+    ListItemDecorator,
     Modal,
+    ModalDialog,
+    Stack,
+    TabList,
+    TabPanel,
+    Tabs,
+    Tooltip,
+    Typography,
 } from "@mui/joy";
 import Tab, { tabClasses } from "@mui/joy/Tab";
-import CloseIcon from "@mui/icons-material/Close";
-import DownloadIcon from "@mui/icons-material/Download";
-import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import AddIcon from "@mui/icons-material/Add";
-import FolderIcon from "@mui/icons-material/Folder";
-import InsertPhotoIcon from "@mui/icons-material/InsertPhoto";
-import NoteAltIcon from "@mui/icons-material/NoteAlt";
-import CommentIcon from "@mui/icons-material/Comment";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
+import { Socket } from "socket.io-client";
 
-import { AttachmentFileProps, TaskCommentProps } from "../../../../../types/tasks";
-import { TaskProps, FileProps, ImageSizeProps } from "../../../../../types/tasks";
-import { deleteTaskAttachment } from "../../../services/deleteTaskAttachment";
-import { downloadFile } from "../../../../../utils/downloadUtils";
 import { useAuth } from "../../../../../context/AuthContext";
-import { useScrollToBottomOnNewTaskComment } from "../../../hooks/taskCommentHooks";
-import { TaskCommentBubble } from "./sub/TaskCommentBubble";
+import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
+import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
+import { NoteManagementState } from "../../../../../hooks/notes/useNoteManagement";
+import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../../types/admin";
-import { ChatProps } from "../../../../../types/chat";
 import { TaskNoteProps } from "../../../../../types/notes";
+import {
+    AttachmentFileProps,
+    FileProps,
+    ImageSizeProps,
+    TaskCommentProps,
+    TaskProps,
+} from "../../../../../types/tasks";
 import { getLocalCurrentTimestamp } from "../../../../../utils/dateUtils";
+import { downloadFile } from "../../../../../utils/downloadUtils";
+import { useScrollToBottomOnNewTaskComment } from "../../../hooks/taskCommentHooks";
+import { deleteTaskAttachment } from "../../../services/deleteTaskAttachment";
+import { TaskCommentBubble } from "./sub/TaskCommentBubble";
+import { TaskCommentEditorBlock } from "./sub/TaskCommentEditorBlock";
 
 const resizeImageToFitBox = (imageSize: ImageSizeProps): ImageSizeProps => {
     const maxWidth = 300;
@@ -57,31 +67,30 @@ type TaskTabBlockProps = {
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    teamMemberProfiles: Record<string, UserProps>;
-    setCurrentChat: (chat: ChatProps) => void;
-    setOpeningService: (value: number) => void;
-    taskContents: TaskProps;
-    setTaskContents: (value: TaskProps) => void;
-    currentPreviewTaskId: number;
+    taskContent: TaskProps;
+    setTaskContent: (value: TaskProps) => void;
     uploadedFiles: any[];
     setUploadedFiles: (value: any[]) => void;
     setTaskUpdated: (value: boolean) => void;
     setIsAttachmentDeleted: (value: boolean) => void;
     setDeletedAttachmentId: (value: number) => void;
     taskComments: TaskCommentProps[];
-    isCommentUpdated: { isUpdate: boolean; scrollToBottom: boolean };
     setIsInEdit: (value: boolean) => void;
     setEditTargetComment: (value: TaskCommentProps) => void;
-    setIsTaskHomeVisible?: (value: boolean) => void;
-    setIsTaskNoteVisible?: (value: boolean) => void;
-    handleCreateNewTaskNote: (
-        parentNoteId: number | null,
-        projectId: number,
-        taskId: number,
-        title?: string
-    ) => Promise<void>;
     taskNotes: TaskNoteProps[];
-    setCurrentTaskNote: (value: TaskNoteProps) => void;
+    editTargetComment: TaskCommentProps | undefined;
+    isInEdit: boolean;
+    setTaskCommentLines: (value: number) => void;
+    setTaskComments: (value: TaskCommentProps[]) => void;
+    tmpCurrentTaskContent: TaskProps;
+    taskCommentLines: number;
+    useTEM: TeamManagementState;
+    tabIndex: number;
+    setTabIndex: (value: number) => void;
+    useTM: TaskManagementState;
+    useUISM: UIStateManagementState;
+    useCM: ChatManagementState;
+    useNM: NoteManagementState;
 };
 export const TaskTabBlock = (props: TaskTabBlockProps) => {
     const { accessToken } = useAuth();
@@ -89,26 +98,30 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         socket,
         myself,
         setMyself,
-        teamMemberProfiles,
-        setCurrentChat,
-        setOpeningService,
+        useCM,
+        useUISM,
         uploadedFiles,
         setUploadedFiles,
-        currentPreviewTaskId,
         setTaskUpdated,
-        taskContents,
-        setTaskContents,
+        taskContent,
+        setTaskContent,
         setIsAttachmentDeleted,
         setDeletedAttachmentId,
         taskComments,
-        isCommentUpdated,
         setIsInEdit,
         setEditTargetComment,
-        setIsTaskHomeVisible,
-        setIsTaskNoteVisible,
-        handleCreateNewTaskNote,
         taskNotes,
-        setCurrentTaskNote,
+        editTargetComment,
+        isInEdit,
+        setTaskCommentLines,
+        setTaskComments,
+        tmpCurrentTaskContent,
+        taskCommentLines,
+        tabIndex,
+        setTabIndex,
+        useTM,
+        useTEM,
+        useNM,
     } = props;
 
     const [images, setImages] = useState<FileProps[]>([]);
@@ -116,7 +129,6 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     const [uploadingFiles, setUploadingFiles] = useState<AttachmentFileProps[]>([]);
     const [isUploadingFilesUpdated, setIsUploadingFilesUpdated] = useState<boolean>(false);
     const [numOfUploadingFiles, setNumOfUploadingFiles] = useState<number>(0);
-    const [tabIndex, setTabIndex] = React.useState(0);
 
     const updateDisplayingFiles = (file: File, attachmentId: number) => {
         if (attachmentId > 0) {
@@ -261,12 +273,12 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         setImages([]);
         setTextFiles([]);
         setTabIndex(0);
-    }, [currentPreviewTaskId]);
+    }, [useTM.currentPreviewTaskId]);
 
     useEffect(() => {
         if (isUploadingFilesUpdated === true) {
-            setTaskContents({
-                ...taskContents,
+            setTaskContent({
+                ...taskContent,
                 attachments: uploadingFiles,
             });
             setIsUploadingFilesUpdated(false);
@@ -300,7 +312,10 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
             } else if (attachmentFile.file) {
                 setUploadingFiles((prev) => [
                     ...prev,
-                    { attachment_id: attachmentFile.attachment_id, file: attachmentFile.file },
+                    {
+                        attachment_id: attachmentFile.attachment_id,
+                        file: attachmentFile.file,
+                    },
                 ]);
             }
         });
@@ -331,7 +346,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     useScrollToBottomOnNewTaskComment(
         virtuosoRef as React.RefObject<VirtuosoHandle>,
         taskComments,
-        isCommentUpdated.scrollToBottom
+        useTM.isTaskCommentUpdated.scrollToBottom
     );
 
     // State for modal
@@ -406,71 +421,6 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                         </ListItemDecorator>
                         History
                     </Tab> */}
-
-                    {tabIndex === 1 && (
-                        <>
-                            <Box sx={{ flexGrow: 1 }} />
-                            <IconButton
-                                sx={{ mr: "23px", mb: "3px", px: "5px" }}
-                                component="p"
-                                variant="plain"
-                                color="neutral"
-                                size="sm"
-                                onClick={() => {
-                                    if (
-                                        setIsTaskHomeVisible &&
-                                        setIsTaskNoteVisible &&
-                                        taskContents.project
-                                    ) {
-                                        setIsTaskHomeVisible(false);
-                                        setIsTaskNoteVisible(true);
-                                        handleCreateNewTaskNote(
-                                            null,
-                                            taskContents.project.projectId,
-                                            currentPreviewTaskId,
-                                            taskContents.title
-                                        );
-                                    } else {
-                                        console.error(
-                                            "Can't parent note ID to create a child note. Project ID is not defined."
-                                        );
-                                    }
-                                }}
-                            >
-                                <AddIcon />
-                                New Note
-                            </IconButton>
-                        </>
-                    )}
-
-                    {tabIndex === 2 && (
-                        <Box
-                            sx={{
-                                display: "flex",
-                                justifyContent: "flex-end",
-                                alignItems: "center",
-                            }}
-                        >
-                            <input
-                                type="file"
-                                accept="*"
-                                multiple={true}
-                                ref={inputRef}
-                                onChange={handleSelectedFiles}
-                                style={{ display: "none" }}
-                            />
-                            <IconButton
-                                sx={{ mr: "15px", mb: "3px", px: "3px" }}
-                                component="p"
-                                variant="plain"
-                                color="neutral"
-                                size="sm"
-                                onClick={handleButtonClick}
-                            >
-                                <FolderIcon sx={{ pr: "5px", fontSize: "25px" }} /> Select Files
-                            </IconButton>
-                        </Box>
-                    )}
                 </TabList>
 
                 <Box
@@ -483,120 +433,177 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                 >
                     <TabPanel value={0}>
                         <>
+                            {taskComments.length === 0 && (
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        justifyContent: "center",
+                                        alignItems: "center",
+                                        flex: 1,
+                                        textAlign: "center",
+                                    }}
+                                >
+                                    <Typography level="body-sm">No comments yet</Typography>
+                                </Box>
+                            )}
+
                             {taskComments.length > 0 && (
                                 <Box sx={{ mb: 1 }}>
                                     <Virtuoso
                                         ref={virtuosoRef}
+                                        atBottomThreshold={128}
+                                        atTopThreshold={64}
                                         className="custom-scrollbar"
+                                        initialTopMostItemIndex={taskComments.length - 1}
+                                        totalCount={taskComments.length}
+                                        itemContent={(index) => {
+                                            const comment = taskComments[index];
+                                            return (
+                                                <TaskCommentBubble
+                                                    key={`task-comment-${comment.commentId}-${comment.tsUpdated}`}
+                                                    useCM={useCM}
+                                                    comment={comment}
+                                                    myself={myself}
+                                                    setEditTargetComment={setEditTargetComment}
+                                                    setIsInEdit={setIsInEdit}
+                                                    setMyself={setMyself}
+                                                    socket={socket}
+                                                    useTEM={useTEM}
+                                                    useUISM={useUISM}
+                                                    currentProjectId={
+                                                        taskContent.project?.projectId
+                                                    }
+                                                    currentProjectName={
+                                                        taskContent.project?.projectName
+                                                    }
+                                                />
+                                            );
+                                        }}
                                         style={{
                                             height: Math.min(
                                                 taskComments.length * 60 + totalCommentLines * 18,
                                                 800
                                             ),
                                         }}
-                                        totalCount={taskComments.length}
-                                        initialTopMostItemIndex={taskComments.length - 1}
-                                        atTopThreshold={64}
-                                        atBottomThreshold={128}
-                                        itemContent={(index) => {
-                                            const comment = taskComments[index];
-                                            return (
-                                                <TaskCommentBubble
-                                                    key={`task-comment-${comment.commentId}-${comment.tsUpdated}`}
-                                                    teamMemberProfiles={teamMemberProfiles}
-                                                    socket={socket}
-                                                    myself={myself}
-                                                    setMyself={setMyself}
-                                                    comment={comment}
-                                                    currentProjectId={
-                                                        taskContents.project?.projectId
-                                                    }
-                                                    currentProjectName={
-                                                        taskContents.project?.projectName
-                                                    }
-                                                    setIsInEdit={setIsInEdit}
-                                                    setEditTargetComment={setEditTargetComment}
-                                                    setCurrentChat={setCurrentChat}
-                                                    setOpeningService={setOpeningService}
-                                                />
-                                            );
-                                        }}
                                     />
                                 </Box>
                             )}
+                            <TaskCommentEditorBlock
+                                useCM={useCM}
+                                editTargetComment={editTargetComment}
+                                isInEdit={isInEdit}
+                                myself={myself}
+                                setIsInEdit={setIsInEdit}
+                                setMyself={setMyself}
+                                setTaskCommentLines={setTaskCommentLines}
+                                setTaskComments={setTaskComments}
+                                socket={socket}
+                                task={tmpCurrentTaskContent}
+                                taskCommentLines={taskCommentLines}
+                                taskComments={taskComments}
+                                useTEM={useTEM}
+                                useUISM={useUISM}
+                                useTM={useTM}
+                            />
                         </>
                     </TabPanel>
 
                     <TabPanel value={1}>
                         <>
-                            {taskNotes.length > 0 && (
-                                <Stack
-                                    className="custom-scrollbar"
-                                    direction="row"
-                                    sx={{
-                                        width: "100%",
-                                        minHeight: "40px",
-                                        maxHeight: "200px",
-                                        overflowY: "scroll",
-                                    }}
-                                >
-                                    <ListItem nested sx={{ width: "100%" }}>
-                                        <List sx={{ gap: 0.5 }}>
-                                            {taskNotes.map((taskNote, index) => {
-                                                return (
-                                                    <ListItem
-                                                        key={`listitem-${taskNote.noteType}-${taskNote.noteId}-${index}`}
+                            <Stack
+                                className="custom-scrollbar"
+                                direction="row"
+                                sx={{
+                                    width: "100%",
+                                    minHeight: "40px",
+                                    maxHeight: "200px",
+                                    overflowY: "scroll",
+                                }}
+                            >
+                                <ListItem sx={{ width: "100%" }} nested>
+                                    <List sx={{ gap: 0.5 }}>
+                                        {taskNotes.map((taskNote, index) => {
+                                            return (
+                                                <ListItem
+                                                    key={`listitem-${taskNote.noteType}-${taskNote.noteId}-${index}`}
+                                                >
+                                                    <ListItemButton
+                                                        variant="soft"
+                                                        sx={{
+                                                            alignItems: "center",
+                                                            borderRadius: "5px",
+                                                        }}
+                                                        onClick={() => {
+                                                            if (useNM.setIsTaskNoteVisible) {
+                                                                useTM.setIsTaskHomeVisible(false);
+                                                                useNM.setIsTaskNoteVisible(true);
+                                                                useNM.setCurrentTaskNote(taskNote);
+                                                            }
+                                                        }}
                                                     >
-                                                        <ListItemButton
-                                                            variant="soft"
-                                                            onClick={() => {
-                                                                if (
-                                                                    setIsTaskHomeVisible &&
-                                                                    setIsTaskNoteVisible
-                                                                ) {
-                                                                    setIsTaskHomeVisible(false);
-                                                                    setIsTaskNoteVisible(true);
-                                                                    setCurrentTaskNote(taskNote);
-                                                                }
-                                                            }}
+                                                        <Typography
+                                                            level="title-md"
                                                             sx={{
-                                                                justifyContent: "flex-start",
+                                                                px: "10px",
+                                                                overflow: "hidden",
+                                                                textOverflow: "ellipsis",
+                                                                whiteSpace: "nowrap",
+                                                                width: "100%",
+                                                                height: "30px",
+                                                                display: "flex",
                                                                 alignItems: "center",
-                                                                borderRadius: "5px",
                                                             }}
+                                                            noWrap
                                                         >
-                                                            <Typography
-                                                                noWrap
-                                                                level="title-md"
-                                                                sx={{
-                                                                    px: "10px",
-                                                                    overflow: "hidden",
-                                                                    textOverflow: "ellipsis",
-                                                                    whiteSpace: "nowrap",
-                                                                    width: "100%",
-                                                                    height: "30px",
-                                                                    display: "flex",
-                                                                    alignItems: "center",
-                                                                }}
-                                                            >
-                                                                {`${taskNote.title}`}
-                                                            </Typography>
-                                                        </ListItemButton>
-                                                    </ListItem>
-                                                );
-                                            })}
-                                        </List>
-                                    </ListItem>
-                                </Stack>
-                            )}
+                                                            {`${taskNote.title}`}
+                                                        </Typography>
+                                                    </ListItemButton>
+                                                </ListItem>
+                                            );
+                                        })}
+                                        <ListItem>
+                                            <ListItemButton
+                                                color="primary"
+                                                variant="soft"
+                                                sx={{
+                                                    justifyContent: "center",
+                                                    alignItems: "center",
+                                                    height: "30px",
+                                                    borderRadius: "5px",
+                                                }}
+                                                onClick={() => {
+                                                    if (
+                                                        useNM.setIsTaskNoteVisible &&
+                                                        taskContent.project
+                                                    ) {
+                                                        useTM.setIsTaskHomeVisible(false);
+                                                        useNM.setIsTaskNoteVisible(true);
+                                                        useNM.handleCreateNewTaskNote(
+                                                            null,
+                                                            taskContent.project.projectId,
+                                                            useTM.currentPreviewTaskId,
+                                                            taskContent.title
+                                                        );
+                                                    } else {
+                                                        console.error(
+                                                            "Can't parent note ID to create a child note. Project ID is not defined."
+                                                        );
+                                                    }
+                                                }}
+                                            >
+                                                <AddIcon />
+                                                New Note
+                                            </ListItemButton>
+                                        </ListItem>
+                                    </List>
+                                </ListItem>
+                            </Stack>
                         </>
                     </TabPanel>
 
                     <TabPanel value={2}>
                         <Box
                             className="custom-scrollbar"
-                            onDrop={handleDroppedFiles}
-                            onDragOver={(e) => e.preventDefault()}
                             sx={{
                                 width: "100%",
                                 minHeight: "150px",
@@ -605,6 +612,8 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                 display: "flex",
                                 alignItems: "center",
                             }}
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={handleDroppedFiles}
                         >
                             {uploadedFiles.length === 0 && (
                                 <Box
@@ -635,36 +644,38 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                         style={{ position: "relative", textAlign: "center" }}
                                     >
                                         <IconButton
-                                            onClick={() => {
-                                                handleDeleteTextFile(taskContents.id, file);
-                                            }}
+                                            color="neutral"
                                             size="sm"
                                             variant="plain"
-                                            color="neutral"
                                             sx={{
                                                 position: "absolute",
                                                 top: 0,
                                                 right: 0,
                                                 background: "transparent",
                                             }}
+                                            onClick={() => {
+                                                handleDeleteTextFile(taskContent.id, file);
+                                            }}
                                         >
                                             <CloseIcon />
                                         </IconButton>
                                         <Tooltip
-                                            placement="top"
-                                            title={`Download \`${file.name}\``}
-                                            sx={{ zIndex: 10010 }}
                                             component="div"
+                                            placement="top"
+                                            size="sm"
+                                            sx={{ zIndex: 10010 }}
+                                            title={`Download \`${file.name}\``}
+                                            variant="outlined"
                                         >
                                             <div
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    downloadFile(file.url, file.name);
-                                                }}
                                                 style={{
                                                     textDecoration: "none",
                                                     color: "inherit",
                                                     cursor: "pointer",
+                                                }}
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    downloadFile(file.url, file.name);
                                                 }}
                                             >
                                                 <InsertDriveFileIcon
@@ -704,24 +715,24 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                         }}
                                     >
                                         <IconButton
-                                            onClick={() => {
-                                                handleDeleteImage(taskContents.id, image);
-                                            }}
+                                            color="neutral"
                                             size="sm"
                                             variant="plain"
-                                            color="neutral"
                                             sx={{
                                                 position: "absolute",
                                                 top: 0,
                                                 right: 0,
                                                 background: "transparent",
                                             }}
+                                            onClick={() => {
+                                                handleDeleteImage(taskContent.id, image);
+                                            }}
                                         >
                                             <CloseIcon />
                                         </IconButton>
                                         <img
-                                            src={image.url}
                                             alt="Uploaded"
+                                            src={image.url}
                                             style={{
                                                 width: `${image.width}px`,
                                                 height: `${image.height}px`,
@@ -741,23 +752,53 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                             </Box>
                         </Box>
 
+                        <Box
+                            sx={{
+                                display: "flex",
+                                justifyContent: "flex-end",
+                                alignItems: "center",
+                                mt: "10px",
+                            }}
+                        >
+                            <input
+                                ref={inputRef}
+                                accept="*"
+                                multiple={true}
+                                style={{ display: "none" }}
+                                type="file"
+                                onChange={handleSelectedFiles}
+                            />
+                            <IconButton
+                                color="primary"
+                                size="sm"
+                                variant="soft"
+                                onClick={handleButtonClick}
+                            >
+                                <FolderIcon />
+                                <Typography level="title-sm" sx={{ mx: "5px" }}>
+                                    Select Files
+                                </Typography>
+                            </IconButton>
+                        </Box>
+
                         <Modal
-                            sx={{ zIndex: 10010 }}
                             open={opened}
+                            sx={{ zIndex: 10010 }}
                             onClose={() => setOpened(false)}
                         >
                             <ModalDialog>
                                 {selectedImage ? (
                                     <Box>
-                                        <img src={selectedImage} alt="preview" />
+                                        <img alt="preview" src={selectedImage} />
                                         <Tooltip
-                                            placement="top"
-                                            title="Download"
-                                            sx={{ zIndex: 10010 }}
                                             component="div"
+                                            placement="top"
+                                            size="sm"
+                                            sx={{ zIndex: 10010 }}
+                                            title="Download"
+                                            variant="outlined"
                                         >
                                             <IconButton
-                                                onClick={() => handleDownload(selectedImage)}
                                                 color="neutral"
                                                 variant="solid"
                                                 sx={{
@@ -765,6 +806,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                     top: "10px",
                                                     right: "10px",
                                                 }}
+                                                onClick={() => handleDownload(selectedImage)}
                                             >
                                                 <DownloadIcon />
                                             </IconButton>

@@ -1,40 +1,31 @@
-import { useEffect, useState } from "react";
-import { Box, Avatar } from "@mui/joy";
+import { useState } from "react";
 import GroupsIcon from "@mui/icons-material/Groups";
-
-import { AllChatProps, ChatProps } from "../../types/chat";
-import { UserProps } from "../../types/admin";
-import { ModalGMProfile } from "../../features/chat/components/modals/ModalGMProfile";
-import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
+import { Avatar, Box } from "@mui/joy";
 import { Socket } from "socket.io-client";
+
+import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
+import { ModalGMProfile } from "../../features/chat/components/modals/ModalGMProfile";
+import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { TeamManagementState } from "../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
+import { UserProps } from "../../types/admin";
+import { AllChatProps } from "../../types/chat";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type GMAvatarProps = {
+    useTEM: TeamManagementState;
     socket: Socket | null;
-    teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     avatarSize?: number;
     isYou: boolean;
     gmChat: AllChatProps;
-    funcSetAllChats: () => Promise<void>;
-    setCurrentMainChat: (chat: ChatProps) => void;
-    setOpeningService: (service: number) => void;
+    useUISM: UIStateManagementState;
+    useCM: ChatManagementState;
 };
 export const GMAvatar = (props: GMAvatarProps) => {
-    const {
-        socket,
-        teamMemberProfiles,
-        myself,
-        setMyself,
-        avatarSize,
-        isYou,
-        gmChat,
-        funcSetAllChats,
-        setCurrentMainChat,
-        setOpeningService,
-    } = props;
+    const { useTEM, socket, myself, setMyself, avatarSize, isYou, gmChat, useUISM, useCM } = props;
     const [openModalGMProfile, setOpenModalGMProfile] = useState<boolean>(false);
     const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
     const [avatarUserId, setAvatarUserId] = useState<string | undefined>(undefined);
@@ -43,46 +34,45 @@ export const GMAvatar = (props: GMAvatarProps) => {
     return (
         <div>
             <Box
+                height={_avatarSize}
                 position="relative"
                 width={_avatarSize}
-                height={_avatarSize}
                 onClick={() => setOpenModalGMProfile(true)}
             >
                 <Avatar
                     size="sm"
-                    sx={{ width: _avatarSize, height: _avatarSize }}
                     src={`${media_url}/${gmChat.profileImagePath}`}
+                    sx={{ width: _avatarSize, height: _avatarSize }}
                 >
                     <GroupsIcon sx={{ fontSize: 26 }} />
                 </Avatar>
             </Box>
 
             <ModalGMProfile
-                teamMemberProfiles={teamMemberProfiles}
-                myself={myself}
-                setMyself={setMyself}
-                socket={socket}
-                setOpeningService={setOpeningService}
-                setCurrentMainChat={setCurrentMainChat}
+                useCM={useCM}
                 gmChat={gmChat}
+                myself={myself}
                 openModalGMProfile={openModalGMProfile}
-                setOpenModalGMProfile={setOpenModalGMProfile}
-                funcSetAllChats={funcSetAllChats}
                 setAvatarUserId={setAvatarUserId}
+                setMyself={setMyself}
+                setOpenModalGMProfile={setOpenModalGMProfile}
                 setOpenUserProfile={setOpenUserProfile}
+                socket={socket}
+                useTEM={useTEM}
+                useUISM={useUISM}
             />
 
             {avatarUserId && (
                 <UserProfile
-                    socket={socket}
-                    myself={myself}
-                    setMyself={setMyself}
+                    useCM={useCM}
                     isYou={isYou}
-                    user={teamMemberProfiles[avatarUserId]}
+                    myself={myself}
                     openUserProfile={openUserProfile}
+                    setMyself={setMyself}
                     setOpenUserProfile={setOpenUserProfile}
-                    setCurrentMainChat={setCurrentMainChat}
-                    setOpeningService={setOpeningService}
+                    socket={socket}
+                    useUISM={useUISM}
+                    user={useTEM.teamMemberProfiles[avatarUserId]}
                 />
             )}
         </div>

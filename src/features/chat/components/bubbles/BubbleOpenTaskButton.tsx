@@ -1,42 +1,24 @@
-import { Box, Tooltip, IconButton } from "@mui/joy";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import { Box, IconButton, Tooltip } from "@mui/joy";
+
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { MessageProps } from "../../../../types/chat";
 import { ProjectProps } from "../../../../types/tasks";
 
 type BubbleReplyButtonTypes = {
     message: MessageProps;
     taskId: number | null;
-    setIsMainChatVisible: (value: boolean) => void;
-    setIsThreadVisible: (value: boolean) => void;
-    setIsTaskPreviewVisible: (value: boolean) => void;
-    isCreatingTask: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    };
-    setIsCreatingTask: (value: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    }) => void;
-    setCurrentPreviewTaskId: (value: number) => void;
-    setCurrentProject: (value: ProjectProps) => void;
+    usePM: ProjectManagementState;
+    useCM: ChatManagementState;
+    useTM: TaskManagementState;
 };
 export const BubbleOpenTaskButton = (props: BubbleReplyButtonTypes) => {
-    const {
-        message,
-        taskId,
-        setIsMainChatVisible,
-        setIsThreadVisible,
-        setIsTaskPreviewVisible,
-        isCreatingTask,
-        setIsCreatingTask,
-        setCurrentPreviewTaskId,
-        setCurrentProject,
-    } = props;
+    const { message, taskId, usePM, useCM, useTM } = props;
     return (
         <Box sx={{ textAlign: "right" }}>
-            <Tooltip title="Open Task" size="sm">
+            <Tooltip size="sm" title="Open Task" variant="outlined">
                 <IconButton
                     size="sm"
                     sx={{
@@ -46,14 +28,14 @@ export const BubbleOpenTaskButton = (props: BubbleReplyButtonTypes) => {
                     }}
                     onClick={() => {
                         if (taskId !== null) {
-                            setIsMainChatVisible(true);
-                            setIsThreadVisible(false);
-                            setIsTaskPreviewVisible(true);
-                            setIsCreatingTask({ ...isCreatingTask, flag: false });
-                            setCurrentPreviewTaskId(taskId);
+                            useCM.setIsMainChatVisible(true);
+                            useCM.setIsThreadVisible(false);
+                            useTM.setIsTaskPreviewVisible(true);
+                            useTM.setIsCreatingTask({ ...useTM.isCreatingTask, flag: false });
+                            useTM.setCurrentPreviewTaskId(taskId);
 
                             if (message.project && message.project.projectId) {
-                                setCurrentProject(message.project);
+                                usePM.setCurrentProject(message.project);
                             } else {
                                 console.error("Failed to set the current project");
                             }

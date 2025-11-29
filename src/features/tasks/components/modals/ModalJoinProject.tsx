@@ -1,13 +1,15 @@
-import { Socket } from "socket.io-client";
 import React, { useState } from "react";
-import { Modal, ModalDialog, Alert, Stack, Button, Typography } from "@mui/joy";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
+import { Alert, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
+import { Socket } from "socket.io-client";
 
-import { UserProps } from "../../../../types/admin";
 import { useAuth } from "../../../../context/AuthContext";
-import { ProjectProps } from "../../../../types/tasks";
 import { loadSpecificPM } from "../../../../features/chat/services/loadSpecificPM";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../../types/chat";
+import { ProjectProps } from "../../../../types/tasks";
 import { addChat } from "../../../chat/services/addChat";
 import { addMessage } from "../../../chat/services/addMessage";
 
@@ -37,20 +39,16 @@ type Props = {
         isPrivate: boolean;
         systemUserId: string;
     }) => void;
-    setCurrentProject: (value: ProjectProps) => void;
-    loadProjectsAndTasks: (value: number) => Promise<void>;
-    allChats: AllChatProps[];
-    setAllChats: (value: AllChatProps[]) => void;
+    usePM: ProjectManagementState;
+    useCM: ChatManagementState;
 };
 export const ModalJoinProject: React.FC<Props> = ({
+    useCM,
+    usePM,
     socket,
     myself,
     openJoinProject,
     setOpenJoinProject,
-    setCurrentProject,
-    loadProjectsAndTasks,
-    allChats,
-    setAllChats,
 }) => {
     const { accessToken } = useAuth();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -147,7 +145,7 @@ export const ModalJoinProject: React.FC<Props> = ({
                         );
                     } else {
                         if (openJoinProject.projectId) {
-                            setCurrentProject({
+                            usePM.setCurrentProject({
                                 projectId: openJoinProject.projectId,
                                 projectName: openJoinProject.projectName,
                                 isPrivate: openJoinProject.isPrivate,
@@ -155,7 +153,6 @@ export const ModalJoinProject: React.FC<Props> = ({
                                 systemUserId: openJoinProject.systemUserId,
                             });
                             (async () => {
-                                await loadProjectsAndTasks(openJoinProject.projectId);
                                 const loadedChat: ChatProps[] = await loadSpecificPM(
                                     myself.teamId,
                                     myself.teamName,
@@ -184,7 +181,7 @@ export const ModalJoinProject: React.FC<Props> = ({
                                     await addChat(newChat, newChat.chatType);
                                     await addMessage(newChat.latestMessage, newChat.chatType);
 
-                                    setAllChats([newChat, ...allChats]);
+                                    useCM.setAllChats([newChat, ...useCM.allChats]);
                                 }
                             })();
                         } else {
@@ -213,8 +210,8 @@ export const ModalJoinProject: React.FC<Props> = ({
     return (
         <>
             <Modal
-                sx={{ zIndex: 10010 }}
                 open={openJoinProject.flag}
+                sx={{ zIndex: 10010 }}
                 onClose={() => setOpenJoinProject(disableOpenJoinModalParams)}
             >
                 <ModalDialog>
@@ -229,7 +226,7 @@ export const ModalJoinProject: React.FC<Props> = ({
                         {openJoinProject.isPrivate === true
                             ? "Make a Request to Join -"
                             : "Join the Project -"}
-                        <Typography level="h3" color="primary" sx={{ ml: 1 }}>
+                        <Typography color="primary" level="h3" sx={{ ml: 1 }}>
                             {openJoinProject.projectName}
                         </Typography>
                     </Typography>
@@ -240,17 +237,17 @@ export const ModalJoinProject: React.FC<Props> = ({
 
                     <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: "center" }}>
                         <Button
-                            component="button"
                             color="danger"
+                            component="button"
                             variant="outlined"
                             onClick={() => setOpenJoinProject(disableOpenJoinModalParams)}
                         >
                             Cancel
                         </Button>
                         <Button
+                            color="primary"
                             component="button"
                             variant="soft"
-                            color="primary"
                             onClick={handleJoinProject}
                         >
                             {openJoinProject.isPrivate === true ? "Send" : "Join"}

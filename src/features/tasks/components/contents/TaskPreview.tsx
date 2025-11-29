@@ -1,133 +1,56 @@
-import { useState, useEffect, useRef } from "react";
-import { Socket } from "socket.io-client";
-import { Sheet, Divider } from "@mui/joy";
+import { useEffect, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
+import { Divider, Sheet } from "@mui/joy";
+import { Socket } from "socket.io-client";
 
-import { TaskTabBlock } from "./base/TaskTabBlock";
-import { TaskTitleBlock } from "./base/TaskTitleBlock";
-import { TaskMainBlock } from "./base/TaskMainBlock";
-import { TaskBodyBlock } from "./base/TaskBodyBlock";
-import { TaskCustomBarBlock } from "./base/TaskCustomBarBlock";
-import { TaskCommentEditorBlock } from "./base/TaskCommentEditorBlock";
-import { TaskSubTasksBlock } from "./base/TaskSubTasksBlock";
-import { sendUpdatedSpecificTask } from "../../services/sendUpdatedSpecificTask";
-import { loadTaskComments } from "../../services/loadTaskComments";
+import { useAuth } from "../../../../context/AuthContext";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { UserProps } from "../../../../types/admin";
+import { TaskNoteProps } from "../../../../types/notes";
 import {
-    updateTeamMembersOptions,
+    AttachmentFileProps,
+    TagListProps,
+    TaskCommentProps,
+    TaskProps,
+} from "../../../../types/tasks";
+import { loadTaskNotes } from "../../../notes/task-notes/services/loadTaskNotes";
+import { loadTaskComments } from "../../services/loadTaskComments";
+import { sendUpdatedSpecificTask } from "../../services/sendUpdatedSpecificTask";
+import {
     updateProjectOptions,
     updateTagOptions,
+    updateTeamMembersOptions,
 } from "../../services/updateTaskAutoCompleteOptions";
-import { UserProps } from "../../../../types/admin";
-import { AttachmentFileProps } from "../../../../types/tasks";
-import { useAuth } from "../../../../context/AuthContext";
-import { TaskProps, ProjectProps, TagListProps, TaskCommentProps } from "../../../../types/tasks";
-import { ChatProps } from "../../../../types/chat";
-import { TaskNoteMetaProps, TaskNoteProps } from "../../../../types/notes";
-import { loadTaskNotes } from "../../services/loadTaskNotes";
+import { TaskBodyBlock } from "./base/TaskBodyBlock";
+import { TaskCustomBarBlock } from "./base/TaskCustomBarBlock";
+import { TaskMainBlock } from "./base/TaskMainBlock";
+import { TaskSubTasksBlock } from "./base/TaskSubTasksBlock";
+import { TaskTabBlock } from "./base/TaskTabBlock";
+import { TaskTitleBlock } from "./base/TaskTitleBlock";
 
 type TaskPreviewProps = {
-    teamMembers: UserProps[];
-    setTeamMembers: (value: UserProps[]) => void;
-    teamMemberProfiles: Record<string, UserProps>;
     socket: Socket | null;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    setCurrentProject: (value: ProjectProps) => void;
-    currentPreviewTask: TaskProps;
-    setCurrentPreviewTask: (value: TaskProps) => void;
-    setIsMainChatVisible?: (value: boolean) => void;
-    setIsThreadVisible?: (value: boolean) => void;
-    isThreadVisible?: boolean;
-    setIsTaskPreviewVisible?: (value: boolean) => void;
-    isCreatingTask: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    };
-    setIsCreatingTask: (value: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    }) => void;
-    setOpenCreateProject: (value: boolean) => void;
-    setOpenCreateTag: (value: boolean) => void;
-    isTaskUpdated?: boolean;
-    setIsTaskUpdated?: (value: boolean) => void;
-    setOpeningService: (service: number) => void;
-    setCurrentMainChat: (chat: ChatProps) => void;
-    currentPreviewTaskId: number;
-    setCurrentPreviewTaskId: (value: number) => void;
-    isCommentUpdated: { isUpdate: boolean; scrollToBottom: boolean };
-    setIsCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
-    setIsTaskHomeVisible?: (value: boolean) => void;
-    isTaskPreviewVisible?: boolean;
-    setIsTaskNoteVisible?: (value: boolean) => void;
-    handleCreateNewTaskNote: (
-        parentNoteId: number | null,
-        projectId: number,
-        taskId: number,
-        title?: string
-    ) => Promise<void>;
-    setCurrentTaskNote: (value: TaskNoteProps) => void;
-    isTaskNoteVisible: boolean;
-    teamProjects: ProjectProps[];
-    setTeamProjects: (value: ProjectProps[]) => void;
-    taskNoteMeta: TaskNoteMetaProps[];
-    setIsTaskVisibleInNote?: (value: boolean) => void;
-    moveToSpecificChat: (
-        chatType: number,
-        chatId: number,
-        threadId: number,
-        openTaskNoteInChat: boolean,
-        openThreadTaskPreview: boolean
-    ) => void;
-    openingService: number;
+    usePM: ProjectManagementState;
+    useUISM: UIStateManagementState;
+    useTM: TaskManagementState;
+    useTEM: TeamManagementState;
+    useCM: ChatManagementState;
+    useNM: NoteManagementState;
 };
 
 export const TaskPreview = (props: TaskPreviewProps) => {
-    const {
-        teamMembers,
-        setTeamMembers,
-        teamMemberProfiles,
-        socket,
-        myself,
-        setMyself,
-        setCurrentProject,
-        currentPreviewTask,
-        setIsCreatingTask,
-        setIsMainChatVisible,
-        setIsThreadVisible,
-        isThreadVisible,
-        setIsTaskPreviewVisible,
-        isCreatingTask,
-        setCurrentPreviewTask,
-        setOpenCreateProject,
-        setOpenCreateTag,
-        isTaskUpdated,
-        setIsTaskUpdated,
-        setOpeningService,
-        setCurrentMainChat,
-        currentPreviewTaskId,
-        setCurrentPreviewTaskId,
-        isCommentUpdated,
-        setIsCommentUpdated,
-        setIsTaskHomeVisible,
-        isTaskPreviewVisible,
-        setIsTaskNoteVisible,
-        handleCreateNewTaskNote,
-        setCurrentTaskNote,
-        isTaskNoteVisible,
-        teamProjects,
-        setTeamProjects,
-        taskNoteMeta,
-        setIsTaskVisibleInNote,
-        moveToSpecificChat,
-        openingService,
-    } = props;
+    const { socket, myself, setMyself, usePM, useNM, useTM, useUISM, useTEM, useCM } = props;
     const { accessToken } = useAuth();
     const [taskClosed, setTaskClosed] = useState(false);
     const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>(
-        currentPreviewTask.attachments
+        useTM.currentPreviewTask?.attachments || []
     );
     const [taskUpdated, setTaskUpdated] = useState(false);
     const [startIntervalUpdatingTask, setStartIntervalUpdatingTask] = useState(false);
@@ -136,18 +59,27 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     const [taskBodySaved, setTaskBodySaved] = useState(false);
     const [isAttachmentDeleted, setIsAttachmentDeleted] = useState(false);
     const [deletedAttachmentId, setDeletedAttachmentId] = useState<number>(-1);
-    const [tmpCurrentTaskContent, setTmpCurrentTaskContent] =
-        useState<TaskProps>(currentPreviewTask);
-    const [taskTitle, setTaskTitle] = useState<string>(currentPreviewTask.title);
-    const [body, setBody] = useState<PartialBlock[]>(currentPreviewTask.body);
-    const [assignee, setAssignee] = useState<UserProps>(tmpCurrentTaskContent.assignee);
-    const [reporter, setReporter] = useState<UserProps>(tmpCurrentTaskContent.reporter);
+    const [tmpCurrentTaskContent, setTmpCurrentTaskContent] = useState<TaskProps>(
+        useTM.currentPreviewTask || ({} as TaskProps)
+    );
+    const [taskTitle, setTaskTitle] = useState<string>(useTM.currentPreviewTask?.title || "");
+    const [body, setBody] = useState<PartialBlock[]>(useTM.currentPreviewTask?.body || []);
+    const [assignee, setAssignee] = useState<UserProps>(
+        useTM.currentPreviewTask?.assignee || myself
+    );
+    const [reporter, setReporter] = useState<UserProps>(
+        useTM.currentPreviewTask?.reporter || myself
+    );
     const [currentTaskId, setCurrentTaskId] = useState<number | undefined>(
-        tmpCurrentTaskContent.id
+        useTM.currentPreviewTask?.id
     );
 
+    const [tabIndex, setTabIndex] = useState(0);
+
     // Save initial task title to restore it when use input empty title
-    const [initTaskTitle, setInitTaskTitle] = useState<string>(currentPreviewTask.title);
+    const [initTaskTitle, setInitTaskTitle] = useState<string>(
+        useTM.currentPreviewTask?.title || ""
+    );
 
     // For task comments
     const [isInEdit, setIsInEdit] = useState<boolean>(false);
@@ -155,7 +87,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
 
     // Set the current preview task when the component is mounted
     useEffect(() => {
-        setTmpCurrentTaskContent(currentPreviewTask);
+        setTmpCurrentTaskContent(useTM.currentPreviewTask || ({} as TaskProps));
     }, []);
 
     // Send updated task to the backend when task is updated
@@ -194,17 +126,17 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             setUploadedFiles([...uploadedFiles, ...uploadedAttachments]);
         }
 
-        if (taskSwitched) {
+        if (taskSwitched && useTM.currentPreviewTask) {
             // Initialize the following variable when user switches the previewing task
-            setTmpCurrentTaskContent(currentPreviewTask);
-            setCurrentPreviewTask(currentPreviewTask);
-            setCurrentTaskId(currentPreviewTask.id);
-            setBody(currentPreviewTask.body || []);
+            setTmpCurrentTaskContent(useTM.currentPreviewTask);
+            useTM.setCurrentPreviewTask(useTM.currentPreviewTask);
+            setCurrentTaskId(useTM.currentPreviewTask.id);
+            setBody(useTM.currentPreviewTask.body || []);
         } else {
             // Update only the tmpCurrentTaskContent when user updated the task content
             // (Not switched the previewing task)
             setTmpCurrentTaskContent(newTaskContent);
-            setCurrentPreviewTask(newTaskContent);
+            useTM.setCurrentPreviewTask(newTaskContent);
         }
         setTaskUpdated(false);
         setTaskBodySaved(true);
@@ -243,22 +175,24 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         if (taskBodyEdited) {
             sendUpdatedTask(true);
         } else {
-            setTmpCurrentTaskContent(currentPreviewTask);
-            setCurrentTaskId(currentPreviewTask.id);
-            setBody(currentPreviewTask.body || []);
+            if (useTM.currentPreviewTask) {
+                setTmpCurrentTaskContent(useTM.currentPreviewTask);
+                setCurrentTaskId(useTM.currentPreviewTask.id);
+                setBody(useTM.currentPreviewTask.body || []);
+            }
         }
 
         // setUploadedFiles(currentPreviewTask.attachments);
-    }, [currentPreviewTask]);
+    }, [useTM.currentPreviewTask]);
 
     // Update task title/attachments when the visible task Id is changed
     // This will be executed after the above useEffect is executed
     //  (i.e., after `setCurrentTaskId` is executed)
     useEffect(() => {
         if (currentTaskId) {
-            setTaskTitle(currentPreviewTask.title);
-            setInitTaskTitle(currentPreviewTask.title);
-            setUploadedFiles(currentPreviewTask.attachments);
+            setTaskTitle(useTM.currentPreviewTask?.title || "");
+            setInitTaskTitle(useTM.currentPreviewTask?.title || "");
+            setUploadedFiles(useTM.currentPreviewTask?.attachments || []);
         }
     }, [currentTaskId]);
 
@@ -268,14 +202,14 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             if (taskBodyEdited) {
                 const execute = async () => {
                     await sendUpdatedTask(false);
-                    if (setIsTaskPreviewVisible) {
-                        setIsTaskPreviewVisible(false);
+                    if (useTM.setIsTaskPreviewVisible) {
+                        useTM.setIsTaskPreviewVisible(false);
                     }
                 };
                 execute();
             } else {
-                if (setIsTaskPreviewVisible) {
-                    setIsTaskPreviewVisible(false);
+                if (useTM.setIsTaskPreviewVisible) {
+                    useTM.setIsTaskPreviewVisible(false);
                 }
             }
     }, [taskClosed]);
@@ -288,10 +222,10 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             uploadedFiles.length > 0
         ) {
             (async () => {
-                setTmpCurrentTaskContent((prevState) => ({
-                    ...prevState,
+                setTmpCurrentTaskContent({
+                    ...tmpCurrentTaskContent,
                     attachments: uploadedFiles,
-                }));
+                });
                 setAssignee(tmpCurrentTaskContent.assignee);
                 setReporter(tmpCurrentTaskContent.reporter);
             })();
@@ -299,11 +233,11 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     }, [uploadedFiles]);
 
     useEffect(() => {
-        if (setIsTaskUpdated && isTaskUpdated === false) {
-            setCurrentPreviewTask(tmpCurrentTaskContent);
-            setIsTaskUpdated(true);
-            setAssignee(tmpCurrentTaskContent.assignee);
-            setReporter(tmpCurrentTaskContent.reporter);
+        if (useTM.isTaskUpdated === false) {
+            useTM.setCurrentPreviewTask(tmpCurrentTaskContent);
+            useTM.setIsTaskUpdated(true);
+            setAssignee(tmpCurrentTaskContent?.assignee || myself);
+            setReporter(tmpCurrentTaskContent?.reporter || myself);
         }
     }, [tmpCurrentTaskContent]);
 
@@ -323,7 +257,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         (async () => {
             const loadedTaskComments: TaskCommentProps[] = await loadTaskComments(
                 myself,
-                Number(currentPreviewTask.id),
+                Number(useTM.currentPreviewTask?.id),
                 accessToken
             );
             if (loadedTaskComments.length > 0) {
@@ -332,17 +266,17 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setTaskComments([]);
             }
         })();
-    }, [isCommentUpdated, currentTaskId]);
+    }, [useTM.isTaskCommentUpdated, currentTaskId]);
 
     // Get Task Notes
     const [taskNotes, setTaskNotes] = useState<TaskNoteProps[]>([]);
     useEffect(() => {
         (async () => {
-            if (currentPreviewTask.project) {
+            if (useTM.currentPreviewTask?.project) {
                 const loadedTaskNotes: TaskNoteProps[] = await loadTaskNotes(
                     myself,
-                    Number(currentPreviewTask.project.projectId),
-                    Number(currentPreviewTask.id),
+                    Number(useTM.currentPreviewTask.project.projectId),
+                    Number(useTM.currentPreviewTask.id),
                     accessToken
                 );
                 if (loadedTaskNotes.length > 0) {
@@ -354,7 +288,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setTaskNotes([]);
             }
         })();
-    }, [isCommentUpdated, currentTaskId, taskNoteMeta]);
+    }, [currentTaskId, useNM.taskNoteMeta]);
 
     // Get team members
     const [isOpenTeamMembersList, setIsOpenTeamMembersList] = useState(false);
@@ -362,7 +296,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         updateTeamMembersOptions({
             myself: myself,
             accessToken: accessToken,
-            setTeamMembers: setTeamMembers,
+            setTeamMembers: useTEM.setTeamMembers,
         });
     }, [isOpenTeamMembersList]);
 
@@ -372,7 +306,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         updateProjectOptions({
             myself: myself,
             accessToken: accessToken,
-            setTeamProjects: setTeamProjects,
+            setTeamProjects: usePM.setTeamProjects,
         });
     }, [isOpenProjectList]);
 
@@ -380,7 +314,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     const [projectTags, setProjectTags] = useState<TagListProps[]>([]);
     const [isOpenTagList, setIsOpenTagList] = useState(false);
     useEffect(() => {
-        if (tmpCurrentTaskContent.project) {
+        if (tmpCurrentTaskContent?.project) {
             updateTagOptions({
                 myself: myself,
                 accessToken: accessToken,
@@ -400,9 +334,17 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         }
     }, [taskCommentLines]); // re-run whenever content changes
 
+    // This is for auto scrolling to the bottom when an user switches the tab.
+    useEffect(() => {
+        const sheet = sheetRef.current;
+        if (sheet) {
+            sheet.scrollTop = sheet.scrollHeight; // scroll to bottom
+        }
+    }, [tabIndex]); // re-run whenever content changes
+
     return (
         <>
-            {tmpCurrentTaskContent.id && (
+            {tmpCurrentTaskContent?.id && (
                 <Sheet
                     ref={sheetRef}
                     className="custom-scrollbar"
@@ -416,151 +358,117 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                     }}
                 >
                     <TaskTitleBlock
-                        myself={myself}
-                        taskContents={tmpCurrentTaskContent}
-                        taskTitle={taskTitle}
-                        setTaskTitle={setTaskTitle}
-                        setIsCreatingTask={setIsCreatingTask}
-                        setOpenCreateProject={setOpenCreateProject}
-                        setOpenCreateTag={setOpenCreateTag}
-                        setTaskClosed={setTaskClosed}
-                        setTaskUpdated={setTaskUpdated}
+                        useCM={useCM}
                         isPreviewMode={true}
-                        setIsMainChatVisible={setIsMainChatVisible}
-                        setIsThreadVisible={setIsThreadVisible}
-                        setIsTaskPreviewVisible={setIsTaskPreviewVisible}
-                        setIsTaskHomeVisible={setIsTaskHomeVisible}
-                        isTaskPreviewVisible={isTaskPreviewVisible}
-                        isCreatingTask={isCreatingTask}
-                        setCurrentTaskContent={setTmpCurrentTaskContent}
+                        myself={myself}
+                        setTaskClosed={setTaskClosed}
+                        setTaskContent={setTmpCurrentTaskContent}
                         setTaskStatusUpdated={setTaskStatusUpdated}
-                        isTaskNoteVisible={isTaskNoteVisible}
-                        setIsTaskVisibleInNote={setIsTaskVisibleInNote}
-                        moveToSpecificChat={moveToSpecificChat}
-                        openingService={openingService}
+                        setTaskTitle={setTaskTitle}
+                        setTaskUpdated={setTaskUpdated}
+                        taskContent={tmpCurrentTaskContent}
+                        taskTitle={taskTitle}
+                        useTM={useTM}
+                        useUISM={useUISM}
+                        useNM={useNM}
+                        usePM={usePM}
                     />
 
                     <Divider sx={{ mt: 1, mb: 1 }} />
 
                     <TaskMainBlock
-                        teamMemberProfiles={teamMemberProfiles}
-                        socket={socket}
-                        taskContents={tmpCurrentTaskContent}
-                        setTaskContents={setTmpCurrentTaskContent}
-                        teamMembers={teamMembers}
-                        teamProjects={teamProjects}
-                        projectTags={projectTags}
-                        myself={myself}
-                        setMyself={setMyself}
                         assignee={assignee}
-                        setAssignee={setAssignee}
-                        reporter={reporter}
-                        setReporter={setReporter}
-                        isOpenTeamMembersList={isOpenTeamMembersList}
-                        setIsOpenTeamMembersList={setIsOpenTeamMembersList}
+                        useCM={useCM}
                         isOpenProjectList={isOpenProjectList}
-                        setIsOpenProjectList={setIsOpenProjectList}
                         isOpenTagList={isOpenTagList}
-                        setIsOpenTagList={setIsOpenTagList}
-                        setOpenCreateTag={setOpenCreateTag}
-                        setCurrentProject={setCurrentProject}
+                        isOpenTeamMembersList={isOpenTeamMembersList}
                         isPreviewMode={true}
-                        setTaskUpdated={setTaskUpdated}
-                        setOpeningService={setOpeningService}
-                        setCurrentMainChat={setCurrentMainChat}
-                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
+                        myself={myself}
+                        projectTags={projectTags}
+                        reporter={reporter}
+                        setAssignee={setAssignee}
+                        setIsOpenProjectList={setIsOpenProjectList}
+                        setIsOpenTagList={setIsOpenTagList}
+                        setIsOpenTeamMembersList={setIsOpenTeamMembersList}
+                        setMyself={setMyself}
+                        setReporter={setReporter}
+                        setTaskContent={setTmpCurrentTaskContent}
                         setTaskStatusUpdated={setTaskStatusUpdated}
+                        setTaskUpdated={setTaskUpdated}
+                        socket={socket}
+                        taskContent={tmpCurrentTaskContent}
+                        useTEM={useTEM}
+                        useTM={useTM}
+                        useUISM={useUISM}
+                        usePM={usePM}
                     />
 
                     <Divider sx={{ mt: 1, mb: 1 }} />
 
                     <TaskCustomBarBlock
-                        currentTaskContent={tmpCurrentTaskContent}
-                        setCurrentTaskContent={setTmpCurrentTaskContent}
+                        setTaskContent={setTmpCurrentTaskContent}
                         setTaskStatusUpdated={setTaskStatusUpdated}
                         setTaskUpdated={setTaskUpdated}
-                        setIsCreatingTask={setIsCreatingTask}
                         taskBodySaved={taskBodySaved}
-                        setIsTaskHomeVisible={setIsTaskHomeVisible}
+                        taskContent={tmpCurrentTaskContent}
                     />
 
                     <TaskBodyBlock
                         key={`TaskBodyBlock-${tmpCurrentTaskContent.id}`}
-                        teamMemberProfiles={teamMemberProfiles}
-                        socket={socket}
-                        myself={myself}
-                        setMyself={setMyself}
-                        teamMembers={teamMembers}
-                        taskId={tmpCurrentTaskContent.id}
                         body={body}
+                        useCM={useCM}
+                        myself={myself}
                         setBody={setBody}
+                        setMyself={setMyself}
                         setTaskBodyEdited={setTaskBodyEdited}
                         setTaskBodySaved={setTaskBodySaved}
-                        setCurrentChat={setCurrentMainChat}
-                        setOpeningService={setOpeningService}
+                        socket={socket}
+                        taskId={tmpCurrentTaskContent.id}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
                     />
 
                     <Divider sx={{ mt: 2 }} />
 
                     <TaskSubTasksBlock
-                        teamMemberProfiles={teamMemberProfiles}
-                        socket={socket}
+                        useCM={useCM}
+                        useTM={useTM}
+                        currentTaskContent={tmpCurrentTaskContent}
                         myself={myself}
                         setMyself={setMyself}
-                        currentPreviewTaskId={currentPreviewTaskId}
-                        currentTaskContent={tmpCurrentTaskContent}
-                        setCurrentProject={setCurrentProject}
-                        setCurrentPreviewTaskId={setCurrentPreviewTaskId}
-                        setOpeningService={setOpeningService}
-                        setCurrentMainChat={setCurrentMainChat}
+                        socket={socket}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
                     />
 
                     <TaskTabBlock
-                        socket={socket}
-                        myself={myself}
-                        setMyself={setMyself}
-                        teamMemberProfiles={teamMemberProfiles}
-                        setCurrentChat={setCurrentMainChat}
-                        setOpeningService={setOpeningService}
-                        uploadedFiles={uploadedFiles}
-                        setUploadedFiles={setUploadedFiles}
-                        currentPreviewTaskId={currentPreviewTaskId}
-                        taskContents={tmpCurrentTaskContent}
-                        setTaskContents={setTmpCurrentTaskContent}
-                        setTaskUpdated={setTaskUpdated}
-                        setIsAttachmentDeleted={setIsAttachmentDeleted}
-                        setDeletedAttachmentId={setDeletedAttachmentId}
-                        taskComments={taskComments}
-                        isCommentUpdated={isCommentUpdated}
-                        setIsInEdit={setIsInEdit}
-                        setEditTargetComment={setEditTargetComment}
-                        setIsTaskHomeVisible={setIsTaskHomeVisible}
-                        setIsTaskNoteVisible={setIsTaskNoteVisible}
-                        handleCreateNewTaskNote={handleCreateNewTaskNote}
-                        taskNotes={taskNotes}
-                        setCurrentTaskNote={setCurrentTaskNote}
-                    />
-
-                    <Divider sx={{ m: 2 }} />
-
-                    <TaskCommentEditorBlock
-                        teamMemberProfiles={teamMemberProfiles}
-                        myself={myself}
-                        setMyself={setMyself}
-                        socket={socket}
-                        teamMembers={teamMembers}
-                        task={tmpCurrentTaskContent}
-                        taskComments={taskComments}
-                        setTaskComments={setTaskComments}
-                        isCommentUpdated={isCommentUpdated}
-                        setIsCommentUpdated={setIsCommentUpdated}
-                        setCurrentChat={setCurrentMainChat}
-                        setOpeningService={setOpeningService}
-                        taskCommentLines={taskCommentLines}
-                        setTaskCommentLines={setTaskCommentLines}
-                        isInEdit={isInEdit}
-                        setIsInEdit={setIsInEdit}
+                        useCM={useCM}
                         editTargetComment={editTargetComment}
+                        isInEdit={isInEdit}
+                        myself={myself}
+                        setDeletedAttachmentId={setDeletedAttachmentId}
+                        setEditTargetComment={setEditTargetComment}
+                        setIsAttachmentDeleted={setIsAttachmentDeleted}
+                        setIsInEdit={setIsInEdit}
+                        setMyself={setMyself}
+                        setTabIndex={setTabIndex}
+                        setTaskCommentLines={setTaskCommentLines}
+                        setTaskComments={setTaskComments}
+                        setTaskContent={setTmpCurrentTaskContent}
+                        setTaskUpdated={setTaskUpdated}
+                        setUploadedFiles={setUploadedFiles}
+                        socket={socket}
+                        tabIndex={tabIndex}
+                        taskCommentLines={taskCommentLines}
+                        taskComments={taskComments}
+                        taskContent={tmpCurrentTaskContent}
+                        taskNotes={taskNotes}
+                        useTEM={useTEM}
+                        useTM={useTM}
+                        tmpCurrentTaskContent={tmpCurrentTaskContent}
+                        useUISM={useUISM}
+                        uploadedFiles={uploadedFiles}
+                        useNM={useNM}
                     />
                 </Sheet>
             )}

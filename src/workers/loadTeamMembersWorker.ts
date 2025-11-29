@@ -1,8 +1,6 @@
+import { UserRepository } from "../db/repositories";
 import { loadTeamMembers } from "../features/admin/services/loadTeamMembers";
 import { UserProps } from "../types/admin";
-import { TaskTableProps } from "../types/tasks";
-import { STORES } from "../db/conf";
-import { clearStore, addData } from "../db/crud";
 
 self.onmessage = async (event) => {
     const myself: UserProps = event.data.myself;
@@ -13,14 +11,13 @@ self.onmessage = async (event) => {
     // await clearStore(STORES.USER_INFO);
 
     // Load data from backend
-    const memberList: TaskTableProps[] = await loadTeamMembers(myself, accessToken);
+    const memberList: UserProps[] = await loadTeamMembers(myself, accessToken);
 
-    for (let i = 0; i < memberList.length; i += 1) {
-        const member: TaskTableProps = memberList[i];
-        await addData({
-            storeName: STORES.USER_INFO,
-            data: member,
-        });
+    const userRepo = new UserRepository();
+
+    // Batch insert all team members
+    if (memberList && memberList.length > 0) {
+        await userRepo.batchInsert(memberList);
     }
 
     // Send finish a message

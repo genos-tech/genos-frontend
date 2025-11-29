@@ -1,78 +1,62 @@
-import { Socket } from "socket.io-client";
 import { Button, Stack } from "@mui/joy";
+import { Socket } from "socket.io-client";
 
-import { uploadNewTask } from "../../../services/uploadNewTask";
+import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
+import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
+import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../../types/admin";
-import { TaskProps, ProjectProps } from "../../../../../types/tasks";
-import { ChatProps, ThreadProps } from "../../../../../types/chat";
+import { TaskProps } from "../../../../../types/tasks";
 import { deleteEmptyTask } from "../../../services/deleteEmptyTask";
+import { uploadNewTask } from "../../../services/uploadNewTask";
 
 type TaskCreateFooterProps = {
     socket: Socket | null;
     myself: UserProps;
     accessToken: string | null;
-    currentMainChat?: ChatProps;
-    currentThreadChat?: ThreadProps;
-    isThreadVisible?: boolean;
-    taskContents: TaskProps;
+    useCM: ChatManagementState;
+    taskContent: TaskProps;
     taskTitle: string;
+    useTM: TaskManagementState;
     setIsSubmitted: (value: boolean) => void;
     setTitleError: (value: string) => void;
     setTitleErrorOpen: (value: boolean) => void;
-    setIsTaskPreviewVisible?: (value: boolean) => void;
-    setIsCreatingTask: (value: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-    }) => void;
-    setCurrentPreviewTaskId: (value: number) => void;
-    setCurrentProject: (value: ProjectProps) => void;
-    setInitialEmptyTaskId: (value: number | undefined) => void;
+    usePM: ProjectManagementState;
 };
 export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
     const {
         socket,
         myself,
         accessToken,
-        currentMainChat,
-        currentThreadChat,
-        isThreadVisible,
-        taskContents,
+        useCM,
+        taskContent,
         taskTitle,
+        useTM,
         setIsSubmitted,
         setTitleError,
         setTitleErrorOpen,
-        setIsTaskPreviewVisible,
-        setIsCreatingTask,
-        setCurrentPreviewTaskId,
-        setCurrentProject,
-        setInitialEmptyTaskId,
+        usePM,
     } = props;
 
     const DoUploadNewTask = async () => {
         await uploadNewTask({
             socket: socket,
             myself: myself,
-            taskContents: taskContents,
-            currentMainChat: currentMainChat,
-            currentThreadChat: currentThreadChat,
-            isThreadVisible: isThreadVisible || false,
+            taskContent: taskContent,
+            useCM: useCM,
             accessToken: accessToken || "",
             setTitleError: setTitleError,
             setTitleErrorOpen: setTitleErrorOpen,
-            setCurrentPreviewTaskId: setCurrentPreviewTaskId,
+            setCurrentPreviewTaskId: useTM.setCurrentPreviewTaskId,
         });
 
-        if (taskContents.project && taskContents.project.projectId) {
-            localStorage.setItem("lastProjectId", String(taskContents.project.projectId));
-            setCurrentProject(taskContents.project);
+        if (taskContent.project && taskContent.project.projectId) {
+            localStorage.setItem("lastProjectId", String(taskContent.project.projectId));
+            usePM.setCurrentProject(taskContent.project);
         } else {
             console.error("Failed to set the current project");
         }
 
-        if (setIsTaskPreviewVisible) {
-            setIsTaskPreviewVisible(true);
-        }
+        useTM.setIsTaskPreviewVisible(true);
 
         setIsSubmitted(true);
     };
@@ -80,25 +64,25 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
     return (
         <Stack direction="row" sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
             <Button
-                component="button"
-                variant="outlined"
                 color="danger"
+                component="button"
                 size="sm"
+                variant="outlined"
                 onClick={() => {
-                    if (setIsCreatingTask) {
-                        setIsCreatingTask({
+                    if (useTM.setIsCreatingTask) {
+                        useTM.setIsCreatingTask({
                             flag: false,
                             parentTaskId: null,
-                            rootTaskId: null,
+                            rootTaskId: useTM.currentPreviewTask?.rootTaskId || null,
                         });
                     }
 
-                    if (taskContents.id !== undefined) {
+                    if (taskContent.id !== undefined) {
                         deleteEmptyTask({
                             myself: myself,
-                            taskId: taskContents.id,
+                            taskId: taskContent.id,
                             accessToken: accessToken,
-                            setInitialEmptyTaskId: setInitialEmptyTaskId,
+                            setInitialEmptyTaskId: useTM.setInitialEmptyTaskId,
                         });
                     }
                 }}
@@ -106,14 +90,14 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
                 Cancel
             </Button>
             <Button
+                color="primary"
                 component="button"
+                disabled={taskTitle === "" || taskContent.project?.projectId === null}
                 type="submit"
                 variant="solid"
-                color="primary"
                 onClick={() => {
                     DoUploadNewTask();
                 }}
-                disabled={taskTitle === "" || taskContents.project?.projectId === null}
             >
                 Create
             </Button>

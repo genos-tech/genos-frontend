@@ -1,86 +1,89 @@
-import { alpha } from "@mui/system";
-import { ListItemContent, Chip } from "@mui/joy";
+import { Chip, ListItemContent } from "@mui/joy";
 import Autocomplete from "@mui/joy/Autocomplete";
 import AutocompleteOption from "@mui/joy/AutocompleteOption";
 import { useColorScheme } from "@mui/joy/styles";
+import { alpha } from "@mui/system";
 
-import { effortLevels } from "../../utils/taskMeta";
 import { TaskProps } from "../../../../types/tasks";
+import { effortLevels } from "../../utils/taskMeta";
 
 type ACTaskEffortLevelProps = {
-    taskContents: TaskProps;
-    setTaskContents: (value: TaskProps) => void;
+    taskContent: TaskProps;
+    setTaskContent: (value: TaskProps) => void;
     setTaskUpdated?: (value: boolean) => void;
 };
 export const ACTaskEffortLevel = (props: ACTaskEffortLevelProps) => {
-    const { taskContents, setTaskContents, setTaskUpdated } = props;
+    const { taskContent, setTaskContent, setTaskUpdated } = props;
 
     const { mode } = useColorScheme();
 
     return (
         <Autocomplete
-            key={`ac-project-effort-level-${taskContents.id}`}
-            placeholder="Effort Level"
-            multiple
-            options={effortLevels}
+            key={`ac-project-effort-level-${taskContent.id}`}
             getOptionLabel={(option) => option.level || ""}
-            value={
-                taskContents &&
-                taskContents.effortLevel.level !== null &&
-                taskContents.effortLevel.level !== ""
-                    ? [taskContents.effortLevel]
-                    : []
-            }
             isOptionEqualToValue={(option, value) => option.level === value.level}
-            renderTags={(tags, getTagProps) =>
-                tags.slice(-1).map((item, index) => {
-                    const { key, ...tagProps } = getTagProps({ index }); // spread the 'key'
-                    return (
-                        <Chip
-                            key={`ac-project-effort-level-${key}`}
-                            variant="soft"
-                            sx={{
-                                backgroundColor: item.color
-                                    ? alpha(item.color, mode === "dark" ? 0.5 : 0.75)
-                                    : "transparent",
-                                color: item.textColor,
-                                fontWeight: "bold",
-                                borderRadius: "5px",
-                            }}
-                            size="sm"
-                        >
-                            {item.level}
-                        </Chip>
-                    );
-                })
-            }
+            openOnFocus={true}
+            options={effortLevels}
+            placeholder="Effort Level"
+            size="sm"
+            sx={{ width: "100%" }}
             renderOption={(props, option) => (
                 <AutocompleteOption {...props} key={option.level}>
                     <ListItemContent sx={{ fontSize: "sm" }}>
                         <Chip
                             key={option.level} // pass the key directly
+                            size="sm"
                             variant="soft"
                             sx={{
                                 backgroundColor: option.color
-                                    ? alpha(option.color, mode === "dark" ? 0.5 : 0.75)
+                                    ? alpha(option.color, mode === "dark" ? 0.5 : 1)
                                     : "transparent",
                                 color: option.textColor,
                                 fontWeight: "bold",
                                 borderRadius: "5px",
                             }}
-                            size="sm"
                         >
                             {option.level}
                         </Chip>
                     </ListItemContent>
                 </AutocompleteOption>
             )}
+            renderTags={(tags, getTagProps) =>
+                tags.slice(-1).map((item, index) => {
+                    const { key, ...tagProps } = getTagProps({ index }); // spread the 'key'
+                    return (
+                        <Chip
+                            key={`ac-project-effort-level-${key}`}
+                            size="sm"
+                            variant="soft"
+                            sx={{
+                                backgroundColor: item.color
+                                    ? alpha(item.color, mode === "dark" ? 0.5 : 1)
+                                    : "transparent",
+                                color: item.textColor,
+                                fontWeight: "bold",
+                                borderRadius: "5px",
+                            }}
+                        >
+                            {item.level}
+                        </Chip>
+                    );
+                })
+            }
+            value={
+                taskContent &&
+                taskContent.effortLevel.level !== null &&
+                taskContent.effortLevel.level !== ""
+                    ? [taskContent.effortLevel]
+                    : []
+            }
+            multiple
             onChange={(event, value) => {
                 if (value !== null) {
                     if (value.length > 0) {
                         (async () => {
-                            setTaskContents({
-                                ...taskContents,
+                            setTaskContent({
+                                ...taskContent,
                                 effortLevel: value.slice(-1)[0],
                             });
                             if (setTaskUpdated) {
@@ -89,8 +92,8 @@ export const ACTaskEffortLevel = (props: ACTaskEffortLevelProps) => {
                         })();
                     } else {
                         (async () => {
-                            setTaskContents({
-                                ...taskContents,
+                            setTaskContent({
+                                ...taskContent,
                                 effortLevel: {
                                     code: 0,
                                     level: null,
@@ -105,9 +108,6 @@ export const ACTaskEffortLevel = (props: ACTaskEffortLevelProps) => {
                     }
                 }
             }}
-            size="sm"
-            sx={{ width: "100%" }}
-            openOnFocus={true}
         />
     );
 };
