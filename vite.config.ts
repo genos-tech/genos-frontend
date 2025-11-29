@@ -1,4 +1,5 @@
 import react from "@vitejs/plugin-react-swc";
+import { visualizer } from "rollup-plugin-visualizer";
 import { defineConfig } from "vite";
 
 // https://vite.dev/config/
@@ -7,5 +8,16 @@ export default defineConfig({
     server: {
         port: 3000,
         strictPort: true,
+    },
+    build: {
+        chunkSizeWarningLimit: 5000, // in kB, default is 500
+        rollupOptions: {
+            plugins: [
+                visualizer({
+                    filename: "stats.html",
+                    open: true, // opens in browser after build
+                }),
+            ],
+        },
     },
 });
