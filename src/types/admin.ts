@@ -83,3 +83,13 @@ export type ProjectProfileProps = {
     isPrivate: boolean;
     tsCreatedAt: string;
 };
+
+export type TeamProfileProps = {
+    teamId: string;
+    teamName: string;
+    teamEmail: string;
+    teamOwnerId: string;
+    teamImgPath: string;
+    teamMembers: UserProps[];
+    tsCreatedAt: string;
+};

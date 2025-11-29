@@ -50,7 +50,7 @@ export const Sidebar = (props: SidebarProps) => {
     const navigate = useNavigate();
 
     const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
-
+    const [avatarUserId, setAvatarUserId] = useState<string | undefined>(undefined);
     const handleLogout = async () => {
         try {
             const response = await fetch(`${base_url}/user/signout/`, {
@@ -149,7 +149,16 @@ export const Sidebar = (props: SidebarProps) => {
                     alignItems: "center",
                 }}
             >
-                <TeamDropdown myself={myself} setMyself={setMyself} useTEM={useTEM} />
+                <TeamDropdown
+                    myself={myself}
+                    setMyself={setMyself}
+                    useTEM={useTEM}
+                    socket={socket}
+                    useCM={useCM}
+                    useUISM={useUISM}
+                    setAvatarUserId={setAvatarUserId}
+                    setOpenUserProfile={setOpenUserProfile}
+                />
                 <ColorSchemeToggle />
             </Box>
 
@@ -351,6 +360,21 @@ export const Sidebar = (props: SidebarProps) => {
                 useUISM={useUISM}
                 user={useTEM.teamMemberProfiles[myself.userId]}
             />
+
+            {/* User profile for team members */}
+            {avatarUserId && (
+                <UserProfile
+                    useCM={useCM}
+                    isYou={false}
+                    myself={myself}
+                    openUserProfile={openUserProfile}
+                    setMyself={setMyself}
+                    setOpenUserProfile={setOpenUserProfile}
+                    socket={socket}
+                    useUISM={useUISM}
+                    user={useTEM.teamMemberProfiles[avatarUserId]}
+                />
+            )}
         </Sheet>
     );
 };

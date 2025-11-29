@@ -142,7 +142,7 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
                                     priority: true,
                                     effortLevel: true,
                                     createdDate: true,
-                                    updatedAt: false,
+                                    updatedAt: true,
                                     dueDate: true,
                                     daysLeft: true,
                                     status: true,

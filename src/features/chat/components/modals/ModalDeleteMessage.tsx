@@ -137,8 +137,8 @@ export const ModalDeleteMessage: React.FC<Props> = ({
                 onClose={() => setOpenDeleteMessage(false)}
             >
                 <ModalDialog>
-                    <Typography level="h4">
-                        Are you sure you want to delete the message?
+                    <Typography level="h4" sx={{ textAlign: "center" }}>
+                        Are you sure to delete?
                     </Typography>
                     {errorMessage && errorMessage !== "" && (
                         <Alert color="danger">{errorMessage}</Alert>

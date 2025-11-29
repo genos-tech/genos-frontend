@@ -188,6 +188,11 @@ input[type="checkbox"] {
     padding-bottom: 15px;
 }
 
+/* Hide selected row count */
+.MuiDataGrid-selectedRowCount {
+    display: none !important;
+}
+
 /* Dark theme DataGrid */
 .task-datagrid-dark .MuiIconButton-root.MuiIconButton-sizeSmall,
 .task-datagrid-dark .MuiDataGrid-menuIconButton,

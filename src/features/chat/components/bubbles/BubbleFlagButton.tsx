@@ -49,7 +49,11 @@ export const BubbleFlagButton = (props: BubbleFlagButtonTypes) => {
 
     return (
         <Box sx={{ textAlign: "right" }}>
-            <Tooltip size="sm" title={tmpIsFlagged ? "Unflag" : "Flag"} variant="outlined">
+            <Tooltip
+                size="sm"
+                title={tmpIsFlagged ? "Unflag" : "Flag for later"}
+                variant="outlined"
+            >
                 <IconButton
                     color={tmpIsFlagged ? "danger" : "neutral"}
                     size="sm"

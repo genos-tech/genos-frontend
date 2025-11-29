@@ -271,12 +271,15 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                 </Typography>
                                             </Stack>
 
-                                            <Box
-                                                className="custom-scrollbar"
-                                                sx={{ maxHeight: "300px", overflow: "auto" }}
-                                            >
-                                                <FormControl>
-                                                    <FormLabel>Members</FormLabel>
+                                            <FormControl>
+                                                <FormLabel>Members</FormLabel>
+                                                <Box
+                                                    className="custom-scrollbar"
+                                                    sx={{
+                                                        maxHeight: "300px",
+                                                        overflow: "auto",
+                                                    }}
+                                                >
                                                     {gmProfile?.gmMembers.map((member) => (
                                                         <ListItemButton sx={{ ml: 2, my: 0.2 }}>
                                                             <AvatarWithStatus
@@ -291,8 +294,8 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                             />
                                                         </ListItemButton>
                                                     ))}
-                                                </FormControl>
-                                            </Box>
+                                                </Box>
+                                            </FormControl>
 
                                             <Stack direction="column" spacing={2}>
                                                 <FormControl>

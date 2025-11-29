@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
@@ -24,37 +24,36 @@ import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
-import { loadProjectProfile } from "../../../../services/loadProjectProfile";
-import { ProjectProfileProps, UserProps } from "../../../../types/admin";
-import { AllChatProps } from "../../../../types/chat";
+import { TeamProfileProps, UserProps } from "../../../../types/admin";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
-import { addChat } from "../../../chat/services/addChat";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
-type ModalProjectProfileProps = {
+type ModalTeamProfileProps = {
     socket: Socket | null;
     useTEM: TeamManagementState;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    pmChat: AllChatProps;
-    openModalProjectProfile: boolean;
-    setOpenModalProjectProfile: (value: boolean) => void;
+    teamProfile: TeamProfileProps;
+    setTeamProfile: (value: TeamProfileProps | null) => void;
+    openModalTeamProfile: boolean;
+    setOpenModalTeamProfile: (value: boolean) => void;
     setAvatarUserId: (value: string) => void;
     setOpenUserProfile: (value: boolean) => void;
     useCM: ChatManagementState;
     useUISM: UIStateManagementState;
 };
-export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
+export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
     const {
         socket,
         useTEM,
         myself,
         setMyself,
-        pmChat,
-        openModalProjectProfile,
-        setOpenModalProjectProfile,
+        teamProfile,
+        setTeamProfile,
+        openModalTeamProfile,
+        setOpenModalTeamProfile,
         setAvatarUserId,
         setOpenUserProfile,
         useCM,
@@ -63,15 +62,13 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
 
     const { accessToken } = useAuth();
 
-    const [projectProfile, setProjectProfile] = useState<ProjectProfileProps | null>(null);
-
     // Profile image file upload manager
     const inputRef = useRef<HTMLInputElement | null>(null);
     const handleButtonClick = () => {
         inputRef.current?.click();
     };
     const handleSelectedFiles = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (pmChat.project) {
+        if (myself.teamId) {
             const selectedFiles = event.target.files;
             if (!selectedFiles || selectedFiles.length !== 1) return;
 
@@ -85,9 +82,9 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
             });
 
             const formData = new FormData();
-            formData.append("profile_image", userProfileImage);
-            formData.append("project_id", pmChat.project.projectId.toString());
-            const uploadProfileImageResponse = await fetch(`${base_url}/project/profile/image/`, {
+            formData.append("team_profile_image", userProfileImage);
+            formData.append("team_id", myself.teamId);
+            const uploadProfileImageResponse = await fetch(`${base_url}/team/profile/image/`, {
                 method: "PUT",
                 headers: {
                     Authorization: `Bearer ${accessToken}`,
@@ -98,37 +95,30 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
             const uploadProfileImageData = await uploadProfileImageResponse.json();
 
             if (!uploadProfileImageResponse.ok) {
-                throw new Error("Failed to upload user profile image.");
+                throw new Error("Failed to upload team profile image.");
             } else {
-                addChat(
-                    {
-                        ...pmChat,
-                        profileImagePath: uploadProfileImageData.profile_image_file_name,
-                    },
-                    pmChat.chatType
+                localStorage.setItem(
+                    "teamImgPath",
+                    uploadProfileImageData.profile_image_file_name
                 );
-                await useCM.funcSetAllChats();
+                useTEM.setCurrentTeam({
+                    ...useTEM.currentTeam,
+                    teamImgPath: uploadProfileImageData.profile_image_file_name,
+                });
+                setTeamProfile({
+                    ...teamProfile,
+                    teamImgPath: uploadProfileImageData.profile_image_file_name,
+                });
             }
         }
     };
 
-    const loadProjectProfileData = async () => {
-        const projectProfile = await loadProjectProfile(myself.teamId, pmChat.chatId, accessToken);
-        setProjectProfile(projectProfile);
-    };
-
-    useEffect(() => {
-        if (openModalProjectProfile) {
-            loadProjectProfileData();
-        }
-    }, [openModalProjectProfile]);
-
     return (
         <>
             <Modal
-                open={openModalProjectProfile}
+                open={openModalTeamProfile}
                 sx={{ zIndex: 10001 }}
-                onClose={() => setOpenModalProjectProfile(false)}
+                onClose={() => setOpenModalTeamProfile(false)}
             >
                 <ModalDialog>
                     <Box sx={{ flex: 1, width: "1000px" }}>
@@ -148,7 +138,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                 }}
                             >
                                 <Typography component="h1" level="h2" sx={{ mt: 1, mb: 1 }}>
-                                    Project Profile - {pmChat.chatName}
+                                    Team Profile - {myself.teamName}
                                 </Typography>
                             </Box>
                         </Box>
@@ -176,51 +166,83 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                         }}
                                     >
                                         <Avatar
-                                            src={`${media_url}/${pmChat.profileImagePath}`}
+                                            src={`${media_url}/${teamProfile.teamImgPath}`}
                                             sx={{ width: 180, height: 180, fontSize: "50px" }}
                                         >
                                             <AccountTreeIcon sx={{ fontSize: 100 }} />
                                         </Avatar>
 
-                                        <Box
-                                            sx={{
-                                                position: "absolute",
-                                                top: 150, // adjust vertical position
-                                                right: 30, // push it to the right side
-                                            }}
-                                        >
-                                            <input
-                                                ref={inputRef}
-                                                accept=".jpg,.jpeg,.png,image/jpeg,image/png"
-                                                multiple={false}
-                                                style={{ display: "none" }}
-                                                type="file"
-                                                onChange={handleSelectedFiles}
-                                            />
-                                            <Tooltip
-                                                size="sm"
-                                                sx={{ zIndex: 9000 }}
-                                                title="EDIT (TBD)"
-                                                variant="outlined"
+                                        {myself.userId === teamProfile.teamOwnerId && (
+                                            <Box
+                                                sx={{
+                                                    position: "absolute",
+                                                    top: 150, // adjust vertical position
+                                                    right: 30, // push it to the right side
+                                                }}
                                             >
-                                                <IconButton
-                                                    variant="soft"
-                                                    onClick={() => {
-                                                        if (pmChat.project) {
-                                                            handleButtonClick();
-                                                        } else {
-                                                            console.error("Project not found");
-                                                        }
-                                                    }}
+                                                <input
+                                                    ref={inputRef}
+                                                    accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                                                    multiple={false}
+                                                    style={{ display: "none" }}
+                                                    type="file"
+                                                    onChange={handleSelectedFiles}
+                                                />
+                                                <Tooltip
+                                                    size="sm"
+                                                    sx={{ zIndex: 9000 }}
+                                                    title="EDIT (TBD)"
+                                                    variant="outlined"
                                                 >
-                                                    <EditIcon sx={{ fontSize: "30px" }} />
-                                                </IconButton>
-                                            </Tooltip>
-                                        </Box>
+                                                    <IconButton
+                                                        variant="soft"
+                                                        onClick={() => {
+                                                            handleButtonClick();
+                                                        }}
+                                                    >
+                                                        <EditIcon sx={{ fontSize: "30px" }} />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            </Box>
+                                        )}
                                     </Box>
 
                                     <Stack spacing={2} sx={{ flexGrow: 1 }}>
                                         <Stack direction="column" spacing={1}>
+                                            <FormControl>
+                                                <FormLabel>Team Name</FormLabel>
+                                                <Button
+                                                    disabled={true}
+                                                    variant="plain"
+                                                    sx={{
+                                                        justifyContent: "flex-start", // left align the content
+                                                    }}
+                                                >
+                                                    <Typography
+                                                        fontWeight="bold"
+                                                        sx={{ userSelect: "text" }}
+                                                    >
+                                                        {teamProfile.teamName}
+                                                    </Typography>
+                                                </Button>
+                                            </FormControl>
+                                            <FormControl>
+                                                <FormLabel>Team ID</FormLabel>
+                                                <Button
+                                                    disabled={true}
+                                                    variant="plain"
+                                                    sx={{
+                                                        justifyContent: "flex-start", // left align the content
+                                                    }}
+                                                >
+                                                    <Typography
+                                                        fontWeight="bold"
+                                                        sx={{ userSelect: "text" }}
+                                                    >
+                                                        {teamProfile.teamId}
+                                                    </Typography>
+                                                </Button>
+                                            </FormControl>
                                             <Stack direction={"row"}>
                                                 <FormControl>
                                                     <FormLabel>Owner</FormLabel>
@@ -231,12 +253,10 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                             justifyContent: "flex-start", // left align the content
                                                         }}
                                                         onClick={() => {
-                                                            if (projectProfile?.ownerUserId) {
-                                                                setAvatarUserId(
-                                                                    projectProfile.ownerUserId
-                                                                );
-                                                                setOpenUserProfile(true);
-                                                            }
+                                                            setAvatarUserId(
+                                                                teamProfile.teamOwnerId
+                                                            );
+                                                            setOpenUserProfile(true);
                                                         }}
                                                     >
                                                         <Typography
@@ -246,11 +266,11 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                                 fontSize: "20px",
                                                             }}
                                                         >
-                                                            {projectProfile
-                                                                ? useTEM.teamMemberProfiles[
-                                                                      projectProfile?.ownerUserId
-                                                                  ]?.userName
-                                                                : "N/A"}
+                                                            {
+                                                                useTEM.teamMemberProfiles[
+                                                                    teamProfile?.teamOwnerId
+                                                                ]?.userName
+                                                            }
                                                         </Typography>
                                                     </Button>
                                                 </FormControl>
@@ -258,11 +278,9 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                 <Typography
                                                     component="a"
                                                     href={`mailto:${
-                                                        projectProfile
-                                                            ? useTEM.teamMemberProfiles[
-                                                                  projectProfile?.ownerUserId
-                                                              ]?.userEmail
-                                                            : "N/A"
+                                                        useTEM.teamMemberProfiles[
+                                                            teamProfile?.teamOwnerId
+                                                        ]?.userEmail
                                                     }`}
                                                     startDecorator={
                                                         <EmailRoundedIcon fontSize="small" />
@@ -274,24 +292,27 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                         pt: "28px",
                                                     }}
                                                 >
-                                                    {projectProfile
-                                                        ? useTEM.teamMemberProfiles[
-                                                              projectProfile?.ownerUserId
-                                                          ]?.userEmail
-                                                        : "N/A"}
+                                                    {
+                                                        useTEM.teamMemberProfiles[
+                                                            teamProfile?.teamOwnerId
+                                                        ]?.userEmail
+                                                    }
                                                 </Typography>
                                             </Stack>
 
-                                            <FormControl>
-                                                <FormLabel>Members</FormLabel>
-                                                <Box
-                                                    className="custom-scrollbar"
-                                                    sx={{ maxHeight: "300px", overflow: "auto" }}
-                                                >
-                                                    {projectProfile?.projectMembers.map(
-                                                        (member) => (
+                                            {teamProfile.teamMembers.length > 0 && (
+                                                <FormControl>
+                                                    <FormLabel>Members</FormLabel>
+                                                    <Box
+                                                        className="custom-scrollbar"
+                                                        sx={{
+                                                            maxHeight: "300px",
+                                                            overflow: "auto",
+                                                        }}
+                                                    >
+                                                        {teamProfile.teamMembers.map((member) => (
                                                             <ListItemButton
-                                                                key={`project-member-${member.userId}`}
+                                                                key={`team-member-${member.userId}`}
                                                                 sx={{ ml: 2, my: 0.2 }}
                                                             >
                                                                 <AvatarWithStatus
@@ -305,32 +326,10 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                                     useUISM={useUISM}
                                                                 />
                                                             </ListItemButton>
-                                                        )
-                                                    )}
-                                                </Box>
-                                            </FormControl>
-
-                                            <Stack direction="column" spacing={2}>
-                                                <FormControl>
-                                                    <FormLabel>Is Private</FormLabel>
-                                                    <Button
-                                                        disabled={true}
-                                                        variant="plain"
-                                                        sx={{
-                                                            justifyContent: "flex-start", // left align the content
-                                                        }}
-                                                    >
-                                                        <Typography
-                                                            fontWeight={"bold"}
-                                                            sx={{ userSelect: "text" }}
-                                                        >
-                                                            {projectProfile?.isPrivate
-                                                                ? "Yes"
-                                                                : "No"}
-                                                        </Typography>
-                                                    </Button>
+                                                        ))}
+                                                    </Box>
                                                 </FormControl>
-                                            </Stack>
+                                            )}
 
                                             <Stack direction="column" spacing={2}>
                                                 <FormControl>
@@ -346,11 +345,9 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                             fontWeight={"bold"}
                                                             sx={{ userSelect: "text" }}
                                                         >
-                                                            {projectProfile?.tsCreatedAt
-                                                                ? extractYYYYMMDD(
-                                                                      projectProfile.tsCreatedAt
-                                                                  )
-                                                                : "N/A"}
+                                                            {extractYYYYMMDD(
+                                                                teamProfile.tsCreatedAt
+                                                            )}
                                                         </Typography>
                                                     </Button>
                                                 </FormControl>

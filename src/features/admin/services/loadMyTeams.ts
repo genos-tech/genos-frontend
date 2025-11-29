@@ -3,7 +3,7 @@ import axios from "axios";
 import { authApi } from "../../../services/api";
 
 export const loadMyTeams = async (
-    accessToken: string,
+    accessToken: string | null,
     userId: string,
     setErrorMessage?: (value: string) => void
 ) => {

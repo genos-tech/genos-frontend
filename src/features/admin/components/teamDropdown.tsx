@@ -1,32 +1,51 @@
 import { useEffect, useRef, useState } from "react";
-import AcUnitIcon from "@mui/icons-material/AcUnit";
 import AddIcon from "@mui/icons-material/Add";
-import EditIcon from "@mui/icons-material/Edit";
-import { Avatar, Box, Dropdown, IconButton, Menu, MenuItem, Tooltip } from "@mui/joy";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import { Avatar, Dropdown, IconButton, Menu, MenuItem, Tooltip } from "@mui/joy";
+import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../context/AuthContext";
+import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
-import { CreateDMResponse, Team, UserProps } from "../../../types/admin";
+import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
+import { CreateDMResponse, Team, TeamProfileProps, UserProps } from "../../../types/admin";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { createDMChat } from "../../chat/services/createDMChat";
 import { sendDMMessage } from "../../chat/services/sendDMMessage";
 import { joinTeam } from "../services/joinTeam";
 import { loadMyTeams } from "../services/loadMyTeams";
+import { ModalTeamProfile } from "./modals/ModalTeamProfile";
 
-const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type TeamDropdownProps = {
     useTEM: TeamManagementState;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
+    socket: Socket | null;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
+    setAvatarUserId: (value: string) => void;
+    setOpenUserProfile: (value: boolean) => void;
 };
 export const TeamDropdown = (props: TeamDropdownProps) => {
-    const { myself, setMyself, useTEM } = props;
+    const {
+        myself,
+        setMyself,
+        useTEM,
+        socket,
+        useCM,
+        useUISM,
+        setAvatarUserId,
+        setOpenUserProfile,
+    } = props;
     const { accessToken } = useAuth();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [teams, setTeams] = useState<Team[]>([]);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const [teamProfile, setTeamProfile] = useState<TeamProfileProps | null>(null);
+    const [openModalTeamProfile, setOpenModalTeamProfile] = useState<boolean>(false);
 
     const _joinTeam = async (teamId: string) => {
         const joinTeamRes = await joinTeam(accessToken, teamId, myself.userId);
@@ -112,64 +131,43 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
         };
     }, []);
 
-    // Team profile image file upload manager
-    const inputRef = useRef<HTMLInputElement | null>(null);
-    const handleButtonClick = () => {
-        inputRef.current?.click();
-    };
-    const toProfileFileName = (originalFileName: string): string => {
-        // Get the extension (including dot, e.g. ".png")
-        const ext = originalFileName.substring(originalFileName.lastIndexOf("."));
-        // return `profile${ext}`;
-
-        // use always "jpg"
-        return `profile.jpg`;
-    };
-    const handleSelectedFiles = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const selectedFiles = event.target.files;
-        if (!selectedFiles || selectedFiles.length !== 1) return;
-
-        const tmpTeamProfileImage = selectedFiles[0]; // original File
-
-        // NOTE: This is the static path and is referred from backend as well.
-        //       So, need to check backend when you need to change it.
-        const newName = toProfileFileName(tmpTeamProfileImage.name);
-
-        // Create a new File instance with the existing file data but new name
-        const teamProfileImage = new File([tmpTeamProfileImage], newName, {
-            type: tmpTeamProfileImage.type,
-            lastModified: tmpTeamProfileImage.lastModified,
-        });
-
-        const formData = new FormData();
-        formData.append("team_profile_image", teamProfileImage);
-        formData.append("team_id", useTEM.currentTeam.teamId);
-
-        const uploadProfileImageResponse = await fetch(`${base_url}/team/profile/image/`, {
-            method: "PUT",
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-            body: formData,
-        });
-
-        const uploadProfileImageData = await uploadProfileImageResponse.json();
-
-        if (!uploadProfileImageResponse.ok) {
-            throw new Error("Failed to upload team profile image.");
-        } else {
-            localStorage.setItem("teamImgPath", uploadProfileImageData.profile_image_file_name);
-            useTEM.setCurrentTeam({
-                ...useTEM.currentTeam,
-                teamImgPath: uploadProfileImageData.profile_image_file_name,
-            });
+    const handleShowTeamProfileClick = () => {
+        if (accessToken !== null) {
+            (async () => {
+                const loadedTeamProfile: TeamProfileProps[] = await loadMyTeams(
+                    accessToken,
+                    myself.userId
+                );
+                // Set current team profile to the team profile
+                setTeamProfile(
+                    loadedTeamProfile.find(
+                        (team: TeamProfileProps) => team.teamId === myself.teamId
+                    ) || null
+                );
+                setOpenModalTeamProfile(true);
+            })();
         }
-
-        handleClose();
     };
 
     return (
         <div className="flex items-center space-x-2">
+            {teamProfile && (
+                <ModalTeamProfile
+                    socket={socket}
+                    useTEM={useTEM}
+                    myself={myself}
+                    setMyself={setMyself}
+                    teamProfile={teamProfile}
+                    setTeamProfile={setTeamProfile}
+                    openModalTeamProfile={openModalTeamProfile}
+                    setOpenModalTeamProfile={setOpenModalTeamProfile}
+                    setAvatarUserId={setAvatarUserId}
+                    setOpenUserProfile={setOpenUserProfile}
+                    useCM={useCM}
+                    useUISM={useUISM}
+                />
+            )}
+
             <Dropdown>
                 <Tooltip placement="right-start" size="sm" title="Switch Team" variant="outlined">
                     <IconButton sx={{ px: 0.7 }} onClick={handleClick}>
@@ -195,6 +193,18 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                     sx={{ zIndex: 10001, overflow: "scroll", maxHeight: "300px" }}
                     onClose={handleClose}
                 >
+                    {myself.userId === useTEM.currentTeam.teamOwnerId && (
+                        <MenuItem
+                            key={"editTeamProfileImage"}
+                            onClick={() => {
+                                handleShowTeamProfileClick();
+                            }}
+                        >
+                            <VisibilityIcon />
+                            Show Team Profile
+                        </MenuItem>
+                    )}
+
                     {teams.map((team) => (
                         <MenuItem
                             key={team.teamName}
@@ -203,10 +213,11 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                                 handleClicked(team.teamId, team.teamName);
                             }}
                         >
-                            <AcUnitIcon />
+                            <OpenInNewIcon />
                             {team.teamName}
                         </MenuItem>
                     ))}
+
                     <MenuItem
                         key={"addTeam"}
                         onClick={() => {
@@ -216,31 +227,6 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                         <AddIcon />
                         New Team (TBD)
                     </MenuItem>
-
-                    {myself.userId === useTEM.currentTeam.teamOwnerId && (
-                        <Box>
-                            <input
-                                ref={inputRef}
-                                accept=".jpg,.jpeg,.png,image/jpeg,image/png"
-                                multiple={false}
-                                style={{ display: "none" }}
-                                type="file"
-                                onChange={handleSelectedFiles}
-                            />
-                            <MenuItem
-                                key={"editTeamProfileImage"}
-                                onClick={() => {
-                                    handleButtonClick();
-                                    console.error(
-                                        "This must move to the setting modal, and only the team owner can change the profile."
-                                    );
-                                }}
-                            >
-                                <EditIcon />
-                                Edit Team Profile
-                            </MenuItem>
-                        </Box>
-                    )}
                 </Menu>
             </Dropdown>
         </div>
