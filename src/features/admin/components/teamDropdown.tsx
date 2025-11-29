@@ -169,7 +169,12 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
             )}
 
             <Dropdown>
-                <Tooltip placement="right-start" size="sm" title="Switch Team" variant="outlined">
+                <Tooltip
+                    placement="right-start"
+                    size="sm"
+                    title="Open Team Menu"
+                    variant="outlined"
+                >
                     <IconButton sx={{ px: 0.7 }} onClick={handleClick}>
                         <Avatar
                             src={`${media_url}/${useTEM.currentTeam.teamImgPath}`}
@@ -193,17 +198,15 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                     sx={{ zIndex: 10001, overflow: "scroll", maxHeight: "300px" }}
                     onClose={handleClose}
                 >
-                    {myself.userId === useTEM.currentTeam.teamOwnerId && (
-                        <MenuItem
-                            key={"editTeamProfileImage"}
-                            onClick={() => {
-                                handleShowTeamProfileClick();
-                            }}
-                        >
-                            <VisibilityIcon />
-                            Show Team Profile
-                        </MenuItem>
-                    )}
+                    <MenuItem
+                        key={"editTeamProfileImage"}
+                        onClick={() => {
+                            handleShowTeamProfileClick();
+                        }}
+                    >
+                        <VisibilityIcon />
+                        Show Team Profile
+                    </MenuItem>
 
                     {teams.map((team) => (
                         <MenuItem
