@@ -598,6 +598,11 @@ input[type="checkbox"] {
     color: #000000;
 }
 
+/* Hide the drag preview completely */
+.bn-drag-preview {
+    display: none !important;
+}
+
 .bn-container {
     display: flex;
     flex-direction: column-reverse;
