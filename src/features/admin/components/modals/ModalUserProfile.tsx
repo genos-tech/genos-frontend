@@ -367,39 +367,49 @@ export const UserProfile = (props: UserProfileProps) => {
                                 px: 3,
                             }}
                         >
-                            <IconButton
-                                component="button"
-                                size="sm"
+                            <Tooltip
+                                title={
+                                    isYou === true
+                                        ? "DM to myself"
+                                        : `DM to ${profileUser?.userName || "the user"}`
+                                }
                                 variant="outlined"
-                                sx={{
-                                    fontSize: "16px",
-                                    paddingX: "7px",
-                                    paddingY: "3px",
-                                }}
-                                onClick={() => {
-                                    (async () => {
-                                        if (profileUser) {
-                                            const chatId: number = await loadDMIdByUserId(
-                                                myself,
-                                                profileUser?.userId,
-                                                accessToken
-                                            );
-                                            await moveToDMChat(
-                                                socket,
-                                                chatId,
-                                                profileUser?.userName,
-                                                profileUser,
-                                                useCM
-                                            );
-                                            useUISM.setOpeningService(1);
-                                            setOpenUserProfile(false);
-                                        }
-                                    })();
-                                }}
+                                sx={{ zIndex: 10100 }}
                             >
-                                <QuestionAnswerRoundedIcon />
-                                &nbsp;DM
-                            </IconButton>
+                                <IconButton
+                                    component="button"
+                                    size="sm"
+                                    variant="outlined"
+                                    sx={{
+                                        fontSize: "16px",
+                                        paddingX: "7px",
+                                        paddingY: "3px",
+                                    }}
+                                    onClick={() => {
+                                        (async () => {
+                                            if (profileUser) {
+                                                const chatId: number = await loadDMIdByUserId(
+                                                    myself,
+                                                    profileUser?.userId,
+                                                    accessToken
+                                                );
+                                                await moveToDMChat(
+                                                    socket,
+                                                    chatId,
+                                                    profileUser?.userName,
+                                                    profileUser,
+                                                    useCM
+                                                );
+                                                useUISM.setOpeningService(1);
+                                                setOpenUserProfile(false);
+                                            }
+                                        })();
+                                    }}
+                                >
+                                    <QuestionAnswerRoundedIcon />
+                                    &nbsp;DM
+                                </IconButton>
+                            </Tooltip>
                         </Box>
                     </Box>
                 </ModalDialog>

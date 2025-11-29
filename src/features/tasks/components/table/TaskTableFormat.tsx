@@ -151,6 +151,51 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
             ),
         },
         {
+            field: "tags",
+            headerName: "Tags",
+            headerClassName: "task-col--header",
+            width: 110,
+            editable: false,
+            align: "left",
+            headerAlign: "left",
+            renderCell: (params: GridRenderCellParams) => {
+                return (
+                    <>
+                        {params.value.map(
+                            (
+                                tag: {
+                                    tagName: string;
+                                    tagColor: string;
+                                    tagTextColor: string;
+                                },
+                                index: number
+                            ) => {
+                                return (
+                                    <Chip
+                                        key={index}
+                                        label={tag.tagName}
+                                        size="small"
+                                        variant="outlined"
+                                        sx={{
+                                            color: mode === "dark" ? "white" : "black",
+                                            fontWeight: "bold",
+                                            borderRadius: "5px",
+                                            borderWidth: "3px",
+                                            borderColor: alpha(
+                                                tag.tagColor,
+                                                mode === "dark" ? 0.5 : 0.75
+                                            ),
+                                            ml: 0.5,
+                                        }}
+                                    />
+                                );
+                            }
+                        )}
+                    </>
+                );
+            },
+        },
+        {
             field: "title",
             headerName: "Title",
             headerClassName: "task-col--header",
@@ -229,51 +274,6 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                     ))}
                 </Select>
             ),
-        },
-        {
-            field: "tags",
-            headerName: "Tags",
-            headerClassName: "task-col--header",
-            width: 110,
-            editable: false,
-            align: "left",
-            headerAlign: "left",
-            renderCell: (params: GridRenderCellParams) => {
-                return (
-                    <>
-                        {params.value.map(
-                            (
-                                tag: {
-                                    tagName: string;
-                                    tagColor: string;
-                                    tagTextColor: string;
-                                },
-                                index: number
-                            ) => {
-                                return (
-                                    <Chip
-                                        key={index}
-                                        label={tag.tagName}
-                                        size="small"
-                                        variant="outlined"
-                                        sx={{
-                                            color: mode === "dark" ? "white" : "black",
-                                            fontWeight: "bold",
-                                            borderRadius: "5px",
-                                            borderWidth: "3px",
-                                            borderColor: alpha(
-                                                tag.tagColor,
-                                                mode === "dark" ? 0.5 : 0.75
-                                            ),
-                                            ml: 0.5,
-                                        }}
-                                    />
-                                );
-                            }
-                        )}
-                    </>
-                );
-            },
         },
         {
             field: "priority",

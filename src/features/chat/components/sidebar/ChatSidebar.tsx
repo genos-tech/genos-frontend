@@ -190,9 +190,29 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     socket={socket}
                 />
 
-                <Stack alignItems="center" direction="row" sx={{ mt: "7px", overflowX: "clip" }}>
+                <Stack
+                    className="custom-scrollbar"
+                    alignItems="center"
+                    direction="row"
+                    sx={{ overflowX: "scroll" }}
+                >
                     {/* Centered buttons */}
-                    <Stack direction="row" flexGrow={1} justifyContent="center" spacing={1}>
+                    <Stack
+                        direction="row"
+                        flexGrow={1}
+                        justifyContent="center"
+                        spacing={2}
+                        sx={{
+                            pt:
+                                (useCM.unReadChatCounts && (useCM.unReadChatCounts[0] || 0) > 0) ||
+                                (useCM.unReadChatCounts && (useCM.unReadChatCounts[1] || 0) > 0) ||
+                                (useCM.unReadChatCounts && (useCM.unReadChatCounts[2] || 0) > 0) ||
+                                (useCM.unReadChatCounts && (useCM.unReadChatCounts[3] || 0) > 0) ||
+                                useCM.flaggedMessages.length > 0
+                                    ? "10px"
+                                    : "3px",
+                        }}
+                    >
                         {/* For DM */}
                         {useCM.unReadChatCounts && (useCM.unReadChatCounts[1] || 0) > 0 && (
                             <Tooltip

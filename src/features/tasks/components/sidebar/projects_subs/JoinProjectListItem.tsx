@@ -132,7 +132,7 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
                             }}
                             noWrap
                         >
-                            No projects to join
+                            No projects available
                         </Typography>
                     </ListItem>
                 )}

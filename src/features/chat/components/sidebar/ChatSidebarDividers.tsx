@@ -129,14 +129,15 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
         <Stack
             direction="column"
             spacing={1}
+            className="custom-scrollbar"
             sx={{
                 justifyContent: "center",
                 alignItems: "center",
                 my: "3px",
-                mr: "120px",
+                overflowX: "scroll",
             }}
         >
-            <Stack direction={"row"} flexWrap="wrap" spacing={0.5}>
+            <Stack direction={"row"} flexWrap="nowrap" spacing={0.5}>
                 <Button
                     component="p"
                     size="sm"
