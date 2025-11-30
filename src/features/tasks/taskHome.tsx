@@ -4,18 +4,13 @@ import { CssVarsProvider } from "@mui/joy/styles";
 
 import { TaskHomeLayout } from "./components/layout/TaskHomeLayout";
 import { TaskHomeModals } from "./components/modals/TaskHomeModals";
-import { useTaskSearch } from "./hooks/useTaskSearch";
 import { TaskHomeProps } from "./types/TaskHomeTypes";
 
 import { Sidebar } from "../../components/layout/sidebar";
-import { useAuth } from "../../context/AuthContext";
 
 export const TaskHome = (props: TaskHomeProps) => {
     const { useTEM, socket, myself, setMyself, useUISM, useIM, useCM, useNM, usePM, useTM } =
         props;
-
-    // Common
-    const { accessToken } = useAuth();
 
     // Task Related State
     const [openJoinProject, setOpenJoinProject] = useState({
@@ -30,22 +25,6 @@ export const TaskHome = (props: TaskHomeProps) => {
         projectId: -1,
         projectName: "",
     });
-
-    // Search functionality
-    const searchHook = useTaskSearch({
-        myself,
-        currentProject: usePM.currentProject,
-        accessToken: accessToken || "",
-    });
-
-    // Event handlers
-    const handleSearchChange = (value: any) => {
-        if (value !== null) {
-            searchHook.handleSearchClose();
-            useTM.setCurrentPreviewTaskId(value.taskId);
-            useTM.setIsTaskPreviewVisible(true);
-        }
-    };
 
     const handleCreateProject = () => {
         usePM.setOpenCreateProject(true);

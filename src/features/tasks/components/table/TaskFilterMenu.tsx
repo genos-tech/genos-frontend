@@ -287,7 +287,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     }, [isTaskUpdated]);
 
     return (
-        <Stack direction="row" gap={1} m={1}>
+        <Stack direction="row" sx={{ overflowX: "scroll" }} className="custom-scrollbar">
             <Stack direction="row" gap={1}>
                 <Tooltip
                     placement="top"

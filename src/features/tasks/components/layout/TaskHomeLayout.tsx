@@ -114,6 +114,7 @@ export const TaskHomeLayout = ({
                         teamMemberProfiles={useTEM.teamMemberProfiles}
                         teamMembers={useTEM.teamMembers}
                         useTM={useTM}
+                        socket={socket}
                     />
                 </>
             )}

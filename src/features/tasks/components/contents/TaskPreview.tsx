@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { PartialBlock } from "@blocknote/core";
 import { Divider, Sheet } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
@@ -9,18 +8,14 @@ import { ProjectManagementState } from "../../../../hooks/common/useProjectManag
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { useSendUpdatedTask } from "../../../../hooks/tasks/useSendUpdatedTask";
+import { useTaskEditState } from "../../../../hooks/tasks/useTaskEditState";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { TaskNoteProps } from "../../../../types/notes";
-import {
-    AttachmentFileProps,
-    TagListProps,
-    TaskCommentProps,
-    TaskProps,
-} from "../../../../types/tasks";
+import { TagListProps, TaskCommentProps, TaskProps } from "../../../../types/tasks";
 import { loadTaskNotes } from "../../../notes/task-notes/services/loadTaskNotes";
 import { loadTaskComments } from "../../services/loadTaskComments";
-import { sendUpdatedSpecificTask } from "../../services/sendUpdatedSpecificTask";
 import {
     updateProjectOptions,
     updateTagOptions,
@@ -49,136 +44,73 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     const { socket, myself, setMyself, usePM, useNM, useTM, useUISM, useTEM, useCM } = props;
     const { accessToken } = useAuth();
     const [taskClosed, setTaskClosed] = useState(false);
-    const [uploadedFiles, setUploadedFiles] = useState<AttachmentFileProps[]>(
-        useTM.currentPreviewTask?.attachments || []
-    );
-    const [taskUpdated, setTaskUpdated] = useState(false);
-    const [startIntervalUpdatingTask, setStartIntervalUpdatingTask] = useState(false);
-    const [taskStatusUpdated, setTaskStatusUpdated] = useState(false);
-    const [taskBodyEdited, setTaskBodyEdited] = useState(false);
-    const [taskBodySaved, setTaskBodySaved] = useState(false);
     const [isAttachmentDeleted, setIsAttachmentDeleted] = useState(false);
     const [deletedAttachmentId, setDeletedAttachmentId] = useState<number>(-1);
-    const [tmpCurrentTaskContent, setTmpCurrentTaskContent] = useState<TaskProps>(
-        useTM.currentPreviewTask || ({} as TaskProps)
-    );
-    const [taskTitle, setTaskTitle] = useState<string>(useTM.currentPreviewTask?.title || "");
-    const [body, setBody] = useState<PartialBlock[]>(useTM.currentPreviewTask?.body || []);
     const [assignee, setAssignee] = useState<UserProps>(
         useTM.currentPreviewTask?.assignee || myself
     );
     const [reporter, setReporter] = useState<UserProps>(
         useTM.currentPreviewTask?.reporter || myself
     );
-    const [currentTaskId, setCurrentTaskId] = useState<number | undefined>(
-        useTM.currentPreviewTask?.id
-    );
-
     const [tabIndex, setTabIndex] = useState(0);
-
-    // Save initial task title to restore it when use input empty title
-    const [initTaskTitle, setInitTaskTitle] = useState<string>(
-        useTM.currentPreviewTask?.title || ""
-    );
 
     // For task comments
     const [isInEdit, setIsInEdit] = useState<boolean>(false);
     const [editTargetComment, setEditTargetComment] = useState<TaskCommentProps>();
 
+    // Consolidated task edit state
+    const taskEditState = useTaskEditState(useTM.currentPreviewTask);
+
     // Set the current preview task when the component is mounted
     useEffect(() => {
-        setTmpCurrentTaskContent(useTM.currentPreviewTask || ({} as TaskProps));
+        taskEditState.setTmpCurrentTaskContent(useTM.currentPreviewTask || ({} as TaskProps));
     }, []);
 
-    // Send updated task to the backend when task is updated
-    const sendUpdatedTask = async (taskSwitched: boolean) => {
-        const newTaskContent: TaskProps = {
-            ...tmpCurrentTaskContent,
-            title: taskTitle === "" ? initTaskTitle : taskTitle,
-            body: body,
-        };
-
-        const uploadAttachments = await sendUpdatedSpecificTask(
-            socket,
-            myself,
-            newTaskContent,
-            taskBodyEdited,
-            taskStatusUpdated,
-            accessToken
-        );
-
-        if (uploadAttachments && uploadAttachments.length > 0) {
-            let uploadedAttachments: AttachmentFileProps[] = [];
-            uploadAttachments.map((attachment: any) => {
-                if (attachment.attachment_id) {
-                    uploadedAttachments = [
-                        ...uploadedAttachments,
-                        {
-                            attachment_id: attachment.attachment_id,
-                            file: attachment.attached_file,
-                            file_base64: attachment.file_base64,
-                            name: attachment.name,
-                            type: attachment.attached_type,
-                        },
-                    ];
-                }
-            });
-            setUploadedFiles([...uploadedFiles, ...uploadedAttachments]);
-        }
-
-        if (taskSwitched && useTM.currentPreviewTask) {
-            // Initialize the following variable when user switches the previewing task
-            setTmpCurrentTaskContent(useTM.currentPreviewTask);
-            useTM.setCurrentPreviewTask(useTM.currentPreviewTask);
-            setCurrentTaskId(useTM.currentPreviewTask.id);
-            setBody(useTM.currentPreviewTask.body || []);
-        } else {
-            // Update only the tmpCurrentTaskContent when user updated the task content
-            // (Not switched the previewing task)
-            setTmpCurrentTaskContent(newTaskContent);
-            useTM.setCurrentPreviewTask(newTaskContent);
-        }
-        setTaskUpdated(false);
-        setTaskBodySaved(true);
-        setTaskStatusUpdated(false);
-        setTaskBodyEdited(false);
-        setStartIntervalUpdatingTask(false);
-    };
+    // Use the custom hook to get the sendUpdatedTask function
+    const sendUpdatedTask = useSendUpdatedTask({
+        socket,
+        myself,
+        accessToken,
+        currentPreviewTask: useTM.currentPreviewTask,
+        setCurrentPreviewTask: useTM.setCurrentPreviewTask,
+        taskEditState,
+    });
 
     useEffect(() => {
         // Save updated task (title, assignee, status, ..., but not task body)
-        if (taskUpdated === true) {
+        if (taskEditState.taskUpdated === true) {
             sendUpdatedTask(false);
         }
-    }, [taskUpdated]);
+    }, [taskEditState.taskUpdated]);
 
     useEffect(() => {
-        if (startIntervalUpdatingTask) {
+        if (taskEditState.startIntervalUpdatingTask) {
             sendUpdatedTask(false);
         }
-    }, [startIntervalUpdatingTask]);
+    }, [taskEditState.startIntervalUpdatingTask]);
 
     // Auto save task body every Nms if needed
     useEffect(() => {
         const intervalId = setInterval(() => {
-            if (taskBodyEdited === true) {
-                setStartIntervalUpdatingTask(true);
+            if (taskEditState.taskBodyEdited === true) {
+                taskEditState.setStartIntervalUpdatingTask(true);
             }
         }, 3000);
 
         // Clean up the interval when the component unmounts
         return () => clearInterval(intervalId);
-    }, [taskBodyEdited]);
+    }, [taskEditState.taskBodyEdited]);
 
     // Update variables when an user change the target task
     useEffect(() => {
-        if (taskBodyEdited) {
+        if (taskEditState.taskBodyEdited) {
             sendUpdatedTask(true);
         } else {
             if (useTM.currentPreviewTask) {
-                setTmpCurrentTaskContent(useTM.currentPreviewTask);
-                setCurrentTaskId(useTM.currentPreviewTask.id);
-                setBody(useTM.currentPreviewTask.body || []);
+                taskEditState.setTmpCurrentTaskContent(useTM.currentPreviewTask);
+                taskEditState.setCurrentTaskId(useTM.currentPreviewTask.id);
+                taskEditState.setTaskTitle(useTM.currentPreviewTask.title);
+                taskEditState.setBody(useTM.currentPreviewTask.body || []);
             }
         }
 
@@ -189,17 +121,17 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     // This will be executed after the above useEffect is executed
     //  (i.e., after `setCurrentTaskId` is executed)
     useEffect(() => {
-        if (currentTaskId) {
-            setTaskTitle(useTM.currentPreviewTask?.title || "");
-            setInitTaskTitle(useTM.currentPreviewTask?.title || "");
-            setUploadedFiles(useTM.currentPreviewTask?.attachments || []);
+        if (taskEditState.currentTaskId) {
+            taskEditState.setTaskTitle(useTM.currentPreviewTask?.title || "");
+            taskEditState.setInitTaskTitle(useTM.currentPreviewTask?.title || "");
+            taskEditState.setUploadedFiles(useTM.currentPreviewTask?.attachments || []);
         }
-    }, [currentTaskId]);
+    }, [taskEditState.currentTaskId]);
 
     useEffect(() => {
         // Save task before the opening task preview is closed.
         if (taskClosed)
-            if (taskBodyEdited) {
+            if (taskEditState.taskBodyEdited) {
                 const execute = async () => {
                     await sendUpdatedTask(false);
                     if (useTM.setIsTaskPreviewVisible) {
@@ -217,33 +149,33 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     // Update attachments
     useEffect(() => {
         if (
-            tmpCurrentTaskContent !== null &&
-            tmpCurrentTaskContent !== undefined &&
-            uploadedFiles.length > 0
+            taskEditState.tmpCurrentTaskContent !== null &&
+            taskEditState.tmpCurrentTaskContent !== undefined &&
+            taskEditState.uploadedFiles.length > 0
         ) {
             (async () => {
-                setTmpCurrentTaskContent({
-                    ...tmpCurrentTaskContent,
-                    attachments: uploadedFiles,
+                taskEditState.setTmpCurrentTaskContent({
+                    ...taskEditState.tmpCurrentTaskContent,
+                    attachments: taskEditState.uploadedFiles,
                 });
-                setAssignee(tmpCurrentTaskContent.assignee);
-                setReporter(tmpCurrentTaskContent.reporter);
+                setAssignee(taskEditState.tmpCurrentTaskContent.assignee);
+                setReporter(taskEditState.tmpCurrentTaskContent.reporter);
             })();
         }
-    }, [uploadedFiles]);
+    }, [taskEditState.uploadedFiles]);
 
     useEffect(() => {
         if (useTM.isTaskUpdated === false) {
-            useTM.setCurrentPreviewTask(tmpCurrentTaskContent);
+            useTM.setCurrentPreviewTask(taskEditState.tmpCurrentTaskContent);
             useTM.setIsTaskUpdated(true);
-            setAssignee(tmpCurrentTaskContent?.assignee || myself);
-            setReporter(tmpCurrentTaskContent?.reporter || myself);
+            setAssignee(taskEditState.tmpCurrentTaskContent?.assignee || myself);
+            setReporter(taskEditState.tmpCurrentTaskContent?.reporter || myself);
         }
-    }, [tmpCurrentTaskContent]);
+    }, [taskEditState.tmpCurrentTaskContent]);
 
     useEffect(() => {
         if (deletedAttachmentId !== -1 && isAttachmentDeleted === true) {
-            setUploadedFiles((prev) =>
+            taskEditState.setUploadedFiles((prev) =>
                 prev.filter((attachment) => attachment.attachment_id !== deletedAttachmentId)
             );
             setIsAttachmentDeleted(false);
@@ -266,7 +198,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setTaskComments([]);
             }
         })();
-    }, [useTM.isTaskCommentUpdated, currentTaskId]);
+    }, [useTM.isTaskCommentUpdated, taskEditState.currentTaskId]);
 
     // Get Task Notes
     const [taskNotes, setTaskNotes] = useState<TaskNoteProps[]>([]);
@@ -288,7 +220,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setTaskNotes([]);
             }
         })();
-    }, [currentTaskId, useNM.taskNoteMeta]);
+    }, [taskEditState.currentTaskId, useNM.taskNoteMeta]);
 
     // Get team members
     const [isOpenTeamMembersList, setIsOpenTeamMembersList] = useState(false);
@@ -314,11 +246,11 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     const [projectTags, setProjectTags] = useState<TagListProps[]>([]);
     const [isOpenTagList, setIsOpenTagList] = useState(false);
     useEffect(() => {
-        if (tmpCurrentTaskContent?.project) {
+        if (taskEditState.tmpCurrentTaskContent?.project) {
             updateTagOptions({
                 myself: myself,
                 accessToken: accessToken,
-                projectId: tmpCurrentTaskContent.project.projectId,
+                projectId: taskEditState.tmpCurrentTaskContent.project.projectId,
                 setProjectTags: setProjectTags,
             });
         }
@@ -327,6 +259,26 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     // This is for auto scrolling to the bottom when an user writes comment.
     const [taskCommentLines, setTaskCommentLines] = useState(0);
     const sheetRef = useRef<HTMLDivElement | null>(null);
+    // Scroll to top when the task preview is initially opened
+    useEffect(() => {
+        setTimeout(() => {
+            const sheet = sheetRef.current;
+            if (sheet) {
+                sheet.scrollTop = 0;
+            }
+        }, 100);
+    }, []);
+
+    // Scroll to top when the another task is opened
+    useEffect(() => {
+        setTimeout(() => {
+            const sheet = sheetRef.current;
+            if (sheet) {
+                sheet.scrollTop = 0;
+            }
+        }, 100);
+    }, [useTM.currentPreviewTaskId]);
+
     useEffect(() => {
         const sheet = sheetRef.current;
         if (sheet && taskCommentLines > 1) {
@@ -344,7 +296,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
 
     return (
         <>
-            {tmpCurrentTaskContent?.id && (
+            {taskEditState.tmpCurrentTaskContent?.id && (
                 <Sheet
                     ref={sheetRef}
                     className="custom-scrollbar"
@@ -362,12 +314,12 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         isPreviewMode={true}
                         myself={myself}
                         setTaskClosed={setTaskClosed}
-                        setTaskContent={setTmpCurrentTaskContent}
-                        setTaskStatusUpdated={setTaskStatusUpdated}
-                        setTaskTitle={setTaskTitle}
-                        setTaskUpdated={setTaskUpdated}
-                        taskContent={tmpCurrentTaskContent}
-                        taskTitle={taskTitle}
+                        setTaskContent={taskEditState.setTmpCurrentTaskContent}
+                        setTaskStatusUpdated={taskEditState.setTaskStatusUpdated}
+                        setTaskTitle={taskEditState.setTaskTitle}
+                        setTaskUpdated={taskEditState.setTaskUpdated}
+                        taskContent={taskEditState.tmpCurrentTaskContent}
+                        taskTitle={taskEditState.taskTitle}
                         useTM={useTM}
                         useUISM={useUISM}
                         useNM={useNM}
@@ -392,11 +344,11 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         setIsOpenTeamMembersList={setIsOpenTeamMembersList}
                         setMyself={setMyself}
                         setReporter={setReporter}
-                        setTaskContent={setTmpCurrentTaskContent}
-                        setTaskStatusUpdated={setTaskStatusUpdated}
-                        setTaskUpdated={setTaskUpdated}
+                        setTaskContent={taskEditState.setTmpCurrentTaskContent}
+                        setTaskStatusUpdated={taskEditState.setTaskStatusUpdated}
+                        setTaskUpdated={taskEditState.setTaskUpdated}
                         socket={socket}
-                        taskContent={tmpCurrentTaskContent}
+                        taskContent={taskEditState.tmpCurrentTaskContent}
                         useTEM={useTEM}
                         useTM={useTM}
                         useUISM={useUISM}
@@ -406,24 +358,24 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                     <Divider sx={{ mt: 1, mb: 1 }} />
 
                     <TaskCustomBarBlock
-                        setTaskContent={setTmpCurrentTaskContent}
-                        setTaskStatusUpdated={setTaskStatusUpdated}
-                        setTaskUpdated={setTaskUpdated}
-                        taskBodySaved={taskBodySaved}
-                        taskContent={tmpCurrentTaskContent}
+                        setTaskContent={taskEditState.setTmpCurrentTaskContent}
+                        setTaskStatusUpdated={taskEditState.setTaskStatusUpdated}
+                        setTaskUpdated={taskEditState.setTaskUpdated}
+                        taskBodySaved={taskEditState.taskBodySaved}
+                        taskContent={taskEditState.tmpCurrentTaskContent}
                     />
 
                     <TaskBodyBlock
-                        key={`TaskBodyBlock-${tmpCurrentTaskContent.id}`}
-                        body={body}
+                        key={`TaskBodyBlock-${taskEditState.tmpCurrentTaskContent.id}`}
+                        body={taskEditState.body}
                         useCM={useCM}
                         myself={myself}
-                        setBody={setBody}
+                        setBody={taskEditState.setBody}
                         setMyself={setMyself}
-                        setTaskBodyEdited={setTaskBodyEdited}
-                        setTaskBodySaved={setTaskBodySaved}
+                        setTaskBodyEdited={taskEditState.setTaskBodyEdited}
+                        setTaskBodySaved={taskEditState.setTaskBodySaved}
                         socket={socket}
-                        taskId={tmpCurrentTaskContent.id}
+                        taskId={taskEditState.tmpCurrentTaskContent.id}
                         useTEM={useTEM}
                         useUISM={useUISM}
                     />
@@ -433,7 +385,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                     <TaskSubTasksBlock
                         useCM={useCM}
                         useTM={useTM}
-                        currentTaskContent={tmpCurrentTaskContent}
+                        currentTaskContent={taskEditState.tmpCurrentTaskContent}
                         myself={myself}
                         setMyself={setMyself}
                         socket={socket}
@@ -454,20 +406,20 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         setTabIndex={setTabIndex}
                         setTaskCommentLines={setTaskCommentLines}
                         setTaskComments={setTaskComments}
-                        setTaskContent={setTmpCurrentTaskContent}
-                        setTaskUpdated={setTaskUpdated}
-                        setUploadedFiles={setUploadedFiles}
+                        setTaskContent={taskEditState.setTmpCurrentTaskContent}
+                        setTaskUpdated={taskEditState.setTaskUpdated}
+                        setUploadedFiles={taskEditState.setUploadedFiles}
                         socket={socket}
                         tabIndex={tabIndex}
                         taskCommentLines={taskCommentLines}
                         taskComments={taskComments}
-                        taskContent={tmpCurrentTaskContent}
+                        taskContent={taskEditState.tmpCurrentTaskContent}
                         taskNotes={taskNotes}
                         useTEM={useTEM}
                         useTM={useTM}
-                        tmpCurrentTaskContent={tmpCurrentTaskContent}
+                        tmpCurrentTaskContent={taskEditState.tmpCurrentTaskContent}
                         useUISM={useUISM}
-                        uploadedFiles={uploadedFiles}
+                        uploadedFiles={taskEditState.uploadedFiles}
                         useNM={useNM}
                     />
                 </Sheet>

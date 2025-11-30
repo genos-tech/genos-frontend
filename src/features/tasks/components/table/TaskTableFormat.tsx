@@ -1,15 +1,17 @@
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PendingIcon from "@mui/icons-material/Pending";
 import { Avatar, Box, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { Chip, MenuItem, Select } from "@mui/material";
+import { Chip, IconButton, MenuItem, Select } from "@mui/material";
 import { alpha } from "@mui/system";
 import { GridColDef, GridRenderCellParams, GridRenderEditCellParams } from "@mui/x-data-grid";
 import dayjs from "dayjs";
 
 import { PulseDot } from "../../../../components/ui/misc/PulseDot";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { effortLevels, priorities } from "../../utils/taskMeta";
 
@@ -65,10 +67,11 @@ type getTaskColumnsProps = {
     myself: UserProps;
     accessToken: string | null;
     teamMembers: UserProps[];
+    useTM: TaskManagementState;
 };
 
 export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
-    const { myself, teamMembers } = props;
+    const { myself, teamMembers, useTM } = props;
     const { mode } = useColorScheme();
 
     return [
@@ -76,9 +79,34 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
             field: "id",
             headerName: "ID",
             headerClassName: "task-col--header",
-            width: 60,
+            width: 85,
             align: "center",
             headerAlign: "center",
+            sortable: false,
+            renderCell: (params: GridRenderCellParams) => {
+                return (
+                    <IconButton
+                        size="small"
+                        onClick={(event) => {
+                            event.stopPropagation();
+                            useTM.setIsTaskPreviewVisible(true);
+                            useTM.setCurrentPreviewTaskId(Number(params.id));
+                        }}
+                        sx={{
+                            color: mode === "dark" ? "#fff" : "#000",
+                            "&:hover": {
+                                backgroundColor:
+                                    mode === "dark"
+                                        ? "rgba(255, 255, 255, 0.1)"
+                                        : "rgba(0, 0, 0, 0.04)",
+                            },
+                        }}
+                    >
+                        <Typography fontSize="16px">{params.id}</Typography>
+                        <OpenInNewIcon fontSize="small" sx={{ ml: 0.5 }} />
+                    </IconButton>
+                );
+            },
         },
         {
             field: "status",
@@ -112,7 +140,7 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
             },
             renderEditCell: (params: GridRenderEditCellParams) => (
                 <Select
-                    value={params.value}
+                    value={params.value || ""}
                     fullWidth
                     onChange={(event) => {
                         const value = event.target.value;
@@ -204,7 +232,7 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
             headerAlign: "left",
         },
         {
-            field: "assignee",
+            field: "assigneeId",
             headerName: "Assignee",
             headerClassName: "task-col--header",
             editable: true,
@@ -247,7 +275,7 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
             },
             renderEditCell: (params: GridRenderEditCellParams) => (
                 <Select
-                    value={params.value}
+                    value={params.row.assigneeId || params.value || ""}
                     fullWidth
                     onChange={(event) => {
                         const value = event.target.value;
@@ -268,8 +296,41 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                     }}
                 >
                     {teamMembers.map((option) => (
-                        <MenuItem key={option.userId} value={option.userEmail}>
-                            {option.userName} | {option.userEmail}
+                        <MenuItem key={option.userId} value={option.userId}>
+                            <Box
+                                sx={{ display: "flex", gap: 2, alignItems: "center" }}
+                                textAlign="left"
+                            >
+                                <Avatar
+                                    size="sm"
+                                    src={
+                                        option.userId === myself.userId
+                                            ? `${media_url}/${myself.avatarImgPath}`
+                                            : `${media_url}/${option.avatarImgPath}`
+                                    }
+                                >
+                                    {option.userName[0].toUpperCase()}
+                                </Avatar>
+                                <Box position="absolute" sx={{ pl: "20px", pt: "20px" }}>
+                                    <PulseDot
+                                        color={
+                                            myself.userId === option?.userId
+                                                ? myself?.isOfflineForced !== "true"
+                                                    ? "#4caf50"
+                                                    : "#999"
+                                                : option?.isOnline === true &&
+                                                    option?.isOfflineForced === "true"
+                                                  ? "#4caf50"
+                                                  : "#999"
+                                        }
+                                    />
+                                </Box>
+                                <div>
+                                    <Typography level="body-xs">
+                                        {option.userName} | {option.userEmail}
+                                    </Typography>
+                                </div>
+                            </Box>
                         </MenuItem>
                     ))}
                 </Select>
@@ -306,7 +367,7 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
             },
             renderEditCell: (params: GridRenderEditCellParams) => (
                 <Select
-                    value={params.value}
+                    value={params.value || ""}
                     fullWidth
                     onChange={(event) => {
                         const value = event.target.value;
@@ -372,7 +433,7 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
             },
             renderEditCell: (params: GridRenderEditCellParams) => (
                 <Select
-                    value={params.value}
+                    value={params.value || ""}
                     fullWidth
                     onChange={(event) => {
                         const value = event.target.value;
@@ -446,6 +507,39 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
             align: "center",
             headerAlign: "center",
             valueFormatter: (params) => (params ? dayjs(params).format("YYYY-MM-DD") : params),
+            renderEditCell: (params: GridRenderEditCellParams) => (
+                <input
+                    type="date"
+                    value={params.value ? dayjs(params.value).format("YYYY-MM-DD") : ""}
+                    onChange={(event) => {
+                        const value = event.target.value;
+                        params.api.setEditCellValue(
+                            {
+                                id: params.id,
+                                field: params.field,
+                                value: value,
+                            },
+                            event
+                        );
+
+                        // Exit edit mode after value is set
+                        params.api.stopCellEditMode({
+                            id: params.id,
+                            field: params.field,
+                        });
+                    }}
+                    style={{
+                        width: "100%",
+                        height: "100%",
+                        border: "none",
+                        outline: "none",
+                        padding: "8px",
+                        fontSize: "14px",
+                        textAlign: "center",
+                    }}
+                    autoFocus
+                />
+            ),
         },
         {
             field: "updatedAt",
