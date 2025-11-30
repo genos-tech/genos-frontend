@@ -2,16 +2,19 @@ import { useEffect, useState } from "react";
 import { useColorScheme } from "@mui/joy/styles";
 import { Box } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { DataGrid, useGridApiRef } from "@mui/x-data-grid";
+import { DataGrid, GridRowModel, useGridApiRef } from "@mui/x-data-grid";
+import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
-import { ProjectProps, TagListProps, TaskTableProps } from "../../../../types/tasks";
+import { TagListProps, TaskTableProps } from "../../../../types/tasks";
 import { popTeamMembers } from "../../../chat/services/popTeamMembers";
 import { loadProjectTags } from "../../services/loadProjectTags";
+import { updateTaskFromTable } from "../../services/updateTaskFromTable";
 import { FilterProps } from "../../types/TaskTableTypes";
+import { effortLevels, priorities, statuses } from "../../utils/taskMeta";
 import { TaskFilterMenu } from "./TaskFilterMenu";
 import { getTaskColumns } from "./TaskTableFormat";
 
@@ -24,10 +27,12 @@ type ProjectTaskTableProps = {
     myself: UserProps;
     usePM: ProjectManagementState;
     useTM: TaskManagementState;
+    socket?: Socket | null;
 };
 
 export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
-    const { teamMembers, setTeamMembers, teamMemberProfiles, myself, usePM, useTM } = props;
+    const { teamMembers, setTeamMembers, teamMemberProfiles, myself, usePM, useTM, socket } =
+        props;
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
     const className = `task-datagrid-${mode}`;
@@ -95,6 +100,83 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
         apiRef.current.setFilterModel({ items: [] });
     }, [usePM.currentProject]);
 
+    // Handle row update when cells are edited
+    const processRowUpdate = async (
+        newRow: GridRowModel,
+        oldRow: GridRowModel
+    ): Promise<GridRowModel> => {
+        // send updated task only if the task is not the same as the old task
+        if (JSON.stringify(newRow) === JSON.stringify(oldRow)) {
+            return oldRow;
+        }
+
+        try {
+            // Update the task via the backend
+            const updatedRow = await updateTaskFromTable(
+                newRow as TaskTableProps,
+                myself,
+                socket || null,
+                accessToken,
+                teamMembers
+            );
+
+            // Update the local state of task table
+            setCurrentDisplayingTasks((prevTasks) =>
+                prevTasks.map((task) => (task.id === updatedRow.id ? updatedRow : task))
+            );
+
+            // Update the preview task by overwriting if the updated task is the current preview task
+            if (
+                useTM.currentPreviewTask &&
+                useTM.currentPreviewTask.id === Number(updatedRow.id)
+            ) {
+                useTM.setCurrentPreviewTask({
+                    ...useTM.currentPreviewTask,
+                    title: updatedRow.title || useTM.currentPreviewTask.title,
+                    tags: updatedRow.tags || useTM.currentPreviewTask.tags,
+                    concatTags: updatedRow.concatTags || useTM.currentPreviewTask.concatTags,
+                    assignee:
+                        teamMembers.find((member) => member.userId === updatedRow.assigneeId) ||
+                        useTM.currentPreviewTask.assignee,
+                    status:
+                        statuses.find((status) => status.status === updatedRow.status) ||
+                        useTM.currentPreviewTask.status,
+                    priority:
+                        priorities.find((priority) => priority.priority === updatedRow.priority) ||
+                        useTM.currentPreviewTask.priority,
+                    effortLevel:
+                        effortLevels.find(
+                            (effortLevel) => effortLevel.level === updatedRow.effortLevel
+                        ) || useTM.currentPreviewTask.effortLevel,
+                    dueDate: updatedRow.dueDate || useTM.currentPreviewTask.dueDate,
+                });
+            }
+
+            // Update the allTasks state in task management
+            const updatedAllTasks = useTM.allTasks.map((task) =>
+                task.id === updatedRow.id ? updatedRow : task
+            );
+            useTM.setAllTasks(updatedAllTasks);
+
+            // Trigger task update to refresh preview if open
+            if (
+                useTM.currentPreviewTask &&
+                useTM.currentPreviewTask.id === Number(updatedRow.id)
+            ) {
+                useTM.setIsTaskUpdated(true);
+            }
+
+            return updatedRow;
+        } catch (error) {
+            console.error("Error processing row update:", error);
+            return oldRow;
+        }
+    };
+
+    const handleProcessRowUpdateError = (error: Error) => {
+        console.error("Row update error:", error);
+    };
+
     return (
         <ThemeProvider theme={theme}>
             <div style={{ height: "100%", overflow: "hidden", borderRadius: "5px" }}>
@@ -115,11 +197,14 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
                         className={className}
                         rows={currentDisplayingTasks}
                         columns={getTaskColumns({
+                            useTM: useTM,
                             teamMemberProfiles: teamMemberProfiles,
                             myself: myself,
                             accessToken: accessToken,
                             teamMembers: teamMembers,
                         })}
+                        processRowUpdate={processRowUpdate}
+                        onProcessRowUpdateError={handleProcessRowUpdateError}
                         initialState={{
                             density: "compact",
                             filter: {
@@ -178,11 +263,19 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
                             const isEditable = params.colDef.editable;
 
                             if (isEditable) {
-                                // Enter edit mode immediately on single click
-                                apiRef.current.startCellEditMode({
-                                    id: params.id,
-                                    field: params.field,
-                                });
+                                // Check if the cell is already in edit mode
+                                const cellMode = apiRef.current.getCellMode(
+                                    params.id,
+                                    params.field
+                                );
+
+                                // Only start edit mode if the cell is currently in view mode
+                                if (cellMode === "view") {
+                                    apiRef.current.startCellEditMode({
+                                        id: params.id,
+                                        field: params.field,
+                                    });
+                                }
                             }
                         }}
                         // onRowClick={(params, event, detail) => {

@@ -109,6 +109,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             if (useTM.currentPreviewTask) {
                 taskEditState.setTmpCurrentTaskContent(useTM.currentPreviewTask);
                 taskEditState.setCurrentTaskId(useTM.currentPreviewTask.id);
+                taskEditState.setTaskTitle(useTM.currentPreviewTask.title);
                 taskEditState.setBody(useTM.currentPreviewTask.body || []);
             }
         }
