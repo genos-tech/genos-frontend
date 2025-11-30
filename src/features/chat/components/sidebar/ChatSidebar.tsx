@@ -331,7 +331,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 placement="top"
                                 size="sm"
                                 sx={{ zIndex: "10020" }}
-                                title="Project Messages"
+                                title="Project Updates"
                                 variant="outlined"
                             >
                                 <Badge
@@ -363,7 +363,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 placement="top"
                                 size="sm"
                                 sx={{ zIndex: "10020" }}
-                                title="Project Messages"
+                                title="Project Updates"
                                 variant="outlined"
                             >
                                 <IconButton

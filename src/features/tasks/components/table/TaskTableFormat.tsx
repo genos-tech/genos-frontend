@@ -247,7 +247,7 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
             },
             renderEditCell: (params: GridRenderEditCellParams) => (
                 <Select
-                    value={params.value}
+                    value={params.row.assigneeEmail || params.value}
                     fullWidth
                     onChange={(event) => {
                         const value = event.target.value;
@@ -269,7 +269,40 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                 >
                     {teamMembers.map((option) => (
                         <MenuItem key={option.userId} value={option.userEmail}>
-                            {option.userName} | {option.userEmail}
+                            <Box
+                                sx={{ display: "flex", gap: 2, alignItems: "center" }}
+                                textAlign="left"
+                            >
+                                <Avatar
+                                    size="sm"
+                                    src={
+                                        option.userId === myself.userId
+                                            ? `${media_url}/${myself.avatarImgPath}`
+                                            : `${media_url}/${option.avatarImgPath}`
+                                    }
+                                >
+                                    {option.userName[0].toUpperCase()}
+                                </Avatar>
+                                <Box position="absolute" sx={{ pl: "20px", pt: "20px" }}>
+                                    <PulseDot
+                                        color={
+                                            myself.userId === option?.userId
+                                                ? myself?.isOfflineForced !== "true"
+                                                    ? "#4caf50"
+                                                    : "#999"
+                                                : option?.isOnline === true &&
+                                                    option?.isOfflineForced === "true"
+                                                  ? "#4caf50"
+                                                  : "#999"
+                                        }
+                                    />
+                                </Box>
+                                <div>
+                                    <Typography level="body-xs">
+                                        {option.userName} | {option.userEmail}
+                                    </Typography>
+                                </div>
+                            </Box>
                         </MenuItem>
                     ))}
                 </Select>

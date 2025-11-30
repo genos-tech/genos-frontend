@@ -173,15 +173,24 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
                         }}
                         // disableRowSelectionOnClick
                         keepNonExistentRowsSelected
-                        onCellClick={(params) => {
-                            // setIsTaskPreviewVisible(true);
-                            // useTM.setCurrentPreviewTaskId(Number(params.id));
+                        onCellClick={(params, event) => {
+                            // Check if the cell is editable
+                            const isEditable = params.colDef.editable;
+
+                            if (isEditable) {
+                                // Enter edit mode immediately on single click
+                                apiRef.current.startCellEditMode({
+                                    id: params.id,
+                                    field: params.field,
+                                });
+                            }
                         }}
+                        // onRowClick={(params, event, detail) => {
+                        //     useTM.setIsTaskPreviewVisible(true);
+                        //     useTM.setCurrentPreviewTaskId(Number(params.id));
+                        // }}
                         onCellDoubleClick={(params) => {
-                            // useTM.setIsTaskPreviewVisible(true);
-                            // setCurrentPreviewTaskId(Number(params.id));
-                        }}
-                        onRowClick={(params, event, detail) => {
+                            // Open task preview on double click
                             useTM.setIsTaskPreviewVisible(true);
                             useTM.setCurrentPreviewTaskId(Number(params.id));
                         }}
