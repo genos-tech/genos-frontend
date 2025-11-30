@@ -4,11 +4,13 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { Socket } from "socket.io-client";
 
+import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { useTaskEditState } from "../../../../hooks/tasks/useTaskEditState";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { TaskNoteMain } from "../../../notes/task-notes/components/TaskNoteMain";
@@ -56,6 +58,10 @@ export const TaskHomeLayout = ({
     onCloseTaskHome,
 }: TaskHomeLayoutProps) => {
     const { mode } = useColorScheme();
+    const { accessToken } = useAuth();
+
+    // Consolidated task edit state
+    const taskEditState = useTaskEditState(useTM.currentPreviewTask);
 
     const renderResizeHandle = () => (
         <PanelResizeHandle
