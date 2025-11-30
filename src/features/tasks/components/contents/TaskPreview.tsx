@@ -259,6 +259,26 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     // This is for auto scrolling to the bottom when an user writes comment.
     const [taskCommentLines, setTaskCommentLines] = useState(0);
     const sheetRef = useRef<HTMLDivElement | null>(null);
+    // Scroll to top when the task preview is initially opened
+    useEffect(() => {
+        setTimeout(() => {
+            const sheet = sheetRef.current;
+            if (sheet) {
+                sheet.scrollTop = 0;
+            }
+        }, 100);
+    }, []);
+
+    // Scroll to top when the another task is opened
+    useEffect(() => {
+        setTimeout(() => {
+            const sheet = sheetRef.current;
+            if (sheet) {
+                sheet.scrollTop = 0;
+            }
+        }, 100);
+    }, [useTM.currentPreviewTaskId]);
+
     useEffect(() => {
         const sheet = sheetRef.current;
         if (sheet && taskCommentLines > 1) {
