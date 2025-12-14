@@ -8,13 +8,12 @@ import { MessageProps } from "../../../../types/chat";
 
 type BubbleReplyButtonTypes = {
     message: MessageProps;
-    taskId: number | null;
     usePM: ProjectManagementState;
     useCM: ChatManagementState;
     useTM: TaskManagementState;
 };
 export const BubbleOpenTaskButton = (props: BubbleReplyButtonTypes) => {
-    const { message, taskId, usePM, useCM, useTM } = props;
+    const { message, usePM, useCM, useTM } = props;
     return (
         <Box sx={{ textAlign: "right" }}>
             <Tooltip size="sm" title="Open Task" variant="outlined">
@@ -26,12 +25,12 @@ export const BubbleOpenTaskButton = (props: BubbleReplyButtonTypes) => {
                         p: 0.7,
                     }}
                     onClick={() => {
-                        if (taskId !== null) {
+                        if (message.taskId !== null) {
                             useCM.setIsMainChatVisible(true);
                             useCM.setIsThreadVisible(false);
                             useTM.setIsTaskPreviewVisible(true);
                             useTM.setIsCreatingTask({ ...useTM.isCreatingTask, flag: false });
-                            useTM.setCurrentPreviewTaskId(taskId);
+                            useTM.setCurrentPreviewTaskId(message.taskId);
 
                             if (message.project && message.project.projectId) {
                                 usePM.setCurrentProject(message.project);
