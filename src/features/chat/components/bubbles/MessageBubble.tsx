@@ -549,7 +549,6 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                 useCM={useCM}
                                                 message={message}
                                                 usePM={usePM}
-                                                taskId={message.taskId}
                                                 useTM={useTM}
                                             />
                                         )}
@@ -672,7 +671,6 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                                 useCM={useCM}
                                                                 useTM={useTM}
                                                                 message={message}
-                                                                taskId={message.taskId}
                                                                 usePM={usePM}
                                                             />
                                                         )}
@@ -699,17 +697,32 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             )}
 
                             {message.content && message.content.length > 0 && (
-                                <BnChatPreview
-                                    key={`${chat.chatId}-${message.messageId}-${chat.chatType}-${message.tsUpdated}`}
-                                    useCM={useCM}
-                                    content={message.content}
-                                    isSent={isSent}
-                                    myself={myself}
-                                    setMyself={setMyself}
-                                    socket={socket}
-                                    useTEM={useTEM}
-                                    useUISM={useUISM}
-                                />
+                                <Box
+                                    onClick={() => {
+                                        if (message.taskId !== null) {
+                                            useCM.setIsMainChatVisible(true);
+                                            useCM.setIsThreadVisible(false);
+                                            useTM.setIsTaskPreviewVisible(true);
+                                            useTM.setIsCreatingTask({
+                                                ...useTM.isCreatingTask,
+                                                flag: false,
+                                            });
+                                            useTM.setCurrentPreviewTaskId(message.taskId);
+                                        }
+                                    }}
+                                >
+                                    <BnChatPreview
+                                        key={`${chat.chatId}-${message.messageId}-${chat.chatType}-${message.tsUpdated}`}
+                                        useCM={useCM}
+                                        content={message.content}
+                                        isSent={isSent}
+                                        myself={myself}
+                                        setMyself={setMyself}
+                                        socket={socket}
+                                        useTEM={useTEM}
+                                        useUISM={useUISM}
+                                    />
+                                </Box>
                             )}
                         </Stack>
 
