@@ -89,6 +89,8 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
                         size="small"
                         onClick={(event) => {
                             event.stopPropagation();
+                            // Programmatically select this row
+                            params.api.setRowSelectionModel([params.id]);
                             useTM.setIsTaskPreviewVisible(true);
                             useTM.setCurrentPreviewTaskId(Number(params.id));
                         }}
