@@ -5,6 +5,7 @@ import LoadDMHistoryWorker from "../db/workers/loadDMHistoryWorker.ts?worker";
 import LoadGMHistoryWorker from "../db/workers/loadGMHistoryWorker.ts?worker";
 import LoadInboxWorker from "../db/workers/loadInboxWorker.ts?worker";
 import LoadPMHistoryWorker from "../db/workers/loadPMHistoryWorker.ts?worker";
+import LoadProjectTasksWorker from "../db/workers/loadProjectTasksWorker.ts?worker";
 import LoadTeamMemberWorker from "../db/workers/loadTeamMembersWorker.ts?worker";
 import PopSpecificChatWorker from "../db/workers/popSpecificChatWorker.ts?worker";
 import PopSpecificMessagesWorker from "../db/workers/popSpecificMessagesWorker.ts?worker";
@@ -25,6 +26,7 @@ export const loadInitialData = (
     const [isPMHistoryLoaded, setIsPMHistoryLoaded] = useState<boolean | null>(false);
     const [isTeamMembersLoaded, setIsTeamMembersLoaded] = useState<boolean | null>(false);
     const [isInitialChatLoaded, setIsInitialChatLoaded] = useState<boolean | null>(false);
+    const [isProjectTasksLoaded, setIsProjectTasksLoaded] = useState<boolean | null>(false);
 
     // Load Inbox
     useEffect(() => {
@@ -154,6 +156,30 @@ export const loadInitialData = (
         }
     }, [myself, accessToken]);
 
+    // Load Project Tasks
+    useEffect(() => {
+        const lastProjectId = localStorage.getItem("lastProjectId");
+        if (accessToken && myself.userId !== "" && myself.userName !== "" && lastProjectId) {
+            const loadProjectTasksWorker = new LoadProjectTasksWorker();
+            loadProjectTasksWorker.postMessage({
+                myself: myself,
+                projectId: Number(lastProjectId),
+                accessToken: accessToken,
+            });
+            loadProjectTasksWorker.onmessage = (event) => {
+                if (event.data === "done") {
+                    setIsProjectTasksLoaded(true);
+                }
+            };
+            return () => {
+                loadProjectTasksWorker.terminate();
+            };
+        } else {
+            console.log("No project tasks to load");
+            setIsProjectTasksLoaded(true);
+        }
+    }, [myself, accessToken]);
+
     // Fetch initial DM chat info after the initial DM chat messages are loaded
     useEffect(() => {
         if (isDMHistoryLoaded && isGMHistoryLoaded && isPMHistoryLoaded) {
@@ -271,7 +297,8 @@ export const loadInitialData = (
             isGMHistoryLoaded &&
             isPMHistoryLoaded &&
             isTeamMembersLoaded &&
-            isInitialChatLoaded
+            isInitialChatLoaded &&
+            isProjectTasksLoaded
         ) {
             setIsLoading(false);
         }
@@ -283,5 +310,6 @@ export const loadInitialData = (
         isPMHistoryLoaded,
         isTeamMembersLoaded,
         isInitialChatLoaded,
+        isProjectTasksLoaded,
     ]);
 };
