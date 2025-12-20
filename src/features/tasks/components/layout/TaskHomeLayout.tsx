@@ -38,6 +38,13 @@ interface TaskHomeLayoutProps {
     onCreateTag: () => void;
     onDeleteProject: () => void;
     onCloseTaskHome: () => void;
+    setOpenJoinProject: (value: {
+        flag: boolean;
+        projectId: number;
+        projectName: string;
+        isPrivate: boolean;
+        systemUserId: string;
+    }) => void;
 }
 
 export const TaskHomeLayout = ({
@@ -54,6 +61,7 @@ export const TaskHomeLayout = ({
     onCreateTag,
     onDeleteProject,
     onCloseTaskHome,
+    setOpenJoinProject,
 }: TaskHomeLayoutProps) => {
     const { mode } = useColorScheme();
 
@@ -291,7 +299,7 @@ export const TaskHomeLayout = ({
                     <TaskSidebar
                         myself={myself}
                         usePM={usePM}
-                        setOpenJoinProject={() => {}}
+                        setOpenJoinProject={setOpenJoinProject}
                         useTM={useTM}
                     />
                 </Box>

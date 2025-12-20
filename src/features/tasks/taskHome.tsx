@@ -76,6 +76,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                     onCreateProject={handleCreateProject}
                     onCreateTag={handleCreateTag}
                     onDeleteProject={handleDeleteProject}
+                    setOpenJoinProject={setOpenJoinProject}
                 />
 
                 <TaskHomeModals
