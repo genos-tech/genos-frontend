@@ -9,7 +9,13 @@ self.onmessage = async (event) => {
     const accessToken: string = event.data.accessToken;
 
     const taskRepository = new TaskRepository();
-    await taskRepository.clear();
+
+    // If no task exists with the same projectId, clear the database.
+    // (The database contains tasks for one project only. But maybe should be changed in the future.)
+    const existingTasks = await taskRepository.getTasksByProject(projectId);
+    if (existingTasks.length === 0) {
+        await taskRepository.clear();
+    }
 
     // Load data from backend
     const taskList: TaskTableProps[] = await loadSpecificTaskTmp(myself, projectId, accessToken);
