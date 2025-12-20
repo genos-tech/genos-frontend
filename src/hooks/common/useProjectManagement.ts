@@ -30,6 +30,7 @@ export const useProjectManagement = (
     let tsLastLoadProjectAndTasks: number | undefined = undefined;
 
     const loadProjectsAndTasks = async (targetProjectId: number = -1) => {
+        console.log("1")
         // Load the latest project as initial process
         const loadedTeamProjects: ProjectProps[] = await loadTeamProjects(myself, accessToken);
         tsLastLoadProjectAndTasks = Date.now();
