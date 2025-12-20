@@ -208,7 +208,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 (useCM.unReadChatCounts && (useCM.unReadChatCounts[1] || 0) > 0) ||
                                 (useCM.unReadChatCounts && (useCM.unReadChatCounts[2] || 0) > 0) ||
                                 (useCM.unReadChatCounts && (useCM.unReadChatCounts[3] || 0) > 0) ||
-                                useCM.flaggedMessages.length > 0
+                                useCM.flaggedMessages.length > 0 ||
+                                useCM.unReadActivityMessageCounts > 0
                                     ? "10px"
                                     : "3px",
                         }}

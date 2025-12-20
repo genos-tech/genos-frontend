@@ -256,6 +256,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             );
         }
 
+        console.log("filteredTasks length:", filteredTasks.length);
         if (filteredTasks.length > 0) {
             setCurrentDisplayingTasks(filteredTasks);
         } else {
@@ -277,6 +278,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     };
 
     useEffect(() => {
+        console.log("useTM.allTasks length:", useTM.allTasks.length);
         applyFilters(selectedStatus, selectedTags, selectedPriorities, selectedEffortLevels);
     }, [useTM.allTasks]);
 
