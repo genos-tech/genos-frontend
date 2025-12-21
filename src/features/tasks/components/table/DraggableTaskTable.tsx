@@ -3,16 +3,12 @@ import AutorenewIcon from "@mui/icons-material/Autorenew";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import PendingIcon from "@mui/icons-material/Pending";
-import { Avatar, Box, Typography } from "@mui/joy";
+import { Box, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { Chip, MenuItem, Select, SelectChangeEvent } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { alpha } from "@mui/system";
-import dayjs from "dayjs";
 import { DragDropContext, Droppable, DropResult } from "react-beautiful-dnd";
 import { Socket } from "socket.io-client";
 
-import { PulseDot } from "../../../../components/ui/misc/PulseDot";
 import { useAuth } from "../../../../context/AuthContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
@@ -27,8 +23,6 @@ import { DraggableTaskRow } from "./DraggableTaskRow";
 import { TaskFilterMenu } from "./TaskFilterMenu";
 
 const theme = createTheme({ cssVariables: true });
-
-const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 // Column definitions for the table
 export type ColumnDef = {

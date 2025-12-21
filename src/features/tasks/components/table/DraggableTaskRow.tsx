@@ -1,10 +1,6 @@
 import { useState } from "react";
-import AutorenewIcon from "@mui/icons-material/Autorenew";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
-import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import PendingIcon from "@mui/icons-material/Pending";
 import { Avatar, Box, Typography } from "@mui/joy";
 import { Chip, IconButton, MenuItem, Select, SelectChangeEvent, TextField } from "@mui/material";
 import { alpha } from "@mui/system";

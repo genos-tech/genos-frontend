@@ -175,10 +175,13 @@ export const SprintBoard = (props: SprintBoardProps) => {
                 );
                 useTM.setAllTasks(updatedAllTasks);
             } catch (error) {
-                console.error("Failed to update task status:", error);
                 // Revert on error
-                setBoardTasks(boardTasks);
+                setBoardTasks(newBoardTasks); // Use newBoardTasks instead of stale boardTasks
             }
+        } else if (sourceColumn !== destColumn) {
+            console.warn(
+                `[SprintBoard] Cannot update task: newStatus=${newStatus}, accessToken=${!!accessToken}`
+            );
         }
     };
 
