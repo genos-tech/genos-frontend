@@ -96,6 +96,7 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                 onClick={() => {
                                                     setOpen(!open);
                                                     setIsTaskHomeVisible(true);
+                                                    useTM.setIsSprintBoardVisible(false);
 
                                                     // Only if the clicked project id is not the same as the current one,
                                                     // reset the project (and load tasks in the downstream step.)

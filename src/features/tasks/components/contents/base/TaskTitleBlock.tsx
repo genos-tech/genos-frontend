@@ -342,6 +342,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                     useNM.isTaskNoteVisible === false
                                 ) {
                                     useTM.setIsTaskHomeVisible(true);
+                                    useTM.setIsSprintBoardVisible(false);
                                 }
                             }
 
@@ -353,6 +354,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             // Open task-home when both task-preview and task-create-form are closed.
                             if (useTM.isTaskPreviewVisible === false) {
                                 useTM.setIsTaskHomeVisible(true);
+                                useTM.setIsSprintBoardVisible(false);
                             }
 
                             // Close the task preview when the task is visible in the task note.

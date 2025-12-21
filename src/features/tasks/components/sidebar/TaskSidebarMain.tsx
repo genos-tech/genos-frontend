@@ -12,6 +12,7 @@ import { loadTeamTaskList } from "../../services/loadTaskSearchList";
 import { ProjectsListItem } from "./ProjectsListItem";
 import { RecentsListItem } from "./RecentsListItem";
 import { TaskSidebarSearchBox } from "./SearchBox";
+import { SprintBoardListItem } from "./SprintBoardListItem";
 import { TaskTableListItem } from "./TaskTableListItem";
 
 type TaskSidebarProps = {
@@ -169,6 +170,8 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                     {/* <DashboardListItem
                         setIsDashboardVisible={setIsDashboardVisible}
                     /> */}
+
+                    <SprintBoardListItem useTM={useTM} />
 
                     <TaskTableListItem useTM={useTM} />
 

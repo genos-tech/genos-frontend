@@ -12,12 +12,13 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { TaskNoteMain } from "../../../notes/task-notes/components/TaskNoteMain";
+import { SprintBoard } from "../board";
 import { CreateTaskForm } from "../contents/CreateTaskForm";
 import { TaskPreview } from "../contents/TaskPreview";
 import { TaskDashboard } from "../dashboard/TaskDashboard";
 import { TaskHomeHeader } from "../header/TaskHomeHeader";
 import { TaskSidebar } from "../sidebar/TaskSidebarMain";
-import { ProjectTaskTable } from "../table/TaskTable";
+import { DraggableTaskTable } from "../table/DraggableTaskTable";
 
 interface TaskHomeLayoutProps {
     // Management states
@@ -115,7 +116,33 @@ export const TaskHomeLayout = ({
                         onCreateTag={onCreateTag}
                         onDeleteProject={onDeleteProject}
                     />
-                    <ProjectTaskTable
+                    <DraggableTaskTable
+                        usePM={usePM}
+                        myself={myself}
+                        setTeamMembers={useTEM.setTeamMembers}
+                        teamMemberProfiles={useTEM.teamMemberProfiles}
+                        teamMembers={useTEM.teamMembers}
+                        useTM={useTM}
+                        socket={socket}
+                    />
+                </>
+            )}
+            {useTM.isSprintBoardVisible && (
+                <>
+                    <TaskHomeHeader
+                        useCM={useCM}
+                        usePM={usePM}
+                        myself={myself}
+                        setMyself={setMyself}
+                        useTEM={useTEM}
+                        useTM={useTM}
+                        useUISM={useUISM}
+                        onCloseTaskHome={onCloseTaskHome}
+                        onCreateProject={onCreateProject}
+                        onCreateTag={onCreateTag}
+                        onDeleteProject={onDeleteProject}
+                    />
+                    <SprintBoard
                         usePM={usePM}
                         myself={myself}
                         setTeamMembers={useTEM.setTeamMembers}
@@ -307,7 +334,7 @@ export const TaskHomeLayout = ({
 
             {usePM.currentProject && usePM.currentProject.projectId ? (
                 <>
-                    {useTM.isTaskHomeVisible && (
+                    {(useTM.isTaskHomeVisible || useTM.isSprintBoardVisible) && (
                         <>
                             {renderResizeHandle()}
                             <Panel id={"2"} maxSize={80} minSize={30} order={2}>

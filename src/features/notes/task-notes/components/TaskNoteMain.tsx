@@ -130,6 +130,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
             setIsTaskHomeVisible
         ) {
             setIsTaskHomeVisible(true);
+            useTM.setIsSprintBoardVisible(false);
         }
     }, [useNM, useTM, setIsTaskHomeVisible]);
 
