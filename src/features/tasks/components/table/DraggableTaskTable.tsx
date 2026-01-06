@@ -10,7 +10,10 @@ import { DragDropContext, Droppable, DropResult } from "react-beautiful-dnd";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
@@ -237,16 +240,29 @@ const getResizeHandleStyles = (
 type DraggableTaskTableProps = {
     teamMembers: UserProps[];
     setTeamMembers: (value: UserProps[]) => void;
-    teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
     usePM: ProjectManagementState;
     useTM: TaskManagementState;
-    socket?: Socket | null;
+    socket: Socket | null;
+    useTEM: TeamManagementState;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
+    setMyself: (value: UserProps) => void;
 };
 
 export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
-    const { teamMembers, setTeamMembers, teamMemberProfiles, myself, usePM, useTM, socket } =
-        props;
+    const {
+        teamMembers,
+        setTeamMembers,
+        myself,
+        usePM,
+        useTM,
+        socket,
+        useTEM,
+        useCM,
+        useUISM,
+        setMyself,
+    } = props;
     const { mode: colorMode } = useColorScheme();
     const { accessToken } = useAuth();
 
@@ -682,6 +698,11 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                             onRowUpdate={handleRowUpdate}
                                             onRowDoubleClick={handleRowDoubleClick}
                                             useTM={useTM}
+                                            useTEM={useTEM}
+                                            useCM={useCM}
+                                            useUISM={useUISM}
+                                            socket={socket}
+                                            setMyself={setMyself}
                                         />
                                     ))}
                                     {provided.placeholder}

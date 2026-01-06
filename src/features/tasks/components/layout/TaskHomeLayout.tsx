@@ -120,10 +120,13 @@ export const TaskHomeLayout = ({
                         usePM={usePM}
                         myself={myself}
                         setTeamMembers={useTEM.setTeamMembers}
-                        teamMemberProfiles={useTEM.teamMemberProfiles}
                         teamMembers={useTEM.teamMembers}
                         useTM={useTM}
                         socket={socket}
+                        useTEM={useTEM}
+                        useCM={useCM}
+                        useUISM={useUISM}
+                        setMyself={setMyself}
                     />
                 </>
             )}

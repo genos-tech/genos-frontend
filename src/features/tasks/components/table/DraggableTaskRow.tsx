@@ -15,8 +15,13 @@ import {
 import { alpha } from "@mui/system";
 import dayjs from "dayjs";
 import { Draggable } from "react-beautiful-dnd";
+import { Socket } from "socket.io-client";
 
+import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { PulseDot } from "../../../../components/ui/misc/PulseDot";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
@@ -137,6 +142,11 @@ type DraggableTaskRowProps = {
     onRowUpdate: (task: TaskTableProps) => Promise<TaskTableProps>;
     onRowDoubleClick: (taskId: number) => void;
     useTM: TaskManagementState;
+    useTEM: TeamManagementState;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
+    socket: Socket | null;
+    setMyself: (value: UserProps) => void;
 };
 
 export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
@@ -150,6 +160,11 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
         onRowUpdate,
         onRowDoubleClick,
         useTM,
+        useTEM,
+        useCM,
+        useUISM,
+        socket,
+        setMyself,
     } = props;
 
     // Hover state for better UX
@@ -493,26 +508,32 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                                                 ? "0 8px 32px rgba(0, 0, 0, 0.5)"
                                                 : "0 8px 32px rgba(0, 0, 0, 0.12)",
                                         mt: 0.5,
-                                        maxHeight: 280,
-                                        overflow: "auto",
-                                        "&::-webkit-scrollbar": {
-                                            width: "6px",
-                                        },
-                                        "&::-webkit-scrollbar-track": {
-                                            background: "transparent",
-                                        },
-                                        "&::-webkit-scrollbar-thumb": {
-                                            background:
-                                                mode === "dark"
-                                                    ? "rgba(255, 255, 255, 0.15)"
-                                                    : "rgba(0, 0, 0, 0.15)",
-                                            borderRadius: "3px",
-                                        },
+                                        overflow: "hidden",
                                     }}
                                 >
                                     {children}
                                 </Paper>
                             )}
+                            ListboxProps={{
+                                sx: {
+                                    maxHeight: 280,
+                                    overflow: "auto",
+                                    padding: "4px 0",
+                                    "&::-webkit-scrollbar": {
+                                        width: "6px",
+                                    },
+                                    "&::-webkit-scrollbar-track": {
+                                        background: "transparent",
+                                    },
+                                    "&::-webkit-scrollbar-thumb": {
+                                        background:
+                                            mode === "dark"
+                                                ? "rgba(255, 255, 255, 0.15)"
+                                                : "rgba(0, 0, 0, 0.15)",
+                                        borderRadius: "3px",
+                                    },
+                                },
+                            }}
                             renderOption={(props, option) => {
                                 const isSelected = option.userId === task.assigneeId;
                                 const { key, ...restProps } = props;
@@ -674,33 +695,22 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                         onClick={() => handleStartEdit("assigneeId", task.assigneeId || "")}
                     >
                         <Box sx={{ position: "relative", display: "inline-flex" }}>
-                            <Avatar
-                                size="sm"
-                                src={
-                                    task.assigneeId === myself.userId
-                                        ? `${media_url}/${myself.avatarImgPath}`
-                                        : `${media_url}/${task.assigneeImgPath}`
-                                }
-                            >
-                                {task.assigneeName?.[0]?.toUpperCase() || "?"}
-                            </Avatar>
-                            <Box
-                                sx={{
-                                    position: "absolute",
-                                    bottom: 0,
-                                    right: 0,
-                                }}
-                            >
-                                <PulseDot
-                                    color={
-                                        myself.userId === task.assigneeId
-                                            ? myself?.isOfflineForced !== "true"
-                                                ? "#4caf50"
-                                                : "#999"
-                                            : "#999"
-                                    }
+                            {task.assigneeId && (
+                                <AvatarWithStatus
+                                    avatarUser={useTEM.teamMemberProfiles[task.assigneeId]}
+                                    useCM={useCM}
+                                    isYou={myself.userId === task.assigneeId ? true : false}
+                                    myself={myself}
+                                    setMyself={setMyself}
+                                    socket={socket}
+                                    useUISM={useUISM}
                                 />
-                            </Box>
+                            )}
+                            {task.assigneeId === null && (
+                                <Avatar size="sm" src={`${media_url}/${myself.avatarImgPath}`}>
+                                    {myself.userName[0].toUpperCase()}
+                                </Avatar>
+                            )}
                         </Box>
                         <Box sx={{ overflow: "hidden" }}>
                             <Typography
