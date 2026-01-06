@@ -1,26 +1,27 @@
-import TableChartIcon from "@mui/icons-material/TableChart";
+import ViewKanbanIcon from "@mui/icons-material/ViewKanban";
 import { ListItem, ListItemContent, Typography } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
 
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 
-type TaskTableListItemProps = {
+type SprintBoardListItemProps = {
     useTM: TaskManagementState;
 };
-export const TaskTableListItem = (props: TaskTableListItemProps) => {
+
+export const SprintBoardListItem = (props: SprintBoardListItemProps) => {
     const { useTM } = props;
     return (
         <ListItem>
             <ListItemButton
                 color="primary"
-                variant={useTM.isTaskHomeVisible === true ? "soft" : "plain"}
+                variant={useTM.isSprintBoardVisible === true ? "soft" : "plain"}
                 onClick={() => {
                     useTM.setIsDashboardVisible(false);
-                    useTM.setIsSprintBoardVisible(false);
-                    useTM.setIsTaskHomeVisible(true);
+                    useTM.setIsTaskHomeVisible(false);
+                    useTM.setIsSprintBoardVisible(true);
                 }}
             >
-                <TableChartIcon />
+                <ViewKanbanIcon />
                 <ListItemContent>
                     <Typography
                         level="title-sm"
@@ -30,7 +31,7 @@ export const TaskTableListItem = (props: TaskTableListItemProps) => {
                             whiteSpace: "nowrap",
                         }}
                     >
-                        Table
+                        Board
                     </Typography>
                 </ListItemContent>
             </ListItemButton>

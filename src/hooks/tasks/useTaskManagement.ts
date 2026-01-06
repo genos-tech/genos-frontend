@@ -23,6 +23,8 @@ export interface TaskManagementState {
     setIsTaskHomeVisible: (visible: boolean) => void;
     isDashboardVisible: boolean;
     setIsDashboardVisible: (visible: boolean) => void;
+    isSprintBoardVisible: boolean;
+    setIsSprintBoardVisible: (visible: boolean) => void;
 
     // Task creation state
     isCreatingTask: {
@@ -99,6 +101,7 @@ export const useTaskManagement = (
     const [isTaskPreviewVisible, setIsTaskPreviewVisible] = useState(false);
     const [isTaskHomeVisible, setIsTaskHomeVisible] = useState(true);
     const [isDashboardVisible, setIsDashboardVisible] = useState(false);
+    const [isSprintBoardVisible, setIsSprintBoardVisible] = useState(false);
 
     // Task creation state
     const [isCreatingTask, setIsCreatingTask] = useState<{
@@ -317,6 +320,8 @@ export const useTaskManagement = (
         setIsTaskHomeVisible,
         isDashboardVisible,
         setIsDashboardVisible,
+        isSprintBoardVisible,
+        setIsSprintBoardVisible,
 
         // Task creation state
         isCreatingTask,

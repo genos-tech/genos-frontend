@@ -156,6 +156,13 @@ input[type="checkbox"] {
     border-radius: var(--scrollbar-border-radius);
 }
 
+/* Scrollbar corner (where horizontal and vertical scrollbars meet) */
+.custom-scrollbar::-webkit-scrollbar-corner,
+.MuiAutocomplete-listbox::-webkit-scrollbar-corner,
+.MuiDataGrid-scrollbar::-webkit-scrollbar-corner {
+    background: var(--scrollbar-track-bg);
+}
+
 /* DataGrid specific scrollbar overrides */
 .task-datagrid-light .MuiDataGrid-scrollbar::-webkit-scrollbar-thumb {
     background: var(--scrollbar-thumb-bg);
