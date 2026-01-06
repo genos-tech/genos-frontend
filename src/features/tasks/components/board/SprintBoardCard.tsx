@@ -104,7 +104,7 @@ export const SprintBoardCard = ({
 
     const formatDaysLeft = (daysLeft: number | null) => {
         if (daysLeft === null) return "No due date";
-        if (daysLeft < 0) return `${Math.abs(daysLeft)}d overdue`;
+        if (daysLeft < 0) return "Expired";
         if (daysLeft === 0) return "Due today";
         return `${daysLeft}d left`;
     };

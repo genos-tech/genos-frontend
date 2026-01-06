@@ -536,7 +536,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     className="custom-scrollbar"
                     style={{
                         ...getTableContainerStyles(mode),
-                        height: "97%",
+                        height: "96%",
                         backgroundColor: mode === "dark" ? "#0a0a14" : "#ffffff",
                         cursor: resizingColumn ? "col-resize" : "auto",
                     }}
@@ -588,6 +588,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                     style={{
                                         display: "flex",
                                         alignItems: "center",
+                                        justifyContent: "center",
                                         gap: 4,
                                         flex: 1,
                                         overflow: "hidden",

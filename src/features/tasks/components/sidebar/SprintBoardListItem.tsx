@@ -31,7 +31,7 @@ export const SprintBoardListItem = (props: SprintBoardListItemProps) => {
                             whiteSpace: "nowrap",
                         }}
                     >
-                        Sprint Board
+                        Board
                     </Typography>
                 </ListItemContent>
             </ListItemButton>

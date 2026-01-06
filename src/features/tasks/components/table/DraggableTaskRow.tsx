@@ -2,7 +2,16 @@ import { useState } from "react";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { Avatar, Box, Typography } from "@mui/joy";
-import { Chip, IconButton, MenuItem, Select, SelectChangeEvent, TextField } from "@mui/material";
+import {
+    Autocomplete,
+    Chip,
+    IconButton,
+    MenuItem,
+    Paper,
+    Select,
+    SelectChangeEvent,
+    TextField,
+} from "@mui/material";
 import { alpha } from "@mui/system";
 import dayjs from "dayjs";
 import { Draggable } from "react-beautiful-dnd";
@@ -21,34 +30,57 @@ const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 const getTableRowStyles = (
     isDragging: boolean,
     isHovered: boolean,
+    isSelected: boolean,
     mode: "light" | "dark" | undefined
-): React.CSSProperties => ({
-    display: "flex",
-    alignItems: "center",
-    minHeight: 36,
-    borderBottom: isDragging
-        ? "none"
-        : mode === "dark"
-          ? "1px solid rgba(255, 255, 255, 0.08)"
-          : "1px solid rgba(0, 0, 0, 0.08)",
-    backgroundColor: isDragging
-        ? mode === "dark"
-            ? "#1e3a5f"
-            : "#e3f2fd"
-        : isHovered
-          ? mode === "dark"
-              ? "rgba(255, 255, 255, 0.04)"
-              : "rgba(0, 0, 0, 0.02)"
-          : "transparent",
-    boxShadow: isDragging
-        ? mode === "dark"
-            ? "0 8px 24px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3)"
-            : "0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)"
-        : "none",
-    borderRadius: isDragging ? 6 : 0,
-    // Don't use transitions when dragging - it interferes with drag positioning
-    transition: isDragging ? "none" : "background-color 0.15s ease, box-shadow 0.15s ease",
-});
+): React.CSSProperties => {
+    // Determine background color based on state priority: dragging > selected > hovered > default
+    const getBackgroundColor = () => {
+        if (isDragging) {
+            return mode === "dark" ? "#1e3a5f" : "#e3f2fd";
+        }
+        if (isSelected) {
+            return mode === "dark"
+                ? "rgba(99, 102, 241, 0.15)" // Indigo tint for dark mode
+                : "rgba(99, 102, 241, 0.08)"; // Indigo tint for light mode
+        }
+        if (isHovered) {
+            return mode === "dark" ? "rgba(255, 255, 255, 0.04)" : "rgba(0, 0, 0, 0.02)";
+        }
+        return "transparent";
+    };
+
+    return {
+        display: "flex",
+        alignItems: "center",
+        minHeight: 36,
+        borderBottom: isDragging
+            ? "none"
+            : mode === "dark"
+              ? "1px solid rgba(255, 255, 255, 0.08)"
+              : "1px solid rgba(0, 0, 0, 0.08)",
+        backgroundColor: getBackgroundColor(),
+        // Add left border accent for selected row
+        borderLeft: isSelected
+            ? mode === "dark"
+                ? "3px solid #818cf8" // Indigo-400
+                : "3px solid #6366f1" // Indigo-500
+            : "3px solid transparent",
+        boxShadow: isDragging
+            ? mode === "dark"
+                ? "0 8px 24px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3)"
+                : "0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)"
+            : isSelected
+              ? mode === "dark"
+                  ? "inset 0 0 0 1px rgba(129, 140, 248, 0.2)"
+                  : "inset 0 0 0 1px rgba(99, 102, 241, 0.1)"
+              : "none",
+        borderRadius: isDragging ? 6 : 0,
+        // Don't use transitions when dragging - it interferes with drag positioning
+        transition: isDragging
+            ? "none"
+            : "background-color 0.15s ease, box-shadow 0.15s ease, border-left 0.15s ease",
+    };
+};
 
 const getTableCellStyles = (
     width: number,
@@ -123,6 +155,10 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
     // Hover state for better UX
     const [isHovered, setIsHovered] = useState(false);
 
+    // Check if this row is the currently selected/previewed task
+    const isSelected =
+        useTM.isTaskPreviewVisible && useTM.currentPreviewTaskId === Number(task.id);
+
     // Edit states for different fields
     const [editingField, setEditingField] = useState<string | null>(null);
     const [editValue, setEditValue] = useState<string>("");
@@ -195,16 +231,15 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                         <Select
                             value={(value as string) || ""}
                             size="small"
-                            autoFocus
+                            open={true}
                             onClose={handleCancelEdit}
                             onChange={(e: SelectChangeEvent) => {
                                 handleSelectChange("status", e.target.value);
                                 handleCancelEdit();
                             }}
-                            sx={{ minWidth: 90 }}
-                        >
-                            {statusOptions.map((opt) => (
-                                <MenuItem key={opt.value} value={opt.value}>
+                            renderValue={(selected) => {
+                                const opt = statusOptions.find((o) => o.value === selected);
+                                return opt ? (
                                     <Chip
                                         icon={opt.icon}
                                         label={opt.label}
@@ -214,6 +249,76 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                                             color: opt.textColor,
                                             fontWeight: "bold",
                                             borderRadius: "5px",
+                                            minWidth: 70,
+                                        }}
+                                    />
+                                ) : null;
+                            }}
+                            MenuProps={{
+                                PaperProps: {
+                                    sx: {
+                                        backgroundColor: mode === "dark" ? "#1a1a2e" : "#ffffff",
+                                        borderRadius: "8px",
+                                        border:
+                                            mode === "dark"
+                                                ? "1px solid rgba(255, 255, 255, 0.1)"
+                                                : "1px solid rgba(0, 0, 0, 0.08)",
+                                        boxShadow:
+                                            mode === "dark"
+                                                ? "0 8px 24px rgba(0, 0, 0, 0.4)"
+                                                : "0 8px 24px rgba(0, 0, 0, 0.1)",
+                                        mt: 0.5,
+                                    },
+                                },
+                            }}
+                            sx={{
+                                minWidth: 110,
+                                "& .MuiSelect-select": {
+                                    display: "flex",
+                                    alignItems: "center",
+                                    padding: "4px 8px",
+                                    minHeight: "unset",
+                                },
+                                "& .MuiOutlinedInput-notchedOutline": {
+                                    borderColor:
+                                        mode === "dark"
+                                            ? "rgba(255, 255, 255, 0.15)"
+                                            : "rgba(0, 0, 0, 0.12)",
+                                    borderRadius: "6px",
+                                },
+                                "&:hover .MuiOutlinedInput-notchedOutline": {
+                                    borderColor: mode === "dark" ? "#90caf9" : "#1976d2",
+                                },
+                            }}
+                        >
+                            {statusOptions.map((opt) => (
+                                <MenuItem
+                                    key={opt.value}
+                                    value={opt.value}
+                                    sx={{
+                                        py: 0.75,
+                                        px: 1,
+                                        mx: 0.5,
+                                        my: 0.25,
+                                        borderRadius: "6px",
+                                        "&:hover": {
+                                            backgroundColor:
+                                                mode === "dark"
+                                                    ? "rgba(255, 255, 255, 0.08)"
+                                                    : "rgba(0, 0, 0, 0.04)",
+                                        },
+                                    }}
+                                >
+                                    <Chip
+                                        icon={opt.icon}
+                                        label={opt.label}
+                                        size="small"
+                                        sx={{
+                                            backgroundColor: alpha(opt.color, 0.75),
+                                            color: opt.textColor,
+                                            fontWeight: "bold",
+                                            borderRadius: "5px",
+                                            minWidth: 70,
                                         }}
                                     />
                                 </MenuItem>
@@ -253,26 +358,31 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                 const tags = task.tags || [];
                 return (
                     <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-                        {tags.map((tag, idx) => (
-                            <Chip
-                                key={idx}
-                                label={tag.tagName}
-                                size="small"
-                                variant="outlined"
-                                sx={{
-                                    color: mode === "dark" ? "white" : "black",
-                                    fontWeight: 600,
-                                    borderRadius: "6px",
-                                    borderWidth: "2px",
-                                    borderColor: alpha(tag.tagColor, mode === "dark" ? 0.6 : 0.8),
-                                    fontSize: "0.7rem",
-                                    backgroundColor: alpha(
-                                        tag.tagColor,
-                                        mode === "dark" ? 0.1 : 0.05
-                                    ),
-                                }}
-                            />
-                        ))}
+                        {[...tags]
+                            .sort((a, b) => (a.tagName || "").localeCompare(b.tagName || ""))
+                            .map((tag, idx) => (
+                                <Chip
+                                    key={idx}
+                                    label={tag.tagName}
+                                    size="small"
+                                    variant="outlined"
+                                    sx={{
+                                        color: mode === "dark" ? "white" : "black",
+                                        fontWeight: 600,
+                                        borderRadius: "6px",
+                                        borderWidth: "2px",
+                                        borderColor: alpha(
+                                            tag.tagColor,
+                                            mode === "dark" ? 0.6 : 0.8
+                                        ),
+                                        fontSize: "0.7rem",
+                                        backgroundColor: alpha(
+                                            tag.tagColor,
+                                            mode === "dark" ? 0.1 : 0.05
+                                        ),
+                                    }}
+                                />
+                            ))}
                     </Box>
                 );
 
@@ -326,32 +436,222 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
 
             case "assigneeId":
                 if (editingField === "assigneeId") {
+                    const currentAssignee = teamMembers.find(
+                        (member) => member.userId === task.assigneeId
+                    );
                     return (
-                        <Select
-                            value={task.assigneeId || ""}
+                        <Autocomplete
+                            open={true}
                             size="small"
-                            autoFocus
                             fullWidth
-                            onClose={handleCancelEdit}
-                            onChange={(e: SelectChangeEvent) => {
-                                handleSelectChange("assigneeId", e.target.value);
-                                handleCancelEdit();
+                            options={teamMembers}
+                            value={currentAssignee || null}
+                            getOptionLabel={(option) => `${option.userName} ${option.userEmail}`}
+                            isOptionEqualToValue={(option, value) =>
+                                option.userId === value?.userId
+                            }
+                            clearOnBlur={false}
+                            blurOnSelect={true}
+                            filterOptions={(options, { inputValue }) => {
+                                const searchTerm = inputValue.toLowerCase();
+                                return options.filter(
+                                    (option) =>
+                                        option.userName.toLowerCase().includes(searchTerm) ||
+                                        option.userEmail.toLowerCase().includes(searchTerm)
+                                );
                             }}
-                        >
-                            {teamMembers.map((member) => (
-                                <MenuItem key={member.userId} value={member.userId}>
-                                    <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+                            onClose={(_, reason) => {
+                                // Only close when clicking outside or pressing escape
+                                // Don't close when clearing the input
+                                if (reason === "blur" || reason === "escape") {
+                                    handleCancelEdit();
+                                }
+                            }}
+                            onChange={(_, newValue) => {
+                                if (newValue) {
+                                    handleSelectChange("assigneeId", newValue.userId);
+                                    handleCancelEdit();
+                                }
+                                // Don't close when clearing - let user continue typing
+                            }}
+                            PaperComponent={({ children, ...props }) => (
+                                <Paper
+                                    {...props}
+                                    sx={{
+                                        backgroundColor: mode === "dark" ? "#1a1a2e" : "#ffffff",
+                                        backgroundImage:
+                                            mode === "dark"
+                                                ? "linear-gradient(rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01))"
+                                                : "none",
+                                        borderRadius: "10px",
+                                        border:
+                                            mode === "dark"
+                                                ? "1px solid rgba(255, 255, 255, 0.1)"
+                                                : "1px solid rgba(0, 0, 0, 0.08)",
+                                        boxShadow:
+                                            mode === "dark"
+                                                ? "0 8px 32px rgba(0, 0, 0, 0.5)"
+                                                : "0 8px 32px rgba(0, 0, 0, 0.12)",
+                                        mt: 0.5,
+                                        maxHeight: 280,
+                                        overflow: "auto",
+                                        "&::-webkit-scrollbar": {
+                                            width: "6px",
+                                        },
+                                        "&::-webkit-scrollbar-track": {
+                                            background: "transparent",
+                                        },
+                                        "&::-webkit-scrollbar-thumb": {
+                                            background:
+                                                mode === "dark"
+                                                    ? "rgba(255, 255, 255, 0.15)"
+                                                    : "rgba(0, 0, 0, 0.15)",
+                                            borderRadius: "3px",
+                                        },
+                                    }}
+                                >
+                                    {children}
+                                </Paper>
+                            )}
+                            renderOption={(props, option) => {
+                                const isSelected = option.userId === task.assigneeId;
+                                const { key, ...restProps } = props;
+                                return (
+                                    <Box
+                                        component="li"
+                                        key={key}
+                                        {...restProps}
+                                        sx={{
+                                            py: 1,
+                                            px: 1.5,
+                                            mx: 0.5,
+                                            my: 0.25,
+                                            borderRadius: "8px",
+                                            transition: "all 0.15s ease",
+                                            backgroundColor: isSelected
+                                                ? mode === "dark"
+                                                    ? "rgba(144, 202, 249, 0.15)"
+                                                    : "rgba(25, 118, 210, 0.08)"
+                                                : "transparent",
+                                            "&:hover": {
+                                                backgroundColor:
+                                                    mode === "dark"
+                                                        ? "rgba(144, 202, 249, 0.2)"
+                                                        : "rgba(25, 118, 210, 0.12)",
+                                            },
+                                            display: "flex",
+                                            gap: 1.5,
+                                            alignItems: "center",
+                                            cursor: "pointer",
+                                        }}
+                                    >
                                         <Avatar
                                             size="sm"
-                                            src={`${media_url}/${member.avatarImgPath}`}
+                                            src={`${media_url}/${option.avatarImgPath}`}
+                                            sx={{
+                                                width: 28,
+                                                height: 28,
+                                                border: isSelected
+                                                    ? `2px solid ${mode === "dark" ? "#90caf9" : "#1976d2"}`
+                                                    : `1.5px solid ${mode === "dark" ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.1)"}`,
+                                                boxShadow: isSelected
+                                                    ? mode === "dark"
+                                                        ? "0 0 8px rgba(144, 202, 249, 0.3)"
+                                                        : "0 0 8px rgba(25, 118, 210, 0.2)"
+                                                    : "none",
+                                            }}
                                         >
-                                            {member.userName[0].toUpperCase()}
+                                            {option.userName[0].toUpperCase()}
                                         </Avatar>
-                                        <Typography level="body-xs">{member.userName}</Typography>
+                                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                                            <Typography
+                                                level="body-sm"
+                                                sx={{
+                                                    fontWeight: isSelected ? 600 : 500,
+                                                    color: mode === "dark" ? "#e8e8e8" : "#1a1a1a",
+                                                    lineHeight: 1.3,
+                                                }}
+                                            >
+                                                {option.userName}
+                                            </Typography>
+                                            <Typography
+                                                level="body-xs"
+                                                sx={{
+                                                    color:
+                                                        mode === "dark"
+                                                            ? "rgba(255, 255, 255, 0.5)"
+                                                            : "rgba(0, 0, 0, 0.5)",
+                                                    fontSize: "0.7rem",
+                                                    overflow: "hidden",
+                                                    textOverflow: "ellipsis",
+                                                    whiteSpace: "nowrap",
+                                                }}
+                                            >
+                                                {option.userEmail}
+                                            </Typography>
+                                        </Box>
                                     </Box>
-                                </MenuItem>
-                            ))}
-                        </Select>
+                                );
+                            }}
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    autoFocus
+                                    placeholder="Search members..."
+                                    sx={{
+                                        minWidth: 180,
+                                        "& .MuiOutlinedInput-root": {
+                                            borderRadius: "8px",
+                                            backgroundColor:
+                                                mode === "dark"
+                                                    ? "rgba(255, 255, 255, 0.03)"
+                                                    : "rgba(0, 0, 0, 0.01)",
+                                            "& fieldset": {
+                                                borderColor:
+                                                    mode === "dark"
+                                                        ? "rgba(255, 255, 255, 0.15)"
+                                                        : "rgba(0, 0, 0, 0.12)",
+                                            },
+                                            "&:hover fieldset": {
+                                                borderColor:
+                                                    mode === "dark" ? "#90caf9" : "#1976d2",
+                                            },
+                                            "&.Mui-focused fieldset": {
+                                                borderColor:
+                                                    mode === "dark" ? "#90caf9" : "#1976d2",
+                                                borderWidth: "1.5px",
+                                            },
+                                        },
+                                        "& .MuiInputBase-input": {
+                                            color: mode === "dark" ? "#e8e8e8" : "#1a1a1a",
+                                            fontSize: "0.875rem",
+                                            padding: "6px 12px",
+                                            "&::placeholder": {
+                                                color:
+                                                    mode === "dark"
+                                                        ? "rgba(255, 255, 255, 0.4)"
+                                                        : "rgba(0, 0, 0, 0.4)",
+                                                opacity: 1,
+                                            },
+                                        },
+                                    }}
+                                />
+                            )}
+                            sx={{
+                                "& .MuiAutocomplete-popupIndicator": {
+                                    color:
+                                        mode === "dark"
+                                            ? "rgba(255, 255, 255, 0.5)"
+                                            : "rgba(0, 0, 0, 0.5)",
+                                },
+                                "& .MuiAutocomplete-clearIndicator": {
+                                    color:
+                                        mode === "dark"
+                                            ? "rgba(255, 255, 255, 0.5)"
+                                            : "rgba(0, 0, 0, 0.5)",
+                                },
+                            }}
+                        />
                     );
                 }
                 return (
@@ -425,16 +725,15 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                         <Select
                             value={(value as string) || ""}
                             size="small"
-                            autoFocus
+                            open={true}
                             onClose={handleCancelEdit}
                             onChange={(e: SelectChangeEvent) => {
                                 handleSelectChange("priority", e.target.value);
                                 handleCancelEdit();
                             }}
-                            sx={{ minWidth: 80 }}
-                        >
-                            {priorities.map((opt) => (
-                                <MenuItem key={opt.priority || ""} value={opt.priority || ""}>
+                            renderValue={(selected) => {
+                                const opt = priorities.find((p) => p.priority === selected);
+                                return opt ? (
                                     <Chip
                                         label={opt.priority}
                                         size="small"
@@ -443,6 +742,75 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                                             color: opt.textColor,
                                             fontWeight: "bold",
                                             borderRadius: "5px",
+                                            minWidth: 60,
+                                        }}
+                                    />
+                                ) : null;
+                            }}
+                            MenuProps={{
+                                PaperProps: {
+                                    sx: {
+                                        backgroundColor: mode === "dark" ? "#1a1a2e" : "#ffffff",
+                                        borderRadius: "8px",
+                                        border:
+                                            mode === "dark"
+                                                ? "1px solid rgba(255, 255, 255, 0.1)"
+                                                : "1px solid rgba(0, 0, 0, 0.08)",
+                                        boxShadow:
+                                            mode === "dark"
+                                                ? "0 8px 24px rgba(0, 0, 0, 0.4)"
+                                                : "0 8px 24px rgba(0, 0, 0, 0.1)",
+                                        mt: 0.5,
+                                    },
+                                },
+                            }}
+                            sx={{
+                                minWidth: 100,
+                                "& .MuiSelect-select": {
+                                    display: "flex",
+                                    alignItems: "center",
+                                    padding: "4px 8px",
+                                    minHeight: "unset",
+                                },
+                                "& .MuiOutlinedInput-notchedOutline": {
+                                    borderColor:
+                                        mode === "dark"
+                                            ? "rgba(255, 255, 255, 0.15)"
+                                            : "rgba(0, 0, 0, 0.12)",
+                                    borderRadius: "6px",
+                                },
+                                "&:hover .MuiOutlinedInput-notchedOutline": {
+                                    borderColor: mode === "dark" ? "#90caf9" : "#1976d2",
+                                },
+                            }}
+                        >
+                            {priorities.map((opt) => (
+                                <MenuItem
+                                    key={opt.priority || ""}
+                                    value={opt.priority || ""}
+                                    sx={{
+                                        py: 0.75,
+                                        px: 1,
+                                        mx: 0.5,
+                                        my: 0.25,
+                                        borderRadius: "6px",
+                                        "&:hover": {
+                                            backgroundColor:
+                                                mode === "dark"
+                                                    ? "rgba(255, 255, 255, 0.08)"
+                                                    : "rgba(0, 0, 0, 0.04)",
+                                        },
+                                    }}
+                                >
+                                    <Chip
+                                        label={opt.priority}
+                                        size="small"
+                                        sx={{
+                                            backgroundColor: alpha(opt.color || "#888", 0.75),
+                                            color: opt.textColor,
+                                            fontWeight: "bold",
+                                            borderRadius: "5px",
+                                            minWidth: 60,
                                         }}
                                     />
                                 </MenuItem>
@@ -483,16 +851,15 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                         <Select
                             value={(value as string) || ""}
                             size="small"
-                            autoFocus
+                            open={true}
                             onClose={handleCancelEdit}
                             onChange={(e: SelectChangeEvent) => {
                                 handleSelectChange("effortLevel", e.target.value);
                                 handleCancelEdit();
                             }}
-                            sx={{ minWidth: 80 }}
-                        >
-                            {effortLevels.map((opt) => (
-                                <MenuItem key={opt.level || ""} value={opt.level || ""}>
+                            renderValue={(selected) => {
+                                const opt = effortLevels.find((e) => e.level === selected);
+                                return opt ? (
                                     <Chip
                                         label={opt.level}
                                         size="small"
@@ -501,6 +868,75 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                                             color: opt.textColor,
                                             fontWeight: "bold",
                                             borderRadius: "5px",
+                                            minWidth: 50,
+                                        }}
+                                    />
+                                ) : null;
+                            }}
+                            MenuProps={{
+                                PaperProps: {
+                                    sx: {
+                                        backgroundColor: mode === "dark" ? "#1a1a2e" : "#ffffff",
+                                        borderRadius: "8px",
+                                        border:
+                                            mode === "dark"
+                                                ? "1px solid rgba(255, 255, 255, 0.1)"
+                                                : "1px solid rgba(0, 0, 0, 0.08)",
+                                        boxShadow:
+                                            mode === "dark"
+                                                ? "0 8px 24px rgba(0, 0, 0, 0.4)"
+                                                : "0 8px 24px rgba(0, 0, 0, 0.1)",
+                                        mt: 0.5,
+                                    },
+                                },
+                            }}
+                            sx={{
+                                minWidth: 90,
+                                "& .MuiSelect-select": {
+                                    display: "flex",
+                                    alignItems: "center",
+                                    padding: "4px 8px",
+                                    minHeight: "unset",
+                                },
+                                "& .MuiOutlinedInput-notchedOutline": {
+                                    borderColor:
+                                        mode === "dark"
+                                            ? "rgba(255, 255, 255, 0.15)"
+                                            : "rgba(0, 0, 0, 0.12)",
+                                    borderRadius: "6px",
+                                },
+                                "&:hover .MuiOutlinedInput-notchedOutline": {
+                                    borderColor: mode === "dark" ? "#90caf9" : "#1976d2",
+                                },
+                            }}
+                        >
+                            {effortLevels.map((opt) => (
+                                <MenuItem
+                                    key={opt.level || ""}
+                                    value={opt.level || ""}
+                                    sx={{
+                                        py: 0.75,
+                                        px: 1,
+                                        mx: 0.5,
+                                        my: 0.25,
+                                        borderRadius: "6px",
+                                        "&:hover": {
+                                            backgroundColor:
+                                                mode === "dark"
+                                                    ? "rgba(255, 255, 255, 0.08)"
+                                                    : "rgba(0, 0, 0, 0.04)",
+                                        },
+                                    }}
+                                >
+                                    <Chip
+                                        label={opt.level}
+                                        size="small"
+                                        sx={{
+                                            backgroundColor: alpha(opt.color || "#888", 0.75),
+                                            color: opt.textColor,
+                                            fontWeight: "bold",
+                                            borderRadius: "5px",
+                                            minWidth: 50,
                                         }}
                                     />
                                 </MenuItem>
@@ -649,7 +1085,7 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                     ref={provided.innerRef}
                     {...provided.draggableProps}
                     style={{
-                        ...getTableRowStyles(snapshot.isDragging, isHovered, mode),
+                        ...getTableRowStyles(snapshot.isDragging, isHovered, isSelected, mode),
                         ...provided.draggableProps.style,
                     }}
                     onMouseEnter={() => setIsHovered(true)}

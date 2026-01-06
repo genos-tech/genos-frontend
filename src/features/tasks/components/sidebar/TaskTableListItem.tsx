@@ -30,7 +30,7 @@ export const TaskTableListItem = (props: TaskTableListItemProps) => {
                             whiteSpace: "nowrap",
                         }}
                     >
-                        Task Table
+                        Table
                     </Typography>
                 </ListItemContent>
             </ListItemButton>

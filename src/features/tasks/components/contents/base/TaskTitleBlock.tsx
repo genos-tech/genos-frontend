@@ -341,8 +341,13 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                     useTM.isCreatingTask.flag === false &&
                                     useNM.isTaskNoteVisible === false
                                 ) {
-                                    useTM.setIsTaskHomeVisible(true);
-                                    useTM.setIsSprintBoardVisible(false);
+                                    if (useTM.isTaskHomeVisible === false) {
+                                        if (useTM.isSprintBoardVisible === false) {
+                                            useTM.setIsTaskHomeVisible(true);
+                                        } else {
+                                            useTM.setIsSprintBoardVisible(true);
+                                        }
+                                    }
                                 }
                             }
 
@@ -353,8 +358,13 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             });
                             // Open task-home when both task-preview and task-create-form are closed.
                             if (useTM.isTaskPreviewVisible === false) {
-                                useTM.setIsTaskHomeVisible(true);
-                                useTM.setIsSprintBoardVisible(false);
+                                if (useTM.isTaskHomeVisible === false) {
+                                    if (useTM.isSprintBoardVisible === false) {
+                                        useTM.setIsTaskHomeVisible(true);
+                                    } else {
+                                        useTM.setIsSprintBoardVisible(true);
+                                    }
+                                }
                             }
 
                             // Close the task preview when the task is visible in the task note.
