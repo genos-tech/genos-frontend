@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import AddIcon from "@mui/icons-material/Add";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { Box, Chip, Grid, IconButton, List, ListItem, Stack, Tooltip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
@@ -23,6 +23,21 @@ import { ACTeamProjects } from "../../autocompletes/ACTeamProjects";
 import { ACTeamUsers } from "../../autocompletes/ACTeamUsers";
 import { DynamicURLManager } from "./sub/DynamicURLManager";
 import { TaskDueDateInput } from "./sub/TaskDueDateInput";
+
+// Label component for consistent styling
+const FieldLabel = ({ children, isDark }: { children: React.ReactNode; isDark: boolean }) => (
+    <Typography
+        level="body-sm"
+        sx={{
+            minWidth: "85px",
+            fontWeight: 500,
+            fontSize: "0.8rem",
+            color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.5)",
+        }}
+    >
+        {children}
+    </Typography>
+);
 
 type TaskMainBlockProps = {
     useTEM: TeamManagementState;
@@ -50,6 +65,7 @@ type TaskMainBlockProps = {
     useTM: TaskManagementState;
     usePM: ProjectManagementState;
 };
+
 export const TaskMainBlock = (props: TaskMainBlockProps) => {
     const {
         useTEM,
@@ -79,19 +95,20 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
     } = props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
+    const isDark = mode === "dark";
 
     const [parentTask, setParentTask] = useState<TaskProps>();
     useEffect(() => {
         (async () => {
             if (taskContent.project && taskContent.parentTaskId != null) {
-                const parentTask: TaskProps[] = await loadSpecificTask(
+                const parentTaskResult: TaskProps[] = await loadSpecificTask(
                     myself,
                     taskContent.project.projectId,
                     taskContent.parentTaskId,
                     accessToken
                 );
-                if (parentTask.length == 1) {
-                    setParentTask(parentTask[0]);
+                if (parentTaskResult.length === 1) {
+                    setParentTask(parentTaskResult[0]);
                 } else {
                     setParentTask(undefined);
                 }
@@ -105,19 +122,26 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
         <Box
             sx={{
                 display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                flexWrap: "wrap",
+                flexDirection: "column",
+                gap: 0.5,
             }}
         >
-            <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                <List aria-labelledby="decorated-list-demo">
-                    <ListItem sx={{ display: "flex", alignItems: "center", width: "100%" }}>
-                        <Typography sx={{ minWidth: "80px" }}>Assignee</Typography>
+            <List
+                sx={{
+                    gap: 0.5,
+                    p: 0,
+                    "--ListItem-paddingY": "6px",
+                    "--ListItem-paddingX": "0px",
+                }}
+            >
+                {/* Assignee */}
+                <ListItem sx={{ display: "flex", alignItems: "center" }}>
+                    <FieldLabel isDark={isDark}>Assignee</FieldLabel>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                         <AvatarWithStatus
                             avatarUser={useTEM.teamMemberProfiles[assignee.userId]}
                             useCM={useCM}
-                            isYou={myself.userId === assignee.userId ? true : false}
+                            isYou={myself.userId === assignee.userId}
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}
@@ -139,13 +163,17 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             useTEM={useTEM}
                             useUISM={useUISM}
                         />
-                    </ListItem>
-                    <ListItem sx={{ display: "flex", alignItems: "center", width: "100%" }}>
-                        <Typography sx={{ minWidth: "80px" }}>Reporter</Typography>
+                    </Box>
+                </ListItem>
+
+                {/* Reporter */}
+                <ListItem sx={{ display: "flex", alignItems: "center" }}>
+                    <FieldLabel isDark={isDark}>Reporter</FieldLabel>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                         <AvatarWithStatus
                             avatarUser={useTEM.teamMemberProfiles[reporter.userId]}
                             useCM={useCM}
-                            isYou={myself.userId === reporter.userId ? true : false}
+                            isYou={myself.userId === reporter.userId}
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}
@@ -167,183 +195,262 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             useTEM={useTEM}
                             useUISM={useUISM}
                         />
-                    </ListItem>
-                    <Grid spacing={2} container>
-                        <Grid key={1} xs={6}>
-                            <ListItem sx={{ display: "flex", alignItems: "center" }}>
-                                <Typography sx={{ minWidth: "80px" }}>Project</Typography>
-                                <ACTeamProjects
-                                    isOpenProjectList={isOpenProjectList}
-                                    setIsOpenProjectList={setIsOpenProjectList}
-                                    setTaskContent={setTaskContent}
-                                    setTaskUpdated={setTaskUpdated}
-                                    taskContent={taskContent}
-                                    usePM={usePM}
-                                />
-                            </ListItem>
-                        </Grid>
-                        <Grid key={2} xs={6}>
-                            <ListItem sx={{ display: "flex", alignItems: "center" }}>
-                                <Typography sx={{ width: "30px" }}>Tags</Typography>
-                                <Tooltip size="sm" title="Create a New Tag" variant="outlined">
-                                    <IconButton
-                                        color="neutral"
-                                        size="sm"
-                                        variant="soft"
-                                        onClick={() => {
-                                            useTM.setOpenCreateTag(true);
-                                        }}
-                                    >
-                                        <AddIcon />
-                                    </IconButton>
-                                </Tooltip>
-                                <ACProjectTags
-                                    isOpenTagList={isOpenTagList}
-                                    projectTags={projectTags}
-                                    setIsOpenTagList={setIsOpenTagList}
-                                    setTaskContent={setTaskContent}
-                                    setTaskUpdated={setTaskUpdated}
-                                    taskContent={taskContent}
-                                />
-                            </ListItem>
-                        </Grid>
-                    </Grid>
-                    <Grid spacing={2} container>
-                        <Grid key={1} xs={6}>
-                            <ListItem sx={{ display: "flex", alignItems: "center" }}>
-                                <Typography sx={{ minWidth: "80px" }}>Priority</Typography>
-                                <ACTaskPriority
-                                    setTaskContent={setTaskContent}
-                                    setTaskUpdated={setTaskUpdated}
-                                    taskContent={taskContent}
-                                />
-                            </ListItem>
-                        </Grid>
-                        <Grid key={2} xs={6}>
-                            <ListItem sx={{ display: "flex", alignItems: "center" }}>
-                                <Typography sx={{ minWidth: "100px" }}>Effort Level</Typography>
-                                <ACTaskEffortLevel
-                                    setTaskContent={setTaskContent}
-                                    setTaskUpdated={setTaskUpdated}
-                                    taskContent={taskContent}
-                                />
-                            </ListItem>
-                        </Grid>
-                    </Grid>
-                    {isPreviewMode === true && (
-                        <ListItem sx={{ width: "49%" }}>
-                            <Typography sx={{ minWidth: "80px" }}>Status</Typography>
-                            <ACTaskStatus
+                    </Box>
+                </ListItem>
+
+                {/* Project and Tags Row */}
+                <Grid spacing={1} container sx={{ mt: 0.5 }}>
+                    <Grid xs={6}>
+                        <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
+                            <FieldLabel isDark={isDark}>Project</FieldLabel>
+                            <ACTeamProjects
+                                isOpenProjectList={isOpenProjectList}
+                                setIsOpenProjectList={setIsOpenProjectList}
                                 setTaskContent={setTaskContent}
-                                setTaskStatusUpdated={setTaskStatusUpdated}
                                 setTaskUpdated={setTaskUpdated}
-                                socket={socket}
+                                taskContent={taskContent}
+                                usePM={usePM}
+                            />
+                        </ListItem>
+                    </Grid>
+                    <Grid xs={6}>
+                        <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
+                            <Typography
+                                level="body-sm"
+                                sx={{
+                                    minWidth: "40px",
+                                    fontWeight: 500,
+                                    fontSize: "0.8rem",
+                                    color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.5)",
+                                }}
+                            >
+                                Tags
+                            </Typography>
+                            <Tooltip size="sm" title="Create a New Tag" variant="outlined">
+                                <IconButton
+                                    size="sm"
+                                    variant="plain"
+                                    sx={{
+                                        borderRadius: "8px",
+                                        minWidth: 28,
+                                        minHeight: 28,
+                                        color: isDark
+                                            ? "rgba(255,255,255,0.5)"
+                                            : "rgba(0,0,0,0.45)",
+                                        "&:hover": {
+                                            background: isDark
+                                                ? "rgba(255,255,255,0.08)"
+                                                : "rgba(0,0,0,0.06)",
+                                            color: isDark
+                                                ? "rgba(255,255,255,0.8)"
+                                                : "rgba(0,0,0,0.7)",
+                                        },
+                                    }}
+                                    onClick={() => useTM.setOpenCreateTag(true)}
+                                >
+                                    <AddRoundedIcon sx={{ fontSize: 18 }} />
+                                </IconButton>
+                            </Tooltip>
+                            <ACProjectTags
+                                isOpenTagList={isOpenTagList}
+                                projectTags={projectTags}
+                                setIsOpenTagList={setIsOpenTagList}
+                                setTaskContent={setTaskContent}
+                                setTaskUpdated={setTaskUpdated}
                                 taskContent={taskContent}
                             />
                         </ListItem>
-                    )}
-                    <ListItem>
-                        <Typography sx={{ minWidth: "80px" }}>Due Date</Typography>
-                        <TaskDueDateInput
-                            setTaskContent={setTaskContent}
-                            setTaskUpdated={setTaskUpdated}
-                            taskContent={taskContent}
-                        />
-                    </ListItem>
-                    <ListItem>
-                        <Typography sx={{ minWidth: "80px" }}>Links</Typography>
-                        <DynamicURLManager
-                            setTaskContent={setTaskContent}
-                            setTaskUpdated={setTaskUpdated}
-                            taskContent={taskContent}
-                        />
-                    </ListItem>
-                    {parentTask !== undefined ? (
-                        <ListItem>
-                            <Stack
-                                alignItems="center"
-                                direction="row"
-                                justifyContent="center"
-                                spacing={0.5}
+                    </Grid>
+                </Grid>
+
+                {/* Priority and Effort Level Row */}
+                <Grid spacing={1} container>
+                    <Grid xs={6}>
+                        <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
+                            <FieldLabel isDark={isDark}>Priority</FieldLabel>
+                            <ACTaskPriority
+                                setTaskContent={setTaskContent}
+                                setTaskUpdated={setTaskUpdated}
+                                taskContent={taskContent}
+                            />
+                        </ListItem>
+                    </Grid>
+                    <Grid xs={6}>
+                        <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
+                            <Typography
+                                level="body-sm"
+                                sx={{
+                                    minWidth: "90px",
+                                    fontWeight: 500,
+                                    fontSize: "0.8rem",
+                                    color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.5)",
+                                }}
                             >
-                                <Typography sx={{ pr: "5px" }}>Parent Task</Typography>
+                                Effort Level
+                            </Typography>
+                            <ACTaskEffortLevel
+                                setTaskContent={setTaskContent}
+                                setTaskUpdated={setTaskUpdated}
+                                taskContent={taskContent}
+                            />
+                        </ListItem>
+                    </Grid>
+                </Grid>
+
+                {/* Status (only in preview mode) */}
+                {isPreviewMode && (
+                    <ListItem sx={{ display: "flex", alignItems: "center", width: "49%" }}>
+                        <FieldLabel isDark={isDark}>Status</FieldLabel>
+                        <ACTaskStatus
+                            setTaskContent={setTaskContent}
+                            setTaskStatusUpdated={setTaskStatusUpdated}
+                            setTaskUpdated={setTaskUpdated}
+                            socket={socket}
+                            taskContent={taskContent}
+                        />
+                    </ListItem>
+                )}
+
+                {/* Due Date */}
+                <ListItem sx={{ display: "flex", alignItems: "center" }}>
+                    <FieldLabel isDark={isDark}>Due Date</FieldLabel>
+                    <TaskDueDateInput
+                        setTaskContent={setTaskContent}
+                        setTaskUpdated={setTaskUpdated}
+                        taskContent={taskContent}
+                    />
+                </ListItem>
+
+                {/* Links */}
+                <ListItem sx={{ display: "flex", alignItems: "flex-start" }}>
+                    <FieldLabel isDark={isDark}>Links</FieldLabel>
+                    <DynamicURLManager
+                        setTaskContent={setTaskContent}
+                        setTaskUpdated={setTaskUpdated}
+                        taskContent={taskContent}
+                    />
+                </ListItem>
+
+                {/* Parent Task (only if exists) */}
+                {parentTask !== undefined && (
+                    <ListItem sx={{ display: "flex", alignItems: "center", mt: 1 }}>
+                        <Stack
+                            alignItems="center"
+                            direction="row"
+                            spacing={1}
+                            sx={{ width: "100%" }}
+                        >
+                            <FieldLabel isDark={isDark}>Parent Task</FieldLabel>
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                    p: 1,
+                                    borderRadius: "10px",
+                                    background: isDark
+                                        ? "rgba(255,255,255,0.03)"
+                                        : "rgba(0,0,0,0.025)",
+                                    border: "1px solid",
+                                    borderColor: isDark
+                                        ? "rgba(255,255,255,0.06)"
+                                        : "rgba(0,0,0,0.05)",
+                                    flex: 1,
+                                    cursor: "pointer",
+                                    transition: "all 0.2s ease",
+                                    "&:hover": {
+                                        background: isDark
+                                            ? "rgba(255,255,255,0.05)"
+                                            : "rgba(0,0,0,0.04)",
+                                        borderColor: isDark
+                                            ? "rgba(255,255,255,0.1)"
+                                            : "rgba(0,0,0,0.08)",
+                                    },
+                                }}
+                                onClick={() => {
+                                    if (
+                                        parentTask.project &&
+                                        parentTask.project.projectId &&
+                                        parentTask.id
+                                    ) {
+                                        usePM.setCurrentProject({
+                                            projectId: parentTask.project.projectId,
+                                            projectName: parentTask.project.projectName,
+                                            projectTags: parentTask.tags,
+                                            systemUserId: parentTask.project.systemUserId,
+                                        });
+                                        useTM.setCurrentPreviewTaskId(parentTask.id);
+                                    }
+                                }}
+                            >
                                 <AvatarWithStatus
                                     avatarUser={useTEM.teamMemberProfiles[assignee.userId]}
                                     useCM={useCM}
-                                    isYou={myself.userId === assignee.userId ? true : false}
+                                    isYou={myself.userId === assignee.userId}
                                     myself={myself}
                                     setMyself={setMyself}
                                     socket={socket}
                                     useUISM={useUISM}
                                 />
-                                <IconButton
-                                    onClick={() => {
-                                        if (
-                                            parentTask.project &&
-                                            parentTask.project.projectId &&
-                                            parentTask.id
-                                        ) {
-                                            usePM.setCurrentProject({
-                                                projectId: parentTask.project.projectId,
-                                                projectName: parentTask.project.projectName,
-                                                projectTags: parentTask.tags,
-                                                systemUserId: parentTask.project.systemUserId,
-                                            });
-                                            useTM.setCurrentPreviewTaskId(parentTask.id);
-                                        } else {
-                                            console.error("Failed to set the current project");
-                                        }
+                                <Chip
+                                    size="sm"
+                                    variant="outlined"
+                                    sx={{
+                                        borderRadius: "6px",
+                                        fontWeight: 600,
+                                        fontSize: "0.7rem",
+                                        px: 1,
+                                        background: isDark
+                                            ? "rgba(255,255,255,0.04)"
+                                            : "rgba(0,0,0,0.03)",
+                                        borderColor: isDark
+                                            ? "rgba(255,255,255,0.1)"
+                                            : "rgba(0,0,0,0.1)",
                                     }}
                                 >
-                                    <Chip
-                                        color="neutral"
-                                        size="md"
-                                        variant="outlined"
-                                        sx={{
-                                            marginX: "5px",
-                                            fontWeight: "bold",
-                                            borderRadius: "5px",
-                                        }}
-                                    >
-                                        {`${parentTask.id}`}
-                                    </Chip>
-                                    <Chip
-                                        size="md"
-                                        variant="soft"
-                                        sx={{
-                                            backgroundColor: parentTask.status.color
-                                                ? alpha(
-                                                      parentTask.status.color,
-                                                      mode === "dark" ? 0.5 : 0.75
-                                                  )
-                                                : "transparent",
-                                            color: parentTask.status.textColor,
-                                            fontWeight: "bold",
-                                            borderRadius: "5px",
-                                        }}
-                                    >
-                                        {`${parentTask.status.status}`}
-                                    </Chip>
-                                    <Typography
-                                        sx={{
-                                            mx: "5px",
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            whiteSpace: "nowrap",
-                                            width: "100%", // take full width of button
-                                        }}
-                                        noWrap
-                                    >
-                                        {`${parentTask.title}`}
-                                    </Typography>
-                                </IconButton>
-                            </Stack>
-                        </ListItem>
-                    ) : (
-                        <div></div>
-                    )}
-                </List>
-            </Box>
+                                    #{parentTask.id}
+                                </Chip>
+                                <Chip
+                                    size="sm"
+                                    variant="soft"
+                                    sx={{
+                                        borderRadius: "6px",
+                                        fontWeight: 600,
+                                        fontSize: "0.7rem",
+                                        px: 1,
+                                        backgroundColor: parentTask.status.color
+                                            ? alpha(parentTask.status.color, isDark ? 0.2 : 0.15)
+                                            : "transparent",
+                                        color: isDark
+                                            ? alpha(parentTask.status.color || "#fff", 0.9)
+                                            : parentTask.status.color || "#000",
+                                        border: "1px solid",
+                                        borderColor: alpha(
+                                            parentTask.status.color || "#666",
+                                            isDark ? 0.25 : 0.2
+                                        ),
+                                    }}
+                                >
+                                    {parentTask.status.status}
+                                </Chip>
+                                <Typography
+                                    level="body-sm"
+                                    sx={{
+                                        fontWeight: 500,
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap",
+                                        flex: 1,
+                                    }}
+                                    noWrap
+                                >
+                                    {parentTask.title}
+                                </Typography>
+                            </Box>
+                        </Stack>
+                    </ListItem>
+                )}
+            </List>
         </Box>
     );
 };

@@ -7,7 +7,6 @@ import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import {
     Box,
-    Breadcrumbs,
     Dropdown,
     IconButton,
     Menu,
@@ -30,6 +29,7 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ModalDeleteChatNote } from "../../chat-notes/modals/ModalDeleteChatNote";
+import { NoteBreadcrumbs } from "../../common/components/NoteBreadcrumbs";
 import { ACChatChildNotes } from "./autocompletes/ACChatChildNotes";
 
 interface ChatNoteHeaderProps {
@@ -103,50 +103,13 @@ export const ChatNoteHeader = ({
             )}
 
             {isInChatPage === false && (
-                <Breadcrumbs aria-label="breadcrumbs" separator="›">
-                    <IconButton
-                        color="warning"
-                        component="button"
-                        variant="soft"
-                        sx={{
-                            fontSize: "14px",
-                        }}
-                    >
-                        <QuestionAnswerRoundedIcon sx={{ fontSize: "20px" }} />
-                        Chat Notes
-                    </IconButton>
-                    {useNM.currentChatNoteChain &&
-                        useNM.currentChatNoteChain.map((node, index) => (
-                            <Tooltip
-                                key={`chat-note-tooltip-${index}`}
-                                size="sm"
-                                title={node.title}
-                                variant="outlined"
-                            >
-                                <Typography
-                                    key={node.noteId}
-                                    component="button"
-                                    level="title-sm"
-                                    sx={{
-                                        background: "none",
-                                        border: "none",
-                                        padding: 0,
-                                        cursor: "pointer",
-                                        color: "#646CFF",
-                                        textAlign: "left",
-                                        fontWeight: "bold",
-                                    }}
-                                    onClick={() => {
-                                        useNM.loadNote(3, node.noteId, -1);
-                                    }}
-                                >
-                                    {node.title.length > 14
-                                        ? `${node.title.slice(0, 14)}...`
-                                        : node.title}
-                                </Typography>
-                            </Tooltip>
-                        ))}
-                </Breadcrumbs>
+                <NoteBreadcrumbs
+                    color="warning"
+                    icon={<QuestionAnswerRoundedIcon />}
+                    label="Chat Notes"
+                    noteChain={useNM.currentChatNoteChain}
+                    onNodeClick={(noteId) => useNM.loadNote(3, noteId, -1)}
+                />
             )}
 
             <Stack direction={"row"}>

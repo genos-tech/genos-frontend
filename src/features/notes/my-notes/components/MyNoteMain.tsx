@@ -109,100 +109,98 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
         setOpenDeleteNote(true);
     };
 
+    // If no tabs at all, show empty state with create button
+    if (useNM.tabItems.length === 0) {
+        return <EmptyState onCreateNewNote={handleCreateNewNote} />;
+    }
+
+    // If tabs exist but currentMyNote is not loaded yet, return null
+    if (useNM.currentMyNote === null) {
+        return null;
+    }
+
     return (
-        <>
-            {(useNM.tabItems.length === 0 || useNM.currentMyNote === null) && (
-                <EmptyState onCreateNewNote={handleCreateNewNote} />
-            )}
+        <Stack direction={"column"} sx={{ width: "100%" }}>
+            {noteEditor.body && (
+                <>
+                    {useNM.currentNoteType !== 0 && (
+                        <Stack direction={"column"} sx={{ width: "100%" }}>
+                            <Stack
+                                alignItems="center"
+                                direction="row"
+                                justifyContent="space-between"
+                                sx={{
+                                    width: "100%",
+                                    height: "30px",
+                                    mt: "10px",
+                                    mb: "5px",
+                                }}
+                            >
+                                <MyNoteHeader useNM={useNM} />
 
-            {!(useNM.tabItems.length === 0 || useNM.currentMyNote === null) && (
-                <Stack direction={"column"} sx={{ width: "100%" }}>
-                    {noteEditor.body && (
-                        <>
-                            {useNM.currentNoteType !== 0 && (
-                                <Stack direction={"column"} sx={{ width: "100%" }}>
-                                    <Stack
-                                        alignItems="center"
-                                        direction="row"
-                                        justifyContent="space-between"
+                                <NoteHeaderActions
+                                    useCM={useCM}
+                                    currentTask={undefined}
+                                    isInTaskPage={false}
+                                    myself={myself}
+                                    noteType={1}
+                                    pmChat={undefined}
+                                    setMyself={setMyself}
+                                    socket={socket}
+                                    useTEM={useTEM}
+                                    useUISM={useUISM}
+                                    onCloseNotes={() => {}}
+                                    onCreateChildNote={handleCreateChildNote}
+                                    onCreateNewNote={handleCreateNewNote}
+                                    onDeleteNote={handleDeleteNote}
+                                    onOpenTask={() => {}}
+                                />
+                            </Stack>
+
+                            <Tabs
+                                sx={{ width: "100%" }}
+                                value={useNM.selectedTabIndex}
+                                onChange={(_, val) => {
+                                    handleTabChange(Number(val));
+                                }}
+                            >
+                                <NoteTabList useNM={useNM} onCloseTab={handleCloseTab} />
+
+                                {useNM.tabItems.map((tabNote, index) => (
+                                    <TabPanel
+                                        key={`tab-note-body-${tabNote.noteType}-${tabNote.noteId}-${tsBody}`}
+                                        value={index}
                                         sx={{
-                                            width: "100%",
-                                            height: "30px",
-                                            mt: "10px",
-                                            mb: "5px",
+                                            paddingX: "5px",
+                                            paddingTop: "0px",
+                                            paddingBottom: "5px",
                                         }}
                                     >
-                                        <MyNoteHeader useNM={useNM} />
-
-                                        <NoteHeaderActions
-                                            useCM={useCM}
-                                            currentTask={undefined}
-                                            isInTaskPage={false}
-                                            myself={myself}
-                                            noteType={1}
-                                            pmChat={undefined}
-                                            setMyself={setMyself}
-                                            socket={socket}
-                                            useTEM={useTEM}
-                                            useUISM={useUISM}
-                                            onCloseNotes={() => {}}
-                                            onCreateChildNote={handleCreateChildNote}
-                                            onCreateNewNote={handleCreateNewNote}
-                                            onDeleteNote={handleDeleteNote}
-                                            onOpenTask={() => {}}
-                                        />
-                                    </Stack>
-
-                                    <Tabs
-                                        sx={{ width: "100%" }}
-                                        value={useNM.selectedTabIndex}
-                                        onChange={(_, val) => {
-                                            handleTabChange(Number(val));
-                                        }}
-                                    >
-                                        <NoteTabList useNM={useNM} onCloseTab={handleCloseTab} />
-
-                                        {useNM.tabItems.map((tabNote, index) => (
-                                            <TabPanel
-                                                key={`tab-note-body-${tabNote.noteType}-${tabNote.noteId}-${tsBody}`}
-                                                value={index}
-                                                sx={{
-                                                    paddingX: "5px",
-                                                    paddingTop: "0px",
-                                                    paddingBottom: "5px",
-                                                }}
-                                            >
-                                                {useNM.currentMyNote && (
-                                                    <NoteEditor
-                                                        body={noteEditor.body}
-                                                        useCM={useCM}
-                                                        useNM={useNM}
-                                                        myself={myself}
-                                                        noteBodySaved={noteEditor.noteBodySaved}
-                                                        setMyself={setMyself}
-                                                        socket={socket}
-                                                        useTEM={useTEM}
-                                                        titleInputRef={noteEditor.titleInputRef}
-                                                        useUISM={useUISM}
-                                                        currentMyNoteTitle={
-                                                            noteEditor.currentMyNoteTitle
-                                                        }
-                                                        onBodyChange={noteEditor.handleBodyChange}
-                                                        onTitleBlur={noteEditor.handleTitleBlur}
-                                                        onTitleChange={
-                                                            noteEditor.handleTitleChange
-                                                        }
-                                                    />
-                                                )}
-                                            </TabPanel>
-                                        ))}
-                                    </Tabs>
-                                </Stack>
-                            )}
-                        </>
+                                        {useNM.currentMyNote && (
+                                            <NoteEditor
+                                                body={noteEditor.body}
+                                                useCM={useCM}
+                                                useNM={useNM}
+                                                myself={myself}
+                                                noteBodySaved={noteEditor.noteBodySaved}
+                                                setMyself={setMyself}
+                                                socket={socket}
+                                                useTEM={useTEM}
+                                                titleInputRef={noteEditor.titleInputRef}
+                                                useUISM={useUISM}
+                                                currentMyNoteTitle={noteEditor.currentMyNoteTitle}
+                                                onBodyChange={noteEditor.handleBodyChange}
+                                                onTitleBlur={noteEditor.handleTitleBlur}
+                                                onTitleChange={noteEditor.handleTitleChange}
+                                            />
+                                        )}
+                                    </TabPanel>
+                                ))}
+                            </Tabs>
+                        </Stack>
                     )}
-                </Stack>
+                </>
             )}
-        </>
+        </Stack>
     );
 };

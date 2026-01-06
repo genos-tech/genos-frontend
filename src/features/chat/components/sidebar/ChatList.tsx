@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { List, Stack } from "@mui/joy";
+import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
+import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
+import NotificationsNoneRoundedIcon from "@mui/icons-material/NotificationsNoneRounded";
+import { Box, List, Stack, Typography } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
@@ -43,6 +47,36 @@ const ACTIVITY_FILTERS = {
     [ACTIVITY_TYPES.MENTION]: (item: ActivityMessageProps) => item.activityType === 3,
     [ACTIVITY_TYPES.REACTION]: (item: ActivityMessageProps) => item.activityType === 2,
 } as const;
+
+// Empty state configuration
+const EMPTY_STATES: Record<number, { icon: React.ElementType; title: string; subtitle: string }> =
+    {
+        [CHAT_TYPES.DM]: {
+            icon: ChatBubbleOutlineRoundedIcon,
+            title: "No direct messages",
+            subtitle: "Start a conversation with someone",
+        },
+        [CHAT_TYPES.GM]: {
+            icon: ChatBubbleOutlineRoundedIcon,
+            title: "No group messages",
+            subtitle: "Create or join a group to get started",
+        },
+        [CHAT_TYPES.PM]: {
+            icon: ChatBubbleOutlineRoundedIcon,
+            title: "No project updates",
+            subtitle: "Project conversations will appear here",
+        },
+        [CHAT_TYPES.ACTIVITY]: {
+            icon: NotificationsNoneRoundedIcon,
+            title: "No activities yet",
+            subtitle: "Mentions and replies will show up here",
+        },
+        [CHAT_TYPES.FLAGGED]: {
+            icon: FlagOutlinedIcon,
+            title: "No flagged messages",
+            subtitle: "Flag important messages to find them later",
+        },
+    };
 
 // Interfaces for better prop organization
 interface ChatListState {
@@ -147,6 +181,94 @@ const useFilteredActivityMessages = (
     return tmpActivityMessages;
 };
 
+// Empty state component
+const EmptyState = ({ chatType }: { chatType: number }) => {
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
+    const config = EMPTY_STATES[chatType] || EMPTY_STATES[CHAT_TYPES.DM];
+    const Icon = config.icon;
+
+    return (
+        <Box
+            sx={{
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                px: 3,
+                py: 6,
+                animation: "fadeIn 0.4s ease-out",
+                "@keyframes fadeIn": {
+                    from: { opacity: 0, transform: "translateY(8px)" },
+                    to: { opacity: 1, transform: "translateY(0)" },
+                },
+            }}
+        >
+            <Box
+                sx={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: isDark
+                        ? "linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.06) 100%)"
+                        : "linear-gradient(135deg, rgba(79,70,229,0.08) 0%, rgba(124,58,237,0.04) 100%)",
+                    border: "1px solid",
+                    borderColor: isDark ? "rgba(139,92,246,0.12)" : "rgba(124,58,237,0.08)",
+                    mb: 2,
+                    position: "relative",
+                    "&::before": {
+                        content: '""',
+                        position: "absolute",
+                        inset: -6,
+                        borderRadius: "50%",
+                        border: "1px dashed",
+                        borderColor: isDark ? "rgba(139,92,246,0.12)" : "rgba(124,58,237,0.1)",
+                        animation: "rotate 25s linear infinite",
+                    },
+                    "@keyframes rotate": {
+                        from: { transform: "rotate(0deg)" },
+                        to: { transform: "rotate(360deg)" },
+                    },
+                }}
+            >
+                <Icon
+                    sx={{
+                        fontSize: 28,
+                        color: isDark ? "#a78bfa" : "#7c3aed",
+                        opacity: 0.7,
+                    }}
+                />
+            </Box>
+
+            <Typography
+                level="title-sm"
+                sx={{
+                    fontWeight: 600,
+                    color: isDark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.75)",
+                    mb: 0.5,
+                    textAlign: "center",
+                }}
+            >
+                {config.title}
+            </Typography>
+            <Typography
+                level="body-xs"
+                sx={{
+                    color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
+                    textAlign: "center",
+                    maxWidth: 180,
+                }}
+            >
+                {config.subtitle}
+            </Typography>
+        </Box>
+    );
+};
+
 // Component for rendering chat items
 const ChatListRenderer = ({
     targetChats,
@@ -177,29 +299,37 @@ const ChatListRenderer = ({
         atTopThreshold={64}
         className="custom-scrollbar"
         initialTopMostItemIndex={0}
-        style={{ height: "93dvh" }}
+        style={{ height: "100%", flex: 1 }}
         totalCount={targetChats.length}
         itemContent={(index) => {
             const chat = targetChats[index];
             return (
-                <div>
-                    <Stack direction="row">
-                        <ChatListItem
-                            key={`${chat.chatId}-${chat.chatType}-${chat.chatName}`}
-                            chat={chat}
-                            useCM={useCM}
-                            incompleteTodoCount={state.incompleteTodoCount}
-                            isPinnedChat={false}
-                            myself={data.myself}
-                            setIsToDoVisible={actions.setIsToDoVisible}
-                            setMyself={data.setMyself}
-                            socket={socket}
-                            useTEM={useTEM}
-                            useUISM={useUISM}
-                            useTM={useTM}
-                        />
-                    </Stack>
-                </div>
+                <Box
+                    sx={{
+                        animation: "fadeSlideIn 0.25s ease-out forwards",
+                        animationDelay: `${Math.min(index * 0.03, 0.15)}s`,
+                        opacity: 0,
+                        "@keyframes fadeSlideIn": {
+                            from: { opacity: 0, transform: "translateX(-4px)" },
+                            to: { opacity: 1, transform: "translateX(0)" },
+                        },
+                    }}
+                >
+                    <ChatListItem
+                        key={`${chat.chatId}-${chat.chatType}-${chat.chatName}`}
+                        chat={chat}
+                        useCM={useCM}
+                        incompleteTodoCount={state.incompleteTodoCount}
+                        isPinnedChat={false}
+                        myself={data.myself}
+                        setIsToDoVisible={actions.setIsToDoVisible}
+                        setMyself={data.setMyself}
+                        socket={socket}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
+                        useTM={useTM}
+                    />
+                </Box>
             );
         }}
     />
@@ -210,8 +340,6 @@ const ActivityListRenderer = ({
     tmpActivityMessages,
     activityMessages,
     virtuosoRef,
-    state,
-    actions,
     data,
     socket,
     selectedActivityId,
@@ -225,8 +353,6 @@ const ActivityListRenderer = ({
     tmpActivityMessages: ActivityMessageProps[];
     activityMessages: ActivityMessageProps[];
     virtuosoRef: React.RefObject<VirtuosoHandle | null>;
-    state: ChatListState;
-    actions: ChatListActions;
     data: ChatListData;
     socket: Socket | null;
     selectedActivityId: string;
@@ -243,12 +369,22 @@ const ActivityListRenderer = ({
         atTopThreshold={64}
         className="custom-scrollbar"
         initialTopMostItemIndex={0}
-        style={{ height: "89dvh" }}
+        style={{ height: "100%", flex: 1 }}
         totalCount={tmpActivityMessages.length}
         itemContent={(index) => {
             const activityMessage = tmpActivityMessages[index];
             return (
-                <div>
+                <Box
+                    sx={{
+                        animation: "fadeSlideIn 0.25s ease-out forwards",
+                        animationDelay: `${Math.min(index * 0.03, 0.15)}s`,
+                        opacity: 0,
+                        "@keyframes fadeSlideIn": {
+                            from: { opacity: 0, transform: "translateX(-4px)" },
+                            to: { opacity: 1, transform: "translateX(0)" },
+                        },
+                    }}
+                >
                     <Stack direction="row">
                         <ChatListItemForActivity
                             key={`${activityMessage.activityId}-${activityMessage.isRead}`}
@@ -266,7 +402,7 @@ const ActivityListRenderer = ({
                             useTM={useTM}
                         />
                     </Stack>
-                </div>
+                </Box>
             );
         }}
     />
@@ -276,8 +412,6 @@ const ActivityListRenderer = ({
 const FlaggedListRenderer = ({
     tmpFlaggedMessages,
     virtuosoRef,
-    state,
-    actions,
     data,
     socket,
     selectedFlaggedMessageId,
@@ -290,8 +424,6 @@ const FlaggedListRenderer = ({
 }: {
     tmpFlaggedMessages: FlaggedMessageProps[];
     virtuosoRef: React.RefObject<VirtuosoHandle | null>;
-    state: ChatListState;
-    actions: ChatListActions;
     data: ChatListData;
     socket: Socket | null;
     selectedFlaggedMessageId: string;
@@ -308,12 +440,22 @@ const FlaggedListRenderer = ({
         atTopThreshold={64}
         className="custom-scrollbar"
         initialTopMostItemIndex={0}
-        style={{ height: "89dvh" }}
+        style={{ height: "100%", flex: 1 }}
         totalCount={tmpFlaggedMessages.length}
         itemContent={(index) => {
             const flaggedMessage = tmpFlaggedMessages[index];
             return (
-                <div>
+                <Box
+                    sx={{
+                        animation: "fadeSlideIn 0.25s ease-out forwards",
+                        animationDelay: `${Math.min(index * 0.03, 0.15)}s`,
+                        opacity: 0,
+                        "@keyframes fadeSlideIn": {
+                            from: { opacity: 0, transform: "translateX(-4px)" },
+                            to: { opacity: 1, transform: "translateX(0)" },
+                        },
+                    }}
+                >
                     <Stack direction="row">
                         <ChatListItemForFlagMessages
                             key={`${flaggedMessage.flaggedMessageId}`}
@@ -330,7 +472,7 @@ const FlaggedListRenderer = ({
                             useTM={useTM}
                         />
                     </Stack>
-                </div>
+                </Box>
             );
         }}
     />
@@ -417,7 +559,10 @@ export const ChatList = (props: ChatListProps) => {
     }, [useCM.flaggedMessages]);
 
     const renderChatList = () => {
-        if (targetChatType < CHAT_TYPES.ACTIVITY && targetChats.length > 0) {
+        if (targetChatType < CHAT_TYPES.ACTIVITY) {
+            if (targetChats.length === 0) {
+                return <EmptyState chatType={targetChatType} />;
+            }
             const virtuosoRef = chatTypeLookup[targetChatType];
             return (
                 <ChatListRenderer
@@ -438,10 +583,12 @@ export const ChatList = (props: ChatListProps) => {
     };
 
     const renderActivityList = () => {
-        if (targetChatType === CHAT_TYPES.ACTIVITY && tmpActivityMessages.length > 0) {
+        if (targetChatType === CHAT_TYPES.ACTIVITY) {
+            if (tmpActivityMessages.length === 0) {
+                return <EmptyState chatType={CHAT_TYPES.ACTIVITY} />;
+            }
             return (
                 <ActivityListRenderer
-                    actions={actions}
                     usePM={usePM}
                     activityMessages={useCM.activityMessages}
                     useCM={useCM}
@@ -449,7 +596,6 @@ export const ChatList = (props: ChatListProps) => {
                     selectedActivityId={selectedActivityId}
                     setSelectedActivityId={setSelectedActivityId}
                     socket={socket}
-                    state={state}
                     useTEM={useTEM}
                     tmpActivityMessages={tmpActivityMessages}
                     useUISM={useUISM}
@@ -462,17 +608,18 @@ export const ChatList = (props: ChatListProps) => {
     };
 
     const renderFlaggedList = () => {
-        if (targetChatType === CHAT_TYPES.FLAGGED && tmpFlaggedMessages.length > 0) {
+        if (targetChatType === CHAT_TYPES.FLAGGED) {
+            if (tmpFlaggedMessages.length === 0) {
+                return <EmptyState chatType={CHAT_TYPES.FLAGGED} />;
+            }
             return (
                 <FlaggedListRenderer
-                    actions={actions}
                     usePM={usePM}
                     useCM={useCM}
                     data={data}
                     selectedFlaggedMessageId={selectedFlaggedMessageId}
                     setSelectedFlaggedMessageId={setSelectedFlaggedMessageId}
                     socket={socket}
-                    state={state}
                     useTEM={useTEM}
                     tmpFlaggedMessages={tmpFlaggedMessages}
                     useUISM={useUISM}
@@ -490,10 +637,12 @@ export const ChatList = (props: ChatListProps) => {
             size="sm"
             sx={{
                 p: 0,
-                "--ListItem-paddingY": "0.3rem",
-                "--ListItem-paddingX": "1rem",
-                overflowY: "auto",
-                overflowX: "hidden",
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+                "--ListItem-paddingY": "0",
+                "--ListItem-paddingX": "0",
             }}
         >
             {renderChatList()}

@@ -1,8 +1,8 @@
 import { useState } from "react";
-import AllInboxIcon from "@mui/icons-material/AllInbox";
+import AllInboxRoundedIcon from "@mui/icons-material/AllInboxRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
-import NoteAltIcon from "@mui/icons-material/NoteAlt";
+import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import {
     Avatar,
@@ -13,11 +13,11 @@ import {
     List,
     ListItem,
     Sheet,
-    Stack,
     Tooltip,
     Typography,
 } from "@mui/joy";
 import ListItemButton, { listItemButtonClasses } from "@mui/joy/ListItemButton";
+import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
@@ -35,6 +35,34 @@ import { ColorSchemeToggle } from "./colorSchemeToggle";
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
+// Navigation item configuration
+const NAV_ITEMS = [
+    {
+        id: 0,
+        icon: AllInboxRoundedIcon,
+        label: "Inbox",
+        colorScheme: { dark: "#a78bfa", light: "#7c3aed" },
+    },
+    {
+        id: 1,
+        icon: QuestionAnswerRoundedIcon,
+        label: "Chats",
+        colorScheme: { dark: "#60a5fa", light: "#3b82f6" },
+    },
+    {
+        id: 2,
+        icon: AssignmentRoundedIcon,
+        label: "Tasks",
+        colorScheme: { dark: "#4ade80", light: "#22c55e" },
+    },
+    {
+        id: 3,
+        icon: NoteAltRoundedIcon,
+        label: "Notes",
+        colorScheme: { dark: "#f472b6", light: "#ec4899" },
+    },
+];
+
 type SidebarProps = {
     useTEM: TeamManagementState;
     socket: Socket | null;
@@ -44,13 +72,17 @@ type SidebarProps = {
     useCM: ChatManagementState;
     useUISM: UIStateManagementState;
 };
+
 export const Sidebar = (props: SidebarProps) => {
     const { useTEM, socket, myself, setMyself, useIM, useCM, useUISM } = props;
     const { setAccessToken } = useAuth();
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
     const navigate = useNavigate();
 
     const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
     const [avatarUserId, setAvatarUserId] = useState<string | undefined>(undefined);
+
     const handleLogout = async () => {
         try {
             const response = await fetch(`${base_url}/user/signout/`, {
@@ -59,31 +91,36 @@ export const Sidebar = (props: SidebarProps) => {
             });
 
             if (response.ok) {
-                // Redirect to home page after successful logout
-                localStorage.setItem("isSigningIn", "no");
-                localStorage.setItem("userEmail", "");
-                localStorage.setItem("userName", "");
-                localStorage.setItem("userId", "");
-                localStorage.setItem("avatarImgPath", "");
-                localStorage.setItem("teamId", "");
-                localStorage.setItem("tsJoined", "");
+                // Clear all localStorage items
+                const keysToRemove = [
+                    "isSigningIn",
+                    "userEmail",
+                    "userName",
+                    "userId",
+                    "avatarImgPath",
+                    "teamId",
+                    "tsJoined",
+                    "isOfflineForced",
+                    "role",
+                    "baseCountry",
+                    "customStatus",
+                    "teamName",
+                    "lastOpenMyNoteId",
+                    "lastOpenNoteType",
+                    "lastChatType",
+                    "lastDMChatId",
+                    "lastGMChatId",
+                    "lastPMChatId",
+                    "lastPinnedChatId",
+                    "lastPinnedChatType",
+                    "lastProjectId",
+                    "lastOpenChatNoteId",
+                    "lastOpenTaskNoteId",
+                    "currentMainChatId",
+                ];
+                keysToRemove.forEach((key) => localStorage.setItem(key, ""));
                 localStorage.setItem("isOfflineForced", "false");
-                localStorage.setItem("role", "");
-                localStorage.setItem("baseCountry", "");
-                localStorage.setItem("customStatus", "");
-                localStorage.setItem("teamName", "");
-                localStorage.setItem("lastOpenMyNoteId", "");
-                localStorage.setItem("lastOpenNoteType", "");
-                localStorage.setItem("lastChatType", "");
-                localStorage.setItem("lastDMChatId", "");
-                localStorage.setItem("lastGMChatId", "");
-                localStorage.setItem("lastPMChatId", "");
-                localStorage.setItem("lastPinnedChatId", "");
-                localStorage.setItem("lastPinnedChatType", "");
-                localStorage.setItem("lastProjectId", "");
-                localStorage.setItem("lastOpenChatNoteId", "");
-                localStorage.setItem("lastOpenTaskNoteId", "");
-                localStorage.setItem("currentMainChatId", "");
+
                 setAccessToken(null);
                 navigate("/");
             } else {
@@ -94,20 +131,20 @@ export const Sidebar = (props: SidebarProps) => {
         }
     };
 
-    const handleMoveToInbox = (): void => {
-        useUISM.setOpeningService(0);
+    const handleNavClick = (serviceId: number) => {
+        useUISM.setOpeningService(serviceId);
     };
 
-    const handleMoveToChat = (): void => {
-        useUISM.setOpeningService(1);
-    };
-
-    const handleMoveToTasks = (): void => {
-        useUISM.setOpeningService(2);
-    };
-
-    const handleMoveToNote = (): void => {
-        useUISM.setOpeningService(3);
+    // Get badge count for a service
+    const getBadgeCount = (serviceId: number): number => {
+        switch (serviceId) {
+            case 0:
+                return useIM.unReadInboxItemCount;
+            case 1:
+                return useCM.unReadChatAndActivityCounts;
+            default:
+                return 0;
+        }
     };
 
     return (
@@ -119,34 +156,39 @@ export const Sidebar = (props: SidebarProps) => {
                     xs: "translateX(calc(100% * (var(--SideNavigation-slideIn, 0) - 1)))",
                     md: "none",
                 },
-                transition: "transform 0.4s, width 0.4s",
+                transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                 height: "100dvh",
                 width: "var(--Sidebar-width)",
-                py: 2,
-                // flexShrink: 0,
                 display: "flex",
                 flexDirection: "column",
-                gap: 2,
                 borderRight: "1px solid",
-                borderColor: "divider",
+                borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+                background: isDark
+                    ? "linear-gradient(180deg, rgba(18,18,22,1) 0%, rgba(12,12,16,1) 100%)"
+                    : "linear-gradient(180deg, rgba(252,252,255,1) 0%, rgba(248,248,252,1) 100%)",
+                overflow: "hidden",
             }}
         >
             <GlobalStyles
                 styles={(theme) => ({
                     ":root": {
-                        "--Sidebar-width": "60px",
+                        "--Sidebar-width": "68px",
                         [theme.breakpoints.up("lg")]: {
-                            "--Sidebar-width": "60px",
+                            "--Sidebar-width": "68px",
                         },
                     },
                 })}
             />
+
+            {/* Header - Team & Theme Toggle */}
             <Box
                 sx={{
                     display: "flex",
                     flexDirection: "column",
                     gap: 1,
                     alignItems: "center",
+                    pt: 2,
+                    pb: 1.5,
                 }}
             >
                 <TeamDropdown
@@ -162,6 +204,9 @@ export const Sidebar = (props: SidebarProps) => {
                 <ColorSchemeToggle />
             </Box>
 
+            <Divider sx={{ opacity: isDark ? 0.06 : 0.08, mx: 1.5 }} />
+
+            {/* Navigation Items */}
             <Box
                 sx={{
                     minHeight: 0,
@@ -169,184 +214,303 @@ export const Sidebar = (props: SidebarProps) => {
                     flexGrow: 1,
                     display: "flex",
                     flexDirection: "column",
-                    [`& .${listItemButtonClasses.root}`]: {
-                        gap: 1.5,
-                    },
                     alignItems: "center",
+                    py: 1.5,
+                    [`& .${listItemButtonClasses.root}`]: {
+                        gap: 0.5,
+                    },
                 }}
             >
                 <List
                     size="sm"
                     sx={{
-                        gap: 0.5,
-                        "--List-nestedInsetStart": "30px",
-                        "--ListItem-radius": (theme) => theme.vars.radius.sm,
+                        gap: 0.75,
+                        "--ListItem-radius": "12px",
+                        px: 1,
                     }}
                 >
-                    <ListItem>
-                        <ListItemButton onClick={handleMoveToInbox}>
-                            <Stack alignItems="center" direction="column">
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        p: "5px",
-                                    }}
+                    {NAV_ITEMS.map((item) => {
+                        const Icon = item.icon;
+                        const isActive = useUISM.openingService === item.id;
+                        const badgeCount = getBadgeCount(item.id);
+                        const color = isDark ? item.colorScheme.dark : item.colorScheme.light;
+
+                        return (
+                            <ListItem key={item.id}>
+                                <Tooltip
+                                    title={item.label}
+                                    placement="right"
+                                    size="sm"
+                                    variant="soft"
+                                    sx={{ zIndex: 10020 }}
                                 >
-                                    {useIM.unReadInboxItemCount > 0 && (
+                                    <ListItemButton
+                                        onClick={() => handleNavClick(item.id)}
+                                        sx={{
+                                            flexDirection: "column",
+                                            alignItems: "center",
+                                            py: 1,
+                                            px: 1.25,
+                                            borderRadius: "12px",
+                                            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                            background: isActive
+                                                ? isDark
+                                                    ? `linear-gradient(135deg, ${color}20 0%, ${color}10 100%)`
+                                                    : `linear-gradient(135deg, ${color}15 0%, ${color}08 100%)`
+                                                : "transparent",
+                                            border: "1px solid",
+                                            borderColor: isActive
+                                                ? isDark
+                                                    ? `${color}35`
+                                                    : `${color}25`
+                                                : "transparent",
+                                            "&:hover": {
+                                                background: isActive
+                                                    ? isDark
+                                                        ? `linear-gradient(135deg, ${color}25 0%, ${color}15 100%)`
+                                                        : `linear-gradient(135deg, ${color}20 0%, ${color}12 100%)`
+                                                    : isDark
+                                                      ? "rgba(255,255,255,0.04)"
+                                                      : "rgba(0,0,0,0.03)",
+                                                transform: "translateY(-1px)",
+                                            },
+                                            "&:active": {
+                                                transform: "translateY(0)",
+                                            },
+                                        }}
+                                    >
                                         <Badge
-                                            badgeContent={useIM.unReadInboxItemCount}
-                                            color="primary"
+                                            badgeContent={badgeCount > 0 ? badgeCount : 0}
+                                            invisible={badgeCount === 0}
                                             size="sm"
-                                            anchorOrigin={{
-                                                vertical: "top",
-                                                horizontal: "right",
+                                            sx={{
+                                                "& .MuiBadge-badge": {
+                                                    background: isDark
+                                                        ? `linear-gradient(135deg, ${color} 0%, ${color}cc 100%)`
+                                                        : `linear-gradient(135deg, ${color} 0%, ${color}cc 100%)`,
+                                                    color: "#fff",
+                                                    fontWeight: 700,
+                                                    fontSize: "0.6rem",
+                                                    minWidth: 16,
+                                                    height: 16,
+                                                    boxShadow: `0 2px 6px ${color}40`,
+                                                    border: "2px solid",
+                                                    borderColor: isDark
+                                                        ? "rgba(18,18,22,1)"
+                                                        : "rgba(252,252,255,1)",
+                                                },
                                             }}
                                         >
-                                            <AllInboxIcon
-                                                sx={{ fontSize: 24 }}
-                                                color={
-                                                    useUISM.openingService === 0
-                                                        ? "primary"
-                                                        : "disabled"
-                                                }
-                                            />
+                                            <Box
+                                                sx={{
+                                                    width: 32,
+                                                    height: 32,
+                                                    borderRadius: "10px",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                    background: isActive
+                                                        ? isDark
+                                                            ? `linear-gradient(135deg, ${color}25 0%, ${color}15 100%)`
+                                                            : `linear-gradient(135deg, ${color}18 0%, ${color}10 100%)`
+                                                        : isDark
+                                                          ? "rgba(255,255,255,0.04)"
+                                                          : "rgba(0,0,0,0.03)",
+                                                    transition: "all 0.2s ease",
+                                                }}
+                                            >
+                                                <Icon
+                                                    sx={{
+                                                        fontSize: 20,
+                                                        color: isActive
+                                                            ? color
+                                                            : isDark
+                                                              ? "rgba(255,255,255,0.45)"
+                                                              : "rgba(0,0,0,0.4)",
+                                                        transition: "color 0.2s ease",
+                                                    }}
+                                                />
+                                            </Box>
                                         </Badge>
-                                    )}
-                                    {useIM.unReadInboxItemCount < 1 && (
-                                        <AllInboxIcon
-                                            sx={{ fontSize: 24 }}
-                                            color={
-                                                useUISM.openingService === 0
-                                                    ? "primary"
-                                                    : "disabled"
-                                            }
-                                        />
-                                    )}
-                                </Box>
-                                <Typography level="body-xs">Inbox</Typography>
-                            </Stack>
-                        </ListItemButton>
-                    </ListItem>
-                    <ListItem>
-                        <ListItemButton onClick={handleMoveToChat}>
-                            <Stack alignItems="center" direction="column">
-                                <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
-                                    {useCM.unReadChatAndActivityCounts > 0 && (
-                                        <Badge
-                                            badgeContent={useCM.unReadChatAndActivityCounts}
-                                            color="primary"
-                                            size="sm"
-                                            anchorOrigin={{
-                                                vertical: "top",
-                                                horizontal: "right",
+                                        <Typography
+                                            level="body-xs"
+                                            sx={{
+                                                mt: 0.5,
+                                                fontSize: "0.65rem",
+                                                fontWeight: isActive ? 600 : 500,
+                                                color: isActive
+                                                    ? color
+                                                    : isDark
+                                                      ? "rgba(255,255,255,0.55)"
+                                                      : "rgba(0,0,0,0.5)",
+                                                transition: "all 0.2s ease",
                                             }}
                                         >
-                                            <QuestionAnswerRoundedIcon
-                                                sx={{ fontSize: 24 }}
-                                                color={
-                                                    useUISM.openingService === 1
-                                                        ? "primary"
-                                                        : "disabled"
-                                                }
-                                            />
-                                        </Badge>
-                                    )}
-                                    {useCM.unReadChatAndActivityCounts < 1 && (
-                                        <QuestionAnswerRoundedIcon
-                                            sx={{ fontSize: 24 }}
-                                            color={
-                                                useUISM.openingService === 1
-                                                    ? "primary"
-                                                    : "disabled"
-                                            }
-                                        />
-                                    )}
-                                </Box>
-                                <Typography level="body-xs">Chats</Typography>
-                            </Stack>
-                        </ListItemButton>
-                    </ListItem>
-                    <ListItem>
-                        <ListItemButton onClick={handleMoveToTasks}>
-                            <Stack alignItems="center" direction="column">
-                                <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
-                                    <AssignmentRoundedIcon
-                                        color={
-                                            useUISM.openingService === 2 ? "primary" : "disabled"
-                                        }
-                                        sx={{ fontSize: 24 }}
-                                    />
-                                </Box>
-                                <Typography level="body-xs">Tasks</Typography>
-                            </Stack>
-                        </ListItemButton>
-                    </ListItem>
-                    <ListItem>
-                        <ListItemButton onClick={handleMoveToNote}>
-                            <Stack alignItems="center" direction="column">
-                                <Box sx={{ display: "flex", alignItems: "center", p: "5px" }}>
-                                    <NoteAltIcon
-                                        color={
-                                            useUISM.openingService === 3 ? "primary" : "disabled"
-                                        }
-                                        sx={{ fontSize: 24 }}
-                                    />
-                                </Box>
-                                <Typography level="body-xs">Notes</Typography>
-                            </Stack>
-                        </ListItemButton>
-                    </ListItem>
+                                            {item.label}
+                                        </Typography>
+                                    </ListItemButton>
+                                </Tooltip>
+                            </ListItem>
+                        );
+                    })}
                 </List>
+
+                {/* Bottom Actions */}
                 <List
                     size="sm"
                     sx={{
                         mt: "auto",
                         flexGrow: 0,
-                        "--ListItem-radius": (theme) => theme.vars.radius.sm,
-                        "--List-gap": "3px",
-                        mb: 0,
+                        "--ListItem-radius": "12px",
+                        px: 1,
                     }}
                 >
-                    {/* <ListItem>
-                        <Tooltip variant="outlined"  title="Settings" placement="right-start">
-                            <ListItemButton>
-                                <SettingsRoundedIcon sx={{ fontSize: 24 }} />
-                            </ListItemButton>
-                        </Tooltip>
-                    </ListItem> */}
-
-                    <ListItem sx={{ mt: 1 }}>
+                    <ListItem>
                         <Tooltip
-                            placement="right-start"
+                            placement="right"
                             size="sm"
                             title="Sign out"
-                            variant="outlined"
+                            variant="soft"
+                            sx={{ zIndex: 10020 }}
                         >
-                            <ListItemButton onClick={handleLogout}>
-                                <LogoutRoundedIcon sx={{ fontSize: 24 }} />
+                            <ListItemButton
+                                onClick={handleLogout}
+                                sx={{
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                    py: 1,
+                                    px: 1.25,
+                                    borderRadius: "12px",
+                                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                    "&:hover": {
+                                        background: isDark
+                                            ? "rgba(239,68,68,0.12)"
+                                            : "rgba(220,38,38,0.08)",
+                                        "& .logout-icon": {
+                                            color: isDark ? "#f87171" : "#dc2626",
+                                        },
+                                    },
+                                }}
+                            >
+                                <Box
+                                    sx={{
+                                        width: 32,
+                                        height: 32,
+                                        borderRadius: "10px",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        background: isDark
+                                            ? "rgba(255,255,255,0.04)"
+                                            : "rgba(0,0,0,0.03)",
+                                        transition: "all 0.2s ease",
+                                    }}
+                                >
+                                    <LogoutRoundedIcon
+                                        className="logout-icon"
+                                        sx={{
+                                            fontSize: 18,
+                                            color: isDark
+                                                ? "rgba(255,255,255,0.45)"
+                                                : "rgba(0,0,0,0.4)",
+                                            transition: "color 0.2s ease",
+                                        }}
+                                    />
+                                </Box>
                             </ListItemButton>
                         </Tooltip>
                     </ListItem>
                 </List>
             </Box>
 
-            <Divider />
+            <Divider sx={{ opacity: isDark ? 0.06 : 0.08, mx: 1.5 }} />
 
-            <Box sx={{ pl: "12px" }} onClick={() => setOpenUserProfile(true)}>
+            {/* User Avatar Section */}
+            <Box
+                onClick={() => setOpenUserProfile(true)}
+                sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    py: 1.5,
+                    cursor: "pointer",
+                    position: "relative",
+                }}
+            >
                 <Tooltip
-                    placement="right-start"
+                    placement="right"
                     size="sm"
                     title="Open My Profile"
-                    variant="outlined"
+                    variant="soft"
+                    sx={{ zIndex: 10020 }}
                 >
-                    <Avatar size="sm" src={`${media_url}/${myself.avatarImgPath}`} variant="solid">
-                        {myself.userName[0].toUpperCase()}
-                    </Avatar>
+                    <Box
+                        sx={{
+                            position: "relative",
+                            borderRadius: "50%",
+                            p: 0.25,
+                            background:
+                                myself?.isOfflineForced !== "true"
+                                    ? isDark
+                                        ? "linear-gradient(135deg, #4ade80 0%, #22c55e 100%)"
+                                        : "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)"
+                                    : isDark
+                                      ? "rgba(255,255,255,0.15)"
+                                      : "rgba(0,0,0,0.1)",
+                            transition: "all 0.3s ease",
+                            "&:hover": {
+                                transform: "scale(1.05)",
+                                boxShadow:
+                                    myself?.isOfflineForced !== "true"
+                                        ? isDark
+                                            ? "0 4px 16px rgba(74,222,128,0.35)"
+                                            : "0 4px 16px rgba(34,197,94,0.3)"
+                                        : "none",
+                            },
+                        }}
+                    >
+                        <Avatar
+                            size="sm"
+                            src={`${media_url}/${myself.avatarImgPath}`}
+                            variant="solid"
+                            sx={{
+                                width: 34,
+                                height: 34,
+                                border: "2px solid",
+                                borderColor: isDark ? "rgba(18,18,22,1)" : "rgba(252,252,255,1)",
+                            }}
+                        >
+                            {myself.userName[0].toUpperCase()}
+                        </Avatar>
+                    </Box>
                 </Tooltip>
-                <Box bottom={0} height={33} position="absolute" right={0} width={24}>
-                    <PulseDot color={myself?.isOfflineForced !== "true" ? "#4caf50" : "#999"} />
-                </Box>
+
+                {/* Online status indicator */}
+                <Box
+                    sx={{
+                        position: "absolute",
+                        bottom: 12,
+                        right: 12,
+                        width: 12,
+                        height: 12,
+                        borderRadius: "50%",
+                        background:
+                            myself?.isOfflineForced !== "true"
+                                ? isDark
+                                    ? "linear-gradient(135deg, #4ade80 0%, #22c55e 100%)"
+                                    : "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)"
+                                : isDark
+                                  ? "#6b7280"
+                                  : "#9ca3af",
+                        border: "2px solid",
+                        borderColor: isDark ? "rgba(18,18,22,1)" : "rgba(252,252,255,1)",
+                        boxShadow:
+                            myself?.isOfflineForced !== "true"
+                                ? isDark
+                                    ? "0 2px 8px rgba(74,222,128,0.4)"
+                                    : "0 2px 8px rgba(34,197,94,0.35)"
+                                : "none",
+                    }}
+                />
             </Box>
 
             <UserProfile

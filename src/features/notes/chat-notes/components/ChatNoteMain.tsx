@@ -144,120 +144,111 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
         setOpenDeleteNote(true);
     };
 
-    return (
-        <>
-            {(useNM.tabItems.length === 0 || useNM.currentChatNote === null) && (
-                <ChatNoteEmptyState />
-            )}
+    // If no tabs at all, show empty state
+    if (useNM.tabItems.length === 0) {
+        return <ChatNoteEmptyState />;
+    }
 
-            {!(useNM.tabItems.length === 0 || useNM.currentChatNote === null) &&
-                useNM.chatNoteMeta.length > 0 && (
-                    <Stack direction={"column"} sx={{ width: "100%" }}>
-                        {chatNoteEditor.body && (
-                            <>
-                                {useNM.currentNoteType !== 0 && (
-                                    <Stack direction={"column"} sx={{ width: "100%" }}>
-                                        <Stack
-                                            alignItems="center"
-                                            direction="row"
-                                            justifyContent="space-between"
-                                            sx={{
-                                                width: "100%",
-                                                height: "30px",
-                                                mt: "10px",
-                                                mb: "5px",
-                                            }}
-                                        >
-                                            <ChatNoteHeader
-                                                chat={chat}
+    // If tabs exist but currentChatNote is not loaded yet, return null
+    if (useNM.currentChatNote === null) {
+        return null;
+    }
+
+    // If no chat note metadata, return null
+    if (useNM.chatNoteMeta.length === 0) {
+        return null;
+    }
+
+    return (
+        <Stack direction={"column"} sx={{ width: "100%" }}>
+            {chatNoteEditor.body && (
+                <>
+                    {useNM.currentNoteType !== 0 && (
+                        <Stack direction={"column"} sx={{ width: "100%" }}>
+                            <Stack
+                                alignItems="center"
+                                direction="row"
+                                justifyContent="space-between"
+                                sx={{
+                                    width: "100%",
+                                    height: "30px",
+                                    mt: "10px",
+                                    mb: "5px",
+                                }}
+                            >
+                                <ChatNoteHeader
+                                    chat={chat}
+                                    useCM={useCM}
+                                    handleCloseTab={handleCloseTab}
+                                    isInChatPage={isInChatPage}
+                                    myself={myself}
+                                    useNM={useNM}
+                                    openDeleteNote={openDeleteNote}
+                                    openSearchBox={openSearchBox}
+                                    useTM={useTM}
+                                    usePM={usePM}
+                                    setMyself={setMyself}
+                                    setOpenDeleteNote={setOpenDeleteNote}
+                                    setOpenSearchBox={setOpenSearchBox}
+                                    socket={socket}
+                                    useTEM={useTEM}
+                                    useUISM={useUISM}
+                                    onCreateChildNote={handleCreateChildNote}
+                                    onDeleteNote={handleDeleteNote}
+                                />
+                            </Stack>
+
+                            <Tabs
+                                sx={{ width: "100%" }}
+                                value={useNM.selectedTabIndex}
+                                onChange={(_, val) => handleTabChange(Number(val))}
+                            >
+                                <ChatNoteTabList
+                                    tabItems={useNM.tabItems}
+                                    onCloseTab={handleCloseTab}
+                                />
+
+                                {useNM.tabItems.map((tabNote, index) => (
+                                    <TabPanel
+                                        key={`tab-note-body-${tabNote.noteType}-${tabNote.noteId}-${tsBody}`}
+                                        value={index}
+                                        sx={{
+                                            paddingX: "5px",
+                                            paddingTop: "0px",
+                                            paddingBottom: "5px",
+                                        }}
+                                    >
+                                        {useNM.currentChatNote && chatNoteEditor.body && (
+                                            <ChatNoteEditor
+                                                body={chatNoteEditor.body}
                                                 useCM={useCM}
-                                                handleCloseTab={handleCloseTab}
-                                                isInChatPage={isInChatPage}
+                                                currentChatNote={useNM.currentChatNote}
                                                 myself={myself}
-                                                useNM={useNM}
-                                                openDeleteNote={openDeleteNote}
-                                                openSearchBox={openSearchBox}
-                                                useTM={useTM}
-                                                usePM={usePM}
                                                 setMyself={setMyself}
-                                                setOpenDeleteNote={setOpenDeleteNote}
-                                                setOpenSearchBox={setOpenSearchBox}
                                                 socket={socket}
                                                 useTEM={useTEM}
                                                 useUISM={useUISM}
-                                                onCreateChildNote={handleCreateChildNote}
-                                                onDeleteNote={handleDeleteNote}
+                                                currentChatNoteTitle={
+                                                    chatNoteEditor.currentChatNoteTitle
+                                                }
+                                                noteBodySaved={chatNoteEditor.noteBodySaved}
+                                                setNoteBodyEdited={
+                                                    chatNoteEditor.setNoteBodyEdited
+                                                }
+                                                setNoteBodySaved={chatNoteEditor.setNoteBodySaved}
+                                                titleInputRef={chatNoteEditor.titleInputRef}
+                                                onBodyChange={chatNoteEditor.handleBodyChange}
+                                                onTitleBlur={chatNoteEditor.handleTitleBlur}
+                                                onTitleChange={chatNoteEditor.handleTitleChange}
                                             />
-                                        </Stack>
-
-                                        <Tabs
-                                            sx={{ width: "100%" }}
-                                            value={useNM.selectedTabIndex}
-                                            onChange={(_, val) => handleTabChange(Number(val))}
-                                        >
-                                            <ChatNoteTabList
-                                                tabItems={useNM.tabItems}
-                                                onCloseTab={handleCloseTab}
-                                            />
-
-                                            {useNM.tabItems.map((tabNote, index) => (
-                                                <TabPanel
-                                                    key={`tab-note-body-${tabNote.noteType}-${tabNote.noteId}-${tsBody}`}
-                                                    value={index}
-                                                    sx={{
-                                                        paddingX: "5px",
-                                                        paddingTop: "0px",
-                                                        paddingBottom: "5px",
-                                                    }}
-                                                >
-                                                    {useNM.currentChatNote &&
-                                                        chatNoteEditor.body && (
-                                                            <ChatNoteEditor
-                                                                body={chatNoteEditor.body}
-                                                                useCM={useCM}
-                                                                currentChatNote={
-                                                                    useNM.currentChatNote
-                                                                }
-                                                                myself={myself}
-                                                                setMyself={setMyself}
-                                                                socket={socket}
-                                                                useTEM={useTEM}
-                                                                useUISM={useUISM}
-                                                                currentChatNoteTitle={
-                                                                    chatNoteEditor.currentChatNoteTitle
-                                                                }
-                                                                noteBodySaved={
-                                                                    chatNoteEditor.noteBodySaved
-                                                                }
-                                                                setNoteBodyEdited={
-                                                                    chatNoteEditor.setNoteBodyEdited
-                                                                }
-                                                                setNoteBodySaved={
-                                                                    chatNoteEditor.setNoteBodySaved
-                                                                }
-                                                                titleInputRef={
-                                                                    chatNoteEditor.titleInputRef
-                                                                }
-                                                                onBodyChange={
-                                                                    chatNoteEditor.handleBodyChange
-                                                                }
-                                                                onTitleBlur={
-                                                                    chatNoteEditor.handleTitleBlur
-                                                                }
-                                                                onTitleChange={
-                                                                    chatNoteEditor.handleTitleChange
-                                                                }
-                                                            />
-                                                        )}
-                                                </TabPanel>
-                                            ))}
-                                        </Tabs>
-                                    </Stack>
-                                )}
-                            </>
-                        )}
-                    </Stack>
-                )}
-        </>
+                                        )}
+                                    </TabPanel>
+                                ))}
+                            </Tabs>
+                        </Stack>
+                    )}
+                </>
+            )}
+        </Stack>
     );
 };

@@ -1,24 +1,15 @@
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
-import HomeIcon from "@mui/icons-material/Home";
+import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
-import ShareIcon from "@mui/icons-material/Share";
-import WindowIcon from "@mui/icons-material/Window";
-import {
-    Box,
-    Divider,
-    GlobalStyles,
-    List,
-    ListItem,
-    ListItemContent,
-    Sheet,
-    Typography,
-} from "@mui/joy";
-import ListItemButton, { listItemButtonClasses } from "@mui/joy/ListItemButton";
+import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
+import WindowRoundedIcon from "@mui/icons-material/WindowRounded";
+import { Box, Divider, List, ListItem, ListItemContent, Sheet, Typography } from "@mui/joy";
+import ListItemButton from "@mui/joy/ListItemButton";
+import { useColorScheme } from "@mui/joy/styles";
 
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { ChildNoteCreator } from "../../chat-notes/components/ChildNoteCreator";
 import { useNoteTreeState } from "../hooks/useNoteTreeState";
-import { NoteToggleButton } from "./NoteToggleButton";
 import { NoteTreeRenderer } from "./NoteTreeRenderer";
 import { NoteTypeSection } from "./NoteTypeSection";
 
@@ -28,6 +19,8 @@ type NoteSidebarProps = {
 
 export const NoteSidebar = (props: NoteSidebarProps) => {
     const { useNM } = props;
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
 
     // Use custom hooks for each note type
     const myNoteState = useNoteTreeState({
@@ -63,15 +56,6 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             createChildNoteList={(node) => (
                 <ChildNoteCreator useNM={useNM} node={node} timestamp={myNoteState.timestamp} />
             )}
-            renderToggle={(open, setOpen, node) => (
-                <NoteToggleButton
-                    useNM={useNM}
-                    node={node}
-                    noteType={1}
-                    open={open}
-                    setOpen={setOpen}
-                />
-            )}
         />
     );
 
@@ -85,15 +69,6 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             timestamp={taskNoteState.timestamp}
             createChildNoteList={(node) => (
                 <ChildNoteCreator useNM={useNM} node={node} timestamp={taskNoteState.timestamp} />
-            )}
-            renderToggle={(open, setOpen, node) => (
-                <NoteToggleButton
-                    useNM={useNM}
-                    node={node}
-                    noteType={2}
-                    open={open}
-                    setOpen={setOpen}
-                />
             )}
         />
     );
@@ -109,118 +84,82 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             createChildNoteList={(node) => (
                 <ChildNoteCreator useNM={useNM} node={node} timestamp={chatNoteState.timestamp} />
             )}
-            renderToggle={(open, setOpen, node) => (
-                <NoteToggleButton
-                    useNM={useNM}
-                    node={node}
-                    noteType={3}
-                    open={open}
-                    setOpen={setOpen}
-                />
-            )}
         />
     );
 
-    // Outer toggle button renderer
-    const renderOuterToggle = (
-        open: boolean,
-        setOpen: (value: boolean) => void,
-        noteType: number
-    ) => {
-        const getIcon = () => {
-            switch (noteType) {
-                case 1:
-                    return <WindowIcon />;
-                case 2:
-                    return <AssignmentRoundedIcon />;
-                case 3:
-                    return <QuestionAnswerRoundedIcon />;
-                case 4:
-                    return <ShareIcon />;
-                default:
-                    return null;
-            }
-        };
-
-        const getTitle = () => {
-            switch (noteType) {
-                case 1:
-                    return "My Notes";
-                case 2:
-                    return "Task Notes";
-                case 3:
-                    return "Chat Notes";
-                case 4:
-                    return "Shared Notes (TBD)";
-                default:
-                    return "";
-            }
-        };
-
-        return (
-            <NoteToggleButton
-                icon={getIcon()}
-                isOuter={true}
-                useNM={useNM}
-                noteType={noteType}
-                open={open}
-                setOpen={setOpen}
-                title={getTitle()}
-            />
-        );
-    };
+    // Note type configurations for cleaner code
+    const noteTypesConfig = [
+        {
+            noteType: 1,
+            icon: <WindowRoundedIcon sx={{ fontSize: 18 }} />,
+            title: "My Notes",
+            state: myNoteState,
+            renderTree: renderMyNoteTree,
+        },
+        {
+            noteType: 2,
+            icon: <AssignmentRoundedIcon sx={{ fontSize: 18 }} />,
+            title: "Task Notes",
+            state: taskNoteState,
+            renderTree: renderTaskNoteTree,
+        },
+        {
+            noteType: 3,
+            icon: <QuestionAnswerRoundedIcon sx={{ fontSize: 18 }} />,
+            title: "Chat Notes",
+            state: chatNoteState,
+            renderTree: renderChatNoteTree,
+        },
+        {
+            noteType: 4,
+            icon: <ShareRoundedIcon sx={{ fontSize: 18 }} />,
+            title: "Shared Notes",
+            state: null,
+            renderTree: null,
+            isDisabled: true,
+        },
+    ];
 
     return (
         <Sheet
-            className="TaskSidebar"
+            className="NoteSidebar"
             sx={{
                 position: { xs: "fixed", md: "sticky" },
                 transform: {
                     xs: "translateX(calc(100% * (var(--SideNavigation-slideIn, 0) - 1)))",
                     md: "none",
                 },
-                transition: "transform 0.4s, width 0.4s",
+                transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                 height: "100dvh",
                 width: "100%",
                 top: 0,
-                p: 2,
                 flexShrink: 0,
                 display: "flex",
                 flexDirection: "column",
-                gap: 2,
             }}
         >
-            <GlobalStyles
-                styles={(theme) => ({
-                    ":root": {
-                        "--TaskSidebar-width": "220px",
-                        [theme.breakpoints.up("lg")]: {
-                            "--TaskSidebar-width": "240px",
-                        },
-                    },
-                })}
-            />
-
+            {/* Content */}
             <Box
+                className="custom-scrollbar"
                 sx={{
                     minHeight: 0,
                     overflow: "hidden auto",
                     flexGrow: 1,
                     display: "flex",
                     flexDirection: "column",
-                    [`& .${listItemButtonClasses.root}`]: {
-                        gap: 1.5,
-                    },
+                    px: 1.5,
+                    py: 1.5,
                 }}
             >
                 <List
                     size="sm"
                     sx={{
-                        gap: 1,
-                        "--List-nestedInsetStart": "30px",
-                        "--ListItem-radius": (theme) => theme.vars.radius.sm,
+                        gap: 0.5,
+                        "--List-nestedInsetStart": "24px",
+                        "--ListItem-radius": "8px",
                     }}
                 >
+                    {/* Home Item */}
                     <ListItem>
                         <ListItemButton
                             selected={useNM.currentNoteType === 0}
@@ -228,58 +167,137 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                                 useNM.setCurrentNoteType(0);
                                 localStorage.setItem("lastOpenNoteType", "0");
                             }}
+                            sx={{
+                                borderRadius: "10px",
+                                py: 1,
+                                px: 1.5,
+                                gap: 1.5,
+                                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                "&:hover": {
+                                    backgroundColor: isDark
+                                        ? "rgba(255,255,255,0.06)"
+                                        : "rgba(0,0,0,0.04)",
+                                },
+                                "&.Mui-selected": {
+                                    backgroundColor: isDark
+                                        ? "rgba(99,102,241,0.15)"
+                                        : "rgba(79,70,229,0.1)",
+                                    "&:hover": {
+                                        backgroundColor: isDark
+                                            ? "rgba(99,102,241,0.2)"
+                                            : "rgba(79,70,229,0.15)",
+                                    },
+                                },
+                            }}
                         >
-                            <HomeIcon />
+                            <Box
+                                sx={{
+                                    width: 28,
+                                    height: 28,
+                                    borderRadius: "8px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    backgroundColor: isDark
+                                        ? "rgba(255,255,255,0.08)"
+                                        : "rgba(0,0,0,0.05)",
+                                    transition: "all 0.2s ease",
+                                }}
+                            >
+                                <HomeRoundedIcon
+                                    sx={{
+                                        fontSize: 16,
+                                        color: isDark
+                                            ? "rgba(255,255,255,0.75)"
+                                            : "rgba(0,0,0,0.65)",
+                                    }}
+                                />
+                            </Box>
                             <ListItemContent>
-                                <Typography level="title-sm">Home</Typography>
+                                <Typography
+                                    level="body-sm"
+                                    sx={{
+                                        fontWeight: 500,
+                                        color: isDark
+                                            ? "rgba(255,255,255,0.9)"
+                                            : "rgba(0,0,0,0.8)",
+                                    }}
+                                >
+                                    Home
+                                </Typography>
                             </ListItemContent>
                         </ListItemButton>
                     </ListItem>
 
-                    <NoteTypeSection
-                        icon={<WindowIcon />}
-                        useNM={useNM}
-                        noteType={1}
-                        renderToggle={renderOuterToggle}
-                        title="My Notes"
-                    >
-                        {myNoteState.tmpMetaTree.map((root) => renderMyNoteTree(root))}
-                    </NoteTypeSection>
+                    {/* Section Divider */}
+                    <Box sx={{ pt: 1.5, pb: 0.5, px: 1 }}>
+                        <Typography
+                            level="body-xs"
+                            sx={{
+                                fontWeight: 600,
+                                textTransform: "uppercase",
+                                letterSpacing: "0.08em",
+                                fontSize: 10,
+                                color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
+                            }}
+                        >
+                            Workspaces
+                        </Typography>
+                    </Box>
 
-                    <NoteTypeSection
-                        icon={<AssignmentRoundedIcon />}
-                        useNM={useNM}
-                        noteType={2}
-                        renderToggle={renderOuterToggle}
-                        title="Task Notes"
-                    >
-                        {taskNoteState.tmpMetaTree.map((root) => renderTaskNoteTree(root))}
-                    </NoteTypeSection>
-
-                    <NoteTypeSection
-                        icon={<QuestionAnswerRoundedIcon />}
-                        useNM={useNM}
-                        noteType={3}
-                        renderToggle={renderOuterToggle}
-                        title="Chat Notes"
-                    >
-                        {chatNoteState.tmpMetaTree.map((root) => renderChatNoteTree(root))}
-                    </NoteTypeSection>
-
-                    <NoteTypeSection
-                        icon={<ShareIcon />}
-                        useNM={useNM}
-                        noteType={4}
-                        renderToggle={renderOuterToggle}
-                        title="Shared Notes (TBD)"
-                    >
-                        <ListItemContent>
-                            <Typography level="title-sm"></Typography>
-                        </ListItemContent>
-                    </NoteTypeSection>
+                    {/* Note Type Sections */}
+                    {noteTypesConfig.map((config) => (
+                        <NoteTypeSection
+                            key={config.noteType}
+                            icon={config.icon}
+                            useNM={useNM}
+                            noteType={config.noteType}
+                            title={config.title}
+                            isDisabled={config.isDisabled}
+                        >
+                            {config.state && config.renderTree ? (
+                                config.state.tmpMetaTree.map((root) => config.renderTree!(root))
+                            ) : config.isDisabled ? (
+                                <Box sx={{ px: 2, py: 1 }}>
+                                    <Typography
+                                        level="body-xs"
+                                        sx={{
+                                            color: isDark
+                                                ? "rgba(255,255,255,0.35)"
+                                                : "rgba(0,0,0,0.35)",
+                                            fontStyle: "italic",
+                                        }}
+                                    >
+                                        Coming soon
+                                    </Typography>
+                                </Box>
+                            ) : null}
+                        </NoteTypeSection>
+                    ))}
                 </List>
             </Box>
-            <Divider />
+
+            {/* Footer */}
+            <Divider sx={{ opacity: isDark ? 0.08 : 0.12 }} />
+            <Box
+                sx={{
+                    px: 2,
+                    py: 1.5,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                }}
+            >
+                <Typography
+                    level="body-xs"
+                    sx={{
+                        color: isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)",
+                        fontSize: 10,
+                    }}
+                >
+                    Organize your thoughts
+                </Typography>
+            </Box>
         </Sheet>
     );
 };

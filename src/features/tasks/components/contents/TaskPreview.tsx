@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Divider, Sheet } from "@mui/joy";
+import { Box, Divider, Sheet, Stack, Typography } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -28,6 +29,33 @@ import { TaskSubTasksBlock } from "./base/TaskSubTasksBlock";
 import { TaskTabBlock } from "./base/TaskTabBlock";
 import { TaskTitleBlock } from "./base/TaskTitleBlock";
 
+// Section divider component
+const SectionDivider = ({ isDark }: { isDark: boolean }) => (
+    <Divider
+        sx={{
+            my: 2,
+            opacity: isDark ? 0.08 : 0.12,
+        }}
+    />
+);
+
+// Section header component
+const SectionHeader = ({ children, isDark }: { children: React.ReactNode; isDark: boolean }) => (
+    <Typography
+        level="body-xs"
+        sx={{
+            fontWeight: 600,
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            fontSize: 10,
+            color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
+            mb: 1,
+        }}
+    >
+        {children}
+    </Typography>
+);
+
 type TaskPreviewProps = {
     socket: Socket | null;
     myself: UserProps;
@@ -43,6 +71,9 @@ type TaskPreviewProps = {
 export const TaskPreview = (props: TaskPreviewProps) => {
     const { socket, myself, setMyself, usePM, useNM, useTM, useUISM, useTEM, useCM } = props;
     const { accessToken } = useAuth();
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
+
     const [taskClosed, setTaskClosed] = useState(false);
     const [isAttachmentDeleted, setIsAttachmentDeleted] = useState(false);
     const [deletedAttachmentId, setDeletedAttachmentId] = useState<number>(-1);
@@ -113,13 +144,9 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 taskEditState.setBody(useTM.currentPreviewTask.body || []);
             }
         }
-
-        // setUploadedFiles(currentPreviewTask.attachments);
     }, [useTM.currentPreviewTask]);
 
     // Update task title/attachments when the visible task Id is changed
-    // This will be executed after the above useEffect is executed
-    //  (i.e., after `setCurrentTaskId` is executed)
     useEffect(() => {
         if (taskEditState.currentTaskId) {
             taskEditState.setTaskTitle(useTM.currentPreviewTask?.title || "");
@@ -256,9 +283,10 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         }
     }, [isOpenTagList]);
 
-    // This is for auto scrolling to the bottom when an user writes comment.
+    // Scroll management
     const [taskCommentLines, setTaskCommentLines] = useState(0);
     const sheetRef = useRef<HTMLDivElement | null>(null);
+
     // Scroll to top when the task preview is initially opened
     useEffect(() => {
         setTimeout(() => {
@@ -269,7 +297,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         }, 100);
     }, []);
 
-    // Scroll to top when the another task is opened
+    // Scroll to top when another task is opened
     useEffect(() => {
         setTimeout(() => {
             const sheet = sheetRef.current;
@@ -282,17 +310,16 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     useEffect(() => {
         const sheet = sheetRef.current;
         if (sheet && taskCommentLines > 1) {
-            sheet.scrollTop = sheet.scrollHeight; // always scroll to bottom
+            sheet.scrollTop = sheet.scrollHeight;
         }
-    }, [taskCommentLines]); // re-run whenever content changes
+    }, [taskCommentLines]);
 
-    // This is for auto scrolling to the bottom when an user switches the tab.
     useEffect(() => {
         const sheet = sheetRef.current;
         if (sheet) {
-            sheet.scrollTop = sheet.scrollHeight; // scroll to bottom
+            sheet.scrollTop = sheet.scrollHeight;
         }
-    }, [tabIndex]); // re-run whenever content changes
+    }, [tabIndex]);
 
     return (
         <>
@@ -300,128 +327,213 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 <Sheet
                     ref={sheetRef}
                     className="custom-scrollbar"
-                    variant="outlined"
                     sx={{
                         minHeight: 500,
-                        borderRadius: "sm",
-                        p: 2,
+                        borderRadius: "16px",
+                        p: 0,
                         overflowY: "auto",
                         overflowX: "hidden",
+                        background: isDark
+                            ? "linear-gradient(180deg, rgba(22,22,28,0.98) 0%, rgba(18,18,24,1) 100%)"
+                            : "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(252,252,255,1) 100%)",
+                        border: "1px solid",
+                        borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
+                        boxShadow: isDark
+                            ? "0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03)"
+                            : "0 8px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8)",
+                        position: "relative",
+                        animation: "slideIn 0.3s ease-out",
+                        "@keyframes slideIn": {
+                            from: { opacity: 0, transform: "translateY(8px)" },
+                            to: { opacity: 1, transform: "translateY(0)" },
+                        },
                     }}
                 >
-                    <TaskTitleBlock
-                        useCM={useCM}
-                        isPreviewMode={true}
-                        myself={myself}
-                        setTaskClosed={setTaskClosed}
-                        setTaskContent={taskEditState.setTmpCurrentTaskContent}
-                        setTaskStatusUpdated={taskEditState.setTaskStatusUpdated}
-                        setTaskTitle={taskEditState.setTaskTitle}
-                        setTaskUpdated={taskEditState.setTaskUpdated}
-                        taskContent={taskEditState.tmpCurrentTaskContent}
-                        taskTitle={taskEditState.taskTitle}
-                        useTM={useTM}
-                        useUISM={useUISM}
-                        useNM={useNM}
-                        usePM={usePM}
+                    {/* Gradient accent at top */}
+                    <Box
+                        sx={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            height: "3px",
+                            background: isDark
+                                ? "linear-gradient(90deg, #4ade80 0%, #22c55e 50%, #16a34a 100%)"
+                                : "linear-gradient(90deg, #22c55e 0%, #16a34a 50%, #15803d 100%)",
+                            borderRadius: "16px 16px 0 0",
+                            opacity: 0.8,
+                        }}
                     />
 
-                    <Divider sx={{ mt: 1, mb: 1 }} />
+                    {/* Header Section */}
+                    <Box
+                        sx={{
+                            p: 2.5,
+                            pt: 3,
+                            borderBottom: "1px solid",
+                            borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+                        }}
+                    >
+                        <TaskTitleBlock
+                            useCM={useCM}
+                            isPreviewMode={true}
+                            myself={myself}
+                            setTaskClosed={setTaskClosed}
+                            setTaskContent={taskEditState.setTmpCurrentTaskContent}
+                            setTaskStatusUpdated={taskEditState.setTaskStatusUpdated}
+                            setTaskTitle={taskEditState.setTaskTitle}
+                            setTaskUpdated={taskEditState.setTaskUpdated}
+                            taskContent={taskEditState.tmpCurrentTaskContent}
+                            taskTitle={taskEditState.taskTitle}
+                            useTM={useTM}
+                            useUISM={useUISM}
+                            useNM={useNM}
+                            usePM={usePM}
+                        />
+                    </Box>
 
-                    <TaskMainBlock
-                        assignee={assignee}
-                        useCM={useCM}
-                        isOpenProjectList={isOpenProjectList}
-                        isOpenTagList={isOpenTagList}
-                        isOpenTeamMembersList={isOpenTeamMembersList}
-                        isPreviewMode={true}
-                        myself={myself}
-                        projectTags={projectTags}
-                        reporter={reporter}
-                        setAssignee={setAssignee}
-                        setIsOpenProjectList={setIsOpenProjectList}
-                        setIsOpenTagList={setIsOpenTagList}
-                        setIsOpenTeamMembersList={setIsOpenTeamMembersList}
-                        setMyself={setMyself}
-                        setReporter={setReporter}
-                        setTaskContent={taskEditState.setTmpCurrentTaskContent}
-                        setTaskStatusUpdated={taskEditState.setTaskStatusUpdated}
-                        setTaskUpdated={taskEditState.setTaskUpdated}
-                        socket={socket}
-                        taskContent={taskEditState.tmpCurrentTaskContent}
-                        useTEM={useTEM}
-                        useTM={useTM}
-                        useUISM={useUISM}
-                        usePM={usePM}
-                    />
+                    {/* Main Content Section */}
+                    <Box sx={{ p: 2.5 }}>
+                        <SectionHeader isDark={isDark}>Task Details</SectionHeader>
+                        <Box
+                            sx={{
+                                p: 2,
+                                borderRadius: "12px",
+                                background: isDark
+                                    ? "rgba(255,255,255,0.02)"
+                                    : "rgba(0,0,0,0.015)",
+                                border: "1px solid",
+                                borderColor: isDark
+                                    ? "rgba(255,255,255,0.04)"
+                                    : "rgba(0,0,0,0.04)",
+                            }}
+                        >
+                            <TaskMainBlock
+                                assignee={assignee}
+                                useCM={useCM}
+                                isOpenProjectList={isOpenProjectList}
+                                isOpenTagList={isOpenTagList}
+                                isOpenTeamMembersList={isOpenTeamMembersList}
+                                isPreviewMode={true}
+                                myself={myself}
+                                projectTags={projectTags}
+                                reporter={reporter}
+                                setAssignee={setAssignee}
+                                setIsOpenProjectList={setIsOpenProjectList}
+                                setIsOpenTagList={setIsOpenTagList}
+                                setIsOpenTeamMembersList={setIsOpenTeamMembersList}
+                                setMyself={setMyself}
+                                setReporter={setReporter}
+                                setTaskContent={taskEditState.setTmpCurrentTaskContent}
+                                setTaskStatusUpdated={taskEditState.setTaskStatusUpdated}
+                                setTaskUpdated={taskEditState.setTaskUpdated}
+                                socket={socket}
+                                taskContent={taskEditState.tmpCurrentTaskContent}
+                                useTEM={useTEM}
+                                useTM={useTM}
+                                useUISM={useUISM}
+                                usePM={usePM}
+                            />
+                        </Box>
 
-                    <Divider sx={{ mt: 1, mb: 1 }} />
+                        <SectionDivider isDark={isDark} />
 
-                    <TaskCustomBarBlock
-                        setTaskContent={taskEditState.setTmpCurrentTaskContent}
-                        setTaskStatusUpdated={taskEditState.setTaskStatusUpdated}
-                        setTaskUpdated={taskEditState.setTaskUpdated}
-                        taskBodySaved={taskEditState.taskBodySaved}
-                        taskContent={taskEditState.tmpCurrentTaskContent}
-                    />
+                        <Stack direction="row">
+                            {/* Body Section */}
+                            <SectionHeader isDark={isDark}>Description</SectionHeader>
+                            {/* Custom Bar */}
+                            <TaskCustomBarBlock
+                                setTaskContent={taskEditState.setTmpCurrentTaskContent}
+                                setTaskStatusUpdated={taskEditState.setTaskStatusUpdated}
+                                setTaskUpdated={taskEditState.setTaskUpdated}
+                                taskBodySaved={taskEditState.taskBodySaved}
+                                taskContent={taskEditState.tmpCurrentTaskContent}
+                            />
+                        </Stack>
+                        <Box
+                            sx={{
+                                p: 2,
+                                borderRadius: "12px",
+                                background: isDark
+                                    ? "rgba(255,255,255,0.02)"
+                                    : "rgba(0,0,0,0.015)",
+                                border: "1px solid",
+                                borderColor: isDark
+                                    ? "rgba(255,255,255,0.04)"
+                                    : "rgba(0,0,0,0.04)",
+                                minHeight: 150,
+                            }}
+                        >
+                            <TaskBodyBlock
+                                key={`TaskBodyBlock-${taskEditState.tmpCurrentTaskContent.id}`}
+                                body={taskEditState.body}
+                                useCM={useCM}
+                                myself={myself}
+                                setBody={taskEditState.setBody}
+                                setMyself={setMyself}
+                                setTaskBodyEdited={taskEditState.setTaskBodyEdited}
+                                setTaskBodySaved={taskEditState.setTaskBodySaved}
+                                socket={socket}
+                                taskId={taskEditState.tmpCurrentTaskContent.id}
+                                useTEM={useTEM}
+                                useUISM={useUISM}
+                            />
+                        </Box>
 
-                    <TaskBodyBlock
-                        key={`TaskBodyBlock-${taskEditState.tmpCurrentTaskContent.id}`}
-                        body={taskEditState.body}
-                        useCM={useCM}
-                        myself={myself}
-                        setBody={taskEditState.setBody}
-                        setMyself={setMyself}
-                        setTaskBodyEdited={taskEditState.setTaskBodyEdited}
-                        setTaskBodySaved={taskEditState.setTaskBodySaved}
-                        socket={socket}
-                        taskId={taskEditState.tmpCurrentTaskContent.id}
-                        useTEM={useTEM}
-                        useUISM={useUISM}
-                    />
+                        <SectionDivider isDark={isDark} />
 
-                    <Divider sx={{ mt: 2 }} />
+                        {/* Subtasks Section */}
+                        <SectionHeader isDark={isDark}>Sub Tasks</SectionHeader>
+                        <TaskSubTasksBlock
+                            useCM={useCM}
+                            useTM={useTM}
+                            currentTaskContent={taskEditState.tmpCurrentTaskContent}
+                            myself={myself}
+                            setMyself={setMyself}
+                            socket={socket}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
+                        />
+                    </Box>
 
-                    <TaskSubTasksBlock
-                        useCM={useCM}
-                        useTM={useTM}
-                        currentTaskContent={taskEditState.tmpCurrentTaskContent}
-                        myself={myself}
-                        setMyself={setMyself}
-                        socket={socket}
-                        useTEM={useTEM}
-                        useUISM={useUISM}
-                    />
-
-                    <TaskTabBlock
-                        useCM={useCM}
-                        editTargetComment={editTargetComment}
-                        isInEdit={isInEdit}
-                        myself={myself}
-                        setDeletedAttachmentId={setDeletedAttachmentId}
-                        setEditTargetComment={setEditTargetComment}
-                        setIsAttachmentDeleted={setIsAttachmentDeleted}
-                        setIsInEdit={setIsInEdit}
-                        setMyself={setMyself}
-                        setTabIndex={setTabIndex}
-                        setTaskCommentLines={setTaskCommentLines}
-                        setTaskComments={setTaskComments}
-                        setTaskContent={taskEditState.setTmpCurrentTaskContent}
-                        setTaskUpdated={taskEditState.setTaskUpdated}
-                        setUploadedFiles={taskEditState.setUploadedFiles}
-                        socket={socket}
-                        tabIndex={tabIndex}
-                        taskCommentLines={taskCommentLines}
-                        taskComments={taskComments}
-                        taskContent={taskEditState.tmpCurrentTaskContent}
-                        taskNotes={taskNotes}
-                        useTEM={useTEM}
-                        useTM={useTM}
-                        tmpCurrentTaskContent={taskEditState.tmpCurrentTaskContent}
-                        useUISM={useUISM}
-                        uploadedFiles={taskEditState.uploadedFiles}
-                        useNM={useNM}
-                    />
+                    {/* Tabs Section */}
+                    <Box
+                        sx={{
+                            borderTop: "1px solid",
+                            borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+                            background: isDark ? "rgba(255,255,255,0.01)" : "rgba(0,0,0,0.01)",
+                        }}
+                    >
+                        <TaskTabBlock
+                            useCM={useCM}
+                            editTargetComment={editTargetComment}
+                            isInEdit={isInEdit}
+                            myself={myself}
+                            setDeletedAttachmentId={setDeletedAttachmentId}
+                            setEditTargetComment={setEditTargetComment}
+                            setIsAttachmentDeleted={setIsAttachmentDeleted}
+                            setIsInEdit={setIsInEdit}
+                            setMyself={setMyself}
+                            setTabIndex={setTabIndex}
+                            setTaskCommentLines={setTaskCommentLines}
+                            setTaskComments={setTaskComments}
+                            setTaskContent={taskEditState.setTmpCurrentTaskContent}
+                            setTaskUpdated={taskEditState.setTaskUpdated}
+                            setUploadedFiles={taskEditState.setUploadedFiles}
+                            socket={socket}
+                            tabIndex={tabIndex}
+                            taskCommentLines={taskCommentLines}
+                            taskComments={taskComments}
+                            taskContent={taskEditState.tmpCurrentTaskContent}
+                            taskNotes={taskNotes}
+                            useTEM={useTEM}
+                            useTM={useTM}
+                            tmpCurrentTaskContent={taskEditState.tmpCurrentTaskContent}
+                            useUISM={useUISM}
+                            uploadedFiles={taskEditState.uploadedFiles}
+                            useNM={useNM}
+                        />
+                    </Box>
                 </Sheet>
             )}
         </>

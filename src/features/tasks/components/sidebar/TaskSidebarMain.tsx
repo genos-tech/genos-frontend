@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Box, Divider, GlobalStyles, List, Sheet } from "@mui/joy";
-import { listItemButtonClasses } from "@mui/joy/ListItemButton";
+import { Box, Divider, List, Sheet, Typography } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
@@ -31,6 +31,8 @@ type TaskSidebarProps = {
 export const TaskSidebar = (props: TaskSidebarProps) => {
     const { myself, setOpenJoinProject, usePM, useTM } = props;
     const { accessToken } = useAuth();
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
 
     // =======================================================================
     const [openSearch, setOpenSearch] = useState(false);
@@ -115,37 +117,28 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                     xs: "translateX(calc(100% * (var(--SideNavigation-slideIn, 0) - 1)))",
                     md: "none",
                 },
-                transition: "transform 0.4s, width 0.4s",
+                transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                 height: "100dvh",
                 width: "100%",
                 top: 0,
-                p: 2,
                 flexShrink: 0,
                 display: "flex",
                 flexDirection: "column",
-                gap: 2,
             }}
         >
-            <GlobalStyles
-                styles={(theme) => ({
-                    ":root": {
-                        "--TaskSidebar-width": "220px",
-                        [theme.breakpoints.up("lg")]: {
-                            "--TaskSidebar-width": "240px",
-                        },
-                    },
-                })}
-            />
+            {/* Search Box */}
+            <Box sx={{ px: 1.5, pt: 1.5, pb: 1 }}>
+                <TaskSidebarSearchBox
+                    loading={loading}
+                    openSearch={openSearch}
+                    setOpenSearch={setOpenSearch}
+                    setTeamTaskSearchOptions={setTeamTaskSearchOptions}
+                    teamTaskSearchOptions={teamTaskSearchOptions}
+                    useTM={useTM}
+                />
+            </Box>
 
-            <TaskSidebarSearchBox
-                loading={loading}
-                openSearch={openSearch}
-                setOpenSearch={setOpenSearch}
-                setTeamTaskSearchOptions={setTeamTaskSearchOptions}
-                teamTaskSearchOptions={teamTaskSearchOptions}
-                useTM={useTM}
-            />
-
+            {/* Content */}
             <Box
                 className="custom-scrollbar"
                 sx={{
@@ -154,28 +147,71 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                     flexGrow: 1,
                     display: "flex",
                     flexDirection: "column",
-                    [`& .${listItemButtonClasses.root}`]: {
-                        gap: 1.5,
-                    },
+                    px: 1.5,
+                    py: 0.5,
                 }}
             >
                 <List
                     size="sm"
                     sx={{
-                        gap: 1,
-                        "--List-nestedInsetStart": "30px",
-                        "--ListItem-radius": (theme) => theme.vars.radius.sm,
+                        gap: 0.5,
+                        "--List-nestedInsetStart": "24px",
+                        "--ListItem-radius": "8px",
                     }}
                 >
-                    {/* <DashboardListItem
-                        setIsDashboardVisible={setIsDashboardVisible}
-                    /> */}
+                    {/* Section Header - Views */}
+                    <Box sx={{ pt: 0.5, pb: 0.5, px: 1 }}>
+                        <Typography
+                            level="body-xs"
+                            sx={{
+                                fontWeight: 600,
+                                textTransform: "uppercase",
+                                letterSpacing: "0.08em",
+                                fontSize: 10,
+                                color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
+                            }}
+                        >
+                            Views
+                        </Typography>
+                    </Box>
 
                     <SprintBoardListItem useTM={useTM} />
 
                     <TaskTableListItem useTM={useTM} />
 
+                    {/* Section Header - Tasks */}
+                    <Box sx={{ pt: 1.5, pb: 0.5, px: 1 }}>
+                        <Typography
+                            level="body-xs"
+                            sx={{
+                                fontWeight: 600,
+                                textTransform: "uppercase",
+                                letterSpacing: "0.08em",
+                                fontSize: 10,
+                                color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
+                            }}
+                        >
+                            Tasks
+                        </Typography>
+                    </Box>
+
                     <RecentsListItem recentTasks={recentTasks} useTM={useTM} usePM={usePM} />
+
+                    {/* Section Header - Projects */}
+                    <Box sx={{ pt: 1.5, pb: 0.5, px: 1 }}>
+                        <Typography
+                            level="body-xs"
+                            sx={{
+                                fontWeight: 600,
+                                textTransform: "uppercase",
+                                letterSpacing: "0.08em",
+                                fontSize: 10,
+                                color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
+                            }}
+                        >
+                            Projects
+                        </Typography>
+                    </Box>
 
                     <ProjectsListItem
                         usePM={usePM}
@@ -185,7 +221,28 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                     />
                 </List>
             </Box>
-            <Divider />
+
+            {/* Footer */}
+            <Divider sx={{ opacity: isDark ? 0.08 : 0.12 }} />
+            <Box
+                sx={{
+                    px: 2,
+                    py: 1.5,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                }}
+            >
+                <Typography
+                    level="body-xs"
+                    sx={{
+                        color: isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)",
+                        fontSize: 10,
+                    }}
+                >
+                    Stay productive
+                </Typography>
+            </Box>
         </Sheet>
     );
 };

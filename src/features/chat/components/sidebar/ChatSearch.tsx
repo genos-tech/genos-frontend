@@ -9,6 +9,7 @@ import {
     Typography,
 } from "@mui/joy";
 import CircularProgress from "@mui/joy/CircularProgress";
+import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
@@ -47,6 +48,9 @@ export const ChatSearch = (props: ChatSearchProps) => {
         useCM,
     } = props;
     const { accessToken } = useAuth();
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
+
     const [options, setOptions] = useState<SearchListProps[]>([]);
     const loading = openSearchBox && options.length === 0;
 
@@ -127,7 +131,13 @@ export const ChatSearch = (props: ChatSearchProps) => {
     }, [openSearchBox]);
 
     return (
-        <Box sx={{ px: 2, pb: 0.5, mt: 2 }}>
+        <Box
+            sx={{
+                px: 1.5,
+                pt: 1.5,
+                pb: 1,
+            }}
+        >
             <Autocomplete
                 aria-label="Search"
                 groupBy={(option) => option.type}
@@ -135,14 +145,71 @@ export const ChatSearch = (props: ChatSearchProps) => {
                 loading={loading}
                 open={openSearchBox}
                 options={options}
-                placeholder={"Search"}
+                placeholder="Search people & groups..."
                 size="sm"
-                startDecorator={<SearchRoundedIcon />}
+                startDecorator={
+                    <SearchRoundedIcon
+                        sx={{
+                            fontSize: 18,
+                            color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.35)",
+                        }}
+                    />
+                }
                 endDecorator={
                     loading ? (
-                        <CircularProgress size="sm" sx={{ bgcolor: "background.surface" }} />
+                        <CircularProgress
+                            size="sm"
+                            sx={{
+                                "--CircularProgress-size": "16px",
+                                "--CircularProgress-trackThickness": "2px",
+                                "--CircularProgress-progressThickness": "2px",
+                            }}
+                        />
                     ) : null
                 }
+                sx={{
+                    "--Input-focusedThickness": "0px",
+                    borderRadius: "12px",
+                    background: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
+                    border: "1px solid",
+                    borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+                    transition: "all 0.2s ease",
+                    "&:hover": {
+                        background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+                        borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)",
+                    },
+                    "&.Mui-focused": {
+                        background: isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.9)",
+                        borderColor: isDark ? "rgba(139,92,246,0.4)" : "rgba(124,58,237,0.3)",
+                        boxShadow: isDark
+                            ? "0 0 0 3px rgba(139,92,246,0.15)"
+                            : "0 0 0 3px rgba(124,58,237,0.1)",
+                    },
+                    "& .MuiAutocomplete-input": {
+                        fontSize: "0.85rem",
+                        "&::placeholder": {
+                            color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)",
+                            opacity: 1,
+                        },
+                    },
+                }}
+                slotProps={{
+                    listbox: {
+                        sx: {
+                            borderRadius: "12px",
+                            boxShadow: isDark
+                                ? "0 8px 32px rgba(0,0,0,0.5)"
+                                : "0 8px 32px rgba(0,0,0,0.12)",
+                            border: "1px solid",
+                            borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+                            "& .MuiAutocomplete-option": {
+                                borderRadius: "8px",
+                                mx: 0.5,
+                                my: 0.25,
+                            },
+                        },
+                    },
+                }}
                 getOptionLabel={(option) =>
                     option.type === "People"
                         ? option.email === myself.userEmail
@@ -162,7 +229,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
                             key={`ac-render-option-chatsearch-${option.name}-${option.id}`}
                         >
                             <ListItemContent sx={{ fontSize: "sm" }}>
-                                <Stack direction="row" spacing={1}>
+                                <Stack direction="row" spacing={1.5} alignItems="center">
                                     {option.type === "People" && (
                                         <AvatarWithStatus
                                             key={`ac-render-option-chatsearch-user-avatar-${option.name}-${option.id}`}
@@ -191,15 +258,37 @@ export const ChatSearch = (props: ChatSearchProps) => {
                                             useUISM={useUISM}
                                         />
                                     )}
-                                    <Typography level="body-md" sx={{ pt: 0.5, pl: 1 }}>
-                                        {option.type === "People"
-                                            ? option.email === myself.userEmail
-                                                ? `${option.name} (You) - ${option.email}`
-                                                : `${option.name} - ${option.email}`
-                                            : option.isPrivate
-                                              ? `🔒 ${option.name}`
-                                              : option.name}
-                                    </Typography>
+                                    <Box>
+                                        <Typography
+                                            level="body-sm"
+                                            sx={{
+                                                fontWeight: 500,
+                                                color: isDark
+                                                    ? "rgba(255,255,255,0.9)"
+                                                    : "rgba(0,0,0,0.85)",
+                                            }}
+                                        >
+                                            {option.type === "People"
+                                                ? option.email === myself.userEmail
+                                                    ? `${option.name} (You)`
+                                                    : option.name
+                                                : option.isPrivate
+                                                  ? `🔒 ${option.name}`
+                                                  : option.name}
+                                        </Typography>
+                                        {option.type === "People" && (
+                                            <Typography
+                                                level="body-xs"
+                                                sx={{
+                                                    color: isDark
+                                                        ? "rgba(255,255,255,0.45)"
+                                                        : "rgba(0,0,0,0.45)",
+                                                }}
+                                            >
+                                                {option.email}
+                                            </Typography>
+                                        )}
+                                    </Box>
                                 </Stack>
                             </ListItemContent>
                         </AutocompleteOption>

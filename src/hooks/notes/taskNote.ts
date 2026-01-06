@@ -40,7 +40,11 @@ type updataTaskNoteChainProps = {
     currentTaskNoteChain?: TaskNoteMetaTreeNode[];
     setCurrentTaskNoteChain: (value: TaskNoteMetaTreeNode[]) => void;
     allNoteIdChains: Record<string, number[]>;
-    setAllNoteIdChains: (value: Record<string, number[]>) => void;
+    setAllNoteIdChains: (
+        value:
+            | Record<string, number[]>
+            | ((prev: Record<string, number[]>) => Record<string, number[]>)
+    ) => void;
     tabItems: any[];
     selectedTabIndex: number;
 };
@@ -57,32 +61,34 @@ export const updataTaskNoteChain = (props: updataTaskNoteChainProps) => {
     } = props;
 
     useEffect(() => {
-        // Will update the Chain when `currentTaskNote` and/or `tabItems` is changed.
+        // Will update the Chain when `currentTaskNote`, `tabItems`, or `selectedTabIndex` is changed.
         // When `tabItems` is changed, `currentTaskNote` is also changed at the same time.
         // But `currentTaskNote` can be changed alone only if `tabItems` includes `currentTaskNote`.
         if (tabItems && tabItems[selectedTabIndex]) {
             const chain = findTaskNoteChain(taskNoteMetaTree, tabItems[selectedTabIndex].noteId);
             if (chain) {
-                if (
-                    currentTaskNoteChain &&
-                    areArraysEqualByJSON(
+                // Update chain if it's different from current, or if current is undefined
+                const isDifferent =
+                    !currentTaskNoteChain ||
+                    !areArraysEqualByJSON(
                         chain.map((item) => `${item.noteType}-${item.noteId}`),
                         currentTaskNoteChain.map((item) => `${item.noteType}-${item.noteId}`)
-                    ) === false
-                ) {
-                    setCurrentTaskNoteChain(chain || []);
+                    );
+
+                if (isDifferent) {
+                    setCurrentTaskNoteChain(chain);
                 }
 
-                setAllNoteIdChains({
-                    ...allNoteIdChains,
+                setAllNoteIdChains((prev) => ({
+                    ...prev,
                     [`${tabItems[selectedTabIndex].noteType}-${tabItems[selectedTabIndex].noteId}`]:
                         chain.map((item) => item.noteId),
-                });
+                }));
             }
         } else {
             setCurrentTaskNoteChain([]);
         }
-    }, [currentTaskNote, tabItems]);
+    }, [currentTaskNote, tabItems, selectedTabIndex, taskNoteMetaTree]);
 };
 
 type initCurrentTaskNoteChainProps = {

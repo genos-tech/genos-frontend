@@ -183,8 +183,9 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
             chat.chatId === useNM.currentTaskNote.projectId
     );
 
-    // Early return for empty state
-    if (useNM.tabItems.length === 0 || useNM.currentTaskNote === null) {
+    // Early return for empty state - only show if no tabs at all
+    // If tabs exist but currentTaskNote is null, let parent handle it
+    if (useNM.tabItems.length === 0) {
         return (
             <Box
                 sx={{
@@ -204,10 +205,15 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                         padding: "10px",
                     }}
                 >
-                    No Chat Selected
+                    No Note Selected
                 </IconButton>
             </Box>
         );
+    }
+
+    // If tabs exist but currentTaskNote is not loaded yet, return null
+    if (useNM.currentTaskNote === null) {
+        return null;
     }
 
     return (

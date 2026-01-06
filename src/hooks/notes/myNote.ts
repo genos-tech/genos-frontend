@@ -40,7 +40,11 @@ type updataMyNoteChainProps = {
     currentMyNoteChain?: MyNoteMetaTreeNode[];
     setCurrentMyNoteChain: (value: MyNoteMetaTreeNode[]) => void;
     allNoteIdChains: Record<string, number[]>;
-    setAllNoteIdChains: (value: Record<string, number[]>) => void;
+    setAllNoteIdChains: (
+        value:
+            | Record<string, number[]>
+            | ((prev: Record<string, number[]>) => Record<string, number[]>)
+    ) => void;
     tabItems: any[];
     selectedTabIndex: number;
 };
@@ -57,32 +61,34 @@ export const updataMyNoteChain = (props: updataMyNoteChainProps) => {
     } = props;
 
     useEffect(() => {
-        // Will update the Chain when `currentMyNote` and/or `tabItems` is changed.
+        // Will update the Chain when `currentMyNote`, `tabItems`, or `selectedTabIndex` is changed.
         // When `tabItems` is changed, `currentMyNote` is also changed at the same time.
         // But `currentMyNote` can be changed alone only if `tabItems` includes `currentMyNote`.
         if (tabItems && tabItems[selectedTabIndex]) {
             const chain = findMyNoteChain(myNoteMetaTree, tabItems[selectedTabIndex].noteId);
             if (chain) {
-                if (
-                    currentMyNoteChain &&
-                    areArraysEqualByJSON(
+                // Update chain if it's different from current, or if current is undefined
+                const isDifferent =
+                    !currentMyNoteChain ||
+                    !areArraysEqualByJSON(
                         chain.map((item) => `${item.noteType}-${item.noteId}`),
                         currentMyNoteChain.map((item) => `${item.noteType}-${item.noteId}`)
-                    ) === false
-                ) {
-                    setCurrentMyNoteChain(chain || []);
+                    );
+
+                if (isDifferent) {
+                    setCurrentMyNoteChain(chain);
                 }
 
-                setAllNoteIdChains({
-                    ...allNoteIdChains,
+                setAllNoteIdChains((prev) => ({
+                    ...prev,
                     [`${tabItems[selectedTabIndex].noteType}-${tabItems[selectedTabIndex].noteId}`]:
                         chain.map((item) => item.noteId),
-                });
+                }));
             }
         } else {
             setCurrentMyNoteChain([]);
         }
-    }, [currentMyNote, tabItems]);
+    }, [currentMyNote, tabItems, selectedTabIndex, myNoteMetaTree]);
 };
 
 type initCurrentMyNoteChainProps = {

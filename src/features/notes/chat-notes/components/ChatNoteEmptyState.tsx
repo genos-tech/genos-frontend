@@ -20,7 +20,7 @@ export const ChatNoteEmptyState = () => {
                     padding: "10px",
                 }}
             >
-                No Chat Selected
+                No Note Selected
             </IconButton>
         </Box>
     );

@@ -1,215 +1,238 @@
-import AddIcon from "@mui/icons-material/Add";
-import { Button, IconButton, Stack, Typography } from "@mui/joy";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import AlternateEmailRoundedIcon from "@mui/icons-material/AlternateEmailRounded";
+import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
+import EmojiEmotionsRoundedIcon from "@mui/icons-material/EmojiEmotionsRounded";
+import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
+import ViewListRoundedIcon from "@mui/icons-material/ViewListRounded";
+import { Box, IconButton, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
-export const PinnedDivider = () => {
+// Shared divider base component
+const DividerBase = ({
+    children,
+    icon,
+}: {
+    children: React.ReactNode;
+    icon?: React.ReactNode;
+}) => {
     const { mode } = useColorScheme();
+    const isDark = mode === "dark";
+
     return (
-        <Stack
-            direction="row"
-            spacing={1}
+        <Box
             sx={{
-                backgroundColor: mode === "dark" ? "black" : "rgb(217, 217, 217)",
-                py: 0.7,
-                justifyContent: "center",
-                alignItems: "center",
-                mt: "3px",
+                px: 2,
+                py: 1,
+                borderBottom: "1px solid",
+                borderColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
+                background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.01)",
             }}
         >
-            <Typography
-                component="h1"
-                sx={{
-                    fontSize: 14,
-                }}
-            >
-                Pinned Messages
-            </Typography>
-        </Stack>
+            <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
+                {icon}
+                <Typography
+                    level="body-xs"
+                    sx={{
+                        fontWeight: 600,
+                        fontSize: 11,
+                        color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.55)",
+                        letterSpacing: "0.02em",
+                    }}
+                >
+                    {children}
+                </Typography>
+            </Stack>
+        </Box>
     );
+};
+
+export const PinnedDivider = () => {
+    return <DividerBase>Pinned Messages</DividerBase>;
 };
 
 type GMDividerProps = {
     setOpenCreateGM: (value: boolean) => void;
 };
+
 export const GMDivider = (props: GMDividerProps) => {
     const { setOpenCreateGM } = props;
     const { mode } = useColorScheme();
+    const isDark = mode === "dark";
+
     return (
-        <Stack
-            direction="row"
-            spacing={1}
+        <Box
             sx={{
-                backgroundColor: mode === "dark" ? "black" : "rgb(217, 217, 217)",
-                justifyContent: "center",
-                alignItems: "center",
-                mt: "3px",
+                px: 2,
+                py: 0.75,
+                borderBottom: "1px solid",
+                borderColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
+                background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.01)",
             }}
         >
-            <Typography
-                component="h1"
-                sx={{
-                    fontSize: 14,
-                }}
-            >
-                GM Chats
-            </Typography>
-            <IconButton
-                color="neutral"
-                component="a"
-                size="sm"
-                variant="plain"
-                onClick={() => setOpenCreateGM(true)}
-            >
-                <AddIcon />
-            </IconButton>
-        </Stack>
+            <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
+                <Typography
+                    level="body-xs"
+                    sx={{
+                        fontWeight: 600,
+                        fontSize: 11,
+                        color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.55)",
+                        letterSpacing: "0.02em",
+                    }}
+                >
+                    Group Messages
+                </Typography>
+                <IconButton
+                    size="sm"
+                    variant="plain"
+                    onClick={() => setOpenCreateGM(true)}
+                    sx={{
+                        width: 22,
+                        height: 22,
+                        minWidth: 22,
+                        minHeight: 22,
+                        borderRadius: "6px",
+                        color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.45)",
+                        "&:hover": {
+                            background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
+                            color: isDark ? "#a78bfa" : "#7c3aed",
+                        },
+                    }}
+                >
+                    <AddRoundedIcon sx={{ fontSize: 14 }} />
+                </IconButton>
+            </Stack>
+        </Box>
     );
 };
 
 export const DMDivider = () => {
-    const { mode } = useColorScheme();
-    return (
-        <Stack
-            direction="row"
-            spacing={1}
-            sx={{
-                backgroundColor: mode === "dark" ? "black" : "rgb(217, 217, 217)",
-                py: 0.55,
-                justifyContent: "center",
-                alignItems: "center",
-                mt: "3px",
-            }}
-        >
-            <Typography
-                component="h1"
-                sx={{
-                    fontSize: 14,
-                }}
-            >
-                Direct Messages
-            </Typography>
-        </Stack>
-    );
+    return <DividerBase>Direct Messages</DividerBase>;
 };
 
 export const PMDivider = () => {
-    const { mode } = useColorScheme();
-    return (
-        <Stack
-            direction="row"
-            spacing={1}
-            sx={{
-                backgroundColor: mode === "dark" ? "black" : "rgb(217, 217, 217)",
-                py: 0.7,
-                justifyContent: "center",
-                alignItems: "center",
-                mt: "3px",
-            }}
-        >
-            <Typography
-                component="h1"
-                sx={{
-                    fontSize: 14,
-                }}
-            >
-                Project Updates
-            </Typography>
-        </Stack>
-    );
+    return <DividerBase>Project Updates</DividerBase>;
 };
+
+// Activity filter configuration
+const ACTIVITY_FILTERS = [
+    { id: 0, label: "All", icon: ViewListRoundedIcon },
+    { id: 3, label: "Mentions", icon: AlternateEmailRoundedIcon },
+    { id: 1, label: "Threads", icon: ChatBubbleOutlineRoundedIcon },
+    { id: 4, label: "Reactions", icon: EmojiEmotionsRoundedIcon },
+    { id: 2, label: "Tasks", icon: TaskAltRoundedIcon },
+];
 
 type ActivityDividerProps = {
     currentActivityMessageType: number;
     setCurrentActivityMessageType: (value: number) => void;
 };
+
 export const ActivityDivider = (props: ActivityDividerProps) => {
     const { currentActivityMessageType, setCurrentActivityMessageType } = props;
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
 
     return (
-        <Stack
-            direction="column"
-            spacing={1}
-            className="custom-scrollbar"
+        <Box
             sx={{
-                justifyContent: "center",
-                alignItems: "center",
-                my: "3px",
-                overflowX: "scroll",
+                px: 1.5,
+                py: 1,
+                borderBottom: "1px solid",
+                borderColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
             }}
         >
-            <Stack direction={"row"} flexWrap="nowrap" spacing={0.5}>
-                <Button
-                    component="p"
-                    size="sm"
-                    sx={{ fontSize: "12px", my: "1px", py: "3px", px: "5px" }}
-                    variant={currentActivityMessageType === 0 ? "soft" : "outlined"}
-                    onClick={() => {
-                        setCurrentActivityMessageType(0);
-                    }}
-                >
-                    All
-                </Button>
-                <Button
-                    component="p"
-                    size="sm"
-                    sx={{ fontSize: "12px", my: "1px", py: "3px", px: "5px" }}
-                    variant={currentActivityMessageType === 3 ? "soft" : "outlined"}
-                    onClick={() => {
-                        if (currentActivityMessageType !== 3) {
-                            setCurrentActivityMessageType(3);
-                        } else {
-                            setCurrentActivityMessageType(0);
-                        }
-                    }}
-                >
-                    Mention
-                </Button>
-                <Button
-                    component="p"
-                    size="sm"
-                    sx={{ fontSize: "12px", my: "1px", py: "3px", px: "5px" }}
-                    variant={currentActivityMessageType === 1 ? "soft" : "outlined"}
-                    onClick={() => {
-                        if (currentActivityMessageType !== 1) {
-                            setCurrentActivityMessageType(1);
-                        } else {
-                            setCurrentActivityMessageType(0);
-                        }
-                    }}
-                >
-                    Thread
-                </Button>
-                <Button
-                    component="p"
-                    size="sm"
-                    sx={{ fontSize: "12px", my: "1px", py: "3px", px: "5px" }}
-                    variant={currentActivityMessageType === 4 ? "soft" : "outlined"}
-                    onClick={() => {
-                        if (currentActivityMessageType !== 4) {
-                            setCurrentActivityMessageType(4);
-                        } else {
-                            setCurrentActivityMessageType(0);
-                        }
-                    }}
-                >
-                    Reaction
-                </Button>
-                <Button
-                    component="p"
-                    size="sm"
-                    sx={{ fontSize: "12px", my: "1px", py: "3px", px: "5px" }}
-                    variant={currentActivityMessageType === 2 ? "soft" : "outlined"}
-                    onClick={() => {
-                        if (currentActivityMessageType !== 2) {
-                            setCurrentActivityMessageType(2);
-                        } else {
-                            setCurrentActivityMessageType(0);
-                        }
-                    }}
-                >
-                    Task
-                </Button>
+            <Stack
+                direction="row"
+                spacing={0.5}
+                className="custom-scrollbar"
+                sx={{
+                    overflowX: "auto",
+                    pb: 0.5,
+                    "&::-webkit-scrollbar": {
+                        height: 4,
+                    },
+                }}
+            >
+                {ACTIVITY_FILTERS.map((filter) => {
+                    const Icon = filter.icon;
+                    const isActive = currentActivityMessageType === filter.id;
+
+                    return (
+                        <Box
+                            key={filter.id}
+                            onClick={() => {
+                                if (currentActivityMessageType !== filter.id) {
+                                    setCurrentActivityMessageType(filter.id);
+                                } else if (filter.id !== 0) {
+                                    setCurrentActivityMessageType(0);
+                                }
+                            }}
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 0.5,
+                                px: 1.25,
+                                py: 0.5,
+                                borderRadius: "8px",
+                                cursor: "pointer",
+                                whiteSpace: "nowrap",
+                                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                background: isActive
+                                    ? isDark
+                                        ? "linear-gradient(135deg, rgba(99,102,241,0.18) 0%, rgba(139,92,246,0.12) 100%)"
+                                        : "linear-gradient(135deg, rgba(79,70,229,0.12) 0%, rgba(124,58,237,0.06) 100%)"
+                                    : "transparent",
+                                border: "1px solid",
+                                borderColor: isActive
+                                    ? isDark
+                                        ? "rgba(139,92,246,0.25)"
+                                        : "rgba(124,58,237,0.15)"
+                                    : "transparent",
+                                "&:hover": {
+                                    background: isActive
+                                        ? isDark
+                                            ? "linear-gradient(135deg, rgba(99,102,241,0.22) 0%, rgba(139,92,246,0.16) 100%)"
+                                            : "linear-gradient(135deg, rgba(79,70,229,0.16) 0%, rgba(124,58,237,0.1) 100%)"
+                                        : isDark
+                                          ? "rgba(255,255,255,0.04)"
+                                          : "rgba(0,0,0,0.03)",
+                                },
+                            }}
+                        >
+                            <Icon
+                                sx={{
+                                    fontSize: 14,
+                                    color: isActive
+                                        ? isDark
+                                            ? "#a78bfa"
+                                            : "#7c3aed"
+                                        : isDark
+                                          ? "rgba(255,255,255,0.45)"
+                                          : "rgba(0,0,0,0.4)",
+                                    transition: "color 0.2s ease",
+                                }}
+                            />
+                            <Typography
+                                level="body-xs"
+                                sx={{
+                                    fontWeight: isActive ? 600 : 500,
+                                    fontSize: "0.7rem",
+                                    color: isActive
+                                        ? isDark
+                                            ? "rgba(255,255,255,0.9)"
+                                            : "rgba(0,0,0,0.85)"
+                                        : isDark
+                                          ? "rgba(255,255,255,0.55)"
+                                          : "rgba(0,0,0,0.5)",
+                                    transition: "all 0.2s ease",
+                                }}
+                            >
+                                {filter.label}
+                            </Typography>
+                        </Box>
+                    );
+                })}
             </Stack>
-        </Stack>
+        </Box>
     );
 };

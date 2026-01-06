@@ -1,6 +1,6 @@
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import { Chip, List, ListItem, ListItemContent, Typography } from "@mui/joy";
+import { Box, Chip, List, ListItem, ListItemContent, Typography } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
@@ -15,9 +15,11 @@ type RecentsListItemProps = {
     usePM: ProjectManagementState;
     useTM: TaskManagementState;
 };
+
 export const RecentsListItem = (props: RecentsListItemProps) => {
     const { recentTasks, usePM, useTM } = props;
     const { mode } = useColorScheme();
+    const isDark = mode === "dark";
 
     return (
         <ListItem nested>
@@ -25,40 +27,70 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                 defaultExpanded={false}
                 renderToggle={({ open, setOpen }) => (
                     <ListItemButton
-                        color="primary"
                         onClick={() => {
                             setOpen(!open);
                             useTM.setIsDashboardVisible(false);
                         }}
+                        sx={{
+                            borderRadius: "10px",
+                            py: 1,
+                            px: 1.5,
+                            gap: 1.5,
+                            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                            "&:hover": {
+                                backgroundColor: isDark
+                                    ? "rgba(255,255,255,0.06)"
+                                    : "rgba(0,0,0,0.04)",
+                            },
+                        }}
                     >
-                        <AccessTimeIcon />
+                        <Box
+                            sx={{
+                                width: 28,
+                                height: 28,
+                                borderRadius: "8px",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                backgroundColor: isDark
+                                    ? "rgba(255,255,255,0.08)"
+                                    : "rgba(0,0,0,0.05)",
+                                transition: "all 0.2s ease",
+                            }}
+                        >
+                            <AccessTimeIcon
+                                sx={{
+                                    fontSize: 16,
+                                    color: isDark ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.65)",
+                                }}
+                            />
+                        </Box>
                         <ListItemContent>
                             <Typography
-                                level="title-sm"
+                                level="body-sm"
                                 sx={{
+                                    fontWeight: 500,
                                     overflow: "hidden",
                                     textOverflow: "ellipsis",
                                     whiteSpace: "nowrap",
+                                    color: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.8)",
                                 }}
                             >
                                 Recents
                             </Typography>
                         </ListItemContent>
                         <KeyboardArrowDownIcon
-                            sx={[
-                                open
-                                    ? {
-                                          transform: "rotate(180deg)",
-                                      }
-                                    : {
-                                          transform: "none",
-                                      },
-                            ]}
+                            sx={{
+                                fontSize: 18,
+                                color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.4)",
+                                transition: "transform 0.2s ease",
+                                transform: open ? "rotate(180deg)" : "none",
+                            }}
                         />
                     </ListItemButton>
                 )}
             >
-                <List>
+                <List sx={{ gap: 0.25, py: 0.5 }}>
                     {recentTasks.map(
                         (
                             { projectId, projectName, systemUserId, taskId, title, status },
@@ -67,7 +99,6 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                             return (
                                 <ListItem key={`recent-task-${taskId}`}>
                                     <ListItemButton
-                                        sx={{ overflow: "hidden" }} // ensure children don't overflow
                                         onClick={() => {
                                             if (projectId) {
                                                 usePM.setCurrentProject({
@@ -82,6 +113,19 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                                                 console.error("Failed to set the current project");
                                             }
                                         }}
+                                        sx={{
+                                            overflow: "hidden",
+                                            borderRadius: "8px",
+                                            py: 0.75,
+                                            px: 1.25,
+                                            gap: 0.75,
+                                            transition: "all 0.15s ease",
+                                            "&:hover": {
+                                                backgroundColor: isDark
+                                                    ? "rgba(255,255,255,0.04)"
+                                                    : "rgba(0,0,0,0.03)",
+                                            },
+                                        }}
                                     >
                                         <Chip
                                             key={`recent-task-project-chip-${taskId}`}
@@ -89,51 +133,43 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                                             size="sm"
                                             variant="outlined"
                                             sx={{
-                                                borderRadius: "5px",
-                                                fontWeight: "bold",
-                                                marginX: "-10px",
+                                                borderRadius: "4px",
+                                                fontWeight: 600,
+                                                fontSize: 10,
+                                                minHeight: 20,
+                                                px: 0.5,
                                             }}
                                         >
                                             {projectName.toUpperCase().slice(0, 2)}
                                         </Chip>
                                         <Chip
-                                            key={`recent-task-chip-${taskId}`}
-                                            color="neutral"
-                                            size="sm"
-                                            variant="soft"
-                                            sx={{
-                                                borderRadius: "5px",
-                                                fontWeight: "bold",
-                                            }}
-                                        >
-                                            ID: {taskId || "N/A"}
-                                        </Chip>
-                                        <Chip
-                                            key={`status-chip-${taskId}-${index}`} // pass the key directly
+                                            key={`status-chip-${taskId}-${index}`}
                                             size="sm"
                                             variant="soft"
                                             sx={{
                                                 backgroundColor: status.color
-                                                    ? alpha(
-                                                          status.color,
-                                                          mode === "dark" ? 0.5 : 0.75
-                                                      )
+                                                    ? alpha(status.color, isDark ? 0.4 : 0.6)
                                                     : "transparent",
                                                 color: status.textColor,
-                                                fontWeight: "bold",
-                                                borderRadius: "5px",
-                                                marginX: "-10px",
+                                                fontWeight: 600,
+                                                borderRadius: "4px",
+                                                fontSize: 10,
+                                                minHeight: 20,
+                                                px: 0.5,
                                             }}
                                         >
-                                            {`${status.status}`}
+                                            {status.status}
                                         </Chip>
                                         <Typography
+                                            level="body-xs"
                                             sx={{
                                                 overflow: "hidden",
                                                 textOverflow: "ellipsis",
                                                 whiteSpace: "nowrap",
-                                                width: "100%", // take full width of button
-                                                fontSize: "15px",
+                                                flex: 1,
+                                                color: isDark
+                                                    ? "rgba(255,255,255,0.8)"
+                                                    : "rgba(0,0,0,0.7)",
                                             }}
                                             noWrap
                                         >

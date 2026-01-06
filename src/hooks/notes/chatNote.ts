@@ -40,7 +40,11 @@ type updataChatNoteChainProps = {
     currentChatNoteChain?: ChatNoteMetaTreeNode[];
     setCurrentChatNoteChain: (value: ChatNoteMetaTreeNode[]) => void;
     allNoteIdChains: Record<string, number[]>;
-    setAllNoteIdChains: (value: Record<string, number[]>) => void;
+    setAllNoteIdChains: (
+        value:
+            | Record<string, number[]>
+            | ((prev: Record<string, number[]>) => Record<string, number[]>)
+    ) => void;
     tabItems: any[];
     selectedTabIndex: number;
 };
@@ -57,32 +61,34 @@ export const updataChatNoteChain = (props: updataChatNoteChainProps) => {
     } = props;
 
     useEffect(() => {
-        // Will update the Chain when `currentChatNote` and/or `tabItems` is changed.
+        // Will update the Chain when `currentChatNote`, `tabItems`, or `selectedTabIndex` is changed.
         // When `tabItems` is changed, `currentChatNote` is also changed at the same time.
         // But `currentChatNote` can be changed alone only if `tabItems` includes `currentChatNote`.
         if (tabItems && tabItems[selectedTabIndex]) {
             const chain = findChatNoteChain(chatNoteMetaTree, tabItems[selectedTabIndex].noteId);
             if (chain) {
-                if (
-                    currentChatNoteChain &&
-                    areArraysEqualByJSON(
+                // Update chain if it's different from current, or if current is undefined
+                const isDifferent =
+                    !currentChatNoteChain ||
+                    !areArraysEqualByJSON(
                         chain.map((item) => `${item.noteType}-${item.noteId}`),
                         currentChatNoteChain.map((item) => `${item.noteType}-${item.noteId}`)
-                    ) === false
-                ) {
-                    setCurrentChatNoteChain(chain || []);
+                    );
+
+                if (isDifferent) {
+                    setCurrentChatNoteChain(chain);
                 }
 
-                setAllNoteIdChains({
-                    ...allNoteIdChains,
+                setAllNoteIdChains((prev) => ({
+                    ...prev,
                     [`${tabItems[selectedTabIndex].noteType}-${tabItems[selectedTabIndex].noteId}`]:
                         chain.map((item) => item.noteId),
-                });
+                }));
             }
         } else {
             setCurrentChatNoteChain([]);
         }
-    }, [currentChatNote, tabItems]);
+    }, [currentChatNote, tabItems, selectedTabIndex, chatNoteMetaTree]);
 };
 
 type initCurrentChatNoteChainProps = {

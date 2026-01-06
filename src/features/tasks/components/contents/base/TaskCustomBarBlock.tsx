@@ -16,7 +16,32 @@ export const TaskCustomBarBlock = (props: TaskCustomBarBlockProps) => {
         props;
 
     return (
-        <Stack direction="row" sx={{ width: "100%", alignItems: "center", gap: 1 }}>
+        <Stack
+            direction="row"
+            sx={{
+                width: "100%",
+                alignItems: "center",
+                gap: 1,
+                justifyContent: "flex-end",
+                pb: 1,
+            }}
+        >
+            {taskBodySaved === true && (
+                <IconButton
+                    color="neutral"
+                    component="p"
+                    size="sm"
+                    variant="plain"
+                    sx={{
+                        fontSize: "14px",
+                        paddingX: "5px",
+                    }}
+                >
+                    <CheckIcon sx={{ fontSize: "15px" }} />
+                    Saved
+                </IconButton>
+            )}
+
             {/* Next Status IconButton */}
             {taskContent.status.status === "Open" || taskContent.status.status === "Pending" ? (
                 <IconButton
@@ -81,22 +106,6 @@ export const TaskCustomBarBlock = (props: TaskCustomBarBlockProps) => {
                 </IconButton>
             ) : (
                 <div></div>
-            )}
-
-            {taskBodySaved === true && (
-                <IconButton
-                    color="neutral"
-                    component="p"
-                    size="sm"
-                    variant="plain"
-                    sx={{
-                        fontSize: "14px",
-                        paddingX: "5px",
-                    }}
-                >
-                    <CheckIcon sx={{ fontSize: "15px" }} />
-                    Saved
-                </IconButton>
             )}
         </Stack>
     );

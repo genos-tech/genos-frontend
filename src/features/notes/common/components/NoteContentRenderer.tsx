@@ -52,13 +52,24 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
         </Box>
     );
 
-    // Note Home placeholder
-    if (useNM.currentNoteType === 0) {
+    // Get the currently selected tab's note type
+    // This ensures we render the correct component based on the OPEN note,
+    // not the sidebar category the user clicked on
+    const selectedTab = useNM.tabItems[useNM.selectedTabIndex];
+    const activeNoteType = selectedTab?.noteType ?? useNM.currentNoteType;
+
+    // Note Home placeholder (only show if no notes are open)
+    if (useNM.currentNoteType === 0 && useNM.tabItems.length === 0) {
         return renderPlaceholder("(TBD) Note Home");
     }
 
-    // My Note
-    if (useNM.currentNoteType === 1 && useNM.currentMyNoteChain) {
+    // No notes open at all
+    if (useNM.tabItems.length === 0) {
+        return renderPlaceholder("No Note Selected");
+    }
+
+    // My Note (noteType === 1)
+    if (activeNoteType === 1 && useNM.currentMyNote) {
         return (
             <MyNoteMain
                 useCM={useCM}
@@ -72,8 +83,8 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
         );
     }
 
-    // Task Note
-    if (useNM.currentNoteType === 2 && useNM.currentTaskNoteChain) {
+    // Task Note (noteType === 2)
+    if (activeNoteType === 2 && useNM.currentTaskNote) {
         return (
             <>
                 <TaskNoteMain
@@ -105,8 +116,8 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
         );
     }
 
-    // Chat Note
-    if (useNM.currentNoteType === 3 && useNM.currentChatNoteChain) {
+    // Chat Note (noteType === 3)
+    if (activeNoteType === 3 && useNM.currentChatNote) {
         return (
             <ChatNoteMain
                 useCM={useCM}
@@ -126,6 +137,11 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
     // Shared Note placeholder
     if (useNM.currentNoteType === 4) {
         return renderPlaceholder("(TBD) Shared Notes");
+    }
+
+    // Fallback: if tabs exist but current note is still loading
+    if (useNM.tabItems.length > 0) {
+        return null; // Let the component load
     }
 
     return null;

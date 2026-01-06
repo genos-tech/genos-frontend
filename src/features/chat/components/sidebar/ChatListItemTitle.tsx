@@ -1,6 +1,7 @@
 import React from "react";
-import LockOutlineIcon from "@mui/icons-material/LockOutline";
+import LockOutlineRoundedIcon from "@mui/icons-material/LockOutlineRounded";
 import { Box, Chip, Stack, Typography } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UserProps } from "../../../../types/admin";
@@ -19,6 +20,9 @@ export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
     isYou,
     myself,
 }) => {
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
+
     const showMyCustomStatus =
         chat.dmPartnerUser.userId !== "" &&
         myself.userId === chat.dmPartnerUser.userId &&
@@ -30,41 +34,53 @@ export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
         useTEM.teamMemberProfiles[chat.dmPartnerUser.userId] &&
         useTEM.teamMemberProfiles[chat.dmPartnerUser.userId].customStatus !== "";
 
+    const customStatus = showMyCustomStatus
+        ? myself.customStatus
+        : showOthersCustomStatus
+          ? useTEM.teamMemberProfiles[chat.dmPartnerUser.userId].customStatus
+          : null;
+
     return (
-        <Box sx={{ pt: "3px" }}>
-            <Stack direction="row" spacing={0.5}>
+        <Box sx={{ minWidth: 0 }}>
+            <Stack direction="row" spacing={0.75} alignItems="center" sx={{ minWidth: 0 }}>
+                {chat.isPrivate && (
+                    <LockOutlineRoundedIcon
+                        sx={{
+                            fontSize: 14,
+                            color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.4)",
+                            flexShrink: 0,
+                        }}
+                    />
+                )}
                 <Typography
                     level="title-sm"
-                    sx={{ pl: "5px" }}
-                    startDecorator={
-                        chat.isPrivate ? <LockOutlineIcon sx={{ fontSize: "16px" }} /> : undefined
-                    }
                     noWrap
+                    sx={{
+                        fontWeight: 600,
+                        fontSize: "0.85rem",
+                        color: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.85)",
+                        minWidth: 0,
+                    }}
                 >
                     {isYou ? `${chat.chatName} (you)` : chat.chatName}
                 </Typography>
 
-                {/* Show my own custom status */}
-                {showMyCustomStatus && (
+                {customStatus && (
                     <Chip
-                        component="h3"
                         size="sm"
-                        sx={{ borderRadius: "sm", height: "10px" }}
-                        variant="outlined"
+                        variant="soft"
+                        sx={{
+                            height: 18,
+                            fontSize: "0.65rem",
+                            fontWeight: 500,
+                            borderRadius: "6px",
+                            px: 0.75,
+                            background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+                            color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.55)",
+                            flexShrink: 0,
+                        }}
                     >
-                        {myself.customStatus}
-                    </Chip>
-                )}
-
-                {/* Show others custom status */}
-                {showOthersCustomStatus && (
-                    <Chip
-                        component="h3"
-                        size="sm"
-                        sx={{ borderRadius: "sm", height: "10px" }}
-                        variant="outlined"
-                    >
-                        {useTEM.teamMemberProfiles[chat.dmPartnerUser.userId].customStatus}
+                        {customStatus}
                     </Chip>
                 )}
             </Stack>

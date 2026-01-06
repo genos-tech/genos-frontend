@@ -1,14 +1,16 @@
 import { useState } from "react";
-import AccountTreeIcon from "@mui/icons-material/AccountTree";
-import AddIcon from "@mui/icons-material/Add";
-import FlagIcon from "@mui/icons-material/Flag";
-import GroupsIcon from "@mui/icons-material/Groups";
-import MoreVert from "@mui/icons-material/MoreVert";
-import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
-import PersonIcon from "@mui/icons-material/Person";
+import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
+import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
+import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
+import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
+import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import {
     Badge,
     Box,
+    Chip,
+    Divider,
     Dropdown,
     IconButton,
     Menu,
@@ -16,7 +18,6 @@ import {
     MenuItem,
     Sheet,
     Stack,
-    Switch,
     Tooltip,
     Typography,
 } from "@mui/joy";
@@ -30,7 +31,6 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps, MessageProps } from "../../../../types/chat";
-import { ProjectProps } from "../../../../types/tasks";
 import { toggleMessagesPane } from "../../../../utils/sidebarUtils";
 import { popSpecificMessages } from "../../services/popSpecificMessages";
 import { defaultChat } from "../../utils/defaults";
@@ -39,6 +39,54 @@ import { ModalJoinGM } from "../modals/ModalJoinGM";
 import { ChatList } from "./ChatList";
 import { ChatSearch } from "./ChatSearch";
 import { ActivityDivider } from "./ChatSidebarDividers";
+
+// Chat type constants
+const CHAT_PANE_TYPES = {
+    DM: 1,
+    GM: 2,
+    PM: 3,
+    ACTIVITY: 5,
+    FLAGGED: 6,
+} as const;
+
+// Navigation item configuration
+const NAV_ITEMS = [
+    {
+        type: CHAT_PANE_TYPES.DM,
+        icon: PersonRoundedIcon,
+        label: "Direct Messages",
+        shortLabel: "DMs",
+        colorScheme: { dark: "#60a5fa", light: "#3b82f6" },
+    },
+    {
+        type: CHAT_PANE_TYPES.GM,
+        icon: GroupsRoundedIcon,
+        label: "Group Messages",
+        shortLabel: "Groups",
+        colorScheme: { dark: "#4ade80", light: "#22c55e" },
+    },
+    {
+        type: CHAT_PANE_TYPES.PM,
+        icon: AccountTreeRoundedIcon,
+        label: "Project Updates",
+        shortLabel: "Projects",
+        colorScheme: { dark: "#f472b6", light: "#ec4899" },
+    },
+    {
+        type: CHAT_PANE_TYPES.FLAGGED,
+        icon: FlagRoundedIcon,
+        label: "Flagged Messages",
+        shortLabel: "Flagged",
+        colorScheme: { dark: "#fbbf24", light: "#f59e0b" },
+    },
+    {
+        type: CHAT_PANE_TYPES.ACTIVITY,
+        icon: NotificationsActiveRoundedIcon,
+        label: "Recent Activities",
+        shortLabel: "Activity",
+        colorScheme: { dark: "#a78bfa", light: "#7c3aed" },
+    },
+];
 
 type ChatSidebarProps = {
     incompleteTodoCount: number;
@@ -67,6 +115,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
         usePM,
     } = props;
     const { mode } = useColorScheme();
+    const isDark = mode === "dark";
+
     const [openSearchBox, setOpenSearchBox] = useState(false);
     const [openCreateGM, setOpenCreateGM] = useState(false);
     const [showOnlyUnreadItems, setShowOnlyUnreadItems] = useState(false);
@@ -78,6 +128,23 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
 
     // 0: none, 1: thread, 2: task, 3: mention, 4: reaction
     const [currentActivityMessageType, setCurrentActivityMessageType] = useState<number>(0);
+
+    // Get unread count for a specific chat type
+    const getUnreadCount = (chatType: number): number => {
+        if (chatType === CHAT_PANE_TYPES.FLAGGED) {
+            return useCM.flaggedMessages.length;
+        }
+        if (chatType === CHAT_PANE_TYPES.ACTIVITY) {
+            return useCM.unReadActivityMessageCounts;
+        }
+        return useCM.unReadChatCounts?.[chatType] || 0;
+    };
+
+    // Calculate total unread count
+    const totalUnread =
+        (useCM.unReadChatCounts?.[1] || 0) +
+        (useCM.unReadChatCounts?.[2] || 0) +
+        (useCM.unReadChatCounts?.[3] || 0);
 
     const defineNewChat = (lastChat: AllChatProps, messages: MessageProps[]) => {
         const newMessages: ChatProps = {
@@ -97,42 +164,29 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
         };
         return newMessages;
     };
+
     const onChatIconClickedHandler = (chatType: number) => {
         localStorage.setItem("lastChatType", chatType.toString());
         let lastChat: AllChatProps | undefined = undefined;
         let lastChatId: number = -1;
         let lastChatType: number = -1;
-        if (chatType === 1) {
-            const lastChatIdStr: string = localStorage.getItem("lastDMChatId") || "";
+
+        const storageKeys: Record<number, { id: string; type?: string }> = {
+            1: { id: "lastDMChatId" },
+            2: { id: "lastGMChatId" },
+            3: { id: "lastPMChatId" },
+            4: { id: "lastPinnedChatId", type: "lastPinnedChatType" },
+        };
+
+        const keys = storageKeys[chatType];
+        if (keys) {
+            const lastChatIdStr = localStorage.getItem(keys.id) || "";
             if (lastChatIdStr !== "") {
                 lastChatId = parseInt(lastChatIdStr);
                 lastChat = useCM.allChats.filter((chat) => chat.chatId === lastChatId)[0];
-                lastChatType = 1;
-            }
-        }
-        if (chatType === 2) {
-            const lastChatIdStr: string = localStorage.getItem("lastGMChatId") || "";
-            if (lastChatIdStr !== "") {
-                lastChatId = parseInt(lastChatIdStr);
-                lastChat = useCM.allChats.filter((chat) => chat.chatId === lastChatId)[0];
-                lastChatType = 2;
-            }
-        }
-        if (chatType === 3) {
-            const lastChatIdStr: string = localStorage.getItem("lastPMChatId") || "";
-            if (lastChatIdStr !== "") {
-                lastChatId = parseInt(lastChatIdStr);
-                lastChat = useCM.allChats.filter((chat) => chat.chatId === lastChatId)[0];
-                lastChatType = 3;
-            }
-        }
-        if (chatType === 4) {
-            const lastChatIdStr: string = localStorage.getItem("lastPinnedChatId") || "";
-            const lastChatTypeStr: string = localStorage.getItem("lastPinnedChatType") || "";
-            if (lastChatIdStr !== "" && lastChatTypeStr !== "") {
-                lastChatId = parseInt(lastChatIdStr);
-                lastChat = useCM.allChats.filter((chat) => chat.chatId === lastChatId)[0];
-                lastChatType = parseInt(lastChatTypeStr);
+                lastChatType = keys.type
+                    ? parseInt(localStorage.getItem(keys.type) || "-1")
+                    : chatType;
             }
         }
 
@@ -144,7 +198,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         const newChat: ChatProps = defineNewChat(lastChat, messages);
                         useCM.setCurrentMainChat(newChat);
 
-                        // Switch Thread to Main
                         if (useCM.isThreadVisible) {
                             useCM.setIsMainChatVisible(true);
                             if (useTM.isCreatingTask.flag === true || useTM.isTaskPreviewVisible) {
@@ -159,18 +212,46 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
         }
     };
 
+    const handleNavClick = (type: number) => {
+        useCM.setCurrentChatPaneType(type);
+        localStorage.setItem("currentChatPaneType", type.toString());
+        if (type !== CHAT_PANE_TYPES.ACTIVITY && type !== CHAT_PANE_TYPES.FLAGGED) {
+            onChatIconClickedHandler(type);
+        }
+    };
+
     return (
-        <div style={{ display: "flex", height: "100dvh" }}>
+        <Box sx={{ display: "flex", height: "100dvh" }}>
             <Sheet
                 sx={{
                     width: "100%",
+                    display: "flex",
+                    flexDirection: "column",
                     borderRight: "1px solid",
-                    borderColor: mode === "dark" ? "black" : "white",
-                    overflowY: "hidden",
+                    borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+                    background: isDark
+                        ? "linear-gradient(180deg, rgba(18,18,22,1) 0%, rgba(14,14,18,1) 100%)"
+                        : "linear-gradient(180deg, rgba(252,252,255,1) 0%, rgba(248,248,252,1) 100%)",
                     position: "relative",
-                    transition: "width 0.2s ease-in-out",
+                    overflow: "hidden",
                 }}
             >
+                {/* Subtle background decoration */}
+                <Box
+                    sx={{
+                        position: "absolute",
+                        top: 0,
+                        right: 0,
+                        width: "60%",
+                        height: "40%",
+                        background: isDark
+                            ? "radial-gradient(ellipse at top right, rgba(99,102,241,0.04) 0%, transparent 60%)"
+                            : "radial-gradient(ellipse at top right, rgba(79,70,229,0.03) 0%, transparent 60%)",
+                        pointerEvents: "none",
+                    }}
+                />
+
+                {/* Search Box */}
                 <ChatSearch
                     useCM={useCM}
                     myself={myself}
@@ -190,364 +271,241 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     socket={socket}
                 />
 
-                <Stack
-                    className="custom-scrollbar"
-                    alignItems="center"
-                    direction="row"
-                    sx={{ overflowX: "scroll" }}
+                {/* Navigation Tabs */}
+                <Box
+                    sx={{
+                        px: 1.5,
+                        py: 1,
+                        borderBottom: "1px solid",
+                        borderColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
+                    }}
                 >
-                    {/* Centered buttons */}
                     <Stack
                         direction="row"
-                        flexGrow={1}
-                        justifyContent="center"
-                        spacing={2}
-                        sx={{
-                            pt:
-                                (useCM.unReadChatCounts && (useCM.unReadChatCounts[0] || 0) > 0) ||
-                                (useCM.unReadChatCounts && (useCM.unReadChatCounts[1] || 0) > 0) ||
-                                (useCM.unReadChatCounts && (useCM.unReadChatCounts[2] || 0) > 0) ||
-                                (useCM.unReadChatCounts && (useCM.unReadChatCounts[3] || 0) > 0) ||
-                                useCM.flaggedMessages.length > 0 ||
-                                useCM.unReadActivityMessageCounts > 0
-                                    ? "10px"
-                                    : "3px",
-                        }}
+                        alignItems="center"
+                        justifyContent="space-between"
+                        sx={{ mb: 1 }}
                     >
-                        {/* For DM */}
-                        {useCM.unReadChatCounts && (useCM.unReadChatCounts[1] || 0) > 0 && (
-                            <Tooltip
-                                placement="top"
-                                size="sm"
-                                sx={{ zIndex: "10020" }}
-                                title="Direct Messages"
-                                variant="outlined"
-                            >
-                                <Badge
-                                    anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                                    badgeContent={useCM.unReadChatCounts[1]}
-                                    color="primary"
-                                    size="sm"
-                                    sx={{ "& .JoyBadge-badge": { zIndex: 1 } }}
-                                >
-                                    <IconButton
-                                        component="p"
-                                        size="sm"
-                                        variant={
-                                            useCM.currentChatPaneType === 1 ? "solid" : "plain"
-                                        }
-                                        onClick={() => {
-                                            useCM.setCurrentChatPaneType(1);
-                                            localStorage.setItem("currentChatPaneType", "1");
-                                            onChatIconClickedHandler(1);
-                                        }}
-                                    >
-                                        <PersonIcon />
-                                    </IconButton>
-                                </Badge>
-                            </Tooltip>
-                        )}
-                        {!(useCM.unReadChatCounts && (useCM.unReadChatCounts[1] || 0) > 0) && (
-                            <Tooltip
-                                placement="top"
-                                size="sm"
-                                sx={{ zIndex: "10020" }}
-                                title="Direct Messages"
-                                variant="outlined"
-                            >
-                                <IconButton
-                                    component="p"
-                                    size="sm"
-                                    variant={useCM.currentChatPaneType === 1 ? "solid" : "plain"}
-                                    onClick={() => {
-                                        useCM.setCurrentChatPaneType(1);
-                                        localStorage.setItem("currentChatPaneType", "1");
-                                        onChatIconClickedHandler(1);
-                                    }}
-                                >
-                                    <PersonIcon />
-                                </IconButton>
-                            </Tooltip>
-                        )}
+                        <Stack direction="row" spacing={0.5} sx={{ flexWrap: "wrap", gap: 0.5 }}>
+                            {NAV_ITEMS.map((item) => {
+                                const Icon = item.icon;
+                                const isActive = useCM.currentChatPaneType === item.type;
+                                const unreadCount = getUnreadCount(item.type);
 
-                        {/* For GM */}
-                        {useCM.unReadChatCounts && (useCM.unReadChatCounts[2] || 0) > 0 && (
-                            <Tooltip
-                                placement="top"
-                                size="sm"
-                                sx={{ zIndex: "10020" }}
-                                title="Group Messages"
-                                variant="outlined"
-                            >
-                                <Badge
-                                    anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                                    badgeContent={useCM.unReadChatCounts[2]}
-                                    color="primary"
-                                    size="sm"
-                                    sx={{ "& .JoyBadge-badge": { zIndex: 1 } }}
-                                >
-                                    <IconButton
-                                        component="p"
+                                return (
+                                    <Tooltip
+                                        key={item.type}
+                                        title={item.label}
                                         size="sm"
-                                        variant={
-                                            useCM.currentChatPaneType === 2 ? "solid" : "plain"
-                                        }
-                                        onClick={() => {
-                                            useCM.setCurrentChatPaneType(2);
-                                            localStorage.setItem("currentChatPaneType", "2");
-                                            onChatIconClickedHandler(2);
-                                        }}
+                                        placement="top"
+                                        sx={{ zIndex: 10020 }}
                                     >
-                                        <GroupsIcon />
-                                    </IconButton>
-                                </Badge>
-                            </Tooltip>
-                        )}
-                        {!(useCM.unReadChatCounts && (useCM.unReadChatCounts[2] || 0) > 0) && (
-                            <Tooltip
-                                placement="top"
-                                size="sm"
-                                sx={{ zIndex: "10020" }}
-                                title="Group Messages"
-                                variant="outlined"
-                            >
-                                <IconButton
-                                    component="p"
-                                    size="sm"
-                                    variant={useCM.currentChatPaneType === 2 ? "solid" : "plain"}
-                                    onClick={() => {
-                                        useCM.setCurrentChatPaneType(2);
-                                        localStorage.setItem("currentChatPaneType", "2");
-                                        onChatIconClickedHandler(2);
-                                    }}
-                                >
-                                    <GroupsIcon />
-                                </IconButton>
-                            </Tooltip>
-                        )}
-
-                        {/* For PM */}
-                        {useCM.unReadChatCounts && (useCM.unReadChatCounts[3] || 0) > 0 && (
-                            <Tooltip
-                                placement="top"
-                                size="sm"
-                                sx={{ zIndex: "10020" }}
-                                title="Project Updates"
-                                variant="outlined"
-                            >
-                                <Badge
-                                    anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                                    badgeContent={useCM.unReadChatCounts[3]}
-                                    color="primary"
-                                    size="sm"
-                                    sx={{ "& .JoyBadge-badge": { zIndex: 1 } }}
-                                >
-                                    <IconButton
-                                        component="p"
-                                        size="sm"
-                                        variant={
-                                            useCM.currentChatPaneType === 3 ? "solid" : "plain"
-                                        }
-                                        onClick={() => {
-                                            useCM.setCurrentChatPaneType(3);
-                                            localStorage.setItem("currentChatPaneType", "3");
-                                            onChatIconClickedHandler(3);
-                                        }}
-                                    >
-                                        <AccountTreeIcon />
-                                    </IconButton>
-                                </Badge>
-                            </Tooltip>
-                        )}
-                        {!(useCM.unReadChatCounts && (useCM.unReadChatCounts[3] || 0) > 0) && (
-                            <Tooltip
-                                placement="top"
-                                size="sm"
-                                sx={{ zIndex: "10020" }}
-                                title="Project Updates"
-                                variant="outlined"
-                            >
-                                <IconButton
-                                    component="p"
-                                    size="sm"
-                                    variant={useCM.currentChatPaneType === 3 ? "solid" : "plain"}
-                                    onClick={() => {
-                                        useCM.setCurrentChatPaneType(3);
-                                        localStorage.setItem("currentChatPaneType", "3");
-                                        onChatIconClickedHandler(3);
-                                    }}
-                                >
-                                    <AccountTreeIcon />
-                                </IconButton>
-                            </Tooltip>
-                        )}
-
-                        {/* For Flagged */}
-                        {useCM.flaggedMessages.length > 0 && (
-                            <Tooltip
-                                placement="top"
-                                size="sm"
-                                sx={{ zIndex: "10020" }}
-                                title="Flagged Messages"
-                                variant="outlined"
-                            >
-                                <Badge
-                                    anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                                    badgeContent={useCM.flaggedMessages.length}
-                                    color="primary"
-                                    size="sm"
-                                    sx={{ "& .JoyBadge-badge": { zIndex: 1 } }}
-                                >
-                                    <IconButton
-                                        component="p"
-                                        size="sm"
-                                        variant={
-                                            useCM.currentChatPaneType === 6 ? "solid" : "plain"
-                                        }
-                                        onClick={() => {
-                                            useCM.setCurrentChatPaneType(6);
-                                            localStorage.setItem("currentChatPaneType", "6");
-                                        }}
-                                    >
-                                        <FlagIcon />
-                                    </IconButton>
-                                </Badge>
-                            </Tooltip>
-                        )}
-                        {!(useCM.flaggedMessages.length > 0) && (
-                            <Tooltip
-                                placement="top"
-                                size="sm"
-                                sx={{ zIndex: "10020" }}
-                                title="Flagged Messages"
-                                variant="outlined"
-                            >
-                                <IconButton
-                                    component="p"
-                                    size="sm"
-                                    variant={useCM.currentChatPaneType === 6 ? "solid" : "plain"}
-                                    onClick={() => {
-                                        useCM.setCurrentChatPaneType(6);
-                                        localStorage.setItem("currentChatPaneType", "6");
-                                    }}
-                                >
-                                    <FlagIcon />
-                                </IconButton>
-                            </Tooltip>
-                        )}
-
-                        {/* For Activity */}
-                        {useCM.unReadActivityMessageCounts > 0 && (
-                            <Tooltip
-                                placement="top"
-                                size="sm"
-                                sx={{ zIndex: "10020" }}
-                                title="Recent Activities"
-                                variant="outlined"
-                            >
-                                <Badge
-                                    anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                                    badgeContent={useCM.unReadActivityMessageCounts}
-                                    color="primary"
-                                    size="sm"
-                                    sx={{
-                                        "& .JoyBadge-badge": { zIndex: 1 },
-                                    }}
-                                >
-                                    <IconButton
-                                        component="p"
-                                        size="sm"
-                                        variant={
-                                            useCM.currentChatPaneType === 5 ? "solid" : "plain"
-                                        }
-                                        onClick={() => {
-                                            useCM.setCurrentChatPaneType(5);
-                                            localStorage.setItem("currentChatPaneType", "5");
-                                        }}
-                                    >
-                                        <NotificationsActiveIcon />
-                                    </IconButton>
-                                </Badge>
-                            </Tooltip>
-                        )}
-                        {useCM.unReadActivityMessageCounts === 0 && (
-                            <Tooltip
-                                placement="top"
-                                size="sm"
-                                sx={{ zIndex: "10020" }}
-                                title="Recent Activities"
-                                variant="outlined"
-                            >
-                                <IconButton
-                                    component="p"
-                                    size="sm"
-                                    variant={useCM.currentChatPaneType === 5 ? "solid" : "plain"}
-                                    onClick={() => {
-                                        useCM.setCurrentChatPaneType(5);
-                                        localStorage.setItem("currentChatPaneType", "5");
-                                    }}
-                                >
-                                    <NotificationsActiveIcon />
-                                </IconButton>
-                            </Tooltip>
-                        )}
-                    </Stack>
-
-                    <Stack direction="row" sx={{ px: "10px", width: "120px" }}>
-                        <Switch
-                            checked={showOnlyUnreadItems}
-                            size="sm"
-                            variant="soft"
-                            slotProps={{
-                                track: {
-                                    children: (
-                                        <Typography
-                                            component="span"
-                                            level="inherit"
+                                        <Badge
+                                            badgeContent={unreadCount > 0 ? unreadCount : 0}
+                                            invisible={unreadCount === 0}
+                                            size="sm"
                                             sx={{
-                                                ml: showOnlyUnreadItems ? "6px" : "22px",
-                                                fontWeight: "bold",
+                                                "& .MuiBadge-badge": {
+                                                    background: isDark
+                                                        ? `linear-gradient(135deg, ${item.colorScheme.dark} 0%, ${item.colorScheme.dark}cc 100%)`
+                                                        : `linear-gradient(135deg, ${item.colorScheme.light} 0%, ${item.colorScheme.light}cc 100%)`,
+                                                    color: "#fff",
+                                                    fontWeight: 700,
+                                                    fontSize: "0.65rem",
+                                                    minWidth: 16,
+                                                    height: 16,
+                                                    boxShadow: isDark
+                                                        ? `0 2px 6px ${item.colorScheme.dark}40`
+                                                        : `0 2px 6px ${item.colorScheme.light}35`,
+                                                },
                                             }}
                                         >
-                                            Unread
-                                        </Typography>
-                                    ),
-                                },
-                            }}
-                            sx={{
-                                "--Switch-thumbSize": "15px",
-                                "--Switch-trackWidth": "70px",
-                                "--Switch-trackHeight": "23px",
-                            }}
-                            onChange={() => setShowOnlyUnreadItems(!showOnlyUnreadItems)}
-                        />
+                                            <Box
+                                                onClick={() => handleNavClick(item.type)}
+                                                sx={{
+                                                    width: 36,
+                                                    height: 36,
+                                                    borderRadius: "10px",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                    cursor: "pointer",
+                                                    transition:
+                                                        "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                                    background: isActive
+                                                        ? isDark
+                                                            ? `linear-gradient(135deg, ${item.colorScheme.dark}20 0%, ${item.colorScheme.dark}10 100%)`
+                                                            : `linear-gradient(135deg, ${item.colorScheme.light}15 0%, ${item.colorScheme.light}08 100%)`
+                                                        : "transparent",
+                                                    border: "1px solid",
+                                                    borderColor: isActive
+                                                        ? isDark
+                                                            ? `${item.colorScheme.dark}35`
+                                                            : `${item.colorScheme.light}25`
+                                                        : "transparent",
+                                                    "&:hover": {
+                                                        background: isActive
+                                                            ? isDark
+                                                                ? `linear-gradient(135deg, ${item.colorScheme.dark}25 0%, ${item.colorScheme.dark}15 100%)`
+                                                                : `linear-gradient(135deg, ${item.colorScheme.light}20 0%, ${item.colorScheme.light}12 100%)`
+                                                            : isDark
+                                                              ? "rgba(255,255,255,0.06)"
+                                                              : "rgba(0,0,0,0.04)",
+                                                        transform: "translateY(-1px)",
+                                                    },
+                                                    "&:active": {
+                                                        transform: "translateY(0)",
+                                                    },
+                                                }}
+                                            >
+                                                <Icon
+                                                    sx={{
+                                                        fontSize: 18,
+                                                        color: isActive
+                                                            ? isDark
+                                                                ? item.colorScheme.dark
+                                                                : item.colorScheme.light
+                                                            : isDark
+                                                              ? "rgba(255,255,255,0.5)"
+                                                              : "rgba(0,0,0,0.45)",
+                                                        transition: "color 0.2s ease",
+                                                    }}
+                                                />
+                                            </Box>
+                                        </Badge>
+                                    </Tooltip>
+                                );
+                            })}
+                        </Stack>
 
-                        <Dropdown>
-                            <MenuButton
-                                slots={{ root: IconButton }}
-                                slotProps={{
-                                    root: { color: "neutral" },
+                        {/* Actions */}
+                        <Stack direction="row" spacing={0.5} alignItems="center">
+                            {/* Unread Filter Toggle */}
+                            <Chip
+                                size="sm"
+                                variant={showOnlyUnreadItems ? "solid" : "soft"}
+                                color={showOnlyUnreadItems ? "primary" : "neutral"}
+                                onClick={() => setShowOnlyUnreadItems(!showOnlyUnreadItems)}
+                                sx={{
+                                    cursor: "pointer",
+                                    fontWeight: 600,
+                                    fontSize: "0.7rem",
+                                    px: 1,
+                                    height: 26,
+                                    borderRadius: "8px",
+                                    transition: "all 0.2s ease",
+                                    background: showOnlyUnreadItems
+                                        ? isDark
+                                            ? "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)"
+                                            : "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)"
+                                        : isDark
+                                          ? "rgba(255,255,255,0.06)"
+                                          : "rgba(0,0,0,0.04)",
+                                    border: "1px solid",
+                                    borderColor: showOnlyUnreadItems
+                                        ? "transparent"
+                                        : isDark
+                                          ? "rgba(255,255,255,0.08)"
+                                          : "rgba(0,0,0,0.06)",
+                                    "&:hover": {
+                                        background: showOnlyUnreadItems
+                                            ? isDark
+                                                ? "linear-gradient(135deg, #818cf8 0%, #a78bfa 100%)"
+                                                : "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)"
+                                            : isDark
+                                              ? "rgba(255,255,255,0.1)"
+                                              : "rgba(0,0,0,0.06)",
+                                    },
                                 }}
                             >
-                                <MoreVert />
-                            </MenuButton>
-                            <Menu size="sm">
-                                <MenuItem
-                                    onClick={() => {
-                                        setOpenCreateGM(true);
+                                Unread
+                            </Chip>
+
+                            {/* Menu */}
+                            <Dropdown>
+                                <MenuButton
+                                    slots={{ root: IconButton }}
+                                    slotProps={{
+                                        root: {
+                                            size: "sm",
+                                            sx: {
+                                                borderRadius: "8px",
+                                                color: isDark
+                                                    ? "rgba(255,255,255,0.5)"
+                                                    : "rgba(0,0,0,0.45)",
+                                                "&:hover": {
+                                                    background: isDark
+                                                        ? "rgba(255,255,255,0.06)"
+                                                        : "rgba(0,0,0,0.04)",
+                                                },
+                                            },
+                                        },
                                     }}
                                 >
-                                    <AddIcon />
-                                    Group Messages
-                                </MenuItem>
-                            </Menu>
-                        </Dropdown>
+                                    <MoreVertRoundedIcon sx={{ fontSize: 18 }} />
+                                </MenuButton>
+                                <Menu
+                                    size="sm"
+                                    placement="bottom-end"
+                                    sx={{
+                                        borderRadius: "12px",
+                                        boxShadow: isDark
+                                            ? "0 8px 32px rgba(0,0,0,0.5)"
+                                            : "0 8px 32px rgba(0,0,0,0.12)",
+                                    }}
+                                >
+                                    <MenuItem
+                                        onClick={() => setOpenCreateGM(true)}
+                                        sx={{
+                                            borderRadius: "8px",
+                                            gap: 1.5,
+                                            fontSize: "0.85rem",
+                                        }}
+                                    >
+                                        <AddRoundedIcon sx={{ fontSize: 18 }} />
+                                        Create Group
+                                    </MenuItem>
+                                </Menu>
+                            </Dropdown>
+                        </Stack>
                     </Stack>
-                </Stack>
 
-                {/* For Direct Messages */}
-                {useCM.currentChatPaneType === 1 && (
-                    <Box>
+                    {/* Current Section Label */}
+                    <Typography
+                        level="body-xs"
+                        sx={{
+                            fontWeight: 600,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.08em",
+                            fontSize: 10,
+                            color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
+                            px: 0.5,
+                        }}
+                    >
+                        {NAV_ITEMS.find((item) => item.type === useCM.currentChatPaneType)
+                            ?.label || "Messages"}
+                    </Typography>
+                </Box>
+
+                {/* Activity Filter (only shown for Activity tab) */}
+                {useCM.currentChatPaneType === CHAT_PANE_TYPES.ACTIVITY && (
+                    <ActivityDivider
+                        currentActivityMessageType={currentActivityMessageType}
+                        setCurrentActivityMessageType={setCurrentActivityMessageType}
+                    />
+                )}
+
+                {/* Chat Lists */}
+                <Box
+                    sx={{
+                        flex: 1,
+                        overflow: "hidden",
+                        display: "flex",
+                        flexDirection: "column",
+                    }}
+                >
+                    {/* Direct Messages */}
+                    {useCM.currentChatPaneType === CHAT_PANE_TYPES.DM && (
                         <ChatList
                             usePM={usePM}
                             targetChatType={1}
@@ -557,24 +515,14 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             useTEM={useTEM}
                             useUISM={useUISM}
                             useTM={useTM}
-                            actions={{
-                                setIsToDoVisible,
-                            }}
-                            data={{
-                                myself,
-                                setMyself,
-                            }}
-                            state={{
-                                showOnlyUnreadItems,
-                                incompleteTodoCount,
-                            }}
+                            actions={{ setIsToDoVisible }}
+                            data={{ myself, setMyself }}
+                            state={{ showOnlyUnreadItems, incompleteTodoCount }}
                         />
-                    </Box>
-                )}
+                    )}
 
-                {/* For Group Messages */}
-                {useCM.currentChatPaneType === 2 && (
-                    <Box>
+                    {/* Group Messages */}
+                    {useCM.currentChatPaneType === CHAT_PANE_TYPES.GM && (
                         <ChatList
                             usePM={usePM}
                             targetChatType={2}
@@ -584,24 +532,14 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             useTEM={useTEM}
                             useUISM={useUISM}
                             useTM={useTM}
-                            actions={{
-                                setIsToDoVisible,
-                            }}
-                            data={{
-                                myself,
-                                setMyself,
-                            }}
-                            state={{
-                                showOnlyUnreadItems,
-                                incompleteTodoCount,
-                            }}
+                            actions={{ setIsToDoVisible }}
+                            data={{ myself, setMyself }}
+                            state={{ showOnlyUnreadItems, incompleteTodoCount }}
                         />
-                    </Box>
-                )}
+                    )}
 
-                {/* For PM Chats */}
-                {useCM.currentChatPaneType === 3 && (
-                    <Box>
+                    {/* Project Messages */}
+                    {useCM.currentChatPaneType === CHAT_PANE_TYPES.PM && (
                         <ChatList
                             usePM={usePM}
                             targetChatType={3}
@@ -611,28 +549,14 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             useTEM={useTEM}
                             useUISM={useUISM}
                             useTM={useTM}
-                            actions={{
-                                setIsToDoVisible,
-                            }}
-                            data={{
-                                myself,
-                                setMyself,
-                            }}
-                            state={{
-                                showOnlyUnreadItems,
-                                incompleteTodoCount,
-                            }}
+                            actions={{ setIsToDoVisible }}
+                            data={{ myself, setMyself }}
+                            state={{ showOnlyUnreadItems, incompleteTodoCount }}
                         />
-                    </Box>
-                )}
+                    )}
 
-                {/* For Activity Messages */}
-                {useCM.currentChatPaneType === 5 && (
-                    <Box>
-                        <ActivityDivider
-                            currentActivityMessageType={currentActivityMessageType}
-                            setCurrentActivityMessageType={setCurrentActivityMessageType}
-                        />
+                    {/* Activity Messages */}
+                    {useCM.currentChatPaneType === CHAT_PANE_TYPES.ACTIVITY && (
                         <ChatList
                             usePM={usePM}
                             targetChatType={5}
@@ -642,24 +566,14 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             useTEM={useTEM}
                             useUISM={useUISM}
                             useTM={useTM}
-                            actions={{
-                                setIsToDoVisible,
-                            }}
-                            data={{
-                                myself,
-                                setMyself,
-                            }}
-                            state={{
-                                showOnlyUnreadItems,
-                                incompleteTodoCount,
-                            }}
+                            actions={{ setIsToDoVisible }}
+                            data={{ myself, setMyself }}
+                            state={{ showOnlyUnreadItems, incompleteTodoCount }}
                         />
-                    </Box>
-                )}
+                    )}
 
-                {/* For Flagged Messages */}
-                {useCM.currentChatPaneType === 6 && (
-                    <Box>
+                    {/* Flagged Messages */}
+                    {useCM.currentChatPaneType === CHAT_PANE_TYPES.FLAGGED && (
                         <ChatList
                             usePM={usePM}
                             targetChatType={6}
@@ -669,20 +583,36 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             useTEM={useTEM}
                             useUISM={useUISM}
                             useTM={useTM}
-                            actions={{
-                                setIsToDoVisible,
-                            }}
-                            data={{
-                                myself,
-                                setMyself,
-                            }}
-                            state={{
-                                showOnlyUnreadItems,
-                                incompleteTodoCount,
-                            }}
+                            actions={{ setIsToDoVisible }}
+                            data={{ myself, setMyself }}
+                            state={{ showOnlyUnreadItems, incompleteTodoCount }}
                         />
-                    </Box>
-                )}
+                    )}
+                </Box>
+
+                {/* Footer */}
+                <Divider sx={{ opacity: isDark ? 0.06 : 0.08 }} />
+                <Box
+                    sx={{
+                        px: 2,
+                        py: 1.5,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}
+                >
+                    <Typography
+                        level="body-xs"
+                        sx={{
+                            color: isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.25)",
+                            fontSize: 10,
+                        }}
+                    >
+                        {totalUnread > 0
+                            ? `${totalUnread} unread message${totalUnread > 1 ? "s" : ""}`
+                            : "All caught up"}
+                    </Typography>
+                </Box>
             </Sheet>
 
             <ModalCreateGM
@@ -692,6 +622,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 setOpen={setOpenCreateGM}
                 socket={socket}
             />
-        </div>
+        </Box>
     );
 };
