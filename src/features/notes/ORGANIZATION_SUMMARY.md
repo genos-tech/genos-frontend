@@ -123,7 +123,7 @@ All import statements have been updated to reflect the new structure:
 - **MyNote imports**: `../../features/notes/my-notes/...`
 - **TaskNote imports**: `../../features/notes/task-notes/...`
 - **ChatNote imports**: `../../features/notes/chat-notes/...`
-- **Shared imports**: `../../features/notes/shared-notes/...`
+- **Shared imports**: `../../features/notes/common/...`
 
 ## Migration Notes
 

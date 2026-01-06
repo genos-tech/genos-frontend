@@ -12,10 +12,10 @@ import { useNoteTabs } from "../../../../hooks/notes/useNoteTabs";
 import { UserProps } from "../../../../types/admin";
 import { MyNoteProps } from "../../../../types/notes";
 import { getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
-import { EmptyState } from "../../shared-notes/components/EmptyState";
-import { NoteEditor } from "../../shared-notes/components/NoteEditor";
-import { NoteHeaderActions } from "../../shared-notes/components/NoteHeaderActions";
-import { NoteTabList } from "../../shared-notes/components/NoteTabList";
+import { EmptyState } from "../../common/components/EmptyState";
+import { NoteEditor } from "../../common/components/NoteEditor";
+import { NoteHeaderActions } from "../../common/components/NoteHeaderActions";
+import { NoteTabList } from "../../common/components/NoteTabList";
 import { MyNoteHeader } from "../components/MyNoteHeader";
 
 /**
