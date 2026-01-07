@@ -539,9 +539,23 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         width: getColumnWidth(col.field),
     }));
 
+    // Calculate total table width (drag handle + all columns)
+    const dragHandleWidth = 28;
+    const totalTableWidth =
+        dragHandleWidth + visibleColumns.reduce((sum, col) => sum + getColumnWidth(col.field), 0);
+
     return (
         <ThemeProvider theme={theme}>
-            <div style={{ height: "100%", overflow: "hidden", borderRadius: "8px" }}>
+            <div
+                style={{
+                    height: "100%",
+                    width: "100%",
+                    overflow: "hidden",
+                    borderRadius: "8px",
+                    display: "flex",
+                    flexDirection: "column",
+                }}
+            >
                 <TaskFilterMenu
                     isTaskUpdated={useTM.isTaskUpdated}
                     predefinedTagsFilters={predefinedTagsFilters}
@@ -552,13 +566,15 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                     style={{
                         ...getTableContainerStyles(mode),
-                        height: "96%",
+                        flex: 1,
+                        minHeight: 0,
+                        width: "100%",
                         backgroundColor: mode === "dark" ? "#0a0a14" : "#ffffff",
                         cursor: resizingColumn ? "col-resize" : "auto",
                     }}
                 >
                     {/* Table Header */}
-                    <div style={getTableHeaderStyles(mode)}>
+                    <div style={{ ...getTableHeaderStyles(mode), minWidth: totalTableWidth }}>
                         {/* Drag handle placeholder */}
                         <div style={headerDragHandlePlaceholderStyles} />
 
@@ -676,6 +692,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                     {...provided.droppableProps}
                                     style={{
                                         minHeight: 100,
+                                        minWidth: totalTableWidth,
                                         display: "flex",
                                         flexDirection: "column",
                                         backgroundColor: snapshot.isDraggingOver
