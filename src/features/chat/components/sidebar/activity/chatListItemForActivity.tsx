@@ -1,6 +1,7 @@
 import * as React from "react";
-import { ListDivider, ListItem, Stack } from "@mui/joy";
-import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
+import { Box, ListDivider, ListItem, Stack } from "@mui/joy";
+import ListItemButton from "@mui/joy/ListItemButton";
+import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../../context/AuthContext";
@@ -17,8 +18,8 @@ import {
     ThreadProps,
 } from "../../../../../types/chat";
 import { ProjectProps } from "../../../../../types/tasks";
-import { toggleMessagesPane } from "../../../../../utils/sidebarUtils";
 import { getLocalCurrentTimestamp } from "../../../../../utils/dateUtils";
+import { toggleMessagesPane } from "../../../../../utils/sidebarUtils";
 import { useActivityStatus } from "../../../hooks/useActivityStatus";
 import { loadSpecificThreadMessages } from "../../../services/loadSpecificThreadMessages";
 import { popSpecificMessages } from "../../../services/popSpecificMessages";
@@ -28,7 +29,15 @@ import { ActivityHeader } from "./ActivityHeader";
 // chatType = {1: DM, 2: GM, 3: PM, 4: Task}
 // activityType = {1: message or comment, 2: reaction, 3: mention}
 
-type ChatListItemForActivityProps = ListItemButtonProps & {
+// Activity type color schemes for visual distinction
+const ACTIVITY_COLOR_SCHEMES = {
+    reply: { dark: "#4ade80", light: "#22c55e" },
+    reaction: { dark: "#fbbf24", light: "#f59e0b" },
+    mention: { dark: "#f87171", light: "#ef4444" },
+    default: { dark: "#a78bfa", light: "#7c3aed" },
+} as const;
+
+type ChatListItemForActivityProps = {
     activity: ActivityMessageProps;
     activityMessages: ActivityMessageProps[];
     myself: UserProps;
@@ -58,7 +67,11 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         useCM,
         useTM,
     } = props;
+
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
     const { accessToken } = useAuth();
+
     const { groupedReactions, updateActivityReadStatus } = useActivityStatus({
         activity,
         activityMessages,
@@ -68,6 +81,23 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
     });
 
     const isYou = myself.userId === activity.dmPartnerUserId;
+    const isSelected = selectedActivityId === activity.activityId;
+
+    // Get color scheme based on activity type
+    const getActivityColor = () => {
+        switch (activity.activityType) {
+            case 1:
+                return ACTIVITY_COLOR_SCHEMES.reply;
+            case 2:
+                return ACTIVITY_COLOR_SCHEMES.reaction;
+            case 3:
+                return ACTIVITY_COLOR_SCHEMES.mention;
+            default:
+                return ACTIVITY_COLOR_SCHEMES.default;
+        }
+    };
+
+    const activityColor = getActivityColor();
 
     const defineNewChat = (messages: any, moveToSpecificIndex: string) => {
         let chatType: number = activity.chatType;
@@ -280,14 +310,117 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
 
     return (
         <React.Fragment>
-            <ListItem sx={{ width: "100%", p: 0.8, overflowX: "hidden" }}>
+            <ListItem
+                sx={{
+                    width: "100%",
+                    p: 0.5,
+                    overflowX: "hidden",
+                }}
+            >
                 <ListItemButton
-                    color={selectedActivityId === activity.activityId ? "success" : "neutral"}
-                    sx={{ flexDirection: "column", alignItems: "initial", gap: 1 }}
-                    variant={selectedActivityId === activity.activityId ? "soft" : "outlined"}
                     onClick={onClickHandler}
+                    sx={{
+                        flexDirection: "column",
+                        alignItems: "initial",
+                        gap: 0.75,
+                        py: 1.25,
+                        px: 1.5,
+                        borderRadius: "12px",
+                        position: "relative",
+                        overflow: "hidden",
+                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                        background: isSelected
+                            ? isDark
+                                ? `linear-gradient(135deg, ${activityColor.dark}15 0%, ${activityColor.dark}08 100%)`
+                                : `linear-gradient(135deg, ${activityColor.light}12 0%, ${activityColor.light}05 100%)`
+                            : isDark
+                              ? "rgba(255,255,255,0.02)"
+                              : "rgba(0,0,0,0.01)",
+                        border: "1px solid",
+                        borderColor: isSelected
+                            ? isDark
+                                ? `${activityColor.dark}30`
+                                : `${activityColor.light}25`
+                            : isDark
+                              ? "rgba(255,255,255,0.04)"
+                              : "rgba(0,0,0,0.04)",
+                        boxShadow: isSelected
+                            ? isDark
+                                ? `0 4px 16px ${activityColor.dark}15, inset 0 1px 0 ${activityColor.dark}10`
+                                : `0 4px 16px ${activityColor.light}12, inset 0 1px 0 ${activityColor.light}08`
+                            : "none",
+                        "&:hover": {
+                            background: isSelected
+                                ? isDark
+                                    ? `linear-gradient(135deg, ${activityColor.dark}20 0%, ${activityColor.dark}12 100%)`
+                                    : `linear-gradient(135deg, ${activityColor.light}15 0%, ${activityColor.light}08 100%)`
+                                : isDark
+                                  ? "rgba(255,255,255,0.05)"
+                                  : "rgba(0,0,0,0.03)",
+                            borderColor: isSelected
+                                ? isDark
+                                    ? `${activityColor.dark}40`
+                                    : `${activityColor.light}35`
+                                : isDark
+                                  ? "rgba(255,255,255,0.08)"
+                                  : "rgba(0,0,0,0.08)",
+                            transform: "translateY(-1px)",
+                            boxShadow: isSelected
+                                ? isDark
+                                    ? `0 6px 20px ${activityColor.dark}20`
+                                    : `0 6px 20px ${activityColor.light}15`
+                                : isDark
+                                  ? "0 4px 12px rgba(0,0,0,0.3)"
+                                  : "0 4px 12px rgba(0,0,0,0.08)",
+                        },
+                        "&:active": {
+                            transform: "translateY(0)",
+                        },
+                    }}
                 >
-                    <Stack direction="column">
+                    {/* Unread indicator line */}
+                    {activity.isRead === false && (
+                        <Box
+                            sx={{
+                                position: "absolute",
+                                left: 0,
+                                top: "50%",
+                                transform: "translateY(-50%)",
+                                width: 3,
+                                height: "60%",
+                                borderRadius: "0 4px 4px 0",
+                                background: isDark
+                                    ? `linear-gradient(180deg, ${activityColor.dark} 0%, ${activityColor.dark}80 100%)`
+                                    : `linear-gradient(180deg, ${activityColor.light} 0%, ${activityColor.light}80 100%)`,
+                                boxShadow: isDark
+                                    ? `0 0 8px ${activityColor.dark}60`
+                                    : `0 0 8px ${activityColor.light}50`,
+                            }}
+                        />
+                    )}
+
+                    {/* Subtle gradient overlay for selected state */}
+                    {isSelected && (
+                        <Box
+                            sx={{
+                                position: "absolute",
+                                top: 0,
+                                right: 0,
+                                width: "50%",
+                                height: "100%",
+                                background: isDark
+                                    ? `radial-gradient(ellipse at top right, ${activityColor.dark}08 0%, transparent 70%)`
+                                    : `radial-gradient(ellipse at top right, ${activityColor.light}06 0%, transparent 70%)`,
+                                pointerEvents: "none",
+                            }}
+                        />
+                    )}
+
+                    <Stack
+                        direction="column"
+                        spacing={0.5}
+                        sx={{ position: "relative", zIndex: 1 }}
+                    >
                         <ActivityHeader
                             activity={activity}
                             chatTypeLookup={chatTypeLookup}
@@ -308,7 +441,12 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                     </Stack>
                 </ListItemButton>
             </ListItem>
-            <ListDivider sx={{ margin: 0 }} />
+            <ListDivider
+                sx={{
+                    margin: 0,
+                    opacity: isDark ? 0.04 : 0.06,
+                }}
+            />
         </React.Fragment>
     );
 };

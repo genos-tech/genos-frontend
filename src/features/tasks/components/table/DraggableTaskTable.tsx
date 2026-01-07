@@ -147,7 +147,7 @@ export const statusOptions = [
     {
         label: "WIP",
         value: "WIP",
-        color: "#ff8c00ff",
+        color: "#ff8c00",
         textColor: "white",
         icon: <AutorenewIcon style={{ color: "white" }} />,
     },

@@ -60,7 +60,7 @@ export const TaskCustomBarBlock = (props: TaskCustomBarBlockProps) => {
                                 status: {
                                     code: 0,
                                     status: "WIP",
-                                    color: "#ff8c00ff",
+                                    color: "#ff8c00",
                                     textColor: "white",
                                 },
                             });

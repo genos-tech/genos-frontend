@@ -16,7 +16,7 @@ const BASE_COLORS = [
     { name: "Red", value: "#ff2323" },
     { name: "Green", value: "#1dc200" },
     { name: "Blue", value: "#0044c2" },
-    { name: "Yellow", value: "#ff8c00ff" },
+    { name: "Yellow", value: "#ff8c00" },
     { name: "Orange", value: "#ffa823" },
     { name: "Purple", value: "#8e23ff" },
     { name: "Pink", value: "#ff238a" },

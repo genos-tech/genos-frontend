@@ -1,7 +1,9 @@
 import * as React from "react";
 import { useEffect } from "react";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import { useColorScheme } from "@mui/joy/styles";
-import { Stack, Tooltip, Typography } from "@mui/material";
+import { Box, Chip, Stack, Tooltip, Typography } from "@mui/material";
 import Button from "@mui/material/Button";
 import Fade from "@mui/material/Fade";
 import Menu from "@mui/material/Menu";
@@ -18,6 +20,37 @@ import {
     predefinedStatusFilters,
 } from "../../types/TaskTableTypes";
 
+// Modern theme-aware styling
+const FILTER_STYLES = {
+    dark: {
+        containerBg: "linear-gradient(135deg, rgba(30,32,44,0.8) 0%, rgba(20,22,34,0.9) 100%)",
+        containerBorder: "rgba(99,102,241,0.2)",
+        buttonBg: "rgba(40,42,54,0.8)",
+        buttonHoverBg: "rgba(99,102,241,0.2)",
+        menuBg: "linear-gradient(180deg, rgba(30,32,44,0.98) 0%, rgba(20,22,34,0.99) 100%)",
+        menuBorder: "rgba(99,102,241,0.15)",
+        textColor: "#f1f5f9",
+        mutedText: "rgba(148,163,184,0.9)",
+        resetBg: "linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(220,38,38,0.15) 100%)",
+        resetHover: "linear-gradient(135deg, rgba(239,68,68,0.3) 0%, rgba(220,38,38,0.3) 100%)",
+        resetBorder: "rgba(239,68,68,0.3)",
+    },
+    light: {
+        containerBg:
+            "linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.95) 100%)",
+        containerBorder: "rgba(99,102,241,0.15)",
+        buttonBg: "rgba(255,255,255,0.9)",
+        buttonHoverBg: "rgba(99,102,241,0.1)",
+        menuBg: "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.99) 100%)",
+        menuBorder: "rgba(99,102,241,0.12)",
+        textColor: "#1e293b",
+        mutedText: "rgba(71,85,105,0.9)",
+        resetBg: "linear-gradient(135deg, rgba(239,68,68,0.08) 0%, rgba(220,38,38,0.08) 100%)",
+        resetHover: "linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(220,38,38,0.15) 100%)",
+        resetBorder: "rgba(239,68,68,0.25)",
+    },
+};
+
 type TaskFilterMenuProps = {
     isTaskUpdated?: boolean;
     useTM: TaskManagementState;
@@ -28,6 +61,8 @@ type TaskFilterMenuProps = {
 export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     const { isTaskUpdated, useTM, predefinedTagsFilters, setCurrentDisplayingTasks } = props;
     const { mode } = useColorScheme();
+    const isDark = mode === "dark";
+    const styles = isDark ? FILTER_STYLES.dark : FILTER_STYLES.light;
 
     // Status filter
     const [selectedStatus, setSelectedStatus] = React.useState<FilterProps[]>(
@@ -286,9 +321,88 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         }
     }, [isTaskUpdated]);
 
+    // Modern filter button style generator
+    const getFilterButtonStyle = (filter: FilterProps, isAllSelected: boolean) => ({
+        color: isAllSelected ? styles.textColor : "#fff",
+        background: isDark
+            ? `linear-gradient(135deg, ${alpha(filter.darkModeColor, 0.4)} 0%, ${alpha(filter.darkModeColor, 0.6)} 100%)`
+            : `linear-gradient(135deg, ${alpha(filter.lightModeColor, 0.7)} 0%, ${alpha(filter.lightModeColor, 0.9)} 100%)`,
+        border: `1px solid ${isDark ? alpha(filter.darkModeColor, 0.5) : alpha(filter.lightModeColor, 0.6)}`,
+        borderRadius: "10px",
+        fontSize: "12px",
+        fontWeight: 600,
+        height: "32px",
+        px: 1.5,
+        textTransform: "none" as const,
+        boxShadow: isDark
+            ? `0 2px 8px ${alpha(filter.darkModeColor, 0.3)}`
+            : `0 2px 8px ${alpha(filter.lightModeColor, 0.25)}`,
+        transition: "all 0.2s ease",
+        "&:hover": {
+            background: isDark
+                ? `linear-gradient(135deg, ${alpha(filter.darkModeColor, 0.5)} 0%, ${alpha(filter.darkModeColor, 0.7)} 100%)`
+                : `linear-gradient(135deg, ${alpha(filter.lightModeColor, 0.8)} 0%, ${alpha(filter.lightModeColor, 1)} 100%)`,
+            transform: "translateY(-1px)",
+            boxShadow: isDark
+                ? `0 4px 12px ${alpha(filter.darkModeColor, 0.4)}`
+                : `0 4px 12px ${alpha(filter.lightModeColor, 0.35)}`,
+        },
+    });
+
     return (
-        <Stack direction="row" sx={{ overflowX: "scroll" }} className="custom-scrollbar">
-            <Stack direction="row" gap={1}>
+        <Box
+            sx={{
+                background: styles.containerBg,
+                border: `1px solid ${styles.containerBorder}`,
+                borderRadius: "14px",
+                px: 2,
+                py: 1,
+                mb: 0.5,
+                boxShadow: isDark
+                    ? "0 4px 20px rgba(0,0,0,0.3)"
+                    : "0 4px 20px rgba(99,102,241,0.08)",
+            }}
+        >
+            <Stack
+                direction="row"
+                alignItems="center"
+                sx={{ overflowX: "auto" }}
+                className="custom-scrollbar"
+                gap={1.5}
+            >
+                {/* Filter Icon Label */}
+                <Stack direction="row" alignItems="center" gap={0.5} sx={{ flexShrink: 0 }}>
+                    <FilterListIcon
+                        sx={{
+                            fontSize: "18px",
+                            color: isDark ? "#818cf8" : "#4f46e5",
+                        }}
+                    />
+                    <Typography
+                        variant="caption"
+                        sx={{
+                            color: styles.mutedText,
+                            fontWeight: 600,
+                            fontSize: "11px",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.05em",
+                        }}
+                    >
+                        Filters
+                    </Typography>
+                </Stack>
+
+                {/* Divider */}
+                <Box
+                    sx={{
+                        width: "1px",
+                        height: "24px",
+                        background: styles.containerBorder,
+                        flexShrink: 0,
+                    }}
+                />
+
+                {/* Status Filter */}
                 <Tooltip
                     placement="top"
                     title={selectedStatus.map((status) => status.label).join(", ")}
@@ -296,10 +410,16 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                         popper: {
                             sx: {
                                 [`& .${tooltipClasses.tooltip}`]: {
-                                    backgroundColor: mode === "dark" ? "#121212" : "#ffffff",
-                                    color: mode === "dark" ? "lightgrey" : "#2B2B2B",
-                                    boxShadow: 1,
-                                    fontSize: 12,
+                                    background: styles.menuBg,
+                                    color: styles.textColor,
+                                    border: `1px solid ${styles.menuBorder}`,
+                                    boxShadow: isDark
+                                        ? "0 4px 12px rgba(0,0,0,0.4)"
+                                        : "0 4px 12px rgba(0,0,0,0.1)",
+                                    fontSize: 11,
+                                    borderRadius: "8px",
+                                    px: 1.5,
+                                    py: 0.5,
                                 },
                             },
                         },
@@ -310,43 +430,28 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                         aria-expanded={openStatusFilter ? "true" : undefined}
                         aria-haspopup="true"
                         id="fade-button"
-                        variant={"contained"}
-                        sx={{
-                            color:
-                                selectedStatus[0].label === "All"
-                                    ? mode === "dark"
-                                        ? "white"
-                                        : "black"
-                                    : "white",
-                            backgroundColor:
-                                mode === "dark"
-                                    ? alpha(selectedStatus[0].darkModeColor, 0.5)
-                                    : alpha(selectedStatus[0].lightModeColor, 0.8),
-                            borderWidth: "3px",
-                            fontSize: "13px",
-                            fontWeight: "bold",
-                            opacity: 0.85,
-                            height: "25px",
-                            "&:hover": {
-                                backgroundColor:
-                                    mode === "dark"
-                                        ? alpha(selectedStatus[0].darkModeColor, 0.6)
-                                        : alpha(selectedStatus[0].lightModeColor, 0.9),
-                                color:
-                                    selectedStatus[0].label === "All"
-                                        ? mode === "dark"
-                                            ? "white"
-                                            : "black"
-                                        : "white",
-                            },
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                        }}
+                        variant="contained"
+                        sx={getFilterButtonStyle(
+                            selectedStatus[0],
+                            selectedStatus[0].label === "All"
+                        )}
                         onClick={handleClickStatusFilter}
                     >
-                        Status: {selectedStatus[0].label}{" "}
-                        {selectedStatus.length > 1 && `+${selectedStatus.length - 1}`}
+                        Status: {selectedStatus[0].label}
+                        {selectedStatus.length > 1 && (
+                            <Chip
+                                label={`+${selectedStatus.length - 1}`}
+                                size="small"
+                                sx={{
+                                    ml: 0.5,
+                                    height: "18px",
+                                    fontSize: "10px",
+                                    fontWeight: 700,
+                                    background: "rgba(255,255,255,0.2)",
+                                    color: "inherit",
+                                }}
+                            />
+                        )}
                     </Button>
                 </Tooltip>
                 <Menu
@@ -360,58 +465,97 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                         },
                         paper: {
                             sx: {
-                                backgroundColor: mode === "dark" ? "#121212" : "#f0f0f0",
+                                background: styles.menuBg,
+                                border: `1px solid ${styles.menuBorder}`,
+                                borderRadius: "12px",
+                                boxShadow: isDark
+                                    ? "0 8px 32px rgba(0,0,0,0.5)"
+                                    : "0 8px 32px rgba(0,0,0,0.15)",
+                                mt: 1,
+                                minWidth: "160px",
                             },
                         },
                     }}
                     onClose={() => setAnchorElStatusFilter(null)}
                 >
-                    {predefinedStatusFilters.map((status) => (
-                        <MenuItem
-                            key={status.label}
-                            onClick={() => handleCloseStatusFilter(status)}
-                        >
-                            <Button
-                                key={`status-filter-${status.label}`}
-                                component="button"
-                                color={
-                                    selectedStatus.some(
-                                        (items) => items.label === status.label
-                                    ) === true
-                                        ? "info"
-                                        : "inherit"
-                                }
+                    {predefinedStatusFilters.map((status) => {
+                        const isSelected = selectedStatus.some(
+                            (items) => items.label === status.label
+                        );
+                        return (
+                            <MenuItem
+                                key={status.label}
+                                onClick={() => handleCloseStatusFilter(status)}
                                 sx={{
-                                    color: mode === "dark" ? "white" : "Black",
-                                    borderColor:
-                                        mode === "dark"
-                                            ? status.darkModeColor
-                                            : status.lightModeColor,
-                                    borderWidth: "3px",
-                                    fontSize: "13px",
-                                    fontWeight: "bold",
-                                    opacity: 0.85,
-                                    height: "25px",
-                                }}
-                                variant={
-                                    selectedStatus.some(
-                                        (items) => items.label === status.label
-                                    ) === true
-                                        ? "contained"
-                                        : "outlined"
-                                }
-                                onClick={() => {
-                                    handleCloseStatusFilter(status);
+                                    borderRadius: "8px",
+                                    mx: 0.5,
+                                    my: 0.25,
+                                    transition: "all 0.2s ease",
+                                    "&:hover": {
+                                        background: styles.buttonHoverBg,
+                                    },
                                 }}
                             >
-                                <Typography fontWeight="bold" variant="body2">
-                                    {status.label}
-                                </Typography>
-                            </Button>
-                        </MenuItem>
-                    ))}
+                                <Box
+                                    sx={{
+                                        width: "100%",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 1,
+                                    }}
+                                >
+                                    <Box
+                                        sx={{
+                                            width: 8,
+                                            height: 8,
+                                            borderRadius: "50%",
+                                            background: isDark
+                                                ? status.darkModeColor
+                                                : status.lightModeColor,
+                                            boxShadow: `0 0 6px ${isDark ? status.darkModeColor : status.lightModeColor}`,
+                                        }}
+                                    />
+                                    <Typography
+                                        sx={{
+                                            fontSize: "13px",
+                                            fontWeight: isSelected ? 700 : 500,
+                                            color: isSelected
+                                                ? isDark
+                                                    ? status.darkModeColor
+                                                    : status.lightModeColor
+                                                : styles.textColor,
+                                            flex: 1,
+                                        }}
+                                    >
+                                        {status.label}
+                                    </Typography>
+                                    {isSelected && (
+                                        <Box
+                                            sx={{
+                                                width: 16,
+                                                height: 16,
+                                                borderRadius: "4px",
+                                                background: isDark
+                                                    ? status.darkModeColor
+                                                    : status.lightModeColor,
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                fontSize: "10px",
+                                                color: "#fff",
+                                                fontWeight: 700,
+                                            }}
+                                        >
+                                            ✓
+                                        </Box>
+                                    )}
+                                </Box>
+                            </MenuItem>
+                        );
+                    })}
                 </Menu>
 
+                {/* Tags Filter */}
                 {selectedTags.length > 0 && (
                     <>
                         <Tooltip
@@ -421,11 +565,16 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                 popper: {
                                     sx: {
                                         [`& .${tooltipClasses.tooltip}`]: {
-                                            backgroundColor:
-                                                mode === "dark" ? "#121212" : "#ffffff",
-                                            color: mode === "dark" ? "lightgrey" : "#2B2B2B",
-                                            boxShadow: 1,
-                                            fontSize: 12,
+                                            background: styles.menuBg,
+                                            color: styles.textColor,
+                                            border: `1px solid ${styles.menuBorder}`,
+                                            boxShadow: isDark
+                                                ? "0 4px 12px rgba(0,0,0,0.4)"
+                                                : "0 4px 12px rgba(0,0,0,0.1)",
+                                            fontSize: 11,
+                                            borderRadius: "8px",
+                                            px: 1.5,
+                                            py: 0.5,
                                         },
                                     },
                                 },
@@ -435,109 +584,131 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                 aria-controls={openTagsFilter ? "fade-menu" : undefined}
                                 aria-expanded={openTagsFilter ? "true" : undefined}
                                 aria-haspopup="true"
-                                id="fade-button"
-                                variant={"contained"}
-                                sx={{
-                                    color: selectedTags.some((tag) => tag.label === "All")
-                                        ? mode === "dark"
-                                            ? "white"
-                                            : "black"
-                                        : "white",
-                                    backgroundColor:
-                                        mode === "dark"
-                                            ? alpha(selectedTags[0].darkModeColor, 0.5)
-                                            : alpha(selectedTags[0].lightModeColor, 0.8),
-                                    borderWidth: "3px",
-                                    fontSize: "13px",
-                                    fontWeight: "bold",
-                                    opacity: 0.85,
-                                    height: "25px",
-                                    "&:hover": {
-                                        backgroundColor:
-                                            mode === "dark"
-                                                ? alpha(selectedTags[0].darkModeColor, 0.6)
-                                                : alpha(selectedTags[0].lightModeColor, 0.9),
-                                        color: selectedTags.some((tag) => tag.label === "All")
-                                            ? mode === "dark"
-                                                ? "white"
-                                                : "black"
-                                            : "white",
-                                    },
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    whiteSpace: "nowrap",
-                                }}
+                                variant="contained"
+                                sx={getFilterButtonStyle(
+                                    selectedTags[0],
+                                    selectedTags.some((tag) => tag.label === "All")
+                                )}
                                 onClick={handleClickTagsFilter}
                             >
-                                Tags: {selectedTags[0].label}{" "}
-                                {selectedTags.length > 1 && `+${selectedTags.length - 1}`}
+                                Tags: {selectedTags[0].label}
+                                {selectedTags.length > 1 && (
+                                    <Chip
+                                        label={`+${selectedTags.length - 1}`}
+                                        size="small"
+                                        sx={{
+                                            ml: 0.5,
+                                            height: "18px",
+                                            fontSize: "10px",
+                                            fontWeight: 700,
+                                            background: "rgba(255,255,255,0.2)",
+                                            color: "inherit",
+                                        }}
+                                    />
+                                )}
                             </Button>
                         </Tooltip>
                         <Menu
                             anchorEl={anchorElTagsFilter}
-                            id="fade-menu"
                             open={openTagsFilter}
                             slots={{ transition: Fade }}
                             slotProps={{
-                                list: {
-                                    "aria-labelledby": "fade-button",
-                                },
                                 paper: {
                                     sx: {
-                                        backgroundColor: mode === "dark" ? "#121212" : "#f0f0f0",
+                                        background: styles.menuBg,
+                                        border: `1px solid ${styles.menuBorder}`,
+                                        borderRadius: "12px",
+                                        boxShadow: isDark
+                                            ? "0 8px 32px rgba(0,0,0,0.5)"
+                                            : "0 8px 32px rgba(0,0,0,0.15)",
+                                        mt: 1,
+                                        minWidth: "160px",
+                                        maxHeight: "300px",
                                     },
                                 },
                             }}
                             onClose={() => setAnchorElTagsFilter(null)}
                         >
-                            {predefinedTagsFilters.map((tag) => (
-                                <MenuItem
-                                    key={tag.label}
-                                    onClick={() => handleCloseTagsFilter(tag)}
-                                >
-                                    <Button
-                                        key={`tags-filter-${tag.label}`}
-                                        component="button"
-                                        color={
-                                            selectedTags.some(
-                                                (items) => items.label === tag.label
-                                            ) === true
-                                                ? "info"
-                                                : "inherit"
-                                        }
+                            {predefinedTagsFilters.map((tag) => {
+                                const isSelected = selectedTags.some(
+                                    (items) => items.label === tag.label
+                                );
+                                return (
+                                    <MenuItem
+                                        key={tag.label}
+                                        onClick={() => handleCloseTagsFilter(tag)}
                                         sx={{
-                                            color: mode === "dark" ? "white" : "Black",
-                                            borderColor:
-                                                mode === "dark"
-                                                    ? tag.darkModeColor
-                                                    : tag.lightModeColor,
-                                            borderWidth: "3px",
-                                            fontSize: "13px",
-                                            fontWeight: "bold",
-                                            opacity: 0.85,
-                                            height: "25px",
-                                        }}
-                                        variant={
-                                            selectedTags.some(
-                                                (items) => items.label === tag.label
-                                            ) === true
-                                                ? "contained"
-                                                : "outlined"
-                                        }
-                                        onClick={() => {
-                                            handleCloseTagsFilter(tag);
+                                            borderRadius: "8px",
+                                            mx: 0.5,
+                                            my: 0.25,
+                                            transition: "all 0.2s ease",
+                                            "&:hover": {
+                                                background: styles.buttonHoverBg,
+                                            },
                                         }}
                                     >
-                                        <Typography fontWeight="bold" variant="body2">
-                                            {tag.label}
-                                        </Typography>
-                                    </Button>
-                                </MenuItem>
-                            ))}
+                                        <Box
+                                            sx={{
+                                                width: "100%",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 1,
+                                            }}
+                                        >
+                                            <Box
+                                                sx={{
+                                                    width: 8,
+                                                    height: 8,
+                                                    borderRadius: "50%",
+                                                    background: isDark
+                                                        ? tag.darkModeColor
+                                                        : tag.lightModeColor,
+                                                    boxShadow: `0 0 6px ${isDark ? tag.darkModeColor : tag.lightModeColor}`,
+                                                }}
+                                            />
+                                            <Typography
+                                                sx={{
+                                                    fontSize: "13px",
+                                                    fontWeight: isSelected ? 700 : 500,
+                                                    color: isSelected
+                                                        ? isDark
+                                                            ? tag.darkModeColor
+                                                            : tag.lightModeColor
+                                                        : styles.textColor,
+                                                    flex: 1,
+                                                }}
+                                            >
+                                                {tag.label}
+                                            </Typography>
+                                            {isSelected && (
+                                                <Box
+                                                    sx={{
+                                                        width: 16,
+                                                        height: 16,
+                                                        borderRadius: "4px",
+                                                        background: isDark
+                                                            ? tag.darkModeColor
+                                                            : tag.lightModeColor,
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        fontSize: "10px",
+                                                        color: "#fff",
+                                                        fontWeight: 700,
+                                                    }}
+                                                >
+                                                    ✓
+                                                </Box>
+                                            )}
+                                        </Box>
+                                    </MenuItem>
+                                );
+                            })}
                         </Menu>
                     </>
                 )}
 
+                {/* Priority Filter */}
                 <Tooltip
                     placement="top"
                     title={selectedPriorities.map((priority) => priority.label).join(", ")}
@@ -545,10 +716,16 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                         popper: {
                             sx: {
                                 [`& .${tooltipClasses.tooltip}`]: {
-                                    backgroundColor: mode === "dark" ? "#121212" : "#ffffff",
-                                    color: mode === "dark" ? "lightgrey" : "#2B2B2B",
-                                    boxShadow: 1,
-                                    fontSize: 12,
+                                    background: styles.menuBg,
+                                    color: styles.textColor,
+                                    border: `1px solid ${styles.menuBorder}`,
+                                    boxShadow: isDark
+                                        ? "0 4px 12px rgba(0,0,0,0.4)"
+                                        : "0 4px 12px rgba(0,0,0,0.1)",
+                                    fontSize: 11,
+                                    borderRadius: "8px",
+                                    px: 1.5,
+                                    py: 0.5,
                                 },
                             },
                         },
@@ -558,109 +735,128 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                         aria-controls={openPriorityFilter ? "fade-menu" : undefined}
                         aria-expanded={openPriorityFilter ? "true" : undefined}
                         aria-haspopup="true"
-                        id="fade-button"
-                        variant={"contained"}
-                        sx={{
-                            color: selectedPriorities.some((priority) => priority.label === "All")
-                                ? mode === "dark"
-                                    ? "white"
-                                    : "black"
-                                : "white",
-                            backgroundColor:
-                                mode === "dark"
-                                    ? alpha(selectedPriorities[0].darkModeColor, 0.5)
-                                    : alpha(selectedPriorities[0].lightModeColor, 0.8),
-                            borderWidth: "3px",
-                            fontSize: "13px",
-                            fontWeight: "bold",
-                            opacity: 0.85,
-                            height: "25px",
-                            "&:hover": {
-                                backgroundColor:
-                                    mode === "dark"
-                                        ? alpha(selectedPriorities[0].darkModeColor, 0.6)
-                                        : alpha(selectedPriorities[0].lightModeColor, 0.9),
-                                color: selectedPriorities.some(
-                                    (priority) => priority.label === "All"
-                                )
-                                    ? mode === "dark"
-                                        ? "white"
-                                        : "black"
-                                    : "white",
-                            },
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                        }}
+                        variant="contained"
+                        sx={getFilterButtonStyle(
+                            selectedPriorities[0],
+                            selectedPriorities.some((priority) => priority.label === "All")
+                        )}
                         onClick={handleClickPriorityFilter}
                     >
-                        Priority: {selectedPriorities[0].label}{" "}
-                        {selectedPriorities.length > 1 && `+${selectedPriorities.length - 1}`}
+                        Priority: {selectedPriorities[0].label}
+                        {selectedPriorities.length > 1 && (
+                            <Chip
+                                label={`+${selectedPriorities.length - 1}`}
+                                size="small"
+                                sx={{
+                                    ml: 0.5,
+                                    height: "18px",
+                                    fontSize: "10px",
+                                    fontWeight: 700,
+                                    background: "rgba(255,255,255,0.2)",
+                                    color: "inherit",
+                                }}
+                            />
+                        )}
                     </Button>
                 </Tooltip>
                 <Menu
                     anchorEl={anchorElPriorityFilter}
-                    id="fade-menu"
                     open={openPriorityFilter}
                     slots={{ transition: Fade }}
                     slotProps={{
-                        list: {
-                            "aria-labelledby": "fade-button",
-                        },
                         paper: {
                             sx: {
-                                backgroundColor: mode === "dark" ? "#121212" : "#f0f0f0",
+                                background: styles.menuBg,
+                                border: `1px solid ${styles.menuBorder}`,
+                                borderRadius: "12px",
+                                boxShadow: isDark
+                                    ? "0 8px 32px rgba(0,0,0,0.5)"
+                                    : "0 8px 32px rgba(0,0,0,0.15)",
+                                mt: 1,
+                                minWidth: "160px",
                             },
                         },
                     }}
                     onClose={() => setAnchorElPriorityFilter(null)}
                 >
-                    {predefinedPriorityFilters.map((priority) => (
-                        <MenuItem
-                            key={priority.label}
-                            onClick={() => handleClosePriorityFilter(priority)}
-                        >
-                            <Button
-                                key={`priority-filter-${priority.label}`}
-                                component="button"
-                                color={
-                                    selectedPriorities.some(
-                                        (items) => items.label === priority.label
-                                    ) === true
-                                        ? "info"
-                                        : "inherit"
-                                }
+                    {predefinedPriorityFilters.map((priority) => {
+                        const isSelected = selectedPriorities.some(
+                            (items) => items.label === priority.label
+                        );
+                        return (
+                            <MenuItem
+                                key={priority.label}
+                                onClick={() => handleClosePriorityFilter(priority)}
                                 sx={{
-                                    color: mode === "dark" ? "white" : "Black",
-                                    borderColor:
-                                        mode === "dark"
-                                            ? priority.darkModeColor
-                                            : priority.lightModeColor,
-                                    borderWidth: "3px",
-                                    fontSize: "13px",
-                                    fontWeight: "bold",
-                                    opacity: 0.85,
-                                    height: "25px",
-                                }}
-                                variant={
-                                    selectedPriorities.some(
-                                        (items) => items.label === priority.label
-                                    ) === true
-                                        ? "contained"
-                                        : "outlined"
-                                }
-                                onClick={() => {
-                                    handleClosePriorityFilter(priority);
+                                    borderRadius: "8px",
+                                    mx: 0.5,
+                                    my: 0.25,
+                                    transition: "all 0.2s ease",
+                                    "&:hover": {
+                                        background: styles.buttonHoverBg,
+                                    },
                                 }}
                             >
-                                <Typography fontWeight="bold" variant="body2">
-                                    {priority.label}
-                                </Typography>
-                            </Button>
-                        </MenuItem>
-                    ))}
+                                <Box
+                                    sx={{
+                                        width: "100%",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 1,
+                                    }}
+                                >
+                                    <Box
+                                        sx={{
+                                            width: 8,
+                                            height: 8,
+                                            borderRadius: "50%",
+                                            background: isDark
+                                                ? priority.darkModeColor
+                                                : priority.lightModeColor,
+                                            boxShadow: `0 0 6px ${isDark ? priority.darkModeColor : priority.lightModeColor}`,
+                                        }}
+                                    />
+                                    <Typography
+                                        sx={{
+                                            fontSize: "13px",
+                                            fontWeight: isSelected ? 700 : 500,
+                                            color: isSelected
+                                                ? isDark
+                                                    ? priority.darkModeColor
+                                                    : priority.lightModeColor
+                                                : styles.textColor,
+                                            flex: 1,
+                                        }}
+                                    >
+                                        {priority.label}
+                                    </Typography>
+                                    {isSelected && (
+                                        <Box
+                                            sx={{
+                                                width: 16,
+                                                height: 16,
+                                                borderRadius: "4px",
+                                                background: isDark
+                                                    ? priority.darkModeColor
+                                                    : priority.lightModeColor,
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                fontSize: "10px",
+                                                color: "#fff",
+                                                fontWeight: 700,
+                                            }}
+                                        >
+                                            ✓
+                                        </Box>
+                                    )}
+                                </Box>
+                            </MenuItem>
+                        );
+                    })}
                 </Menu>
 
+                {/* Effort Level Filter */}
                 <Tooltip
                     placement="top"
                     title={selectedEffortLevels.map((effortLevel) => effortLevel.label).join(", ")}
@@ -668,10 +864,16 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                         popper: {
                             sx: {
                                 [`& .${tooltipClasses.tooltip}`]: {
-                                    backgroundColor: mode === "dark" ? "#121212" : "#ffffff",
-                                    color: mode === "dark" ? "lightgrey" : "#2B2B2B",
-                                    boxShadow: 1,
-                                    fontSize: 12,
+                                    background: styles.menuBg,
+                                    color: styles.textColor,
+                                    border: `1px solid ${styles.menuBorder}`,
+                                    boxShadow: isDark
+                                        ? "0 4px 12px rgba(0,0,0,0.4)"
+                                        : "0 4px 12px rgba(0,0,0,0.1)",
+                                    fontSize: 11,
+                                    borderRadius: "8px",
+                                    px: 1.5,
+                                    py: 0.5,
                                 },
                             },
                         },
@@ -681,132 +883,180 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                         aria-controls={openEffortLevelFilter ? "fade-menu" : undefined}
                         aria-expanded={openEffortLevelFilter ? "true" : undefined}
                         aria-haspopup="true"
-                        id="fade-button"
-                        variant={"contained"}
-                        sx={{
-                            color: selectedEffortLevels.some(
-                                (effortLevel) => effortLevel.label === "All"
-                            )
-                                ? mode === "dark"
-                                    ? "white"
-                                    : "black"
-                                : "white",
-                            backgroundColor:
-                                mode === "dark"
-                                    ? alpha(selectedEffortLevels[0].darkModeColor, 0.5)
-                                    : alpha(selectedEffortLevels[0].lightModeColor, 0.8),
-                            borderWidth: "3px",
-                            fontSize: "13px",
-                            fontWeight: "bold",
-                            opacity: 0.85,
-                            height: "25px",
-                            "&:hover": {
-                                backgroundColor:
-                                    mode === "dark"
-                                        ? alpha(selectedEffortLevels[0].darkModeColor, 0.6)
-                                        : alpha(selectedEffortLevels[0].lightModeColor, 0.9),
-                                color: selectedEffortLevels.some(
-                                    (effortLevel) => effortLevel.label === "All"
-                                )
-                                    ? mode === "dark"
-                                        ? "white"
-                                        : "black"
-                                    : "white",
-                            },
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                        }}
+                        variant="contained"
+                        sx={getFilterButtonStyle(
+                            selectedEffortLevels[0],
+                            selectedEffortLevels.some((effortLevel) => effortLevel.label === "All")
+                        )}
                         onClick={handleClickEffortLevelFilter}
                     >
-                        Effort Level: {selectedEffortLevels[0].label}{" "}
-                        {selectedEffortLevels.length > 1 && `+${selectedEffortLevels.length - 1}`}
+                        Effort: {selectedEffortLevels[0].label}
+                        {selectedEffortLevels.length > 1 && (
+                            <Chip
+                                label={`+${selectedEffortLevels.length - 1}`}
+                                size="small"
+                                sx={{
+                                    ml: 0.5,
+                                    height: "18px",
+                                    fontSize: "10px",
+                                    fontWeight: 700,
+                                    background: "rgba(255,255,255,0.2)",
+                                    color: "inherit",
+                                }}
+                            />
+                        )}
                     </Button>
                 </Tooltip>
                 <Menu
                     anchorEl={anchorElEffortLevelFilter}
-                    id="fade-menu"
                     open={openEffortLevelFilter}
                     slots={{ transition: Fade }}
                     slotProps={{
-                        list: {
-                            "aria-labelledby": "fade-button",
-                        },
                         paper: {
                             sx: {
-                                backgroundColor: mode === "dark" ? "#121212" : "#f0f0f0",
+                                background: styles.menuBg,
+                                border: `1px solid ${styles.menuBorder}`,
+                                borderRadius: "12px",
+                                boxShadow: isDark
+                                    ? "0 8px 32px rgba(0,0,0,0.5)"
+                                    : "0 8px 32px rgba(0,0,0,0.15)",
+                                mt: 1,
+                                minWidth: "160px",
                             },
                         },
                     }}
                     onClose={() => setAnchorElEffortLevelFilter(null)}
                 >
-                    {predefinedEffortLevelFilters.map((effortLevel) => (
-                        <MenuItem
-                            key={effortLevel.label}
-                            onClick={() => handleCloseEffortLevelFilter(effortLevel)}
-                        >
-                            <Button
-                                key={`effort-level-filter-${effortLevel.label}`}
-                                component="button"
-                                color={
-                                    selectedEffortLevels.some(
-                                        (items) => items.label === effortLevel.label
-                                    ) === true
-                                        ? "info"
-                                        : "inherit"
-                                }
+                    {predefinedEffortLevelFilters.map((effortLevel) => {
+                        const isSelected = selectedEffortLevels.some(
+                            (items) => items.label === effortLevel.label
+                        );
+                        return (
+                            <MenuItem
+                                key={effortLevel.label}
+                                onClick={() => handleCloseEffortLevelFilter(effortLevel)}
                                 sx={{
-                                    color: mode === "dark" ? "white" : "Black",
-                                    borderColor:
-                                        mode === "dark"
-                                            ? effortLevel.darkModeColor
-                                            : effortLevel.lightModeColor,
-                                    borderWidth: "3px",
-                                    fontSize: "13px",
-                                    fontWeight: "bold",
-                                    opacity: 0.85,
-                                    height: "25px",
-                                }}
-                                variant={
-                                    selectedEffortLevels.some(
-                                        (items) => items.label === effortLevel.label
-                                    ) === true
-                                        ? "contained"
-                                        : "outlined"
-                                }
-                                onClick={() => {
-                                    handleCloseEffortLevelFilter(effortLevel);
+                                    borderRadius: "8px",
+                                    mx: 0.5,
+                                    my: 0.25,
+                                    transition: "all 0.2s ease",
+                                    "&:hover": {
+                                        background: styles.buttonHoverBg,
+                                    },
                                 }}
                             >
-                                <Typography fontWeight="bold" variant="body2">
-                                    {effortLevel.label}
-                                </Typography>
-                            </Button>
-                        </MenuItem>
-                    ))}
+                                <Box
+                                    sx={{
+                                        width: "100%",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 1,
+                                    }}
+                                >
+                                    <Box
+                                        sx={{
+                                            width: 8,
+                                            height: 8,
+                                            borderRadius: "50%",
+                                            background: isDark
+                                                ? effortLevel.darkModeColor
+                                                : effortLevel.lightModeColor,
+                                            boxShadow: `0 0 6px ${isDark ? effortLevel.darkModeColor : effortLevel.lightModeColor}`,
+                                        }}
+                                    />
+                                    <Typography
+                                        sx={{
+                                            fontSize: "13px",
+                                            fontWeight: isSelected ? 700 : 500,
+                                            color: isSelected
+                                                ? isDark
+                                                    ? effortLevel.darkModeColor
+                                                    : effortLevel.lightModeColor
+                                                : styles.textColor,
+                                            flex: 1,
+                                        }}
+                                    >
+                                        {effortLevel.label}
+                                    </Typography>
+                                    {isSelected && (
+                                        <Box
+                                            sx={{
+                                                width: 16,
+                                                height: 16,
+                                                borderRadius: "4px",
+                                                background: isDark
+                                                    ? effortLevel.darkModeColor
+                                                    : effortLevel.lightModeColor,
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                fontSize: "10px",
+                                                color: "#fff",
+                                                fontWeight: 700,
+                                            }}
+                                        >
+                                            ✓
+                                        </Box>
+                                    )}
+                                </Box>
+                            </MenuItem>
+                        );
+                    })}
                 </Menu>
-            </Stack>
 
-            <Stack direction="row" flex={1} justifyContent="flex-end">
-                <Button
-                    variant="contained"
-                    sx={{
-                        color: "black",
-                        backgroundColor: "white",
-                        borderWidth: "3px",
-                        fontSize: "13px",
-                        fontWeight: "bold",
-                        opacity: 0.85,
-                        height: "25px",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
+                {/* Spacer */}
+                <Box sx={{ flex: 1 }} />
+
+                {/* Reset Filters Button */}
+                <Tooltip
+                    placement="top"
+                    title="Reset all filters to default"
+                    slotProps={{
+                        popper: {
+                            sx: {
+                                [`& .${tooltipClasses.tooltip}`]: {
+                                    background: styles.menuBg,
+                                    color: styles.textColor,
+                                    border: `1px solid ${styles.menuBorder}`,
+                                    fontSize: 11,
+                                    borderRadius: "8px",
+                                    px: 1.5,
+                                    py: 0.5,
+                                },
+                            },
+                        },
                     }}
-                    onClick={resetFilters}
                 >
-                    Reset Filters
-                </Button>
+                    <Button
+                        variant="outlined"
+                        startIcon={<RestartAltIcon sx={{ fontSize: "16px" }} />}
+                        sx={{
+                            color: isDark ? "#f87171" : "#dc2626",
+                            background: styles.resetBg,
+                            border: `1px solid ${styles.resetBorder}`,
+                            borderRadius: "10px",
+                            fontSize: "12px",
+                            fontWeight: 600,
+                            height: "32px",
+                            px: 1.5,
+                            textTransform: "none",
+                            flexShrink: 0,
+                            transition: "all 0.2s ease",
+                            "&:hover": {
+                                background: styles.resetHover,
+                                border: `1px solid ${isDark ? "rgba(239,68,68,0.5)" : "rgba(239,68,68,0.4)"}`,
+                                transform: "translateY(-1px)",
+                                boxShadow: isDark
+                                    ? "0 4px 12px rgba(239,68,68,0.2)"
+                                    : "0 4px 12px rgba(239,68,68,0.15)",
+                            },
+                        }}
+                        onClick={resetFilters}
+                    >
+                        Reset
+                    </Button>
+                </Tooltip>
             </Stack>
-        </Stack>
+        </Box>
     );
 };

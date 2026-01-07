@@ -1,10 +1,33 @@
-import { Box, Chip, Stack, Typography } from "@mui/joy";
+import { Box, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { alpha } from "@mui/system";
 
 import { UserProps } from "../../../../types/admin";
 import { extractMMDDHHMMSSs } from "../../../../utils/dateUtils";
 import { statuses } from "../../../tasks/utils/taskMeta";
+
+// Status chip color configuration - improved for better visibility
+const getStatusChipStyles = (
+    taskStatusDetails: { color?: string | null; textColor?: string | null } | undefined,
+    isDark: boolean
+) => {
+    if (!taskStatusDetails?.color) {
+        return {
+            background: isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)",
+            color: isDark ? "#e2e8f0" : "#1e293b",
+            borderColor: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)",
+        };
+    }
+
+    const baseColor = taskStatusDetails.color;
+    // For light mode, use darker background and ensure text is visible
+    return {
+        background: isDark
+            ? `linear-gradient(135deg, ${baseColor}40 0%, ${baseColor}25 100%)`
+            : `${baseColor}`,
+        color: isDark ? "#ffffff" : taskStatusDetails.textColor || "#ffffff",
+        borderColor: isDark ? `${baseColor}60` : `${baseColor}`,
+    };
+};
 
 type BubbleUserNameTypes = {
     isSimpleBubble: boolean;
@@ -19,6 +42,7 @@ type BubbleUserNameTypes = {
     taskStatus: string | null;
     isThread: boolean;
 };
+
 export const BubbleUserName = (props: BubbleUserNameTypes) => {
     const {
         isSimpleBubble,
@@ -33,110 +57,109 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
         taskStatus,
         isThread,
     } = props;
+
     const { mode } = useColorScheme();
+    const isDark = mode === "dark";
     const taskStatusDetails = statuses.find((item) => item.status === taskStatus);
-    const isEdited = extractMMDDHHMMSSs(tsSent) === extractMMDDHHMMSSs(tsUpdated) ? false : true;
+    const isEdited = extractMMDDHHMMSSs(tsSent) !== extractMMDDHHMMSSs(tsUpdated);
+
+    // Modern chip component with improved visibility
+    const ModernChip = ({
+        children,
+        variant = "neutral",
+        customStyles,
+    }: {
+        children: React.ReactNode;
+        variant?: "neutral" | "status";
+        customStyles?: Record<string, any>;
+    }) => (
+        <Box
+            sx={{
+                display: "inline-flex",
+                alignItems: "center",
+                height: 24,
+                px: 1,
+                borderRadius: "6px",
+                fontSize: "0.75rem",
+                fontWeight: 700,
+                letterSpacing: "0.01em",
+                border: "1px solid",
+                transition: "all 0.15s ease",
+                ...(variant === "neutral"
+                    ? {
+                          // Improved neutral chip with better contrast
+                          background: isDark
+                              ? "linear-gradient(135deg, rgba(99,102,241,0.25) 0%, rgba(99,102,241,0.15) 100%)"
+                              : "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
+                          color: isDark ? "#c7d2fe" : "#ffffff",
+                          borderColor: isDark ? "rgba(99,102,241,0.4)" : "#4f46e5",
+                      }
+                    : customStyles),
+            }}
+        >
+            {children}
+        </Box>
+    );
 
     return (
         <Box sx={{ flex: 1 }}>
             <Stack
-                alignItems="left"
+                alignItems="flex-start"
                 direction="column"
                 justifyContent={isSent ? "flex-end" : "flex-start"}
+                spacing={0.25}
             >
-                {/* Task update message bubble */}
+                {/* Task update message bubble (system user) */}
                 {sender.isSystemUser === true && (
-                    <>
+                    <Stack
+                        direction="row"
+                        alignItems="center"
+                        spacing={0.75}
+                        sx={{ flexWrap: "wrap", gap: 0.5 }}
+                    >
+                        {isThread === false && <ModernChip>ID: {taskId || "N/A"}</ModernChip>}
+
+                        {taskStatusDetails && (
+                            <ModernChip
+                                variant="status"
+                                customStyles={getStatusChipStyles(taskStatusDetails, isDark)}
+                            >
+                                {taskStatus || "N/A"}
+                            </ModernChip>
+                        )}
+
                         <Typography
-                            component="span"
-                            level="body-sm"
-                            sx={[
-                                {
-                                    marginTop: "3px",
-                                    marginLeft:
-                                        (chatType === 3 || chatType === 4) &&
-                                        sender.isSystemUser === true
-                                            ? "5px"
-                                            : "0px",
-                                },
-                                isSent
-                                    ? {
-                                          color: "background.body",
-                                      }
-                                    : {
-                                          color: "var(--joy-palette-text-primary)",
-                                      },
-                            ]}
+                            level="body-xs"
+                            sx={{
+                                fontWeight: 500,
+                                fontSize: "0.7rem",
+                                color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.55)",
+                                letterSpacing: "0.02em",
+                            }}
                         >
-                            {isThread === false && (
+                            {isEdited ? (
                                 <>
-                                    <Chip
-                                        key={taskId}
-                                        color="neutral"
-                                        size="lg"
-                                        variant="soft"
-                                        sx={{
-                                            marginRight: taskStatusDetails ? "5px" : "7px",
-                                            borderRadius: "5px",
-                                            fontWeight: "bold",
-                                        }}
-                                    >
-                                        ID: {taskId || "N/A"}
-                                    </Chip>
+                                    {dtSent} {isThread ? "" : "Updated"}
                                 </>
+                            ) : (
+                                dtSent
                             )}
-                            {taskStatusDetails && (
-                                <>
-                                    <Chip
-                                        key={taskStatus}
-                                        size="lg"
-                                        variant="soft"
-                                        sx={{
-                                            backgroundColor: taskStatusDetails.color
-                                                ? alpha(
-                                                      taskStatusDetails.color,
-                                                      mode === "dark" ? 0.5 : 0.75
-                                                  )
-                                                : "transparent",
-                                            color: taskStatusDetails.textColor,
-                                            marginRight: "10px",
-                                            fontWeight: "bold",
-                                            borderRadius: "5px",
-                                        }}
-                                    >
-                                        {taskStatus || "N/A"}
-                                    </Chip>
-                                </>
-                            )}
-                            {isEdited === true && (
-                                <Typography sx={{ marginRight: "10px" }}>
-                                    {sender.isSystemUser === true && (
-                                        <>
-                                            {isThread === true && <>{dtSent}</>}
-                                            {isThread === false && <>{dtSent} Updated</>}
-                                        </>
-                                    )}
-                                    {sender.isSystemUser !== true && <>{dtSent} Edited</>}
-                                </Typography>
-                            )}
-                            {isEdited === false && <>{dtSent}</>}
                         </Typography>
-                    </>
+                    </Stack>
                 )}
 
-                {/* Message bubble for normal users (not system users)*/}
+                {/* Message bubble for normal users (not system users) */}
                 {!sender.isSystemUser && (
-                    <>
+                    <Stack direction="row" alignItems="center" spacing={1}>
                         {isSimpleBubble === false && (
                             <Typography
-                                component="span"
-                                level="body-md"
-                                sx={[
-                                    { lineHeight: 1.5, marginRight: "10px" },
-                                    isSent
-                                        ? { color: "background.body" }
-                                        : { color: "var(--joy-palette-text-primary)" },
-                                ]}
+                                level="body-sm"
+                                sx={{
+                                    fontWeight: 600,
+                                    fontSize: "0.85rem",
+                                    color: isDark ? "#f1f5f9" : "#0f172a",
+                                    letterSpacing: "-0.01em",
+                                }}
                             >
                                 {userName}
                             </Typography>
@@ -144,24 +167,17 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
 
                         <Typography
                             level="body-xs"
-                            sx={[
-                                {
-                                    lineHeight: 1.5,
-                                    paddingTop: isSimpleBubble === true ? 1 : 0,
-                                },
-                                isSent
-                                    ? {
-                                          color: "background.body",
-                                      }
-                                    : {
-                                          color: "var(--joy-palette-text-primary)",
-                                      },
-                            ]}
+                            sx={{
+                                fontWeight: 500,
+                                fontSize: "0.7rem",
+                                color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.5)",
+                                letterSpacing: "0.02em",
+                                pt: isSimpleBubble ? 0.5 : 0,
+                            }}
                         >
-                            {isEdited === true && <>{dtSent} Edited</>}
-                            {isEdited === false && <>{dtSent}</>}
+                            {isEdited ? `${dtSent} Edited` : dtSent}
                         </Typography>
-                    </>
+                    </Stack>
                 )}
             </Stack>
         </Box>

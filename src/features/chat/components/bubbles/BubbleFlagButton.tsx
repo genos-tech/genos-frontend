@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import FlagIcon from "@mui/icons-material/Flag";
 import { Box, IconButton, Tooltip } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 
 import { FlaggedService } from "../../../../db/services/flagged.service";
 import { UserProps } from "../../../../types/admin";
@@ -28,6 +29,7 @@ type BubbleFlagButtonTypes = {
     flaggedMessages: FlaggedMessageProps[];
     setFlaggedMessages: (messages: FlaggedMessageProps[]) => void;
 };
+
 export const BubbleFlagButton = (props: BubbleFlagButtonTypes) => {
     const {
         accessToken,
@@ -41,177 +43,208 @@ export const BubbleFlagButton = (props: BubbleFlagButtonTypes) => {
         flaggedMessages,
         setFlaggedMessages,
     } = props;
+
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
     const [tmpIsFlagged, setTmpIsFlagged] = useState(message.isFlagged || false);
 
     useEffect(() => {
         setTmpIsFlagged(message.isFlagged || false);
     }, [message]);
 
+    const handleFlagClick = () => {
+        // If the message is not a thread message
+        if (threadId === 0 && currentChat && setCurrentChat) {
+            setCurrentChat({
+                ...currentChat,
+                messages: currentChat.messages.map((m) => ({
+                    ...m,
+                    isFlagged: m.messageId === message.messageId ? !m.isFlagged : m.isFlagged,
+                })),
+            });
+            addMessage(
+                { ...message, isFlagged: !tmpIsFlagged } as MessageProps,
+                currentChat.chatType
+            );
+
+            // Add the flagged message to the indexedDB
+            if (tmpIsFlagged === false) {
+                addFlaggedMessage({
+                    flaggedMessageId: `${currentChat.chatType}-${currentChat.chatId}-${0}-${message.messageId}`,
+                    chatType: currentChat.chatType,
+                    chatId: currentChat.chatId,
+                    threadId: 0,
+                    messageId: message.messageId,
+                    contentText: getFirstLine(message.content[0]),
+                    sender: message.sender,
+                    dmPartnerUser: currentChat.dmPartnerUser,
+                    project: currentChat.project,
+                    taskId: 0,
+                    tsSent: message.tsSent,
+                } as FlaggedMessageProps);
+
+                setFlaggedMessages([
+                    ...flaggedMessages,
+                    {
+                        flaggedMessageId: `${currentChat.chatType}-${currentChat.chatId}-${0}-${message.messageId}`,
+                        chatType: currentChat.chatType,
+                        chatName: currentChat.chatName,
+                        chatId: currentChat.chatId,
+                        threadId: 0,
+                        messageId: message.messageId,
+                        contentText: getFirstLine(message.content[0]),
+                        sender: message.sender,
+                        dmPartnerUser: currentChat.dmPartnerUser,
+                        project: currentChat.project,
+                        taskId: 0,
+                        tsSent: message.tsSent,
+                    },
+                ]);
+            } else {
+                // Delete the flagged message from the indexedDB
+                const flaggedService = new FlaggedService();
+                flaggedService.deleteFlaggedMessage(
+                    `${currentChat.chatType}-${currentChat.chatId}-${0}-${message.messageId}`
+                );
+
+                // Delete the unflagged message from the flaggedMessages array
+                setFlaggedMessages(
+                    flaggedMessages.filter(
+                        (_message) =>
+                            _message.flaggedMessageId !==
+                            `${currentChat.chatType}-${currentChat.chatId}-${0}-${message.messageId}`
+                    )
+                );
+            }
+
+            updateFlagMessage(accessToken, myself, {
+                chat_type: currentChat.chatType,
+                chat_id: currentChat.chatId,
+                thread_id: threadId,
+                message_id: message.messageId,
+            });
+        } else if (currentThreadChat && setCurrentThreadChat) {
+            setCurrentThreadChat({
+                ...currentThreadChat,
+                messages: currentThreadChat.messages.map((m) => ({
+                    ...m,
+                    isFlagged: m.messageId === message.messageId ? !m.isFlagged : m.isFlagged,
+                })),
+            });
+
+            // Add the flagged message to the indexedDB
+            if (tmpIsFlagged === false) {
+                addFlaggedMessage({
+                    flaggedMessageId: `${currentThreadChat.chatType}-${currentThreadChat.chatId}-${threadId}-${message.messageId}`,
+                    chatType: currentThreadChat.chatType,
+                    chatId: currentThreadChat.chatId,
+                    threadId: threadId,
+                    messageId: message.messageId,
+                    contentText: getFirstLine(message.content[0]),
+                    sender: message.sender,
+                    dmPartnerUser: currentThreadChat.dmPartnerUser,
+                    project: currentThreadChat.project,
+                    taskId: currentThreadChat.taskId || 0,
+                    tsSent: message.tsSent,
+                } as FlaggedMessageProps);
+
+                setFlaggedMessages([
+                    ...flaggedMessages,
+                    {
+                        flaggedMessageId: `${currentThreadChat.chatType}-${currentThreadChat.chatId}-${threadId}-${message.messageId}`,
+                        chatName: currentThreadChat.chatName,
+                        chatType: currentThreadChat.chatType,
+                        chatId: currentThreadChat.chatId,
+                        threadId: threadId,
+                        messageId: message.messageId,
+                        contentText: getFirstLine(message.content[0]),
+                        sender: message.sender,
+                        dmPartnerUser: currentThreadChat.dmPartnerUser,
+                        project: currentThreadChat.project,
+                        taskId: currentThreadChat.taskId || 0,
+                        tsSent: message.tsSent,
+                    },
+                ]);
+            } else {
+                // Delete the flagged message from the indexedDB
+                const flaggedService = new FlaggedService();
+                flaggedService.deleteFlaggedMessage(
+                    `${currentThreadChat.chatType}-${currentThreadChat.chatId}-${threadId}-${message.messageId}`
+                );
+
+                setFlaggedMessages(
+                    flaggedMessages.filter(
+                        (_message) =>
+                            _message.flaggedMessageId !==
+                            `${currentThreadChat.chatType}-${currentThreadChat.chatId}-${threadId}-${message.messageId}`
+                    )
+                );
+            }
+            updateFlagMessage(accessToken, myself, {
+                chat_type: currentThreadChat.chatType,
+                chat_id: currentThreadChat.chatId,
+                thread_id: threadId,
+                message_id: message.messageId,
+            });
+        }
+
+        setTmpIsFlagged(!tmpIsFlagged);
+    };
+
     return (
         <Box sx={{ textAlign: "right" }}>
             <Tooltip
                 size="sm"
                 title={tmpIsFlagged ? "Unflag" : "Flag for later"}
-                variant="outlined"
+                placement="top"
+                sx={{
+                    borderRadius: "8px",
+                    fontSize: "0.75rem",
+                }}
             >
                 <IconButton
-                    color={tmpIsFlagged ? "danger" : "neutral"}
                     size="sm"
-                    onClick={() => {
-                        // If the message is not a thread message,
-                        // we need to update the message in the indexedDB.
-                        if (threadId === 0 && currentChat && setCurrentChat) {
-                            setCurrentChat({
-                                ...currentChat,
-                                messages: currentChat.messages.map((m) => ({
-                                    ...m,
-                                    isFlagged:
-                                        m.messageId === message.messageId
-                                            ? !m.isFlagged
-                                            : m.isFlagged,
-                                })),
-                            });
-                            addMessage(
-                                { ...message, isFlagged: !tmpIsFlagged } as MessageProps,
-                                currentChat.chatType
-                            );
-
-                            // Add the flagged message to the indexedDB
-                            if (tmpIsFlagged === false) {
-                                addFlaggedMessage({
-                                    flaggedMessageId: `${currentChat.chatType}-${
-                                        currentChat.chatId
-                                    }-${0}-${message.messageId}`,
-                                    chatType: currentChat.chatType,
-                                    chatId: currentChat.chatId,
-                                    threadId: 0,
-                                    messageId: message.messageId,
-                                    contentText: getFirstLine(message.content[0]),
-                                    sender: message.sender,
-                                    dmPartnerUser: currentChat.dmPartnerUser,
-                                    project: currentChat.project,
-                                    taskId: 0,
-                                    tsSent: message.tsSent,
-                                } as FlaggedMessageProps);
-
-                                setFlaggedMessages([
-                                    ...flaggedMessages,
-                                    {
-                                        flaggedMessageId: `${currentChat.chatType}-${
-                                            currentChat.chatId
-                                        }-${0}-${message.messageId}`,
-                                        chatType: currentChat.chatType,
-                                        chatName: currentChat.chatName,
-                                        chatId: currentChat.chatId,
-                                        threadId: 0,
-                                        messageId: message.messageId,
-                                        contentText: getFirstLine(message.content[0]),
-                                        sender: message.sender,
-                                        dmPartnerUser: currentChat.dmPartnerUser,
-                                        project: currentChat.project,
-                                        taskId: 0,
-                                        tsSent: message.tsSent,
-                                    },
-                                ]);
-                            } else {
-                                // Delete the flagged message from the indexedDB
-                                const flaggedService = new FlaggedService();
-                                flaggedService.deleteFlaggedMessage(
-                                    `${currentChat.chatType}-${currentChat.chatId}-${0}-${
-                                        message.messageId
-                                    }`
-                                );
-
-                                // Delete the unflagged message from the flaggedMessages array
-                                setFlaggedMessages(
-                                    flaggedMessages.filter(
-                                        (_message) =>
-                                            _message.flaggedMessageId !==
-                                            `${currentChat.chatType}-${currentChat.chatId}-${0}-${
-                                                message.messageId
-                                            }`
-                                    )
-                                );
-                            }
-
-                            updateFlagMessage(accessToken, myself, {
-                                chat_type: currentChat.chatType,
-                                chat_id: currentChat.chatId,
-                                thread_id: threadId,
-                                message_id: message.messageId,
-                            });
-                        } else if (currentThreadChat && setCurrentThreadChat) {
-                            setCurrentThreadChat({
-                                ...currentThreadChat,
-                                messages: currentThreadChat.messages.map((m) => ({
-                                    ...m,
-                                    isFlagged:
-                                        m.messageId === message.messageId
-                                            ? !m.isFlagged
-                                            : m.isFlagged,
-                                })),
-                            });
-
-                            // Add the flagged message to the indexedDB
-                            if (tmpIsFlagged === false) {
-                                addFlaggedMessage({
-                                    flaggedMessageId: `${currentThreadChat.chatType}-${currentThreadChat.chatId}-${threadId}-${message.messageId}`,
-                                    chatType: currentThreadChat.chatType,
-                                    chatId: currentThreadChat.chatId,
-                                    threadId: threadId,
-                                    messageId: message.messageId,
-                                    contentText: getFirstLine(message.content[0]),
-                                    sender: message.sender,
-                                    dmPartnerUser: currentThreadChat.dmPartnerUser,
-                                    project: currentThreadChat.project,
-                                    taskId: currentThreadChat.taskId || 0,
-                                    tsSent: message.tsSent,
-                                } as FlaggedMessageProps);
-
-                                setFlaggedMessages([
-                                    ...flaggedMessages,
-                                    {
-                                        flaggedMessageId: `${currentThreadChat.chatType}-${currentThreadChat.chatId}-${threadId}-${message.messageId}`,
-                                        chatName: currentThreadChat.chatName,
-                                        chatType: currentThreadChat.chatType,
-                                        chatId: currentThreadChat.chatId,
-                                        threadId: threadId,
-                                        messageId: message.messageId,
-                                        contentText: getFirstLine(message.content[0]),
-                                        sender: message.sender,
-                                        dmPartnerUser: currentThreadChat.dmPartnerUser,
-                                        project: currentThreadChat.project,
-                                        taskId: currentThreadChat.taskId || 0,
-                                        tsSent: message.tsSent,
-                                    },
-                                ]);
-                            } else {
-                                // Delete the flagged message from the indexedDB
-                                const flaggedService = new FlaggedService();
-                                flaggedService.deleteFlaggedMessage(
-                                    `${currentThreadChat.chatType}-${currentThreadChat.chatId}-${threadId}-${message.messageId}`
-                                );
-
-                                setFlaggedMessages(
-                                    flaggedMessages.filter(
-                                        (_message) =>
-                                            _message.flaggedMessageId !==
-                                            `${currentThreadChat.chatType}-${currentThreadChat.chatId}-${threadId}-${message.messageId}`
-                                    )
-                                );
-                            }
-                            updateFlagMessage(accessToken, myself, {
-                                chat_type: currentThreadChat.chatType,
-                                chat_id: currentThreadChat.chatId,
-                                thread_id: threadId,
-                                message_id: message.messageId,
-                            });
-                        }
-
-                        setTmpIsFlagged(!tmpIsFlagged);
+                    onClick={handleFlagClick}
+                    sx={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: "8px",
+                        transition: "all 0.15s ease",
+                        color: tmpIsFlagged
+                            ? isDark
+                                ? "#f87171"
+                                : "#ef4444"
+                            : isDark
+                              ? "rgba(255,255,255,0.6)"
+                              : "rgba(0,0,0,0.5)",
+                        background: tmpIsFlagged
+                            ? isDark
+                                ? "rgba(239,68,68,0.15)"
+                                : "rgba(239,68,68,0.1)"
+                            : "transparent",
+                        "&:hover": {
+                            background: tmpIsFlagged
+                                ? isDark
+                                    ? "rgba(239,68,68,0.25)"
+                                    : "rgba(239,68,68,0.18)"
+                                : isDark
+                                  ? "rgba(251,191,36,0.15)"
+                                  : "rgba(245,158,11,0.1)",
+                            color: tmpIsFlagged
+                                ? isDark
+                                    ? "#fca5a5"
+                                    : "#f87171"
+                                : isDark
+                                  ? "#fbbf24"
+                                  : "#f59e0b",
+                            transform: "scale(1.05)",
+                        },
+                        "&:active": {
+                            transform: "scale(0.95)",
+                        },
                     }}
                 >
-                    <FlagIcon />
+                    <FlagIcon sx={{ fontSize: 16 }} />
                 </IconButton>
             </Tooltip>
         </Box>

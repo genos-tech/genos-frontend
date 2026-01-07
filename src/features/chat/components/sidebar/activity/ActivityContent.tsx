@@ -1,5 +1,6 @@
-import { Box, Stack, Typography } from "@mui/joy";
 import React from "react";
+import { Box, Stack, Typography } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 
 import { UserProps } from "../../../../../types/admin";
 import { ActivityMessageProps } from "../../../../../types/chat";
@@ -17,54 +18,86 @@ export const ActivityContent: React.FC<ActivityContentProps> = ({
     myself,
     groupedReactions,
 }) => {
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
+
     // For non-reaction activities, show the first line content
     if (activity.activityType !== 2) {
         return (
             <Stack alignItems="flex-start" direction="row" justifyContent="space-between">
-                <Typography
-                    level="body-sm"
+                <Box
                     sx={{
-                        marginBottom: 0.5,
-                        ml: "45px",
-                        fontWeight: "bold",
-                        display: "-webkit-box",
-                        WebkitLineClamp: "2",
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
+                        ml: "44px",
+                        py: 0.5,
+                        px: 1,
+                        borderRadius: "8px",
+                        background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
+                        border: "1px solid",
+                        borderColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
+                        maxWidth: "100%",
                     }}
                 >
-                    {activity.firstLineContent}
-                </Typography>
+                    <Typography
+                        level="body-sm"
+                        sx={{
+                            fontWeight: 500,
+                            fontSize: "0.8rem",
+                            lineHeight: 1.5,
+                            color: isDark ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.7)",
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            wordBreak: "break-word",
+                        }}
+                    >
+                        {activity.firstLineContent}
+                    </Typography>
+                </Box>
             </Stack>
         );
     }
 
     // For reaction activities, show the reaction display
     return (
-        <>
+        <Box sx={{ mt: 0.25 }}>
             <ActivityReactions
                 activity={activity}
                 groupedReactions={groupedReactions}
                 myself={myself}
             />
-            <Box sx={{ lineHeight: 0, textAlign: "right" }}>
+            <Box
+                sx={{
+                    ml: "44px",
+                    mt: 0.75,
+                    py: 0.5,
+                    px: 1,
+                    borderRadius: "8px",
+                    background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
+                    border: "1px solid",
+                    borderColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
+                }}
+            >
                 <Typography
                     level="body-sm"
                     sx={{
-                        marginBottom: 0.5,
-                        ml: "45px",
-                        fontWeight: "bold",
+                        fontWeight: 500,
+                        fontSize: "0.8rem",
+                        lineHeight: 1.5,
+                        color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.55)",
                         display: "-webkit-box",
-                        WebkitLineClamp: "2",
+                        WebkitLineClamp: 2,
                         WebkitBoxOrient: "vertical",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
+                        fontStyle: "italic",
+                        wordBreak: "break-word",
                     }}
                 >
                     {activity.firstLineContent}
                 </Typography>
             </Box>
-        </>
+        </Box>
     );
 };

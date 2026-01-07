@@ -2,7 +2,7 @@ import { TaskEffortLevelProps, TaskPriorityProps, TaskStatusProps } from "../../
 
 export const statuses: TaskStatusProps[] = [
     { code: 0, status: "Open", color: "#0044c2", textColor: "white" },
-    { code: 0, status: "WIP", color: "#ff8c00ff", textColor: "white" },
+    { code: 0, status: "WIP", color: "#ff8c00", textColor: "white" },
     { code: 0, status: "Pending", color: "#b900ff", textColor: "white" },
     { code: 0, status: "Closed", color: "#1dc200", textColor: "white" },
     { code: 0, status: "Deleted", color: "#ff2323", textColor: "white" },

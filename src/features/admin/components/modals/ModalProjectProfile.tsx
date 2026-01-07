@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
+import SearchIcon from "@mui/icons-material/Search";
 import {
     Avatar,
     Box,
@@ -10,6 +12,7 @@ import {
     FormControl,
     FormLabel,
     IconButton,
+    Input,
     ListItemButton,
     Modal,
     ModalDialog,
@@ -17,6 +20,7 @@ import {
     Tooltip,
     Typography,
 } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
@@ -32,6 +36,32 @@ import { addChat } from "../../../chat/services/addChat";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
+
+// Modern theme-aware styling
+const MODAL_STYLES = {
+    dark: {
+        bg: "linear-gradient(145deg, rgba(30,32,44,0.98) 0%, rgba(20,22,34,0.99) 100%)",
+        cardBg: "linear-gradient(135deg, rgba(40,42,54,0.9) 0%, rgba(30,32,44,0.95) 100%)",
+        border: "rgba(99,102,241,0.2)",
+        shadow: "0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(99,102,241,0.1)",
+        headerGradient: "linear-gradient(90deg, #818cf8 0%, #a78bfa 50%, #c084fc 100%)",
+        labelColor: "rgba(148,163,184,0.9)",
+        valueColor: "#f1f5f9",
+        hoverBg: "rgba(99,102,241,0.15)",
+        avatarGlow: "0 0 40px rgba(99,102,241,0.4), 0 0 80px rgba(139,92,246,0.2)",
+    },
+    light: {
+        bg: "linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.99) 100%)",
+        cardBg: "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(241,245,249,0.9) 100%)",
+        border: "rgba(99,102,241,0.15)",
+        shadow: "0 8px 32px rgba(99,102,241,0.1), 0 0 0 1px rgba(99,102,241,0.08)",
+        headerGradient: "linear-gradient(90deg, #4f46e5 0%, #7c3aed 50%, #a855f7 100%)",
+        labelColor: "rgba(71,85,105,0.9)",
+        valueColor: "#1e293b",
+        hoverBg: "rgba(99,102,241,0.08)",
+        avatarGlow: "0 0 40px rgba(99,102,241,0.2), 0 0 80px rgba(139,92,246,0.1)",
+    },
+};
 
 type ModalProjectProfileProps = {
     socket: Socket | null;
@@ -62,8 +92,28 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
     } = props;
 
     const { accessToken } = useAuth();
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
+    const styles = isDark ? MODAL_STYLES.dark : MODAL_STYLES.light;
 
     const [projectProfile, setProjectProfile] = useState<ProjectProfileProps | null>(null);
+
+    // Member search state
+    const [memberSearchQuery, setMemberSearchQuery] = useState("");
+
+    // Filter members based on search query
+    const filteredMembers = useMemo(() => {
+        if (!projectProfile?.projectMembers) return [];
+        if (!memberSearchQuery.trim()) {
+            return projectProfile.projectMembers;
+        }
+        const query = memberSearchQuery.toLowerCase();
+        return projectProfile.projectMembers.filter(
+            (member) =>
+                member.userName.toLowerCase().includes(query) ||
+                member.userEmail.toLowerCase().includes(query)
+        );
+    }, [projectProfile?.projectMembers, memberSearchQuery]);
 
     // Profile image file upload manager
     const inputRef = useRef<HTMLInputElement | null>(null);
@@ -127,10 +177,23 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
         <>
             <Modal
                 open={openModalProjectProfile}
-                sx={{ zIndex: 10001 }}
+                sx={{
+                    zIndex: 10001,
+                    backdropFilter: "blur(8px)",
+                    backgroundColor: isDark ? "rgba(0,0,0,0.6)" : "rgba(0,0,0,0.3)",
+                }}
                 onClose={() => setOpenModalProjectProfile(false)}
             >
-                <ModalDialog>
+                <ModalDialog
+                    sx={{
+                        background: styles.bg,
+                        border: `1px solid ${styles.border}`,
+                        boxShadow: styles.shadow,
+                        borderRadius: "20px",
+                        overflow: "hidden",
+                        transition: "all 0.3s ease",
+                    }}
+                >
                     <Box sx={{ flex: 1, width: "1000px" }}>
                         <Box
                             sx={{
@@ -147,7 +210,20 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                     px: 3,
                                 }}
                             >
-                                <Typography component="h1" level="h2" sx={{ mt: 1, mb: 1 }}>
+                                <Typography
+                                    component="h1"
+                                    level="h2"
+                                    sx={{
+                                        mt: 1,
+                                        mb: 1,
+                                        background: styles.headerGradient,
+                                        backgroundClip: "text",
+                                        WebkitBackgroundClip: "text",
+                                        WebkitTextFillColor: "transparent",
+                                        fontWeight: 700,
+                                        letterSpacing: "-0.02em",
+                                    }}
+                                >
                                     Project Profile - {pmChat.chatName}
                                 </Typography>
                             </Box>
@@ -162,7 +238,22 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                 py: { xs: 2, md: 3 },
                             }}
                         >
-                            <Card>
+                            <Card
+                                sx={{
+                                    background: styles.cardBg,
+                                    border: `1px solid ${styles.border}`,
+                                    borderRadius: "16px",
+                                    boxShadow: isDark
+                                        ? "0 4px 20px rgba(0,0,0,0.3)"
+                                        : "0 4px 20px rgba(99,102,241,0.08)",
+                                    transition: "all 0.3s ease",
+                                    "&:hover": {
+                                        boxShadow: isDark
+                                            ? "0 8px 30px rgba(0,0,0,0.4)"
+                                            : "0 8px 30px rgba(99,102,241,0.12)",
+                                    },
+                                }}
+                            >
                                 <Stack
                                     direction="row"
                                     sx={{ display: { xs: "none", md: "flex" }, my: 1 }}
@@ -177,7 +268,20 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                     >
                                         <Avatar
                                             src={`${media_url}/${pmChat.profileImagePath}`}
-                                            sx={{ width: 180, height: 180, fontSize: "50px" }}
+                                            sx={{
+                                                width: 180,
+                                                height: 180,
+                                                fontSize: "50px",
+                                                boxShadow: styles.avatarGlow,
+                                                border: `3px solid ${styles.border}`,
+                                                transition: "all 0.3s ease",
+                                                "&:hover": {
+                                                    transform: "scale(1.02)",
+                                                    boxShadow: isDark
+                                                        ? "0 0 50px rgba(99,102,241,0.5), 0 0 100px rgba(139,92,246,0.3)"
+                                                        : "0 0 50px rgba(99,102,241,0.3), 0 0 100px rgba(139,92,246,0.15)",
+                                                },
+                                            }}
                                         >
                                             <AccountTreeIcon sx={{ fontSize: 100 }} />
                                         </Avatar>
@@ -185,8 +289,8 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                         <Box
                                             sx={{
                                                 position: "absolute",
-                                                top: 150, // adjust vertical position
-                                                right: 30, // push it to the right side
+                                                top: 150,
+                                                right: 30,
                                             }}
                                         >
                                             <input
@@ -200,11 +304,24 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                             <Tooltip
                                                 size="sm"
                                                 sx={{ zIndex: 9000 }}
-                                                title="EDIT (TBD)"
+                                                title="Edit Profile Image"
                                                 variant="outlined"
                                             >
                                                 <IconButton
                                                     variant="soft"
+                                                    sx={{
+                                                        background: isDark
+                                                            ? "linear-gradient(135deg, rgba(99,102,241,0.3) 0%, rgba(139,92,246,0.3) 100%)"
+                                                            : "linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.15) 100%)",
+                                                        border: `1px solid ${styles.border}`,
+                                                        transition: "all 0.2s ease",
+                                                        "&:hover": {
+                                                            background: isDark
+                                                                ? "linear-gradient(135deg, rgba(99,102,241,0.5) 0%, rgba(139,92,246,0.5) 100%)"
+                                                                : "linear-gradient(135deg, rgba(99,102,241,0.25) 0%, rgba(139,92,246,0.25) 100%)",
+                                                            transform: "scale(1.1)",
+                                                        },
+                                                    }}
                                                     onClick={() => {
                                                         if (pmChat.project) {
                                                             handleButtonClick();
@@ -213,22 +330,49 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                         }
                                                     }}
                                                 >
-                                                    <EditIcon sx={{ fontSize: "30px" }} />
+                                                    <EditIcon
+                                                        sx={{
+                                                            fontSize: "30px",
+                                                            color: isDark ? "#a78bfa" : "#7c3aed",
+                                                        }}
+                                                    />
                                                 </IconButton>
                                             </Tooltip>
                                         </Box>
                                     </Box>
 
                                     <Stack spacing={2} sx={{ flexGrow: 1 }}>
-                                        <Stack direction="column" spacing={1}>
-                                            <Stack direction={"row"}>
+                                        <Stack direction="column" spacing={1.5}>
+                                            <Stack
+                                                direction={"row"}
+                                                alignItems="flex-end"
+                                                spacing={2}
+                                            >
                                                 <FormControl>
-                                                    <FormLabel>Owner</FormLabel>
+                                                    <FormLabel
+                                                        sx={{
+                                                            color: styles.labelColor,
+                                                            fontSize: "0.75rem",
+                                                            fontWeight: 600,
+                                                            textTransform: "uppercase",
+                                                            letterSpacing: "0.05em",
+                                                            mb: 0.5,
+                                                        }}
+                                                    >
+                                                        Owner
+                                                    </FormLabel>
                                                     <Button
                                                         color="neutral"
                                                         variant="plain"
                                                         sx={{
-                                                            justifyContent: "flex-start", // left align the content
+                                                            justifyContent: "flex-start",
+                                                            px: 1.5,
+                                                            py: 0.5,
+                                                            borderRadius: "8px",
+                                                            transition: "all 0.2s ease",
+                                                            "&:hover": {
+                                                                background: styles.hoverBg,
+                                                            },
                                                         }}
                                                         onClick={() => {
                                                             if (projectProfile?.ownerUserId) {
@@ -244,6 +388,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                             sx={{
                                                                 userSelect: "text",
                                                                 fontSize: "20px",
+                                                                color: styles.valueColor,
                                                             }}
                                                         >
                                                             {projectProfile
@@ -265,13 +410,24 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                             : "N/A"
                                                     }`}
                                                     startDecorator={
-                                                        <EmailRoundedIcon fontSize="small" />
+                                                        <EmailRoundedIcon
+                                                            fontSize="small"
+                                                            sx={{
+                                                                color: isDark
+                                                                    ? "#818cf8"
+                                                                    : "#4f46e5",
+                                                            }}
+                                                        />
                                                     }
                                                     sx={{
                                                         textDecoration: "none",
-                                                        color: "inherit",
+                                                        color: styles.valueColor,
                                                         cursor: "pointer",
-                                                        pt: "28px",
+                                                        pb: "8px",
+                                                        transition: "all 0.2s ease",
+                                                        "&:hover": {
+                                                            color: isDark ? "#a78bfa" : "#7c3aed",
+                                                        },
                                                     }}
                                                 >
                                                     {projectProfile
@@ -283,16 +439,119 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                             </Stack>
 
                                             <FormControl>
-                                                <FormLabel>Members</FormLabel>
+                                                <Stack
+                                                    direction="row"
+                                                    alignItems="center"
+                                                    justifyContent="space-between"
+                                                    sx={{ mb: 1 }}
+                                                >
+                                                    <FormLabel
+                                                        sx={{
+                                                            color: styles.labelColor,
+                                                            fontSize: "0.75rem",
+                                                            fontWeight: 600,
+                                                            textTransform: "uppercase",
+                                                            letterSpacing: "0.05em",
+                                                            mb: 0,
+                                                        }}
+                                                    >
+                                                        Members ({filteredMembers.length}/
+                                                        {projectProfile?.projectMembers?.length ||
+                                                            0}
+                                                        )
+                                                    </FormLabel>
+                                                    <Input
+                                                        placeholder="Search members..."
+                                                        value={memberSearchQuery}
+                                                        onChange={(e) =>
+                                                            setMemberSearchQuery(e.target.value)
+                                                        }
+                                                        startDecorator={
+                                                            <SearchIcon
+                                                                sx={{
+                                                                    color: isDark
+                                                                        ? "#818cf8"
+                                                                        : "#4f46e5",
+                                                                    fontSize: "18px",
+                                                                }}
+                                                            />
+                                                        }
+                                                        endDecorator={
+                                                            memberSearchQuery && (
+                                                                <IconButton
+                                                                    size="sm"
+                                                                    variant="plain"
+                                                                    onClick={() =>
+                                                                        setMemberSearchQuery("")
+                                                                    }
+                                                                    sx={{
+                                                                        minWidth: "24px",
+                                                                        minHeight: "24px",
+                                                                        borderRadius: "50%",
+                                                                    }}
+                                                                >
+                                                                    <CloseIcon
+                                                                        sx={{ fontSize: "16px" }}
+                                                                    />
+                                                                </IconButton>
+                                                            )
+                                                        }
+                                                        sx={{
+                                                            width: "220px",
+                                                            "--Input-focusedThickness": "1px",
+                                                            "--Input-radius": "8px",
+                                                            background: isDark
+                                                                ? "rgba(0,0,0,0.3)"
+                                                                : "rgba(255,255,255,0.8)",
+                                                            border: `1px solid ${styles.border}`,
+                                                            fontSize: "14px",
+                                                            transition: "all 0.2s ease",
+                                                            "&:hover": {
+                                                                borderColor: isDark
+                                                                    ? "#818cf8"
+                                                                    : "#4f46e5",
+                                                            },
+                                                            "&:focus-within": {
+                                                                borderColor: isDark
+                                                                    ? "#818cf8"
+                                                                    : "#4f46e5",
+                                                                boxShadow: isDark
+                                                                    ? "0 0 0 2px rgba(99,102,241,0.2)"
+                                                                    : "0 0 0 2px rgba(99,102,241,0.1)",
+                                                            },
+                                                        }}
+                                                    />
+                                                </Stack>
                                                 <Box
                                                     className="custom-scrollbar"
-                                                    sx={{ maxHeight: "300px", overflow: "auto" }}
+                                                    sx={{
+                                                        maxHeight: "300px",
+                                                        overflow: "auto",
+                                                        background: isDark
+                                                            ? "rgba(0,0,0,0.2)"
+                                                            : "rgba(99,102,241,0.03)",
+                                                        borderRadius: "12px",
+                                                        border: `1px solid ${styles.border}`,
+                                                        p: 1,
+                                                    }}
                                                 >
-                                                    {projectProfile?.projectMembers.map(
-                                                        (member) => (
+                                                    {filteredMembers.length > 0 ? (
+                                                        filteredMembers.map((member) => (
                                                             <ListItemButton
                                                                 key={`project-member-${member.userId}`}
-                                                                sx={{ ml: 2, my: 0.2 }}
+                                                                sx={{
+                                                                    ml: 1,
+                                                                    my: 0.3,
+                                                                    borderRadius: "8px",
+                                                                    transition: "all 0.2s ease",
+                                                                    "&:hover": {
+                                                                        background: styles.hoverBg,
+                                                                    },
+                                                                }}
+                                                                onClick={() => {
+                                                                    setAvatarUserId(member.userId);
+                                                                    setOpenUserProfile(true);
+                                                                }}
                                                             >
                                                                 <AvatarWithStatus
                                                                     avatarUser={member}
@@ -305,46 +564,111 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                                     useUISM={useUISM}
                                                                 />
                                                             </ListItemButton>
-                                                        )
+                                                        ))
+                                                    ) : (
+                                                        <Box
+                                                            sx={{
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                justifyContent: "center",
+                                                                py: 3,
+                                                                color: styles.labelColor,
+                                                            }}
+                                                        >
+                                                            <Typography level="body-sm">
+                                                                No members found matching "
+                                                                {memberSearchQuery}"
+                                                            </Typography>
+                                                        </Box>
                                                     )}
                                                 </Box>
                                             </FormControl>
 
-                                            <Stack direction="column" spacing={2}>
+                                            <Stack direction="row" spacing={4} sx={{ mt: 1 }}>
                                                 <FormControl>
-                                                    <FormLabel>Is Private</FormLabel>
-                                                    <Button
-                                                        disabled={true}
-                                                        variant="plain"
+                                                    <FormLabel
                                                         sx={{
-                                                            justifyContent: "flex-start", // left align the content
+                                                            color: styles.labelColor,
+                                                            fontSize: "0.75rem",
+                                                            fontWeight: 600,
+                                                            textTransform: "uppercase",
+                                                            letterSpacing: "0.05em",
+                                                            mb: 0.5,
+                                                        }}
+                                                    >
+                                                        Is Private
+                                                    </FormLabel>
+                                                    <Box
+                                                        sx={{
+                                                            display: "inline-flex",
+                                                            px: 2,
+                                                            py: 0.5,
+                                                            borderRadius: "20px",
+                                                            background: projectProfile?.isPrivate
+                                                                ? isDark
+                                                                    ? "linear-gradient(135deg, rgba(239,68,68,0.2) 0%, rgba(220,38,38,0.2) 100%)"
+                                                                    : "linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(220,38,38,0.15) 100%)"
+                                                                : isDark
+                                                                  ? "linear-gradient(135deg, rgba(34,197,94,0.2) 0%, rgba(22,163,74,0.2) 100%)"
+                                                                  : "linear-gradient(135deg, rgba(34,197,94,0.15) 0%, rgba(22,163,74,0.15) 100%)",
+                                                            border: `1px solid ${
+                                                                projectProfile?.isPrivate
+                                                                    ? "rgba(239,68,68,0.3)"
+                                                                    : "rgba(34,197,94,0.3)"
+                                                            }`,
                                                         }}
                                                     >
                                                         <Typography
-                                                            fontWeight={"bold"}
-                                                            sx={{ userSelect: "text" }}
+                                                            fontWeight={600}
+                                                            sx={{
+                                                                userSelect: "text",
+                                                                color: projectProfile?.isPrivate
+                                                                    ? isDark
+                                                                        ? "#f87171"
+                                                                        : "#dc2626"
+                                                                    : isDark
+                                                                      ? "#4ade80"
+                                                                      : "#16a34a",
+                                                            }}
                                                         >
                                                             {projectProfile?.isPrivate
                                                                 ? "Yes"
                                                                 : "No"}
                                                         </Typography>
-                                                    </Button>
+                                                    </Box>
                                                 </FormControl>
-                                            </Stack>
 
-                                            <Stack direction="column" spacing={2}>
                                                 <FormControl>
-                                                    <FormLabel>Created Date</FormLabel>
-                                                    <Button
-                                                        disabled={true}
-                                                        variant="plain"
+                                                    <FormLabel
                                                         sx={{
-                                                            justifyContent: "flex-start", // left align the content
+                                                            color: styles.labelColor,
+                                                            fontSize: "0.75rem",
+                                                            fontWeight: 600,
+                                                            textTransform: "uppercase",
+                                                            letterSpacing: "0.05em",
+                                                            mb: 0.5,
+                                                        }}
+                                                    >
+                                                        Created Date
+                                                    </FormLabel>
+                                                    <Box
+                                                        sx={{
+                                                            display: "inline-flex",
+                                                            px: 2,
+                                                            py: 0.5,
+                                                            borderRadius: "8px",
+                                                            background: isDark
+                                                                ? "rgba(99,102,241,0.1)"
+                                                                : "rgba(99,102,241,0.05)",
+                                                            border: `1px solid ${styles.border}`,
                                                         }}
                                                     >
                                                         <Typography
-                                                            fontWeight={"bold"}
-                                                            sx={{ userSelect: "text" }}
+                                                            fontWeight={600}
+                                                            sx={{
+                                                                userSelect: "text",
+                                                                color: styles.valueColor,
+                                                            }}
                                                         >
                                                             {projectProfile?.tsCreatedAt
                                                                 ? extractYYYYMMDD(
@@ -352,7 +676,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                                   )
                                                                 : "N/A"}
                                                         </Typography>
-                                                    </Button>
+                                                    </Box>
                                                 </FormControl>
                                             </Stack>
                                         </Stack>

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import EditIcon from "@mui/icons-material/Edit";
-import { Avatar, Box, Card, IconButton, Stack, Tooltip, Typography } from "@mui/joy";
+import { Box, Card, IconButton, Stack, Tooltip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -20,6 +20,22 @@ import {
     getLocalCurrentTimestamp,
 } from "../../../../../../utils/dateUtils";
 
+// Color scheme for task comment bubbles
+const COMMENT_COLORS = {
+    dark: {
+        bg: "#1e1b4b",
+        border: "#3730a3",
+        text: "#e0e7ff",
+        secondaryText: "rgba(224, 231, 255, 0.6)",
+    },
+    light: {
+        bg: "#ffffff",
+        border: "#e5e7eb",
+        text: "#111827",
+        secondaryText: "rgba(17, 24, 39, 0.55)",
+    },
+} as const;
+
 type TaskCommentBubbleProps = {
     useTEM: TeamManagementState;
     socket: Socket | null;
@@ -33,6 +49,7 @@ type TaskCommentBubbleProps = {
     useCM: ChatManagementState;
     useUISM: UIStateManagementState;
 };
+
 export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
     const {
         useTEM,
@@ -47,18 +64,19 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
         useCM,
         useUISM,
     } = props;
-    const { mode } = useColorScheme();
 
-    const isEdited =
-        extractMMDDHHMMSSs(comment.tsSent) === extractMMDDHHMMSSs(comment.tsUpdated)
-            ? false
-            : true;
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
+    const colors = isDark ? COMMENT_COLORS.dark : COMMENT_COLORS.light;
+
+    const isEdited = extractMMDDHHMMSSs(comment.tsSent) !== extractMMDDHHMMSSs(comment.tsUpdated);
 
     // Reaction handling
     const [showUnderBarOption, setShowUnderBarOption] = useState(false);
     const [reactions, setReactions] = useState<ReactionProps[]>([]);
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
+
     useEffect(() => {
         if (comment.reactions) {
             setReactions(comment.reactions);
@@ -137,27 +155,20 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
             const rect = boxRef.current.getBoundingClientRect();
             const viewportHeight = window.innerHeight;
             const viewportWidth = window.innerWidth;
-            const pickerHeight = 435; // Approximate height of emoji picker
-            const pickerWidth = 352; // Approximate width of emoji picker
+            const pickerHeight = 435;
+            const pickerWidth = 352;
 
-            // Calculate vertical position using fixed positioning
-            // If there's enough space below, show picker below the comment
-            // Otherwise show above
             if (viewportHeight - rect.bottom > pickerHeight + 20) {
-                // Show below the comment
                 setPickerTopPosition(rect.bottom + 10);
                 setPickerBottomPosition("auto");
             } else if (rect.top > pickerHeight + 20) {
-                // Show above the comment
                 setPickerTopPosition(rect.top - pickerHeight - 10);
                 setPickerBottomPosition("auto");
             } else {
-                // Not enough space either way, position at top of viewport with some margin
                 setPickerTopPosition(20);
                 setPickerBottomPosition("auto");
             }
 
-            // Horizontal positioning - align to left edge of comment with some margin
             const leftPos = Math.max(20, Math.min(rect.left, viewportWidth - pickerWidth - 20));
             setPickerLeftPosition(leftPos);
             setPickerRightPosition("auto");
@@ -192,41 +203,86 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                 >
                     <Card
                         sx={{
-                            backgroundColor:
-                                mode === "dark" ? "black" : "rgba(221, 221, 221, 0.45)",
+                            borderRadius: "16px",
+                            position: "relative",
+                            overflow: "hidden",
+                            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                            background: colors.bg,
+                            color: colors.text,
+                            border: "1px solid",
+                            borderColor: colors.border,
+                            boxShadow: isDark
+                                ? "0 2px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.03)"
+                                : "0 2px 8px rgba(0,0,0,0.06)",
+                            "&:hover": {
+                                boxShadow: isDark
+                                    ? "0 4px 16px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05)"
+                                    : "0 4px 16px rgba(0,0,0,0.1)",
+                                borderColor: isDark
+                                    ? "rgba(99, 102, 241, 0.4)"
+                                    : "rgba(99, 102, 241, 0.25)",
+                            },
                         }}
                     >
-                        <Stack alignItems="center" direction="row" spacing={1}>
+                        {/* Subtle top highlight */}
+                        <Box
+                            sx={{
+                                position: "absolute",
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                height: "1px",
+                                background: isDark
+                                    ? "rgba(255,255,255,0.06)"
+                                    : "rgba(255,255,255,0.8)",
+                                pointerEvents: "none",
+                            }}
+                        />
+
+                        {/* Header with avatar, name, and timestamp */}
+                        <Stack alignItems="center" direction="row" spacing={1.5}>
                             <AvatarWithStatus
                                 avatarUser={useTEM.teamMemberProfiles[comment.senderId]}
                                 useCM={useCM}
                                 isForBubble={true}
-                                isYou={myself.userId === comment.senderId ? true : false}
+                                isYou={myself.userId === comment.senderId}
                                 myself={myself}
                                 setMyself={setMyself}
                                 socket={socket}
                                 useUISM={useUISM}
                             />
-                            <Typography level="title-md">{comment.senderName}</Typography>
                             <Typography
-                                level="body-sm"
-                                textColor={mode === "dark" ? "lightgrey" : "rgba(37, 37, 37, 1)"}
+                                level="title-md"
                                 sx={{
-                                    fontFamily: "monospace",
-                                    opacity: 0.7,
-                                    pl: "5px",
+                                    fontWeight: 600,
+                                    fontSize: "0.9rem",
+                                    color: colors.text,
+                                    letterSpacing: "-0.01em",
                                 }}
                             >
-                                {isEdited === true && (
-                                    <>{extractYYYYMMDDHHMM(comment.tsSent)} Edited</>
-                                )}
-                                {isEdited === false && <>{extractYYYYMMDDHHMM(comment.tsSent)}</>}
+                                {comment.senderName}
+                            </Typography>
+                            <Typography
+                                level="body-xs"
+                                sx={{
+                                    fontWeight: 500,
+                                    fontSize: "0.7rem",
+                                    color: colors.secondaryText,
+                                    letterSpacing: "0.02em",
+                                    fontFamily: "inherit",
+                                }}
+                            >
+                                {isEdited
+                                    ? `${extractYYYYMMDDHHMM(comment.tsSent)} Edited`
+                                    : extractYYYYMMDDHHMM(comment.tsSent)}
                             </Typography>
                         </Stack>
+
+                        {/* Reactions display */}
                         <Box
                             sx={{
                                 position: "absolute",
-                                bottom: -15,
+                                bottom: -12,
                                 right: 10,
                             }}
                         >
@@ -242,34 +298,65 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                                 socket={socket}
                             />
                         </Box>
-                        <Tooltip size="sm" title="Edit" variant="outlined">
+
+                        {/* Edit button */}
+                        <Tooltip
+                            size="sm"
+                            title="Edit"
+                            placement="top"
+                            sx={{
+                                borderRadius: "8px",
+                                fontSize: "0.75rem",
+                            }}
+                        >
                             <IconButton
                                 size="sm"
-                                sx={{
-                                    position: "absolute",
-                                    top: 5,
-                                    right: 5,
-                                }}
                                 onClick={() => {
                                     setIsInEdit(true);
                                     setEditTargetComment(comment);
                                 }}
+                                sx={{
+                                    position: "absolute",
+                                    top: 8,
+                                    right: 8,
+                                    width: 28,
+                                    height: 28,
+                                    borderRadius: "8px",
+                                    transition: "all 0.15s ease",
+                                    opacity: showUnderBarOption ? 1 : 0,
+                                    color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.5)",
+                                    background: "transparent",
+                                    "&:hover": {
+                                        background: isDark
+                                            ? "rgba(251,191,36,0.15)"
+                                            : "rgba(245,158,11,0.1)",
+                                        color: isDark ? "#fbbf24" : "#f59e0b",
+                                        transform: "scale(1.05)",
+                                    },
+                                    "&:active": {
+                                        transform: "scale(0.95)",
+                                    },
+                                }}
                             >
-                                <EditIcon />
+                                <EditIcon sx={{ fontSize: 16 }} />
                             </IconButton>
                         </Tooltip>
-                        <BnChatPreview
-                            key={`${comment.taskId}-${comment.commentId}-${comment.tsSent}`}
-                            useCM={useCM}
-                            content={comment.commentBody}
-                            customClassName="task-comment-preview"
-                            isSent={true}
-                            myself={myself}
-                            setMyself={setMyself}
-                            socket={socket}
-                            useTEM={useTEM}
-                            useUISM={useUISM}
-                        />
+
+                        {/* Comment content */}
+                        <Box sx={{ mt: 0.5 }}>
+                            <BnChatPreview
+                                key={`${comment.taskId}-${comment.commentId}-${comment.tsSent}`}
+                                useCM={useCM}
+                                content={comment.commentBody}
+                                customClassName="task-comment-preview"
+                                isSent={true}
+                                myself={myself}
+                                setMyself={setMyself}
+                                socket={socket}
+                                useTEM={useTEM}
+                                useUISM={useUISM}
+                            />
+                        </Box>
                     </Card>
                 </Box>
             )}

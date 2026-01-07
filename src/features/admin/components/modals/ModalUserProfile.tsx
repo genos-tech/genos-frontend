@@ -17,6 +17,7 @@ import {
     Tooltip,
     Typography,
 } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { EmojiPicker } from "../../../../components/ui/emoji/EmojiPicker";
@@ -33,6 +34,34 @@ import { UserProfileStatus } from "./sub/UserProfileStatus";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
+
+// Modern theme-aware styling
+const MODAL_STYLES = {
+    dark: {
+        bg: "linear-gradient(145deg, rgba(30,32,44,0.98) 0%, rgba(20,22,34,0.99) 100%)",
+        cardBg: "linear-gradient(135deg, rgba(40,42,54,0.9) 0%, rgba(30,32,44,0.95) 100%)",
+        border: "rgba(244,114,182,0.2)",
+        shadow: "0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(244,114,182,0.1)",
+        headerGradient: "linear-gradient(90deg, #f472b6 0%, #fb923c 50%, #fbbf24 100%)",
+        labelColor: "rgba(148,163,184,0.9)",
+        valueColor: "#f1f5f9",
+        hoverBg: "rgba(244,114,182,0.15)",
+        avatarGlow: "0 0 40px rgba(244,114,182,0.4), 0 0 80px rgba(251,146,60,0.2)",
+        accentColor: "#f472b6",
+    },
+    light: {
+        bg: "linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.99) 100%)",
+        cardBg: "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(241,245,249,0.9) 100%)",
+        border: "rgba(219,39,119,0.15)",
+        shadow: "0 8px 32px rgba(219,39,119,0.1), 0 0 0 1px rgba(219,39,119,0.08)",
+        headerGradient: "linear-gradient(90deg, #db2777 0%, #ea580c 50%, #d97706 100%)",
+        labelColor: "rgba(71,85,105,0.9)",
+        valueColor: "#1e293b",
+        hoverBg: "rgba(219,39,119,0.08)",
+        avatarGlow: "0 0 40px rgba(219,39,119,0.2), 0 0 80px rgba(234,88,12,0.1)",
+        accentColor: "#db2777",
+    },
+};
 
 type UserProfileProps = {
     socket: Socket | null;
@@ -59,6 +88,10 @@ export const UserProfile = (props: UserProfileProps) => {
     } = props;
 
     const { accessToken } = useAuth();
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
+    const styles = isDark ? MODAL_STYLES.dark : MODAL_STYLES.light;
+
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
 
@@ -129,11 +162,27 @@ export const UserProfile = (props: UserProfileProps) => {
         <>
             <Modal
                 open={openUserProfile}
-                sx={{ zIndex: 10001 }}
+                sx={{
+                    zIndex: 10001,
+                    backdropFilter: "blur(8px)",
+                    backgroundColor: isDark ? "rgba(0,0,0,0.6)" : "rgba(0,0,0,0.3)",
+                }}
                 onClose={() => setOpenUserProfile(false)}
             >
-                <ModalDialog>
-                    <Box sx={{ flex: 1, width: "1000px" }}>
+                <ModalDialog
+                    sx={{
+                        background: styles.bg,
+                        border: `1px solid ${styles.border}`,
+                        boxShadow: styles.shadow,
+                        borderRadius: "20px",
+                        overflow: "hidden",
+                        transition: "all 0.3s ease",
+                        width: "min(900px, 90vw)",
+                        maxWidth: "900px",
+                        p: 0,
+                    }}
+                >
+                    <Box sx={{ flex: 1, width: "100%", p: 2 }}>
                         <EmojiPicker
                             setSelectedEmoji={setSelectedEmoji}
                             setShowEmojiPicker={setShowEmojiPicker}
@@ -154,7 +203,20 @@ export const UserProfile = (props: UserProfileProps) => {
                                     px: 3,
                                 }}
                             >
-                                <Typography component="h1" level="h2" sx={{ mt: 1, mb: 1 }}>
+                                <Typography
+                                    component="h1"
+                                    level="h2"
+                                    sx={{
+                                        mt: 1,
+                                        mb: 1,
+                                        background: styles.headerGradient,
+                                        backgroundClip: "text",
+                                        WebkitBackgroundClip: "text",
+                                        WebkitTextFillColor: "transparent",
+                                        fontWeight: 700,
+                                        letterSpacing: "-0.02em",
+                                    }}
+                                >
                                     {isYou === true
                                         ? "My Profile"
                                         : myself.userId !== profileUser?.userId
@@ -167,30 +229,61 @@ export const UserProfile = (props: UserProfileProps) => {
                         </Box>
 
                         <Stack
-                            spacing={4}
+                            spacing={3}
                             sx={{
                                 display: "flex",
                                 mx: "auto",
-                                px: { xs: 2, md: 6 },
-                                py: { xs: 2, md: 3 },
+                                px: { xs: 1, md: 3 },
+                                py: { xs: 1, md: 2 },
+                                width: "100%",
                             }}
                         >
-                            <Card>
+                            <Card
+                                sx={{
+                                    background: styles.cardBg,
+                                    border: `1px solid ${styles.border}`,
+                                    borderRadius: "16px",
+                                    boxShadow: isDark
+                                        ? "0 4px 20px rgba(0,0,0,0.3)"
+                                        : "0 4px 20px rgba(219,39,119,0.08)",
+                                    transition: "all 0.3s ease",
+                                    p: { xs: 2, md: 3 },
+                                    "&:hover": {
+                                        boxShadow: isDark
+                                            ? "0 8px 30px rgba(0,0,0,0.4)"
+                                            : "0 8px 30px rgba(219,39,119,0.12)",
+                                    },
+                                }}
+                            >
                                 <Stack
-                                    direction="row"
-                                    sx={{ display: { xs: "none", md: "flex" }, my: 1 }}
+                                    direction={{ xs: "column", md: "row" }}
+                                    spacing={3}
+                                    alignItems={{ xs: "center", md: "flex-start" }}
                                 >
                                     <Box
                                         sx={{
-                                            pl: "20px",
-                                            pr: "40px",
                                             position: "relative",
-                                            display: "inline-block",
+                                            display: "flex",
+                                            flexShrink: 0,
                                         }}
                                     >
                                         <Avatar
                                             src={`${media_url}/${profileUser?.avatarImgPath}`}
-                                            sx={{ width: 180, height: 180, fontSize: "50px" }}
+                                            sx={{
+                                                width: 150,
+                                                height: 150,
+                                                fontSize: "48px",
+                                                boxShadow: styles.avatarGlow,
+                                                border: `3px solid ${styles.border}`,
+                                                cursor: "pointer",
+                                                transition: "all 0.3s ease",
+                                                "&:hover": {
+                                                    transform: "scale(1.02)",
+                                                    boxShadow: isDark
+                                                        ? "0 0 50px rgba(244,114,182,0.5), 0 0 100px rgba(251,146,60,0.3)"
+                                                        : "0 0 50px rgba(219,39,119,0.3), 0 0 100px rgba(234,88,12,0.15)",
+                                                },
+                                            }}
                                             onClick={() => setOpenUserProfile(true)}
                                         >
                                             {profileUser?.userName[0]}
@@ -200,8 +293,8 @@ export const UserProfile = (props: UserProfileProps) => {
                                             <Box
                                                 sx={{
                                                     position: "absolute",
-                                                    top: 150, // adjust vertical position
-                                                    right: 30, // push it to the right side
+                                                    bottom: 0,
+                                                    right: 0,
                                                 }}
                                             >
                                                 <input
@@ -215,21 +308,42 @@ export const UserProfile = (props: UserProfileProps) => {
                                                 <Tooltip
                                                     size="sm"
                                                     sx={{ zIndex: 9000 }}
-                                                    title="EDIT (TBD)"
+                                                    title="Edit Profile Image"
                                                     variant="outlined"
                                                 >
                                                     <IconButton
                                                         variant="soft"
+                                                        size="sm"
+                                                        sx={{
+                                                            background: isDark
+                                                                ? "linear-gradient(135deg, rgba(244,114,182,0.3) 0%, rgba(251,146,60,0.3) 100%)"
+                                                                : "linear-gradient(135deg, rgba(219,39,119,0.15) 0%, rgba(234,88,12,0.15) 100%)",
+                                                            border: `1px solid ${styles.border}`,
+                                                            transition: "all 0.2s ease",
+                                                            "&:hover": {
+                                                                background: isDark
+                                                                    ? "linear-gradient(135deg, rgba(244,114,182,0.5) 0%, rgba(251,146,60,0.5) 100%)"
+                                                                    : "linear-gradient(135deg, rgba(219,39,119,0.25) 0%, rgba(234,88,12,0.25) 100%)",
+                                                                transform: "scale(1.1)",
+                                                            },
+                                                        }}
                                                         onClick={handleButtonClick}
                                                     >
-                                                        <EditIcon sx={{ fontSize: "30px" }} />
+                                                        <EditIcon
+                                                            sx={{
+                                                                fontSize: "20px",
+                                                                color: isDark
+                                                                    ? "#f472b6"
+                                                                    : "#db2777",
+                                                            }}
+                                                        />
                                                     </IconButton>
                                                 </Tooltip>
                                             </Box>
                                         )}
                                     </Box>
 
-                                    <Stack spacing={2} sx={{ flexGrow: 1 }}>
+                                    <Stack spacing={2} sx={{ flexGrow: 1, minWidth: 0 }}>
                                         <UserProfileStatus
                                             isYou={isYou}
                                             myself={myself}
@@ -240,112 +354,253 @@ export const UserProfile = (props: UserProfileProps) => {
                                             user={user}
                                         />
 
-                                        <Stack direction={"row"} spacing={2}>
+                                        <Stack
+                                            direction={{ xs: "column", sm: "row" }}
+                                            spacing={2}
+                                            flexWrap="wrap"
+                                        >
                                             <Typography
                                                 component="a"
                                                 href={`mailto:${profileUser?.userEmail}`}
                                                 startDecorator={
-                                                    <EmailRoundedIcon fontSize="small" />
+                                                    <EmailRoundedIcon
+                                                        fontSize="small"
+                                                        sx={{
+                                                            color: isDark ? "#f472b6" : "#db2777",
+                                                        }}
+                                                    />
                                                 }
                                                 sx={{
                                                     textDecoration: "none",
-                                                    color: "inherit",
+                                                    color: styles.valueColor,
                                                     cursor: "pointer",
+                                                    transition: "all 0.2s ease",
+                                                    fontSize: "14px",
+                                                    "&:hover": {
+                                                        color: isDark ? "#fb923c" : "#ea580c",
+                                                    },
                                                 }}
                                             >
                                                 {profileUser?.userEmail}
                                             </Typography>
                                             <Typography
-                                                sx={{ userSelect: "text" }}
+                                                sx={{
+                                                    userSelect: "text",
+                                                    color: styles.valueColor,
+                                                    fontSize: "14px",
+                                                }}
                                                 startDecorator={
-                                                    <LocalPhoneIcon fontSize="small" />
+                                                    <LocalPhoneIcon
+                                                        fontSize="small"
+                                                        sx={{
+                                                            color: isDark ? "#fbbf24" : "#d97706",
+                                                        }}
+                                                    />
                                                 }
                                             >
                                                 +81 999-888-777
                                             </Typography>
                                         </Stack>
-                                        <Stack direction="column" spacing={1}>
-                                            <FormControl>
-                                                <FormLabel>Team Name</FormLabel>
-                                                <Button
-                                                    disabled={true}
-                                                    variant="plain"
+
+                                        {/* Team Name */}
+                                        <FormControl>
+                                            <FormLabel
+                                                sx={{
+                                                    color: styles.labelColor,
+                                                    fontSize: "0.7rem",
+                                                    fontWeight: 600,
+                                                    textTransform: "uppercase",
+                                                    letterSpacing: "0.05em",
+                                                    mb: 0.5,
+                                                }}
+                                            >
+                                                Team Name
+                                            </FormLabel>
+                                            <Box
+                                                sx={{
+                                                    px: 1.5,
+                                                    py: 0.75,
+                                                    borderRadius: "8px",
+                                                    background: isDark
+                                                        ? "rgba(244,114,182,0.1)"
+                                                        : "rgba(219,39,119,0.05)",
+                                                    border: `1px solid ${styles.border}`,
+                                                    display: "inline-flex",
+                                                    width: "fit-content",
+                                                }}
+                                            >
+                                                <Typography
+                                                    fontWeight="bold"
                                                     sx={{
-                                                        justifyContent: "flex-start", // left align the content
+                                                        userSelect: "text",
+                                                        color: styles.valueColor,
+                                                        fontSize: "14px",
+                                                    }}
+                                                >
+                                                    {profileUser?.teamName}
+                                                </Typography>
+                                            </Box>
+                                        </FormControl>
+
+                                        {/* IDs Row */}
+                                        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                                            <FormControl sx={{ flex: 1, minWidth: 0 }}>
+                                                <FormLabel
+                                                    sx={{
+                                                        color: styles.labelColor,
+                                                        fontSize: "0.7rem",
+                                                        fontWeight: 600,
+                                                        textTransform: "uppercase",
+                                                        letterSpacing: "0.05em",
+                                                        mb: 0.5,
+                                                    }}
+                                                >
+                                                    Team ID
+                                                </FormLabel>
+                                                <Box
+                                                    sx={{
+                                                        px: 1.5,
+                                                        py: 0.5,
+                                                        borderRadius: "6px",
+                                                        background: isDark
+                                                            ? "rgba(0,0,0,0.3)"
+                                                            : "rgba(0,0,0,0.05)",
+                                                        border: `1px solid ${styles.border}`,
+                                                        overflow: "hidden",
                                                     }}
                                                 >
                                                     <Typography
-                                                        fontWeight="bold"
-                                                        sx={{ userSelect: "text" }}
-                                                    >
-                                                        {profileUser?.teamName}
-                                                    </Typography>
-                                                </Button>
-                                            </FormControl>
-                                            <FormControl>
-                                                <FormLabel>Team ID</FormLabel>
-                                                <Button
-                                                    disabled={true}
-                                                    variant="plain"
-                                                    sx={{
-                                                        justifyContent: "flex-start", // left align the content
-                                                    }}
-                                                >
-                                                    <Typography
-                                                        fontWeight="bold"
-                                                        sx={{ userSelect: "text" }}
+                                                        fontWeight={600}
+                                                        sx={{
+                                                            userSelect: "text",
+                                                            color: styles.labelColor,
+                                                            fontSize: "11px",
+                                                            fontFamily: "monospace",
+                                                            whiteSpace: "nowrap",
+                                                            overflow: "hidden",
+                                                            textOverflow: "ellipsis",
+                                                        }}
                                                     >
                                                         {profileUser?.teamId}
                                                     </Typography>
-                                                </Button>
+                                                </Box>
                                             </FormControl>
-                                            <FormControl>
-                                                <FormLabel>User ID</FormLabel>
-                                                <Button
-                                                    disabled={true}
-                                                    variant="plain"
+                                            <FormControl sx={{ flex: 1, minWidth: 0 }}>
+                                                <FormLabel
                                                     sx={{
-                                                        justifyContent: "flex-start", // left align the content
+                                                        color: styles.labelColor,
+                                                        fontSize: "0.7rem",
+                                                        fontWeight: 600,
+                                                        textTransform: "uppercase",
+                                                        letterSpacing: "0.05em",
+                                                        mb: 0.5,
+                                                    }}
+                                                >
+                                                    User ID
+                                                </FormLabel>
+                                                <Box
+                                                    sx={{
+                                                        px: 1.5,
+                                                        py: 0.5,
+                                                        borderRadius: "6px",
+                                                        background: isDark
+                                                            ? "rgba(0,0,0,0.3)"
+                                                            : "rgba(0,0,0,0.05)",
+                                                        border: `1px solid ${styles.border}`,
+                                                        overflow: "hidden",
                                                     }}
                                                 >
                                                     <Typography
-                                                        fontWeight="bold"
-                                                        sx={{ userSelect: "text" }}
+                                                        fontWeight={600}
+                                                        sx={{
+                                                            userSelect: "text",
+                                                            color: styles.labelColor,
+                                                            fontSize: "11px",
+                                                            fontFamily: "monospace",
+                                                            whiteSpace: "nowrap",
+                                                            overflow: "hidden",
+                                                            textOverflow: "ellipsis",
+                                                        }}
                                                     >
                                                         {profileUser?.userId}
                                                     </Typography>
-                                                </Button>
+                                                </Box>
                                             </FormControl>
-                                            <FormControl>
-                                                <FormLabel>Role</FormLabel>
+                                        </Stack>
+
+                                        {/* Role & Country Row */}
+                                        <Stack direction="column" spacing={2}>
+                                            <FormControl sx={{ flex: 1 }}>
+                                                <FormLabel
+                                                    sx={{
+                                                        color: styles.labelColor,
+                                                        fontSize: "0.7rem",
+                                                        fontWeight: 600,
+                                                        textTransform: "uppercase",
+                                                        letterSpacing: "0.05em",
+                                                        mb: 0.5,
+                                                    }}
+                                                >
+                                                    Role
+                                                </FormLabel>
                                                 <UserProfileRole
                                                     myself={myself}
                                                     setMyself={setMyself}
                                                     user={profileUser}
                                                 />
                                             </FormControl>
-                                            <FormControl>
-                                                <FormLabel>Country</FormLabel>
+                                            <FormControl sx={{ flex: 1 }}>
+                                                <FormLabel
+                                                    sx={{
+                                                        color: styles.labelColor,
+                                                        fontSize: "0.7rem",
+                                                        fontWeight: 600,
+                                                        textTransform: "uppercase",
+                                                        letterSpacing: "0.05em",
+                                                        mb: 0.5,
+                                                    }}
+                                                >
+                                                    Country
+                                                </FormLabel>
                                                 <UserProfileBaseCountry
                                                     myself={myself}
                                                     setMyself={setMyself}
                                                     user={profileUser}
                                                 />
                                             </FormControl>
-                                        </Stack>
-                                        <Stack direction="column" spacing={2}>
-                                            <FormControl>
-                                                <FormLabel>Joined Date</FormLabel>
-                                                <Button
-                                                    disabled={true}
-                                                    variant="plain"
+                                            <FormControl sx={{ flex: 1 }}>
+                                                <FormLabel
                                                     sx={{
-                                                        justifyContent: "flex-start", // left align the content
+                                                        color: styles.labelColor,
+                                                        fontSize: "0.7rem",
+                                                        fontWeight: 600,
+                                                        textTransform: "uppercase",
+                                                        letterSpacing: "0.05em",
+                                                        mb: 0.5,
+                                                    }}
+                                                >
+                                                    Joined Date
+                                                </FormLabel>
+                                                <Box
+                                                    sx={{
+                                                        display: "inline-flex",
+                                                        px: 1.5,
+                                                        py: 0.5,
+                                                        borderRadius: "6px",
+                                                        background: isDark
+                                                            ? "rgba(244,114,182,0.1)"
+                                                            : "rgba(219,39,119,0.05)",
+                                                        border: `1px solid ${styles.border}`,
+                                                        width: "fit-content",
                                                     }}
                                                 >
                                                     <Typography
-                                                        fontWeight={"bold"}
-                                                        sx={{ userSelect: "text" }}
+                                                        fontWeight={600}
+                                                        sx={{
+                                                            userSelect: "text",
+                                                            color: styles.valueColor,
+                                                            fontSize: "13px",
+                                                        }}
                                                     >
                                                         {profileUser &&
                                                         profileUser?.tsJoined !== "" &&
@@ -353,7 +608,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                             ? extractYYYYMMDD(profileUser.tsJoined)
                                                             : "N/A"}
                                                     </Typography>
-                                                </Button>
+                                                </Box>
                                             </FormControl>
                                         </Stack>
                                     </Stack>
@@ -363,8 +618,9 @@ export const UserProfile = (props: UserProfileProps) => {
                         <Box
                             sx={{
                                 display: "flex",
-                                justifyContent: "flex-end", // Push content to the right
-                                px: 3,
+                                justifyContent: "flex-end",
+                                px: { xs: 1, md: 3 },
+                                pb: 1,
                             }}
                         >
                             <Tooltip
@@ -376,14 +632,37 @@ export const UserProfile = (props: UserProfileProps) => {
                                 variant="outlined"
                                 sx={{ zIndex: 10100 }}
                             >
-                                <IconButton
-                                    component="button"
+                                <Button
                                     size="sm"
                                     variant="outlined"
+                                    startDecorator={
+                                        <QuestionAnswerRoundedIcon
+                                            sx={{
+                                                color: isDark ? "#f472b6" : "#db2777",
+                                                fontSize: "18px",
+                                            }}
+                                        />
+                                    }
                                     sx={{
-                                        fontSize: "16px",
-                                        paddingX: "7px",
-                                        paddingY: "3px",
+                                        fontSize: "14px",
+                                        px: 2,
+                                        py: 0.75,
+                                        borderRadius: "10px",
+                                        background: isDark
+                                            ? "linear-gradient(135deg, rgba(244,114,182,0.2) 0%, rgba(251,146,60,0.2) 100%)"
+                                            : "linear-gradient(135deg, rgba(219,39,119,0.1) 0%, rgba(234,88,12,0.1) 100%)",
+                                        border: `1px solid ${styles.border}`,
+                                        color: styles.valueColor,
+                                        transition: "all 0.2s ease",
+                                        "&:hover": {
+                                            background: isDark
+                                                ? "linear-gradient(135deg, rgba(244,114,182,0.4) 0%, rgba(251,146,60,0.4) 100%)"
+                                                : "linear-gradient(135deg, rgba(219,39,119,0.2) 0%, rgba(234,88,12,0.2) 100%)",
+                                            transform: "translateY(-2px)",
+                                            boxShadow: isDark
+                                                ? "0 4px 12px rgba(244,114,182,0.3)"
+                                                : "0 4px 12px rgba(219,39,119,0.2)",
+                                        },
                                     }}
                                     onClick={() => {
                                         (async () => {
@@ -406,9 +685,8 @@ export const UserProfile = (props: UserProfileProps) => {
                                         })();
                                     }}
                                 >
-                                    <QuestionAnswerRoundedIcon />
-                                    &nbsp;DM
-                                </IconButton>
+                                    Send DM
+                                </Button>
                             </Tooltip>
                         </Box>
                     </Box>

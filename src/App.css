@@ -48,15 +48,22 @@
     --breakpoint-tablet: 768px;
     --breakpoint-desktop: 1024px;
 
-    /* Code Colors */
-    --code-light-bg: #97979770;
-    --code-light-color: rgb(255, 0, 144);
-    --code-dark-bg: #00000070;
-    --code-dark-color: rgb(255, 140, 0);
-    --code-dark-me-bg: #ffffffce;
-    --code-dark-me-color: rgb(255, 0, 144);
-    --code-light-me-bg: #00000070;
-    --code-light-me-color: rgb(255, 140, 0);
+    /* Code Colors - Updated for new bubble colors */
+    --code-light-bg: rgba(0, 0, 0, 0.08);
+    --code-light-color: #be185d;
+    --code-dark-bg: rgba(0, 0, 0, 0.3);
+    --code-dark-color: #fb923c;
+    /* Sent message code colors */
+    --code-dark-me-bg: rgba(255, 255, 255, 0.15);
+    --code-dark-me-color: #fbbf24;
+    --code-light-me-bg: rgba(99, 102, 241, 0.15);
+    --code-light-me-color: #7c3aed;
+    
+    /* Bubble text colors for reference */
+    --bubble-light-received-text: #111827;
+    --bubble-light-sent-text: #1e1b4b;
+    --bubble-dark-received-text: #f3f4f6;
+    --bubble-dark-sent-text: #e0e7ff;
 }
 
 /* ==========================================================================
@@ -342,47 +349,52 @@ input[type="checkbox"] {
    ========================================================================== */
 
 /* Message bubble preview styles */
+/* Light mode - Received messages (white background) */
 .bn-message-bubble-box-light .bn-editor {
     background-color: transparent;
     padding: 1px;
-    color: rgb(55, 55, 55);
+    color: #111827; /* Dark text on white background */
 }
 
 .bn-message-bubble-box-light code {
-    background-color: var(--code-light-bg) !important;
-    color: var(--code-light-color);
+    background-color: rgba(0, 0, 0, 0.08) !important;
+    color: #be185d; /* Pink for code */
 }
 
+/* Light mode - Sent messages (light indigo background #eef2ff) */
 .bn-message-bubble-box-light-me .bn-editor {
     background-color: transparent;
     padding: 1px;
-    color: rgb(255, 255, 255);
+    color: #1e1b4b; /* Dark indigo text on light indigo background */
 }
 
 .bn-message-bubble-box-light-me code {
-    background-color: var(--code-light-me-bg) !important;
-    color: var(--code-light-me-color);
+    background-color: rgba(99, 102, 241, 0.15) !important;
+    color: #7c3aed; /* Purple for code */
 }
 
+/* Dark mode - Received messages (dark gray background #1f2937) */
 .bn-message-bubble-box-dark .bn-editor {
     background-color: transparent;
     padding: 1px;
+    color: #f3f4f6; /* Light text on dark gray background */
 }
 
 .bn-message-bubble-box-dark code {
-    background-color: var(--code-dark-bg) !important;
-    color: var(--code-dark-color);
+    background-color: rgba(0, 0, 0, 0.3) !important;
+    color: #fb923c; /* Orange for code */
 }
 
+/* Dark mode - Sent messages (deep indigo background #312e81) */
 .bn-message-bubble-box-dark-me .bn-editor {
     background-color: transparent;
     padding: 1px;
-    color: rgb(13, 13, 13);
+    color: #e0e7ff; /* Light indigo text on deep indigo background */
 }
 
 .bn-message-bubble-box-dark-me code {
-    background-color: var(--code-dark-me-bg) !important;
-    color: var(--code-dark-me-color);
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    color: #fbbf24; /* Amber for code */
 }
 
 /* Editor common styles */
@@ -655,27 +667,27 @@ div[data-floating-ui-focusable] {
    Preview Styles
    ========================================================================== */
 
-/* Task comment preview */
+/* Task comment preview - Updated for modern bubble colors */
 .task-comment-preview-light .bn-editor {
-    color: black;
+    color: #111827; /* Dark text on white background */
     background-color: transparent;
     padding-left: 20px;
 }
 
 .task-comment-preview-light code {
-    background-color: #adadad70 !important;
-    color: var(--code-light-color);
+    background-color: rgba(0, 0, 0, 0.08) !important;
+    color: #be185d;
 }
 
 .task-comment-preview-dark .bn-editor {
-    color: white;
+    color: #e0e7ff; /* Light indigo text on dark indigo background */
     background-color: transparent;
     padding-left: 20px;
 }
 
 .task-comment-preview-dark code {
-    background-color: #2f2f2f70 !important;
-    color: var(--code-dark-color);
+    background-color: rgba(255, 255, 255, 0.12) !important;
+    color: #fbbf24;
 }
 
 /* Inbox preview */

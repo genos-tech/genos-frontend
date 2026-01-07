@@ -137,7 +137,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                 {/* Assignee */}
                 <ListItem sx={{ display: "flex", alignItems: "center" }}>
                     <FieldLabel isDark={isDark}>Assignee</FieldLabel>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, width: "40%" }}>
                         <AvatarWithStatus
                             avatarUser={useTEM.teamMemberProfiles[assignee.userId]}
                             useCM={useCM}
@@ -169,7 +169,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                 {/* Reporter */}
                 <ListItem sx={{ display: "flex", alignItems: "center" }}>
                     <FieldLabel isDark={isDark}>Reporter</FieldLabel>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, width: "40%" }}>
                         <AvatarWithStatus
                             avatarUser={useTEM.teamMemberProfiles[reporter.userId]}
                             useCM={useCM}

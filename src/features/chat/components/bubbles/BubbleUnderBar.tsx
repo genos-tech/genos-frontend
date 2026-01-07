@@ -1,4 +1,5 @@
-import { Box, Button, Stack } from "@mui/joy";
+import { Box, Stack, Typography } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { ShowEmojiReaction } from "../../../../components/ui/emoji/ShowEmojiReaction";
@@ -22,6 +23,7 @@ type BubbleUnderBarTypes = {
     replayHandler?: () => void;
     isThread: boolean;
 };
+
 export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
     const {
         socket,
@@ -40,6 +42,9 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
         isThread,
     } = props;
 
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
+
     let numRepliesWithoutFirstMessage: number;
     if (chatType !== 3) {
         numRepliesWithoutFirstMessage = numReplies - 1;
@@ -47,20 +52,27 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
         numRepliesWithoutFirstMessage = numReplies;
     }
 
+    // Only render if there are reactions or replies to show
+    const hasReactions = reactions && reactions.length > 0;
+    const hasReplies = isThread === false && numRepliesWithoutFirstMessage > 0;
+
+    if (!hasReactions && !hasReplies) {
+        return null;
+    }
+
     return (
-        <Box sx={{ paddingBottom: "3px", marginBottom: "1px", position: "relative" }}>
+        <Box sx={{ mt: 1 }}>
             <Stack
                 direction="row"
                 sx={{
-                    justifyContent: "space-between", // 👈 spreads A to left, B to right
-                    position: "absolute",
-                    p: 0.5,
-                    width: "100%",
-                    overflow: "hidden",
-                    left: 0,
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    gap: 0.5,
                 }}
             >
-                <Box>
+                {/* Emoji Reactions */}
+                <Box sx={{ flex: 1, minWidth: 0 }}>
                     <ShowEmojiReaction
                         chatName={chatName}
                         chatType={chatType}
@@ -78,37 +90,57 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
                     />
                 </Box>
 
-                {isThread == false && numRepliesWithoutFirstMessage > 0 && (
-                    <Button
-                        component="a"
-                        size="sm"
-                        variant="plain" // Removes background & border
+                {/* Reply Counter */}
+                {hasReplies && (
+                    <Box
+                        component="button"
+                        onClick={replayHandler}
                         sx={{
-                            backgroundColor: "transparent",
-                            marginLeft: "auto", // Push to right
-                            padding: "10px 6px", // Reduce padding for a compact look
-                            minWidth: "auto", // Removes default button width
-                            fontSize: "12px", // Makes text smaller
-                            textTransform: "none", // Prevents uppercase text
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 0.5,
+                            px: 1,
+                            py: 0.5,
+                            flexShrink: 0,
+                            borderRadius: "8px",
+                            border: "1px solid",
+                            borderColor: isDark ? "rgba(99,102,241,0.3)" : "rgba(79,70,229,0.25)",
+                            background: isDark
+                                ? "linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(99,102,241,0.08) 100%)"
+                                : "linear-gradient(135deg, rgba(79,70,229,0.12) 0%, rgba(79,70,229,0.05) 100%)",
+                            cursor: "pointer",
+                            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                             "&:hover": {
-                                backgroundColor: "transparent",
-                                color: "transparent",
-                                fontWeight: "bold",
+                                background: isDark
+                                    ? "linear-gradient(135deg, rgba(99,102,241,0.25) 0%, rgba(99,102,241,0.15) 100%)"
+                                    : "linear-gradient(135deg, rgba(79,70,229,0.2) 0%, rgba(79,70,229,0.1) 100%)",
+                                borderColor: isDark
+                                    ? "rgba(99,102,241,0.5)"
+                                    : "rgba(79,70,229,0.4)",
+                                transform: "translateY(-1px)",
+                                boxShadow: isDark
+                                    ? "0 3px 10px rgba(99,102,241,0.2)"
+                                    : "0 3px 10px rgba(79,70,229,0.15)",
+                            },
+                            "&:active": {
+                                transform: "translateY(0)",
                             },
                         }}
-                        onClick={replayHandler}
                     >
-                        {numRepliesWithoutFirstMessage == 1 ? (
-                            <Box sx={{ color: "neutral.plainColor" }}>
-                                {/* <CircleIcon sx={{ fontSize: 10 }} color="primary" /> */}
-                                &nbsp; 1 reply
-                            </Box>
-                        ) : (
-                            <Box sx={{ color: "neutral.plainColor" }}>
-                                {numRepliesWithoutFirstMessage} replies
-                            </Box>
-                        )}
-                    </Button>
+                        <Typography
+                            level="body-xs"
+                            sx={{
+                                fontWeight: 600,
+                                fontSize: "0.7rem",
+                                color: isDark ? "#a5b4fc" : "#4f46e5",
+                                letterSpacing: "0.01em",
+                            }}
+                        >
+                            {numRepliesWithoutFirstMessage === 1
+                                ? "1 reply"
+                                : `${numRepliesWithoutFirstMessage} replies`}
+                        </Typography>
+                    </Box>
                 )}
             </Stack>
         </Box>

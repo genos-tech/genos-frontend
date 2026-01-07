@@ -38,8 +38,8 @@ export const predefinedStatusFilters: FilterProps[] = [
         filterModel: {
             items: [{ field: "status", operator: "equals", value: "WIP" }],
         },
-        lightModeColor: "#ff8c00ff",
-        darkModeColor: "#ff8c00ff",
+        lightModeColor: "#ff8c00",
+        darkModeColor: "#ff8c00",
     },
     {
         label: "Pending",
