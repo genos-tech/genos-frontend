@@ -1,12 +1,14 @@
 import AddIcon from "@mui/icons-material/Add";
-import CancelIcon from "@mui/icons-material/Cancel";
-import DeleteIcon from "@mui/icons-material/Delete";
-import MoreVert from "@mui/icons-material/MoreVert";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import LaunchRoundedIcon from "@mui/icons-material/LaunchRounded";
+import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
+import NoteAddRoundedIcon from "@mui/icons-material/NoteAddRounded";
 import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import {
     Box,
+    Divider,
     Dropdown,
     IconButton,
     Menu,
@@ -16,6 +18,7 @@ import {
     Tooltip,
     Typography,
 } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
@@ -31,6 +34,46 @@ import { UserProps } from "../../../../types/admin";
 import { ModalDeleteChatNote } from "../../chat-notes/modals/ModalDeleteChatNote";
 import { NoteBreadcrumbs } from "../../common/components/NoteBreadcrumbs";
 import { ACChatChildNotes } from "./autocompletes/ACChatChildNotes";
+
+// Amber/Orange theme for Chat Notes
+const HEADER_STYLES = {
+    dark: {
+        buttonBg: "linear-gradient(135deg, rgba(251,191,36,0.12) 0%, rgba(245,158,11,0.12) 100%)",
+        buttonHover:
+            "linear-gradient(135deg, rgba(251,191,36,0.22) 0%, rgba(245,158,11,0.22) 100%)",
+        buttonBorder: "rgba(251,191,36,0.3)",
+        primaryButtonBg: "linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)",
+        primaryButtonHover: "linear-gradient(135deg, #fcd34d 0%, #fbbf24 100%)",
+        dangerBg: "linear-gradient(135deg, rgba(239,68,68,0.12) 0%, rgba(220,38,38,0.12) 100%)",
+        dangerHover: "linear-gradient(135deg, rgba(239,68,68,0.22) 0%, rgba(220,38,38,0.22) 100%)",
+        dangerBorder: "rgba(239,68,68,0.3)",
+        menuBg: "linear-gradient(180deg, rgba(30,32,44,0.98) 0%, rgba(20,22,34,0.99) 100%)",
+        menuBorder: "rgba(251,191,36,0.15)",
+        textColor: "#fef3c7",
+        accentColor: "#fbbf24",
+        glowColor: "rgba(251,191,36,0.3)",
+        avatarBg: "rgba(251,191,36,0.1)",
+        avatarBorder: "rgba(251,191,36,0.2)",
+    },
+    light: {
+        buttonBg: "linear-gradient(135deg, rgba(251,191,36,0.1) 0%, rgba(245,158,11,0.1) 100%)",
+        buttonHover:
+            "linear-gradient(135deg, rgba(251,191,36,0.18) 0%, rgba(245,158,11,0.18) 100%)",
+        buttonBorder: "rgba(217,119,6,0.25)",
+        primaryButtonBg: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+        primaryButtonHover: "linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)",
+        dangerBg: "linear-gradient(135deg, rgba(239,68,68,0.08) 0%, rgba(220,38,38,0.08) 100%)",
+        dangerHover: "linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(220,38,38,0.15) 100%)",
+        dangerBorder: "rgba(239,68,68,0.2)",
+        menuBg: "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(254,243,199,0.95) 100%)",
+        menuBorder: "rgba(217,119,6,0.12)",
+        textColor: "#78350f",
+        accentColor: "#d97706",
+        glowColor: "rgba(217,119,6,0.2)",
+        avatarBg: "rgba(245,158,11,0.08)",
+        avatarBorder: "rgba(217,119,6,0.15)",
+    },
+};
 
 interface ChatNoteHeaderProps {
     chat: any;
@@ -73,6 +116,75 @@ export const ChatNoteHeader = ({
     onCreateChildNote,
     onDeleteNote,
 }: ChatNoteHeaderProps) => {
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
+    const styles = isDark ? HEADER_STYLES.dark : HEADER_STYLES.light;
+
+    // Action button style
+    const actionButtonStyle = {
+        background: styles.buttonBg,
+        border: `1px solid ${styles.buttonBorder}`,
+        borderRadius: "10px",
+        color: styles.textColor,
+        minWidth: 36,
+        height: 36,
+        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+        "&:hover": {
+            background: styles.buttonHover,
+            transform: "translateY(-1px)",
+            boxShadow: `0 4px 12px ${styles.glowColor}`,
+        },
+    };
+
+    // Primary button style (Child Note)
+    const primaryButtonStyle = {
+        background: styles.primaryButtonBg,
+        color: isDark ? "#1c1917" : "#fff",
+        fontWeight: 600,
+        fontSize: "13px",
+        borderRadius: "10px",
+        border: "none",
+        px: 1.5,
+        py: 0.75,
+        gap: 0.5,
+        height: 36,
+        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+        boxShadow: `0 2px 8px ${styles.glowColor}, inset 0 1px 0 rgba(255,255,255,0.15)`,
+        "&:hover": {
+            background: styles.primaryButtonHover,
+            transform: "translateY(-2px)",
+            boxShadow: `0 6px 16px ${styles.glowColor}, inset 0 1px 0 rgba(255,255,255,0.2)`,
+        },
+    };
+
+    // Danger button style (Close)
+    const dangerButtonStyle = {
+        background: styles.dangerBg,
+        border: `1px solid ${styles.dangerBorder}`,
+        borderRadius: "10px",
+        color: "#ef4444",
+        minWidth: 36,
+        height: 36,
+        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+        "&:hover": {
+            background: styles.dangerHover,
+            transform: "translateY(-1px)",
+            boxShadow: "0 4px 12px rgba(239,68,68,0.2)",
+        },
+    };
+
+    // Avatar container style
+    const avatarContainerStyle = {
+        p: 0.5,
+        borderRadius: "10px",
+        background: styles.avatarBg,
+        border: `1px solid ${styles.avatarBorder}`,
+        transition: "all 0.2s ease",
+        "&:hover": {
+            background: isDark ? "rgba(251,191,36,0.15)" : "rgba(245,158,11,0.12)",
+        },
+    };
+
     return (
         <Stack
             alignItems="center"
@@ -80,7 +192,7 @@ export const ChatNoteHeader = ({
             justifyContent="space-between"
             sx={{
                 width: "100%",
-                height: "30px",
+                minHeight: "44px",
                 mt: isInChatPage === true ? "0px" : "10px",
                 mb: "5px",
             }}
@@ -89,7 +201,6 @@ export const ChatNoteHeader = ({
                 <Box
                     sx={{
                         ml: "5px",
-                        mb: "10px",
                         width: "40%",
                     }}
                 >
@@ -112,10 +223,10 @@ export const ChatNoteHeader = ({
                 />
             )}
 
-            <Stack direction={"row"}>
-                {/* Chat Avatar */}
+            <Stack alignItems="center" direction="row" spacing={1}>
+                {/* Chat Avatars with styled containers */}
                 {chat && chat.chatType === 1 && (
-                    <Box sx={{ mt: "2px", mr: "5px" }}>
+                    <Box sx={avatarContainerStyle}>
                         <AvatarWithStatus
                             avatarUser={useTEM.teamMemberProfiles[chat.dmPartnerUser.userId]}
                             chat={chat}
@@ -129,7 +240,7 @@ export const ChatNoteHeader = ({
                     </Box>
                 )}
                 {chat && chat.chatType === 2 && (
-                    <Box sx={{ mt: "2px", mr: "5px" }}>
+                    <Box sx={avatarContainerStyle}>
                         <GMAvatar
                             useCM={useCM}
                             gmChat={chat}
@@ -143,7 +254,7 @@ export const ChatNoteHeader = ({
                     </Box>
                 )}
                 {chat && chat.chatType === 3 && (
-                    <Box sx={{ mt: "2px", mr: "5px" }}>
+                    <Box sx={avatarContainerStyle}>
                         <ProjectAvatar
                             useCM={useCM}
                             myself={myself}
@@ -156,111 +267,218 @@ export const ChatNoteHeader = ({
                     </Box>
                 )}
 
-                {/* Action Buttons */}
+                {/* Child Note Button */}
                 {isInChatPage && useNM.currentChatNote && (
-                    <IconButton
-                        color="neutral"
-                        component="button"
-                        variant="plain"
+                    <Tooltip
+                        size="sm"
+                        title="Create Child Note"
+                        variant="soft"
                         sx={{
-                            fontSize: "14px",
-                            paddingRight: "10px",
-                            height: "5px",
+                            background: styles.menuBg,
+                            border: `1px solid ${styles.menuBorder}`,
+                            borderRadius: "8px",
+                            backdropFilter: "blur(8px)",
                         }}
-                        onClick={onCreateChildNote}
                     >
-                        <AddIcon />
-                        Child Note
-                    </IconButton>
-                )}
-
-                {isInChatPage && (
-                    <Tooltip size="sm" title="Open in Notes" variant="outlined">
                         <IconButton
-                            color="neutral"
                             size="sm"
-                            sx={{ mb: "5px" }}
                             variant="plain"
-                            onClick={() => {
-                                useUISM.setOpeningService(3);
-                            }}
+                            sx={primaryButtonStyle}
+                            onClick={onCreateChildNote}
                         >
-                            <OpenInNewIcon />
+                            <NoteAddRoundedIcon sx={{ fontSize: 18 }} />
+                            <Typography level="body-xs" sx={{ fontWeight: 600, color: "inherit" }}>
+                                Child Note
+                            </Typography>
                         </IconButton>
                     </Tooltip>
                 )}
 
-                {isInChatPage === false && (
-                    <Tooltip size="sm" title="Open Related Chat" variant="outlined">
+                {/* Open in Notes Button */}
+                {isInChatPage && (
+                    <Tooltip
+                        size="sm"
+                        title="Open in Notes"
+                        variant="soft"
+                        sx={{
+                            background: styles.menuBg,
+                            border: `1px solid ${styles.menuBorder}`,
+                            borderRadius: "8px",
+                            backdropFilter: "blur(8px)",
+                        }}
+                    >
                         <IconButton
-                            color="neutral"
                             size="sm"
-                            sx={{ mb: "5px" }}
                             variant="plain"
+                            sx={actionButtonStyle}
+                            onClick={() => useUISM.setOpeningService(3)}
+                        >
+                            <LaunchRoundedIcon sx={{ fontSize: 18, color: styles.accentColor }} />
+                        </IconButton>
+                    </Tooltip>
+                )}
+
+                {/* Open Related Chat Button */}
+                {isInChatPage === false && (
+                    <Tooltip
+                        size="sm"
+                        title="Open Related Chat"
+                        variant="soft"
+                        sx={{
+                            background: styles.menuBg,
+                            border: `1px solid ${styles.menuBorder}`,
+                            borderRadius: "8px",
+                            backdropFilter: "blur(8px)",
+                        }}
+                    >
+                        <IconButton
+                            size="sm"
+                            variant="plain"
+                            sx={actionButtonStyle}
                             onClick={() => {
                                 useCM.moveToSpecificChat(
                                     useNM.currentChatNote?.chatType || 0,
                                     useNM.currentChatNote?.chatId || 0,
                                     useNM.currentChatNote?.threadId || 0,
-                                    true, // openTaskNoteInChat
-                                    false, // openThreadTaskPreview
+                                    true,
+                                    false,
                                     useUISM.setOpeningService,
                                     useTM.setCurrentPreviewTaskId,
                                     usePM.setCurrentProject
                                 );
                             }}
                         >
-                            <QuestionAnswerIcon />
+                            <QuestionAnswerIcon sx={{ fontSize: 18, color: styles.accentColor }} />
                         </IconButton>
                     </Tooltip>
                 )}
 
+                {/* More Options Dropdown */}
                 <Dropdown>
                     <MenuButton
                         slots={{ root: IconButton }}
-                        sx={{ mb: "5px" }}
                         slotProps={{
-                            root: { color: "neutral" },
+                            root: {
+                                size: "sm",
+                                variant: "plain",
+                                sx: actionButtonStyle,
+                            },
                         }}
                     >
-                        <MoreVert />
+                        <MoreHorizRoundedIcon sx={{ fontSize: 20, color: styles.accentColor }} />
                     </MenuButton>
-                    <Menu size="sm">
-                        <MenuItem onClick={onCreateChildNote}>
-                            <AddIcon />
-                            Child Note
-                        </MenuItem>
+                    <Menu
+                        size="sm"
+                        sx={{
+                            background: styles.menuBg,
+                            backdropFilter: "blur(12px)",
+                            border: `1px solid ${styles.menuBorder}`,
+                            borderRadius: "12px",
+                            boxShadow: isDark
+                                ? `0 12px 40px rgba(0,0,0,0.5), 0 0 20px ${styles.glowColor}`
+                                : `0 12px 40px rgba(0,0,0,0.12), 0 0 15px ${styles.glowColor}`,
+                            p: 0.75,
+                            minWidth: 180,
+                            "& .MuiMenuItem-root": {
+                                borderRadius: "8px",
+                                transition: "all 0.15s ease-out",
+                            },
+                        }}
+                    >
+                        {/* Child Note */}
                         <MenuItem
+                            onClick={onCreateChildNote}
                             sx={{
-                                color: "red",
+                                gap: 1.25,
+                                py: 0.875,
+                                "&:hover": {
+                                    background: styles.buttonHover,
+                                },
                             }}
-                            onClick={onDeleteNote}
                         >
-                            <DeleteIcon sx={{ color: "red" }} />
-                            <Typography color="danger" level="title-sm">
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    width: 28,
+                                    height: 28,
+                                    borderRadius: "7px",
+                                    background: styles.buttonBg,
+                                    border: `1px solid ${styles.buttonBorder}`,
+                                }}
+                            >
+                                <AddIcon sx={{ fontSize: 16, color: styles.accentColor }} />
+                            </Box>
+                            <Typography
+                                level="body-sm"
+                                sx={{ fontWeight: 500, color: styles.textColor }}
+                            >
+                                Child Note
+                            </Typography>
+                        </MenuItem>
+
+                        <Divider sx={{ my: 0.5, opacity: 0.3 }} />
+
+                        {/* Delete Note */}
+                        <MenuItem
+                            onClick={onDeleteNote}
+                            sx={{
+                                gap: 1.25,
+                                py: 0.875,
+                                "&:hover": {
+                                    background: styles.dangerHover,
+                                },
+                            }}
+                        >
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    width: 28,
+                                    height: 28,
+                                    borderRadius: "7px",
+                                    background: styles.dangerBg,
+                                    border: `1px solid ${styles.dangerBorder}`,
+                                }}
+                            >
+                                <DeleteOutlineRoundedIcon
+                                    sx={{ fontSize: 16, color: "#ef4444" }}
+                                />
+                            </Box>
+                            <Typography level="body-sm" sx={{ fontWeight: 500, color: "#ef4444" }}>
                                 Delete Note
                             </Typography>
                         </MenuItem>
                     </Menu>
                 </Dropdown>
 
+                {/* Close Button */}
                 {isInChatPage === true && (
-                    <Tooltip size="sm" title="Close Notes" variant="outlined">
+                    <Tooltip
+                        size="sm"
+                        title="Close Notes"
+                        variant="soft"
+                        sx={{
+                            background: styles.menuBg,
+                            border: `1px solid ${styles.menuBorder}`,
+                            borderRadius: "8px",
+                            backdropFilter: "blur(8px)",
+                        }}
+                    >
                         <IconButton
-                            color="neutral"
                             size="sm"
-                            sx={{ mb: "5px" }}
                             variant="plain"
+                            sx={dangerButtonStyle}
                             onClick={() => {
                                 useCM.setIsChatNoteVisibleInChat(false);
-
-                                // Open main chat pane
                                 if (useCM.setIsMainChatVisible) {
                                     useCM.setIsMainChatVisible(true);
                                 }
                             }}
                         >
-                            <CancelIcon />
+                            <CloseRoundedIcon sx={{ fontSize: 18 }} />
                         </IconButton>
                     </Tooltip>
                 )}
