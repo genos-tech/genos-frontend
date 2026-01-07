@@ -82,6 +82,7 @@ export const SprintBoardColumn = ({
     const { mode: colorMode } = useColorScheme();
     const mode: "light" | "dark" | undefined =
         colorMode === "light" || colorMode === "dark" ? colorMode : undefined;
+    const isDark = mode === "dark";
 
     return (
         <div style={getColumnStyles(column.color, mode)}>
@@ -130,7 +131,7 @@ export const SprintBoardColumn = ({
             >
                 {(provided, snapshot) => (
                     <div
-                        className="custom-scrollbar"
+                        className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                         ref={provided.innerRef}
                         {...provided.droppableProps}
                         style={getDropAreaStyles(snapshot.isDraggingOver, mode)}

@@ -19,8 +19,10 @@
     --scrollbar-width: 8px;
     --scrollbar-height: 8px;
     --scrollbar-track-bg: transparent;
-    --scrollbar-thumb-bg: #626262;
-    --scrollbar-thumb-bg-hover: #9c9c9c;
+    --scrollbar-thumb-bg-light: #bfbfbf;
+    --scrollbar-thumb-bg-dark: #626262;
+    --scrollbar-thumb-bg-hover-light: #626262;
+    --scrollbar-thumb-bg-hover-dark: #bfbfbf;
     --scrollbar-border-radius: 10px;
 
     /* DataGrid Colors */
@@ -138,46 +140,78 @@ input[type="checkbox"] {
    ========================================================================== */
 
 /* Base scrollbar styles */
-.custom-scrollbar::-webkit-scrollbar,
+.custom-scrollbar-light::-webkit-scrollbar,
 .MuiAutocomplete-listbox::-webkit-scrollbar,
 .MuiDataGrid-scrollbar::-webkit-scrollbar {
     width: var(--scrollbar-width);
     height: var(--scrollbar-height);
 }
 
-.custom-scrollbar::-webkit-scrollbar-track,
+.custom-scrollbar-dark::-webkit-scrollbar,
+.MuiAutocomplete-listbox::-webkit-scrollbar,
+.MuiDataGrid-scrollbar::-webkit-scrollbar {
+    width: var(--scrollbar-width);
+    height: var(--scrollbar-height);
+}
+
+.custom-scrollbar-light::-webkit-scrollbar-track,
 .MuiAutocomplete-listbox::-webkit-scrollbar-track,
 .MuiDataGrid-scrollbar::-webkit-scrollbar-track {
-    background: var(--scrollbar-track-bg);
+    background: var(--scrollbar-track-bg-light);
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb,
+.custom-scrollbar-dark::-webkit-scrollbar-track,
+.MuiAutocomplete-listbox::-webkit-scrollbar-track,
+.MuiDataGrid-scrollbar::-webkit-scrollbar-track {
+    background: var(--scrollbar-track-bg-dark);
+}
+
+.custom-scrollbar-light::-webkit-scrollbar-thumb,
 .MuiAutocomplete-listbox::-webkit-scrollbar-thumb {
-    background: var(--scrollbar-thumb-bg);
+    background: var(--scrollbar-thumb-bg-light);
     border-radius: var(--scrollbar-border-radius);
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb:hover,
-.MuiAutocomplete-listbox::-webkit-scrollbar-thumb:hover {
-    background: var(--scrollbar-thumb-bg-hover);
+.custom-scrollbar-dark::-webkit-scrollbar-thumb,
+.MuiAutocomplete-listbox::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb-bg-dark);
     border-radius: var(--scrollbar-border-radius);
 }
+
+.custom-scrollbar-light::-webkit-scrollbar-thumb:hover,
+.MuiAutocomplete-listbox::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-bg-hover-light);
+    border-radius: var(--scrollbar-border-radius);
+}
+
+.custom-scrollbar-dark::-webkit-scrollbar-thumb:hover,
+.MuiAutocomplete-listbox::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-bg-hover-dark);
+    border-radius: var(--scrollbar-border-radius);
+}
+
 
 /* Scrollbar corner (where horizontal and vertical scrollbars meet) */
-.custom-scrollbar::-webkit-scrollbar-corner,
+.custom-scrollbar-light::-webkit-scrollbar-corner,
 .MuiAutocomplete-listbox::-webkit-scrollbar-corner,
 .MuiDataGrid-scrollbar::-webkit-scrollbar-corner {
-    background: var(--scrollbar-track-bg);
+    background: var(--scrollbar-track-bg-light);
+}
+
+.custom-scrollbar-dark::-webkit-scrollbar-corner,
+.MuiAutocomplete-listbox::-webkit-scrollbar-corner,
+.MuiDataGrid-scrollbar::-webkit-scrollbar-corner {
+    background: var(--scrollbar-track-bg-dark);
 }
 
 /* DataGrid specific scrollbar overrides */
 .task-datagrid-light .MuiDataGrid-scrollbar::-webkit-scrollbar-thumb {
-    background: var(--scrollbar-thumb-bg);
+    background: var(--scrollbar-thumb-bg-light);
     border-radius: var(--scrollbar-border-radius);
 }
 
 .task-datagrid-light .MuiDataGrid-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: var(--scrollbar-thumb-bg-hover);
+    background: var(--scrollbar-thumb-bg-hover-light);
     border-radius: var(--scrollbar-border-radius);
 }
 

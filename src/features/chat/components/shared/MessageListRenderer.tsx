@@ -1,4 +1,4 @@
-import { Box, Chip, Stack } from "@mui/joy";
+import { Box, Chip, Stack, useColorScheme } from "@mui/joy";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
@@ -77,6 +77,9 @@ export const MessageListRenderer = ({
         setErrorMessage,
         setErrorOpen
     );
+
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
 
     const renderDateSeparator = (index: number) => {
         if (
@@ -175,7 +178,7 @@ export const MessageListRenderer = ({
                 atBottomThreshold={128}
                 atTopStateChange={handleAtTop}
                 atTopThreshold={64}
-                className="custom-scrollbar"
+                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 context={{ isScrolling }}
                 initialTopMostItemIndex={messages.length - 1}
                 isScrolling={setIsScrolling}

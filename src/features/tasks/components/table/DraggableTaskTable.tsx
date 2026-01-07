@@ -265,7 +265,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
     } = props;
     const { mode: colorMode } = useColorScheme();
     const { accessToken } = useAuth();
-
+    const isDark = colorMode === "dark";
     // Normalize mode to only "light" | "dark" | undefined (treat "system" as undefined)
     const mode: "light" | "dark" | undefined =
         colorMode === "light" || colorMode === "dark" ? colorMode : undefined;
@@ -549,7 +549,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     useTM={useTM}
                 />
                 <div
-                    className="custom-scrollbar"
+                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                     style={{
                         ...getTableContainerStyles(mode),
                         height: "96%",

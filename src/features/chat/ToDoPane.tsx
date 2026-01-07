@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Box, Button, Stack, Switch, Typography } from "@mui/joy";
+import { Box, Button, Stack, Switch, Typography, useColorScheme } from "@mui/joy";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
@@ -42,6 +42,8 @@ export const ToDoPane = (props: ToDoPaneProps) => {
         currentWindowHeight,
     } = props;
     const { accessToken } = useAuth();
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
     const [tmpTodos, setTmpTodos] = useState<ToDoFactProps[]>(todos);
 
     const handleCreateNewTodo = async () => {
@@ -128,7 +130,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                         ref={virtuosoRef}
                         atBottomThreshold={128}
                         atTopThreshold={64}
-                        className="custom-scrollbar"
+                        className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                         initialTopMostItemIndex={0}
                         totalCount={tmpTodos.length}
                         itemContent={(index) => {

@@ -301,7 +301,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         <>
             {taskContent && taskContent.id && (
                 <Sheet
-                    className="custom-scrollbar"
+                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                     sx={{
                         minHeight: 500,
                         borderRadius: "16px",

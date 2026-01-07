@@ -523,7 +523,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                     />
                                                 </Stack>
                                                 <Box
-                                                    className="custom-scrollbar"
+                                                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                                                     sx={{
                                                         maxHeight: "300px",
                                                         overflow: "auto",

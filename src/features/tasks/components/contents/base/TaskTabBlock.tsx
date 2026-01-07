@@ -515,7 +515,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                     ref={virtuosoRef}
                                     atBottomThreshold={128}
                                     atTopThreshold={64}
-                                    className="custom-scrollbar"
+                                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                                     initialTopMostItemIndex={taskComments.length - 1}
                                     totalCount={taskComments.length}
                                     itemContent={(index) => {
@@ -570,7 +570,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                     {/* Notes Tab */}
                     <TabPanel value={1} sx={{ p: 0 }}>
                         <Stack
-                            className="custom-scrollbar"
+                            className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                             direction="column"
                             sx={{
                                 width: "100%",
@@ -697,7 +697,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                     {/* Attachments Tab */}
                     <TabPanel value={2} sx={{ p: 0 }}>
                         <Box
-                            className="custom-scrollbar"
+                            className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                             sx={{
                                 width: "100%",
                                 minHeight: "150px",

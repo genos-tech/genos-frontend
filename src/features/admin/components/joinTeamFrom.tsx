@@ -410,7 +410,7 @@ const JoinTeamContent = () => {
                             </Stack>
 
                             <List
-                                className="custom-scrollbar"
+                                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                                 sx={{
                                     maxHeight: 250,
                                     overflow: "auto",

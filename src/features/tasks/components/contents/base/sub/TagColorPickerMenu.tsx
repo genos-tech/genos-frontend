@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import PaletteIcon from "@mui/icons-material/Palette";
-import { IconButton, ListItemDecorator, Menu, MenuItem } from "@mui/joy";
+import { IconButton, ListItemDecorator, Menu, MenuItem, useColorScheme } from "@mui/joy";
 
 import { TagColorOption } from "../../../../../../types/tasks";
 
@@ -64,6 +64,8 @@ type ColorPickerMenuProps = {
 };
 
 export const ColorPickerMenu: React.FC<ColorPickerMenuProps> = ({ onSelectColor }) => {
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
     const handleOpen = (event: React.MouseEvent<HTMLElement>) => {
@@ -93,7 +95,7 @@ export const ColorPickerMenu: React.FC<ColorPickerMenuProps> = ({ onSelectColor 
 
             <Menu
                 anchorEl={anchorEl}
-                className="custom-scrollbar"
+                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 open={Boolean(anchorEl)}
                 placement="bottom-start"
                 sx={{ zIndex: 10010, maxHeight: "300px", overflowY: "scroll" }}

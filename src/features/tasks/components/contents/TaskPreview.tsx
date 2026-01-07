@@ -326,7 +326,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             {taskEditState.tmpCurrentTaskContent?.id && (
                 <Sheet
                     ref={sheetRef}
-                    className="custom-scrollbar"
+                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                     sx={{
                         minHeight: 500,
                         borderRadius: "16px",

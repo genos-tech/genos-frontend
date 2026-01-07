@@ -334,6 +334,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         height: "32px",
         whiteSpace: "nowrap",
         px: 1.5,
+        my: 0.5,
         textTransform: "none" as const,
         boxShadow: isDark
             ? `0 2px 8px ${alpha(filter.darkModeColor, 0.3)}`
@@ -386,7 +387,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                 direction="row"
                 alignItems="center"
                 sx={{ overflowX: "auto" }}
-                className="custom-scrollbar"
+                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 gap={1.5}
             >
                 {/* Filter Icon Label */}
@@ -633,7 +634,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                             slots={{ transition: Fade }}
                             slotProps={{
                                 paper: {
-                                    className: "custom-scrollbar",
+                                    className: `custom-scrollbar-${isDark ? "dark" : "light"}`,
                                     sx: {
                                         background: styles.menuBg,
                                         border: `1px solid ${styles.menuBorder}`,

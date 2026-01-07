@@ -144,7 +144,7 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
             <Stack
                 direction="row"
                 spacing={0.5}
-                className="custom-scrollbar"
+                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 sx={{
                     overflowX: "auto",
                     pb: 0.5,

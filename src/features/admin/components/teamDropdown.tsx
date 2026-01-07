@@ -288,7 +288,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                 <Menu
                     ref={dropdownRef}
                     anchorEl={anchorEl}
-                    className="custom-scrollbar"
+                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                     open={Boolean(anchorEl)}
                     size="sm"
                     sx={{

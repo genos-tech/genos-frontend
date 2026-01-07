@@ -281,6 +281,7 @@ const ChatListRenderer = ({
     useUISM,
     useCM,
     useTM,
+    isDark,
 }: {
     targetChats: AllChatProps[];
     virtuosoRef: React.RefObject<VirtuosoHandle | null>;
@@ -292,12 +293,13 @@ const ChatListRenderer = ({
     useTEM: TeamManagementState;
     useCM: ChatManagementState;
     useTM: TaskManagementState;
+    isDark: boolean;
 }) => (
     <Virtuoso
         ref={virtuosoRef}
         atBottomThreshold={128}
         atTopThreshold={64}
-        className="custom-scrollbar"
+        className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
         initialTopMostItemIndex={0}
         style={{ height: "100%", flex: 1 }}
         totalCount={targetChats.length}
@@ -349,6 +351,7 @@ const ActivityListRenderer = ({
     useTEM,
     useTM,
     usePM,
+    isDark,
 }: {
     tmpActivityMessages: ActivityMessageProps[];
     activityMessages: ActivityMessageProps[];
@@ -362,12 +365,13 @@ const ActivityListRenderer = ({
     useCM: ChatManagementState;
     useTM: TaskManagementState;
     usePM: ProjectManagementState;
+    isDark: boolean;
 }) => (
     <Virtuoso
         ref={virtuosoRef}
         atBottomThreshold={128}
         atTopThreshold={64}
-        className="custom-scrollbar"
+        className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
         initialTopMostItemIndex={0}
         style={{ height: "100%", flex: 1 }}
         totalCount={tmpActivityMessages.length}
@@ -421,6 +425,7 @@ const FlaggedListRenderer = ({
     useCM,
     useTM,
     usePM,
+    isDark,
 }: {
     tmpFlaggedMessages: FlaggedMessageProps[];
     virtuosoRef: React.RefObject<VirtuosoHandle | null>;
@@ -433,12 +438,13 @@ const FlaggedListRenderer = ({
     useCM: ChatManagementState;
     useTM: TaskManagementState;
     usePM: ProjectManagementState;
+    isDark: boolean;
 }) => (
     <Virtuoso
         ref={virtuosoRef}
         atBottomThreshold={128}
         atTopThreshold={64}
-        className="custom-scrollbar"
+        className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
         initialTopMostItemIndex={0}
         style={{ height: "100%", flex: 1 }}
         totalCount={tmpFlaggedMessages.length}
@@ -492,6 +498,9 @@ export const ChatList = (props: ChatListProps) => {
         useTM,
         usePM,
     } = props;
+
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
 
     // Refs for different chat types
     const virtuosoDMRef = useRef<VirtuosoHandle | null>(null);
@@ -567,6 +576,7 @@ export const ChatList = (props: ChatListProps) => {
             return (
                 <ChatListRenderer
                     actions={actions}
+                    isDark={isDark}
                     useCM={useCM}
                     data={data}
                     socket={socket}
@@ -589,6 +599,7 @@ export const ChatList = (props: ChatListProps) => {
             }
             return (
                 <ActivityListRenderer
+                    isDark={isDark}
                     usePM={usePM}
                     activityMessages={useCM.activityMessages}
                     useCM={useCM}
@@ -614,6 +625,7 @@ export const ChatList = (props: ChatListProps) => {
             }
             return (
                 <FlaggedListRenderer
+                    isDark={isDark}
                     usePM={usePM}
                     useCM={useCM}
                     data={data}
@@ -633,7 +645,7 @@ export const ChatList = (props: ChatListProps) => {
 
     return (
         <List
-            className="custom-scrollbar"
+            className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
             size="sm"
             sx={{
                 p: 0,

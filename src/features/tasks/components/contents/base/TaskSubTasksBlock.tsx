@@ -165,7 +165,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
 
             {childTasks.length > 0 && (
                 <Stack
-                    className="custom-scrollbar"
+                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                     direction="row"
                     sx={{
                         width: "100%",

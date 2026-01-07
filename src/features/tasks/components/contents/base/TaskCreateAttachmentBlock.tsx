@@ -1,7 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import { Box, Button, Card, CardContent, IconButton, Stack, Typography } from "@mui/joy";
+import {
+    Box,
+    Button,
+    Card,
+    CardContent,
+    IconButton,
+    Stack,
+    Typography,
+    useColorScheme,
+} from "@mui/joy";
 
 import {
     AttachmentFileProps,
@@ -32,7 +41,8 @@ type TaskCreateAttachmentBlockProps = {
 };
 export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps) => {
     const { taskContent, setTaskContent } = props;
-
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
     const [images, setImages] = useState<FileProps[]>([]);
     const [textFiles, setTextFiles] = useState<FileProps[]>([]);
     const [uploadingFiles, setUploadingFiles] = useState<AttachmentFileProps[]>([]);
@@ -186,7 +196,7 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
             </Stack>
 
             <Box
-                className="custom-scrollbar"
+                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 sx={{
                     width: "100%",
                     minHeight: "150px",

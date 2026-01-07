@@ -140,7 +140,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
 
             {/* Content */}
             <Box
-                className="custom-scrollbar"
+                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 sx={{
                     minHeight: 0,
                     overflow: "hidden auto",
