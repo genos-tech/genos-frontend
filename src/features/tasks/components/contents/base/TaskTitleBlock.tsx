@@ -133,11 +133,9 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 fontSize: "0.75rem",
                                 px: 1.5,
                                 backgroundColor: taskContent.status.color
-                                    ? alpha(taskContent.status.color, isDark ? 0.25 : 0.15)
+                                    ? alpha(taskContent.status.color, isDark ? 0.25 : 0.65)
                                     : "transparent",
-                                color: isDark
-                                    ? alpha(taskContent.status.color || "#fff", 0.9)
-                                    : taskContent.status.color || "#000",
+                                color: taskContent.status.textColor || "#ffffff",
                                 border: "1px solid",
                                 borderColor: alpha(
                                     taskContent.status.color || "#666",

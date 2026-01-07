@@ -299,12 +299,12 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     };
 
     const resetFilters = () => {
-        setSelectedStatus([predefinedStatusFilters[0]]);
+        setSelectedStatus(predefinedStatusFilters.slice(1, 4));
         setSelectedTags([predefinedTagsFilters[0]]);
         setSelectedPriorities([predefinedPriorityFilters[0]]);
         setSelectedEffortLevels([predefinedEffortLevelFilters[0]]);
         applyFilters(
-            [predefinedStatusFilters[0]],
+            predefinedStatusFilters.slice(1, 4),
             [predefinedTagsFilters[0]],
             [predefinedPriorityFilters[0]],
             [predefinedEffortLevelFilters[0]]
@@ -332,12 +332,31 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         fontSize: "12px",
         fontWeight: 600,
         height: "32px",
+        whiteSpace: "nowrap",
         px: 1.5,
         textTransform: "none" as const,
         boxShadow: isDark
             ? `0 2px 8px ${alpha(filter.darkModeColor, 0.3)}`
             : `0 2px 8px ${alpha(filter.lightModeColor, 0.25)}`,
         transition: "all 0.2s ease",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        maxHeight: "2.7em", // show up to ~2 lines, then cut
+        lineHeight: 1.35,
+        display: "-webkit-box",
+        WebkitLineClamp: 2, // limit lines for better UX
+        WebkitBoxOrient: "vertical",
+        "& span, & .MuiChip-label, & .MuiButton-label, & .MuiTypography-root": {
+            overflow: "hidden",
+            whiteSpace: "normal",
+            textOverflow: "ellipsis",
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+        },
+        "&::after": {
+            content: '""',
+        },
         "&:hover": {
             background: isDark
                 ? `linear-gradient(135deg, ${alpha(filter.darkModeColor, 0.5)} 0%, ${alpha(filter.darkModeColor, 0.7)} 100%)`
@@ -357,7 +376,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                 borderRadius: "14px",
                 px: 2,
                 py: 1,
-                mb: 0.5,
+                mb: 1,
                 boxShadow: isDark
                     ? "0 4px 20px rgba(0,0,0,0.3)"
                     : "0 4px 20px rgba(99,102,241,0.08)",
@@ -614,6 +633,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                             slots={{ transition: Fade }}
                             slotProps={{
                                 paper: {
+                                    className: "custom-scrollbar",
                                     sx: {
                                         background: styles.menuBg,
                                         border: `1px solid ${styles.menuBorder}`,

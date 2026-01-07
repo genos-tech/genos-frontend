@@ -13,7 +13,15 @@ export const NewProjectListItem = (props: NewProjectListItemProps) => {
         <ListItem key={"listitem-createProject"}>
             <ListItemButton
                 color="primary"
-                sx={{ overflow: "hidden" }} // ensure children don't overflow
+                sx={{
+                    overflow: "hidden",
+                    borderRadius: "8px",
+                    py: 0.75,
+                    px: 1.25,
+                    ml: 0.5,
+                    gap: 1,
+                    transition: "all 0.15s ease",
+                }} // ensure children don't overflow
                 onClick={() => {
                     usePM.setOpenCreateProject(true);
                 }}

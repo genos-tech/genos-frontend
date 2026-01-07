@@ -179,7 +179,7 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
 
                         <Box
                             sx={{
-                                opacity: isHovered || selected ? 1 : 0,
+                                opacity: isHovered || selected ? 1 : 0.5,
                                 transition: "opacity 0.15s ease",
                                 flexShrink: 0,
                             }}

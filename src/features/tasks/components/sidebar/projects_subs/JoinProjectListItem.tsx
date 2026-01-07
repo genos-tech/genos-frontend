@@ -30,6 +30,15 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
                     onClick={() => {
                         setOpen(!open);
                     }}
+                    sx={{
+                        overflow: "hidden",
+                        borderRadius: "8px",
+                        py: 0.75,
+                        px: 1.25,
+                        ml: 4.5,
+                        gap: 1,
+                        transition: "all 0.15s ease",
+                    }}
                 >
                     <LoginIcon />
                     <ListItemContent>

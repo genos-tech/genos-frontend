@@ -192,9 +192,6 @@ export const ChatNoteHeader = ({
             justifyContent="space-between"
             sx={{
                 width: "100%",
-                minHeight: "44px",
-                mt: isInChatPage === true ? "0px" : "10px",
-                mb: "5px",
             }}
         >
             {isInChatPage === true && useNM.currentChatNote && (

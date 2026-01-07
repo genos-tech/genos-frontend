@@ -463,7 +463,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                         }}
                                     >
                                         <AddRoundedIcon sx={{ fontSize: 18 }} />
-                                        Create Group
+                                        New Group
                                     </MenuItem>
                                 </Menu>
                             </Dropdown>

@@ -155,11 +155,9 @@ export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
                                     borderRadius: "6px",
                                     backgroundColor: alpha(
                                         option.status.color || "#0044c2",
-                                        isDark ? 0.35 : 0.2
+                                        isDark ? 0.35 : 0.6
                                     ),
-                                    color: isDark
-                                        ? option.status.color || "#60a5fa"
-                                        : option.status.textColor || option.status.color,
+                                    color: option.status.textColor || "#ffffff",
                                     border: "1px solid",
                                     borderColor: alpha(
                                         option.status.color || "#0044c2",
@@ -203,7 +201,7 @@ export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
                                 borderRadius: "6px",
                                 backgroundColor: alpha(
                                     item.status.color || "#0044c2",
-                                    isDark ? 0.35 : 0.2
+                                    isDark ? 0.35 : 0.6
                                 ),
                                 color: isDark
                                     ? item.status.color || "#60a5fa"

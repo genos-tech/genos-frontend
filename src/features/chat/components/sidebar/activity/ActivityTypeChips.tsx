@@ -99,7 +99,6 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
             spacing={0.5}
             sx={{
                 flexWrap: "wrap",
-                gap: 0.5,
                 alignItems: "center",
             }}
         >

@@ -151,7 +151,6 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
             sx={{
                 justifyContent: "space-between",
                 alignItems: "center",
-                py: 1.5,
                 px: { xs: 1.5, md: 2 },
                 background: styles.containerBg,
                 backdropFilter: "blur(12px)",

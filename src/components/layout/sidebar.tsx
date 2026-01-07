@@ -290,8 +290,9 @@ export const Sidebar = (props: SidebarProps) => {
                                                     color: "#fff",
                                                     fontWeight: 700,
                                                     fontSize: "0.6rem",
-                                                    minWidth: 16,
-                                                    height: 16,
+                                                    minWidth: 20,
+                                                    height: 20,
+                                                    pt: 0.25,
                                                     boxShadow: `0 2px 6px ${color}40`,
                                                     border: "2px solid",
                                                     borderColor: isDark

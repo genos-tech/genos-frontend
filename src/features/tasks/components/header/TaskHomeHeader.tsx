@@ -149,7 +149,6 @@ export const TaskHomeHeader = ({
         <Box
             sx={{
                 display: "flex",
-                mb: 1,
                 gap: 2,
                 flexDirection: { xs: "column", sm: "row" },
                 alignItems: { xs: "stretch", sm: "center" },
@@ -229,7 +228,7 @@ export const TaskHomeHeader = ({
             </Box>
 
             {/* Search Box */}
-            <Box sx={{ flex: 1, minWidth: "200px", maxWidth: "400px" }}>
+            <Box sx={{ flex: 1, minWidth: "200px", maxWidth: "600px" }}>
                 <TaskSidebarSearchBox
                     loading={loading}
                     openSearch={openSearch}

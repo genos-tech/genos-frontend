@@ -45,6 +45,7 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                             borderRadius: "10px",
                             py: 1,
                             px: 1.5,
+                            mb: 0.5,
                             gap: 1.5,
                             transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                             "&:hover": {
@@ -100,7 +101,7 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                     </ListItemButton>
                 )}
             >
-                <List sx={{ gap: 0.25, py: 0.5 }}>
+                <List sx={{ gap: 0.25 }}>
                     {usePM.teamProjects.map(
                         (
                             {
@@ -156,6 +157,7 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                     borderRadius: "8px",
                                                     py: 0.75,
                                                     px: 1.25,
+                                                    ml: 4.5,
                                                     gap: 1,
                                                     transition: "all 0.15s ease",
                                                     "&:hover": {
@@ -201,7 +203,7 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                 )}
 
                                                 <Typography
-                                                    level="body-xs"
+                                                    level="body-sm"
                                                     sx={{
                                                         overflow: "hidden",
                                                         textOverflow: "ellipsis",
@@ -235,7 +237,7 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                             </ListItemButton>
                                         )}
                                     >
-                                        <List sx={{ gap: 0.25, py: 0.25 }}>
+                                        <List sx={{ gap: 0.25 }}>
                                             <OngoingsListItem
                                                 currentProjectId={projectId}
                                                 useTM={useTM}

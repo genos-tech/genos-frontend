@@ -11,10 +11,12 @@ import { defaultDmPartner } from "./constants";
 import { createGMChat } from "./createGMChat";
 import { popSpecificMessages } from "./popSpecificMessages";
 
+const gmCreatedMessage = "Has created this group";
+
 const createGroupMessage = [
     {
         type: "paragraph",
-        content: [{ type: "text", text: "Has created", styles: {} }],
+        content: [{ type: "text", text: gmCreatedMessage, styles: {} }],
     },
     { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] },
 ];
@@ -57,7 +59,7 @@ const addGMChatAndMessage = async (
         chatId: data.chatId,
         messageId: 1,
         content: createGroupMessage,
-        contentText: "Has created",
+        contentText: gmCreatedMessage,
         sender: myself,
         tsSent: getLocalCurrentTimestamp(),
         tsUpdated: getLocalCurrentTimestamp(),
@@ -73,7 +75,7 @@ const addGMChatAndMessage = async (
         dmPartnerUser: defaultDmPartner,
         lastReadMessageId: -1,
         latestMessage: newMessage,
-        latestMessageText: "Has created",
+        latestMessageText: gmCreatedMessage,
         TSLastMessage: getLocalCurrentTimestamp(),
         isPrivate: isPrivate,
     };

@@ -1,5 +1,5 @@
-import { Box, Chip, Tooltip } from "@mui/joy";
 import { useEffect, useState } from "react";
+import { Box, Chip, Tooltip } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { UserProps } from "../../../types/admin";
@@ -254,7 +254,9 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
                 >
                     <Chip
                         key={`emoji-chip-${emoji}-${index}`}
-                        color="neutral"
+                        color={
+                            senders.some((u) => u.userId === myself.userId) ? "success" : "neutral"
+                        }
                         size="sm"
                         sx={{
                             fontSize: "0.9rem",

@@ -454,7 +454,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                     <Divider sx={{ my: 1, background: styles.dividerColor }} />
 
                     {/* Add New Team */}
-                    <MenuItem
+                    {/* <MenuItem
                         onClick={() => {
                             console.log("create team via modal?");
                         }}
@@ -500,7 +500,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                         >
                             Coming soon
                         </Typography>
-                    </MenuItem>
+                    </MenuItem> */}
                 </Menu>
             </Dropdown>
         </Box>

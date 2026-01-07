@@ -120,7 +120,8 @@ export const InboxTabHeader = ({ activeTab, onTabChange, requestCount }: InboxTa
                                     height: 20,
                                     fontSize: "0.65rem",
                                     fontWeight: 700,
-                                    px: 0.75,
+                                    px: 0.85,
+                                    pt: 0.15,
                                     background: isDark
                                         ? "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)"
                                         : "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",

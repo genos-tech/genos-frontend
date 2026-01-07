@@ -90,7 +90,7 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                     </ListItemButton>
                 )}
             >
-                <List sx={{ gap: 0.25, py: 0.5 }}>
+                <List sx={{ gap: 0.25 }}>
                     {recentTasks.map(
                         (
                             { projectId, projectName, systemUserId, taskId, title, status },
@@ -116,8 +116,8 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                                         sx={{
                                             overflow: "hidden",
                                             borderRadius: "8px",
-                                            py: 0.75,
                                             px: 1.25,
+                                            ml: 0,
                                             gap: 0.75,
                                             transition: "all 0.15s ease",
                                             "&:hover": {
@@ -161,7 +161,7 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                                             {status.status}
                                         </Chip>
                                         <Typography
-                                            level="body-xs"
+                                            level="body-sm"
                                             sx={{
                                                 overflow: "hidden",
                                                 textOverflow: "ellipsis",
