@@ -1,4 +1,7 @@
 import React, { useState } from "react";
+import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
+import LockRoundedIcon from "@mui/icons-material/LockRounded";
+import LoginRoundedIcon from "@mui/icons-material/LoginRounded";
 import {
     Alert,
     Box,
@@ -13,14 +16,55 @@ import {
     Stack,
     Typography,
 } from "@mui/joy";
-import { CssVarsProvider } from "@mui/joy/styles";
+import { CssVarsProvider, useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../../context/AuthContext";
 import { SignInResponse } from "../../../types/admin";
 import { signIn } from "../services/signin";
-import { AdminBackground } from "./Background";
 import { AdminHeader } from "./Header";
+
+// Theme-aware styling
+const FORM_STYLES = {
+    dark: {
+        cardBg: "linear-gradient(145deg, rgba(30,32,44,0.95) 0%, rgba(20,22,34,0.98) 100%)",
+        cardBorder: "rgba(99,102,241,0.2)",
+        cardShadow: "0 8px 32px rgba(0,0,0,0.4), 0 0 60px rgba(99,102,241,0.1)",
+        inputBg: "rgba(0,0,0,0.3)",
+        inputBorder: "rgba(99,102,241,0.2)",
+        inputFocusBorder: "#818cf8",
+        inputFocusShadow: "0 0 0 3px rgba(99,102,241,0.2)",
+        labelColor: "rgba(148,163,184,0.9)",
+        titleGradient: "linear-gradient(90deg, #818cf8 0%, #a78bfa 50%, #c084fc 100%)",
+        buttonBg: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+        buttonHover: "linear-gradient(135deg, #818cf8 0%, #a78bfa 100%)",
+        buttonShadow: "0 4px 16px rgba(99,102,241,0.4)",
+        linkColor: "#818cf8",
+        linkHover: "#a78bfa",
+        accentColor: "#818cf8",
+        textColor: "#f1f5f9",
+        subtitleColor: "#94a3b8",
+    },
+    light: {
+        cardBg: "linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.99) 100%)",
+        cardBorder: "rgba(99,102,241,0.15)",
+        cardShadow: "0 8px 32px rgba(99,102,241,0.1), 0 0 60px rgba(99,102,241,0.05)",
+        inputBg: "rgba(255,255,255,0.9)",
+        inputBorder: "rgba(99,102,241,0.2)",
+        inputFocusBorder: "#6366f1",
+        inputFocusShadow: "0 0 0 3px rgba(99,102,241,0.1)",
+        labelColor: "rgba(71,85,105,0.9)",
+        titleGradient: "linear-gradient(90deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%)",
+        buttonBg: "linear-gradient(135deg, #6366f1 0%, #7c3aed 100%)",
+        buttonHover: "linear-gradient(135deg, #818cf8 0%, #8b5cf6 100%)",
+        buttonShadow: "0 4px 16px rgba(99,102,241,0.3)",
+        linkColor: "#6366f1",
+        linkHover: "#7c3aed",
+        accentColor: "#6366f1",
+        textColor: "#1e293b",
+        subtitleColor: "#64748b",
+    },
+};
 
 interface FormElements extends HTMLFormControlsCollection {
     email: HTMLInputElement;
@@ -31,17 +75,20 @@ interface SignInFormElement extends HTMLFormElement {
     readonly elements: FormElements;
 }
 
-export const SignInForm = () => {
+const SignInContent = () => {
     const navigate = useNavigate();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [rememberEmail, setRememberEmail] = useState<boolean>(false);
     const { setAccessToken } = useAuth();
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
+    const styles = isDark ? FORM_STYLES.dark : FORM_STYLES.light;
 
     const _signin = async (email: string, password: string) => {
         const signInRes: SignInResponse = await signIn(email, password, setErrorMessage);
 
         if (signInRes) {
-            setAccessToken(signInRes.access); // Store access token in memory
+            setAccessToken(signInRes.access);
             localStorage.setItem("isSigningIn", "yes");
             localStorage.setItem("userName", signInRes.username || "");
             localStorage.setItem("userId", signInRes.user_id || "");
@@ -61,6 +108,276 @@ export const SignInForm = () => {
         }
     };
 
+    // Input style
+    const inputStyle = {
+        "--Input-focusedThickness": "2px",
+        "--Input-radius": "12px",
+        background: styles.inputBg,
+        border: `1px solid ${styles.inputBorder}`,
+        fontSize: "15px",
+        py: 1.25,
+        transition: "all 0.2s ease",
+        "&:hover": {
+            borderColor: styles.accentColor,
+        },
+        "&:focus-within": {
+            borderColor: styles.inputFocusBorder,
+            boxShadow: styles.inputFocusShadow,
+        },
+    };
+
+    return (
+        <Box
+            sx={(theme) => ({
+                width: { xs: "100%", md: "100vw" },
+                transition: "width var(--Transition-duration)",
+                transitionDelay: "calc(var(--Transition-duration) + 0.1s)",
+                position: "relative",
+                zIndex: 1,
+                display: "flex",
+                justifyContent: "flex-end",
+                backdropFilter: "blur(12px)",
+                backgroundColor: "rgba(255 255 255 / 0.2)",
+                [theme.getColorSchemeSelector("dark")]: {
+                    backgroundColor: "rgba(19 19 24 / 0.4)",
+                },
+            })}
+        >
+            <Box
+                sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    minHeight: "100dvh",
+                    width: "100%",
+                    px: 2,
+                }}
+            >
+                <AdminHeader />
+
+                <Box
+                    component="main"
+                    sx={{
+                        my: "auto",
+                        py: 2,
+                        pb: 5,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 2,
+                        width: 420,
+                        maxWidth: "100%",
+                        mx: "auto",
+                    }}
+                >
+                    {/* Form Card */}
+                    <Box
+                        sx={{
+                            background: styles.cardBg,
+                            border: `1px solid ${styles.cardBorder}`,
+                            borderRadius: "20px",
+                            boxShadow: styles.cardShadow,
+                            p: 4,
+                            backdropFilter: "blur(12px)",
+                        }}
+                    >
+                        <Stack sx={{ gap: 3, mb: 3 }}>
+                            <Stack sx={{ gap: 1 }}>
+                                <Typography
+                                    component="h1"
+                                    level="h2"
+                                    sx={{
+                                        background: styles.titleGradient,
+                                        backgroundClip: "text",
+                                        WebkitBackgroundClip: "text",
+                                        WebkitTextFillColor: "transparent",
+                                        fontWeight: 700,
+                                        letterSpacing: "-0.02em",
+                                    }}
+                                >
+                                    Welcome Back
+                                </Typography>
+                                <Typography level="body-sm" sx={{ color: styles.subtitleColor }}>
+                                    New member?{" "}
+                                    <Link
+                                        href="SignUp"
+                                        level="title-sm"
+                                        sx={{
+                                            color: styles.linkColor,
+                                            fontWeight: 600,
+                                            transition: "all 0.2s ease",
+                                            "&:hover": {
+                                                color: styles.linkHover,
+                                            },
+                                        }}
+                                    >
+                                        Create an account
+                                    </Link>
+                                </Typography>
+                            </Stack>
+
+                            {errorMessage && (
+                                <Alert
+                                    color="danger"
+                                    sx={{
+                                        borderRadius: "12px",
+                                        border: "1px solid rgba(239,68,68,0.3)",
+                                    }}
+                                >
+                                    {errorMessage}
+                                </Alert>
+                            )}
+                        </Stack>
+
+                        <form
+                            onSubmit={(event: React.FormEvent<SignInFormElement>) => {
+                                event.preventDefault();
+                                const formElements = event.currentTarget.elements;
+                                const email = formElements.email.value;
+                                const password = formElements.password.value;
+
+                                if (!email || !password) {
+                                    return;
+                                }
+
+                                _signin(email, password);
+
+                                if (rememberEmail) {
+                                    localStorage.setItem("signInEmail", email);
+                                }
+                            }}
+                        >
+                            <Stack sx={{ gap: 2.5 }}>
+                                <FormControl required>
+                                    <FormLabel
+                                        sx={{
+                                            color: styles.labelColor,
+                                            fontSize: "0.8rem",
+                                            fontWeight: 600,
+                                            textTransform: "uppercase",
+                                            letterSpacing: "0.05em",
+                                            mb: 0.75,
+                                        }}
+                                    >
+                                        Email
+                                    </FormLabel>
+                                    <Input
+                                        defaultValue={localStorage.getItem("signInEmail") || ""}
+                                        name="email"
+                                        type="email"
+                                        placeholder="Enter your email"
+                                        startDecorator={
+                                            <EmailRoundedIcon
+                                                sx={{ color: styles.accentColor, fontSize: 20 }}
+                                            />
+                                        }
+                                        sx={inputStyle}
+                                    />
+                                </FormControl>
+
+                                <FormControl required>
+                                    <FormLabel
+                                        sx={{
+                                            color: styles.labelColor,
+                                            fontSize: "0.8rem",
+                                            fontWeight: 600,
+                                            textTransform: "uppercase",
+                                            letterSpacing: "0.05em",
+                                            mb: 0.75,
+                                        }}
+                                    >
+                                        Password
+                                    </FormLabel>
+                                    <Input
+                                        name="password"
+                                        type="password"
+                                        placeholder="Enter your password"
+                                        startDecorator={
+                                            <LockRoundedIcon
+                                                sx={{ color: styles.accentColor, fontSize: 20 }}
+                                            />
+                                        }
+                                        sx={inputStyle}
+                                    />
+                                </FormControl>
+
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "center",
+                                    }}
+                                >
+                                    <Checkbox
+                                        label="Remember me"
+                                        name="persistent"
+                                        size="sm"
+                                        sx={{
+                                            "& .MuiCheckbox-checkbox": {
+                                                borderRadius: "6px",
+                                            },
+                                        }}
+                                        onChange={(event) => {
+                                            if (event.target.checked) {
+                                                setRememberEmail(true);
+                                            }
+                                        }}
+                                    />
+                                    <Link
+                                        href="#"
+                                        level="body-sm"
+                                        sx={{
+                                            color: styles.linkColor,
+                                            fontWeight: 500,
+                                            transition: "all 0.2s ease",
+                                            "&:hover": {
+                                                color: styles.linkHover,
+                                            },
+                                        }}
+                                    >
+                                        Forgot password?
+                                    </Link>
+                                </Box>
+
+                                <Button
+                                    type="submit"
+                                    fullWidth
+                                    startDecorator={<LoginRoundedIcon />}
+                                    sx={{
+                                        mt: 1,
+                                        py: 1.5,
+                                        background: styles.buttonBg,
+                                        borderRadius: "12px",
+                                        fontWeight: 600,
+                                        fontSize: "15px",
+                                        boxShadow: styles.buttonShadow,
+                                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                        "&:hover": {
+                                            background: styles.buttonHover,
+                                            transform: "translateY(-2px)",
+                                            boxShadow: `${styles.buttonShadow}, 0 8px 24px rgba(99,102,241,0.3)`,
+                                        },
+                                    }}
+                                >
+                                    Sign In
+                                </Button>
+                            </Stack>
+                        </form>
+                    </Box>
+                </Box>
+
+                <Box component="footer" sx={{ py: 3 }}>
+                    <Typography
+                        level="body-xs"
+                        sx={{ textAlign: "center", color: styles.subtitleColor }}
+                    >
+                        © Origin {new Date().getFullYear()}
+                    </Typography>
+                </Box>
+            </Box>
+        </Box>
+    );
+};
+
+export const SignInForm = () => {
     return (
         <CssVarsProvider disableTransitionOnChange>
             <CssBaseline />
@@ -72,147 +389,7 @@ export const SignInForm = () => {
                     },
                 }}
             />
-            <Box
-                sx={(theme) => ({
-                    width: { xs: "100%", md: "50vw" },
-                    transition: "width var(--Transition-duration)",
-                    transitionDelay: "calc(var(--Transition-duration) + 0.1s)",
-                    position: "relative",
-                    zIndex: 1,
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    backdropFilter: "blur(12px)",
-                    backgroundColor: "rgba(255 255 255 / 0.2)",
-                    [theme.getColorSchemeSelector("dark")]: {
-                        backgroundColor: "rgba(19 19 24 / 0.4)",
-                    },
-                })}
-            >
-                <Box
-                    sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        minHeight: "100dvh",
-                        width: "100%",
-                        px: 2,
-                    }}
-                >
-                    <AdminHeader />
-
-                    <Box
-                        component="main"
-                        sx={{
-                            my: "auto",
-                            py: 2,
-                            pb: 5,
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 2,
-                            width: 400,
-                            maxWidth: "100%",
-                            mx: "auto",
-                            borderRadius: "sm",
-                            "& form": {
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: 2,
-                            },
-                            [`& .MuiFormLabel-asterisk`]: {
-                                visibility: "hidden",
-                            },
-                        }}
-                    >
-                        <Stack sx={{ gap: 4, mb: 2 }}>
-                            <Stack sx={{ gap: 1 }}>
-                                <Typography component="h1" level="h3">
-                                    Sign In
-                                </Typography>
-                                <Typography level="body-sm">
-                                    New member?{" "}
-                                    <Link href="SignUp" level="title-sm">
-                                        Sign up!
-                                    </Link>
-                                </Typography>
-                            </Stack>
-
-                            {errorMessage && <Alert color="danger">{errorMessage}</Alert>}
-                        </Stack>
-
-                        <Stack sx={{ gap: 4, mt: 2 }}>
-                            <form
-                                onSubmit={(event: React.FormEvent<SignInFormElement>) => {
-                                    event.preventDefault();
-
-                                    const formElements = event.currentTarget.elements;
-                                    const email = formElements.email.value;
-                                    const password = formElements.password.value;
-
-                                    if (!email || !password) {
-                                        return {
-                                            type: "CredentialsSignin",
-                                            error: "Email and password are required.",
-                                        };
-                                    }
-
-                                    _signin(email, password);
-
-                                    if (rememberEmail) {
-                                        localStorage.setItem("signInEmail", email);
-                                    }
-                                }}
-                            >
-                                <FormControl required>
-                                    <FormLabel>Email</FormLabel>
-                                    <Input
-                                        defaultValue={localStorage.getItem("signInEmail") || ""}
-                                        name="email"
-                                        type="email"
-                                    />
-                                </FormControl>
-
-                                <FormControl required>
-                                    <FormLabel>Password</FormLabel>
-                                    <Input name="password" type="password" />
-                                </FormControl>
-
-                                <Stack sx={{ gap: 4, mt: 2 }}>
-                                    <Box
-                                        sx={{
-                                            display: "flex",
-                                            justifyContent: "space-between",
-                                            alignItems: "center",
-                                        }}
-                                    >
-                                        <Checkbox
-                                            label="Remember me"
-                                            name="persistent"
-                                            size="sm"
-                                            onChange={(event) => {
-                                                if (event.target.checked) {
-                                                    setRememberEmail(true);
-                                                }
-                                            }}
-                                        />
-                                        <Link href="#replace-with-a-link" level="title-sm">
-                                            Forgot your password?
-                                        </Link>
-                                    </Box>
-                                    <Button type="submit" variant="soft" fullWidth>
-                                        Sign In
-                                    </Button>
-                                </Stack>
-                            </form>
-                        </Stack>
-                    </Box>
-
-                    <Box component="footer" sx={{ py: 3 }}>
-                        <Typography level="body-xs" sx={{ textAlign: "center" }}>
-                            © Origin {new Date().getFullYear()}
-                        </Typography>
-                    </Box>
-                </Box>
-            </Box>
-            <AdminBackground />
+            <SignInContent />
         </CssVarsProvider>
     );
 };

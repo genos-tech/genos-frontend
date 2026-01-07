@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from "react";
-import AcUnitIcon from "@mui/icons-material/AcUnit";
+import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
+import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
+import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
+import LoginRoundedIcon from "@mui/icons-material/LoginRounded";
+import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import {
     Alert,
     Box,
@@ -16,7 +21,7 @@ import {
     Stack,
     Typography,
 } from "@mui/joy";
-import { CssVarsProvider } from "@mui/joy/styles";
+import { CssVarsProvider, useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 import { io, Socket } from "socket.io-client";
 
@@ -35,8 +40,69 @@ import { createTeam } from "../services/createTeam";
 import { findTeam } from "../services/findTeam";
 import { joinTeam } from "../services/joinTeam";
 import { loadMyTeams } from "../services/loadMyTeams";
-import { AdminBackground } from "./Background";
 import { AdminHeader } from "./Header";
+
+// Theme-aware styling - Blue/Cyan theme for team management
+const FORM_STYLES = {
+    dark: {
+        cardBg: "linear-gradient(145deg, rgba(30,32,44,0.95) 0%, rgba(20,22,34,0.98) 100%)",
+        cardBorder: "rgba(56,189,248,0.2)",
+        cardShadow: "0 8px 32px rgba(0,0,0,0.4), 0 0 60px rgba(56,189,248,0.1)",
+        inputBg: "rgba(0,0,0,0.3)",
+        inputBorder: "rgba(56,189,248,0.2)",
+        inputFocusBorder: "#38bdf8",
+        inputFocusShadow: "0 0 0 3px rgba(56,189,248,0.2)",
+        labelColor: "rgba(148,163,184,0.9)",
+        titleGradient: "linear-gradient(90deg, #38bdf8 0%, #22d3ee 50%, #06b6d4 100%)",
+        sectionTitleColor: "#38bdf8",
+        buttonBg: "linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)",
+        buttonHover: "linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%)",
+        buttonShadow: "0 4px 16px rgba(56,189,248,0.4)",
+        secondaryButtonBg: "rgba(56,189,248,0.1)",
+        secondaryButtonBorder: "rgba(56,189,248,0.3)",
+        secondaryButtonHover: "rgba(56,189,248,0.2)",
+        linkColor: "#38bdf8",
+        linkHover: "#22d3ee",
+        accentColor: "#38bdf8",
+        textColor: "#f1f5f9",
+        subtitleColor: "#94a3b8",
+        listItemBg: "rgba(56,189,248,0.05)",
+        listItemBorder: "rgba(56,189,248,0.1)",
+        listItemHover: "rgba(56,189,248,0.15)",
+        successBg: "rgba(34,197,94,0.1)",
+        successBorder: "rgba(34,197,94,0.3)",
+        successText: "#4ade80",
+    },
+    light: {
+        cardBg: "linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.99) 100%)",
+        cardBorder: "rgba(14,165,233,0.15)",
+        cardShadow: "0 8px 32px rgba(56,189,248,0.1), 0 0 60px rgba(56,189,248,0.05)",
+        inputBg: "rgba(255,255,255,0.9)",
+        inputBorder: "rgba(14,165,233,0.2)",
+        inputFocusBorder: "#0284c7",
+        inputFocusShadow: "0 0 0 3px rgba(56,189,248,0.1)",
+        labelColor: "rgba(71,85,105,0.9)",
+        titleGradient: "linear-gradient(90deg, #0284c7 0%, #0891b2 50%, #0e7490 100%)",
+        sectionTitleColor: "#0284c7",
+        buttonBg: "linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)",
+        buttonHover: "linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%)",
+        buttonShadow: "0 4px 16px rgba(56,189,248,0.3)",
+        secondaryButtonBg: "rgba(14,165,233,0.05)",
+        secondaryButtonBorder: "rgba(14,165,233,0.2)",
+        secondaryButtonHover: "rgba(14,165,233,0.1)",
+        linkColor: "#0284c7",
+        linkHover: "#0891b2",
+        accentColor: "#0284c7",
+        textColor: "#1e293b",
+        subtitleColor: "#64748b",
+        listItemBg: "rgba(14,165,233,0.03)",
+        listItemBorder: "rgba(14,165,233,0.08)",
+        listItemHover: "rgba(14,165,233,0.08)",
+        successBg: "rgba(34,197,94,0.05)",
+        successBorder: "rgba(34,197,94,0.2)",
+        successText: "#16a34a",
+    },
+};
 
 interface FindTeamFormElements extends HTMLFormControlsCollection {
     teamId: HTMLInputElement;
@@ -52,7 +118,7 @@ interface JoinTeamFormElement extends HTMLFormElement {
     readonly elements: JoinTeamFormElements;
 }
 
-export const JoinTeam = () => {
+const JoinTeamContent = () => {
     const navigate = useNavigate();
     const [searchTeamMessage, setSearchMessage] = useState<string | null>(null);
     const [moveToTeamErrorMessage, setMoveToTeamErrorMessage] = useState<string | null>(null);
@@ -60,16 +126,19 @@ export const JoinTeam = () => {
     const [createTeamErrorMessage, setCreateTeamErrorMessage] = useState<string | null>(null);
     const { accessToken } = useAuth();
     const [joinedTeams, setJoinedTeams] = useState<Team[]>([]);
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
+    const styles = isDark ? FORM_STYLES.dark : FORM_STYLES.light;
 
     const ws_url = import.meta.env.VITE_WS_BASE_URL;
     const [socketInstance, setSocketInstance] = useState<Socket | null>(null);
     const socket = (accessToken: string | null): Socket => {
         return io(ws_url, {
-            reconnection: true, // Enable reconnection
-            reconnectionAttempts: 5, // Try to reconnect 5 times
-            reconnectionDelay: 1000, // Wait 1 second before reconnecting
-            reconnectionDelayMax: 5000, // Max delay between reconnection attempts
-            timeout: 10000, // Timeout for the connection attempt
+            reconnection: true,
+            reconnectionAttempts: 5,
+            reconnectionDelay: 1000,
+            reconnectionDelayMax: 5000,
+            timeout: 10000,
             withCredentials: true,
             query: {
                 teamId: localStorage.getItem("teamId"),
@@ -143,8 +212,6 @@ export const JoinTeam = () => {
         const userName: string | null = localStorage.getItem("userName");
         const userEmail: string | null = localStorage.getItem("userEmail");
         if (userId && userName && userEmail && socketInstance !== null) {
-            // Sent a request to join the team.
-            // The team owner(s) will get the request and they only can approve it.
             socketInstance.emit("join_team_request", {
                 joiningTeamId: targetTeamDetails.teamId,
                 joiningTeamName: targetTeamDetails.teamName,
@@ -216,6 +283,583 @@ export const JoinTeam = () => {
         accessToken: accessToken,
     });
 
+    // Input style
+    const inputStyle = {
+        "--Input-focusedThickness": "2px",
+        "--Input-radius": "12px",
+        background: styles.inputBg,
+        border: `1px solid ${styles.inputBorder}`,
+        fontSize: "15px",
+        py: 1.25,
+        transition: "all 0.2s ease",
+        "&:hover": {
+            borderColor: styles.accentColor,
+        },
+        "&:focus-within": {
+            borderColor: styles.inputFocusBorder,
+            boxShadow: styles.inputFocusShadow,
+        },
+    };
+
+    return (
+        <Box
+            sx={(theme) => ({
+                width: { xs: "100%", md: "100vw" },
+                transition: "width var(--Transition-duration)",
+                transitionDelay: "calc(var(--Transition-duration) + 0.1s)",
+                position: "relative",
+                zIndex: 1,
+                display: "flex",
+                justifyContent: "flex-end",
+                backdropFilter: "blur(12px)",
+                backgroundColor: "rgba(255 255 255 / 0.2)",
+                [theme.getColorSchemeSelector("dark")]: {
+                    backgroundColor: "rgba(19 19 24 / 0.4)",
+                },
+            })}
+        >
+            <Box
+                sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    minHeight: "100dvh",
+                    width: "100%",
+                    px: 2,
+                }}
+            >
+                <AdminHeader />
+
+                <Box
+                    component="main"
+                    sx={{
+                        my: "auto",
+                        py: 2,
+                        pb: 5,
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 3,
+                        width: 480,
+                        maxWidth: "100%",
+                        mx: "auto",
+                    }}
+                >
+                    {/* Main Title */}
+                    <Typography
+                        component="h1"
+                        level="h2"
+                        textAlign="center"
+                        sx={{
+                            background: styles.titleGradient,
+                            backgroundClip: "text",
+                            WebkitBackgroundClip: "text",
+                            WebkitTextFillColor: "transparent",
+                            fontWeight: 700,
+                            letterSpacing: "-0.02em",
+                        }}
+                    >
+                        Team Management
+                    </Typography>
+
+                    {/* Your Teams Section */}
+                    {joinedTeams.length > 0 && (
+                        <Box
+                            sx={{
+                                background: styles.cardBg,
+                                border: `1px solid ${styles.cardBorder}`,
+                                borderRadius: "20px",
+                                boxShadow: styles.cardShadow,
+                                p: 3,
+                                backdropFilter: "blur(12px)",
+                            }}
+                        >
+                            {moveToTeamErrorMessage && (
+                                <Alert
+                                    color="danger"
+                                    sx={{
+                                        mb: 2,
+                                        borderRadius: "12px",
+                                        border: "1px solid rgba(239,68,68,0.3)",
+                                    }}
+                                >
+                                    {moveToTeamErrorMessage}
+                                </Alert>
+                            )}
+                            <Stack direction="row" alignItems="center" gap={1.5} sx={{ mb: 2 }}>
+                                <Box
+                                    sx={{
+                                        width: 36,
+                                        height: 36,
+                                        borderRadius: "10px",
+                                        background: `linear-gradient(135deg, ${styles.accentColor} 0%, ${isDark ? "#22d3ee" : "#0891b2"} 100%)`,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                    }}
+                                >
+                                    <GroupsRoundedIcon sx={{ color: "#fff", fontSize: 20 }} />
+                                </Box>
+                                <Typography
+                                    level="title-lg"
+                                    sx={{
+                                        color: styles.sectionTitleColor,
+                                        fontWeight: 600,
+                                    }}
+                                >
+                                    Your Teams
+                                </Typography>
+                            </Stack>
+
+                            <List
+                                className="custom-scrollbar"
+                                sx={{
+                                    maxHeight: 250,
+                                    overflow: "auto",
+                                    gap: 1,
+                                    "--List-gap": "8px",
+                                }}
+                            >
+                                {joinedTeams.map((team) => (
+                                    <ListItemButton
+                                        key={team.teamId}
+                                        title={team.teamEmail}
+                                        onClick={() => {
+                                            moveToTeam(team.teamId, team.teamName);
+                                        }}
+                                        sx={{
+                                            background: styles.listItemBg,
+                                            border: `1px solid ${styles.listItemBorder}`,
+                                            borderRadius: "12px",
+                                            py: 1.5,
+                                            px: 2,
+                                            transition: "all 0.2s ease",
+                                            "&:hover": {
+                                                background: styles.listItemHover,
+                                                borderColor: styles.accentColor,
+                                                transform: "translateX(4px)",
+                                            },
+                                        }}
+                                    >
+                                        <ListItemDecorator>
+                                            <Box
+                                                sx={{
+                                                    width: 32,
+                                                    height: 32,
+                                                    borderRadius: "8px",
+                                                    background: `linear-gradient(135deg, ${styles.accentColor}30 0%, ${styles.accentColor}10 100%)`,
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                    mr: 1,
+                                                }}
+                                            >
+                                                <GroupsRoundedIcon
+                                                    sx={{
+                                                        color: styles.accentColor,
+                                                        fontSize: 18,
+                                                    }}
+                                                />
+                                            </Box>
+                                        </ListItemDecorator>
+                                        <Typography level="title-md" sx={{ fontWeight: 500 }}>
+                                            {team.teamName}
+                                        </Typography>
+                                        <LoginRoundedIcon
+                                            sx={{
+                                                ml: "auto",
+                                                color: styles.subtitleColor,
+                                                fontSize: 18,
+                                            }}
+                                        />
+                                    </ListItemButton>
+                                ))}
+                            </List>
+                        </Box>
+                    )}
+
+                    {/* Found Team Section */}
+                    {foundTeamDetails !== undefined && (
+                        <Box
+                            sx={{
+                                background: styles.cardBg,
+                                border: `1px solid ${styles.successBorder}`,
+                                borderRadius: "20px",
+                                boxShadow: styles.cardShadow,
+                                p: 3,
+                                backdropFilter: "blur(12px)",
+                            }}
+                        >
+                            <Stack direction="row" alignItems="center" gap={1.5} sx={{ mb: 2 }}>
+                                <Box
+                                    sx={{
+                                        width: 36,
+                                        height: 36,
+                                        borderRadius: "10px",
+                                        background:
+                                            "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                    }}
+                                >
+                                    <GroupsRoundedIcon sx={{ color: "#fff", fontSize: 20 }} />
+                                </Box>
+                                <Typography
+                                    level="title-lg"
+                                    sx={{
+                                        color: styles.successText,
+                                        fontWeight: 600,
+                                    }}
+                                >
+                                    Team Found!
+                                </Typography>
+                            </Stack>
+
+                            {moveToTeamErrorMessage && (
+                                <Alert
+                                    color="danger"
+                                    sx={{
+                                        mb: 2,
+                                        borderRadius: "12px",
+                                        border: "1px solid rgba(239,68,68,0.3)",
+                                    }}
+                                >
+                                    {moveToTeamErrorMessage}
+                                </Alert>
+                            )}
+
+                            <Box
+                                sx={{
+                                    background: styles.successBg,
+                                    border: `1px solid ${styles.successBorder}`,
+                                    borderRadius: "12px",
+                                    p: 2,
+                                    mb: 2,
+                                }}
+                            >
+                                <Typography level="title-md" sx={{ fontWeight: 600, mb: 0.5 }}>
+                                    {foundTeamDetails.teamName}
+                                </Typography>
+                                <Typography level="body-sm" sx={{ color: styles.subtitleColor }}>
+                                    {foundTeamDetails.teamEmail}
+                                </Typography>
+                            </Box>
+
+                            <Stack direction="row" gap={2} justifyContent="center">
+                                <Button
+                                    variant="outlined"
+                                    startDecorator={<ArrowBackRoundedIcon />}
+                                    onClick={() => setFoundTeamDetails(undefined)}
+                                    sx={{
+                                        borderRadius: "10px",
+                                        borderColor: styles.secondaryButtonBorder,
+                                        background: styles.secondaryButtonBg,
+                                        "&:hover": {
+                                            background: styles.secondaryButtonHover,
+                                            borderColor: styles.accentColor,
+                                        },
+                                    }}
+                                >
+                                    Search Another
+                                </Button>
+                                <Button
+                                    startDecorator={<SendRoundedIcon />}
+                                    onClick={() => getApproveToJoinTeam(foundTeamDetails)}
+                                    sx={{
+                                        background:
+                                            "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)",
+                                        borderRadius: "10px",
+                                        boxShadow: "0 4px 12px rgba(34,197,94,0.3)",
+                                        "&:hover": {
+                                            background:
+                                                "linear-gradient(135deg, #4ade80 0%, #22c55e 100%)",
+                                            transform: "translateY(-1px)",
+                                        },
+                                    }}
+                                >
+                                    Request to Join
+                                </Button>
+                            </Stack>
+                        </Box>
+                    )}
+
+                    {/* Search Team Section */}
+                    {foundTeamDetails === undefined && (
+                        <Box
+                            sx={{
+                                background: styles.cardBg,
+                                border: `1px solid ${styles.cardBorder}`,
+                                borderRadius: "20px",
+                                boxShadow: styles.cardShadow,
+                                p: 3,
+                                backdropFilter: "blur(12px)",
+                            }}
+                        >
+                            <Stack direction="row" alignItems="center" gap={1.5} sx={{ mb: 2 }}>
+                                <Box
+                                    sx={{
+                                        width: 36,
+                                        height: 36,
+                                        borderRadius: "10px",
+                                        background: `linear-gradient(135deg, ${styles.accentColor} 0%, ${isDark ? "#22d3ee" : "#0891b2"} 100%)`,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                    }}
+                                >
+                                    <SearchRoundedIcon sx={{ color: "#fff", fontSize: 20 }} />
+                                </Box>
+                                <Typography
+                                    level="title-lg"
+                                    sx={{
+                                        color: styles.sectionTitleColor,
+                                        fontWeight: 600,
+                                    }}
+                                >
+                                    Search by Team ID
+                                </Typography>
+                            </Stack>
+
+                            {searchTeamMessage && (
+                                <Alert
+                                    color="success"
+                                    sx={{
+                                        mb: 2,
+                                        borderRadius: "12px",
+                                        background: styles.successBg,
+                                        border: `1px solid ${styles.successBorder}`,
+                                    }}
+                                >
+                                    {searchTeamMessage}
+                                </Alert>
+                            )}
+                            {searchTeamErrorMessage && (
+                                <Alert
+                                    color="danger"
+                                    sx={{
+                                        mb: 2,
+                                        borderRadius: "12px",
+                                        border: "1px solid rgba(239,68,68,0.3)",
+                                    }}
+                                >
+                                    {searchTeamErrorMessage}
+                                </Alert>
+                            )}
+
+                            <form
+                                onSubmit={(event: React.FormEvent<FindTeamFormElement>) => {
+                                    event.preventDefault();
+                                    const formElements = event.currentTarget.elements;
+                                    const teamId = formElements.teamId.value;
+                                    getTeamInfo(teamId);
+                                }}
+                            >
+                                <FormControl required>
+                                    <FormLabel
+                                        sx={{
+                                            color: styles.labelColor,
+                                            fontSize: "0.8rem",
+                                            fontWeight: 600,
+                                            textTransform: "uppercase",
+                                            letterSpacing: "0.05em",
+                                            mb: 0.75,
+                                        }}
+                                    >
+                                        Team ID
+                                    </FormLabel>
+                                    <Input
+                                        name="teamId"
+                                        type="text"
+                                        placeholder="Enter team ID to search"
+                                        startDecorator={
+                                            <SearchRoundedIcon
+                                                sx={{ color: styles.accentColor, fontSize: 20 }}
+                                            />
+                                        }
+                                        sx={inputStyle}
+                                    />
+                                </FormControl>
+                                <Button
+                                    type="submit"
+                                    fullWidth
+                                    startDecorator={<SearchRoundedIcon />}
+                                    sx={{
+                                        mt: 2,
+                                        py: 1.25,
+                                        background: styles.buttonBg,
+                                        borderRadius: "12px",
+                                        fontWeight: 600,
+                                        boxShadow: styles.buttonShadow,
+                                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                        "&:hover": {
+                                            background: styles.buttonHover,
+                                            transform: "translateY(-2px)",
+                                        },
+                                    }}
+                                >
+                                    Search Team
+                                </Button>
+                            </form>
+                        </Box>
+                    )}
+
+                    {/* Create Team Section */}
+                    <Box
+                        sx={{
+                            background: styles.cardBg,
+                            border: `1px solid ${styles.cardBorder}`,
+                            borderRadius: "20px",
+                            boxShadow: styles.cardShadow,
+                            p: 3,
+                            backdropFilter: "blur(12px)",
+                        }}
+                    >
+                        <Stack direction="row" alignItems="center" gap={1.5} sx={{ mb: 2 }}>
+                            <Box
+                                sx={{
+                                    width: 36,
+                                    height: 36,
+                                    borderRadius: "10px",
+                                    background:
+                                        "linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                }}
+                            >
+                                <AddCircleRoundedIcon sx={{ color: "#fff", fontSize: 20 }} />
+                            </Box>
+                            <Typography
+                                level="title-lg"
+                                sx={{
+                                    color: isDark ? "#a855f7" : "#7c3aed",
+                                    fontWeight: 600,
+                                }}
+                            >
+                                Create New Team
+                            </Typography>
+                        </Stack>
+
+                        {createTeamErrorMessage && (
+                            <Alert
+                                color="danger"
+                                sx={{
+                                    mb: 2,
+                                    borderRadius: "12px",
+                                    border: "1px solid rgba(239,68,68,0.3)",
+                                }}
+                            >
+                                {createTeamErrorMessage}
+                            </Alert>
+                        )}
+
+                        <form
+                            onSubmit={(event: React.FormEvent<JoinTeamFormElement>) => {
+                                event.preventDefault();
+                                const formElements = event.currentTarget.elements;
+                                const teamName = formElements.teamName.value;
+                                _createTeam(teamName);
+                            }}
+                        >
+                            <FormControl required>
+                                <FormLabel
+                                    sx={{
+                                        color: styles.labelColor,
+                                        fontSize: "0.8rem",
+                                        fontWeight: 600,
+                                        textTransform: "uppercase",
+                                        letterSpacing: "0.05em",
+                                        mb: 0.75,
+                                    }}
+                                >
+                                    Team Name
+                                </FormLabel>
+                                <Input
+                                    name="teamName"
+                                    type="text"
+                                    placeholder="Enter your team name"
+                                    startDecorator={
+                                        <GroupsRoundedIcon
+                                            sx={{
+                                                color: isDark ? "#a855f7" : "#7c3aed",
+                                                fontSize: 20,
+                                            }}
+                                        />
+                                    }
+                                    sx={{
+                                        ...inputStyle,
+                                        "&:focus-within": {
+                                            borderColor: isDark ? "#a855f7" : "#7c3aed",
+                                            boxShadow: "0 0 0 3px rgba(168,85,247,0.2)",
+                                        },
+                                    }}
+                                />
+                            </FormControl>
+                            <Button
+                                type="submit"
+                                fullWidth
+                                startDecorator={<AddCircleRoundedIcon />}
+                                sx={{
+                                    mt: 2,
+                                    py: 1.25,
+                                    background:
+                                        "linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)",
+                                    borderRadius: "12px",
+                                    fontWeight: 600,
+                                    boxShadow: "0 4px 16px rgba(168,85,247,0.4)",
+                                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                    "&:hover": {
+                                        background:
+                                            "linear-gradient(135deg, #c084fc 0%, #a855f7 100%)",
+                                        transform: "translateY(-2px)",
+                                    },
+                                }}
+                            >
+                                Create Team
+                            </Button>
+                        </form>
+                    </Box>
+
+                    {/* Back to Sign In */}
+                    <Typography
+                        level="body-sm"
+                        textAlign="center"
+                        sx={{ color: styles.subtitleColor }}
+                    >
+                        <Link
+                            href="SignIn"
+                            level="title-sm"
+                            sx={{
+                                color: styles.linkColor,
+                                fontWeight: 600,
+                                transition: "all 0.2s ease",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 0.5,
+                                "&:hover": {
+                                    color: styles.linkHover,
+                                },
+                            }}
+                        >
+                            <ArrowBackRoundedIcon sx={{ fontSize: 16 }} />
+                            Back to Sign In
+                        </Link>
+                    </Typography>
+                </Box>
+
+                <Box component="footer" sx={{ py: 3 }}>
+                    <Typography
+                        level="body-xs"
+                        sx={{ textAlign: "center", color: styles.subtitleColor }}
+                    >
+                        © Origin {new Date().getFullYear()}
+                    </Typography>
+                </Box>
+            </Box>
+        </Box>
+    );
+};
+
+export const JoinTeam = () => {
     return (
         <CssVarsProvider disableTransitionOnChange>
             <CssBaseline />
@@ -223,255 +867,11 @@ export const JoinTeam = () => {
                 styles={{
                     ":root": {
                         "--Form-maxWidth": "800px",
-                        "--Transition-duration": "0.4s", // set to `none` to disable transition
+                        "--Transition-duration": "0.4s",
                     },
                 }}
             />
-            <Box
-                sx={(theme) => ({
-                    width: { xs: "100%", md: "50vw" },
-                    transition: "width var(--Transition-duration)",
-                    transitionDelay: "calc(var(--Transition-duration) + 0.1s)",
-                    position: "relative",
-                    zIndex: 1,
-                    display: "flex",
-                    justifyContent: "flex-end",
-                    backdropFilter: "blur(12px)",
-                    backgroundColor: "rgba(255 255 255 / 0.2)",
-                    [theme.getColorSchemeSelector("dark")]: {
-                        backgroundColor: "rgba(19 19 24 / 0.4)",
-                    },
-                })}
-            >
-                <Box
-                    sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        minHeight: "100dvh",
-                        width: "100%",
-                        px: 2,
-                    }}
-                >
-                    <AdminHeader />
-
-                    <Box
-                        component="main"
-                        sx={{
-                            my: "auto",
-                            py: 2,
-                            pb: 5,
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 2,
-                            minWidth: "400px",
-                            maxWidth: "100%",
-                            mx: "auto",
-                            borderRadius: "sm",
-                            "& form": {
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: 2,
-                            },
-                            [`& .MuiFormLabel-asterisk`]: {
-                                visibility: "hidden",
-                            },
-                        }}
-                    >
-                        {joinedTeams.length > 0 && (
-                            <Box
-                                component="main"
-                                sx={{
-                                    my: "auto",
-                                    py: 2,
-                                    pb: 5,
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    gap: 2,
-                                    width: 400,
-                                    maxWidth: "100%",
-                                    mx: "auto",
-                                    borderRadius: "sm",
-                                    "& form": {
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        gap: 2,
-                                    },
-                                    [`& .MuiFormLabel-asterisk`]: {
-                                        visibility: "hidden",
-                                    },
-                                }}
-                            >
-                                {moveToTeamErrorMessage && (
-                                    <Alert color="danger">{moveToTeamErrorMessage}</Alert>
-                                )}
-                                <Typography component="h1" level="h3">
-                                    Join Your Team
-                                </Typography>
-
-                                <List
-                                    component="nav"
-                                    sx={{
-                                        maxHeight: 300,
-                                        overflow: "auto",
-                                    }}
-                                >
-                                    {joinedTeams.map((team) => (
-                                        <ListItemButton
-                                            key={team.teamId}
-                                            title={team.teamEmail}
-                                            onClick={() => {
-                                                moveToTeam(team.teamId, team.teamName);
-                                            }}
-                                        >
-                                            <ListItemDecorator>
-                                                <AcUnitIcon />
-                                            </ListItemDecorator>
-                                            <Typography component="h1" level="h4">
-                                                {team.teamName}
-                                            </Typography>
-                                        </ListItemButton>
-                                    ))}
-                                </List>
-                            </Box>
-                        )}
-
-                        {foundTeamDetails !== undefined && (
-                            <Stack sx={{ gap: 1, mb: 2 }}>
-                                <Stack sx={{ gap: 1 }}>
-                                    <Typography component="h1" level="h3">
-                                        Found the Team
-                                    </Typography>
-                                </Stack>
-                                {moveToTeamErrorMessage && (
-                                    <Alert color="danger">{moveToTeamErrorMessage}</Alert>
-                                )}
-                                <List
-                                    component="nav"
-                                    sx={{
-                                        maxHeight: 300,
-                                        overflow: "auto",
-                                    }}
-                                >
-                                    <ListItemButton
-                                        key={foundTeamDetails.teamId}
-                                        title={foundTeamDetails.teamEmail}
-                                        onClick={() => {
-                                            getApproveToJoinTeam(foundTeamDetails);
-                                        }}
-                                    >
-                                        <ListItemDecorator>
-                                            <AcUnitIcon />
-                                        </ListItemDecorator>
-                                        <Typography component="h1" level="h4">
-                                            {foundTeamDetails.teamName} (
-                                            {foundTeamDetails.teamEmail})
-                                        </Typography>
-                                    </ListItemButton>
-                                </List>
-                                <Stack
-                                    direction={"row"}
-                                    gap={2}
-                                    justifyContent={"center"}
-                                    sx={{ mb: 5 }}
-                                >
-                                    <Button
-                                        variant="outlined"
-                                        onClick={() => {
-                                            setFoundTeamDetails(undefined);
-                                        }}
-                                    >
-                                        Search another team
-                                    </Button>
-                                    <Button
-                                        variant="soft"
-                                        onClick={() => {
-                                            getApproveToJoinTeam(foundTeamDetails);
-                                        }}
-                                    >
-                                        Get Approval to Join
-                                    </Button>
-                                </Stack>
-                            </Stack>
-                        )}
-                        {foundTeamDetails === undefined && (
-                            <Stack sx={{ gap: 1, mb: 2 }}>
-                                <Stack sx={{ gap: 1 }}>
-                                    <Typography component="h1" level="h3">
-                                        Search by Team ID
-                                    </Typography>
-                                </Stack>
-                                {searchTeamMessage && (
-                                    <Alert color="success">{searchTeamMessage}</Alert>
-                                )}
-                                {searchTeamErrorMessage && (
-                                    <Alert color="danger">{searchTeamErrorMessage}</Alert>
-                                )}
-                                <form
-                                    onSubmit={(event: React.FormEvent<FindTeamFormElement>) => {
-                                        event.preventDefault(); // Needs for prevent reload page
-                                        const formElements = event.currentTarget.elements;
-                                        const teamId = formElements.teamId.value;
-                                        getTeamInfo(teamId);
-                                    }}
-                                >
-                                    <FormControl required>
-                                        <FormLabel>Team Id</FormLabel>
-                                        <Input name="teamId" type="name" />
-                                    </FormControl>
-                                    <Stack sx={{ gap: 1, mb: 5 }}>
-                                        <Button type="submit" variant="soft" fullWidth>
-                                            Search
-                                        </Button>
-                                    </Stack>
-                                </form>
-                            </Stack>
-                        )}
-
-                        <Stack sx={{ gap: 1, mb: 2 }}>
-                            <Stack sx={{ gap: 1 }}>
-                                <Typography component="h1" level="h3">
-                                    Create New Team
-                                </Typography>
-                            </Stack>
-                            {createTeamErrorMessage && (
-                                <Alert color="danger">{createTeamErrorMessage}</Alert>
-                            )}
-                            <form
-                                onSubmit={(event: React.FormEvent<JoinTeamFormElement>) => {
-                                    event.preventDefault(); // Needs for prevent reload page
-                                    const formElements = event.currentTarget.elements;
-                                    const teamName = formElements.teamName.value;
-                                    _createTeam(teamName);
-                                }}
-                            >
-                                <FormControl required>
-                                    <FormLabel>Team Name</FormLabel>
-                                    <Input name="teamName" type="name" />
-                                </FormControl>
-                                <Stack sx={{ gap: 1 }}>
-                                    <Button type="submit" variant="soft" fullWidth>
-                                        Create
-                                    </Button>
-                                </Stack>
-                            </form>
-                        </Stack>
-
-                        <Typography level="body-sm" textAlign={"right"}>
-                            <Link href="SignIn" level="title-sm">
-                                Back to Sign In
-                            </Link>
-                        </Typography>
-                    </Box>
-
-                    <Box component="footer" sx={{ py: 3 }}>
-                        <Typography level="body-xs" sx={{ textAlign: "center" }}>
-                            © Origin {new Date().getFullYear()}
-                        </Typography>
-                    </Box>
-                </Box>
-            </Box>
-
-            <AdminBackground />
+            <JoinTeamContent />
         </CssVarsProvider>
     );
 };

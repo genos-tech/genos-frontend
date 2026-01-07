@@ -1,8 +1,22 @@
 import { useEffect, useRef, useState } from "react";
-import AddIcon from "@mui/icons-material/Add";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import { Avatar, Dropdown, IconButton, Menu, MenuItem, Tooltip } from "@mui/joy";
+import AddCircleRoundedIcon from "@mui/icons-material/AddCircleRounded";
+import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
+import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
+import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
+import {
+    Avatar,
+    Box,
+    Divider,
+    Dropdown,
+    IconButton,
+    ListItemDecorator,
+    Menu,
+    MenuItem,
+    Tooltip,
+    Typography,
+} from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../context/AuthContext";
@@ -19,6 +33,44 @@ import { ModalTeamProfile } from "./modals/ModalTeamProfile";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
+// Theme-aware styling
+const DROPDOWN_STYLES = {
+    dark: {
+        avatarBorder: "rgba(99,102,241,0.4)",
+        avatarShadow: "0 2px 12px rgba(99,102,241,0.3)",
+        avatarHoverShadow: "0 4px 20px rgba(99,102,241,0.5)",
+        menuBg: "linear-gradient(145deg, rgba(30,32,44,0.98) 0%, rgba(20,22,34,0.99) 100%)",
+        menuBorder: "rgba(99,102,241,0.2)",
+        menuShadow: "0 8px 32px rgba(0,0,0,0.5), 0 0 60px rgba(99,102,241,0.1)",
+        menuItemHover: "rgba(99,102,241,0.15)",
+        menuItemActive:
+            "linear-gradient(135deg, rgba(99,102,241,0.3) 0%, rgba(139,92,246,0.2) 100%)",
+        iconColor: "#818cf8",
+        textColor: "#f1f5f9",
+        subtitleColor: "#94a3b8",
+        accentGradient: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+        successColor: "#4ade80",
+        dividerColor: "rgba(99,102,241,0.15)",
+    },
+    light: {
+        avatarBorder: "rgba(99,102,241,0.3)",
+        avatarShadow: "0 2px 12px rgba(99,102,241,0.15)",
+        avatarHoverShadow: "0 4px 20px rgba(99,102,241,0.3)",
+        menuBg: "linear-gradient(145deg, rgba(255,255,255,0.99) 0%, rgba(248,250,252,1) 100%)",
+        menuBorder: "rgba(99,102,241,0.15)",
+        menuShadow: "0 8px 32px rgba(99,102,241,0.12), 0 0 60px rgba(99,102,241,0.05)",
+        menuItemHover: "rgba(99,102,241,0.08)",
+        menuItemActive:
+            "linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.1) 100%)",
+        iconColor: "#6366f1",
+        textColor: "#1e293b",
+        subtitleColor: "#64748b",
+        accentGradient: "linear-gradient(135deg, #6366f1 0%, #7c3aed 100%)",
+        successColor: "#16a34a",
+        dividerColor: "rgba(99,102,241,0.1)",
+    },
+};
+
 type TeamDropdownProps = {
     useTEM: TeamManagementState;
     myself: UserProps;
@@ -29,6 +81,7 @@ type TeamDropdownProps = {
     setAvatarUserId: (value: string) => void;
     setOpenUserProfile: (value: boolean) => void;
 };
+
 export const TeamDropdown = (props: TeamDropdownProps) => {
     const {
         myself,
@@ -46,6 +99,9 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
     const dropdownRef = useRef<HTMLDivElement>(null);
     const [teamProfile, setTeamProfile] = useState<TeamProfileProps | null>(null);
     const [openModalTeamProfile, setOpenModalTeamProfile] = useState<boolean>(false);
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
+    const styles = isDark ? DROPDOWN_STYLES.dark : DROPDOWN_STYLES.light;
 
     const _joinTeam = async (teamId: string) => {
         const joinTeamRes = await joinTeam(accessToken, teamId, myself.userId);
@@ -96,9 +152,6 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
     };
 
     const handleClicked = (teamId: string, teamName: string) => {
-        // Change the team.
-        // Re-load chats and tasks in the team.
-        // For now, just update the current team variable
         localStorage.setItem("teamId", teamId);
         localStorage.setItem("teamName", teamName);
         localStorage.removeItem("lastProjectId");
@@ -140,7 +193,6 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                     accessToken,
                     myself.userId
                 );
-                // Set current team profile to the team profile
                 setTeamProfile(
                     loadedTeamProfile.find(
                         (team: TeamProfileProps) => team.teamId === myself.teamId
@@ -152,7 +204,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
     };
 
     return (
-        <div className="flex items-center space-x-2">
+        <Box sx={{ display: "flex", alignItems: "center" }}>
             {teamProfile && (
                 <ModalTeamProfile
                     socket={socket}
@@ -176,64 +228,281 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                     size="sm"
                     title="Open Team Menu"
                     variant="outlined"
+                    sx={{
+                        background: styles.menuBg,
+                        border: `1px solid ${styles.menuBorder}`,
+                        borderRadius: "8px",
+                    }}
                 >
-                    <IconButton sx={{ px: 0.7 }} onClick={handleClick}>
-                        <Avatar
-                            src={`${media_url}/${useTEM.currentTeam.teamImgPath}`}
-                            variant="outlined"
+                    <IconButton
+                        onClick={handleClick}
+                        sx={{
+                            p: 0.5,
+                            borderRadius: "12px",
+                            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                            "&:hover": {
+                                background: "transparent",
+                                transform: "scale(1.05)",
+                            },
+                        }}
+                    >
+                        <Box
                             sx={{
-                                borderRadius: 4, // 0 for sharp square, or use theme radius values
-                                width: 36,
-                                height: 36,
+                                position: "relative",
+                                "&::before": {
+                                    content: '""',
+                                    position: "absolute",
+                                    inset: -3,
+                                    borderRadius: "14px",
+                                    background: styles.accentGradient,
+                                    opacity: 0.3,
+                                    filter: "blur(8px)",
+                                    transition: "opacity 0.2s ease",
+                                },
+                                "&:hover::before": {
+                                    opacity: 0.5,
+                                },
                             }}
                         >
-                            {myself.teamName.slice(0, 2).toUpperCase()}
-                        </Avatar>
+                            <Avatar
+                                src={`${media_url}/${useTEM.currentTeam.teamImgPath}`}
+                                variant="outlined"
+                                sx={{
+                                    borderRadius: "10px",
+                                    width: 40,
+                                    height: 40,
+                                    border: `2px solid ${styles.avatarBorder}`,
+                                    boxShadow: styles.avatarShadow,
+                                    transition: "all 0.2s ease",
+                                    "&:hover": {
+                                        boxShadow: styles.avatarHoverShadow,
+                                    },
+                                }}
+                            >
+                                {myself.teamName.slice(0, 2).toUpperCase()}
+                            </Avatar>
+                        </Box>
                     </IconButton>
                 </Tooltip>
+
                 <Menu
                     ref={dropdownRef}
                     anchorEl={anchorEl}
                     className="custom-scrollbar"
                     open={Boolean(anchorEl)}
                     size="sm"
-                    sx={{ zIndex: 10001, overflow: "scroll", maxHeight: "300px" }}
+                    sx={{
+                        zIndex: 10001,
+                        overflow: "auto",
+                        maxHeight: "350px",
+                        minWidth: 240,
+                        background: styles.menuBg,
+                        border: `1px solid ${styles.menuBorder}`,
+                        borderRadius: "14px",
+                        boxShadow: styles.menuShadow,
+                        backdropFilter: "blur(16px)",
+                        p: 1,
+                        "--ListItemDecorator-size": "32px",
+                    }}
                     onClose={handleClose}
                 >
-                    <MenuItem
-                        key={"editTeamProfileImage"}
-                        onClick={() => {
-                            handleShowTeamProfileClick();
-                        }}
-                    >
-                        <VisibilityIcon />
-                        Show Team Profile
-                    </MenuItem>
-
-                    {teams.map((team) => (
-                        <MenuItem
-                            key={team.teamName}
-                            variant={team.teamId === myself.teamId ? "solid" : "plain"}
-                            onClick={() => {
-                                handleClicked(team.teamId, team.teamName);
+                    {/* Header */}
+                    <Box sx={{ px: 1.5, py: 1, mb: 0.5 }}>
+                        <Typography
+                            level="body-xs"
+                            sx={{
+                                color: styles.subtitleColor,
+                                fontWeight: 600,
+                                textTransform: "uppercase",
+                                letterSpacing: "0.05em",
                             }}
                         >
-                            <OpenInNewIcon />
-                            {team.teamName}
-                        </MenuItem>
-                    ))}
+                            Team Management
+                        </Typography>
+                    </Box>
 
+                    {/* Show Team Profile */}
                     <MenuItem
-                        key={"addTeam"}
+                        onClick={handleShowTeamProfileClick}
+                        sx={{
+                            borderRadius: "10px",
+                            py: 1.25,
+                            px: 1.5,
+                            transition: "all 0.15s ease",
+                            "&:hover": {
+                                background: styles.menuItemHover,
+                            },
+                        }}
+                    >
+                        <ListItemDecorator>
+                            <Box
+                                sx={{
+                                    width: 28,
+                                    height: 28,
+                                    borderRadius: "8px",
+                                    background: styles.accentGradient,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                }}
+                            >
+                                <VisibilityRoundedIcon sx={{ color: "#fff", fontSize: 16 }} />
+                            </Box>
+                        </ListItemDecorator>
+                        <Typography level="body-sm" sx={{ fontWeight: 500 }}>
+                            Show Team Profile
+                        </Typography>
+                    </MenuItem>
+
+                    <Divider sx={{ my: 1, background: styles.dividerColor }} />
+
+                    {/* Teams Header */}
+                    <Box sx={{ px: 1.5, py: 0.75 }}>
+                        <Typography
+                            level="body-xs"
+                            sx={{
+                                color: styles.subtitleColor,
+                                fontWeight: 600,
+                                textTransform: "uppercase",
+                                letterSpacing: "0.05em",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                            }}
+                        >
+                            <GroupsRoundedIcon sx={{ fontSize: 14 }} />
+                            Your Teams ({teams.length})
+                        </Typography>
+                    </Box>
+
+                    {/* Team List */}
+                    {teams.map((team) => {
+                        const isCurrentTeam = team.teamId === myself.teamId;
+                        return (
+                            <MenuItem
+                                key={team.teamName}
+                                onClick={() => handleClicked(team.teamId, team.teamName)}
+                                sx={{
+                                    borderRadius: "10px",
+                                    py: 1.25,
+                                    px: 1.5,
+                                    background: isCurrentTeam
+                                        ? styles.menuItemActive
+                                        : "transparent",
+                                    border: isCurrentTeam
+                                        ? `1px solid ${styles.iconColor}30`
+                                        : "1px solid transparent",
+                                    transition: "all 0.15s ease",
+                                    "&:hover": {
+                                        background: isCurrentTeam
+                                            ? styles.menuItemActive
+                                            : styles.menuItemHover,
+                                        transform: "translateX(4px)",
+                                    },
+                                }}
+                            >
+                                <ListItemDecorator>
+                                    <Box
+                                        sx={{
+                                            width: 28,
+                                            height: 28,
+                                            borderRadius: "8px",
+                                            background: isCurrentTeam
+                                                ? styles.accentGradient
+                                                : `${styles.iconColor}20`,
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                        }}
+                                    >
+                                        {isCurrentTeam ? (
+                                            <CheckCircleRoundedIcon
+                                                sx={{ color: "#fff", fontSize: 16 }}
+                                            />
+                                        ) : (
+                                            <OpenInNewRoundedIcon
+                                                sx={{ color: styles.iconColor, fontSize: 16 }}
+                                            />
+                                        )}
+                                    </Box>
+                                </ListItemDecorator>
+                                <Box sx={{ flex: 1 }}>
+                                    <Typography
+                                        level="body-sm"
+                                        sx={{
+                                            fontWeight: isCurrentTeam ? 600 : 500,
+                                            color: isCurrentTeam
+                                                ? styles.iconColor
+                                                : styles.textColor,
+                                        }}
+                                    >
+                                        {team.teamName}
+                                    </Typography>
+                                    {isCurrentTeam && (
+                                        <Typography
+                                            level="body-xs"
+                                            sx={{ color: styles.successColor, fontWeight: 500 }}
+                                        >
+                                            Current Team
+                                        </Typography>
+                                    )}
+                                </Box>
+                            </MenuItem>
+                        );
+                    })}
+
+                    <Divider sx={{ my: 1, background: styles.dividerColor }} />
+
+                    {/* Add New Team */}
+                    <MenuItem
                         onClick={() => {
                             console.log("create team via modal?");
                         }}
+                        sx={{
+                            borderRadius: "10px",
+                            py: 1.25,
+                            px: 1.5,
+                            transition: "all 0.15s ease",
+                            "&:hover": {
+                                background: "rgba(34,197,94,0.1)",
+                            },
+                        }}
                     >
-                        <AddIcon />
-                        New Team (TBD)
+                        <ListItemDecorator>
+                            <Box
+                                sx={{
+                                    width: 28,
+                                    height: 28,
+                                    borderRadius: "8px",
+                                    background:
+                                        "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                }}
+                            >
+                                <AddCircleRoundedIcon sx={{ color: "#fff", fontSize: 16 }} />
+                            </Box>
+                        </ListItemDecorator>
+                        <Typography
+                            level="body-sm"
+                            sx={{ fontWeight: 500, color: styles.successColor }}
+                        >
+                            New Team
+                        </Typography>
+                        <Typography
+                            level="body-xs"
+                            sx={{
+                                ml: "auto",
+                                color: styles.subtitleColor,
+                                fontStyle: "italic",
+                            }}
+                        >
+                            Coming soon
+                        </Typography>
                     </MenuItem>
                 </Menu>
             </Dropdown>
-        </div>
+        </Box>
     );
 };
