@@ -851,7 +851,7 @@ const JoinTeamContent = () => {
                         level="body-xs"
                         sx={{ textAlign: "center", color: styles.subtitleColor }}
                     >
-                        © Origin {new Date().getFullYear()}
+                        © Genos {new Date().getFullYear()}
                     </Typography>
                 </Box>
             </Box>

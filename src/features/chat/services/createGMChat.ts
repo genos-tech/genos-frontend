@@ -17,7 +17,7 @@ export const createGMChat = async (
             const res = await api.post("/gm/create/", {
                 group_email: `${myself.teamId}-${replaceSpacesWithUnderscore(
                     chatName
-                )}@origin.tech`,
+                )}@genos.tech`,
                 group_name: chatName,
                 owner_user: myself.userId,
                 owner_team: myself.teamId,

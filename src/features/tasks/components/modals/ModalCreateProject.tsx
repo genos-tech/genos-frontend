@@ -133,7 +133,7 @@ export const ModalCreateProject: React.FC<Props> = ({ myself, usePM, setIsNewPro
                 }
             };
             _signup(
-                `${myself.teamId}-${replaceSpacesWithUnderscore(projectName)}@origin.tech`,
+                `${myself.teamId}-${replaceSpacesWithUnderscore(projectName)}@genos.tech`,
                 `${projectName}-Bad-Password-Need-Secure-One`
             );
         } catch (error) {

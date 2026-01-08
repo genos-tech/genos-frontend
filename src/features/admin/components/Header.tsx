@@ -1,8 +1,8 @@
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
-import RocketLaunchRoundedIcon from "@mui/icons-material/RocketLaunchRounded";
 import { Box, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import genosLogo from "../../../assets/genos_tech.png";
 import { ColorSchemeToggle } from "../../../components/layout/colorSchemeToggle";
 
 // Theme-aware styling
@@ -81,7 +81,16 @@ export const AdminHeader = () => {
                         },
                     }}
                 >
-                    <RocketLaunchRoundedIcon sx={{ color: "#fff", fontSize: 24 }} />
+                    <img
+                        src={genosLogo}
+                        alt="Genos Logo"
+                        style={{
+                            width: 38,
+                            height: 38,
+                            objectFit: "contain",
+                            borderRadius: "50%",
+                        }}
+                    />
                 </Box>
 
                 {/* Brand Text */}
@@ -98,7 +107,7 @@ export const AdminHeader = () => {
                                 letterSpacing: "-0.02em",
                             }}
                         >
-                            Origin
+                            Genos
                         </Typography>
                         <AutoAwesomeRoundedIcon
                             sx={{

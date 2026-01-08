@@ -2,7 +2,7 @@ import { ChatProps } from "../../../types/chat";
 
 export const defaultChat: ChatProps = {
     chatId: -1,
-    chatName: "Origin",
+    chatName: "Genos",
     chatType: -1,
     dmPartnerUser: {
         teamId: "",

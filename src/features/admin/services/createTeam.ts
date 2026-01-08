@@ -13,7 +13,7 @@ export const createTeam = async (
         if (api) {
             const res = await api.post("/team/create/", {
                 team_name: teamName,
-                team_email: `${teamName}@origin.tech`,
+                team_email: `${teamName}@genos.tech`,
                 owner_id: userId,
             });
             return res.data;
