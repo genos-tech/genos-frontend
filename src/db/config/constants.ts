@@ -1,6 +1,6 @@
 // Database constants
-export const DB_NAME = "originData";
-export const DB_VERSION = 18;
+export const DB_NAME = "genosData";
+export const DB_VERSION = 1;
 
 // Store names
 export const STORES = {

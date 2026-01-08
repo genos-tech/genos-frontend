@@ -40,7 +40,7 @@ export const ModalCreateTeam: React.FC<Props> = ({
                 },
                 body: JSON.stringify({
                     team_name: teamName,
-                    team_email: `${teamName}@origin.tech`,
+                    team_email: `${teamName}@genos.tech`,
                     owner_id: myself.userId,
                 }),
             });
