@@ -125,6 +125,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                         borderRadius: "10px",
                         px: 1.5,
                         py: 0.75,
+                        mb: 1.5,
                         fontSize: "13px",
                         fontWeight: 600,
                         gap: 0.5,
@@ -303,8 +304,6 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                     No sub tasks yet
                 </Typography>
             )}
-
-            <Divider sx={{ mt: 1, mb: 2 }} />
         </>
     );
 };
