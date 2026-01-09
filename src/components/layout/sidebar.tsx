@@ -18,7 +18,7 @@ import {
 } from "@mui/joy";
 import ListItemButton, { listItemButtonClasses } from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
@@ -40,24 +40,28 @@ const NAV_ITEMS = [
         id: 0,
         icon: AllInboxRoundedIcon,
         label: "Inbox",
+        path: "/home/inbox",
         colorScheme: { dark: "#a78bfa", light: "#7c3aed" },
     },
     {
         id: 1,
         icon: QuestionAnswerRoundedIcon,
         label: "Chats",
+        path: "/home/chat",
         colorScheme: { dark: "#60a5fa", light: "#3b82f6" },
     },
     {
         id: 2,
         icon: AssignmentRoundedIcon,
         label: "Tasks",
+        path: "/home/tasks",
         colorScheme: { dark: "#4ade80", light: "#22c55e" },
     },
     {
         id: 3,
         icon: NoteAltRoundedIcon,
         label: "Notes",
+        path: "/home/notes",
         colorScheme: { dark: "#f472b6", light: "#ec4899" },
     },
 ];
@@ -78,6 +82,7 @@ export const Sidebar = (props: SidebarProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const navigate = useNavigate();
+    const location = useLocation();
 
     const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
     const [avatarUserId, setAvatarUserId] = useState<string | undefined>(undefined);
@@ -130,8 +135,8 @@ export const Sidebar = (props: SidebarProps) => {
         }
     };
 
-    const handleNavClick = (serviceId: number) => {
-        useUISM.setOpeningService(serviceId);
+    const handleNavClick = (path: string) => {
+        navigate(path);
     };
 
     // Get badge count for a service
@@ -230,7 +235,7 @@ export const Sidebar = (props: SidebarProps) => {
                 >
                     {NAV_ITEMS.map((item) => {
                         const Icon = item.icon;
-                        const isActive = useUISM.openingService === item.id;
+                        const isActive = location.pathname === item.path;
                         const badgeCount = getBadgeCount(item.id);
                         const color = isDark ? item.colorScheme.dark : item.colorScheme.light;
 
@@ -244,7 +249,7 @@ export const Sidebar = (props: SidebarProps) => {
                                     sx={{ zIndex: 10020 }}
                                 >
                                     <ListItemButton
-                                        onClick={() => handleNavClick(item.id)}
+                                        onClick={() => handleNavClick(item.path)}
                                         sx={{
                                             flexDirection: "column",
                                             alignItems: "center",

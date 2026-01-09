@@ -2,28 +2,42 @@ import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsAct
 import PendingActionsRoundedIcon from "@mui/icons-material/PendingActionsRounded";
 import { Box, Chip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { useLocation, useNavigate } from "react-router-dom";
 
 type InboxTab = "activities" | "requests";
 
 type InboxTabHeaderProps = {
-    activeTab: InboxTab;
-    onTabChange: (tab: InboxTab) => void;
     requestCount?: number;
 };
 
-export const InboxTabHeader = ({ activeTab, onTabChange, requestCount }: InboxTabHeaderProps) => {
+export const InboxTabHeader = ({ requestCount }: InboxTabHeaderProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const navigate = useNavigate();
+    const location = useLocation();
 
-    const tabs: { id: InboxTab; label: string; icon: React.ReactNode; count?: number }[] = [
+    // Determine active tab from URL
+    const activeTab: InboxTab = location.pathname.includes("/requests")
+        ? "requests"
+        : "activities";
+
+    const tabs: {
+        id: InboxTab;
+        label: string;
+        path: string;
+        icon: React.ReactNode;
+        count?: number;
+    }[] = [
         {
             id: "activities",
             label: "Activities",
+            path: "/home/inbox/activities",
             icon: <NotificationsActiveRoundedIcon sx={{ fontSize: 16 }} />,
         },
         {
             id: "requests",
             label: "Requests",
+            path: "/home/inbox/requests",
             icon: <PendingActionsRoundedIcon sx={{ fontSize: 16 }} />,
             count: requestCount,
         },
@@ -46,7 +60,7 @@ export const InboxTabHeader = ({ activeTab, onTabChange, requestCount }: InboxTa
                 return (
                     <Box
                         key={tab.id}
-                        onClick={() => onTabChange(tab.id)}
+                        onClick={() => navigate(tab.path)}
                         sx={{
                             display: "flex",
                             alignItems: "center",

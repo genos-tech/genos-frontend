@@ -2,9 +2,13 @@ import "./App.css";
 
 import CssBaseline from "@mui/joy/CssBaseline";
 import { CssVarsProvider } from "@mui/joy/styles";
+import { Navigate, Route, Routes } from "react-router-dom";
 
-import { AppContent } from "./components/App/AppContent";
 import { InitialLoad } from "./components/ui/misc/InitialLoad";
+import { ChatHome } from "./features/chat/chatHome";
+import { InboxHome } from "./features/inbox/inboxHome";
+import { NoteHome } from "./features/notes/NoteHome";
+import { TaskHome } from "./features/tasks/taskHome";
 import { useAppInitialization } from "./hooks/common/useAppInitialization";
 import { useProjectTaskManagement } from "./hooks/common/useProjectTaskManagement";
 import { useServiceInitialization } from "./hooks/common/useServiceInitialization";
@@ -63,18 +67,75 @@ export const App = () => {
         <div className="main-container">
             <CssVarsProvider disableTransitionOnChange>
                 <CssBaseline />
-                <AppContent
-                    useCM={useCM}
-                    useIM={useIM}
-                    myself={myself}
-                    useNM={useNM}
-                    usePM={usePM}
-                    setMyself={setMyself}
-                    socketInstance={socketInstance}
-                    useTEM={useTEM}
-                    useTM={useTM}
-                    useUISM={useUISM}
-                />
+                <Routes>
+                    <Route
+                        path="inbox/*"
+                        element={
+                            <InboxHome
+                                useCM={useCM}
+                                useIM={useIM}
+                                myself={myself}
+                                setMyself={setMyself}
+                                socket={socketInstance}
+                                useTEM={useTEM}
+                                useUISM={useUISM}
+                            />
+                        }
+                    />
+                    <Route
+                        path="chat"
+                        element={
+                            <ChatHome
+                                useCM={useCM}
+                                useIM={useIM}
+                                myself={myself}
+                                useNM={useNM}
+                                usePM={usePM}
+                                setMyself={setMyself}
+                                socket={socketInstance}
+                                useTEM={useTEM}
+                                useTM={useTM}
+                                useUISM={useUISM}
+                            />
+                        }
+                    />
+                    <Route
+                        path="tasks"
+                        element={
+                            <TaskHome
+                                useCM={useCM}
+                                useIM={useIM}
+                                myself={myself}
+                                useNM={useNM}
+                                usePM={usePM}
+                                setMyself={setMyself}
+                                socket={socketInstance}
+                                useTEM={useTEM}
+                                useTM={useTM}
+                                useUISM={useUISM}
+                            />
+                        }
+                    />
+                    <Route
+                        path="notes"
+                        element={
+                            <NoteHome
+                                useCM={useCM}
+                                useIM={useIM}
+                                myself={myself}
+                                useNM={useNM}
+                                usePM={usePM}
+                                setMyself={setMyself}
+                                socket={socketInstance}
+                                useTEM={useTEM}
+                                useTM={useTM}
+                                useUISM={useUISM}
+                            />
+                        }
+                    />
+                    {/* Default redirect to inbox */}
+                    <Route path="" element={<Navigate to="inbox" replace />} />
+                </Routes>
             </CssVarsProvider>
         </div>
     );
