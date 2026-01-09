@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Box, Sheet, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
 import { BnChatPreview } from "../../../../components/editors/bnChatPreview";
@@ -89,11 +90,27 @@ export const MessageBubble = (props: MessageBubbleProps) => {
     const isSent = variant === "sent";
     const dtSent = extractYYYYMMDDHHMM(message.tsSent);
     const { accessToken } = useAuth();
+    const navigate = useNavigate();
 
     // Get bubble colors based on variant and theme
     const bubbleColors = isSent ? BUBBLE_COLORS.sent : BUBBLE_COLORS.received;
     const colors = isDark ? bubbleColors.dark : bubbleColors.light;
     const focusedColors = isDark ? BUBBLE_COLORS.focused.dark : BUBBLE_COLORS.focused.light;
+
+    // Chat type to URL path mapping
+    const CHAT_TYPE_PATH: Record<number, string> = {
+        1: "dm",
+        2: "gm",
+        3: "pm",
+    };
+
+    // Handle message click to update URL
+    const handleMessageClick = () => {
+        const typePath = CHAT_TYPE_PATH[chat.chatType];
+        if (typePath) {
+            navigate(`/home/chat/${typePath}/${chat.chatId}/message/${message.messageId}`);
+        }
+    };
 
     // Load the thread task if exists
     const loadTask = (threadId: number) => {
@@ -532,11 +549,13 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                         />
                     )}
                     <Sheet
+                        onClick={handleMessageClick}
                         sx={{
                             p: 1.25,
                             borderRadius: "16px",
                             position: "relative",
                             overflow: "hidden",
+                            cursor: "pointer",
                             transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                             // Variant-specific border radius
                             ...(isSent

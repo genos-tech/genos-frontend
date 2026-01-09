@@ -156,9 +156,10 @@ export const MessageListRenderer = ({
 
     const getFocusedState = (message: MessageProps | ThreadMessageProps) => {
         if (isThread) {
+            // For thread messages, check against currentThreadChat's moveToSpecificIndex
             return (
                 (message as ThreadMessageProps).messageIdWithChatIdAndThreadId ===
-                useCM.currentMainChat?.moveToSpecificIndex
+                useCM.currentThreadChat?.moveToSpecificIndex
             );
         }
         return (

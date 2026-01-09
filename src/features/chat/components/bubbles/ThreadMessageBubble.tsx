@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Box, Sheet, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
 import { BnChatPreview } from "../../../../components/editors/bnChatPreview";
@@ -80,6 +81,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const { accessToken } = useAuth();
+    const navigate = useNavigate();
     const isSent = variant === "sent";
     const dtSent = extractYYYYMMDDHHMM(message.tsSent);
 
@@ -87,6 +89,37 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
     const bubbleColors = isSent ? BUBBLE_COLORS.sent : BUBBLE_COLORS.received;
     const colors = isDark ? bubbleColors.dark : bubbleColors.light;
     const focusedColors = isDark ? BUBBLE_COLORS.focused.dark : BUBBLE_COLORS.focused.light;
+
+    // Chat type to URL path mapping
+    const CHAT_TYPE_PATH: Record<number, string> = {
+        1: "dm",
+        2: "gm",
+        3: "pm",
+    };
+
+    // Handle thread message click to update URL and focus
+    const handleMessageClick = () => {
+        const typePath = CHAT_TYPE_PATH[thread.chatType];
+        if (typePath) {
+            // Update URL
+            navigate(
+                `/home/chat/${typePath}/${thread.chatId}/thread/${thread.threadId}/message/${message.messageId}`
+            );
+
+            // Update currentThreadChat's moveToSpecificIndex to focus on this message
+            // Format: {chatId}-{threadId}-{messageId} to match messageIdWithChatIdAndThreadId
+            const newMoveIndex = `${thread.chatId}-${thread.threadId}-${message.messageId}`;
+            if (
+                useCM.currentThreadChat &&
+                useCM.currentThreadChat.moveToSpecificIndex !== newMoveIndex
+            ) {
+                useCM.setCurrentThreadChat({
+                    ...useCM.currentThreadChat,
+                    moveToSpecificIndex: newMoveIndex,
+                });
+            }
+        }
+    };
 
     // Reaction handling
     const [showUnderBarOption, setShowUnderBarOption] = useState(false);
@@ -347,11 +380,13 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                         />
                     )}
                     <Sheet
+                        onClick={handleMessageClick}
                         sx={{
                             p: 1.25,
                             borderRadius: "16px",
                             position: "relative",
                             overflow: "hidden",
+                            cursor: "pointer",
                             transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                             // Variant-specific border radius
                             ...(isSent

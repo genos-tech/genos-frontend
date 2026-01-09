@@ -32,6 +32,7 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps, MessageProps } from "../../../../types/chat";
 import { toggleMessagesPane } from "../../../../utils/sidebarUtils";
+import { useChatRouting } from "../../hooks/useChatRouting";
 import { popSpecificMessages } from "../../services/popSpecificMessages";
 import { defaultChat } from "../../utils/defaults";
 import { ModalCreateGM } from "../modals/ModalCreateGM";
@@ -99,6 +100,7 @@ type ChatSidebarProps = {
     useCM: ChatManagementState;
     useTM: TaskManagementState;
     usePM: ProjectManagementState;
+    chatRouting: ReturnType<typeof useChatRouting>;
 };
 
 export const ChatSidebar = (props: ChatSidebarProps) => {
@@ -113,6 +115,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
         useCM,
         useTM,
         usePM,
+        chatRouting,
     } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -213,11 +216,10 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
     };
 
     const handleNavClick = (type: number) => {
-        useCM.setCurrentChatPaneType(type);
+        // Navigate via URL - the useChatRouting hook will sync state
+        chatRouting.navigateToChatType(type);
         localStorage.setItem("currentChatPaneType", type.toString());
-        if (type !== CHAT_PANE_TYPES.ACTIVITY && type !== CHAT_PANE_TYPES.FLAGGED) {
-            onChatIconClickedHandler(type);
-        }
+        localStorage.setItem("lastChatType", type.toString());
     };
 
     return (

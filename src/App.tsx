@@ -83,7 +83,7 @@ export const App = () => {
                         }
                     />
                     <Route
-                        path="chat"
+                        path="chat/*"
                         element={
                             <ChatHome
                                 useCM={useCM}
@@ -100,7 +100,7 @@ export const App = () => {
                         }
                     />
                     <Route
-                        path="tasks"
+                        path="tasks/*"
                         element={
                             <TaskHome
                                 useCM={useCM}
@@ -117,7 +117,7 @@ export const App = () => {
                         }
                     />
                     <Route
-                        path="notes"
+                        path="notes/*"
                         element={
                             <NoteHome
                                 useCM={useCM}
