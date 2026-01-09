@@ -212,9 +212,10 @@ export const useChatRouting = ({ useCM, useTM }: UseChatRoutingProps) => {
                                 project: existingChat.project,
                                 isPrivate: existingChat.isPrivate,
                                 profileImagePath: existingChat.profileImagePath,
-                                moveToSpecificIndex: messageId
-                                    ? `${chatId}-${messageId}`
-                                    : undefined,
+                                moveToSpecificIndex:
+                                    messageId && useCM.currentMainChat?.chatId !== -1
+                                        ? `${chatId}-${messageId}`
+                                        : undefined,
                             };
                             useCM.setCurrentMainChat(newChat);
                             useCM.setIsMainChatVisible(true);
@@ -245,8 +246,10 @@ export const useChatRouting = ({ useCM, useTM }: UseChatRoutingProps) => {
 
     // Update URL when main chat changes (user navigates via UI)
     useEffect(() => {
+        const { chatId } = parseCurrentRoute();
+
         // Skip if we're currently navigating from URL (to avoid circular updates)
-        if (isNavigatingFromUrl.current) {
+        if (isNavigatingFromUrl.current || chatId === useCM.currentMainChat?.chatId) {
             return;
         }
 

@@ -278,13 +278,13 @@ export const loadInitialData = (
                         }
                     };
                 } else {
+                    console.warn(
+                        "Failed due to lastChatId is null or undefined, using default chat"
+                    );
                     setCurrentMainChat(defaultChat);
                     setIsInitialChatLoaded(true);
                 }
             }
-        } else {
-            setCurrentMainChat(defaultChat);
-            setIsInitialChatLoaded(true);
         }
     }, [isDMHistoryLoaded, isGMHistoryLoaded, isPMHistoryLoaded]);
 
