@@ -14,6 +14,7 @@ import { TaskPreviewPanel } from "./components/panels/TaskPreviewPanel";
 import { ThreadPanel } from "./components/panels/ThreadPanel";
 import { ResizeHandle } from "./components/shared/ResizeHandle";
 import { ChatSidebar } from "./components/sidebar/ChatSidebar";
+import { useChatRouting } from "./hooks/useChatRouting";
 
 import { Sidebar } from "../../components/layout/sidebar";
 import { useAuth } from "../../context/AuthContext";
@@ -66,6 +67,9 @@ export const ChatHome = (props: ChatHomeProps) => {
         usePanelSizes();
     const { todos, setTodos, isExistingTodaysTodo, setIsExistingTodaysTodo, incompleteTodoCount } =
         useTodos(myself, accessToken, isToDoVisible);
+
+    // URL-based routing
+    const chatRouting = useChatRouting({ useCM, useTM, myself });
 
     useEffect(() => {
         localStorage.setItem("isToDoVisible", isToDoVisible.toString());
@@ -157,6 +161,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                             >
                                 <ChatSidebar
                                     useCM={useCM}
+                                    chatRouting={chatRouting}
                                     incompleteTodoCount={incompleteTodoCount}
                                     myself={myself}
                                     setIsToDoVisible={setIsToDoVisible}

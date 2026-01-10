@@ -16,6 +16,7 @@ import { NoteContentRenderer } from "./common/components/NoteContentRenderer";
 import { NoteSidebar } from "./common/components/NoteSidebar";
 import { ResizeHandle } from "./common/components/ResizeHandle";
 import { ResizeHandleStyles } from "./common/components/ResizeHandleStyles";
+import { useNoteRouting } from "./common/hooks/useNoteRouting";
 import { TaskPreviewPanel } from "./task-notes/components/TaskPreviewPanel";
 
 type NoteHomeProps = {
@@ -33,6 +34,9 @@ type NoteHomeProps = {
 export const NoteHome = (props: NoteHomeProps) => {
     const { useTEM, socket, myself, setMyself, useUISM, useIM, useNM, useCM, usePM, useTM } =
         props;
+
+    // URL-based routing for notes
+    useNoteRouting({ useNM });
 
     const { mode } = useColorScheme();
 

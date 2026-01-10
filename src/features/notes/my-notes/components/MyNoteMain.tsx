@@ -109,6 +109,17 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
         setOpenDeleteNote(true);
     };
 
+    const handleCopyNoteLink = async () => {
+        if (useNM.currentMyNote) {
+            const noteUrl = `${window.location.origin}/home/notes/my/${useNM.currentMyNote.noteId}`;
+            try {
+                await navigator.clipboard.writeText(noteUrl);
+            } catch (err) {
+                console.error("Failed to copy link:", err);
+            }
+        }
+    };
+
     // If no tabs at all, show empty state with create button
     if (useNM.tabItems.length === 0) {
         return <EmptyState onCreateNewNote={handleCreateNewNote} />;
@@ -150,6 +161,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                     useTEM={useTEM}
                                     useUISM={useUISM}
                                     onCloseNotes={() => {}}
+                                    onCopyNoteLink={handleCopyNoteLink}
                                     onCreateChildNote={handleCreateChildNote}
                                     onCreateNewNote={handleCreateNewNote}
                                     onDeleteNote={handleDeleteNote}

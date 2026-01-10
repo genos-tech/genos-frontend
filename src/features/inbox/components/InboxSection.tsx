@@ -1,8 +1,9 @@
-import { forwardRef } from "react";
+import { forwardRef, useEffect } from "react";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import InboxRoundedIcon from "@mui/icons-material/InboxRounded";
 import { Box, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { useNavigate } from "react-router-dom";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
 import { InboxSectionProps } from "../types/inboxTypes";
@@ -12,6 +13,7 @@ type InboxSectionExtendedProps = InboxSectionProps & {
     emptyTitle?: string;
     emptySubtitle?: string;
     isRequest?: boolean;
+    selectedItemId?: number;
 };
 
 export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionExtendedProps>(
@@ -28,11 +30,32 @@ export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionExtendedProps
             emptyTitle = "All caught up!",
             emptySubtitle = "No new items to review",
             isRequest = false,
+            selectedItemId,
         },
         ref
     ) => {
         const { mode } = useColorScheme();
         const isDark = mode === "dark";
+        const navigate = useNavigate();
+        const basePath = isRequest ? "/home/inbox/requests" : "/home/inbox/activities";
+
+        // Scroll to selected item when it changes
+        useEffect(() => {
+            if (selectedItemId && ref && typeof ref !== "function" && ref.current) {
+                const itemIndex = items.findIndex((item) => item.itemId === selectedItemId);
+                if (itemIndex !== -1) {
+                    ref.current.scrollToIndex({
+                        index: itemIndex,
+                        align: "center",
+                        behavior: "smooth",
+                    });
+                }
+            }
+        }, [selectedItemId, items, ref]);
+
+        const handleItemClick = (itemId: number) => {
+            navigate(`${basePath}/${itemId}`);
+        };
 
         return (
             <Box
@@ -54,15 +77,30 @@ export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionExtendedProps
                         totalCount={items.length}
                         itemContent={(index) => {
                             const item = items[index];
+                            const isSelected = selectedItemId === item.itemId;
                             return (
                                 <Box
                                     key={`${itemKeyPrefix}-${item.itemId}`}
+                                    onClick={() => handleItemClick(item.itemId)}
                                     sx={{
                                         px: 2,
                                         py: 0.75,
+                                        cursor: "pointer",
                                         animation: "fadeSlideIn 0.3s ease-out forwards",
                                         animationDelay: `${Math.min(index * 0.05, 0.3)}s`,
                                         opacity: 0,
+                                        borderRadius: "16px",
+                                        mx: 0.5,
+                                        background: isSelected
+                                            ? isDark
+                                                ? "rgba(139,92,246,0.08)"
+                                                : "rgba(124,58,237,0.06)"
+                                            : "transparent",
+                                        outline: isSelected
+                                            ? `2px solid ${isDark ? "rgba(139,92,246,0.3)" : "rgba(124,58,237,0.2)"}`
+                                            : "none",
+                                        outlineOffset: "-2px",
+                                        transition: "background 0.2s ease, outline 0.2s ease",
                                         "@keyframes fadeSlideIn": {
                                             from: {
                                                 opacity: 0,

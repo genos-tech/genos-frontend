@@ -181,7 +181,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
             sx={{
                 zIndex: 10001,
                 backdropFilter: "blur(8px)",
-                backgroundColor: isDark ? "rgba(0,0,0,0.6)" : "rgba(0,0,0,0.3)",
+                backgroundColor: "transparent",
             }}
             onClose={() => setOpenModalGMProfile(false)}
         >
@@ -651,7 +651,9 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                         }}
                                                     >
                                                         {gmProfile?.tsCreatedAt
-                                                            ? extractYYYYMMDD(gmProfile.tsCreatedAt)
+                                                            ? extractYYYYMMDD(
+                                                                  gmProfile.tsCreatedAt
+                                                              )
                                                             : "N/A"}
                                                     </Typography>
                                                 </Box>

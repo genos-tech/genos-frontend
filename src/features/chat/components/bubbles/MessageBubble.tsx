@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Box, Sheet, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
 import { BnChatPreview } from "../../../../components/editors/bnChatPreview";
@@ -21,11 +22,7 @@ import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils
 import { loadSpecificTaskByThreadId } from "../../../tasks/services/loadSpecificTaskByThreadId";
 import { loadSpecificThreadMessages } from "../../services/loadSpecificThreadMessages";
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
-import { BubbleDeleteButton } from "./BubbleDeleteButton";
-import { BubbleEditButton } from "./BubbleEditButton";
-import { BubbleFlagButton } from "./BubbleFlagButton";
-import { BubbleOpenTaskButton } from "./BubbleOpenTaskButton";
-import { BubbleReplyButton } from "./BubbleReplyButton";
+import { BubbleMoreMenu } from "./BubbleMoreMenu";
 import { BubbleUnderBar } from "./BubbleUnderBar";
 import { BubbleUserName } from "./BubbleUserName";
 
@@ -89,11 +86,27 @@ export const MessageBubble = (props: MessageBubbleProps) => {
     const isSent = variant === "sent";
     const dtSent = extractYYYYMMDDHHMM(message.tsSent);
     const { accessToken } = useAuth();
+    const navigate = useNavigate();
 
     // Get bubble colors based on variant and theme
     const bubbleColors = isSent ? BUBBLE_COLORS.sent : BUBBLE_COLORS.received;
     const colors = isDark ? bubbleColors.dark : bubbleColors.light;
     const focusedColors = isDark ? BUBBLE_COLORS.focused.dark : BUBBLE_COLORS.focused.light;
+
+    // Chat type to URL path mapping
+    const CHAT_TYPE_PATH: Record<number, string> = {
+        1: "dm",
+        2: "gm",
+        3: "pm",
+    };
+
+    // Handle message click to update URL
+    const handleMessageClick = () => {
+        const typePath = CHAT_TYPE_PATH[chat.chatType];
+        if (typePath) {
+            navigate(`/home/chat/${typePath}/${chat.chatId}/message/${message.messageId}`);
+        }
+    };
 
     // Load the thread task if exists
     const loadTask = (threadId: number) => {
@@ -428,18 +441,27 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         numRepliesWithoutFirstMessage = message.numReplies;
     }
 
-    // Bubble action buttons component
+    // Bubble action buttons component - consolidated into a single "More" menu
     const BubbleActions = () => (
         <Stack
             direction="row"
-            spacing={0.25}
+            spacing={0.5}
+            alignItems="center"
             sx={{
                 opacity: showUnderBarOption ? 1 : 0,
-                transition: "opacity 0.15s ease",
+                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                transform: showUnderBarOption ? "translateX(0)" : "translateX(-4px)",
+                pl: 1,
             }}
         >
-            <Box sx={{ textAlign: "right", pl: "8px" }}>
-                {isScrolling !== true && (
+            {/* Quick emoji reaction - kept visible for fast access */}
+            {isScrolling !== true && (
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                    }}
+                >
                     <EmojiReaction
                         chatName={chat.chatName}
                         chatType={chat.chatType}
@@ -455,50 +477,27 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                         socket={socket}
                         setUniqueReactionEmojiCount={setUniqueReactionEmojiCount}
                     />
-                )}
-            </Box>
+                </Box>
+            )}
 
-            <BubbleFlagButton
+            {/* Consolidated "More" menu with all other actions */}
+            <BubbleMoreMenu
                 accessToken={accessToken}
-                currentChat={chat}
+                chat={chat}
                 flaggedMessages={useCM.flaggedMessages}
                 message={message}
                 myself={myself}
+                replyHandler={replayHandler}
                 setCurrentChat={useCM.setCurrentMainChat}
+                setEditTargetMessage={setEditTargetMessage}
                 setFlaggedMessages={useCM.setFlaggedMessages}
-                threadId={0}
+                setIsInEdit={setIsInEdit}
+                socket={socket}
+                useCM={useCM}
+                usePM={usePM}
+                useTM={useTM}
+                isSent={isSent}
             />
-
-            <BubbleReplyButton replayHandler={replayHandler} />
-
-            {message.sender.userId === myself.userId && (
-                <BubbleEditButton
-                    message={message}
-                    setEditTargetMessage={setEditTargetMessage}
-                    setIsInEdit={setIsInEdit}
-                />
-            )}
-
-            {(chat.chatType === 3 || chat.chatType === 4) &&
-                message.sender.isSystemUser === true && (
-                    <BubbleOpenTaskButton
-                        useCM={useCM}
-                        message={message}
-                        usePM={usePM}
-                        useTM={useTM}
-                    />
-                )}
-
-            {message.numReplies < 2 && message.sender.userId === myself.userId && (
-                <BubbleDeleteButton
-                    accessToken={accessToken}
-                    currentChat={chat}
-                    isThread={false}
-                    message={message}
-                    setCurrentChat={useCM.setCurrentMainChat}
-                    socket={socket}
-                />
-            )}
         </Stack>
     );
 
@@ -532,11 +531,13 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                         />
                     )}
                     <Sheet
+                        onClick={handleMessageClick}
                         sx={{
                             p: 1.25,
                             borderRadius: "16px",
                             position: "relative",
                             overflow: "hidden",
+                            cursor: "pointer",
                             transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                             // Variant-specific border radius
                             ...(isSent

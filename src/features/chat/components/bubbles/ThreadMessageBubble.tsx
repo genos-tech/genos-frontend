@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Box, Sheet, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
 import { BnChatPreview } from "../../../../components/editors/bnChatPreview";
@@ -16,9 +17,7 @@ import { ThreadMessageProps, ThreadProps } from "../../../../types/chat";
 import { ReactionProps } from "../../../../types/common";
 import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
-import { BubbleDeleteButton } from "./BubbleDeleteButton";
-import { BubbleFlagButton } from "./BubbleFlagButton";
-import { BubbleThreadEditButton } from "./BubbleThreadEditButton";
+import { BubbleThreadMoreMenu } from "./BubbleThreadMoreMenu";
 import { BubbleUnderBar } from "./BubbleUnderBar";
 import { BubbleUserName } from "./BubbleUserName";
 
@@ -80,6 +79,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const { accessToken } = useAuth();
+    const navigate = useNavigate();
     const isSent = variant === "sent";
     const dtSent = extractYYYYMMDDHHMM(message.tsSent);
 
@@ -87,6 +87,37 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
     const bubbleColors = isSent ? BUBBLE_COLORS.sent : BUBBLE_COLORS.received;
     const colors = isDark ? bubbleColors.dark : bubbleColors.light;
     const focusedColors = isDark ? BUBBLE_COLORS.focused.dark : BUBBLE_COLORS.focused.light;
+
+    // Chat type to URL path mapping
+    const CHAT_TYPE_PATH: Record<number, string> = {
+        1: "dm",
+        2: "gm",
+        3: "pm",
+    };
+
+    // Handle thread message click to update URL and focus
+    const handleMessageClick = () => {
+        const typePath = CHAT_TYPE_PATH[thread.chatType];
+        if (typePath) {
+            // Update URL
+            navigate(
+                `/home/chat/${typePath}/${thread.chatId}/thread/${thread.threadId}/message/${message.messageId}`
+            );
+
+            // Update currentThreadChat's moveToSpecificIndex to focus on this message
+            // Format: {chatId}-{threadId}-{messageId} to match messageIdWithChatIdAndThreadId
+            const newMoveIndex = `${thread.chatId}-${thread.threadId}-${message.messageId}`;
+            if (
+                useCM.currentThreadChat &&
+                useCM.currentThreadChat.moveToSpecificIndex !== newMoveIndex
+            ) {
+                useCM.setCurrentThreadChat({
+                    ...useCM.currentThreadChat,
+                    moveToSpecificIndex: newMoveIndex,
+                });
+            }
+        }
+    };
 
     // Reaction handling
     const [showUnderBarOption, setShowUnderBarOption] = useState(false);
@@ -253,18 +284,27 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
         }
     }, [selectedEmoji]);
 
-    // Thread bubble action buttons
+    // Thread bubble action buttons - consolidated into a single "More" menu
     const BubbleActions = () => (
         <Stack
             direction="row"
-            spacing={0.25}
+            spacing={0.5}
+            alignItems="center"
             sx={{
                 opacity: showUnderBarOption ? 1 : 0,
-                transition: "opacity 0.15s ease",
+                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                transform: showUnderBarOption ? "translateX(0)" : "translateX(-4px)",
+                pl: 1,
             }}
         >
-            <Box sx={{ textAlign: "right", pl: "8px" }}>
-                {isScrolling !== true && (
+            {/* Quick emoji reaction - kept visible for fast access */}
+            {isScrolling !== true && (
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                    }}
+                >
                     <EmojiReaction
                         chatName={thread.chatName}
                         chatType={thread.chatType}
@@ -280,40 +320,26 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                         socket={socket}
                         setUniqueReactionEmojiCount={setUniqueReactionEmojiCount}
                     />
-                )}
-            </Box>
+                </Box>
+            )}
 
-            <BubbleFlagButton
+            {/* Consolidated "More" menu with all other actions */}
+            <BubbleThreadMoreMenu
                 accessToken={accessToken}
-                currentThreadChat={thread}
+                currentMessageIndex={currentMessageIndex}
                 flaggedMessages={useCM.flaggedMessages}
                 message={message}
                 myself={myself}
                 setCurrentThreadChat={useCM.setCurrentThreadChat}
+                setEditTargetMessage={setEditTargetMessage}
                 setFlaggedMessages={useCM.setFlaggedMessages}
-                threadId={thread.threadId}
+                setIsInEdit={setIsInEdit}
+                setTargetMessageIndex={setTargetMessageIndex}
+                socket={socket}
+                thread={thread}
+                useCM={useCM}
+                isSent={isSent}
             />
-
-            {message.sender.userId === myself.userId && (
-                <BubbleThreadEditButton
-                    currentMessageIndex={currentMessageIndex}
-                    message={message}
-                    setEditTargetMessage={setEditTargetMessage}
-                    setIsInEdit={setIsInEdit}
-                    setTargetMessageIndex={setTargetMessageIndex}
-                />
-            )}
-
-            {message.messageId !== 1 && message.sender.userId === myself.userId && (
-                <BubbleDeleteButton
-                    accessToken={accessToken}
-                    currentThreadChat={thread}
-                    isThread={true}
-                    message={message}
-                    setCurrentThreadChat={useCM.setCurrentThreadChat}
-                    socket={socket}
-                />
-            )}
         </Stack>
     );
 
@@ -347,11 +373,13 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                         />
                     )}
                     <Sheet
+                        onClick={handleMessageClick}
                         sx={{
                             p: 1.25,
                             borderRadius: "16px",
                             position: "relative",
                             overflow: "hidden",
+                            cursor: "pointer",
                             transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                             // Variant-specific border radius
                             ...(isSent

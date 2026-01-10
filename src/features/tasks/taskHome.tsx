@@ -4,6 +4,7 @@ import { CssVarsProvider } from "@mui/joy/styles";
 
 import { TaskHomeLayout } from "./components/layout/TaskHomeLayout";
 import { TaskHomeModals } from "./components/modals/TaskHomeModals";
+import { useTaskRouting } from "./hooks/useTaskRouting";
 import { TaskHomeProps } from "./types/TaskHomeTypes";
 
 import { Sidebar } from "../../components/layout/sidebar";
@@ -11,6 +12,9 @@ import { Sidebar } from "../../components/layout/sidebar";
 export const TaskHome = (props: TaskHomeProps) => {
     const { useTEM, socket, myself, setMyself, useUISM, useIM, useCM, useNM, usePM, useTM } =
         props;
+
+    // URL-based routing for tasks
+    useTaskRouting({ usePM, useTM });
 
     // Task Related State
     const [openJoinProject, setOpenJoinProject] = useState({

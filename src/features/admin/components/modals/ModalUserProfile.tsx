@@ -165,7 +165,7 @@ export const UserProfile = (props: UserProfileProps) => {
                 sx={{
                     zIndex: 10001,
                     backdropFilter: "blur(8px)",
-                    backgroundColor: isDark ? "rgba(0,0,0,0.6)" : "rgba(0,0,0,0.3)",
+                    backgroundColor: "transparent",
                 }}
                 onClose={() => setOpenUserProfile(false)}
             >

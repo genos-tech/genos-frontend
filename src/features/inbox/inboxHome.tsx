@@ -1,22 +1,71 @@
-import { useState } from "react";
 import { Box, Sheet, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { Navigate, Route, Routes, useParams } from "react-router-dom";
 
 import { InboxHeader } from "./components/InboxHeader";
 import { InboxSection } from "./components/InboxSection";
-import { InboxTab, InboxTabHeader } from "./components/InboxTabHeader";
+import { InboxTabHeader } from "./components/InboxTabHeader";
 import { useInboxItems } from "./hooks/useInboxItems";
 import { useInboxScroll } from "./hooks/useInboxScroll";
 import { InboxHomeProps } from "./types/inboxTypes";
 
 import { Sidebar } from "../../components/layout/sidebar";
 
+// Wrapper component for Activities section with item routing
+const ActivitiesSection = (props: InboxHomeProps & { items: any[]; virtuosoRef: any }) => {
+    const { itemId } = useParams<{ itemId?: string }>();
+    const { items, virtuosoRef, useCM, myself, setMyself, socket, useTEM, useUISM } = props;
+
+    // If there's an itemId in the URL, we could scroll to it or highlight it
+    // For now, we just render the section normally
+    return (
+        <InboxSection
+            ref={virtuosoRef}
+            useCM={useCM}
+            itemKeyPrefix="inbox-general-items-bubble"
+            items={items}
+            myself={myself}
+            setMyself={setMyself}
+            socket={socket}
+            useTEM={useTEM}
+            useUISM={useUISM}
+            emptyTitle="No activities yet"
+            emptySubtitle="New updates and notifications will appear here"
+            isRequest={false}
+            selectedItemId={itemId ? parseInt(itemId, 10) : undefined}
+        />
+    );
+};
+
+// Wrapper component for Requests section with item routing
+const RequestsSection = (props: InboxHomeProps & { items: any[]; virtuosoRef: any }) => {
+    const { itemId } = useParams<{ itemId?: string }>();
+    const { items, virtuosoRef, useCM, myself, setMyself, socket, useTEM, useUISM } = props;
+
+    return (
+        <InboxSection
+            ref={virtuosoRef}
+            useCM={useCM}
+            itemKeyPrefix="inbox-request-bubble"
+            items={items}
+            myself={myself}
+            setMyself={setMyself}
+            socket={socket}
+            useTEM={useTEM}
+            useUISM={useUISM}
+            emptyTitle="No pending requests"
+            emptySubtitle="Team and project requests will show up here"
+            isRequest={true}
+            selectedItemId={itemId ? parseInt(itemId, 10) : undefined}
+        />
+    );
+};
+
 export const InboxHome = (props: InboxHomeProps) => {
     const { useTEM, useIM, myself, socket, setMyself, useCM, useUISM } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
 
-    const [activeTab, setActiveTab] = useState<InboxTab>("activities");
     const { activityInboxItems, requestInboxItems } = useInboxItems(useIM.inboxItems);
     const activityVirtuosoRef = useInboxScroll(activityInboxItems);
     const requestVirtuosoRef = useInboxScroll(requestInboxItems);
@@ -78,14 +127,12 @@ export const InboxHome = (props: InboxHomeProps) => {
 
                 {/* Tab Navigation */}
                 <InboxTabHeader
-                    activeTab={activeTab}
-                    onTabChange={setActiveTab}
                     requestCount={
                         useIM.unReadInboxItemCount > 0 ? useIM.unReadInboxItemCount : undefined
                     }
                 />
 
-                {/* Content Area */}
+                {/* Content Area with Routes */}
                 <Box
                     sx={{
                         flex: 1,
@@ -95,63 +142,106 @@ export const InboxHome = (props: InboxHomeProps) => {
                         position: "relative",
                     }}
                 >
-                    {/* Activities Tab Content */}
-                    <Box
-                        sx={{
-                            display: activeTab === "activities" ? "flex" : "none",
-                            flexDirection: "column",
-                            height: "100%",
-                            animation: activeTab === "activities" ? "fadeIn 0.3s ease" : "none",
-                            "@keyframes fadeIn": {
-                                from: { opacity: 0 },
-                                to: { opacity: 1 },
-                            },
-                        }}
-                    >
-                        <InboxSection
-                            ref={activityVirtuosoRef}
-                            useCM={useCM}
-                            itemKeyPrefix="inbox-general-items-bubble"
-                            items={activityInboxItems}
-                            myself={myself}
-                            setMyself={setMyself}
-                            socket={socket}
-                            useTEM={useTEM}
-                            useUISM={useUISM}
-                            emptyTitle="No activities yet"
-                            emptySubtitle="New updates and notifications will appear here"
-                            isRequest={false}
+                    <Routes>
+                        {/* Activities routes */}
+                        <Route
+                            path="activities"
+                            element={
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        height: "100%",
+                                        animation: "fadeIn 0.3s ease",
+                                        "@keyframes fadeIn": {
+                                            from: { opacity: 0 },
+                                            to: { opacity: 1 },
+                                        },
+                                    }}
+                                >
+                                    <ActivitiesSection
+                                        {...props}
+                                        items={activityInboxItems}
+                                        virtuosoRef={activityVirtuosoRef}
+                                    />
+                                </Box>
+                            }
                         />
-                    </Box>
+                        <Route
+                            path="activities/:itemId"
+                            element={
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        height: "100%",
+                                        animation: "fadeIn 0.3s ease",
+                                        "@keyframes fadeIn": {
+                                            from: { opacity: 0 },
+                                            to: { opacity: 1 },
+                                        },
+                                    }}
+                                >
+                                    <ActivitiesSection
+                                        {...props}
+                                        items={activityInboxItems}
+                                        virtuosoRef={activityVirtuosoRef}
+                                    />
+                                </Box>
+                            }
+                        />
 
-                    {/* Requests Tab Content */}
-                    <Box
-                        sx={{
-                            display: activeTab === "requests" ? "flex" : "none",
-                            flexDirection: "column",
-                            height: "100%",
-                            animation: activeTab === "requests" ? "fadeIn 0.3s ease" : "none",
-                            "@keyframes fadeIn": {
-                                from: { opacity: 0 },
-                                to: { opacity: 1 },
-                            },
-                        }}
-                    >
-                        <InboxSection
-                            ref={requestVirtuosoRef}
-                            useCM={useCM}
-                            itemKeyPrefix="inbox-request-bubble"
-                            items={requestInboxItems}
-                            myself={myself}
-                            setMyself={setMyself}
-                            socket={socket}
-                            useTEM={useTEM}
-                            useUISM={useUISM}
-                            emptyTitle="No pending requests"
-                            emptySubtitle="Team and project requests will show up here"
-                            isRequest={true}
+                        {/* Requests routes */}
+                        <Route
+                            path="requests"
+                            element={
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        height: "100%",
+                                        animation: "fadeIn 0.3s ease",
+                                        "@keyframes fadeIn": {
+                                            from: { opacity: 0 },
+                                            to: { opacity: 1 },
+                                        },
+                                    }}
+                                >
+                                    <RequestsSection
+                                        {...props}
+                                        items={requestInboxItems}
+                                        virtuosoRef={requestVirtuosoRef}
+                                    />
+                                </Box>
+                            }
                         />
-                    </Box>
+                        <Route
+                            path="requests/:itemId"
+                            element={
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        height: "100%",
+                                        animation: "fadeIn 0.3s ease",
+                                        "@keyframes fadeIn": {
+                                            from: { opacity: 0 },
+                                            to: { opacity: 1 },
+                                        },
+                                    }}
+                                >
+                                    <RequestsSection
+                                        {...props}
+                                        items={requestInboxItems}
+                                        virtuosoRef={requestVirtuosoRef}
+                                    />
+                                </Box>
+                            }
+                        />
+
+                        {/* Default redirect to activities */}
+                        <Route path="" element={<Navigate to="activities" replace />} />
+                    </Routes>
                 </Box>
 
                 {/* Footer */}
