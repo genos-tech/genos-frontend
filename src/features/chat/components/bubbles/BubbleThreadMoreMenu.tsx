@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
@@ -272,11 +273,41 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
         closeMenu();
     };
 
+    // Chat type to URL path mapping
+    const CHAT_TYPE_PATH: Record<number, string> = {
+        1: "dm",
+        2: "gm",
+        3: "pm",
+        4: "pm",
+    };
+
+    const handleCopyLinkClick = async () => {
+        const typePath = CHAT_TYPE_PATH[thread.chatType];
+        if (typePath) {
+            const messageUrl = `${window.location.origin}/home/chat/${typePath}/${thread.chatId}/thread/${thread.threadId}/message/${message.messageId}`;
+            try {
+                await navigator.clipboard.writeText(messageUrl);
+            } catch (err) {
+                console.error("Failed to copy link:", err);
+            }
+        }
+        closeMenu();
+    };
+
     // Check conditions for showing each menu item
     const isOwnMessage = message.sender.userId === myself.userId;
     const canDelete = message.messageId !== 1 && isOwnMessage;
 
     const menuItems: MenuItemConfig[] = [
+        {
+            id: "copyLink",
+            label: "Copy message link",
+            icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
+            onClick: handleCopyLinkClick,
+            color: { light: "#059669", dark: "#34d399" },
+            hoverBg: { light: "rgba(5,150,105,0.12)", dark: "rgba(52,211,153,0.18)" },
+            visible: true,
+        },
         {
             id: "flag",
             label: isFlagged ? "Remove flag" : "Flag for later",
