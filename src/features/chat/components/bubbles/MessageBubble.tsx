@@ -22,11 +22,7 @@ import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils
 import { loadSpecificTaskByThreadId } from "../../../tasks/services/loadSpecificTaskByThreadId";
 import { loadSpecificThreadMessages } from "../../services/loadSpecificThreadMessages";
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
-import { BubbleDeleteButton } from "./BubbleDeleteButton";
-import { BubbleEditButton } from "./BubbleEditButton";
-import { BubbleFlagButton } from "./BubbleFlagButton";
-import { BubbleOpenTaskButton } from "./BubbleOpenTaskButton";
-import { BubbleReplyButton } from "./BubbleReplyButton";
+import { BubbleMoreMenu } from "./BubbleMoreMenu";
 import { BubbleUnderBar } from "./BubbleUnderBar";
 import { BubbleUserName } from "./BubbleUserName";
 
@@ -445,18 +441,27 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         numRepliesWithoutFirstMessage = message.numReplies;
     }
 
-    // Bubble action buttons component
+    // Bubble action buttons component - consolidated into a single "More" menu
     const BubbleActions = () => (
         <Stack
             direction="row"
-            spacing={0.25}
+            spacing={0.5}
+            alignItems="center"
             sx={{
                 opacity: showUnderBarOption ? 1 : 0,
-                transition: "opacity 0.15s ease",
+                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                transform: showUnderBarOption ? "translateX(0)" : "translateX(-4px)",
+                pl: 1,
             }}
         >
-            <Box sx={{ textAlign: "right", pl: "8px" }}>
-                {isScrolling !== true && (
+            {/* Quick emoji reaction - kept visible for fast access */}
+            {isScrolling !== true && (
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                    }}
+                >
                     <EmojiReaction
                         chatName={chat.chatName}
                         chatType={chat.chatType}
@@ -472,50 +477,27 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                         socket={socket}
                         setUniqueReactionEmojiCount={setUniqueReactionEmojiCount}
                     />
-                )}
-            </Box>
+                </Box>
+            )}
 
-            <BubbleFlagButton
+            {/* Consolidated "More" menu with all other actions */}
+            <BubbleMoreMenu
                 accessToken={accessToken}
-                currentChat={chat}
+                chat={chat}
                 flaggedMessages={useCM.flaggedMessages}
                 message={message}
                 myself={myself}
+                replyHandler={replayHandler}
                 setCurrentChat={useCM.setCurrentMainChat}
+                setEditTargetMessage={setEditTargetMessage}
                 setFlaggedMessages={useCM.setFlaggedMessages}
-                threadId={0}
+                setIsInEdit={setIsInEdit}
+                socket={socket}
+                useCM={useCM}
+                usePM={usePM}
+                useTM={useTM}
+                isSent={isSent}
             />
-
-            <BubbleReplyButton replayHandler={replayHandler} />
-
-            {message.sender.userId === myself.userId && (
-                <BubbleEditButton
-                    message={message}
-                    setEditTargetMessage={setEditTargetMessage}
-                    setIsInEdit={setIsInEdit}
-                />
-            )}
-
-            {(chat.chatType === 3 || chat.chatType === 4) &&
-                message.sender.isSystemUser === true && (
-                    <BubbleOpenTaskButton
-                        useCM={useCM}
-                        message={message}
-                        usePM={usePM}
-                        useTM={useTM}
-                    />
-                )}
-
-            {message.numReplies < 2 && message.sender.userId === myself.userId && (
-                <BubbleDeleteButton
-                    accessToken={accessToken}
-                    currentChat={chat}
-                    isThread={false}
-                    message={message}
-                    setCurrentChat={useCM.setCurrentMainChat}
-                    socket={socket}
-                />
-            )}
         </Stack>
     );
 

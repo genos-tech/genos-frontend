@@ -17,9 +17,7 @@ import { ThreadMessageProps, ThreadProps } from "../../../../types/chat";
 import { ReactionProps } from "../../../../types/common";
 import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
-import { BubbleDeleteButton } from "./BubbleDeleteButton";
-import { BubbleFlagButton } from "./BubbleFlagButton";
-import { BubbleThreadEditButton } from "./BubbleThreadEditButton";
+import { BubbleThreadMoreMenu } from "./BubbleThreadMoreMenu";
 import { BubbleUnderBar } from "./BubbleUnderBar";
 import { BubbleUserName } from "./BubbleUserName";
 
@@ -286,18 +284,27 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
         }
     }, [selectedEmoji]);
 
-    // Thread bubble action buttons
+    // Thread bubble action buttons - consolidated into a single "More" menu
     const BubbleActions = () => (
         <Stack
             direction="row"
-            spacing={0.25}
+            spacing={0.5}
+            alignItems="center"
             sx={{
                 opacity: showUnderBarOption ? 1 : 0,
-                transition: "opacity 0.15s ease",
+                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                transform: showUnderBarOption ? "translateX(0)" : "translateX(-4px)",
+                pl: 1,
             }}
         >
-            <Box sx={{ textAlign: "right", pl: "8px" }}>
-                {isScrolling !== true && (
+            {/* Quick emoji reaction - kept visible for fast access */}
+            {isScrolling !== true && (
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                    }}
+                >
                     <EmojiReaction
                         chatName={thread.chatName}
                         chatType={thread.chatType}
@@ -313,40 +320,26 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                         socket={socket}
                         setUniqueReactionEmojiCount={setUniqueReactionEmojiCount}
                     />
-                )}
-            </Box>
+                </Box>
+            )}
 
-            <BubbleFlagButton
+            {/* Consolidated "More" menu with all other actions */}
+            <BubbleThreadMoreMenu
                 accessToken={accessToken}
-                currentThreadChat={thread}
+                currentMessageIndex={currentMessageIndex}
                 flaggedMessages={useCM.flaggedMessages}
                 message={message}
                 myself={myself}
                 setCurrentThreadChat={useCM.setCurrentThreadChat}
+                setEditTargetMessage={setEditTargetMessage}
                 setFlaggedMessages={useCM.setFlaggedMessages}
-                threadId={thread.threadId}
+                setIsInEdit={setIsInEdit}
+                setTargetMessageIndex={setTargetMessageIndex}
+                socket={socket}
+                thread={thread}
+                useCM={useCM}
+                isSent={isSent}
             />
-
-            {message.sender.userId === myself.userId && (
-                <BubbleThreadEditButton
-                    currentMessageIndex={currentMessageIndex}
-                    message={message}
-                    setEditTargetMessage={setEditTargetMessage}
-                    setIsInEdit={setIsInEdit}
-                    setTargetMessageIndex={setTargetMessageIndex}
-                />
-            )}
-
-            {message.messageId !== 1 && message.sender.userId === myself.userId && (
-                <BubbleDeleteButton
-                    accessToken={accessToken}
-                    currentThreadChat={thread}
-                    isThread={true}
-                    message={message}
-                    setCurrentThreadChat={useCM.setCurrentThreadChat}
-                    socket={socket}
-                />
-            )}
         </Stack>
     );
 

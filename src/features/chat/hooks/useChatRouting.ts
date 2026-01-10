@@ -273,7 +273,6 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
                             : undefined,
                     };
                     if (newThread) {
-                        console.log(newThread);
                         useCM.setCurrentThreadChat(newThread);
                         if (newThread.taskExist === true && threadMessages[0].taskId) {
                             useTM.setCurrentPreviewTaskId(threadMessages[0].taskId);
