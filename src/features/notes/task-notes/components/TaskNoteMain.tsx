@@ -142,6 +142,18 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         updateNote();
     }, [updateNote]);
 
+    const handleCopyNoteLink = useCallback(async () => {
+        if (useNM.currentTaskNote) {
+            const note = useNM.currentTaskNote;
+            const noteUrl = `${window.location.origin}/home/notes/task/project/${note.projectId}/task/${note.taskId}/note/${note.noteId}`;
+            try {
+                await navigator.clipboard.writeText(noteUrl);
+            } catch (err) {
+                console.error("Failed to copy link:", err);
+            }
+        }
+    }, [useNM.currentTaskNote]);
+
     // Handle note updates after auto-save
     useEffect(() => {
         if (
@@ -263,6 +275,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                             useTEM={useTEM}
                             useUISM={useUISM}
                             onCloseNotes={handleCloseNotes}
+                            onCopyNoteLink={handleCopyNoteLink}
                             onCreateChildNote={handleCreateChildNote}
                             onCreateNewNote={() => {}} // Don't create new task note in task note page
                             onDeleteNote={handleDeleteNote}

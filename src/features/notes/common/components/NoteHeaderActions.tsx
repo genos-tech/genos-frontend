@@ -1,10 +1,10 @@
 import AddIcon from "@mui/icons-material/Add";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import NoteAddRoundedIcon from "@mui/icons-material/NoteAddRounded";
-import NoteAltIcon from "@mui/icons-material/NoteAlt";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import {
     Box,
@@ -91,6 +91,7 @@ interface NoteHeaderActionsProps {
     onOpenTask: () => void;
     onDeleteNote: () => void;
     onCloseNotes: () => void;
+    onCopyNoteLink?: () => void;
 }
 
 export const NoteHeaderActions = ({
@@ -109,6 +110,7 @@ export const NoteHeaderActions = ({
     onOpenTask,
     onDeleteNote,
     onCloseNotes,
+    onCopyNoteLink,
 }: NoteHeaderActionsProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -349,13 +351,75 @@ export const NoteHeaderActions = ({
                             ? `0 12px 40px rgba(0,0,0,0.5), 0 0 20px ${styles.glowColor}`
                             : `0 12px 40px rgba(0,0,0,0.12), 0 0 15px ${styles.glowColor}`,
                         p: 0.75,
-                        minWidth: 180,
+                        minWidth: 200,
                         "& .MuiMenuItem-root": {
                             borderRadius: "8px",
                             transition: "all 0.15s ease-out",
                         },
                     }}
                 >
+                    {/* Copy Note Link */}
+                    {onCopyNoteLink && (
+                        <MenuItem
+                            onClick={onCopyNoteLink}
+                            sx={{
+                                gap: 1.25,
+                                py: 0.875,
+                                "&:hover": {
+                                    background: isDark
+                                        ? "rgba(52,211,153,0.18)"
+                                        : "rgba(5,150,105,0.12)",
+                                    "& .copy-icon-box": {
+                                        background: isDark
+                                            ? "rgba(52,211,153,0.25)"
+                                            : "rgba(5,150,105,0.18)",
+                                        borderColor: isDark
+                                            ? "rgba(52,211,153,0.4)"
+                                            : "rgba(5,150,105,0.3)",
+                                    },
+                                    "& .copy-text": {
+                                        color: isDark ? "#34d399" : "#059669",
+                                    },
+                                },
+                            }}
+                        >
+                            <Box
+                                className="copy-icon-box"
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    width: 28,
+                                    height: 28,
+                                    borderRadius: "7px",
+                                    background: isDark
+                                        ? "rgba(52,211,153,0.12)"
+                                        : "rgba(5,150,105,0.08)",
+                                    border: `1px solid ${isDark ? "rgba(52,211,153,0.25)" : "rgba(5,150,105,0.2)"}`,
+                                    transition: "all 0.15s ease",
+                                }}
+                            >
+                                <ContentCopyRoundedIcon
+                                    sx={{
+                                        fontSize: 16,
+                                        color: isDark ? "#34d399" : "#059669",
+                                    }}
+                                />
+                            </Box>
+                            <Typography
+                                className="copy-text"
+                                level="body-sm"
+                                sx={{
+                                    fontWeight: 500,
+                                    color: styles.textColor,
+                                    transition: "color 0.15s ease",
+                                }}
+                            >
+                                Copy note link
+                            </Typography>
+                        </MenuItem>
+                    )}
+
                     {/* Open Task (for task notes) */}
                     {noteType === 2 && currentTask && currentTask.id && (
                         <MenuItem
