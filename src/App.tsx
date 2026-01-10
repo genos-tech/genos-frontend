@@ -57,7 +57,7 @@ export const App = () => {
         socket: socketInstance,
     });
 
-    return useUISM.isLoading || useCM.currentMainChat === undefined ? (
+    return useUISM.isLoading ? (
         <InitialLoad
             myself={myself}
             setCurrentMainChat={useCM.setCurrentMainChat}

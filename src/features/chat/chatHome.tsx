@@ -69,7 +69,7 @@ export const ChatHome = (props: ChatHomeProps) => {
         useTodos(myself, accessToken, isToDoVisible);
 
     // URL-based routing
-    const chatRouting = useChatRouting({ useCM, useTM });
+    const chatRouting = useChatRouting({ useCM, useTM, myself });
 
     useEffect(() => {
         localStorage.setItem("isToDoVisible", isToDoVisible.toString());

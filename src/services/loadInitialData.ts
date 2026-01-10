@@ -285,6 +285,9 @@ export const loadInitialData = (
                     setIsInitialChatLoaded(true);
                 }
             }
+        } else {
+            console.warn("lastChatType is not set");
+            setIsInitialChatLoaded(true);
         }
     }, [isDMHistoryLoaded, isGMHistoryLoaded, isPMHistoryLoaded]);
 
