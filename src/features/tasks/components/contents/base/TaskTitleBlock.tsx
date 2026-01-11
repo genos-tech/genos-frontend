@@ -102,8 +102,8 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     justifyContent: "space-between",
                 }}
             >
-                {/* Left side: ID and Status chips */}
-                {isPreviewMode && (
+                {/* Left side: ID and Status chips (preview mode) or New Task badge (create mode) */}
+                {isPreviewMode ? (
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                         <Chip
                             key={`task-title-block-${taskContent.id}`}
@@ -146,6 +146,50 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                         >
                             {taskContent.status.status || "Open"}
                         </Chip>
+                    </Box>
+                ) : (
+                    <Box
+                        sx={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 1,
+                            px: 1.5,
+                            py: 0.5,
+                            borderRadius: "8px",
+                            background: isDark
+                                ? "linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.1) 100%)"
+                                : "linear-gradient(135deg, rgba(79,70,229,0.1) 0%, rgba(124,58,237,0.06) 100%)",
+                            border: "1px solid",
+                            borderColor: isDark ? "rgba(139,92,246,0.2)" : "rgba(124,58,237,0.15)",
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                width: 6,
+                                height: 6,
+                                borderRadius: "50%",
+                                background: isDark
+                                    ? "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)"
+                                    : "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
+                                animation: "pulse 2s infinite",
+                                "@keyframes pulse": {
+                                    "0%, 100%": { opacity: 1 },
+                                    "50%": { opacity: 0.5 },
+                                },
+                            }}
+                        />
+                        <Typography
+                            level="body-xs"
+                            sx={{
+                                fontWeight: 700,
+                                fontSize: "0.7rem",
+                                color: isDark ? "#a78bfa" : "#7c3aed",
+                                textTransform: "uppercase",
+                                letterSpacing: "0.05em",
+                            }}
+                        >
+                            New Task
+                        </Typography>
                     </Box>
                 )}
 
