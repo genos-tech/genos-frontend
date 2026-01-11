@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useRef } from "react";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { Box, Stack, Tooltip, Typography } from "@mui/joy";
 
@@ -69,6 +69,14 @@ export const NoteBreadcrumbs = ({
     maxTitleLength = 14,
 }: NoteBreadcrumbsProps) => {
     const scheme = colorSchemes[color];
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+    // Auto-scroll to the rightmost position when noteChain changes
+    useEffect(() => {
+        if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollLeft = scrollContainerRef.current.scrollWidth;
+        }
+    }, [noteChain]);
 
     const truncateTitle = (title: string) => {
         if (title.length > maxTitleLength) {
@@ -79,12 +87,29 @@ export const NoteBreadcrumbs = ({
 
     return (
         <Stack
+            ref={scrollContainerRef}
             alignItems="center"
             direction="row"
             spacing={0.5}
             sx={{
-                flexWrap: "wrap",
+                flexWrap: "nowrap",
                 rowGap: 0.5,
+                overflowX: "auto",
+                overflowY: "hidden",
+                whiteSpace: "nowrap",
+                scrollbarWidth: "thin",
+                scrollbarColor: `${scheme.text} rgba(0,0,0,0.04)`,
+                "&::-webkit-scrollbar": {
+                    height: "6px",
+                },
+                "&::-webkit-scrollbar-thumb": {
+                    backgroundColor: "rgba(100,116,139,0.18)",
+                    borderRadius: "4px",
+                },
+                "&::-webkit-scrollbar-track": {
+                    backgroundColor: "transparent",
+                },
+                maxWidth: "100%",
             }}
         >
             {/* Root Badge */}
@@ -138,86 +163,90 @@ export const NoteBreadcrumbs = ({
 
             {/* Breadcrumb Chain */}
             {noteChain &&
-                noteChain.map((node, index) => (
-                    <Stack
-                        key={`breadcrumb-${node.noteId}-${index}`}
-                        alignItems="center"
-                        direction="row"
-                        spacing={0.5}
-                    >
-                        {/* Separator */}
-                        <ChevronRightIcon
-                            sx={{
-                                fontSize: 16,
-                                color: "neutral.400",
-                                opacity: 0.7,
-                            }}
-                        />
+                noteChain.map((node, index) => {
+                    const isLastItem = index === noteChain.length - 1;
 
-                        {/* Breadcrumb Item */}
-                        <Tooltip
-                            arrow
-                            placement="bottom"
-                            size="sm"
-                            title={node.title}
-                            variant="soft"
-                            sx={{
-                                maxWidth: 280,
-                                "& .MuiTooltip-arrow": {
-                                    color: "background.level2",
-                                },
-                            }}
+                    return (
+                        <Stack
+                            key={`breadcrumb-${node.noteId}-${index}`}
+                            alignItems="center"
+                            direction="row"
+                            spacing={0.5}
                         >
-                            <Typography
-                                component="button"
-                                level="body-sm"
+                            {/* Separator */}
+                            <ChevronRightIcon
                                 sx={{
-                                    background: "transparent",
-                                    border: "none",
-                                    padding: "4px 10px",
-                                    borderRadius: "6px",
-                                    cursor: "pointer",
-                                    fontWeight: 500,
-                                    color: "text.secondary",
-                                    transition: "all 0.15s ease-out",
-                                    position: "relative",
-                                    overflow: "hidden",
-                                    "&::before": {
-                                        content: '""',
-                                        position: "absolute",
-                                        inset: 0,
-                                        borderRadius: "6px",
-                                        background: scheme.hoverBg,
-                                        opacity: 0,
-                                        transition: "opacity 0.15s ease-out",
-                                    },
-                                    "&:hover": {
-                                        color: scheme.text,
-                                        "&::before": {
-                                            opacity: 1,
-                                        },
-                                    },
-                                    "&:active": {
-                                        transform: "scale(0.98)",
-                                        "&::before": {
-                                            background: scheme.activeBg,
-                                            opacity: 1,
-                                        },
-                                    },
-                                    "&:focus-visible": {
-                                        outline: `2px solid ${scheme.text}`,
-                                        outlineOffset: "2px",
+                                    fontSize: 16,
+                                    color: "neutral.400",
+                                    opacity: 0.7,
+                                }}
+                            />
+
+                            {/* Breadcrumb Item */}
+                            <Tooltip
+                                arrow
+                                placement="bottom"
+                                size="sm"
+                                title={node.title}
+                                variant="soft"
+                                sx={{
+                                    maxWidth: 280,
+                                    "& .MuiTooltip-arrow": {
+                                        color: "background.level2",
                                     },
                                 }}
-                                onClick={() => onNodeClick(node.noteId)}
                             >
-                                <span style={{ position: "relative", zIndex: 1 }}>
-                                    {truncateTitle(node.title)}
-                                </span>
-                            </Typography>
-                        </Tooltip>
-                    </Stack>
-                ))}
+                                <Typography
+                                    component="button"
+                                    level="body-sm"
+                                    sx={{
+                                        background: isLastItem ? scheme.activeBg : "transparent",
+                                        border: "none",
+                                        padding: "4px 10px",
+                                        borderRadius: "6px",
+                                        cursor: "pointer",
+                                        fontWeight: isLastItem ? 600 : 500,
+                                        color: isLastItem ? scheme.text : "text.secondary",
+                                        transition: "all 0.15s ease-out",
+                                        position: "relative",
+                                        overflow: "hidden",
+                                        "&::before": {
+                                            content: '""',
+                                            position: "absolute",
+                                            inset: 0,
+                                            borderRadius: "6px",
+                                            background: scheme.hoverBg,
+                                            opacity: 0,
+                                            transition: "opacity 0.15s ease-out",
+                                        },
+                                        "&:hover": {
+                                            color: scheme.text,
+                                            "&::before": {
+                                                opacity: 1,
+                                            },
+                                        },
+                                        "&:active": {
+                                            transform: "scale(0.98)",
+                                            "&::before": {
+                                                background: scheme.activeBg,
+                                                opacity: 1,
+                                            },
+                                        },
+                                        "&:focus-visible": {
+                                            outline: `2px solid ${scheme.text}`,
+                                            outlineOffset: "2px",
+                                        },
+                                    }}
+                                    onClick={() => onNodeClick(node.noteId)}
+                                >
+                                    <span style={{ position: "relative", zIndex: 1 }}>
+                                        {truncateTitle(node.title)}
+                                    </span>
+                                </Typography>
+                            </Tooltip>
+                        </Stack>
+                    );
+                })}
         </Stack>
     );
 };

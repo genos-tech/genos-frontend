@@ -10,6 +10,7 @@ export default defineConfig({
         strictPort: true,
     },
     build: {
+        sourcemap: true,
         chunkSizeWarningLimit: 5000, // in kB, default is 500
         rollupOptions: {
             plugins: [

@@ -3,6 +3,8 @@ import { useEffect } from "react";
 import { UserProps } from "../../types/admin";
 import { ChatNoteProps, MyNoteProps, TaskNoteProps } from "../../types/notes";
 
+const MAX_TAB_ITEMS = 9;
+
 type updateTabFromMyNoteUpdateProps = {
     myself: UserProps;
     currentMyNote: MyNoteProps | null;
@@ -30,8 +32,14 @@ export const updateTabFromMyNoteUpdate = (props: updateTabFromMyNoteUpdateProps)
                         `${currentMyNote.noteType}-${currentMyNote.noteId}`
                 ) === false
             ) {
-                setSelectedTabIndex(tabItems.length);
-                setTabItems([...tabItems, currentMyNote]);
+                if (tabItems.length < MAX_TAB_ITEMS) {
+                    setSelectedTabIndex(tabItems.length);
+                    setTabItems([...tabItems, currentMyNote]);
+                } else {
+                    // Remove the first item and add the current my note
+                    setSelectedTabIndex(tabItems.length - 1);
+                    setTabItems([...tabItems.slice(1), currentMyNote]);
+                }
             } else {
                 const targetTabIndex = tabItems.findIndex(
                     (item) =>
@@ -73,8 +81,14 @@ export const updateTabFromTaskNoteUpdate = (props: updateTabFromTaskNoteUpdatePr
                         `${currentTaskNote.noteType}-${currentTaskNote.noteId}`
                 ) === false
             ) {
-                setSelectedTabIndex(tabItems.length);
-                setTabItems([...tabItems, currentTaskNote]);
+                if (tabItems.length < MAX_TAB_ITEMS) {
+                    setSelectedTabIndex(tabItems.length);
+                    setTabItems([...tabItems, currentTaskNote]);
+                } else {
+                    // Remove the first item and add the current task note
+                    setSelectedTabIndex(tabItems.length - 1);
+                    setTabItems([...tabItems.slice(1), currentTaskNote]);
+                }
             } else {
                 const targetTabIndex = tabItems.findIndex(
                     (item) =>
@@ -116,8 +130,14 @@ export const updateTabFromChatNoteUpdate = (props: updateTabFromChatNoteUpdatePr
                         `${currentChatNote.noteType}-${currentChatNote.noteId}`
                 ) === false
             ) {
-                setSelectedTabIndex(tabItems.length);
-                setTabItems([...tabItems, currentChatNote]);
+                if (tabItems.length < MAX_TAB_ITEMS) {
+                    setSelectedTabIndex(tabItems.length);
+                    setTabItems([...tabItems, currentChatNote]);
+                } else {
+                    // Remove the first item and add the current chat note
+                    setSelectedTabIndex(tabItems.length - 1);
+                    setTabItems([...tabItems.slice(1), currentChatNote]);
+                }
             } else {
                 const targetTabIndex = tabItems.findIndex(
                     (item) =>

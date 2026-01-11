@@ -119,7 +119,9 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
 
                 <ListItemButton
                     selected={isSelected}
-                    onClick={handleClick}
+                    onClick={() => {
+                        handleClick();
+                    }}
                     sx={{
                         borderRadius: "8px",
                         py: 0.5,
