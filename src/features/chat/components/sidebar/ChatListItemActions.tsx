@@ -1,9 +1,10 @@
+import React from "react";
 import ChecklistIcon from "@mui/icons-material/Checklist";
 import CircleIcon from "@mui/icons-material/Circle";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PushPinIcon from "@mui/icons-material/PushPin";
+import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import { Badge, IconButton, Stack, Tooltip, Typography } from "@mui/joy";
-import React from "react";
 
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
@@ -16,7 +17,8 @@ interface ChatListItemActionsProps {
     isPinned: boolean;
     onPinClick: (event: React.MouseEvent) => void;
     onSplitClick: (event: React.MouseEvent) => void;
-    onTodoClick: () => void;
+    setIsToDoVisible: (value: boolean) => void;
+    isToDoVisible: boolean;
 }
 
 export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
@@ -26,7 +28,8 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
     isPinned,
     onPinClick,
     onSplitClick,
-    onTodoClick,
+    setIsToDoVisible,
+    isToDoVisible,
 }) => {
     return (
         <Stack alignItems="center" direction="row">
@@ -39,28 +42,42 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
             </Typography>
 
             {/* To-Do Button */}
-            {chat.dmPartnerUser.userId === myself.userId && (
-                <Tooltip size="sm" title="To-Do" variant="outlined">
-                    <Badge
-                        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                        badgeContent={incompleteTodoCount}
-                        color="primary"
-                        size="sm"
-                        sx={{ "& .JoyBadge-badge": { zIndex: 1 }, mt: 0.6 }}
-                    >
+            {chat.dmPartnerUser.userId === myself.userId &&
+                (isToDoVisible ? (
+                    <Tooltip size="sm" title="Back to Chat" variant="outlined">
                         <IconButton
                             color="neutral"
                             component="a"
                             size="sm"
-                            sx={{ mr: -1 }}
+                            sx={{ mr: -1, mt: 0.6 }}
                             variant="plain"
-                            onClick={onTodoClick}
+                            onClick={() => setIsToDoVisible(false)}
                         >
-                            <ChecklistIcon />
+                            <QuestionAnswerRoundedIcon />
                         </IconButton>
-                    </Badge>
-                </Tooltip>
-            )}
+                    </Tooltip>
+                ) : (
+                    <Tooltip size="sm" title="Open To-Do" variant="outlined">
+                        <Badge
+                            anchorOrigin={{ vertical: "top", horizontal: "right" }}
+                            badgeContent={incompleteTodoCount}
+                            color="primary"
+                            size="sm"
+                            sx={{ "& .JoyBadge-badge": { zIndex: 1 }, mt: 0.6 }}
+                        >
+                            <IconButton
+                                color="neutral"
+                                component="a"
+                                size="sm"
+                                sx={{ mr: -1 }}
+                                variant="plain"
+                                onClick={() => setIsToDoVisible(true)}
+                            >
+                                <ChecklistIcon />
+                            </IconButton>
+                        </Badge>
+                    </Tooltip>
+                ))}
 
             {/* Pin Button */}
             <Tooltip

@@ -57,33 +57,6 @@ export const MainChatPanel = ({
 
     return (
         <Panel id={"4"} maxSize={80} minSize={30} order={4} onResize={setMainChatPanelSize}>
-            {/* No chat selected */}
-            {useCM.currentMainChat && useCM.currentMainChat.chatId === -1 && (
-                <Box
-                    sx={{
-                        height: "100%",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        width: "100%",
-                        borderRight: mode === "dark" ? "2px black inset" : "2px lightgrey inset",
-                    }}
-                >
-                    <IconButton
-                        color="neutral"
-                        component="button"
-                        variant="soft"
-                        sx={{
-                            fontSize: "15px",
-                            padding: "10px",
-                        }}
-                    >
-                        No Chat Selected
-                    </IconButton>
-                </Box>
-            )}
-
-            {/* Chat selected */}
             {useCM.currentMainChat && useCM.currentMainChat.chatId !== -1 && (
                 <MessagesPane
                     useCM={useCM}

@@ -415,6 +415,7 @@ const JoinTeamContent = () => {
                                     maxHeight: 250,
                                     overflow: "auto",
                                     gap: 1,
+                                    px: 1,
                                     "--List-gap": "8px",
                                 }}
                             >

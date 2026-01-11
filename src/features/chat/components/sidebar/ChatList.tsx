@@ -82,6 +82,7 @@ const EMPTY_STATES: Record<number, { icon: React.ElementType; title: string; sub
 interface ChatListState {
     showOnlyUnreadItems: boolean;
     incompleteTodoCount: number;
+    isToDoVisible: boolean;
 }
 
 interface ChatListActions {
@@ -325,6 +326,7 @@ const ChatListRenderer = ({
                         isPinnedChat={false}
                         myself={data.myself}
                         setIsToDoVisible={actions.setIsToDoVisible}
+                        isToDoVisible={state.isToDoVisible}
                         setMyself={data.setMyself}
                         socket={socket}
                         useTEM={useTEM}
@@ -645,7 +647,7 @@ export const ChatList = (props: ChatListProps) => {
 
     return (
         <List
-            className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+            className="custom-scrollbar"
             size="sm"
             sx={{
                 p: 0,

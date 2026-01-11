@@ -16,6 +16,7 @@ import {
     Typography,
 } from "@mui/joy";
 import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
+import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
@@ -37,8 +38,8 @@ import {
     ThreadProps,
 } from "../../../../types/chat";
 import { ProjectProps } from "../../../../types/tasks";
-import { toggleMessagesPane } from "../../../../utils/sidebarUtils";
 import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
+import { toggleMessagesPane } from "../../../../utils/sidebarUtils";
 import { addMessage } from "../../services/addMessage";
 import { loadSpecificThreadMessages } from "../../services/loadSpecificThreadMessages";
 import { popSpecificMessages } from "../../services/popSpecificMessages";
@@ -56,6 +57,12 @@ const CHAT_TYPE_LABELS = {
     [CHAT_TYPES.DM]: "DM",
     [CHAT_TYPES.GM]: "GM",
     [CHAT_TYPES.PM]: "PM",
+} as const;
+
+// Flagged message color scheme for visual distinction
+const FLAGGED_COLOR_SCHEME = {
+    dark: "#f87171",
+    light: "#ef4444",
 } as const;
 
 type ChatListItemForFlagMessagesProps = ListItemButtonProps & {
@@ -134,9 +141,12 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         useTM,
     } = props;
     const { accessToken } = useAuth();
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
 
     const isYou = myself.userId === flaggedMessage.dmPartnerUser.userId;
     const [tmpIsFlagged, setTmpIsFlagged] = useState(true);
+    const flagColor = FLAGGED_COLOR_SCHEME;
 
     // Flag status management
     const updateFlagStatus = async () => {
@@ -483,7 +493,14 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
             flaggedMessage.chatType === CHAT_TYPES.GM
         ) {
             return (
-                <Typography level="title-sm" sx={{ pt: "3px" }} noWrap>
+                <Typography
+                    level="title-sm"
+                    sx={{
+                        fontWeight: 600,
+                        lineHeight: 1.3,
+                    }}
+                    noWrap
+                >
                     {isYou ? `${flaggedMessage.chatName} (you)` : flaggedMessage.chatName}
                 </Typography>
             );
@@ -503,9 +520,11 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                         size="sm"
                         variant="soft"
                         sx={{
-                            fontSize: "12px",
-                            borderRadius: "4px",
-                            fontWeight: "bold",
+                            fontSize: "10px",
+                            borderRadius: "6px",
+                            fontWeight: 600,
+                            px: 0.75,
+                            height: "20px",
                         }}
                     >
                         {flaggedMessage.chatName}
@@ -514,9 +533,11 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                         size="sm"
                         variant="soft"
                         sx={{
-                            fontSize: "12px",
-                            borderRadius: "4px",
-                            fontWeight: "bold",
+                            fontSize: "10px",
+                            borderRadius: "6px",
+                            fontWeight: 600,
+                            px: 0.75,
+                            height: "20px",
                         }}
                     >
                         ID:{flaggedMessage.taskId}
@@ -531,11 +552,14 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         <Chip
             color="neutral"
             size="sm"
-            variant="outlined"
+            variant="soft"
             sx={{
-                fontSize: "12px",
-                borderRadius: "4px",
-                fontWeight: "bold",
+                fontSize: "10px",
+                borderRadius: "6px",
+                fontWeight: 600,
+                px: 0.75,
+                height: "20px",
+                opacity: 0.8,
             }}
         >
             {CHAT_TYPE_LABELS[flaggedMessage.chatType as keyof typeof CHAT_TYPE_LABELS] ||
@@ -547,13 +571,15 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         if (flaggedMessage.threadId !== 0) {
             return (
                 <Chip
-                    color="neutral"
+                    color="warning"
                     size="sm"
-                    variant="outlined"
+                    variant="soft"
                     sx={{
-                        fontSize: "12px",
-                        borderRadius: "4px",
-                        fontWeight: "bold",
+                        fontSize: "10px",
+                        borderRadius: "6px",
+                        fontWeight: 600,
+                        px: 0.75,
+                        height: "20px",
                     }}
                 >
                     Thread
@@ -567,14 +593,117 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
 
     return (
         <React.Fragment>
-            <ListItem sx={{ width: "100%", p: 0.8, overflowX: "hidden" }}>
+            <ListItem
+                sx={{
+                    width: "100%",
+                    p: 0.5,
+                    overflowX: "hidden",
+                }}
+            >
                 <ListItemButton
-                    color={isSelected ? "success" : "neutral"}
-                    sx={{ flexDirection: "column", alignItems: "initial", gap: 1 }}
-                    variant={isSelected ? "soft" : "outlined"}
                     onClick={onClickHandler}
+                    sx={{
+                        flexDirection: "column",
+                        alignItems: "initial",
+                        gap: 0.75,
+                        py: 1.25,
+                        px: 1.5,
+                        borderRadius: "12px",
+                        position: "relative",
+                        overflow: "hidden",
+                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                        background: isSelected
+                            ? isDark
+                                ? `linear-gradient(135deg, ${flagColor.dark}15 0%, ${flagColor.dark}08 100%)`
+                                : `linear-gradient(135deg, ${flagColor.light}12 0%, ${flagColor.light}05 100%)`
+                            : isDark
+                              ? "rgba(255,255,255,0.02)"
+                              : "rgba(0,0,0,0.01)",
+                        border: "1px solid",
+                        borderColor: isSelected
+                            ? isDark
+                                ? `${flagColor.dark}30`
+                                : `${flagColor.light}25`
+                            : isDark
+                              ? "rgba(255,255,255,0.04)"
+                              : "rgba(0,0,0,0.04)",
+                        boxShadow: isSelected
+                            ? isDark
+                                ? `0 4px 16px ${flagColor.dark}15, inset 0 1px 0 ${flagColor.dark}10`
+                                : `0 4px 16px ${flagColor.light}12, inset 0 1px 0 ${flagColor.light}08`
+                            : "none",
+                        "&:hover": {
+                            background: isSelected
+                                ? isDark
+                                    ? `linear-gradient(135deg, ${flagColor.dark}20 0%, ${flagColor.dark}12 100%)`
+                                    : `linear-gradient(135deg, ${flagColor.light}15 0%, ${flagColor.light}08 100%)`
+                                : isDark
+                                  ? "rgba(255,255,255,0.05)"
+                                  : "rgba(0,0,0,0.03)",
+                            borderColor: isSelected
+                                ? isDark
+                                    ? `${flagColor.dark}40`
+                                    : `${flagColor.light}35`
+                                : isDark
+                                  ? "rgba(255,255,255,0.08)"
+                                  : "rgba(0,0,0,0.08)",
+                            transform: "translateY(-1px)",
+                            boxShadow: isSelected
+                                ? isDark
+                                    ? `0 6px 20px ${flagColor.dark}20`
+                                    : `0 6px 20px ${flagColor.light}15`
+                                : isDark
+                                  ? "0 4px 12px rgba(0,0,0,0.3)"
+                                  : "0 4px 12px rgba(0,0,0,0.08)",
+                        },
+                        "&:active": {
+                            transform: "translateY(0)",
+                        },
+                    }}
                 >
-                    <Stack direction="column">
+                    {/* Flagged indicator line */}
+                    {tmpIsFlagged && (
+                        <Box
+                            sx={{
+                                position: "absolute",
+                                left: 0,
+                                top: "50%",
+                                transform: "translateY(-50%)",
+                                width: 3,
+                                height: "60%",
+                                borderRadius: "0 4px 4px 0",
+                                background: isDark
+                                    ? `linear-gradient(180deg, ${flagColor.dark} 0%, ${flagColor.dark}80 100%)`
+                                    : `linear-gradient(180deg, ${flagColor.light} 0%, ${flagColor.light}80 100%)`,
+                                boxShadow: isDark
+                                    ? `0 0 8px ${flagColor.dark}60`
+                                    : `0 0 8px ${flagColor.light}50`,
+                            }}
+                        />
+                    )}
+
+                    {/* Subtle gradient overlay for selected state */}
+                    {isSelected && (
+                        <Box
+                            sx={{
+                                position: "absolute",
+                                top: 0,
+                                right: 0,
+                                width: "50%",
+                                height: "100%",
+                                background: isDark
+                                    ? `radial-gradient(ellipse at top right, ${flagColor.dark}08 0%, transparent 70%)`
+                                    : `radial-gradient(ellipse at top right, ${flagColor.light}06 0%, transparent 70%)`,
+                                pointerEvents: "none",
+                            }}
+                        />
+                    )}
+
+                    <Stack
+                        direction="column"
+                        spacing={0.5}
+                        sx={{ position: "relative", zIndex: 1 }}
+                    >
                         {/* Header with avatar, name, and actions */}
                         <Stack
                             alignItems="center"
@@ -582,12 +711,17 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                             justifyContent="space-between"
                             spacing={1.5}
                         >
-                            <Stack direction="row" spacing={1}>
+                            <Stack direction="row" spacing={1} alignItems="center">
                                 <div>{renderAvatar()}</div>
 
-                                <Stack direction="row" spacing={0.5}>
+                                <Stack
+                                    direction="row"
+                                    spacing={0.5}
+                                    alignItems="center"
+                                    flexWrap="wrap"
+                                >
                                     {renderChatNameChip()}
-                                    <Box>
+                                    <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
                                         {renderProjectChips()}
                                         {renderChatTypeChip()}
                                         {renderThreadChip()}
@@ -599,7 +733,10 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                             <Stack alignItems="center" direction="row" spacing={1}>
                                 <Typography
                                     level="body-xs"
-                                    sx={{ display: { xs: "none", md: "block" } }}
+                                    sx={{
+                                        display: { xs: "none", md: "block" },
+                                        opacity: 0.7,
+                                    }}
                                     noWrap
                                 >
                                     {extractYYYYMMDDHHMM(flaggedMessage.tsSent)}
@@ -609,7 +746,16 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                                         color={tmpIsFlagged ? "danger" : "neutral"}
                                         size="sm"
                                         variant="plain"
-                                        onClick={updateFlagStatus}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            updateFlagStatus();
+                                        }}
+                                        sx={{
+                                            transition: "all 0.2s ease",
+                                            "&:hover": {
+                                                transform: "scale(1.1)",
+                                            },
+                                        }}
                                     >
                                         <FlagIcon sx={{ fontSize: 16 }} />
                                     </IconButton>
@@ -618,31 +764,32 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                         </Stack>
 
                         {/* Message content */}
-                        <Stack
-                            alignItems="flex-start"
-                            direction="row"
-                            justifyContent="space-between"
-                        >
+                        <Box sx={{ pl: "44px" }}>
                             <Typography
                                 level="body-sm"
                                 sx={{
-                                    marginBottom: 0.5,
-                                    ml: "45px",
-                                    fontWeight: "bold",
+                                    fontWeight: 500,
                                     display: "-webkit-box",
-                                    WebkitLineClamp: "2",
+                                    WebkitLineClamp: 2,
                                     WebkitBoxOrient: "vertical",
                                     overflow: "hidden",
                                     textOverflow: "ellipsis",
+                                    opacity: 0.85,
+                                    lineHeight: 1.5,
                                 }}
                             >
                                 {flaggedMessage.contentText}
                             </Typography>
-                        </Stack>
+                        </Box>
                     </Stack>
                 </ListItemButton>
             </ListItem>
-            <ListDivider sx={{ margin: 0 }} />
+            <ListDivider
+                sx={{
+                    margin: 0,
+                    opacity: isDark ? 0.04 : 0.06,
+                }}
+            />
         </React.Fragment>
     );
 };

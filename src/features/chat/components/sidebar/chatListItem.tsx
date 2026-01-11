@@ -18,6 +18,7 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
         incompleteTodoCount,
         isPinnedChat,
         myself,
+        isToDoVisible,
         setIsToDoVisible,
         setMyself,
         useUISM,
@@ -58,10 +59,6 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
     const handleSplitClick = (event: React.MouseEvent) => {
         event.stopPropagation();
         splitOpenHandler(useCM);
-    };
-
-    const handleTodoClick = () => {
-        setIsToDoVisible(true);
     };
 
     // Check if there are unread messages
@@ -119,7 +116,6 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                 }}
                 onClick={() => {
                     onClickHandler(useCM);
-                    setIsToDoVisible(false);
                 }}
             >
                 {/* Unread indicator line */}
@@ -191,7 +187,8 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                                 myself={myself}
                                 onPinClick={handlePinClick}
                                 onSplitClick={handleSplitClick}
-                                onTodoClick={handleTodoClick}
+                                setIsToDoVisible={setIsToDoVisible}
+                                isToDoVisible={isToDoVisible}
                             />
                         </Box>
                     </Stack>

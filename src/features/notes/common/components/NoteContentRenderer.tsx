@@ -1,4 +1,6 @@
-import { Box, IconButton } from "@mui/joy";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import TouchAppOutlinedIcon from "@mui/icons-material/TouchAppOutlined";
+import { Box, Stack, Typography, useColorScheme } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -27,8 +29,10 @@ type NoteContentRendererProps = {
 
 export const NoteContentRenderer = (props: NoteContentRendererProps) => {
     const { myself, setMyself, useUISM, socket, useTEM, usePM, useNM, useCM, useTM } = props;
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
 
-    const renderPlaceholder = (message: string) => (
+    const renderPlaceholder = (message: string, subtitle?: string) => (
         <Box
             sx={{
                 height: "100%",
@@ -36,19 +40,140 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
                 justifyContent: "center",
                 alignItems: "center",
                 width: "100%",
+                background: isDark
+                    ? "radial-gradient(ellipse at center, rgba(251,191,36,0.03) 0%, transparent 70%)"
+                    : "radial-gradient(ellipse at center, rgba(251,191,36,0.04) 0%, transparent 70%)",
+                position: "relative",
+                overflow: "hidden",
             }}
         >
-            <IconButton
-                color="neutral"
-                component="button"
-                variant="soft"
+            {/* Decorative background elements */}
+            <Box
                 sx={{
-                    fontSize: "15px",
-                    padding: "10px",
+                    position: "absolute",
+                    width: 300,
+                    height: 300,
+                    borderRadius: "50%",
+                    background: isDark
+                        ? "radial-gradient(circle, rgba(251,191,36,0.04) 0%, transparent 70%)"
+                        : "radial-gradient(circle, rgba(251,191,36,0.05) 0%, transparent 70%)",
+                    top: "20%",
+                    right: "15%",
+                    pointerEvents: "none",
+                }}
+            />
+            <Box
+                sx={{
+                    position: "absolute",
+                    width: 200,
+                    height: 200,
+                    borderRadius: "50%",
+                    background: isDark
+                        ? "radial-gradient(circle, rgba(245,158,11,0.03) 0%, transparent 70%)"
+                        : "radial-gradient(circle, rgba(245,158,11,0.04) 0%, transparent 70%)",
+                    bottom: "25%",
+                    left: "20%",
+                    pointerEvents: "none",
+                }}
+            />
+
+            {/* Main content */}
+            <Stack
+                alignItems="center"
+                spacing={2.5}
+                sx={{
+                    maxWidth: 280,
+                    textAlign: "center",
+                    zIndex: 1,
                 }}
             >
-                {message}
-            </IconButton>
+                {/* Icon container */}
+                <Box
+                    sx={{
+                        width: 80,
+                        height: 80,
+                        borderRadius: "20px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: isDark
+                            ? "linear-gradient(135deg, rgba(251,191,36,0.12) 0%, rgba(245,158,11,0.12) 100%)"
+                            : "linear-gradient(135deg, rgba(251,191,36,0.08) 0%, rgba(245,158,11,0.08) 100%)",
+                        border: isDark
+                            ? "1px solid rgba(251,191,36,0.15)"
+                            : "1px solid rgba(251,191,36,0.1)",
+                        boxShadow: isDark
+                            ? "0 8px 32px rgba(0,0,0,0.2)"
+                            : "0 8px 32px rgba(251,191,36,0.08)",
+                    }}
+                >
+                    <DescriptionOutlinedIcon
+                        sx={{
+                            fontSize: 36,
+                            color: isDark ? "#fcd34d" : "#f59e0b",
+                            opacity: 0.8,
+                        }}
+                    />
+                </Box>
+
+                {/* Text content */}
+                <Stack spacing={1}>
+                    <Typography
+                        level="h4"
+                        sx={{
+                            fontWeight: 700,
+                            fontSize: "1.25rem",
+                            color: isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.8)",
+                            letterSpacing: "-0.02em",
+                        }}
+                    >
+                        {message}
+                    </Typography>
+                    {subtitle && (
+                        <Typography
+                            level="body-sm"
+                            sx={{
+                                color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.45)",
+                                fontSize: "0.875rem",
+                                lineHeight: 1.5,
+                            }}
+                        >
+                            {subtitle}
+                        </Typography>
+                    )}
+                </Stack>
+
+                {/* Hint indicator */}
+                <Stack
+                    direction="row"
+                    alignItems="center"
+                    spacing={0.5}
+                    sx={{
+                        mt: 1,
+                        px: 1.5,
+                        py: 0.75,
+                        borderRadius: "8px",
+                        background: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
+                    }}
+                >
+                    <TouchAppOutlinedIcon
+                        sx={{
+                            fontSize: 18,
+                            color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.3)",
+                        }}
+                    />
+                    <Typography
+                        level="body-xs"
+                        sx={{
+                            color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.35)",
+                            fontWeight: 500,
+                            fontSize: "0.75rem",
+                        }}
+                    >
+                        Select from sidebar
+                    </Typography>
+                </Stack>
+            </Stack>
         </Box>
     );
 
@@ -60,12 +185,18 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
 
     // Note Home placeholder (only show if no notes are open)
     if (useNM.currentNoteType === 0 && useNM.tabItems.length === 0) {
-        return renderPlaceholder("(TBD) Note Home");
+        return renderPlaceholder(
+            "Welcome to Notes",
+            "Select a category from the sidebar to get started"
+        );
     }
 
     // No notes open at all
     if (useNM.tabItems.length === 0) {
-        return renderPlaceholder("No Note Selected");
+        return renderPlaceholder(
+            "No Note Selected",
+            "Choose a note from the sidebar to start editing"
+        );
     }
 
     // My Note (noteType === 1)
@@ -136,7 +267,7 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
 
     // Shared Note placeholder
     if (useNM.currentNoteType === 4) {
-        return renderPlaceholder("(TBD) Shared Notes");
+        return renderPlaceholder("Shared Notes", "Coming soon - collaborate with your team");
     }
 
     // Fallback: if tabs exist but current note is still loading

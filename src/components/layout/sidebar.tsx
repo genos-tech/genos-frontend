@@ -235,7 +235,7 @@ export const Sidebar = (props: SidebarProps) => {
                 >
                     {NAV_ITEMS.map((item) => {
                         const Icon = item.icon;
-                        const isActive = location.pathname === item.path;
+                        const isActive = location.pathname.includes(item.path);
                         const badgeCount = getBadgeCount(item.id);
                         const color = isDark ? item.colorScheme.dark : item.colorScheme.light;
 

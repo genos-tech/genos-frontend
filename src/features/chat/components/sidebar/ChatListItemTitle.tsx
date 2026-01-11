@@ -1,6 +1,6 @@
 import React from "react";
 import LockOutlineRoundedIcon from "@mui/icons-material/LockOutlineRounded";
-import { Box, Chip, Stack, Typography } from "@mui/joy";
+import { Box, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -42,46 +42,50 @@ export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
 
     return (
         <Box sx={{ minWidth: 0 }}>
-            <Stack direction="row" spacing={0.75} alignItems="center" sx={{ minWidth: 0 }}>
-                {chat.isPrivate && (
-                    <LockOutlineRoundedIcon
+            <Stack direction="column" spacing={0.25} sx={{ minWidth: 0 }}>
+                {/* Name row with lock icon */}
+                <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
+                    {chat.isPrivate && (
+                        <LockOutlineRoundedIcon
+                            sx={{
+                                fontSize: 13,
+                                color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.35)",
+                                flexShrink: 0,
+                            }}
+                        />
+                    )}
+                    <Typography
+                        level="title-sm"
+                        noWrap
                         sx={{
-                            fontSize: 14,
-                            color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.4)",
-                            flexShrink: 0,
+                            fontWeight: 600,
+                            fontSize: "0.85rem",
+                            color: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.85)",
+                            minWidth: 0,
+                            lineHeight: 1.3,
                         }}
-                    />
-                )}
-                <Typography
-                    level="title-sm"
-                    noWrap
-                    sx={{
-                        fontWeight: 600,
-                        fontSize: "0.85rem",
-                        color: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.85)",
-                        minWidth: 0,
-                    }}
-                >
-                    {isYou ? `${chat.chatName} (you)` : chat.chatName}
-                </Typography>
+                    >
+                        {isYou ? `${chat.chatName} (you)` : chat.chatName}
+                    </Typography>
+                </Stack>
 
+                {/* Custom status row - only shown when status exists */}
                 {customStatus && (
-                    <Chip
-                        size="sm"
-                        variant="soft"
+                    <Typography
+                        level="body-xs"
+                        noWrap
                         sx={{
-                            height: 18,
-                            fontSize: "0.65rem",
+                            fontSize: "0.7rem",
                             fontWeight: 500,
-                            borderRadius: "6px",
-                            px: 0.75,
-                            background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
-                            color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.55)",
-                            flexShrink: 0,
+                            color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.45)",
+                            lineHeight: 1.2,
+                            pl: chat.isPrivate ? 2.25 : 0, // Align with name when lock icon present
+                            fontStyle: "italic",
+                            letterSpacing: "0.01em",
                         }}
                     >
                         {customStatus}
-                    </Chip>
+                    </Typography>
                 )}
             </Stack>
         </Box>

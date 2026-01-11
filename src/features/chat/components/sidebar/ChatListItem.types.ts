@@ -29,6 +29,7 @@ export interface ChatListItemProps extends ListItemButtonProps {
     isPinnedChat: boolean;
     incompleteTodoCount: number;
     setIsToDoVisible: (value: boolean) => void;
+    isToDoVisible: boolean;
 }
 
 export interface ChatListItemHandlers {

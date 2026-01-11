@@ -1,7 +1,8 @@
 import { useRef } from "react";
 import { PartialBlock } from "@blocknote/core";
 import CheckIcon from "@mui/icons-material/Check";
-import CloseIcon from "@mui/icons-material/Close";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import NoteAltIcon from "@mui/icons-material/NoteAlt";
 import {
     Box,
@@ -14,6 +15,8 @@ import {
     TabPanel,
     Tabs,
     Tooltip,
+    Typography,
+    useColorScheme,
 } from "@mui/joy";
 
 import { BnTaskNoteEditor } from "../../../../components/editors/bnTaskNoteEditor";
@@ -62,6 +65,8 @@ export const NoteTabs = ({
     currentTaskNoteTitle,
 }: NoteTabsProps) => {
     const titleInputRef = useRef<HTMLInputElement | null>(null);
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
 
     return (
         <Tabs
@@ -77,55 +82,140 @@ export const NoteTabs = ({
         >
             <TabList
                 sx={{
-                    px: "5px",
+                    px: 1,
+                    py: 0.5,
+                    gap: 0.5,
                     overflow: "auto",
                     scrollSnapType: "x mandatory",
+                    background: isDark
+                        ? "linear-gradient(180deg, rgba(0,0,0,0.2) 0%, transparent 100%)"
+                        : "linear-gradient(180deg, rgba(0,0,0,0.02) 0%, transparent 100%)",
+                    borderBottom: isDark
+                        ? "1px solid rgba(255,255,255,0.06)"
+                        : "1px solid rgba(0,0,0,0.06)",
                     "&::-webkit-scrollbar": { display: "none" },
+                    "--ListItem-radius": "8px",
                 }}
             >
                 {useNM.tabItems.map((tab, index) => (
                     <Tooltip
                         key={`tab-tooltip-${index}`}
+                        arrow
+                        placement="bottom"
                         size="sm"
                         title={tab.title}
-                        variant="outlined"
+                        variant="soft"
+                        sx={{
+                            maxWidth: 280,
+                            "& .MuiTooltip-arrow": {
+                                color: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.05)",
+                            },
+                        }}
                     >
                         <Tab
                             key={`tab-${index}`}
-                            variant="soft"
                             sx={{
-                                mx: "2px",
-                                my: "4px",
                                 flex: "none",
                                 scrollSnapAlign: "start",
-                                borderRadius: "5px",
+                                px: 1.5,
+                                py: 0.75,
+                                minHeight: 36,
+                                borderRadius: "8px",
+                                fontSize: "0.8125rem",
+                                fontWeight: 500,
+                                letterSpacing: "-0.01em",
+                                transition: "all 0.15s ease-in-out",
+                                border: "1px solid transparent",
+                                background: "transparent",
+                                color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.55)",
+                                "&:hover": {
+                                    background: isDark
+                                        ? "rgba(255,255,255,0.06)"
+                                        : "rgba(0,0,0,0.04)",
+                                    color: isDark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.8)",
+                                    "& .close-btn": {
+                                        opacity: 1,
+                                    },
+                                },
+                                "&.Mui-selected": {
+                                    background: isDark
+                                        ? "linear-gradient(135deg, rgba(251,191,36,0.12) 0%, rgba(245,158,11,0.08) 100%)"
+                                        : "linear-gradient(135deg, rgba(251,191,36,0.1) 0%, rgba(245,158,11,0.06) 100%)",
+                                    border: isDark
+                                        ? "1px solid rgba(251,191,36,0.2)"
+                                        : "1px solid rgba(251,191,36,0.15)",
+                                    color: isDark ? "#fcd34d" : "#d97706",
+                                    boxShadow: isDark
+                                        ? "0 2px 8px rgba(0,0,0,0.3)"
+                                        : "0 2px 8px rgba(251,191,36,0.15)",
+                                    "& .tab-icon": {
+                                        color: isDark ? "#fcd34d" : "#f59e0b",
+                                    },
+                                    "& .close-btn": {
+                                        opacity: 1,
+                                    },
+                                },
                             }}
                         >
                             <Box
                                 sx={{
                                     display: "flex",
                                     alignItems: "center",
-                                    height: "20px",
-                                    maxWidth: "200px",
+                                    gap: 1,
+                                    maxWidth: 180,
                                 }}
                             >
-                                {tab.title.length > 14
-                                    ? `${tab.title.slice(0, 14)}...`
-                                    : tab.title}
+                                <DescriptionOutlinedIcon
+                                    className="tab-icon"
+                                    sx={{
+                                        fontSize: 16,
+                                        color: isDark
+                                            ? "rgba(255,255,255,0.4)"
+                                            : "rgba(0,0,0,0.4)",
+                                        transition: "color 0.15s ease-in-out",
+                                        flexShrink: 0,
+                                    }}
+                                />
+                                <Typography
+                                    level="body-sm"
+                                    noWrap
+                                    sx={{
+                                        fontSize: "inherit",
+                                        fontWeight: "inherit",
+                                        color: "inherit",
+                                        maxWidth: 120,
+                                    }}
+                                >
+                                    {tab.title}
+                                </Typography>
 
                                 {useNM.tabItems.length > 1 && (
                                     <IconButton
+                                        className="close-btn"
                                         color="neutral"
                                         component="span"
                                         size="sm"
-                                        sx={{ ml: 1 }}
                                         variant="plain"
+                                        sx={{
+                                            "--IconButton-size": "20px",
+                                            minWidth: 20,
+                                            minHeight: 20,
+                                            ml: 0.5,
+                                            opacity: 0,
+                                            transition: "all 0.15s ease-in-out",
+                                            borderRadius: "6px",
+                                            "&:hover": {
+                                                background: isDark
+                                                    ? "rgba(255,255,255,0.1)"
+                                                    : "rgba(0,0,0,0.08)",
+                                            },
+                                        }}
                                         onClick={(e: React.MouseEvent) => {
                                             e.stopPropagation();
                                             onCloseTab(index, Number(tab.noteId));
                                         }}
                                     >
-                                        <CloseIcon />
+                                        <CloseRoundedIcon sx={{ fontSize: 14 }} />
                                     </IconButton>
                                 )}
                             </Box>

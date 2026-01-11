@@ -30,11 +30,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
-import { AllChatProps, ChatProps, MessageProps } from "../../../../types/chat";
-import { toggleMessagesPane } from "../../../../utils/sidebarUtils";
 import { useChatRouting } from "../../hooks/useChatRouting";
-import { popSpecificMessages } from "../../services/popSpecificMessages";
-import { defaultChat } from "../../utils/defaults";
 import { ModalCreateGM } from "../modals/ModalCreateGM";
 import { ModalJoinGM } from "../modals/ModalJoinGM";
 import { ChatList } from "./ChatList";
@@ -93,6 +89,7 @@ type ChatSidebarProps = {
     incompleteTodoCount: number;
     myself: UserProps;
     setIsToDoVisible: (value: boolean) => void;
+    isToDoVisible: boolean;
     setMyself: (value: UserProps) => void;
     useUISM: UIStateManagementState;
     socket: Socket | null;
@@ -108,6 +105,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
         incompleteTodoCount,
         myself,
         setIsToDoVisible,
+        isToDoVisible,
         setMyself,
         useUISM,
         socket,
@@ -148,72 +146,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
         (useCM.unReadChatCounts?.[1] || 0) +
         (useCM.unReadChatCounts?.[2] || 0) +
         (useCM.unReadChatCounts?.[3] || 0);
-
-    const defineNewChat = (lastChat: AllChatProps, messages: MessageProps[]) => {
-        const newMessages: ChatProps = {
-            chatId: lastChat.chatId,
-            chatName: lastChat.chatName,
-            chatType: lastChat.chatType,
-            dmPartnerUser: lastChat.dmPartnerUser,
-            lastReadMessageId: messages[messages.length - 1].messageId,
-            messages: messages,
-            latestMessage: lastChat.latestMessage,
-            latestMessageText: lastChat.latestMessageText,
-            TSLastMessage: lastChat.TSLastMessage,
-            systemUserId: lastChat.systemUserId,
-            project: lastChat.project,
-            isPrivate: lastChat.isPrivate,
-            profileImagePath: lastChat.profileImagePath,
-        };
-        return newMessages;
-    };
-
-    const onChatIconClickedHandler = (chatType: number) => {
-        localStorage.setItem("lastChatType", chatType.toString());
-        let lastChat: AllChatProps | undefined = undefined;
-        let lastChatId: number = -1;
-        let lastChatType: number = -1;
-
-        const storageKeys: Record<number, { id: string; type?: string }> = {
-            1: { id: "lastDMChatId" },
-            2: { id: "lastGMChatId" },
-            3: { id: "lastPMChatId" },
-            4: { id: "lastPinnedChatId", type: "lastPinnedChatType" },
-        };
-
-        const keys = storageKeys[chatType];
-        if (keys) {
-            const lastChatIdStr = localStorage.getItem(keys.id) || "";
-            if (lastChatIdStr !== "") {
-                lastChatId = parseInt(lastChatIdStr);
-                lastChat = useCM.allChats.filter((chat) => chat.chatId === lastChatId)[0];
-                lastChatType = keys.type
-                    ? parseInt(localStorage.getItem(keys.type) || "-1")
-                    : chatType;
-            }
-        }
-
-        if (lastChat !== undefined) {
-            toggleMessagesPane();
-            popSpecificMessages(lastChatId, lastChatType)
-                .then((messages: MessageProps[]) => {
-                    if (messages.length > 0) {
-                        const newChat: ChatProps = defineNewChat(lastChat, messages);
-                        useCM.setCurrentMainChat(newChat);
-
-                        if (useCM.isThreadVisible) {
-                            useCM.setIsMainChatVisible(true);
-                            if (useTM.isCreatingTask.flag === true || useTM.isTaskPreviewVisible) {
-                                useCM.setIsThreadVisible(false);
-                            }
-                        }
-                    }
-                })
-                .catch((error) => console.error(error));
-        } else {
-            useCM.setCurrentMainChat(defaultChat);
-        }
-    };
 
     const handleNavClick = (type: number) => {
         // Navigate via URL - the useChatRouting hook will sync state
@@ -288,7 +220,27 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         justifyContent="space-between"
                         sx={{ mb: 1 }}
                     >
-                        <Stack direction="row" spacing={0.5} sx={{ flexWrap: "wrap", gap: 0.5 }}>
+                        <Stack
+                            direction="row"
+                            spacing={0.5}
+                            sx={{
+                                gap: 0.5,
+                                overflow: "visible", // let Stack overflow remain visible
+                                position: "relative", // ensure context for absolute positioning
+                                "& > .MuiBadge-root": {
+                                    overflow: "visible", // make sure Badge overflow is visible if used directly inside
+                                },
+                                // child container to enable scroll, but let Badge overflow
+                                "& > .scroll-container": {
+                                    display: "flex",
+                                    overflowX: "auto",
+                                    overflowY: "hidden",
+                                    gap: 0.5,
+                                    pb: 0.5, // optional: add space to prevent clipping at top
+                                    position: "relative",
+                                },
+                            }}
+                        >
                             {NAV_ITEMS.map((item) => {
                                 const Icon = item.icon;
                                 const isActive = useCM.currentChatPaneType === item.type;
@@ -300,6 +252,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                         title={item.label}
                                         size="sm"
                                         placement="top"
+                                        variant="outlined"
                                         sx={{ zIndex: 10020 }}
                                     >
                                         <Badge
@@ -519,7 +472,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             useTM={useTM}
                             actions={{ setIsToDoVisible }}
                             data={{ myself, setMyself }}
-                            state={{ showOnlyUnreadItems, incompleteTodoCount }}
+                            state={{ showOnlyUnreadItems, incompleteTodoCount, isToDoVisible }}
                         />
                     )}
 
@@ -536,7 +489,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             useTM={useTM}
                             actions={{ setIsToDoVisible }}
                             data={{ myself, setMyself }}
-                            state={{ showOnlyUnreadItems, incompleteTodoCount }}
+                            state={{ showOnlyUnreadItems, incompleteTodoCount, isToDoVisible }}
                         />
                     )}
 
@@ -553,7 +506,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             useTM={useTM}
                             actions={{ setIsToDoVisible }}
                             data={{ myself, setMyself }}
-                            state={{ showOnlyUnreadItems, incompleteTodoCount }}
+                            state={{ showOnlyUnreadItems, incompleteTodoCount, isToDoVisible }}
                         />
                     )}
 
@@ -570,7 +523,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             useTM={useTM}
                             actions={{ setIsToDoVisible }}
                             data={{ myself, setMyself }}
-                            state={{ showOnlyUnreadItems, incompleteTodoCount }}
+                            state={{ showOnlyUnreadItems, incompleteTodoCount, isToDoVisible }}
                         />
                     )}
 
@@ -587,7 +540,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             useTM={useTM}
                             actions={{ setIsToDoVisible }}
                             data={{ myself, setMyself }}
-                            state={{ showOnlyUnreadItems, incompleteTodoCount }}
+                            state={{ showOnlyUnreadItems, incompleteTodoCount, isToDoVisible }}
                         />
                     )}
                 </Box>

@@ -165,6 +165,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     incompleteTodoCount={incompleteTodoCount}
                                     myself={myself}
                                     setIsToDoVisible={setIsToDoVisible}
+                                    isToDoVisible={isToDoVisible}
                                     setMyself={setMyself}
                                     socket={socket}
                                     useTEM={useTEM}
@@ -321,10 +322,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                         useCM.isChatNoteVisibleInChat === false && (
                             <>
                                 <ResizeHandle key="select-chat-resize-handle" />
-                                <SelectChatPanel
-                                    mainChatPanelSize={mainChatPanelSize}
-                                    setMainChatPanelSize={setMainChatPanelSize}
-                                />
+                                <SelectChatPanel setMainChatPanelSize={setMainChatPanelSize} />
                             </>
                         )}
 

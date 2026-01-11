@@ -3,7 +3,7 @@ import ChecklistRoundedIcon from "@mui/icons-material/ChecklistRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import SwapVertRoundedIcon from "@mui/icons-material/SwapVertRounded";
-import { Badge, Box, IconButton, Stack, Tooltip } from "@mui/joy";
+import { Badge, IconButton, Stack, Tooltip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -206,7 +206,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                         {isToDoVisible === true ? (
                             <Tooltip
                                 size="sm"
-                                title="Back to DM"
+                                title="Back to Chat"
                                 variant="soft"
                                 sx={{ borderRadius: "8px" }}
                             >

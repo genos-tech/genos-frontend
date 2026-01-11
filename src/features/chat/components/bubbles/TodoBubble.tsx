@@ -122,6 +122,7 @@ export const TodoBubble = (props: TodoBubbleProps) => {
                     gap: 0.5,
                     height: 26,
                     px: 1,
+                    ml: 0.5,
                     borderRadius: "8px",
                     fontSize: "0.7rem",
                     fontWeight: 600,

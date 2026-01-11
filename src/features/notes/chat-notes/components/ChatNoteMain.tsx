@@ -15,7 +15,6 @@ import { UserProps } from "../../../../types/admin";
 import { ChatNoteProps } from "../../../../types/notes";
 import { getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
 import { ChatNoteEditor } from "./ChatNoteEditor";
-import { ChatNoteEmptyState } from "./ChatNoteEmptyState";
 import { ChatNoteHeader } from "./ChatNoteHeader";
 import { ChatNoteTabList } from "./ChatNoteTabList";
 
@@ -143,11 +142,6 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
     const handleDeleteNote = () => {
         setOpenDeleteNote(true);
     };
-
-    // If no tabs at all, show empty state
-    if (useNM.tabItems.length === 0) {
-        return <ChatNoteEmptyState />;
-    }
 
     // If tabs exist but currentChatNote is not loaded yet, return null
     if (useNM.currentChatNote === null) {
