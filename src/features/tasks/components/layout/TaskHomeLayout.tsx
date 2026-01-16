@@ -100,7 +100,7 @@ export const TaskHomeLayout = ({
                 borderRight: mode === "dark" ? "2px black inset" : "2px lightgrey inset",
             }}
         >
-            {useTM.isDashboardVisible && <TaskDashboard />}
+            {useTM.isDashboardVisible && <TaskDashboard useTM={useTM} usePM={usePM} />}
             {useTM.isTaskHomeVisible && (
                 <>
                     <TaskHomeHeader
@@ -337,7 +337,9 @@ export const TaskHomeLayout = ({
 
             {usePM.currentProject && usePM.currentProject.projectId ? (
                 <>
-                    {(useTM.isTaskHomeVisible || useTM.isSprintBoardVisible) && (
+                    {(useTM.isTaskHomeVisible ||
+                        useTM.isSprintBoardVisible ||
+                        useTM.isDashboardVisible) && (
                         <>
                             {renderResizeHandle()}
                             <Panel id={"2"} maxSize={80} minSize={30} order={2}>

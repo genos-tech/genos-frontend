@@ -72,7 +72,6 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                     <ListItemButton
                         onClick={() => {
                             setOpen(!open);
-                            useTM.setIsDashboardVisible(false);
                         }}
                         sx={{
                             borderRadius: "10px",

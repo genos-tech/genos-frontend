@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import { Box, Divider, List, Sheet, Typography } from "@mui/joy";
+import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
+import { Box, Divider, List, ListItem, ListItemContent, Sheet, Typography } from "@mui/joy";
+import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -159,8 +161,79 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                         "--ListItem-radius": "8px",
                     }}
                 >
+                    {/* Home Item */}
+                    <ListItem>
+                        <ListItemButton
+                            selected={useTM.isDashboardVisible}
+                            onClick={() => {
+                                useTM.setIsDashboardVisible(true);
+                                useTM.setIsTaskHomeVisible(false);
+                                useTM.setIsSprintBoardVisible(false);
+                            }}
+                            sx={{
+                                borderRadius: "10px",
+                                py: 1,
+                                px: 1.5,
+                                gap: 1.5,
+                                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                "&:hover": {
+                                    backgroundColor: isDark
+                                        ? "rgba(255,255,255,0.06)"
+                                        : "rgba(0,0,0,0.04)",
+                                },
+                                "&.Mui-selected": {
+                                    backgroundColor: isDark
+                                        ? "rgba(59,130,246,0.15)"
+                                        : "rgba(59,130,246,0.1)",
+                                    "&:hover": {
+                                        backgroundColor: isDark
+                                            ? "rgba(59,130,246,0.2)"
+                                            : "rgba(59,130,246,0.15)",
+                                    },
+                                },
+                            }}
+                        >
+                            <Box
+                                sx={{
+                                    width: 28,
+                                    height: 28,
+                                    borderRadius: "8px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    backgroundColor: isDark
+                                        ? "rgba(255,255,255,0.08)"
+                                        : "rgba(0,0,0,0.05)",
+                                    transition: "all 0.2s ease",
+                                }}
+                            >
+                                <HomeRoundedIcon
+                                    sx={{
+                                        fontSize: 16,
+                                        color: isDark
+                                            ? "rgba(255,255,255,0.75)"
+                                            : "rgba(0,0,0,0.65)",
+                                    }}
+                                />
+                            </Box>
+                            <ListItemContent>
+                                <Typography
+                                    level="body-sm"
+                                    sx={{
+                                        fontWeight: 500,
+                                        color: isDark
+                                            ? "rgba(255,255,255,0.9)"
+                                            : "rgba(0,0,0,0.8)",
+                                    }}
+                                >
+                                    Home
+                                </Typography>
+                            </ListItemContent>
+                        </ListItemButton>
+                    </ListItem>
+
                     {/* Section Header - Views */}
-                    <Box sx={{ pt: 0.5, pb: 0.5, px: 1 }}>
+                    <Box sx={{ pt: 1.5, pb: 0.5, px: 1 }}>
                         <Typography
                             level="body-xs"
                             sx={{

@@ -125,6 +125,7 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                 selected={isSelected}
                                                 onClick={() => {
                                                     setOpen(!open);
+                                                    useTM.setIsDashboardVisible(false);
                                                     setIsTaskHomeVisible(true);
                                                     useTM.setIsSprintBoardVisible(false);
 
