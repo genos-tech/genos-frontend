@@ -57,86 +57,88 @@ export const App = () => {
         socket: socketInstance,
     });
 
-    return useUISM.isLoading ? (
-        <InitialLoad
-            myself={myself}
-            setCurrentMainChat={useCM.setCurrentMainChat}
-            setIsLoading={useUISM.setIsLoading}
-        />
-    ) : (
-        <div className="main-container">
-            <CssVarsProvider disableTransitionOnChange>
-                <CssBaseline />
-                <Routes>
-                    <Route
-                        path="inbox/*"
-                        element={
-                            <InboxHome
-                                useCM={useCM}
-                                useIM={useIM}
-                                myself={myself}
-                                setMyself={setMyself}
-                                socket={socketInstance}
-                                useTEM={useTEM}
-                                useUISM={useUISM}
-                            />
-                        }
-                    />
-                    <Route
-                        path="chat/*"
-                        element={
-                            <ChatHome
-                                useCM={useCM}
-                                useIM={useIM}
-                                myself={myself}
-                                useNM={useNM}
-                                usePM={usePM}
-                                setMyself={setMyself}
-                                socket={socketInstance}
-                                useTEM={useTEM}
-                                useTM={useTM}
-                                useUISM={useUISM}
-                            />
-                        }
-                    />
-                    <Route
-                        path="tasks/*"
-                        element={
-                            <TaskHome
-                                useCM={useCM}
-                                useIM={useIM}
-                                myself={myself}
-                                useNM={useNM}
-                                usePM={usePM}
-                                setMyself={setMyself}
-                                socket={socketInstance}
-                                useTEM={useTEM}
-                                useTM={useTM}
-                                useUISM={useUISM}
-                            />
-                        }
-                    />
-                    <Route
-                        path="notes/*"
-                        element={
-                            <NoteHome
-                                useCM={useCM}
-                                useIM={useIM}
-                                myself={myself}
-                                useNM={useNM}
-                                usePM={usePM}
-                                setMyself={setMyself}
-                                socket={socketInstance}
-                                useTEM={useTEM}
-                                useTM={useTM}
-                                useUISM={useUISM}
-                            />
-                        }
-                    />
-                    {/* Default redirect to inbox */}
-                    <Route path="" element={<Navigate to="inbox" replace />} />
-                </Routes>
-            </CssVarsProvider>
-        </div>
+    return (
+        <CssVarsProvider disableTransitionOnChange>
+            <CssBaseline />
+            {useUISM.isLoading ? (
+                <InitialLoad
+                    myself={myself}
+                    setCurrentMainChat={useCM.setCurrentMainChat}
+                    setIsLoading={useUISM.setIsLoading}
+                />
+            ) : (
+                <div className="main-container">
+                    <Routes>
+                        <Route
+                            path="inbox/*"
+                            element={
+                                <InboxHome
+                                    useCM={useCM}
+                                    useIM={useIM}
+                                    myself={myself}
+                                    setMyself={setMyself}
+                                    socket={socketInstance}
+                                    useTEM={useTEM}
+                                    useUISM={useUISM}
+                                />
+                            }
+                        />
+                        <Route
+                            path="chat/*"
+                            element={
+                                <ChatHome
+                                    useCM={useCM}
+                                    useIM={useIM}
+                                    myself={myself}
+                                    useNM={useNM}
+                                    usePM={usePM}
+                                    setMyself={setMyself}
+                                    socket={socketInstance}
+                                    useTEM={useTEM}
+                                    useTM={useTM}
+                                    useUISM={useUISM}
+                                />
+                            }
+                        />
+                        <Route
+                            path="tasks/*"
+                            element={
+                                <TaskHome
+                                    useCM={useCM}
+                                    useIM={useIM}
+                                    myself={myself}
+                                    useNM={useNM}
+                                    usePM={usePM}
+                                    setMyself={setMyself}
+                                    socket={socketInstance}
+                                    useTEM={useTEM}
+                                    useTM={useTM}
+                                    useUISM={useUISM}
+                                />
+                            }
+                        />
+                        <Route
+                            path="notes/*"
+                            element={
+                                <NoteHome
+                                    useCM={useCM}
+                                    useIM={useIM}
+                                    myself={myself}
+                                    useNM={useNM}
+                                    usePM={usePM}
+                                    setMyself={setMyself}
+                                    socket={socketInstance}
+                                    useTEM={useTEM}
+                                    useTM={useTM}
+                                    useUISM={useUISM}
+                                />
+                            }
+                        />
+                        {/* Default redirect to inbox */}
+                        <Route path="" element={<Navigate to="inbox" replace />} />
+                    </Routes>
+                </div>
+            )}
+        </CssVarsProvider>
     );
 };
