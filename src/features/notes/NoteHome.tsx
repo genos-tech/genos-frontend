@@ -1,5 +1,5 @@
-import { Box, CssBaseline } from "@mui/joy";
-import { CssVarsProvider, useColorScheme } from "@mui/joy/styles";
+import { Box } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { Socket } from "socket.io-client";
 
@@ -94,53 +94,50 @@ export const NoteHome = (props: NoteHomeProps) => {
     };
 
     return (
-        <CssVarsProvider disableTransitionOnChange>
-            <CssBaseline />
-            <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
-                <Sidebar
+        <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
+            <Sidebar
+                useCM={useCM}
+                useIM={useIM}
+                myself={myself}
+                setMyself={setMyself}
+                socket={socket}
+                useTEM={useTEM}
+                useUISM={useUISM}
+            />
+
+            <PanelGroup direction="horizontal">
+                <Panel id={"1"} maxSize={25} minSize={10} order={1}>
+                    <Box
+                        sx={{
+                            height: "100%",
+                            width: "100%",
+                            borderColor: mode === "dark" ? "black" : "white",
+                            borderRight:
+                                mode === "dark" ? "2px black inset" : "2px lightgrey inset",
+                        }}
+                    >
+                        <NoteSidebar useNM={useNM} />
+                    </Box>
+                </Panel>
+
+                <ResizeHandle />
+
+                {renderMainContent()}
+
+                <TaskPreviewPanel
                     useCM={useCM}
-                    useIM={useIM}
                     myself={myself}
+                    useNM={useNM}
+                    usePM={usePM}
                     setMyself={setMyself}
                     socket={socket}
                     useTEM={useTEM}
+                    useTM={useTM}
                     useUISM={useUISM}
                 />
+            </PanelGroup>
 
-                <PanelGroup direction="horizontal">
-                    <Panel id={"1"} maxSize={25} minSize={10} order={1}>
-                        <Box
-                            sx={{
-                                height: "100%",
-                                width: "100%",
-                                borderColor: mode === "dark" ? "black" : "white",
-                                borderRight:
-                                    mode === "dark" ? "2px black inset" : "2px lightgrey inset",
-                            }}
-                        >
-                            <NoteSidebar useNM={useNM} />
-                        </Box>
-                    </Panel>
-
-                    <ResizeHandle />
-
-                    {renderMainContent()}
-
-                    <TaskPreviewPanel
-                        useCM={useCM}
-                        myself={myself}
-                        useNM={useNM}
-                        usePM={usePM}
-                        setMyself={setMyself}
-                        socket={socket}
-                        useTEM={useTEM}
-                        useTM={useTM}
-                        useUISM={useUISM}
-                    />
-                </PanelGroup>
-
-                <ResizeHandleStyles />
-            </Box>
-        </CssVarsProvider>
+            <ResizeHandleStyles />
+        </Box>
     );
 };

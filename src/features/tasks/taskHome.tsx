@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { Box, CssBaseline } from "@mui/joy";
-import { CssVarsProvider } from "@mui/joy/styles";
+import { Box } from "@mui/joy";
 
 import { TaskHomeLayout } from "./components/layout/TaskHomeLayout";
 import { TaskHomeModals } from "./components/modals/TaskHomeModals";
@@ -53,51 +52,49 @@ export const TaskHome = (props: TaskHomeProps) => {
     };
 
     return (
-        <CssVarsProvider disableTransitionOnChange>
-            <CssBaseline />
-            <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
-                <Sidebar
-                    useCM={useCM}
-                    useIM={useIM}
-                    myself={myself}
-                    setMyself={setMyself}
-                    socket={socket}
-                    useTEM={useTEM}
-                    useUISM={useUISM}
-                />
+        <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
+            <Sidebar
+                useCM={useCM}
+                useIM={useIM}
+                myself={myself}
+                setMyself={setMyself}
+                socket={socket}
+                useTEM={useTEM}
+                useUISM={useUISM}
+            />
 
-                <TaskHomeLayout
-                    useCM={useCM}
-                    myself={myself}
-                    useNM={useNM}
-                    usePM={usePM}
-                    setMyself={setMyself}
-                    socket={socket}
-                    useTEM={useTEM}
-                    useTM={useTM}
-                    useUISM={useUISM}
-                    onCloseTaskHome={handleCloseTaskHome}
-                    onCreateProject={handleCreateProject}
-                    onCreateTag={handleCreateTag}
-                    onDeleteProject={handleDeleteProject}
-                    setOpenJoinProject={setOpenJoinProject}
-                />
+            <TaskHomeLayout
+                useCM={useCM}
+                myself={myself}
+                useNM={useNM}
+                usePM={usePM}
+                setMyself={setMyself}
+                socket={socket}
+                useTEM={useTEM}
+                useTM={useTM}
+                useUISM={useUISM}
+                onCloseTaskHome={handleCloseTaskHome}
+                onCreateProject={handleCreateProject}
+                onCreateTag={handleCreateTag}
+                onDeleteProject={handleDeleteProject}
+                setOpenJoinProject={setOpenJoinProject}
+            />
 
-                <TaskHomeModals
-                    useCM={useCM}
-                    myself={myself}
-                    openDeleteProject={openDeleteProject}
-                    openJoinProject={openJoinProject}
-                    usePM={usePM}
-                    setOpenDeleteProject={setOpenDeleteProject}
-                    setOpenJoinProject={setOpenJoinProject}
-                    socket={socket}
-                    useTM={useTM}
-                />
+            <TaskHomeModals
+                useCM={useCM}
+                myself={myself}
+                openDeleteProject={openDeleteProject}
+                openJoinProject={openJoinProject}
+                usePM={usePM}
+                setOpenDeleteProject={setOpenDeleteProject}
+                setOpenJoinProject={setOpenJoinProject}
+                socket={socket}
+                useTM={useTM}
+            />
 
-                {/* Hover Animation with CSS */}
-                <style>
-                    {`
+            {/* Hover Animation with CSS */}
+            <style>
+                {`
                 .task-resize-handle {
                     transition: all 0.3s ease-in-out;
                 }
@@ -106,8 +103,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                     width: 8px !important;
                 }
                 `}
-                </style>
-            </Box>
-        </CssVarsProvider>
+            </style>
+        </Box>
     );
 };
