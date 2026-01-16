@@ -1,6 +1,16 @@
 import { memo, ReactNode, useCallback, useEffect, useState } from "react";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
-import { Box, List, ListItem, ListItemButton, ListItemContent, Typography } from "@mui/joy";
+import StarOutlineRoundedIcon from "@mui/icons-material/StarOutlineRounded";
+import StarRoundedIcon from "@mui/icons-material/StarRounded";
+import {
+    Box,
+    IconButton,
+    List,
+    ListItem,
+    ListItemButton,
+    ListItemContent,
+    Typography,
+} from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
@@ -85,6 +95,14 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
         setOpen((prev) => !prev);
     };
 
+    // Check if this note is favorited
+    const isFavorited = useNM.isNoteFavorited(node.noteId, noteType);
+
+    const handleFavoriteClick = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        await useNM.toggleFavorite(node.noteId, noteType);
+    };
+
     if (!currentChain) return null;
 
     return (
@@ -134,6 +152,9 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                             backgroundColor: isDark
                                 ? "rgba(255,255,255,0.05)"
                                 : "rgba(0,0,0,0.03)",
+                            "& .favorite-btn": {
+                                opacity: 1,
+                            },
                         },
                         "&.Mui-selected": {
                             backgroundColor: isDark
@@ -214,6 +235,38 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                             {node.title || "Untitled"}
                         </Typography>
                     </ListItemContent>
+
+                    {/* Favorite toggle button */}
+                    <IconButton
+                        className="favorite-btn"
+                        size="sm"
+                        variant="plain"
+                        color="warning"
+                        onClick={handleFavoriteClick}
+                        sx={{
+                            opacity: isFavorited ? 1 : 0,
+                            minWidth: 20,
+                            minHeight: 20,
+                            borderRadius: "4px",
+                            transition: "opacity 0.15s ease, background-color 0.15s ease",
+                            "&:hover": {
+                                backgroundColor: isDark
+                                    ? "rgba(245,158,11,0.15)"
+                                    : "rgba(245,158,11,0.1)",
+                            },
+                        }}
+                    >
+                        {isFavorited ? (
+                            <StarRoundedIcon sx={{ fontSize: 14, color: "#f59e0b" }} />
+                        ) : (
+                            <StarOutlineRoundedIcon
+                                sx={{
+                                    fontSize: 14,
+                                    color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.3)",
+                                }}
+                            />
+                        )}
+                    </IconButton>
                 </ListItemButton>
 
                 {/* Children with smooth animation */}
