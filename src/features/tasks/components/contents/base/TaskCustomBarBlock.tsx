@@ -1,19 +1,16 @@
 import CheckIcon from "@mui/icons-material/Check";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import { IconButton, Stack } from "@mui/joy";
-
-import { TaskProps } from "../../../../../types/tasks";
+import { Chip, Stack } from "@mui/joy";
 
 type TaskCustomBarBlockProps = {
-    taskContent: TaskProps;
-    setTaskContent: (value: TaskProps) => void;
-    setTaskUpdated: (value: boolean) => void;
-    setTaskStatusUpdated: (value: boolean) => void;
     taskBodySaved: boolean;
 };
+
 export const TaskCustomBarBlock = (props: TaskCustomBarBlockProps) => {
-    const { taskContent, setTaskContent, setTaskUpdated, setTaskStatusUpdated, taskBodySaved } =
-        props;
+    const { taskBodySaved } = props;
+
+    if (!taskBodySaved) {
+        return null;
+    }
 
     return (
         <Stack
@@ -21,92 +18,29 @@ export const TaskCustomBarBlock = (props: TaskCustomBarBlockProps) => {
             sx={{
                 width: "100%",
                 alignItems: "center",
-                gap: 1,
+                gap: 1.5,
                 justifyContent: "flex-end",
                 pb: 1,
             }}
         >
-            {taskBodySaved === true && (
-                <IconButton
-                    color="neutral"
-                    component="p"
-                    size="sm"
-                    variant="plain"
-                    sx={{
-                        fontSize: "14px",
-                        paddingX: "5px",
-                    }}
-                >
-                    <CheckIcon sx={{ fontSize: "15px" }} />
-                    Saved
-                </IconButton>
-            )}
-
-            {/* Next Status IconButton */}
-            {taskContent.status.status === "Open" || taskContent.status.status === "Pending" ? (
-                <IconButton
-                    color="warning"
-                    component="p"
-                    size="sm"
-                    variant="outlined"
-                    sx={{
-                        fontSize: "14px",
-                        paddingX: "7px",
-                    }}
-                    onClick={() => {
-                        (async () => {
-                            setTaskContent({
-                                ...taskContent,
-                                status: {
-                                    code: 0,
-                                    status: "WIP",
-                                    color: "#ff8c00",
-                                    textColor: "white",
-                                },
-                            });
-                        })();
-                        setTaskUpdated(true);
-                        setTaskStatusUpdated(true);
-                    }}
-                >
-                    <CheckCircleOutlineIcon sx={{ fontSize: "15px" }} />
-                    Mark as WIP
-                </IconButton>
-            ) : (
-                <div></div>
-            )}
-            {taskContent.status.status === "WIP" ? (
-                <IconButton
-                    color="success"
-                    component="p"
-                    size="sm"
-                    variant="outlined"
-                    sx={{
-                        fontSize: "14px",
-                        paddingX: "7px",
-                    }}
-                    onClick={() => {
-                        (async () => {
-                            setTaskContent({
-                                ...taskContent,
-                                status: {
-                                    code: 0,
-                                    status: "Closed",
-                                    color: "#1dc200",
-                                    textColor: "white",
-                                },
-                            });
-                        })();
-                        setTaskUpdated(true);
-                        setTaskStatusUpdated(true);
-                    }}
-                >
-                    <CheckCircleOutlineIcon sx={{ fontSize: "15px" }} />
-                    Mark as Closed
-                </IconButton>
-            ) : (
-                <div></div>
-            )}
+            <Chip
+                size="sm"
+                variant="soft"
+                color="neutral"
+                startDecorator={<CheckIcon sx={{ fontSize: 14 }} />}
+                sx={{
+                    fontWeight: 500,
+                    fontSize: "13px",
+                    "--Chip-paddingInline": "10px",
+                    animation: "fadeIn 0.3s ease-in-out",
+                    "@keyframes fadeIn": {
+                        from: { opacity: 0, transform: "scale(0.95)" },
+                        to: { opacity: 1, transform: "scale(1)" },
+                    },
+                }}
+            >
+                Saved
+            </Chip>
         </Stack>
     );
 };

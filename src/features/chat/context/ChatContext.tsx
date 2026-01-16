@@ -19,6 +19,8 @@ interface ChatContextType {
     useTEM: TeamManagementState;
     useNM: NoteManagementState;
     useTM: TaskManagementState;
+    currentThreadTaskId: number;
+    setCurrentThreadTaskId: (id: number) => void;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -42,6 +44,8 @@ interface ChatProviderProps {
     useTEM: TeamManagementState;
     useNM: NoteManagementState;
     useTM: TaskManagementState;
+    currentThreadTaskId: number;
+    setCurrentThreadTaskId: (id: number) => void;
 }
 
 export const ChatProvider = ({
@@ -55,6 +59,8 @@ export const ChatProvider = ({
     useTEM,
     useNM,
     useTM,
+    currentThreadTaskId,
+    setCurrentThreadTaskId,
 }: ChatProviderProps) => {
     return (
         <ChatContext.Provider
@@ -68,6 +74,8 @@ export const ChatProvider = ({
                 useTEM,
                 useNM,
                 useTM,
+                currentThreadTaskId,
+                setCurrentThreadTaskId,
             }}
         >
             {children}

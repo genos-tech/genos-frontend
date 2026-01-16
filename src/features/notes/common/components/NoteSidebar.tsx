@@ -112,9 +112,9 @@ function getChatTypeLabel(chatType: number): string {
         case 1:
             return "DM";
         case 2:
-            return "PM";
-        case 3:
             return "GM";
+        case 3:
+            return "PM";
         default:
             return "Chat";
     }
@@ -207,67 +207,57 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     );
 
     // Render grouped task notes (Project → Task → Notes)
-    const renderGroupedTaskNotes = () => (
-        <>
-            {groupedTaskNotes.map((projectGroup) => (
-                <GroupedNoteSection
-                    key={`project-${projectGroup.projectId}`}
-                    groupKey={`project-${projectGroup.projectId}`}
-                    groupLabel={projectGroup.projectName}
-                    defaultExpanded={projectGroup.tasks.some((taskGroup) =>
-                        taskGroup.notes.some(
+    const renderGroupedTaskNotes = () =>
+        groupedTaskNotes.map((projectGroup) => (
+            <GroupedNoteSection
+                key={`project-${projectGroup.projectId}`}
+                groupKey={`project-${projectGroup.projectId}`}
+                groupLabel={projectGroup.projectName}
+                defaultExpanded={projectGroup.tasks.some((taskGroup) =>
+                    taskGroup.notes.some((note) => note.noteId === useNM.currentTaskNote?.noteId)
+                )}
+            >
+                {projectGroup.tasks.map((taskGroup) => (
+                    <GroupedNoteSection
+                        key={`task-${projectGroup.projectId}-${taskGroup.taskId}`}
+                        groupKey={`task-${projectGroup.projectId}-${taskGroup.taskId}`}
+                        groupLabel={`#${taskGroup.taskId}`}
+                        subLabel={taskGroup.taskTitle}
+                        defaultExpanded={taskGroup.notes.some(
                             (note) => note.noteId === useNM.currentTaskNote?.noteId
-                        )
-                    )}
-                >
-                    {projectGroup.tasks.map((taskGroup) => (
-                        <GroupedNoteSection
-                            key={`task-${projectGroup.projectId}-${taskGroup.taskId}`}
-                            groupKey={`task-${projectGroup.projectId}-${taskGroup.taskId}`}
-                            groupLabel={`#${taskGroup.taskId}`}
-                            subLabel={taskGroup.taskTitle}
-                            defaultExpanded={taskGroup.notes.some(
-                                (note) => note.noteId === useNM.currentTaskNote?.noteId
-                            )}
-                        >
-                            {taskGroup.notes.map((note) => renderTaskNoteTreeItem(note))}
-                        </GroupedNoteSection>
-                    ))}
-                </GroupedNoteSection>
-            ))}
-        </>
-    );
+                        )}
+                    >
+                        {taskGroup.notes.map((note) => renderTaskNoteTreeItem(note))}
+                    </GroupedNoteSection>
+                ))}
+            </GroupedNoteSection>
+        ));
 
     // Render grouped chat notes (Chat Type → Chat Name → Notes)
-    const renderGroupedChatNotes = () => (
-        <>
-            {groupedChatNotes.map((chatTypeGroup) => (
-                <GroupedNoteSection
-                    key={`chatType-${chatTypeGroup.chatType}`}
-                    groupKey={`chatType-${chatTypeGroup.chatType}`}
-                    groupLabel={chatTypeGroup.chatTypeName}
-                    defaultExpanded={chatTypeGroup.chats.some((chatGroup) =>
-                        chatGroup.notes.some(
+    const renderGroupedChatNotes = () =>
+        groupedChatNotes.map((chatTypeGroup) => (
+            <GroupedNoteSection
+                key={`chatType-${chatTypeGroup.chatType}`}
+                groupKey={`chatType-${chatTypeGroup.chatType}`}
+                groupLabel={chatTypeGroup.chatTypeName}
+                defaultExpanded={chatTypeGroup.chats.some((chatGroup) =>
+                    chatGroup.notes.some((note) => note.noteId === useNM.currentChatNote?.noteId)
+                )}
+            >
+                {chatTypeGroup.chats.map((chatGroup) => (
+                    <GroupedNoteSection
+                        key={`chat-${chatTypeGroup.chatType}-${chatGroup.chatId}`}
+                        groupKey={`chat-${chatTypeGroup.chatType}-${chatGroup.chatId}`}
+                        groupLabel={chatGroup.chatName}
+                        defaultExpanded={chatGroup.notes.some(
                             (note) => note.noteId === useNM.currentChatNote?.noteId
-                        )
-                    )}
-                >
-                    {chatTypeGroup.chats.map((chatGroup) => (
-                        <GroupedNoteSection
-                            key={`chat-${chatTypeGroup.chatType}-${chatGroup.chatId}`}
-                            groupKey={`chat-${chatTypeGroup.chatType}-${chatGroup.chatId}`}
-                            groupLabel={chatGroup.chatName}
-                            defaultExpanded={chatGroup.notes.some(
-                                (note) => note.noteId === useNM.currentChatNote?.noteId
-                            )}
-                        >
-                            {chatGroup.notes.map((note) => renderChatNoteTreeItem(note))}
-                        </GroupedNoteSection>
-                    ))}
-                </GroupedNoteSection>
-            ))}
-        </>
-    );
+                        )}
+                    >
+                        {chatGroup.notes.map((note) => renderChatNoteTreeItem(note))}
+                    </GroupedNoteSection>
+                ))}
+            </GroupedNoteSection>
+        ));
 
     // Note type configurations for cleaner code
     const noteTypesConfig = [

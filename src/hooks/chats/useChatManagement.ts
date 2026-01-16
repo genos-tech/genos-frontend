@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { loadSpecificThreadMessages } from "../../features/chat/services/loadSpecificThreadMessages";
 import { popActivityMessages } from "../../features/chat/services/popActivityMessages";
@@ -15,6 +16,13 @@ import {
     ThreadProps,
 } from "../../types/chat";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
+
+// Chat type constants for URL routing
+const CHAT_TYPE_REVERSE_MAP: Record<number, string> = {
+    1: "dm",
+    2: "gm",
+    3: "pm",
+};
 
 export interface ChatManagementState {
     isMainChatVisible: boolean;
@@ -73,6 +81,8 @@ export const useChatManagement = (
     myself: UserProps,
     accessToken: string | null
 ): ChatManagementState => {
+    const navigate = useNavigate();
+
     // Chat visibility states
     const [isMainChatVisible, setIsMainChatVisible] = useState(true);
     const [isSubChatVisible, setIsSubChatVisible] = useState(false);
@@ -233,14 +243,32 @@ export const useChatManagement = (
         setCurrentPreviewTaskId: (id: number) => void,
         setCurrentProject: (project: any) => void
     ) => {
+        // Get the URL path for the chat type
+        const chatTypePath = CHAT_TYPE_REVERSE_MAP[chatType];
+        if (!chatTypePath) {
+            console.error(`Invalid chat type: ${chatType}`);
+            return;
+        }
+
         setOpeningService(1); // move to chat
         setIsMainChatVisible(false);
         setIsChatNoteVisibleInChat(openTaskNoteInChat);
         setIsThreadTaskVisible(openThreadTaskPreview);
 
-        const targetChat: AllChatProps = allChats.filter(
+        const targetChat: AllChatProps | undefined = allChats.find(
             (chat) => chat.chatType === chatType && chat.chatId === chatId
-        )[0];
+        );
+
+        if (!targetChat) {
+            console.error(`Chat not found: chatType=${chatType}, chatId=${chatId}`);
+            // Still navigate to the chat page - the routing hook will handle loading
+            if (threadId > 0) {
+                navigate(`/home/chat/${chatTypePath}/${chatId}/thread/${threadId}`);
+            } else {
+                navigate(`/home/chat/${chatTypePath}/${chatId}`);
+            }
+            return;
+        }
 
         try {
             const messages = await popSpecificMessages(chatId, chatType);
@@ -258,12 +286,23 @@ export const useChatManagement = (
                         setCurrentPreviewTaskId(newThread.taskId);
                     }
                 }
+                setIsMainChatVisible(true);
                 setIsThreadVisible(true);
+                // Navigate to thread URL
+                navigate(`/home/chat/${chatTypePath}/${chatId}/thread/${threadId}`);
             } else {
                 setIsMainChatVisible(true);
+                // Navigate to chat URL
+                navigate(`/home/chat/${chatTypePath}/${chatId}`);
             }
         } catch (error) {
             console.error(error);
+            // Still navigate on error to show the chat page
+            if (threadId > 0) {
+                navigate(`/home/chat/${chatTypePath}/${chatId}/thread/${threadId}`);
+            } else {
+                navigate(`/home/chat/${chatTypePath}/${chatId}`);
+            }
         }
     };
 

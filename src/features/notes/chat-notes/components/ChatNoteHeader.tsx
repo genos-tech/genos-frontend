@@ -384,7 +384,7 @@ export const ChatNoteHeader = ({
                         }}
                     >
                         {/* Copy Note Link */}
-                        {useNM.currentChatNote && (
+                        {useNM.currentChatNote ? (
                             <MenuItem
                                 onClick={async () => {
                                     const note = useNM.currentChatNote;
@@ -461,7 +461,7 @@ export const ChatNoteHeader = ({
                                     Copy note link
                                 </Typography>
                             </MenuItem>
-                        )}
+                        ) : null}
 
                         {/* Child Note */}
                         <MenuItem

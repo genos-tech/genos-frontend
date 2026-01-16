@@ -2,9 +2,7 @@ import { useEffect, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import {
     Box,
-    Button,
     Chip,
-    Divider,
     IconButton,
     List,
     ListItem,
@@ -70,6 +68,7 @@ const HEADER_STYLES = {
 };
 
 type TaskSubTasksBlockProps = {
+    SectionHeader: React.ComponentType<{ children: React.ReactNode; isDark: boolean }>;
     useTEM: TeamManagementState;
     socket: Socket | null;
     myself: UserProps;
@@ -80,7 +79,17 @@ type TaskSubTasksBlockProps = {
     useTM: TaskManagementState;
 };
 export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
-    const { useTEM, socket, myself, setMyself, currentTaskContent, useUISM, useCM, useTM } = props;
+    const {
+        SectionHeader,
+        useTEM,
+        socket,
+        myself,
+        setMyself,
+        currentTaskContent,
+        useUISM,
+        useCM,
+        useTM,
+    } = props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -117,6 +126,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                 spacing={0}
                 sx={{ alignItems: "center", justifyContent: "space-between" }}
             >
+                <SectionHeader isDark={isDark}>Sub Tasks</SectionHeader>
                 <IconButton
                     size="sm"
                     sx={{
@@ -125,7 +135,6 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                         borderRadius: "10px",
                         px: 1.5,
                         py: 0.75,
-                        mb: 1.5,
                         fontSize: "13px",
                         fontWeight: 600,
                         gap: 0.5,

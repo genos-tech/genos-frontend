@@ -57,6 +57,7 @@ export const ChatHome = (props: ChatHomeProps) => {
     const [currentMainChatId, setCurrentMainChatId] = useState<number>(-1);
     const [currentSubChatId, setCurrentSubChatId] = useState<number>(-1);
     const [currentThreadChatId, setCurrentThreadChatId] = useState<number>(-1);
+    const [currentThreadTaskId, setCurrentThreadTaskId] = useState<number>(-1);
     const [isToDoVisible, setIsToDoVisible] = useState<boolean>(
         localStorage.getItem("isToDoVisible") === "true"
     );
@@ -123,6 +124,8 @@ export const ChatHome = (props: ChatHomeProps) => {
             useTEM={useTEM}
             useTM={useTM}
             useUISM={useUISM}
+            currentThreadTaskId={currentThreadTaskId}
+            setCurrentThreadTaskId={setCurrentThreadTaskId}
         >
             <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
                 <Sidebar

@@ -442,13 +442,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                             {/* Body Section */}
                             <SectionHeader isDark={isDark}>Description</SectionHeader>
                             {/* Custom Bar */}
-                            <TaskCustomBarBlock
-                                setTaskContent={taskEditState.setTmpCurrentTaskContent}
-                                setTaskStatusUpdated={taskEditState.setTaskStatusUpdated}
-                                setTaskUpdated={taskEditState.setTaskUpdated}
-                                taskBodySaved={taskEditState.taskBodySaved}
-                                taskContent={taskEditState.tmpCurrentTaskContent}
-                            />
+                            <TaskCustomBarBlock taskBodySaved={taskEditState.taskBodySaved} />
                         </Stack>
                         <Box
                             sx={{
@@ -483,8 +477,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         <SectionDivider isDark={isDark} />
 
                         {/* Subtasks Section */}
-                        <SectionHeader isDark={isDark}>Sub Tasks</SectionHeader>
                         <TaskSubTasksBlock
+                            SectionHeader={SectionHeader}
                             useCM={useCM}
                             useTM={useTM}
                             currentTaskContent={taskEditState.tmpCurrentTaskContent}

@@ -3,6 +3,7 @@ import { Sheet } from "@mui/joy";
 import { VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
+import { useChatContext } from "./context/ChatContext";
 import { ThreadChatPaneHeader } from "./components/headers/ThreadChatPaneHeader";
 import { ChatEditorSection } from "./components/shared/ChatEditorSection";
 import { ErrorSnackbar } from "./components/shared/ErrorSnackbar";
@@ -50,6 +51,17 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         useCM,
         useNM,
     } = props;
+
+    const { setCurrentThreadTaskId } = useChatContext();
+
+    // Update currentThreadTaskId when thread panel mounts or thread changes
+    useEffect(() => {
+        if (useCM.currentThreadChat?.taskId) {
+            setCurrentThreadTaskId(useCM.currentThreadChat.taskId);
+        } else {
+            setCurrentThreadTaskId(-1);
+        }
+    }, [useCM.currentThreadChat?.taskId, setCurrentThreadTaskId]);
 
     // Use shared hooks
     const messageManagement = useMessageManagement({

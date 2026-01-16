@@ -443,25 +443,10 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
 
                         {/* Attachments Section */}
                         <SectionHeader isDark={isDark}>Attachments</SectionHeader>
-                        <Box
-                            sx={{
-                                p: 2,
-                                borderRadius: "12px",
-                                background: isDark
-                                    ? "rgba(255,255,255,0.02)"
-                                    : "rgba(0,0,0,0.015)",
-                                border: "1px dashed",
-                                borderColor: isDark
-                                    ? "rgba(255,255,255,0.08)"
-                                    : "rgba(0,0,0,0.08)",
-                                minHeight: 100,
-                            }}
-                        >
-                            <TaskCreateAttachmentBlock
-                                setTaskContent={setTaskContent}
-                                taskContent={taskContent}
-                            />
-                        </Box>
+                        <TaskCreateAttachmentBlock
+                            setTaskContent={setTaskContent}
+                            taskContent={taskContent}
+                        />
                     </Box>
 
                     {/* Footer Section */}

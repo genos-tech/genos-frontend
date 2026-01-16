@@ -12,6 +12,7 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ThreadProps } from "../../../../types/chat";
+import { useChatContext } from "../../context/ChatContext";
 
 // Theme-aware styling - Purple/Violet theme for threads
 const HEADER_STYLES = {
@@ -68,6 +69,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const styles = isDark ? HEADER_STYLES.dark : HEADER_STYLES.light;
+    const { currentThreadTaskId } = useChatContext();
 
     const isYou: boolean = myself.userId === useCM.currentThreadChat?.dmPartnerUser.userId;
 
@@ -186,8 +188,8 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                 {/* Task ID and Status chips (for PM/task threads) */}
                 {(((useCM.currentThreadChat?.chatType === 3 ||
                     useCM.currentThreadChat?.chatType === 4) &&
-                    useTM.currentPreviewTaskId !== -1) ||
-                    (useTM.currentPreviewTaskId !== -1 &&
+                    currentThreadTaskId !== -1) ||
+                    (currentThreadTaskId !== -1 &&
                         useTM.currentPreviewTask &&
                         useCM.currentThreadChat?.taskExist === true)) && (
                     <>
@@ -237,7 +239,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                 {/* Create Task Button (for DM/GM threads without task) */}
                 {useCM.currentThreadChat?.chatType !== 3 &&
                     useCM.currentThreadChat?.chatType !== 4 &&
-                    useTM.currentPreviewTaskId === -1 && (
+                    currentThreadTaskId === -1 && (
                         <Tooltip
                             size="sm"
                             title="Create a New Task"
@@ -268,7 +270,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                 {!(
                     useCM.currentThreadChat?.chatType !== 3 &&
                     useCM.currentThreadChat?.chatType !== 4 &&
-                    useTM.currentPreviewTaskId === -1
+                    currentThreadTaskId === -1
                 ) && (
                     <Tooltip
                         size="sm"
@@ -283,6 +285,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                             onClick={() => {
                                 useCM.setIsMainChatVisible(false);
                                 useCM.setIsThreadVisible(true);
+                                useTM.setCurrentPreviewTaskId(currentThreadTaskId);
                                 useTM.setIsTaskPreviewVisible(true);
                                 useTM.setIsCreatingTask({
                                     flag: false,

@@ -7,9 +7,12 @@ import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
+import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
+import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import {
     Box,
+    Button,
     Chip,
     Dropdown,
     FormControl,
@@ -85,6 +88,26 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
     const [openDeleteTask, setOpenDeleteTask] = useState<boolean>(false);
     const titleInputRef = useRef<HTMLInputElement | null>(null);
 
+    const handleStatusChange = (newStatus: string, color: string) => {
+        if (setTaskContent) {
+            setTaskContent({
+                ...taskContent,
+                status: {
+                    code: 0,
+                    status: newStatus,
+                    color: color,
+                    textColor: "white",
+                },
+            });
+        }
+        if (setTaskUpdated) {
+            setTaskUpdated(true);
+        }
+        if (setTaskStatusUpdated) {
+            setTaskStatusUpdated(true);
+        }
+    };
+
     return (
         <Box
             sx={{
@@ -105,6 +128,74 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                 {/* Left side: ID and Status chips (preview mode) or New Task badge (create mode) */}
                 {isPreviewMode ? (
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        {/* Status Transition Buttons */}
+                        {isPreviewMode &&
+                            (taskContent.status.status === "Open" ||
+                                taskContent.status.status === "Pending") && (
+                                <Button
+                                    size="sm"
+                                    variant="soft"
+                                    startDecorator={<PlayArrowRoundedIcon sx={{ fontSize: 16 }} />}
+                                    onClick={() => handleStatusChange("WIP", "#ff8c00")}
+                                    sx={{
+                                        fontWeight: 600,
+                                        fontSize: "12px",
+                                        borderRadius: "8px",
+                                        px: 1.5,
+                                        py: 0.5,
+                                        background:
+                                            "linear-gradient(135deg, #ff9500 0%, #ff6b00 100%)",
+                                        color: "white",
+                                        boxShadow: "0 2px 8px rgba(255, 140, 0, 0.25)",
+                                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                        "&:hover": {
+                                            background:
+                                                "linear-gradient(135deg, #ffa726 0%, #ff7043 100%)",
+                                            boxShadow: "0 4px 12px rgba(255, 140, 0, 0.35)",
+                                            transform: "translateY(-1px)",
+                                        },
+                                        "&:active": {
+                                            transform: "translateY(0)",
+                                            boxShadow: "0 2px 6px rgba(255, 140, 0, 0.2)",
+                                        },
+                                    }}
+                                >
+                                    Start Task
+                                </Button>
+                            )}
+
+                        {isPreviewMode && taskContent.status.status === "WIP" && (
+                            <Button
+                                size="sm"
+                                variant="soft"
+                                startDecorator={<TaskAltRoundedIcon sx={{ fontSize: 16 }} />}
+                                onClick={() => handleStatusChange("Closed", "#1dc200")}
+                                sx={{
+                                    fontWeight: 600,
+                                    fontSize: "12px",
+                                    borderRadius: "8px",
+                                    px: 1.5,
+                                    py: 0.5,
+                                    background:
+                                        "linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)",
+                                    color: "white",
+                                    boxShadow: "0 2px 8px rgba(76, 175, 80, 0.25)",
+                                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                    "&:hover": {
+                                        background:
+                                            "linear-gradient(135deg, #66bb6a 0%, #388e3c 100%)",
+                                        boxShadow: "0 4px 12px rgba(76, 175, 80, 0.35)",
+                                        transform: "translateY(-1px)",
+                                    },
+                                    "&:active": {
+                                        transform: "translateY(0)",
+                                        boxShadow: "0 2px 6px rgba(76, 175, 80, 0.2)",
+                                    },
+                                }}
+                            >
+                                Complete Task
+                            </Button>
+                        )}
                         <Chip
                             key={`task-title-block-${taskContent.id}`}
                             size="md"
@@ -333,6 +424,67 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                     Copy task link
                                 </Typography>
                             </MenuItem>
+
+                            {/* Open Thread - only show if task was created from a thread */}
+                            {taskContent.threadId !== null &&
+                            taskContent.chatType !== null &&
+                            taskContent.chatId !== null ? (
+                                <MenuItem
+                                    sx={{
+                                        mx: 0.75,
+                                        my: 0.25,
+                                        borderRadius: "10px",
+                                        gap: 1.5,
+                                        minHeight: 40,
+                                        transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
+                                        color: isDark
+                                            ? "rgba(255,255,255,0.9)"
+                                            : "rgba(15,23,42,0.85)",
+                                        "&:hover": {
+                                            background: isDark
+                                                ? "rgba(96,165,250,0.18)"
+                                                : "rgba(59,130,246,0.12)",
+                                            color: isDark ? "#60a5fa" : "#2563eb",
+                                            transform: "translateX(3px)",
+                                        },
+                                    }}
+                                    onClick={() => {
+                                        useCM.moveToSpecificChat(
+                                            taskContent.chatType!,
+                                            taskContent.chatId!,
+                                            taskContent.threadId!,
+                                            false,
+                                            true,
+                                            useUISM.setOpeningService,
+                                            useTM.setCurrentPreviewTaskId,
+                                            usePM.setCurrentProject
+                                        );
+                                    }}
+                                >
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            width: 30,
+                                            height: 30,
+                                            borderRadius: "8px",
+                                        }}
+                                    >
+                                        <QuestionAnswerRoundedIcon sx={{ fontSize: 18 }} />
+                                    </Box>
+                                    <Typography
+                                        level="body-sm"
+                                        sx={{
+                                            fontWeight: 500,
+                                            fontSize: "0.875rem",
+                                            color: "inherit",
+                                        }}
+                                    >
+                                        Open Thread
+                                    </Typography>
+                                </MenuItem>
+                            ) : null}
 
                             {/* New Task */}
                             <MenuItem
