@@ -99,9 +99,35 @@ export const useTaskManagement = (
 ): TaskManagementState => {
     // Task visible states
     const [isTaskPreviewVisible, setIsTaskPreviewVisible] = useState(false);
-    const [isTaskHomeVisible, setIsTaskHomeVisible] = useState(true);
-    const [isDashboardVisible, setIsDashboardVisible] = useState(false);
-    const [isSprintBoardVisible, setIsSprintBoardVisible] = useState(false);
+    const [isTaskHomeVisible, _setIsTaskHomeVisible] = useState(true);
+    const [isDashboardVisible, _setIsDashboardVisible] = useState(false);
+    const [isSprintBoardVisible, _setIsSprintBoardVisible] = useState(false);
+
+    // Wrapper functions to ensure mutual exclusivity of main view panels
+    // Only one of TaskHome (Table), Dashboard, or SprintBoard can be visible at a time
+    const setIsTaskHomeVisible = (visible: boolean) => {
+        if (visible) {
+            _setIsDashboardVisible(false);
+            _setIsSprintBoardVisible(false);
+        }
+        _setIsTaskHomeVisible(visible);
+    };
+
+    const setIsDashboardVisible = (visible: boolean) => {
+        if (visible) {
+            _setIsTaskHomeVisible(false);
+            _setIsSprintBoardVisible(false);
+        }
+        _setIsDashboardVisible(visible);
+    };
+
+    const setIsSprintBoardVisible = (visible: boolean) => {
+        if (visible) {
+            _setIsTaskHomeVisible(false);
+            _setIsDashboardVisible(false);
+        }
+        _setIsSprintBoardVisible(visible);
+    };
 
     // Task creation state
     const [isCreatingTask, setIsCreatingTask] = useState<{
