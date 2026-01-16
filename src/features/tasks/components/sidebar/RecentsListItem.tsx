@@ -1,5 +1,8 @@
+import { useMemo } from "react";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import { Box, Chip, List, ListItem, ListItemContent, Typography } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
@@ -20,6 +23,46 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
     const { recentTasks, usePM, useTM } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+
+    // Group tasks by projectName and sort by tsUpdated descending
+    const groupedTasks = useMemo(() => {
+        const groups: Record<
+            string,
+            {
+                projectId: number;
+                projectName: string;
+                systemUserId: string;
+                tasks: SearchTeamTasksResponse[];
+            }
+        > = {};
+
+        recentTasks.forEach((task) => {
+            const key = task.projectName;
+            if (!groups[key]) {
+                groups[key] = {
+                    projectId: task.projectId,
+                    projectName: task.projectName,
+                    systemUserId: task.systemUserId,
+                    tasks: [],
+                };
+            }
+            groups[key].tasks.push(task);
+        });
+
+        // Sort tasks within each group by tsUpdated descending
+        Object.values(groups).forEach((group) => {
+            group.tasks.sort(
+                (a, b) => new Date(b.tsUpdated).getTime() - new Date(a.tsUpdated).getTime()
+            );
+        });
+
+        // Sort groups by most recent task's tsUpdated descending
+        return Object.values(groups).sort((a, b) => {
+            const aLatest = a.tasks[0]?.tsUpdated ?? "";
+            const bLatest = b.tasks[0]?.tsUpdated ?? "";
+            return new Date(bLatest).getTime() - new Date(aLatest).getTime();
+        });
+    }, [recentTasks]);
 
     return (
         <ListItem nested>
@@ -90,35 +133,19 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                     </ListItemButton>
                 )}
             >
-                <List sx={{ gap: 0.25 }}>
-                    {recentTasks.map(
-                        (
-                            { projectId, projectName, systemUserId, taskId, title, status },
-                            index
-                        ) => {
-                            return (
-                                <ListItem key={`recent-task-${taskId}`}>
+                <List sx={{ gap: 0.5, pl: 1 }}>
+                    {groupedTasks.map((group) => (
+                        <ListItem key={`project-group-${group.projectId}`} nested sx={{ gap: 0 }}>
+                            <Toggler
+                                defaultExpanded={true}
+                                renderToggle={({ open, setOpen }) => (
                                     <ListItemButton
-                                        onClick={() => {
-                                            if (projectId) {
-                                                usePM.setCurrentProject({
-                                                    projectId: projectId,
-                                                    projectName: projectName,
-                                                    projectTags: [],
-                                                    systemUserId: systemUserId,
-                                                });
-                                                useTM.setCurrentPreviewTaskId(taskId);
-                                                useTM.setIsTaskPreviewVisible(true);
-                                            } else {
-                                                console.error("Failed to set the current project");
-                                            }
-                                        }}
+                                        onClick={() => setOpen(!open)}
                                         sx={{
-                                            overflow: "hidden",
                                             borderRadius: "8px",
-                                            px: 1.25,
-                                            ml: 0,
-                                            gap: 0.75,
+                                            py: 0.75,
+                                            px: 1,
+                                            gap: 1,
                                             transition: "all 0.15s ease",
                                             "&:hover": {
                                                 backgroundColor: isDark
@@ -127,59 +154,154 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                                             },
                                         }}
                                     >
-                                        <Chip
-                                            key={`recent-task-project-chip-${taskId}`}
-                                            color="neutral"
-                                            size="sm"
-                                            variant="outlined"
+                                        {open ? (
+                                            <KeyboardArrowDownIcon
+                                                sx={{
+                                                    fontSize: 16,
+                                                    color: isDark
+                                                        ? "rgba(255,255,255,0.5)"
+                                                        : "rgba(0,0,0,0.4)",
+                                                }}
+                                            />
+                                        ) : (
+                                            <KeyboardArrowRightIcon
+                                                sx={{
+                                                    fontSize: 16,
+                                                    color: isDark
+                                                        ? "rgba(255,255,255,0.5)"
+                                                        : "rgba(0,0,0,0.4)",
+                                                }}
+                                            />
+                                        )}
+                                        <FolderOpenIcon
                                             sx={{
-                                                borderRadius: "4px",
-                                                fontWeight: 600,
-                                                fontSize: 10,
-                                                minHeight: 20,
-                                                px: 0.5,
+                                                fontSize: 16,
+                                                color: isDark
+                                                    ? "rgba(255,255,255,0.6)"
+                                                    : "rgba(0,0,0,0.5)",
                                             }}
-                                        >
-                                            {projectName.toUpperCase().slice(0, 2)}
-                                        </Chip>
-                                        <Chip
-                                            key={`status-chip-${taskId}-${index}`}
-                                            size="sm"
-                                            variant="soft"
-                                            sx={{
-                                                backgroundColor: status.color
-                                                    ? alpha(status.color, isDark ? 0.4 : 0.6)
-                                                    : "transparent",
-                                                color: status.textColor,
-                                                fontWeight: 600,
-                                                borderRadius: "4px",
-                                                fontSize: 10,
-                                                minHeight: 20,
-                                                px: 0.5,
-                                            }}
-                                        >
-                                            {status.status}
-                                        </Chip>
+                                        />
                                         <Typography
                                             level="body-sm"
                                             sx={{
+                                                fontWeight: 600,
                                                 overflow: "hidden",
                                                 textOverflow: "ellipsis",
                                                 whiteSpace: "nowrap",
                                                 flex: 1,
                                                 color: isDark
-                                                    ? "rgba(255,255,255,0.8)"
-                                                    : "rgba(0,0,0,0.7)",
+                                                    ? "rgba(255,255,255,0.85)"
+                                                    : "rgba(0,0,0,0.75)",
                                             }}
-                                            noWrap
                                         >
-                                            {title}
+                                            {group.projectName}
                                         </Typography>
+                                        <Chip
+                                            size="sm"
+                                            variant="soft"
+                                            color="neutral"
+                                            sx={{
+                                                borderRadius: "4px",
+                                                fontSize: 10,
+                                                minHeight: 18,
+                                                px: 0.5,
+                                            }}
+                                        >
+                                            {group.tasks.length}
+                                        </Chip>
                                     </ListItemButton>
-                                </ListItem>
-                            );
-                        }
-                    )}
+                                )}
+                            >
+                                <List sx={{ gap: 0, pl: 2.5 }}>
+                                    {group.tasks.map((task, index) => (
+                                        <ListItem key={`recent-task-${task.taskId}`}>
+                                            <ListItemButton
+                                                onClick={() => {
+                                                    if (group.projectId) {
+                                                        usePM.setCurrentProject({
+                                                            projectId: group.projectId,
+                                                            projectName: group.projectName,
+                                                            projectTags: [],
+                                                            systemUserId: group.systemUserId,
+                                                        });
+                                                        useTM.setCurrentPreviewTaskId(task.taskId);
+                                                        useTM.setIsTaskPreviewVisible(true);
+                                                    } else {
+                                                        console.error(
+                                                            "Failed to set the current project"
+                                                        );
+                                                    }
+                                                }}
+                                                sx={{
+                                                    overflow: "hidden",
+                                                    borderRadius: "6px",
+                                                    py: 0.5,
+                                                    px: 1,
+                                                    gap: 0.75,
+                                                    transition: "all 0.15s ease",
+                                                    "&:hover": {
+                                                        backgroundColor: isDark
+                                                            ? "rgba(255,255,255,0.04)"
+                                                            : "rgba(0,0,0,0.03)",
+                                                    },
+                                                }}
+                                            >
+                                                <Chip
+                                                    key={`task-id-chip-${task.taskId}`}
+                                                    color="neutral"
+                                                    variant="outlined"
+                                                    sx={{
+                                                        borderRadius: "4px",
+                                                        fontWeight: 600,
+                                                        fontSize: 10,
+                                                        minHeight: 18,
+                                                        px: 0.5,
+                                                    }}
+                                                >
+                                                    #{task.taskId}
+                                                </Chip>
+                                                <Chip
+                                                    key={`status-chip-${task.taskId}-${index}`}
+                                                    variant="soft"
+                                                    sx={{
+                                                        backgroundColor: task.status.color
+                                                            ? alpha(
+                                                                  task.status.color,
+                                                                  isDark ? 0.4 : 0.6
+                                                              )
+                                                            : "transparent",
+                                                        color: task.status.textColor,
+                                                        fontWeight: 600,
+                                                        borderRadius: "4px",
+                                                        fontSize: 12,
+                                                        minHeight: 18,
+                                                        px: 0.5,
+                                                    }}
+                                                >
+                                                    {task.status.status}
+                                                </Chip>
+                                                <Typography
+                                                    level="body-sm"
+                                                    sx={{
+                                                        overflow: "hidden",
+                                                        textOverflow: "ellipsis",
+                                                        whiteSpace: "nowrap",
+                                                        flex: 1,
+                                                        color: isDark
+                                                            ? "rgba(255,255,255,0.75)"
+                                                            : "rgba(0,0,0,0.65)",
+                                                    }}
+                                                    noWrap
+                                                >
+                                                    {task.title}
+                                                </Typography>
+                                            </ListItemButton>
+                                        </ListItem>
+                                    ))}
+                                </List>
+                            </Toggler>
+                        </ListItem>
+                    ))}
                 </List>
             </Toggler>
         </ListItem>

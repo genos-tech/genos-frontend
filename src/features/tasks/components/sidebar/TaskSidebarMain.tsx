@@ -175,9 +175,9 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                         </Typography>
                     </Box>
 
-                    <SprintBoardListItem useTM={useTM} />
-
                     <TaskTableListItem useTM={useTM} />
+
+                    <SprintBoardListItem useTM={useTM} />
 
                     {/* Section Header - Tasks */}
                     <Box sx={{ pt: 1.5, pb: 0.5, px: 1 }}>

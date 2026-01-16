@@ -87,7 +87,20 @@ const TaskNodeButton = memo(
         return (
             <ListItemButton
                 selected={isSelected}
-                sx={{ ml: "45px", mr: "8px", pl: "20px" }}
+                sx={{
+                    overflow: "hidden",
+                    borderRadius: "6px",
+                    py: 0.5,
+                    px: 1,
+                    ml: "50px",
+                    mr: "8px",
+                    gap: 0.75,
+                    transition: "all 0.15s ease",
+                    "&:hover": {
+                        backgroundColor:
+                            mode === "dark" ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
+                    },
+                }}
                 variant="plain"
                 onClick={handleClick}
             >
@@ -96,24 +109,28 @@ const TaskNodeButton = memo(
                     size="sm"
                     variant="soft"
                     sx={{
-                        marginRight: "1px",
-                        borderRadius: "5px",
-                        fontWeight: "bold",
+                        borderRadius: "4px",
+                        fontWeight: 600,
+                        fontSize: 10,
+                        minHeight: 18,
+                        px: 0.5,
                     }}
                 >
-                    ID: {node.taskId}
+                    #{node.taskId}
                 </Chip>
                 <Chip
                     size="sm"
                     variant="soft"
                     sx={{
                         backgroundColor: node.status.color
-                            ? alpha(node.status.color, mode === "dark" ? 0.5 : 0.75)
+                            ? alpha(node.status.color, mode === "dark" ? 0.4 : 0.6)
                             : "transparent",
                         color: node.status.textColor,
-                        fontWeight: "bold",
-                        borderRadius: "5px",
-                        marginX: "-10px",
+                        fontWeight: 600,
+                        borderRadius: "4px",
+                        fontSize: 12,
+                        minHeight: 18,
+                        px: 0.5,
                     }}
                 >
                     {`${node.status.status}`}
@@ -122,10 +139,11 @@ const TaskNodeButton = memo(
                     <Typography
                         level="title-sm"
                         sx={{
-                            ml: "5px",
                             overflow: "hidden",
                             textOverflow: "ellipsis",
                             whiteSpace: "nowrap",
+                            flex: 1,
+                            color: mode === "dark" ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.65)",
                         }}
                         noWrap
                     >
