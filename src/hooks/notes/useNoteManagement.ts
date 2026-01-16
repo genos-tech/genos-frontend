@@ -6,6 +6,12 @@ import { loadChatNoteMeta } from "../../features/notes/chat-notes/services/loadC
 import { loadChatNotesByChatId } from "../../features/notes/chat-notes/services/loadChatNotesByChatId";
 import { addNote } from "../../features/notes/common/services/addNote";
 import { loadSpecificNote } from "../../features/notes/common/services/loadSpecificNote";
+import {
+    addNoteFavorite,
+    FavoriteNotesMetaResponse,
+    loadFavoriteNotesMeta,
+    removeNoteFavorite,
+} from "../../features/notes/favorite-notes/services";
 import { createEmptyMyNote } from "../../features/notes/my-notes/services/createEmptyMyNote";
 import { loadMyNoteMeta } from "../../features/notes/my-notes/services/loadMyNoteMeta";
 import { createEmptyTaskNote } from "../../features/notes/task-notes/services/createEmptyTaskNote";
@@ -69,6 +75,14 @@ export interface NoteManagementState {
     currentMyNoteChain: MyNoteMetaTreeNode[] | undefined;
     setCurrentMyNoteChain: (chain: MyNoteMetaTreeNode[]) => void;
     getMyNoteMeta: () => Promise<void>;
+
+    // Favorite notes
+    favoriteNotes: FavoriteNotesMetaResponse | null;
+    setFavoriteNotes: (notes: FavoriteNotesMetaResponse | null) => void;
+    favoriteNoteIds: Set<string>;
+    getFavoriteNotesMeta: () => Promise<void>;
+    toggleFavorite: (noteId: number, noteType: number) => Promise<boolean>;
+    isNoteFavorited: (noteId: number, noteType: number) => boolean;
 
     // Visibility states
     isTaskNoteVisible: boolean;
@@ -157,6 +171,10 @@ export const useNoteManagement = (
         undefined
     );
     const [newlyCreatedMyNotes, setNewlyCreatedMyNotes] = useState<MyNoteProps[]>([]);
+
+    // Favorite notes
+    const [favoriteNotes, setFavoriteNotes] = useState<FavoriteNotesMetaResponse | null>(null);
+    const [favoriteNoteIds, setFavoriteNoteIds] = useState<Set<string>>(new Set());
 
     // Visibility states
     const [isTaskNoteVisible, setIsTaskNoteVisible] = useState(false);
@@ -410,6 +428,87 @@ export const useNoteManagement = (
         setMyNoteMetaTree(buildMyNoteTree(myNoteMeta));
     }, [myNoteMeta]);
 
+    // Favorite notes functions
+    const getFavoriteNotesMeta = async () => {
+        const loadedFavorites = await loadFavoriteNotesMeta(myself, accessToken);
+        if (loadedFavorites) {
+            setFavoriteNotes(loadedFavorites);
+            // Build a set of favorited note IDs for quick lookup
+            const ids = new Set<string>();
+            loadedFavorites.personalNotes.forEach((note) => ids.add(`1-${note.noteId}`));
+            loadedFavorites.taskNotes.forEach((note) => ids.add(`2-${note.noteId}`));
+            loadedFavorites.chatNotes.forEach((note) => ids.add(`3-${note.noteId}`));
+            setFavoriteNoteIds(ids);
+        }
+    };
+
+    const isNoteFavorited = (noteId: number, noteType: number): boolean => {
+        return favoriteNoteIds.has(`${noteType}-${noteId}`);
+    };
+
+    const toggleFavorite = async (noteId: number, noteType: number): Promise<boolean> => {
+        if (!accessToken) return false;
+
+        const isFavorited = isNoteFavorited(noteId, noteType);
+
+        try {
+            if (isFavorited) {
+                const result = await removeNoteFavorite(myself, noteId, noteType, accessToken);
+                if (result && !result.isFavorited) {
+                    // Remove from local state
+                    setFavoriteNoteIds((prev) => {
+                        const newSet = new Set(prev);
+                        newSet.delete(`${noteType}-${noteId}`);
+                        return newSet;
+                    });
+                    // Remove from favoriteNotes
+                    if (favoriteNotes) {
+                        if (noteType === 1) {
+                            setFavoriteNotes({
+                                ...favoriteNotes,
+                                personalNotes: favoriteNotes.personalNotes.filter(
+                                    (n) => n.noteId !== noteId
+                                ),
+                            });
+                        } else if (noteType === 2) {
+                            setFavoriteNotes({
+                                ...favoriteNotes,
+                                taskNotes: favoriteNotes.taskNotes.filter(
+                                    (n) => n.noteId !== noteId
+                                ),
+                            });
+                        } else if (noteType === 3) {
+                            setFavoriteNotes({
+                                ...favoriteNotes,
+                                chatNotes: favoriteNotes.chatNotes.filter(
+                                    (n) => n.noteId !== noteId
+                                ),
+                            });
+                        }
+                    }
+                    return false;
+                }
+            } else {
+                const result = await addNoteFavorite(myself, noteId, noteType, accessToken);
+                if (result && result.isFavorited) {
+                    // Add to local state
+                    setFavoriteNoteIds((prev) => {
+                        const newSet = new Set(prev);
+                        newSet.add(`${noteType}-${noteId}`);
+                        return newSet;
+                    });
+                    // Refresh favorites to get full metadata
+                    await getFavoriteNotesMeta();
+                    return true;
+                }
+            }
+        } catch (error) {
+            console.error("Error toggling favorite:", error);
+        }
+
+        return isFavorited;
+    };
+
     initCurrentMyNoteChain({
         myNoteMeta: myNoteMeta,
         currentMyNoteChain: currentMyNoteChain,
@@ -659,6 +758,14 @@ export const useNoteManagement = (
         currentMyNoteChain,
         setCurrentMyNoteChain,
         getMyNoteMeta,
+
+        // Favorite notes
+        favoriteNotes,
+        setFavoriteNotes,
+        favoriteNoteIds,
+        getFavoriteNotesMeta,
+        toggleFavorite,
+        isNoteFavorited,
 
         // Visibility states
         isTaskNoteVisible,

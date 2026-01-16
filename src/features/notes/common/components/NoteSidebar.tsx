@@ -1,17 +1,21 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
+import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import WindowRoundedIcon from "@mui/icons-material/WindowRounded";
 import { Box, Divider, List, ListItem, ListItemContent, Sheet, Typography } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { ChatNoteMetaProps, MyNoteMetaProps, TaskNoteMetaProps } from "../../../../types/notes";
 import { ChildNoteCreator } from "../../chat-notes/components/ChildNoteCreator";
 import { useNoteTreeState } from "../hooks/useNoteTreeState";
 import { ChatNoteMetaTreeNode, TaskNoteMetaTreeNode } from "../types/noteTypes";
+import { FavoriteNoteItem } from "./FavoriteNoteItem";
+import { FavoriteNoteSection } from "./FavoriteNoteSection";
 import { GroupedNoteSection } from "./GroupedNoteSection";
 import { NoteTreeRenderer } from "./NoteTreeRenderer";
 import { NoteTypeSection } from "./NoteTypeSection";
@@ -128,6 +132,11 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     const { useNM } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+
+    // Load favorite notes on mount
+    useEffect(() => {
+        useNM.getFavoriteNotesMeta();
+    }, []);
 
     // Use custom hooks for each note type
     const myNoteState = useNoteTreeState({
@@ -258,6 +267,85 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 ))}
             </GroupedNoteSection>
         ));
+
+    // Render favorite note item
+    const renderFavoriteNoteItem = (
+        note: MyNoteMetaProps | TaskNoteMetaProps | ChatNoteMetaProps,
+        noteType: number
+    ) => (
+        <FavoriteNoteItem
+            key={`fav-${noteType}-${note.noteId}`}
+            note={note}
+            noteType={noteType}
+            useNM={useNM}
+        />
+    );
+
+    // Render favorite notes section content
+    const renderFavoriteNotes = () => {
+        if (!useNM.favoriteNotes) return null;
+
+        const hasPersonalNotes = useNM.favoriteNotes.personalNotes.length > 0;
+        const hasTaskNotes = useNM.favoriteNotes.taskNotes.length > 0;
+        const hasChatNotes = useNM.favoriteNotes.chatNotes.length > 0;
+
+        if (!hasPersonalNotes && !hasTaskNotes && !hasChatNotes) {
+            return (
+                <Box sx={{ px: 2, py: 1 }}>
+                    <Typography
+                        level="body-xs"
+                        sx={{
+                            color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)",
+                            fontStyle: "italic",
+                        }}
+                    >
+                        No favorites yet. Star notes to add them here.
+                    </Typography>
+                </Box>
+            );
+        }
+
+        return (
+            <Box>
+                {hasPersonalNotes && (
+                    <FavoriteNoteSection
+                        groupKey="fav-personal"
+                        groupLabel="My Notes"
+                        icon={<WindowRoundedIcon sx={{ fontSize: 14 }} />}
+                        defaultExpanded={true}
+                    >
+                        {useNM.favoriteNotes.personalNotes.map((note) =>
+                            renderFavoriteNoteItem(note, 1)
+                        )}
+                    </FavoriteNoteSection>
+                )}
+                {hasTaskNotes && (
+                    <FavoriteNoteSection
+                        groupKey="fav-task"
+                        groupLabel="Task Notes"
+                        icon={<AssignmentRoundedIcon sx={{ fontSize: 14 }} />}
+                        defaultExpanded={true}
+                    >
+                        {useNM.favoriteNotes.taskNotes.map((note) =>
+                            renderFavoriteNoteItem(note, 2)
+                        )}
+                    </FavoriteNoteSection>
+                )}
+                {hasChatNotes && (
+                    <FavoriteNoteSection
+                        groupKey="fav-chat"
+                        groupLabel="Chat Notes"
+                        icon={<QuestionAnswerRoundedIcon sx={{ fontSize: 14 }} />}
+                        defaultExpanded={true}
+                    >
+                        {useNM.favoriteNotes.chatNotes.map((note) =>
+                            renderFavoriteNoteItem(note, 3)
+                        )}
+                    </FavoriteNoteSection>
+                )}
+            </Box>
+        );
+    };
 
     // Note type configurations for cleaner code
     const noteTypesConfig = [
@@ -406,6 +494,16 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                             </ListItemContent>
                         </ListItemButton>
                     </ListItem>
+
+                    {/* Favorites Section */}
+                    <NoteTypeSection
+                        icon={<StarRoundedIcon sx={{ fontSize: 18, color: "#f59e0b" }} />}
+                        useNM={useNM}
+                        noteType={5} // Use 5 for favorites (distinct from 0-4)
+                        title="Favorites"
+                    >
+                        {renderFavoriteNotes()}
+                    </NoteTypeSection>
 
                     {/* Section Divider */}
                     <Box sx={{ pt: 1.5, pb: 0.5, px: 1 }}>
