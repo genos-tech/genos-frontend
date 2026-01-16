@@ -14,11 +14,15 @@ export interface TaskNoteMetaTreeNode extends BaseNoteTreeNode {
     noteType: 2;
     projectId: number;
     taskId: number;
+    projectName?: string;
+    taskTitle?: string;
 }
 
 export interface ChatNoteMetaTreeNode extends BaseNoteTreeNode {
     noteType: 3;
-    chatType: string;
+    chatType: number;
+    chatTypeName?: string;
+    chatName?: string;
     chatId: number;
     isThread: boolean;
     threadId?: number;

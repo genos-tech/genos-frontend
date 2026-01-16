@@ -34,6 +34,8 @@ export type TaskNoteMetaProps = {
     parentNoteId: number | null;
     projectId: number;
     taskId: number;
+    projectName?: string;
+    taskTitle?: string;
     title: string;
     tsUpdated: string;
     error?: string;
@@ -65,6 +67,8 @@ export type ChatNoteMetaProps = {
     noteId: number;
     parentNoteId: number | null;
     chatType: number;
+    chatTypeName?: string;
+    chatName?: string;
     chatId: number;
     isThread: boolean;
     threadId: number;

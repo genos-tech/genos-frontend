@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
@@ -10,8 +11,114 @@ import { useColorScheme } from "@mui/joy/styles";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { ChildNoteCreator } from "../../chat-notes/components/ChildNoteCreator";
 import { useNoteTreeState } from "../hooks/useNoteTreeState";
+import { ChatNoteMetaTreeNode, TaskNoteMetaTreeNode } from "../types/noteTypes";
+import { GroupedNoteSection } from "./GroupedNoteSection";
 import { NoteTreeRenderer } from "./NoteTreeRenderer";
 import { NoteTypeSection } from "./NoteTypeSection";
+
+// Types for grouped notes
+interface TaskGroup {
+    taskId: number;
+    taskTitle: string;
+    notes: TaskNoteMetaTreeNode[];
+}
+
+interface ProjectGroup {
+    projectId: number;
+    projectName: string;
+    tasks: TaskGroup[];
+}
+
+interface ChatGroup {
+    chatId: number;
+    chatName: string;
+    notes: ChatNoteMetaTreeNode[];
+}
+
+interface ChatTypeGroup {
+    chatType: number;
+    chatTypeName: string;
+    chats: ChatGroup[];
+}
+
+// Utility function to group task notes by project, then by task
+function groupTaskNotes(notes: TaskNoteMetaTreeNode[]): ProjectGroup[] {
+    const projectMap: Map<number, ProjectGroup> = new Map();
+
+    for (const note of notes) {
+        // Get or create project group
+        if (!projectMap.has(note.projectId)) {
+            projectMap.set(note.projectId, {
+                projectId: note.projectId,
+                projectName: note.projectName || `Project ${note.projectId}`,
+                tasks: [],
+            });
+        }
+        const projectGroup = projectMap.get(note.projectId)!;
+
+        // Find or create task group within project
+        let taskGroup = projectGroup.tasks.find((t) => t.taskId === note.taskId);
+        if (!taskGroup) {
+            taskGroup = {
+                taskId: note.taskId,
+                taskTitle: note.taskTitle || `Task #${note.taskId}`,
+                notes: [],
+            };
+            projectGroup.tasks.push(taskGroup);
+        }
+
+        taskGroup.notes.push(note);
+    }
+
+    return Array.from(projectMap.values());
+}
+
+// Utility function to group chat notes by chat type, then by chat name
+function groupChatNotes(notes: ChatNoteMetaTreeNode[]): ChatTypeGroup[] {
+    const chatTypeMap: Map<number, ChatTypeGroup> = new Map();
+
+    for (const note of notes) {
+        const chatTypeName = note.chatTypeName || getChatTypeLabel(note.chatType);
+
+        // Get or create chat type group
+        if (!chatTypeMap.has(note.chatType)) {
+            chatTypeMap.set(note.chatType, {
+                chatType: note.chatType,
+                chatTypeName,
+                chats: [],
+            });
+        }
+        const chatTypeGroup = chatTypeMap.get(note.chatType)!;
+
+        // Find or create chat group within chat type
+        let chatGroup = chatTypeGroup.chats.find((c) => c.chatId === note.chatId);
+        if (!chatGroup) {
+            chatGroup = {
+                chatId: note.chatId,
+                chatName: note.chatName || `${chatTypeName} ${note.chatId}`,
+                notes: [],
+            };
+            chatTypeGroup.chats.push(chatGroup);
+        }
+
+        chatGroup.notes.push(note);
+    }
+
+    return Array.from(chatTypeMap.values());
+}
+
+function getChatTypeLabel(chatType: number): string {
+    switch (chatType) {
+        case 1:
+            return "DM";
+        case 2:
+            return "PM";
+        case 3:
+            return "GM";
+        default:
+            return "Chat";
+    }
+}
 
 type NoteSidebarProps = {
     useNM: NoteManagementState;
@@ -59,7 +166,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         />
     );
 
-    const renderTaskNoteTree = (node: any) => (
+    const renderTaskNoteTreeItem = (node: any) => (
         <NoteTreeRenderer
             key={node.noteId}
             currentChain={taskNoteState.tmpCurrentChain}
@@ -73,7 +180,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         />
     );
 
-    const renderChatNoteTree = (node: any) => (
+    const renderChatNoteTreeItem = (node: any) => (
         <NoteTreeRenderer
             key={node.noteId}
             currentChain={chatNoteState.tmpCurrentChain}
@@ -87,6 +194,81 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         />
     );
 
+    // Grouped task notes by project and task
+    const groupedTaskNotes = useMemo(
+        () => groupTaskNotes(taskNoteState.tmpMetaTree as TaskNoteMetaTreeNode[]),
+        [taskNoteState.tmpMetaTree]
+    );
+
+    // Grouped chat notes by chat type and name
+    const groupedChatNotes = useMemo(
+        () => groupChatNotes(chatNoteState.tmpMetaTree as ChatNoteMetaTreeNode[]),
+        [chatNoteState.tmpMetaTree]
+    );
+
+    // Render grouped task notes (Project → Task → Notes)
+    const renderGroupedTaskNotes = () => (
+        <>
+            {groupedTaskNotes.map((projectGroup) => (
+                <GroupedNoteSection
+                    key={`project-${projectGroup.projectId}`}
+                    groupKey={`project-${projectGroup.projectId}`}
+                    groupLabel={projectGroup.projectName}
+                    defaultExpanded={projectGroup.tasks.some((taskGroup) =>
+                        taskGroup.notes.some(
+                            (note) => note.noteId === useNM.currentTaskNote?.noteId
+                        )
+                    )}
+                >
+                    {projectGroup.tasks.map((taskGroup) => (
+                        <GroupedNoteSection
+                            key={`task-${projectGroup.projectId}-${taskGroup.taskId}`}
+                            groupKey={`task-${projectGroup.projectId}-${taskGroup.taskId}`}
+                            groupLabel={`#${taskGroup.taskId}`}
+                            subLabel={taskGroup.taskTitle}
+                            defaultExpanded={taskGroup.notes.some(
+                                (note) => note.noteId === useNM.currentTaskNote?.noteId
+                            )}
+                        >
+                            {taskGroup.notes.map((note) => renderTaskNoteTreeItem(note))}
+                        </GroupedNoteSection>
+                    ))}
+                </GroupedNoteSection>
+            ))}
+        </>
+    );
+
+    // Render grouped chat notes (Chat Type → Chat Name → Notes)
+    const renderGroupedChatNotes = () => (
+        <>
+            {groupedChatNotes.map((chatTypeGroup) => (
+                <GroupedNoteSection
+                    key={`chatType-${chatTypeGroup.chatType}`}
+                    groupKey={`chatType-${chatTypeGroup.chatType}`}
+                    groupLabel={chatTypeGroup.chatTypeName}
+                    defaultExpanded={chatTypeGroup.chats.some((chatGroup) =>
+                        chatGroup.notes.some(
+                            (note) => note.noteId === useNM.currentChatNote?.noteId
+                        )
+                    )}
+                >
+                    {chatTypeGroup.chats.map((chatGroup) => (
+                        <GroupedNoteSection
+                            key={`chat-${chatTypeGroup.chatType}-${chatGroup.chatId}`}
+                            groupKey={`chat-${chatTypeGroup.chatType}-${chatGroup.chatId}`}
+                            groupLabel={chatGroup.chatName}
+                            defaultExpanded={chatGroup.notes.some(
+                                (note) => note.noteId === useNM.currentChatNote?.noteId
+                            )}
+                        >
+                            {chatGroup.notes.map((note) => renderChatNoteTreeItem(note))}
+                        </GroupedNoteSection>
+                    ))}
+                </GroupedNoteSection>
+            ))}
+        </>
+    );
+
     // Note type configurations for cleaner code
     const noteTypesConfig = [
         {
@@ -95,20 +277,25 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             title: "My Notes",
             state: myNoteState,
             renderTree: renderMyNoteTree,
+            isGrouped: false,
         },
         {
             noteType: 2,
             icon: <AssignmentRoundedIcon sx={{ fontSize: 18 }} />,
             title: "Task Notes",
             state: taskNoteState,
-            renderTree: renderTaskNoteTree,
+            renderTree: null,
+            renderGrouped: renderGroupedTaskNotes,
+            isGrouped: true,
         },
         {
             noteType: 3,
             icon: <QuestionAnswerRoundedIcon sx={{ fontSize: 18 }} />,
             title: "Chat Notes",
             state: chatNoteState,
-            renderTree: renderChatNoteTree,
+            renderTree: null,
+            renderGrouped: renderGroupedChatNotes,
+            isGrouped: true,
         },
         {
             noteType: 4,
@@ -117,6 +304,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             state: null,
             renderTree: null,
             isDisabled: true,
+            isGrouped: false,
         },
     ];
 
@@ -255,7 +443,9 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                             title={config.title}
                             isDisabled={config.isDisabled}
                         >
-                            {config.state && config.renderTree ? (
+                            {config.isGrouped && config.renderGrouped ? (
+                                config.renderGrouped()
+                            ) : config.state && config.renderTree ? (
                                 config.state.tmpMetaTree.map((root) => config.renderTree!(root))
                             ) : config.isDisabled ? (
                                 <Box sx={{ px: 2, py: 1 }}>
