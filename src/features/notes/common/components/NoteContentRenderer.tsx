@@ -14,6 +14,7 @@ import { TaskPreview } from "../../../tasks/components/contents/TaskPreview";
 import { ChatNoteMain } from "../../chat-notes/components/ChatNoteMain";
 import { MyNoteMain } from "../../my-notes/components/MyNoteMain";
 import { TaskNoteMain } from "../../task-notes/components/TaskNoteMain";
+import { NoteHomeContent } from "./NoteHomeContent";
 
 type NoteContentRendererProps = {
     myself: UserProps;
@@ -177,19 +178,16 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
         </Box>
     );
 
+    // Note Home page - show dashboard when Home is selected
+    if (useNM.currentNoteType === 0) {
+        return <NoteHomeContent useNM={useNM} />;
+    }
+
     // Get the currently selected tab's note type
     // This ensures we render the correct component based on the OPEN note,
     // not the sidebar category the user clicked on
     const selectedTab = useNM.tabItems[useNM.selectedTabIndex];
     const activeNoteType = selectedTab?.noteType ?? useNM.currentNoteType;
-
-    // Note Home placeholder (only show if no notes are open)
-    if (useNM.currentNoteType === 0 && useNM.tabItems.length === 0) {
-        return renderPlaceholder(
-            "Welcome to Notes",
-            "Select a category from the sidebar to get started"
-        );
-    }
 
     // No notes open at all
     if (useNM.tabItems.length === 0) {
