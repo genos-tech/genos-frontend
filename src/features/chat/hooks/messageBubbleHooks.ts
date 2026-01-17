@@ -47,7 +47,6 @@ export const useScrollToBottomOnChatChange = (
                     if (indexMap[moveToSpecificIndex]) {
                         const targetIndex = indexMap[moveToSpecificIndex];
                         // Only scroll if the target is not already visible
-                        console.log(targetIndex, visibleRangeStart, visibleRangeEnd)
                         if (targetIndex < visibleRangeStart || targetIndex > visibleRangeEnd) {
                             virtuoso.scrollToIndex({
                                 index: targetIndex,
