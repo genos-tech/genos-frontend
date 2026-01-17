@@ -147,7 +147,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 width: "100%",
                                 borderColor: mode === "dark" ? "black" : "white",
                                 borderRight:
-                                    mode === "dark" ? "2px black inset" : "2px lightgrey inset",
+                                    mode === "dark" ? "1px black inset" : "1px lightgrey inset",
                             }}
                         >
                             <Sheet

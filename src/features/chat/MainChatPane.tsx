@@ -153,7 +153,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                         height: "100%",
                         width: "100%",
                         borderColor: mode === "dark" ? "black" : "white",
-                        borderRight: mode === "dark" ? "2px black inset" : "2px lightgrey inset",
+                        borderRight: mode === "dark" ? "1px black inset" : "1px lightgrey inset",
                     }}
                 >
                     <ErrorSnackbar

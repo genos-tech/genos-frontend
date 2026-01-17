@@ -49,7 +49,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                             paddingX: 1,
                             height: "100dvh",
                             borderRight:
-                                mode === "dark" ? "2px black inset" : "2px lightgrey inset",
+                                mode === "dark" ? "1px black inset" : "1px lightgrey inset",
                         }}
                     >
                         <NoteContentRenderer
@@ -74,7 +74,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                     sx={{
                         paddingX: 1,
                         height: "100dvh",
-                        borderRight: mode === "dark" ? "2px black inset" : "2px lightgrey inset",
+                        borderRight: mode === "dark" ? "1px black inset" : "1px lightgrey inset",
                     }}
                 >
                     <NoteContentRenderer
@@ -113,7 +113,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                             width: "100%",
                             borderColor: mode === "dark" ? "black" : "white",
                             borderRight:
-                                mode === "dark" ? "2px black inset" : "2px lightgrey inset",
+                                mode === "dark" ? "1px black inset" : "1px lightgrey inset",
                         }}
                     >
                         <NoteSidebar useNM={useNM} />
