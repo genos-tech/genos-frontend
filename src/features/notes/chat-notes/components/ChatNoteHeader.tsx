@@ -20,6 +20,7 @@ import {
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
@@ -120,6 +121,14 @@ export const ChatNoteHeader = ({
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const styles = isDark ? HEADER_STYLES.dark : HEADER_STYLES.light;
+    const navigate = useNavigate();
+
+    // Chat type mapping for URL construction
+    const CHAT_TYPE_PATH_MAP: Record<number, string> = {
+        1: "dm",
+        2: "gm",
+        3: "pm",
+    };
 
     // Action button style
     const actionButtonStyle = {
@@ -309,7 +318,18 @@ export const ChatNoteHeader = ({
                             size="sm"
                             variant="plain"
                             sx={actionButtonStyle}
-                            onClick={() => useUISM.setOpeningService(3)}
+                            onClick={() => {
+                                const note = useNM.currentChatNote;
+                                if (note) {
+                                    const chatTypePath = CHAT_TYPE_PATH_MAP[note.chatType];
+                                    if (chatTypePath) {
+                                        useUISM.setOpeningService(3);
+                                        navigate(
+                                            `/home/notes/chat/${chatTypePath}/${note.chatId}/thread/${note.threadId}/note/${note.noteId}`
+                                        );
+                                    }
+                                }
+                            }}
                         >
                             <LaunchRoundedIcon sx={{ fontSize: 18, color: styles.accentColor }} />
                         </IconButton>

@@ -15,8 +15,7 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ActivityMessageProps, AllChatProps, FlaggedMessageProps } from "../../../../types/chat";
 import {
-    useScrollToBottomOnChatPaneChange,
-    useScrollToBottomOnNewActivity,
+    useScrollToBottomOnNewActivity
 } from "../../hooks/messageBubbleHooks";
 import { ChatListItemForActivity } from "./activity/chatListItemForActivity";
 import { ChatListItem } from "./chatListItem";
@@ -101,6 +100,25 @@ const sortAllChatByPinned = (allChats: AllChatProps[]) => {
         if (!a.isPinned && b.isPinned) return 1;
         return new Date(b.TSLastMessage).getTime() - new Date(a.TSLastMessage).getTime();
     });
+};
+
+const useScrollToBottomOnChatPaneChange = (
+    virtuosoRef: React.RefObject<VirtuosoHandle>,
+    allChats: AllChatProps[]
+) => {
+    useEffect(() => {
+        const virtuoso = virtuosoRef.current;
+        if (virtuoso === null) {
+            return;
+        } else {
+            setTimeout(() => {
+                virtuoso.scrollToIndex({
+                    index: 0,
+                    behavior: "auto",
+                });
+            }, 300); // wait 300ms
+        }
+    }, [allChats]);
 };
 
 type ChatListProps = {

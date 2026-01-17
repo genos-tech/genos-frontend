@@ -69,6 +69,7 @@ export const MessageListRenderer = ({
     useScrollToBottomOnChatChange(
         virtuosoRef,
         currentChatId,
+        visibleRange.startIndex,
         visibleRange.endIndex,
         messages.length - 1,
         indexMap,

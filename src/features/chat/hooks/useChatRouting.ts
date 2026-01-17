@@ -7,8 +7,9 @@ import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../types/admin";
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../types/chat";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
-import { loadSpecificThreadMessages } from "../services/loadSpecificThreadMessages";
 import { popSpecificMessages } from "../services/popSpecificMessages";
+import { loadSpecificThreadMessagesByTaskId } from "../services/loadSpecificThreadMessagesByTaskId";
+import { loadSpecificThreadMessages } from "../services/loadSpecificThreadMessages";
 
 // Chat type constants matching the existing codebase
 const CHAT_TYPE_MAP: Record<string, number> = {
@@ -223,12 +224,21 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
                                 project: existingChat.project,
                                 isPrivate: existingChat.isPrivate,
                                 profileImagePath: existingChat.profileImagePath,
-                                moveToSpecificIndex:
-                                    messageId && useCM.currentMainChat?.chatId !== -1
-                                        ? `${chatId}-${messageId}`
-                                        : undefined,
+                                moveToSpecificIndex: undefined,
                             };
-                            useCM.setCurrentMainChat(newChat);
+                            setTimeout(() => {
+                                let newMoveIndex: string | undefined;
+                                if (threadId === undefined) {
+                                    newMoveIndex = messageId && useCM.currentMainChat?.chatId !== -1 ? `${chatId}-${messageId}` : undefined
+                                    useCM.setCurrentMainChat({...newChat, 
+                                        moveToSpecificIndex: newMoveIndex});
+                                } else {
+                                    newMoveIndex = useCM.currentMainChat?.chatId !== -1 ? `${chatId}-${threadId}` : undefined
+                                    useCM.setCurrentMainChat({...newChat, 
+                                        moveToSpecificIndex: newMoveIndex});
+                                }
+                                useCM.setCurrentMainChat({...newChat, moveToSpecificIndex: newMoveIndex});
+                            }, 250); // wait for the messages to be set
                             useCM.setIsMainChatVisible(true);
                         }
                     })
@@ -249,6 +259,45 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
             (useCM.currentThreadChat === undefined ||
                 useCM.currentThreadChat?.threadId !== threadId)
         ) {
+            if (CHAT_TYPE_MAP[chatType] === 3) {
+            loadSpecificThreadMessagesByTaskId(
+                myself,
+                CHAT_TYPE_MAP[chatType],
+                chatId,
+                threadId, // this is the task id in this case
+                accessToken
+            ).then((threadMessages: ThreadMessageProps[]) => {
+                if (threadMessages && threadMessages.length > 0) {
+                    const newThread: ThreadProps = {
+                        chatId: chatId,
+                        chatName: useCM.currentMainChat?.chatName || "",
+                        threadId: threadMessages[0].threadId,
+                        chatType: CHAT_TYPE_MAP[chatType],
+                        dmPartnerUser: myself,
+                        taskId: threadMessages[0].taskId || null,
+                        messages: threadMessages,
+                        project: threadMessages[0].project,
+                        TSLastMessage: getLocalCurrentTimestamp(),
+                        taskExist: threadMessages[0].taskExist,
+                        moveToSpecificIndex: undefined,
+                    };
+                    if (newThread) {
+                        setTimeout(() => {
+                            const newMoveIndex = messageId
+                                ? `${chatId}-${threadId}-${messageId}`
+                                : `${chatId}-${threadId}-1`;
+                            useCM.setCurrentThreadChat({...newThread, moveToSpecificIndex: newMoveIndex});
+                        }, 250); // wait for the messages to be set
+                        if (newThread.taskExist === true && threadMessages[0].taskId) {
+                            useTM.setCurrentPreviewTaskId(threadMessages[0].taskId);
+                        }
+                    }
+                }
+
+                // Open thread chat
+                useCM.setIsThreadVisible(true);
+            });
+        } else {
             loadSpecificThreadMessages(
                 myself,
                 CHAT_TYPE_MAP[chatType],
@@ -268,12 +317,15 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
                         project: threadMessages[0].project,
                         TSLastMessage: getLocalCurrentTimestamp(),
                         taskExist: threadMessages[0].taskExist,
-                        moveToSpecificIndex: messageId
-                            ? `${chatId}-${threadId}-${messageId}`
-                            : undefined,
+                        moveToSpecificIndex: undefined,
                     };
                     if (newThread) {
-                        useCM.setCurrentThreadChat(newThread);
+                        setTimeout(() => {
+                            const newMoveIndex = messageId
+                                ? `${chatId}-${threadId}-${messageId}`
+                                : `${chatId}-${threadId}-1`;
+                            useCM.setCurrentThreadChat({...newThread, moveToSpecificIndex: newMoveIndex});
+                        }, 250); // wait for the messages to be set
                         if (newThread.taskExist === true && threadMessages[0].taskId) {
                             useTM.setCurrentPreviewTaskId(threadMessages[0].taskId);
                         }
@@ -283,6 +335,7 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
                 // Open thread chat
                 useCM.setIsThreadVisible(true);
             });
+        }
         }
     }, [location.pathname, useCM.allChats.length]);
 
@@ -321,11 +374,18 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
         ) {
             const chatType = useCM.currentMainChat.chatType;
             const chatId = useCM.currentMainChat.chatId;
-            const threadId = useCM.currentThreadChat.chatId;
+            const threadId = useCM.currentThreadChat.chatType === 3 && useCM.currentThreadChat.taskId ? useCM.currentThreadChat.taskId : useCM.currentThreadChat.threadId;
             const typePath = CHAT_TYPE_REVERSE_MAP[chatType];
 
+            // Get the message id from the current path
+            const messageId = parseCurrentRoute().messageId;
+
             if (typePath) {
-                navigate(`/home/chat/${typePath}/${chatId}/thread/${threadId}`, { replace: true });
+                if (messageId) {
+                    navigate(`/home/chat/${typePath}/${chatId}/thread/${threadId}/message/${messageId}`, { replace: true });
+                } else {
+                    navigate(`/home/chat/${typePath}/${chatId}/thread/${threadId}`, { replace: true });
+                }
             }
         }
     }, [useCM.isThreadVisible, useCM.currentThreadChat?.chatId]);

@@ -1,4 +1,4 @@
-import { Box, IconButton, useColorScheme } from "@mui/joy";
+import { useColorScheme } from "@mui/joy";
 import { Panel } from "react-resizable-panels";
 
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";

@@ -24,9 +24,13 @@ export const useScrollManagement = ({
     useEffect(() => {
         setTimeout(() => {
             if (indexMap && currentChat.moveToSpecificIndex) {
-                virtuosoRef.current?.scrollToIndex({
-                    index: indexMap[currentChat.moveToSpecificIndex],
-                });
+                const targetIndex = indexMap[currentChat.moveToSpecificIndex];
+                // Only scroll if the target is not already visible
+                if (targetIndex < visibleRange.startIndex || targetIndex > visibleRange.endIndex) {
+                    virtuosoRef.current?.scrollToIndex({
+                        index: targetIndex,
+                    });
+                }
             } else if (currentChat.notMove !== true) {
                 virtuosoRef.current?.scrollToIndex({
                     index: "LAST",

@@ -71,7 +71,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
     const styles = isDark ? HEADER_STYLES.dark : HEADER_STYLES.light;
     const { currentThreadTaskId } = useChatContext();
 
-    const isYou: boolean = myself.userId === useCM.currentThreadChat?.dmPartnerUser.userId;
+    const isYou: boolean = myself.userId === useCM.currentThreadChat?.dmPartnerUser.userId && useCM.currentThreadChat?.chatType === 1;
 
     // Action button style
     const actionButtonStyle = {

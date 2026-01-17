@@ -3,7 +3,7 @@ import { Box, IconButton, Tooltip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 type BubbleReplyButtonTypes = {
-    replayHandler: () => void;
+    replayHandler: (e?: React.MouseEvent) => void;
 };
 
 export const BubbleReplyButton = (props: BubbleReplyButtonTypes) => {

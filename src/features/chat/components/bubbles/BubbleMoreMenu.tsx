@@ -29,7 +29,7 @@ type BubbleMoreMenuProps = {
     flaggedMessages: FlaggedMessageProps[];
     message: MessageProps;
     myself: UserProps;
-    replyHandler: () => void;
+    replyHandler: (e?: React.MouseEvent) => void;
     setCurrentChat: (chat: ChatProps) => void;
     setEditTargetMessage: (value: MessageProps) => void;
     setFlaggedMessages: (messages: FlaggedMessageProps[]) => void;
@@ -272,6 +272,8 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
     };
 
     const handleReplyClick = () => {
+        // Note: When called from menu items, there's no event to propagate
+        // The stopPropagation is handled by replyHandler if event is provided
         replyHandler();
         closeMenu();
     };

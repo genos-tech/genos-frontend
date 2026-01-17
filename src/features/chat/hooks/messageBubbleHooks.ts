@@ -26,6 +26,7 @@ export const useScrollToBottomOnNewMessage = (
 export const useScrollToBottomOnChatChange = (
     virtuosoRef: React.RefObject<VirtuosoHandle>,
     currentMainChatId: number,
+    visibleRangeStart: number,
     visibleRangeEnd: number,
     maxIndex: number,
     indexMap?: { [k: string]: any },
@@ -44,9 +45,14 @@ export const useScrollToBottomOnChatChange = (
             setTimeout(() => {
                 if (indexMap && moveToSpecificIndex) {
                     if (indexMap[moveToSpecificIndex]) {
-                        virtuoso.scrollToIndex({
-                            index: indexMap[moveToSpecificIndex],
-                        });
+                        const targetIndex = indexMap[moveToSpecificIndex];
+                        // Only scroll if the target is not already visible
+                        console.log(targetIndex, visibleRangeStart, visibleRangeEnd)
+                        if (targetIndex < visibleRangeStart || targetIndex > visibleRangeEnd) {
+                            virtuoso.scrollToIndex({
+                                index: targetIndex,
+                            });
+                        }
                     } else if (
                         indexMap.length > 0 &&
                         Object.keys(indexMap)[0][0] !== moveToSpecificIndex[0]
@@ -69,25 +75,6 @@ export const useScrollToBottomOnChatChange = (
             }, 300); // wait 300ms
         }
     }, [currentMainChatId, indexMap]);
-};
-
-export const useScrollToBottomOnChatPaneChange = (
-    virtuosoRef: React.RefObject<VirtuosoHandle>,
-    allChats: AllChatProps[]
-) => {
-    useEffect(() => {
-        const virtuoso = virtuosoRef.current;
-        if (virtuoso === null) {
-            return;
-        } else {
-            setTimeout(() => {
-                virtuoso.scrollToIndex({
-                    index: 0,
-                    behavior: "auto",
-                });
-            }, 300); // wait 300ms
-        }
-    }, [allChats]);
 };
 
 export const useScrollToBottomOnNewActivity = (

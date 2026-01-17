@@ -104,7 +104,11 @@ export const MessageBubble = (props: MessageBubbleProps) => {
     const handleMessageClick = () => {
         const typePath = CHAT_TYPE_PATH[chat.chatType];
         if (typePath) {
-            navigate(`/home/chat/${typePath}/${chat.chatId}/message/${message.messageId}`);
+            // For PM (chatType 3), use taskId instead of messageId to match the indexMap key format
+            // The indexMap for PM uses messageIdWithChatId = `${chatId}-${taskId}`
+            const messageIdentifier =
+                chat.chatType === 3 && message.taskId ? message.taskId : message.messageId;
+            navigate(`/home/chat/${typePath}/${chat.chatId}/message/${messageIdentifier}`);
         }
     };
 
@@ -124,13 +128,16 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         })();
     };
 
-    const replayHandler = () => {
+    const replayHandler = (e?: React.MouseEvent) => {
+        // Stop propagation to prevent handleMessageClick from being called
+        e?.stopPropagation();
+
         loadTask(message.messageId);
 
         // Show thread pane on the right side.
         useCM.setIsMainChatVisible(true);
         useCM.setIsThreadVisible(true);
-        useTM.setIsTaskPreviewVisible(false);
+        // useTM.setIsTaskPreviewVisible(false);
         useTM.setIsCreatingTask({ ...useTM.isCreatingTask, flag: false });
 
         if (message.taskId) {
@@ -217,6 +224,15 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                 useCM.setCurrentThreadChat(newThread);
                                 if (newThread.taskExist === true && threadMessages[0].taskId) {
                                     useTM.setCurrentPreviewTaskId(threadMessages[0].taskId);
+                                }
+
+                                // Navigate to thread URL for consistency with URL routing
+                                const typePath = CHAT_TYPE_PATH[chat.chatType];
+                                if (typePath) {
+                                    // For PM (chatType 3), use taskId as thread identifier to match indexMap key format
+                                    const threadIdentifier =
+                                        chat.chatType === 3 && message.taskId ? message.taskId : message.messageId;
+                                    navigate(`/home/chat/${typePath}/${chat.chatId}/thread/${threadIdentifier}`);
                                 }
                             }
                         }

@@ -205,7 +205,6 @@ export const useTaskManagement = (
 
             if (loadedTask.length > 0) {
                 setCurrentPreviewTask(loadedTask[0]);
-                setIsTaskPreviewVisible(true);
             }
         } catch (error) {
             console.error("Error loading task:", error);

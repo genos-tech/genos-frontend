@@ -75,6 +75,7 @@ export const useProjectTaskManagement = ({
     useEffect(() => {
         if (usePM.currentProject && useTM.currentPreviewTaskId !== -1) {
             useTM.loadTask(usePM.currentProject.projectId, useTM.currentPreviewTaskId);
+            useTM.setIsTaskPreviewVisible(true);
         }
     }, [useTM.currentPreviewTaskId, usePM.currentProject]);
 

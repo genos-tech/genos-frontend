@@ -20,7 +20,7 @@ type BubbleUnderBarTypes = {
     setReactions: (value: ReactionProps[]) => void;
     setUniqueReactionEmojiCount: (value: number) => void;
     setShowEmojiPicker: (value: boolean) => void;
-    replayHandler?: () => void;
+    replayHandler?: (e?: React.MouseEvent) => void;
     isThread: boolean;
 };
 

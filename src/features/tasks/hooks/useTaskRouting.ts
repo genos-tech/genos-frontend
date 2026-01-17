@@ -99,6 +99,7 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
                 useTM.loadTask(projectId, taskId).finally(() => {
                     setTimeout(() => {
                         isNavigatingFromUrl.current = false;
+                        useTM.setIsTaskPreviewVisible(true);
                     }, 100);
                 });
             }

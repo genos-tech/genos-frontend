@@ -284,7 +284,8 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
     const handleCopyLinkClick = async () => {
         const typePath = CHAT_TYPE_PATH[thread.chatType];
         if (typePath) {
-            const messageUrl = `${window.location.origin}/home/chat/${typePath}/${thread.chatId}/thread/${thread.threadId}/message/${message.messageId}`;
+            const threadId = thread.chatType === 3 && thread.taskId ? thread.taskId : thread.threadId;
+            const messageUrl = `${window.location.origin}/home/chat/${typePath}/${thread.chatId}/thread/${threadId}/message/${message.messageId}`;
             try {
                 await navigator.clipboard.writeText(messageUrl);
             } catch (err) {
