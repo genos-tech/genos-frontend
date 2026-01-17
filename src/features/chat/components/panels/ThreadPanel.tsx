@@ -47,7 +47,7 @@ export const ThreadPanel = ({
                     height: "100%",
                     backgroundColor: "black",
                     borderColor: mode === "dark" ? "black" : "white",
-                    borderRight: mode === "dark" ? "2px black inset" : "2px lightgrey inset",
+                    borderRight: mode === "dark" ? "1px black inset" : "1px lightgrey inset",
                 }}
             >
                 {useCM.currentThreadChat && (

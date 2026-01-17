@@ -97,7 +97,7 @@ export const TaskHomeLayout = ({
                 height: "100dvh",
                 overflow: "hidden",
                 gap: 1,
-                borderRight: mode === "dark" ? "2px black inset" : "2px lightgrey inset",
+                borderRight: mode === "dark" ? "1px black inset" : "1px lightgrey inset",
             }}
         >
             {useTM.isDashboardVisible && <TaskDashboard useTM={useTM} usePM={usePM} />}
@@ -178,7 +178,7 @@ export const TaskHomeLayout = ({
                         minWidth: 0,
                         height: "100dvh",
                         gap: 1,
-                        borderRight: mode === "dark" ? "2px black inset" : "2px lightgrey inset",
+                        borderRight: mode === "dark" ? "1px black inset" : "1px lightgrey inset",
                     }}
                 >
                     <CreateTaskForm
@@ -262,7 +262,7 @@ export const TaskHomeLayout = ({
                         minWidth: 0,
                         height: "100dvh",
                         gap: 1,
-                        borderRight: mode === "dark" ? "2px black inset" : "2px lightgrey inset",
+                        borderRight: mode === "dark" ? "1px black inset" : "1px lightgrey inset",
                     }}
                 >
                     <TaskNoteMain
@@ -292,7 +292,7 @@ export const TaskHomeLayout = ({
                         justifyContent: "center",
                         alignItems: "center",
                         width: "100%",
-                        borderRight: mode === "dark" ? "2px black inset" : "2px lightgrey inset",
+                        borderRight: mode === "dark" ? "1px black inset" : "1px lightgrey inset",
                     }}
                 >
                     <IconButton
@@ -323,7 +323,7 @@ export const TaskHomeLayout = ({
                         height: "100%",
                         width: "100%",
                         borderColor: mode === "dark" ? "black" : "white",
-                        borderRight: mode === "dark" ? "2px black inset" : "2px lightgrey inset",
+                        borderRight: mode === "dark" ? "1px black inset" : "1px lightgrey inset",
                     }}
                 >
                     <TaskSidebar

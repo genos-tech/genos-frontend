@@ -55,7 +55,7 @@ export const CreateTaskPanel = ({
                     gap: 1,
                     boxShadow: "0 0 0 1px grey",
                     borderColor: mode === "dark" ? "black" : "white",
-                    borderRight: mode === "dark" ? "2px black inset" : "2px lightgrey inset",
+                    borderRight: mode === "dark" ? "1px black inset" : "1px lightgrey inset",
                 }}
             >
                 <CreateTaskForm
