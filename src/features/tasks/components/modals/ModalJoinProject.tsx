@@ -1,6 +1,10 @@
 import React, { useState } from "react";
+import { keyframes } from "@emotion/react";
+import FolderSharedIcon from "@mui/icons-material/FolderShared";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
-import { Alert, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
+import PublicIcon from "@mui/icons-material/Public";
+import SendIcon from "@mui/icons-material/Send";
+import { Alert, Box, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -12,6 +16,11 @@ import { AllChatProps, ChatProps } from "../../../../types/chat";
 import { ProjectProps } from "../../../../types/tasks";
 import { addChat } from "../../../chat/services/addChat";
 import { addMessage } from "../../../chat/services/addMessage";
+
+const fadeIn = keyframes`
+    from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+`;
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const disableOpenJoinModalParams = {
@@ -208,53 +217,189 @@ export const ModalJoinProject: React.FC<Props> = ({
     };
 
     return (
-        <>
-            <Modal
-                open={openJoinProject.flag}
-                sx={{ zIndex: 10010 }}
-                onClose={() => setOpenJoinProject(disableOpenJoinModalParams)}
+        <Modal
+            open={openJoinProject.flag}
+            sx={{
+                zIndex: 10010,
+                backdropFilter: "blur(4px)",
+                backgroundColor: "rgba(0, 0, 0, 0.5)",
+            }}
+            onClose={() => setOpenJoinProject(disableOpenJoinModalParams)}
+        >
+            <ModalDialog
+                sx={{
+                    animation: `${fadeIn} 0.2s ease-out`,
+                    background:
+                        "linear-gradient(145deg, rgba(30, 30, 40, 0.95) 0%, rgba(20, 20, 28, 0.98) 100%)",
+                    border: `1px solid ${openJoinProject.isPrivate ? "rgba(168, 85, 247, 0.2)" : "rgba(59, 130, 246, 0.2)"}`,
+                    borderRadius: "16px",
+                    boxShadow: `0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px ${openJoinProject.isPrivate ? "rgba(168, 85, 247, 0.1)" : "rgba(59, 130, 246, 0.1)"}`,
+                    minWidth: "360px",
+                    p: 3,
+                    textAlign: "center",
+                }}
             >
-                <ModalDialog>
-                    <Typography
-                        level="h4"
-                        startDecorator={
-                            openJoinProject.isPrivate === true ? (
-                                <LockOutlineIcon sx={{ fontSize: "22px" }} />
+                {/* Icon */}
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 56,
+                        height: 56,
+                        borderRadius: "14px",
+                        background: openJoinProject.isPrivate
+                            ? "linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%)"
+                            : "linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(99, 102, 241, 0.15) 100%)",
+                        border: `1px solid ${openJoinProject.isPrivate ? "rgba(168, 85, 247, 0.25)" : "rgba(59, 130, 246, 0.25)"}`,
+                        mx: "auto",
+                        mb: 2,
+                    }}
+                >
+                    <FolderSharedIcon
+                        sx={{
+                            color: openJoinProject.isPrivate
+                                ? "rgba(168, 85, 247, 0.9)"
+                                : "rgba(59, 130, 246, 0.9)",
+                            fontSize: 28,
+                        }}
+                    />
+                </Box>
+
+                {/* Privacy Badge */}
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 1,
+                        mb: 1,
+                    }}
+                >
+                    {openJoinProject.isPrivate ? (
+                        <>
+                            <LockOutlineIcon
+                                sx={{ color: "rgba(168, 85, 247, 0.7)", fontSize: 16 }}
+                            />
+                            <Typography
+                                level="body-xs"
+                                sx={{
+                                    color: "rgba(168, 85, 247, 0.8)",
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.1em",
+                                }}
+                            >
+                                Private Project
+                            </Typography>
+                        </>
+                    ) : (
+                        <>
+                            <PublicIcon sx={{ color: "rgba(59, 130, 246, 0.7)", fontSize: 16 }} />
+                            <Typography
+                                level="body-xs"
+                                sx={{
+                                    color: "rgba(59, 130, 246, 0.8)",
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.1em",
+                                }}
+                            >
+                                Public Project
+                            </Typography>
+                        </>
+                    )}
+                </Box>
+
+                {/* Title */}
+                <Typography
+                    level="h4"
+                    sx={{
+                        color: "rgba(255, 255, 255, 0.9)",
+                        fontWeight: 600,
+                        mb: 0.5,
+                    }}
+                >
+                    {openJoinProject.isPrivate ? "Request to Join" : "Join Project"}
+                </Typography>
+
+                {/* Project Name */}
+                <Typography
+                    level="h3"
+                    sx={{
+                        background: openJoinProject.isPrivate
+                            ? "linear-gradient(135deg, #a855f7 0%, #8b5cf6 100%)"
+                            : "linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                        fontWeight: 700,
+                        mb: 2.5,
+                    }}
+                >
+                    {openJoinProject.projectName}
+                </Typography>
+
+                {/* Error Alert */}
+                {errorMessage && (
+                    <Alert
+                        color="danger"
+                        sx={{
+                            mb: 2,
+                            borderRadius: "10px",
+                            backgroundColor: "rgba(239, 68, 68, 0.1)",
+                            border: "1px solid rgba(239, 68, 68, 0.3)",
+                            textAlign: "left",
+                        }}
+                    >
+                        {errorMessage}
+                    </Alert>
+                )}
+
+                {/* Action Buttons */}
+                <Stack direction="row" spacing={1.5} sx={{ justifyContent: "center" }}>
+                    <Button
+                        variant="plain"
+                        onClick={() => setOpenJoinProject(disableOpenJoinModalParams)}
+                        sx={{
+                            color: "rgba(255, 255, 255, 0.6)",
+                            borderRadius: "10px",
+                            px: 3,
+                            "&:hover": {
+                                backgroundColor: "rgba(255, 255, 255, 0.05)",
+                                color: "rgba(255, 255, 255, 0.9)",
+                            },
+                        }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleJoinProject}
+                        endDecorator={
+                            openJoinProject.isPrivate ? (
+                                <SendIcon sx={{ fontSize: 16 }} />
                             ) : undefined
                         }
+                        sx={{
+                            background: openJoinProject.isPrivate
+                                ? "linear-gradient(135deg, #a855f7 0%, #8b5cf6 100%)"
+                                : "linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)",
+                            borderRadius: "10px",
+                            px: 3,
+                            fontWeight: 600,
+                            boxShadow: openJoinProject.isPrivate
+                                ? "0 4px 15px rgba(168, 85, 247, 0.3)"
+                                : "0 4px 15px rgba(59, 130, 246, 0.3)",
+                            transition: "all 0.2s ease",
+                            "&:hover": {
+                                transform: "translateY(-1px)",
+                                boxShadow: openJoinProject.isPrivate
+                                    ? "0 6px 20px rgba(168, 85, 247, 0.4)"
+                                    : "0 6px 20px rgba(59, 130, 246, 0.4)",
+                            },
+                        }}
                     >
-                        {openJoinProject.isPrivate === true
-                            ? "Make a Request to Join -"
-                            : "Join the Project -"}
-                        <Typography color="primary" level="h3" sx={{ ml: 1 }}>
-                            {openJoinProject.projectName}
-                        </Typography>
-                    </Typography>
-
-                    {errorMessage && errorMessage !== "" && (
-                        <Alert color="danger">{errorMessage}</Alert>
-                    )}
-
-                    <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: "center" }}>
-                        <Button
-                            color="danger"
-                            component="button"
-                            variant="outlined"
-                            onClick={() => setOpenJoinProject(disableOpenJoinModalParams)}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            color="primary"
-                            component="button"
-                            variant="soft"
-                            onClick={handleJoinProject}
-                        >
-                            {openJoinProject.isPrivate === true ? "Send" : "Join"}
-                        </Button>
-                    </Stack>
-                </ModalDialog>
-            </Modal>
-        </>
+                        {openJoinProject.isPrivate ? "Send Request" : "Join Project"}
+                    </Button>
+                </Stack>
+            </ModalDialog>
+        </Modal>
     );
 };

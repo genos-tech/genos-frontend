@@ -174,7 +174,6 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
     ];
 
     const tips = [
-        "Use keyboard shortcut ⌘+S to save notes quickly",
         "Star important notes to access them from Favorites",
         "Organize notes with nested hierarchies for better structure",
         "Link notes to tasks and chats for seamless context",

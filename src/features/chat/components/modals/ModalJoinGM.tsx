@@ -1,10 +1,18 @@
 import React, { useState } from "react";
+import GroupsIcon from "@mui/icons-material/Groups";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
-import { Alert, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
+import SendIcon from "@mui/icons-material/Send";
+import { Alert, Box, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
+import { keyframes } from "@emotion/react";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { UserProps } from "../../../../types/admin";
+
+const fadeIn = keyframes`
+    from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+`;
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const disableOpenJoinGMParams = {
@@ -115,47 +123,134 @@ export const ModalJoinGM: React.FC<Props> = ({ socket, myself, openJoinGM, setOp
     };
 
     return (
-        <>
-            <Modal
-                open={openJoinGM.flag}
-                sx={{ zIndex: 10010 }}
-                onClose={() => setOpenJoinGM(disableOpenJoinGMParams)}
+        <Modal
+            open={openJoinGM.flag}
+            sx={{
+                zIndex: 10010,
+                backdropFilter: "blur(4px)",
+                backgroundColor: "rgba(0, 0, 0, 0.5)",
+            }}
+            onClose={() => setOpenJoinGM(disableOpenJoinGMParams)}
+        >
+            <ModalDialog
+                sx={{
+                    animation: `${fadeIn} 0.2s ease-out`,
+                    background:
+                        "linear-gradient(145deg, rgba(30, 30, 40, 0.95) 0%, rgba(20, 20, 28, 0.98) 100%)",
+                    border: "1px solid rgba(168, 85, 247, 0.2)",
+                    borderRadius: "16px",
+                    boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(168, 85, 247, 0.1)",
+                    minWidth: "360px",
+                    p: 3,
+                    textAlign: "center",
+                }}
             >
-                <ModalDialog>
+                {/* Icon */}
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 56,
+                        height: 56,
+                        borderRadius: "14px",
+                        background: "linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%)",
+                        border: "1px solid rgba(168, 85, 247, 0.25)",
+                        mx: "auto",
+                        mb: 2,
+                    }}
+                >
+                    <GroupsIcon sx={{ color: "rgba(168, 85, 247, 0.9)", fontSize: 28 }} />
+                </Box>
+
+                {/* Title */}
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, mb: 1 }}>
+                    <LockOutlineIcon sx={{ color: "rgba(168, 85, 247, 0.7)", fontSize: 18 }} />
                     <Typography
-                        level="h4"
-                        startDecorator={<LockOutlineIcon sx={{ fontSize: "22px" }} />}
+                        level="body-sm"
+                        sx={{ color: "rgba(255, 255, 255, 0.5)", textTransform: "uppercase", letterSpacing: "0.1em" }}
                     >
-                        Make a request to join GM -
-                        <Typography color="primary" level="h3" sx={{ ml: 1 }}>
-                            {openJoinGM.chatName}
-                        </Typography>
+                        Private Group
                     </Typography>
+                </Box>
 
-                    {errorMessage && errorMessage !== "" && (
-                        <Alert color="danger">{errorMessage}</Alert>
-                    )}
+                <Typography
+                    level="h4"
+                    sx={{
+                        color: "rgba(255, 255, 255, 0.9)",
+                        fontWeight: 600,
+                        mb: 0.5,
+                    }}
+                >
+                    Request to Join
+                </Typography>
 
-                    <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: "center" }}>
-                        <Button
-                            color="danger"
-                            component="button"
-                            variant="outlined"
-                            onClick={() => setOpenJoinGM(disableOpenJoinGMParams)}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            color="primary"
-                            component="button"
-                            variant="soft"
-                            onClick={handleJoinGM}
-                        >
-                            Send
-                        </Button>
-                    </Stack>
-                </ModalDialog>
-            </Modal>
-        </>
+                <Typography
+                    level="h3"
+                    sx={{
+                        background: "linear-gradient(135deg, #a855f7 0%, #8b5cf6 100%)",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                        fontWeight: 700,
+                        mb: 2.5,
+                    }}
+                >
+                    {openJoinGM.chatName}
+                </Typography>
+
+                {/* Error Alert */}
+                {errorMessage && (
+                    <Alert
+                        color="danger"
+                        sx={{
+                            mb: 2,
+                            borderRadius: "10px",
+                            backgroundColor: "rgba(239, 68, 68, 0.1)",
+                            border: "1px solid rgba(239, 68, 68, 0.3)",
+                            textAlign: "left",
+                        }}
+                    >
+                        {errorMessage}
+                    </Alert>
+                )}
+
+                {/* Action Buttons */}
+                <Stack direction="row" spacing={1.5} sx={{ justifyContent: "center" }}>
+                    <Button
+                        variant="plain"
+                        onClick={() => setOpenJoinGM(disableOpenJoinGMParams)}
+                        sx={{
+                            color: "rgba(255, 255, 255, 0.6)",
+                            borderRadius: "10px",
+                            px: 3,
+                            "&:hover": {
+                                backgroundColor: "rgba(255, 255, 255, 0.05)",
+                                color: "rgba(255, 255, 255, 0.9)",
+                            },
+                        }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        onClick={handleJoinGM}
+                        endDecorator={<SendIcon sx={{ fontSize: 16 }} />}
+                        sx={{
+                            background: "linear-gradient(135deg, #a855f7 0%, #8b5cf6 100%)",
+                            borderRadius: "10px",
+                            px: 3,
+                            fontWeight: 600,
+                            boxShadow: "0 4px 15px rgba(168, 85, 247, 0.3)",
+                            transition: "all 0.2s ease",
+                            "&:hover": {
+                                transform: "translateY(-1px)",
+                                boxShadow: "0 6px 20px rgba(168, 85, 247, 0.4)",
+                            },
+                        }}
+                    >
+                        Send Request
+                    </Button>
+                </Stack>
+            </ModalDialog>
+        </Modal>
     );
 };

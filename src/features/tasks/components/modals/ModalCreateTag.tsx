@@ -1,6 +1,8 @@
 import React, { useState } from "react";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import { Alert, Box, Button, Chip, Input, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { keyframes } from "@emotion/react";
 import { alpha } from "@mui/system";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -9,6 +11,11 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ProjectProps } from "../../../../types/tasks";
 import { ColorPickerMenu } from "../contents/base/sub/TagColorPickerMenu";
+
+const fadeIn = keyframes`
+    from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+`;
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -69,72 +76,182 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, usePM, useTM }) => {
     }
 
     return (
-        <>
-            <Modal
-                open={useTM.openCreateTag}
-                sx={{ zIndex: 10010 }}
-                onClose={() => useTM.setOpenCreateTag(false)}
+        <Modal
+            open={useTM.openCreateTag}
+            sx={{
+                zIndex: 10010,
+                backdropFilter: "blur(4px)",
+                backgroundColor: "rgba(0, 0, 0, 0.5)",
+            }}
+            onClose={() => useTM.setOpenCreateTag(false)}
+        >
+            <ModalDialog
+                sx={{
+                    animation: `${fadeIn} 0.2s ease-out`,
+                    background:
+                        "linear-gradient(145deg, rgba(30, 30, 40, 0.95) 0%, rgba(20, 20, 28, 0.98) 100%)",
+                    border: "1px solid rgba(34, 197, 94, 0.2)",
+                    borderRadius: "16px",
+                    boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(34, 197, 94, 0.1)",
+                    minWidth: "360px",
+                    p: 3,
+                }}
             >
-                <ModalDialog>
-                    <Typography level="h4">Create New Tag</Typography>
-                    {errorTagCreateMessage && errorTagCreateMessage !== "" && (
-                        <Alert color="danger">{errorTagCreateMessage}</Alert>
-                    )}
-                    <Stack direction={"row"}>
-                        <Input
-                            placeholder="Unique tag name"
-                            value={tagName}
-                            onChange={(e) => setTagName(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter" && tagName.trim()) {
-                                    handleCreateTag();
-                                }
-                            }}
-                        />
-                        <ColorPickerMenu
-                            onSelectColor={(color) =>
-                                setSelectedColor({
-                                    chipColor: color.value,
-                                    textColor: color.textColor,
-                                })
+                {/* Header */}
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2.5 }}>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: 40,
+                            height: 40,
+                            borderRadius: "10px",
+                            background: "linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(16, 185, 129, 0.2) 100%)",
+                            border: "1px solid rgba(34, 197, 94, 0.3)",
+                        }}
+                    >
+                        <LocalOfferIcon sx={{ color: "rgba(34, 197, 94, 0.9)", fontSize: 22 }} />
+                    </Box>
+                    <Typography
+                        level="h4"
+                        sx={{
+                            background: "linear-gradient(135deg, #86efac 0%, #4ade80 100%)",
+                            WebkitBackgroundClip: "text",
+                            WebkitTextFillColor: "transparent",
+                            fontWeight: 600,
+                        }}
+                    >
+                        Create New Tag
+                    </Typography>
+                </Box>
+
+                {/* Error Alert */}
+                {errorTagCreateMessage && (
+                    <Alert
+                        color="danger"
+                        sx={{
+                            mb: 2,
+                            borderRadius: "10px",
+                            backgroundColor: "rgba(239, 68, 68, 0.1)",
+                            border: "1px solid rgba(239, 68, 68, 0.3)",
+                        }}
+                    >
+                        {errorTagCreateMessage}
+                    </Alert>
+                )}
+
+                {/* Input Row */}
+                <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+                    <Input
+                        placeholder="Enter tag name..."
+                        value={tagName}
+                        onChange={(e) => setTagName(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter" && tagName.trim()) {
+                                handleCreateTag();
                             }
-                        />
-                    </Stack>
-                    {selectedColor && tagName !== "" && (
-                        <Box>
-                            Tag will be:&nbsp;
-                            <Chip
-                                variant="outlined"
-                                sx={{
-                                    color: mode === "dark" ? "white" : "black",
-                                    fontWeight: "bold",
-                                    borderRadius: "5px",
-                                    borderWidth: "3px",
-                                    borderColor: alpha(
-                                        selectedColor.chipColor,
-                                        mode === "dark" ? 0.5 : 0.75
-                                    ),
-                                }}
-                            >
-                                {tagName}
-                            </Chip>
-                        </Box>
-                    )}
-                    <Stack direction="row" spacing={1} sx={{ mt: 2, justifyContent: "flex-end" }}>
-                        <Button
-                            color="danger"
-                            component="a"
+                        }}
+                        sx={{
+                            flex: 1,
+                            "--Input-focusedThickness": "1px",
+                            "--Input-focusedHighlight": "rgba(34, 197, 94, 0.5)",
+                            backgroundColor: "rgba(255, 255, 255, 0.05)",
+                            border: "1px solid rgba(255, 255, 255, 0.1)",
+                            borderRadius: "10px",
+                            transition: "all 0.2s ease",
+                            "&:hover": {
+                                borderColor: "rgba(34, 197, 94, 0.3)",
+                            },
+                        }}
+                    />
+                    <ColorPickerMenu
+                        onSelectColor={(color) =>
+                            setSelectedColor({
+                                chipColor: color.value,
+                                textColor: color.textColor,
+                            })
+                        }
+                    />
+                </Stack>
+
+                {/* Tag Preview */}
+                {selectedColor && tagName !== "" && (
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1.5,
+                            p: 2,
+                            mb: 2,
+                            borderRadius: "10px",
+                            backgroundColor: "rgba(255, 255, 255, 0.03)",
+                            border: "1px solid rgba(255, 255, 255, 0.08)",
+                        }}
+                    >
+                        <Typography level="body-sm" sx={{ color: "rgba(255, 255, 255, 0.5)" }}>
+                            Preview:
+                        </Typography>
+                        <Chip
                             variant="outlined"
-                            onClick={() => useTM.setOpenCreateTag(false)}
+                            sx={{
+                                color: mode === "dark" ? "white" : "black",
+                                fontWeight: "bold",
+                                borderRadius: "6px",
+                                borderWidth: "2px",
+                                borderColor: alpha(
+                                    selectedColor.chipColor,
+                                    mode === "dark" ? 0.6 : 0.75
+                                ),
+                                backgroundColor: alpha(selectedColor.chipColor, 0.1),
+                            }}
                         >
-                            Cancel
-                        </Button>
-                        <Button component="a" disabled={!tagName.trim()} onClick={handleCreateTag}>
-                            Create
-                        </Button>
-                    </Stack>
-                </ModalDialog>
-            </Modal>
-        </>
+                            {tagName}
+                        </Chip>
+                    </Box>
+                )}
+
+                {/* Action Buttons */}
+                <Stack direction="row" spacing={1.5} sx={{ justifyContent: "flex-end" }}>
+                    <Button
+                        variant="plain"
+                        onClick={() => useTM.setOpenCreateTag(false)}
+                        sx={{
+                            color: "rgba(255, 255, 255, 0.6)",
+                            borderRadius: "10px",
+                            px: 2.5,
+                            "&:hover": {
+                                backgroundColor: "rgba(255, 255, 255, 0.05)",
+                                color: "rgba(255, 255, 255, 0.9)",
+                            },
+                        }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        disabled={!tagName.trim()}
+                        onClick={handleCreateTag}
+                        sx={{
+                            background: "linear-gradient(135deg, #22c55e 0%, #10b981 100%)",
+                            borderRadius: "10px",
+                            px: 3,
+                            fontWeight: 600,
+                            boxShadow: "0 4px 15px rgba(34, 197, 94, 0.3)",
+                            transition: "all 0.2s ease",
+                            "&:hover": {
+                                transform: "translateY(-1px)",
+                                boxShadow: "0 6px 20px rgba(34, 197, 94, 0.4)",
+                            },
+                            "&:disabled": {
+                                background: "rgba(255, 255, 255, 0.1)",
+                                color: "rgba(255, 255, 255, 0.3)",
+                            },
+                        }}
+                    >
+                        Create Tag
+                    </Button>
+                </Stack>
+            </ModalDialog>
+        </Modal>
     );
 };

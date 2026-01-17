@@ -191,7 +191,6 @@ export const TaskHomeContent = ({ useTM, usePM }: TaskHomeContentProps) => {
     ];
 
     const tips = [
-        "Use keyboard shortcut ⌘+N to quickly create a new task",
         "Drag and drop tasks in the Sprint Board to change their status",
         "Add tags to tasks for better organization and filtering",
         "Use the filter menu to quickly find specific tasks",

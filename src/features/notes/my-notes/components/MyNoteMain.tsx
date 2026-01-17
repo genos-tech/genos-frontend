@@ -17,6 +17,7 @@ import { NoteEditor } from "../../common/components/NoteEditor";
 import { NoteHeaderActions } from "../../common/components/NoteHeaderActions";
 import { NoteTabList } from "../../common/components/NoteTabList";
 import { MyNoteHeader } from "../components/MyNoteHeader";
+import { ModalDeleteMyNote } from "../modals/ModalDeleteMyNote";
 
 /**
  * Props for the MyNoteMain component
@@ -167,6 +168,19 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                     onDeleteNote={handleDeleteNote}
                                     onOpenTask={() => {}}
                                 />
+
+                                {useNM.currentMyNote && (
+                                    <ModalDeleteMyNote
+                                        handleCloseTab={handleCloseTab}
+                                        myself={myself}
+                                        openDeleteNote={openDeleteNote}
+                                        setOpenDeleteNote={setOpenDeleteNote}
+                                        myNoteMeta={useNM.myNoteMeta}
+                                        setMyNoteMeta={useNM.setMyNoteMeta}
+                                        currentMyNote={useNM.currentMyNote}
+                                        currentTabIndex={useNM.selectedTabIndex}
+                                    />
+                                )}
                             </Stack>
 
                             <Tabs
