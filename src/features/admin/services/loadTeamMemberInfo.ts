@@ -13,7 +13,6 @@ export const loadTeamMemberInfo = async (
         const query: string = `team_id=${myself.teamId}&user_id=${targetUserId}`;
         if (api) {
             const res = await api.get(`/team/getTeamMemberInfo/?${query}`);
-            console.log("Member info:", res.data);
             return res.data;
         } else {
             console.error("Unauthorized. Auth toke is not found.");

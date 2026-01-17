@@ -46,7 +46,6 @@ export const moveToGMChat = async (
 ) => {
     const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, 2);
     if (fetchedMessages) {
-        console.log("move to gm:", fetchedMessages[fetchedMessages.length - 1]);
         useCM.setCurrentMainChat(
             defineNewChat(chatId, chatName, 2, defaultDmPartner, fetchedMessages, isPrivate)
         );

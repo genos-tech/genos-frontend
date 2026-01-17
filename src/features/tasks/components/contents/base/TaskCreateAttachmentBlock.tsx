@@ -122,7 +122,6 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
         event.preventDefault();
 
         const droppedFiles = Array.from(event.dataTransfer.files);
-        console.log("droppedFiles:", droppedFiles);
         droppedFiles.map((file, index) => {
             const attachmentId: number = -numOfUploadingFiles - index - 1;
 

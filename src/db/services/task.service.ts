@@ -76,7 +76,6 @@ export class TaskService {
 
     // Batch insert tasks
     async batchInsertTasks(tasks: TaskTableProps[]): Promise<boolean> {
-        console.log("batchInsertTasks", tasks);
         return this.taskRepo.batchInsertTasks(tasks);
     }
 

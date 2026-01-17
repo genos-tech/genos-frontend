@@ -37,6 +37,8 @@ export interface ChatManagementState {
     setIsChatNoteVisibleInChat: (value: boolean) => void;
     currentChatPaneType: number;
     setCurrentChatPaneType: (value: number) => void;
+    notMoveChatPaneType: boolean;
+    setNotMoveChatPaneType: (value: boolean) => void;
     currentMainChat: ChatProps | undefined;
     setCurrentMainChat: (value: ChatProps | undefined) => void;
     currentSubChat: ChatProps | undefined;
@@ -94,6 +96,11 @@ export const useChatManagement = (
     const [currentChatPaneType, setCurrentChatPaneType] = useState<number>(
         Number(localStorage.getItem("currentChatPaneType") || "1")
     );
+
+    // Not move chat pane type state
+    // true: not move chat pane type (used for activity and flagged chats only via UI)
+    // false: move chat pane type (used for all chats via URL)
+    const [notMoveChatPaneType, setNotMoveChatPaneType] = useState<boolean>(false);
 
     // To-Do visibility state: 0: show only incomplete todos, 1: show all todos
     const [showOnlyInCompleteTodos, setShowOnlyInCompleteTodos] = useState<boolean>(
@@ -371,6 +378,8 @@ export const useChatManagement = (
         // Chat type
         currentChatPaneType,
         setCurrentChatPaneType,
+        notMoveChatPaneType,
+        setNotMoveChatPaneType,
 
         // Current chats
         currentMainChat,

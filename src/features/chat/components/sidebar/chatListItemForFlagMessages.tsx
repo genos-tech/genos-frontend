@@ -385,6 +385,9 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
     };
 
     const onClickHandler = async () => {
+        // set to true to not move chat pane type
+        useCM.setNotMoveChatPaneType(true);
+
         setSelectedFlaggedMessageId(flaggedMessage.flaggedMessageId);
 
         if (flaggedMessage.threadId === 0) {

@@ -99,6 +99,9 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
     // Navigate to a specific chat type
     const navigateToChatType = useCallback(
         (chatType: number) => {
+            // set to true to not move chat pane type
+            useCM.setNotMoveChatPaneType(false);
+
             const typePath = CHAT_TYPE_REVERSE_MAP[chatType];
             if (typePath) {
                 navigate(buildChatPath(typePath));
@@ -229,9 +232,10 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
         if (!paneType) return;
 
         // Update chat pane type from URL
-        if (useCM.currentChatPaneType !== paneType) {
+        if (useCM.currentChatPaneType !== paneType && useCM.notMoveChatPaneType === false) {
             useCM.setCurrentChatPaneType(paneType);
             localStorage.setItem("currentChatPaneType", paneType.toString());
+            useCM.setNotMoveChatPaneType(false); // set to false by default
         }
 
         // Early exit if no chatId or allChats not loaded

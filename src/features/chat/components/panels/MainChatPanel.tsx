@@ -1,4 +1,4 @@
-import { useColorScheme } from "@mui/joy";
+import { Box, useColorScheme } from "@mui/joy";
 import { Panel } from "react-resizable-panels";
 
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -9,6 +9,8 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ToDoFactProps } from "../../../../types/chat";
 import { MessagesPane } from "../../MainChatPane";
+import { SelectChatPanel } from "./SelectChatPanel";
+import { ResizeHandle } from "../../../notes/common/components/ResizeHandle";
 
 interface MainChatPanelProps {
     useCM: ChatManagementState;
@@ -78,6 +80,12 @@ export const MainChatPanel = ({
                     useTM={useTM}
                     usePM={usePM}
                 />
+            )}
+            {!(useCM.currentMainChat && useCM.currentMainChat.chatId !== -1) && (
+                <Box sx={{ height: "100%", display: "flex", justifyContent: "center", alignItems: "center", width: "100%" }}>
+                    <ResizeHandle key="select-chat-resize-handle" />
+                    <SelectChatPanel setMainChatPanelSize={setMainChatPanelSize} />
+                </Box>
             )}
         </Panel>
     );
