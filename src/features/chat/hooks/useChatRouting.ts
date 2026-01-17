@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../../context/AuthContext";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
@@ -28,41 +28,44 @@ const CHAT_TYPE_REVERSE_MAP: Record<number, string> = {
     6: "flagged",
 };
 
+// Helper to build chat paths - avoids repeated string concatenations
+const buildChatPath = (typePath: string, chatId?: number, threadId?: number, messageId?: number): string => {
+    let path = `/home/chat/${typePath}`;
+    if (chatId !== undefined) path += `/${chatId}`;
+    if (threadId !== undefined) path += `/thread/${threadId}`;
+    if (messageId !== undefined) path += `/message/${messageId}`;
+    return path;
+};
+
 type UseChatRoutingProps = {
     useCM: ChatManagementState;
     useTM: TaskManagementState;
     myself: UserProps;
 };
 
-type ChatRouteParams = {
-    chatType?: string;
-    chatId?: string;
-    threadId?: string;
-    messageId?: string;
+type ParsedRoute = {
+    chatType: string | undefined;
+    chatId: number | undefined;
+    threadId: number | undefined;
+    messageId: number | undefined;
 };
 
 export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) => {
     const { accessToken } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
-    const params = useParams<ChatRouteParams>();
 
     // Ref to track if we're currently navigating from URL (to avoid circular updates)
     const isNavigatingFromUrl = useRef(false);
     // Ref to track the last URL we navigated to (to avoid duplicate navigations)
     const lastNavigatedPath = useRef("");
 
-    // Parse the current URL to extract chat routing info
-    const parseCurrentRoute = useCallback(() => {
+    // Memoized route parsing - only recalculates when pathname changes
+    const parsedRoute = useMemo((): ParsedRoute => {
         const pathParts = location.pathname.split("/").filter(Boolean);
         // Expected format: /home/chat/:chatType/:chatId?/thread/:threadId?/message/:messageId?
 
-        const result: {
-            chatType: string | undefined;
-            chatId: number | undefined;
-            threadId: number | undefined;
-            messageId: number | undefined;
-        } = {
+        const result: ParsedRoute = {
             chatType: undefined,
             chatId: undefined,
             threadId: undefined,
@@ -97,12 +100,15 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
         return result;
     }, [location.pathname]);
 
+    // Keep parseCurrentRoute for backward compatibility but use memoized value
+    const parseCurrentRoute = useCallback(() => parsedRoute, [parsedRoute]);
+
     // Navigate to a specific chat type
     const navigateToChatType = useCallback(
         (chatType: number) => {
             const typePath = CHAT_TYPE_REVERSE_MAP[chatType];
             if (typePath) {
-                navigate(`/home/chat/${typePath}`);
+                navigate(buildChatPath(typePath));
             }
         },
         [navigate]
@@ -113,7 +119,7 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
         (chatType: number, chatId: number) => {
             const typePath = CHAT_TYPE_REVERSE_MAP[chatType];
             if (typePath) {
-                navigate(`/home/chat/${typePath}/${chatId}`);
+                navigate(buildChatPath(typePath, chatId));
             }
         },
         [navigate]
@@ -124,7 +130,7 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
         (chatType: number, chatId: number, threadId: number) => {
             const typePath = CHAT_TYPE_REVERSE_MAP[chatType];
             if (typePath) {
-                navigate(`/home/chat/${typePath}/${chatId}/thread/${threadId}`);
+                navigate(buildChatPath(typePath, chatId, threadId));
             }
         },
         [navigate]
@@ -135,7 +141,7 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
         (chatType: number, chatId: number, messageId: number) => {
             const typePath = CHAT_TYPE_REVERSE_MAP[chatType];
             if (typePath) {
-                navigate(`/home/chat/${typePath}/${chatId}/message/${messageId}`);
+                navigate(buildChatPath(typePath, chatId, undefined, messageId));
             }
         },
         [navigate]
@@ -146,249 +152,230 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
         (chatType: number, chatId: number, threadId: number, messageId: number) => {
             const typePath = CHAT_TYPE_REVERSE_MAP[chatType];
             if (typePath) {
-                navigate(
-                    `/home/chat/${typePath}/${chatId}/thread/${threadId}/message/${messageId}`
-                );
+                navigate(buildChatPath(typePath, chatId, threadId, messageId));
             }
         },
         [navigate]
     );
 
-    // Get current chat type from URL
+    // Get current chat type from URL - uses memoized parsedRoute directly
     const getCurrentChatTypeFromUrl = useCallback((): number => {
-        const { chatType } = parseCurrentRoute();
-        if (chatType && CHAT_TYPE_MAP[chatType]) {
-            return CHAT_TYPE_MAP[chatType];
+        if (parsedRoute.chatType && CHAT_TYPE_MAP[parsedRoute.chatType]) {
+            return CHAT_TYPE_MAP[parsedRoute.chatType];
         }
         return 1; // Default to DM
-    }, [parseCurrentRoute]);
+    }, [parsedRoute.chatType]);
 
-    // Sync URL with chat state on initial load or URL change
+    // Extract values from parsedRoute for more stable dependencies
+    const { chatType: urlChatType, chatId: urlChatId, threadId: urlThreadId, messageId: urlMessageId } = parsedRoute;
+
+    // Effect 1: Handle missing chat type - redirect to default
     useEffect(() => {
-        const { chatType, chatId, threadId, messageId } = parseCurrentRoute();
-
-        // If no chat type in URL, redirect to default (dm)
-        if (!chatType) {
+        if (!urlChatType) {
             const lastChatType = localStorage.getItem("lastChatType");
             const defaultType = lastChatType ? CHAT_TYPE_REVERSE_MAP[Number(lastChatType)] : "dm";
-            navigate(`/home/chat/${defaultType || "dm"}`, { replace: true });
-            return;
+            navigate(buildChatPath(defaultType || "dm"), { replace: true });
         }
+    }, [urlChatType, navigate]);
 
-        // Update chat pane type from URL
-        const paneType = CHAT_TYPE_MAP[chatType];
+    // Effect 2: Sync chat pane type from URL
+    useEffect(() => {
+        if (!urlChatType) return;
+        
+        const paneType = CHAT_TYPE_MAP[urlChatType];
         if (paneType && useCM.currentChatPaneType !== paneType) {
             useCM.setCurrentChatPaneType(paneType);
             localStorage.setItem("currentChatPaneType", paneType.toString());
         }
+    }, [urlChatType, useCM.currentChatPaneType, useCM.setCurrentChatPaneType]);
 
-        // If there's a chatId in the URL and allChats is loaded, load that chat
-        if (chatId && paneType && useCM.allChats.length > 0) {
-            const existingChat = useCM.allChats.find((c) => c.chatId === chatId);
-
-            // If chat is already loaded but we need to focus on a specific message
-            if (
-                existingChat &&
-                useCM.currentMainChat?.chatId === chatId &&
-                messageId &&
-                threadId === undefined
-            ) {
-                const newMoveIndex = `${chatId}-${messageId}`;
-                if (useCM.currentMainChat.moveToSpecificIndex !== newMoveIndex) {
-                    useCM.setCurrentMainChat({
-                        ...useCM.currentMainChat,
-                        moveToSpecificIndex: newMoveIndex,
-                    });
-                }
-            }
-            // If it's a different chat, load it
-            else if (existingChat && useCM.currentMainChat?.chatId !== chatId) {
-                // Mark that we're navigating from URL
-                isNavigatingFromUrl.current = true;
-
-                // Load messages for this chat
-                popSpecificMessages(chatId, existingChat.chatType)
-                    .then((messages: MessageProps[]) => {
-                        if (messages.length > 0) {
-                            const newChat: ChatProps = {
-                                chatId: existingChat.chatId,
-                                chatName: existingChat.chatName,
-                                chatType: existingChat.chatType,
-                                dmPartnerUser: existingChat.dmPartnerUser,
-                                lastReadMessageId: messages[messages.length - 1].messageId,
-                                messages: messages,
-                                latestMessage: existingChat.latestMessage,
-                                latestMessageText: existingChat.latestMessageText,
-                                TSLastMessage: existingChat.TSLastMessage,
-                                systemUserId: existingChat.systemUserId,
-                                project: existingChat.project,
-                                isPrivate: existingChat.isPrivate,
-                                profileImagePath: existingChat.profileImagePath,
-                                moveToSpecificIndex: undefined,
-                            };
-                            setTimeout(() => {
-                                let newMoveIndex: string | undefined;
-                                if (threadId === undefined) {
-                                    newMoveIndex = messageId && useCM.currentMainChat?.chatId !== -1 ? `${chatId}-${messageId}` : undefined
-                                    useCM.setCurrentMainChat({...newChat, 
-                                        moveToSpecificIndex: newMoveIndex});
-                                } else {
-                                    newMoveIndex = useCM.currentMainChat?.chatId !== -1 ? `${chatId}-${threadId}` : undefined
-                                    useCM.setCurrentMainChat({...newChat, 
-                                        moveToSpecificIndex: newMoveIndex});
-                                }
-                                useCM.setCurrentMainChat({...newChat, moveToSpecificIndex: newMoveIndex});
-                            }, 250); // wait for the messages to be set
-                            useCM.setIsMainChatVisible(true);
-                        }
-                    })
-                    .catch((error) => console.error("Error loading chat from URL:", error))
-                    .finally(() => {
-                        // Reset the flag after a short delay
-                        setTimeout(() => {
-                            isNavigatingFromUrl.current = false;
-                        }, 100);
-                    });
-            }
-        }
-
-        // Handle thread message from URL
-        if (
-            chatId &&
-            threadId &&
-            (useCM.currentThreadChat === undefined ||
-                useCM.currentThreadChat?.threadId !== threadId)
-        ) {
-            if (CHAT_TYPE_MAP[chatType] === 3) {
-            loadSpecificThreadMessagesByTaskId(
-                myself,
-                CHAT_TYPE_MAP[chatType],
-                chatId,
-                threadId, // this is the task id in this case
-                accessToken
-            ).then((threadMessages: ThreadMessageProps[]) => {
-                if (threadMessages && threadMessages.length > 0) {
-                    const newThread: ThreadProps = {
-                        chatId: chatId,
-                        chatName: useCM.currentMainChat?.chatName || "",
-                        threadId: threadMessages[0].threadId,
-                        chatType: CHAT_TYPE_MAP[chatType],
-                        dmPartnerUser: myself,
-                        taskId: threadMessages[0].taskId || null,
-                        messages: threadMessages,
-                        project: threadMessages[0].project,
-                        TSLastMessage: getLocalCurrentTimestamp(),
-                        taskExist: threadMessages[0].taskExist,
-                        moveToSpecificIndex: undefined,
-                    };
-                    if (newThread) {
-                        setTimeout(() => {
-                            const newMoveIndex = messageId
-                                ? `${chatId}-${threadId}-${messageId}`
-                                : `${chatId}-${threadId}-1`;
-                            useCM.setCurrentThreadChat({...newThread, moveToSpecificIndex: newMoveIndex});
-                        }, 250); // wait for the messages to be set
-                        if (newThread.taskExist === true && threadMessages[0].taskId) {
-                            useTM.setCurrentPreviewTaskId(threadMessages[0].taskId);
-                        }
-                    }
-                }
-
-                // Open thread chat
-                useCM.setIsThreadVisible(true);
-            });
-        } else {
-            loadSpecificThreadMessages(
-                myself,
-                CHAT_TYPE_MAP[chatType],
-                chatId,
-                threadId,
-                accessToken
-            ).then((threadMessages: ThreadMessageProps[]) => {
-                if (threadMessages && threadMessages.length > 0) {
-                    const newThread: ThreadProps = {
-                        chatId: chatId,
-                        chatName: useCM.currentMainChat?.chatName || "",
-                        threadId: threadId,
-                        chatType: CHAT_TYPE_MAP[chatType],
-                        dmPartnerUser: myself,
-                        taskId: threadMessages[0].taskId || null,
-                        messages: threadMessages,
-                        project: threadMessages[0].project,
-                        TSLastMessage: getLocalCurrentTimestamp(),
-                        taskExist: threadMessages[0].taskExist,
-                        moveToSpecificIndex: undefined,
-                    };
-                    if (newThread) {
-                        setTimeout(() => {
-                            const newMoveIndex = messageId
-                                ? `${chatId}-${threadId}-${messageId}`
-                                : `${chatId}-${threadId}-1`;
-                            useCM.setCurrentThreadChat({...newThread, moveToSpecificIndex: newMoveIndex});
-                        }, 250); // wait for the messages to be set
-                        if (newThread.taskExist === true && threadMessages[0].taskId) {
-                            useTM.setCurrentPreviewTaskId(threadMessages[0].taskId);
-                        }
-                    }
-                }
-
-                // Open thread chat
-                useCM.setIsThreadVisible(true);
-            });
-        }
-        }
-    }, [location.pathname, useCM.allChats.length]);
-
-    // Update URL when main chat changes (user navigates via UI)
+    // Effect 3: Handle main chat navigation from URL
     useEffect(() => {
-        const { chatId } = parseCurrentRoute();
+        if (!urlChatType || !urlChatId) return;
+        
+        const paneType = CHAT_TYPE_MAP[urlChatType];
+        if (!paneType || useCM.allChats.length === 0) return;
 
-        // Skip if we're currently navigating from URL (to avoid circular updates)
-        if (isNavigatingFromUrl.current || chatId === useCM.currentMainChat?.chatId) {
+        const existingChat = useCM.allChats.find((c) => c.chatId === urlChatId);
+        if (!existingChat) return;
+
+        const currentMainChatId = useCM.currentMainChat?.chatId;
+
+        // If chat is already loaded but we need to focus on a specific message (not in thread)
+        if (currentMainChatId === urlChatId && urlMessageId && urlThreadId === undefined) {
+            const newMoveIndex = `${urlChatId}-${urlMessageId}`;
+            if (useCM.currentMainChat?.moveToSpecificIndex !== newMoveIndex) {
+                useCM.setCurrentMainChat({
+                    ...useCM.currentMainChat!,
+                    moveToSpecificIndex: newMoveIndex,
+                });
+            }
             return;
         }
 
-        if (useCM.currentMainChat && useCM.currentMainChat.chatId !== -1) {
-            const chatType = useCM.currentMainChat.chatType;
-            const chatId = useCM.currentMainChat.chatId;
-            const typePath = CHAT_TYPE_REVERSE_MAP[chatType];
+        // If it's a different chat, load it
+        if (currentMainChatId !== urlChatId) {
+            isNavigatingFromUrl.current = true;
 
-            if (typePath) {
-                const newPath = `/home/chat/${typePath}/${chatId}`;
-                // Only update if path is different
-                if (newPath !== location.pathname && newPath !== lastNavigatedPath.current) {
-                    lastNavigatedPath.current = newPath;
-                    navigate(newPath, { replace: true });
-                }
-            }
+            popSpecificMessages(urlChatId, existingChat.chatType)
+                .then((messages: MessageProps[]) => {
+                    if (messages.length === 0) return;
+
+                    const newChat: ChatProps = {
+                        chatId: existingChat.chatId,
+                        chatName: existingChat.chatName,
+                        chatType: existingChat.chatType,
+                        dmPartnerUser: existingChat.dmPartnerUser,
+                        lastReadMessageId: messages[messages.length - 1].messageId,
+                        messages: messages,
+                        latestMessage: existingChat.latestMessage,
+                        latestMessageText: existingChat.latestMessageText,
+                        TSLastMessage: existingChat.TSLastMessage,
+                        systemUserId: existingChat.systemUserId,
+                        project: existingChat.project,
+                        isPrivate: existingChat.isPrivate,
+                        profileImagePath: existingChat.profileImagePath,
+                        moveToSpecificIndex: undefined,
+                    };
+
+                    // Determine moveToSpecificIndex based on thread/message presence
+                    const newMoveIndex = urlThreadId !== undefined
+                        ? `${urlChatId}-${urlThreadId}`
+                        : urlMessageId
+                            ? `${urlChatId}-${urlMessageId}`
+                            : undefined;
+
+                    // Single state update with delay for messages to settle
+                    setTimeout(() => {
+                        useCM.setCurrentMainChat({ ...newChat, moveToSpecificIndex: newMoveIndex });
+                    }, 250);
+                    
+                    useCM.setIsMainChatVisible(true);
+                })
+                .catch((error) => console.error("Error loading chat from URL:", error))
+                .finally(() => {
+                    setTimeout(() => {
+                        isNavigatingFromUrl.current = false;
+                    }, 100);
+                });
         }
-    }, [useCM.currentMainChat?.chatId]);
+    }, [urlChatType, urlChatId, urlThreadId, urlMessageId, useCM.allChats.length, useCM.currentMainChat?.chatId]);
+
+    // Effect 4: Handle thread navigation from URL
+    useEffect(() => {
+        if (!urlChatType || !urlChatId || !urlThreadId) return;
+
+        const currentThreadId = useCM.currentThreadChat?.threadId;
+        if (currentThreadId === urlThreadId) return;
+
+        const chatTypeNum = CHAT_TYPE_MAP[urlChatType];
+        const currentChatName = useCM.currentMainChat?.chatName || "";
+
+        // Helper to process thread messages and update state
+        const processThreadMessages = (threadMessages: ThreadMessageProps[], threadIdToUse: number) => {
+            if (!threadMessages || threadMessages.length === 0) {
+                useCM.setIsThreadVisible(true);
+                return;
+            }
+
+            const newThread: ThreadProps = {
+                chatId: urlChatId,
+                chatName: currentChatName,
+                threadId: threadIdToUse,
+                chatType: chatTypeNum,
+                dmPartnerUser: myself,
+                taskId: threadMessages[0].taskId || null,
+                messages: threadMessages,
+                project: threadMessages[0].project,
+                TSLastMessage: getLocalCurrentTimestamp(),
+                taskExist: threadMessages[0].taskExist,
+                moveToSpecificIndex: undefined,
+            };
+
+            const newMoveIndex = urlMessageId
+                ? `${urlChatId}-${urlThreadId}-${urlMessageId}`
+                : `${urlChatId}-${urlThreadId}-1`;
+
+            setTimeout(() => {
+                useCM.setCurrentThreadChat({ ...newThread, moveToSpecificIndex: newMoveIndex });
+            }, 250);
+
+            if (newThread.taskExist === true && threadMessages[0].taskId) {
+                useTM.setCurrentPreviewTaskId(threadMessages[0].taskId);
+            }
+
+            useCM.setIsThreadVisible(true);
+        };
+
+        // Load thread messages based on chat type
+        if (chatTypeNum === 3) {
+            // PM chat type - load by task ID
+            loadSpecificThreadMessagesByTaskId(
+                myself,
+                chatTypeNum,
+                urlChatId,
+                urlThreadId,
+                accessToken
+            ).then((threadMessages) => {
+                const threadIdToUse = threadMessages.length > 0 ? threadMessages[0].threadId : urlThreadId;
+                processThreadMessages(threadMessages, threadIdToUse);
+            });
+        } else {
+            // Other chat types
+            loadSpecificThreadMessages(
+                myself,
+                chatTypeNum,
+                urlChatId,
+                urlThreadId,
+                accessToken
+            ).then((threadMessages) => {
+                processThreadMessages(threadMessages, urlThreadId);
+            });
+        }
+    }, [urlChatType, urlChatId, urlThreadId, urlMessageId, useCM.currentThreadChat?.threadId, accessToken, myself]);
+
+    // Update URL when main chat changes (user navigates via UI)
+    useEffect(() => {
+        // Skip if we're currently navigating from URL (to avoid circular updates)
+        if (isNavigatingFromUrl.current) return;
+
+        const mainChat = useCM.currentMainChat;
+        if (!mainChat || mainChat.chatId === -1) return;
+        
+        // Skip if URL already matches current chat
+        if (urlChatId === mainChat.chatId) return;
+
+        const typePath = CHAT_TYPE_REVERSE_MAP[mainChat.chatType];
+        if (!typePath) return;
+
+        const newPath = buildChatPath(typePath, mainChat.chatId);
+        
+        // Only update if path is different
+        if (newPath !== location.pathname && newPath !== lastNavigatedPath.current) {
+            lastNavigatedPath.current = newPath;
+            navigate(newPath, { replace: true });
+        }
+    }, [useCM.currentMainChat?.chatId, useCM.currentMainChat?.chatType, urlChatId, location.pathname, navigate]);
 
     // Update URL when thread opens
     useEffect(() => {
-        if (
-            useCM.isThreadVisible &&
-            useCM.currentThreadChat &&
-            useCM.currentMainChat &&
-            useCM.currentMainChat.chatId !== -1
-        ) {
-            const chatType = useCM.currentMainChat.chatType;
-            const chatId = useCM.currentMainChat.chatId;
-            const threadId = useCM.currentThreadChat.chatType === 3 && useCM.currentThreadChat.taskId ? useCM.currentThreadChat.taskId : useCM.currentThreadChat.threadId;
-            const typePath = CHAT_TYPE_REVERSE_MAP[chatType];
-
-            // Get the message id from the current path
-            const messageId = parseCurrentRoute().messageId;
-
-            if (typePath) {
-                if (messageId) {
-                    navigate(`/home/chat/${typePath}/${chatId}/thread/${threadId}/message/${messageId}`, { replace: true });
-                } else {
-                    navigate(`/home/chat/${typePath}/${chatId}/thread/${threadId}`, { replace: true });
-                }
-            }
+        const mainChat = useCM.currentMainChat;
+        const threadChat = useCM.currentThreadChat;
+        
+        if (!useCM.isThreadVisible || !threadChat || !mainChat || mainChat.chatId === -1) {
+            return;
         }
-    }, [useCM.isThreadVisible, useCM.currentThreadChat?.chatId]);
+
+        const typePath = CHAT_TYPE_REVERSE_MAP[mainChat.chatType];
+        if (!typePath) return;
+
+        const threadId = threadChat.chatType === 3 && threadChat.taskId 
+            ? threadChat.taskId 
+            : threadChat.threadId;
+
+        const newPath = buildChatPath(typePath, mainChat.chatId, threadId, urlMessageId);
+        navigate(newPath, { replace: true });
+    }, [useCM.isThreadVisible, useCM.currentThreadChat?.threadId, useCM.currentThreadChat?.taskId, useCM.currentMainChat?.chatId, useCM.currentMainChat?.chatType, urlMessageId, navigate]);
 
     return {
         parseCurrentRoute,
