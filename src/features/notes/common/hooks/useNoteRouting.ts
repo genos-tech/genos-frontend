@@ -58,9 +58,9 @@ export const useNoteRouting = ({ useNM }: UseNoteRoutingProps) => {
     const parseCurrentRoute = useCallback((): NoteRouteInfo => {
         const pathParts = location.pathname.split("/").filter(Boolean);
         // Expected formats:
-        // - My notes: /home/notes/my/:noteId
-        // - Task notes: /home/notes/task/project/:projectId/task/:taskId/note/:noteId
-        // - Chat notes: /home/notes/chat/:chatType/:chatId/thread/:threadId/note/:noteId
+        // - My notes: /Home/notes/my/:noteId
+        // - Task notes: /Home/notes/task/project/:projectId/task/:taskId/note/:noteId
+        // - Chat notes: /Home/notes/chat/:chatType/:chatId/thread/:threadId/note/:noteId
 
         const result: NoteRouteInfo = {
             noteType: undefined,
@@ -82,12 +82,12 @@ export const useNoteRouting = ({ useNM }: UseNoteRoutingProps) => {
         }
 
         if (noteTypeStr === "my") {
-            // My notes: /home/notes/my/:noteId
+            // My notes: /Home/notes/my/:noteId
             if (pathParts[notesIndex + 2]) {
                 result.noteId = Number(pathParts[notesIndex + 2]);
             }
         } else if (noteTypeStr === "task") {
-            // Task notes: /home/notes/task/project/:projectId/task/:taskId/note/:noteId
+            // Task notes: /Home/notes/task/project/:projectId/task/:taskId/note/:noteId
             const projectIndex = pathParts.indexOf("project");
             if (projectIndex !== -1 && pathParts[projectIndex + 1]) {
                 result.projectId = Number(pathParts[projectIndex + 1]);
@@ -101,7 +101,7 @@ export const useNoteRouting = ({ useNM }: UseNoteRoutingProps) => {
                 result.noteId = Number(pathParts[noteIndex + 1]);
             }
         } else if (noteTypeStr === "chat") {
-            // Chat notes: /home/notes/chat/:chatType/:chatId/thread/:threadId/note/:noteId
+            // Chat notes: /Home/notes/chat/:chatType/:chatId/thread/:threadId/note/:noteId
             if (pathParts[notesIndex + 2]) {
                 result.chatType = pathParts[notesIndex + 2];
             }
@@ -123,7 +123,7 @@ export const useNoteRouting = ({ useNM }: UseNoteRoutingProps) => {
 
     // Navigate to notes home
     const navigateToNotes = useCallback(() => {
-        navigate("/home/notes");
+        navigate("/Home/notes");
     }, [navigate]);
 
     // Navigate to a specific note type
@@ -131,7 +131,7 @@ export const useNoteRouting = ({ useNM }: UseNoteRoutingProps) => {
         (noteType: number) => {
             const typePath = NOTE_TYPE_REVERSE_MAP[noteType];
             if (typePath) {
-                navigate(`/home/notes/${typePath}`);
+                navigate(`/Home/notes/${typePath}`);
             }
         },
         [navigate]
@@ -140,7 +140,7 @@ export const useNoteRouting = ({ useNM }: UseNoteRoutingProps) => {
     // Navigate to a my note
     const navigateToMyNote = useCallback(
         (noteId: number) => {
-            navigate(`/home/notes/my/${noteId}`);
+            navigate(`/Home/notes/my/${noteId}`);
         },
         [navigate]
     );
@@ -148,7 +148,7 @@ export const useNoteRouting = ({ useNM }: UseNoteRoutingProps) => {
     // Navigate to a task note
     const navigateToTaskNote = useCallback(
         (projectId: number, taskId: number, noteId: number) => {
-            navigate(`/home/notes/task/project/${projectId}/task/${taskId}/note/${noteId}`);
+            navigate(`/Home/notes/task/project/${projectId}/task/${taskId}/note/${noteId}`);
         },
         [navigate]
     );
@@ -159,7 +159,7 @@ export const useNoteRouting = ({ useNM }: UseNoteRoutingProps) => {
             const chatTypePath = CHAT_TYPE_REVERSE_MAP[chatType];
             if (chatTypePath) {
                 navigate(
-                    `/home/notes/chat/${chatTypePath}/${chatId}/thread/${threadId}/note/${noteId}`
+                    `/Home/notes/chat/${chatTypePath}/${chatId}/thread/${threadId}/note/${noteId}`
                 );
             }
         },
@@ -232,17 +232,17 @@ export const useNoteRouting = ({ useNM }: UseNoteRoutingProps) => {
         // Check which note is currently open
         if (useNM.currentNoteType === 1 && useNM.currentMyNote) {
             // My note
-            newPath = `/home/notes/my/${useNM.currentMyNote.noteId}`;
+            newPath = `/Home/notes/my/${useNM.currentMyNote.noteId}`;
         } else if (useNM.currentNoteType === 2 && useNM.currentTaskNote) {
             // Task note
             const { projectId, taskId, noteId } = useNM.currentTaskNote;
-            newPath = `/home/notes/task/project/${projectId}/task/${taskId}/note/${noteId}`;
+            newPath = `/Home/notes/task/project/${projectId}/task/${taskId}/note/${noteId}`;
         } else if (useNM.currentNoteType === 3 && useNM.currentChatNote) {
             // Chat note
             const { chatType, chatId, threadId, noteId } = useNM.currentChatNote;
             const chatTypePath = CHAT_TYPE_REVERSE_MAP[chatType];
             if (chatTypePath) {
-                newPath = `/home/notes/chat/${chatTypePath}/${chatId}/thread/${threadId}/note/${noteId}`;
+                newPath = `/Home/notes/chat/${chatTypePath}/${chatId}/thread/${threadId}/note/${noteId}`;
             }
         }
 

@@ -26,7 +26,7 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
     // Parse the current URL to extract task routing info
     const parseCurrentRoute = useCallback((): TaskRouteInfo => {
         const pathParts = location.pathname.split("/").filter(Boolean);
-        // Expected format: /home/tasks/project/:projectId/task/:taskId
+        // Expected format: /Home/tasks/project/:projectId/task/:taskId
 
         const result: TaskRouteInfo = {
             projectId: undefined,
@@ -53,13 +53,13 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
 
     // Navigate to tasks home
     const navigateToTasks = useCallback(() => {
-        navigate("/home/tasks");
+        navigate("/Home/tasks");
     }, [navigate]);
 
     // Navigate to a specific project
     const navigateToProject = useCallback(
         (projectId: number) => {
-            navigate(`/home/tasks/project/${projectId}`);
+            navigate(`/Home/tasks/project/${projectId}`);
         },
         [navigate]
     );
@@ -67,7 +67,7 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
     // Navigate to a specific task
     const navigateToTask = useCallback(
         (projectId: number, taskId: number) => {
-            navigate(`/home/tasks/project/${projectId}/task/${taskId}`);
+            navigate(`/Home/tasks/project/${projectId}/task/${taskId}`);
         },
         [navigate]
     );
@@ -121,7 +121,7 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
             const projectId = useTM.currentPreviewTask.project.projectId;
             const taskId = useTM.currentPreviewTask.id;
 
-            const newPath = `/home/tasks/project/${projectId}/task/${taskId}`;
+            const newPath = `/Home/tasks/project/${projectId}/task/${taskId}`;
             if (newPath !== location.pathname && newPath !== lastNavigatedPath.current) {
                 lastNavigatedPath.current = newPath;
                 navigate(newPath, { replace: true });
@@ -130,7 +130,7 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
             // Task preview closed, go back to project view
             const { taskId } = parseCurrentRoute();
             if (taskId) {
-                const newPath = `/home/tasks/project/${usePM.currentProject.projectId}`;
+                const newPath = `/Home/tasks/project/${usePM.currentProject.projectId}`;
                 if (newPath !== lastNavigatedPath.current) {
                     lastNavigatedPath.current = newPath;
                     navigate(newPath, { replace: true });
@@ -151,7 +151,7 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
         }
 
         if (usePM.currentProject && !useTM.isTaskPreviewVisible) {
-            const newPath = `/home/tasks/project/${usePM.currentProject.projectId}`;
+            const newPath = `/Home/tasks/project/${usePM.currentProject.projectId}`;
             const { projectId: urlProjectId } = parseCurrentRoute();
 
             if (

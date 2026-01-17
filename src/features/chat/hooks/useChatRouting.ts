@@ -30,7 +30,7 @@ const CHAT_TYPE_REVERSE_MAP: Record<number, string> = {
 
 // Helper to build chat paths - defined outside component to avoid recreation
 const buildChatPath = (typePath: string, chatId?: number, threadId?: number, messageId?: number): string => {
-    let path = `/home/chat/${typePath}`;
+    let path = `/Home/chat/${typePath}`;
     if (chatId !== undefined) path += `/${chatId}`;
     if (threadId !== undefined) path += `/thread/${threadId}`;
     if (messageId !== undefined) path += `/message/${messageId}`;
@@ -71,7 +71,7 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
     // Memoized parsed route - only recalculates when pathname changes
     const parsedRoute = useMemo((): ParsedRoute => {
         const pathParts = pathname.split("/").filter(Boolean);
-        // Expected format: /home/chat/:chatType/:chatId?/thread/:threadId?/message/:messageId?
+        // Expected format: /Home/chat/:chatType/:chatId?/thread/:threadId?/message/:messageId?
 
         const chatIndex = pathParts.indexOf("chat");
         if (chatIndex === -1) return EMPTY_ROUTE;
@@ -134,7 +134,7 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
         (chatType: number, chatId: number, messageId: number) => {
             const typePath = CHAT_TYPE_REVERSE_MAP[chatType];
             if (typePath) {
-                navigate(`/home/chat/${typePath}/${chatId}/message/${messageId}`);
+                navigate(`/Home/chat/${typePath}/${chatId}/message/${messageId}`);
             }
         },
         [navigate]
@@ -220,7 +220,7 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
         if (!chatType) {
             const lastChatType = localStorage.getItem("lastChatType");
             const defaultType = lastChatType ? CHAT_TYPE_REVERSE_MAP[Number(lastChatType)] : "dm";
-            navigate(`/home/chat/${defaultType || "dm"}`, { replace: true });
+            navigate(`/Home/chat/${defaultType || "dm"}`, { replace: true });
             return;
         }
 

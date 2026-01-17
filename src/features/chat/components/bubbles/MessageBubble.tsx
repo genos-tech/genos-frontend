@@ -108,7 +108,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
             // The indexMap for PM uses messageIdWithChatId = `${chatId}-${taskId}`
             const messageIdentifier =
                 chat.chatType === 3 && message.taskId ? message.taskId : message.messageId;
-            navigate(`/home/chat/${typePath}/${chat.chatId}/message/${messageIdentifier}`);
+            navigate(`/Home/chat/${typePath}/${chat.chatId}/message/${messageIdentifier}`);
         }
     };
 
@@ -232,7 +232,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                     // For PM (chatType 3), use taskId as thread identifier to match indexMap key format
                                     const threadIdentifier =
                                         chat.chatType === 3 && message.taskId ? message.taskId : message.messageId;
-                                    navigate(`/home/chat/${typePath}/${chat.chatId}/thread/${threadIdentifier}`);
+                                    navigate(`/Home/chat/${typePath}/${chat.chatId}/thread/${threadIdentifier}`);
                                 }
                             }
                         }
