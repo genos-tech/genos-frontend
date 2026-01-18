@@ -38,7 +38,6 @@ export const ModalJoinGM: React.FC<Props> = ({ socket, myself, openJoinGM, setOp
     async function joinGM(): Promise<void> {
         try {
             if (socket !== null) {
-                console.log("joinGM");
                 socket.emit(
                     "join_gm_request",
                     {

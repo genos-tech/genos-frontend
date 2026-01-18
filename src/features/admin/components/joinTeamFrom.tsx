@@ -199,9 +199,9 @@ const JoinTeamContent = () => {
 
                     await sleepMilliSeconds(100);
 
-                    navigate("/home");
+                    navigate("/Home");
                 } else {
-                    navigate("/home");
+                    navigate("/Home");
                 }
             }
         }

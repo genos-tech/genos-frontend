@@ -23,7 +23,7 @@ createRoot(document.getElementById("root")!).render(
 
                 {/* Protected Routes */}
                 <Route element={<AuthGuard />}>
-                    <Route element={<App />} path="/home/*" />
+                    <Route element={<App />} path="/Home/*" />
                     <Route element={<JoinTeam />} path="/JoinTeam" />
                 </Route>
             </Routes>

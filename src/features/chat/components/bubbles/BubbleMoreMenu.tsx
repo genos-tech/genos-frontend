@@ -315,7 +315,7 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
     const handleCopyLinkClick = async () => {
         const typePath = CHAT_TYPE_PATH[chat.chatType];
         if (typePath) {
-            const messageUrl = `${window.location.origin}/home/chat/${typePath}/${chat.chatId}/message/${message.messageId}`;
+            const messageUrl = `${window.location.origin}/Home/chat/${typePath}/${chat.chatId}/message/${message.messageId}`;
             try {
                 await navigator.clipboard.writeText(messageUrl);
             } catch (err) {

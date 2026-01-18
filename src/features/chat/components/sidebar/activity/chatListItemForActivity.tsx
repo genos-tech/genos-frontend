@@ -276,7 +276,9 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
     };
 
     const onClickHandler = async () => {
-        console.log("onClickHandler", activity);
+        // set to true to not move chat pane type
+        useCM.setNotMoveChatPaneType(true);
+
         setSelectedActivityId(activity.activityId);
 
         if (activity.isThread === false) {

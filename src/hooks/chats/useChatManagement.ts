@@ -37,6 +37,8 @@ export interface ChatManagementState {
     setIsChatNoteVisibleInChat: (value: boolean) => void;
     currentChatPaneType: number;
     setCurrentChatPaneType: (value: number) => void;
+    notMoveChatPaneType: boolean;
+    setNotMoveChatPaneType: (value: boolean) => void;
     currentMainChat: ChatProps | undefined;
     setCurrentMainChat: (value: ChatProps | undefined) => void;
     currentSubChat: ChatProps | undefined;
@@ -94,6 +96,11 @@ export const useChatManagement = (
     const [currentChatPaneType, setCurrentChatPaneType] = useState<number>(
         Number(localStorage.getItem("currentChatPaneType") || "1")
     );
+
+    // Not move chat pane type state
+    // true: not move chat pane type (used for activity and flagged chats only via UI)
+    // false: move chat pane type (used for all chats via URL)
+    const [notMoveChatPaneType, setNotMoveChatPaneType] = useState<boolean>(false);
 
     // To-Do visibility state: 0: show only incomplete todos, 1: show all todos
     const [showOnlyInCompleteTodos, setShowOnlyInCompleteTodos] = useState<boolean>(
@@ -263,9 +270,9 @@ export const useChatManagement = (
             console.error(`Chat not found: chatType=${chatType}, chatId=${chatId}`);
             // Still navigate to the chat page - the routing hook will handle loading
             if (threadId > 0) {
-                navigate(`/home/chat/${chatTypePath}/${chatId}/thread/${threadId}`);
+                navigate(`/Home/chat/${chatTypePath}/${chatId}/thread/${threadId}`);
             } else {
-                navigate(`/home/chat/${chatTypePath}/${chatId}`);
+                navigate(`/Home/chat/${chatTypePath}/${chatId}`);
             }
             return;
         }
@@ -289,19 +296,19 @@ export const useChatManagement = (
                 setIsMainChatVisible(true);
                 setIsThreadVisible(true);
                 // Navigate to thread URL
-                navigate(`/home/chat/${chatTypePath}/${chatId}/thread/${threadId}`);
+                navigate(`/Home/chat/${chatTypePath}/${chatId}/thread/${threadId}`);
             } else {
                 setIsMainChatVisible(true);
                 // Navigate to chat URL
-                navigate(`/home/chat/${chatTypePath}/${chatId}`);
+                navigate(`/Home/chat/${chatTypePath}/${chatId}`);
             }
         } catch (error) {
             console.error(error);
             // Still navigate on error to show the chat page
             if (threadId > 0) {
-                navigate(`/home/chat/${chatTypePath}/${chatId}/thread/${threadId}`);
+                navigate(`/Home/chat/${chatTypePath}/${chatId}/thread/${threadId}`);
             } else {
-                navigate(`/home/chat/${chatTypePath}/${chatId}`);
+                navigate(`/Home/chat/${chatTypePath}/${chatId}`);
             }
         }
     };
@@ -371,6 +378,8 @@ export const useChatManagement = (
         // Chat type
         currentChatPaneType,
         setCurrentChatPaneType,
+        notMoveChatPaneType,
+        setNotMoveChatPaneType,
 
         // Current chats
         currentMainChat,

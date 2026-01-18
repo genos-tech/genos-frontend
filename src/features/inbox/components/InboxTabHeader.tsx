@@ -31,13 +31,13 @@ export const InboxTabHeader = ({ requestCount }: InboxTabHeaderProps) => {
         {
             id: "activities",
             label: "Activities",
-            path: "/home/inbox/activities",
+            path: "/Home/inbox/activities",
             icon: <NotificationsActiveRoundedIcon sx={{ fontSize: 16 }} />,
         },
         {
             id: "requests",
             label: "Requests",
-            path: "/home/inbox/requests",
+            path: "/Home/inbox/requests",
             icon: <PendingActionsRoundedIcon sx={{ fontSize: 16 }} />,
             count: requestCount,
         },

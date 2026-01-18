@@ -392,7 +392,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 }}
                                 onClick={async () => {
                                     if (taskContent.project && taskContent.id) {
-                                        const taskUrl = `${window.location.origin}/home/tasks/project/${taskContent.project.projectId}/task/${taskContent.id}`;
+                                        const taskUrl = `${window.location.origin}/Home/tasks/project/${taskContent.project.projectId}/task/${taskContent.id}`;
                                         try {
                                             await navigator.clipboard.writeText(taskUrl);
                                         } catch (err) {
