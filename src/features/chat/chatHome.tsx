@@ -140,7 +140,7 @@ export const ChatHome = (props: ChatHomeProps) => {
 
                 <PanelGroup autoSaveId="conditional" direction="horizontal">
                     {/* Chat Sidebar pane which is always visible */}
-                    <Panel id={"1"} maxSize={30} minSize={20} order={1}>
+                    <Panel id={"1"} maxSize={30} minSize={10} order={1}>
                         <Box
                             sx={{
                                 height: "100%",
