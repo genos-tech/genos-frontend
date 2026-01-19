@@ -48,7 +48,8 @@ export const ToDoPane = (props: ToDoPaneProps) => {
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
-    const [tmpTodos, setTmpTodos] = useState<ToDoFactProps[]>(todos);
+    const [tmpAllTodos, setTmpAllTodos] = useState<ToDoFactProps[]>(todos);
+    const [tmpIncompleteTodos, setTmpIncompleteTodos] = useState<ToDoFactProps[]>(todos.filter((todo) => !todo.isCompleted));
 
     const handleCreateNewTodo = async () => {
         const todoContent = await createNewTodo(
@@ -66,18 +67,16 @@ export const ToDoPane = (props: ToDoPaneProps) => {
     };
 
     useEffect(() => {
-        if (useCM.showOnlyInCompleteTodos) {
-            setTmpTodos(todos.filter((todo) => !todo.isCompleted));
-        } else {
-            setTmpTodos(todos);
-        }
-    }, [useCM.showOnlyInCompleteTodos, todos]);
+        console.log(3, todos)
+        setTmpAllTodos(todos);
+        setTmpIncompleteTodos(todos.filter((todo) => !todo.isCompleted));
+    }, [todos]);
 
     const virtuosoRef = useRef<VirtuosoHandle | null>(null);
 
     // Stats
-    const completedCount = todos.filter((t) => t.isCompleted).length;
-    const totalCount = todos.length;
+    const completedCount = tmpAllTodos.filter((t) => t.isCompleted).length;
+    const totalCount = tmpAllTodos.length;
 
     return (
         <Box
@@ -283,93 +282,102 @@ export const ToDoPane = (props: ToDoPaneProps) => {
 
             {/* Todo List */}
             <Box sx={{ flex: 1, px: 0.5, py: 0.5, overflow: "hidden" }}>
-                {tmpTodos.length > 0 ? (
-                    <Virtuoso
-                        ref={virtuosoRef}
-                        atBottomThreshold={128}
-                        atTopThreshold={64}
-                        className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                        initialTopMostItemIndex={0}
-                        totalCount={tmpTodos.length}
-                        itemContent={(index) => {
-                            const todo = tmpTodos[index];
-                            return (
-                                <TodoBubble
-                                    key={`todo-bubble-${todo.todoId}`}
-                                    useCM={useCM}
-                                    currentIndex={index}
-                                    isExistingTodaysTodo={isExistingTodaysTodo}
-                                    myself={myself}
-                                    setMyself={setMyself}
-                                    setTodos={setTodos}
-                                    socket={socket}
-                                    useTEM={useTEM}
-                                    todo={todo}
-                                    todos={tmpTodos}
-                                    useUISM={useUISM}
-                                />
-                            );
-                        }}
-                        style={{
-                            height: useCM.isSubChatVisible
-                                ? `${(currentWindowHeight - 180) * 0.43}px`
-                                : `${currentWindowHeight - 180}px`,
-                        }}
-                    />
-                ) : (
-                    /* Empty State */
-                    <Stack
-                        alignItems="center"
-                        justifyContent="center"
-                        spacing={2}
-                        sx={{
-                            height: "100%",
-                            py: 8,
-                        }}
-                    >
-                        <Box
-                            sx={{
-                                width: 64,
-                                height: 64,
-                                borderRadius: "16px",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                background: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
-                            }}
-                        >
-                            <CheckCircleOutlineRoundedIcon
-                                sx={{
-                                    fontSize: 32,
-                                    color: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)",
+                {(() => {
+                    // Determine which todos to display based on filter
+                    const displayTodos = useCM.showOnlyInCompleteTodos ? tmpIncompleteTodos : tmpAllTodos;
+                    
+                    if (displayTodos.length > 0) {
+                        return (
+                            <Virtuoso
+                                ref={virtuosoRef}
+                                atBottomThreshold={128}
+                                atTopThreshold={64}
+                                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                                initialTopMostItemIndex={0}
+                                totalCount={displayTodos.length}
+                                itemContent={(index) => {
+                                    const todo = displayTodos[index];
+                                    return (
+                                        <TodoBubble
+                                            key={`todo-bubble-${todo.todoId}`}
+                                            useCM={useCM}
+                                            currentIndex={index}
+                                            isExistingTodaysTodo={isExistingTodaysTodo}
+                                            myself={myself}
+                                            setMyself={setMyself}
+                                            setTodos={setTodos}
+                                            socket={socket}
+                                            useTEM={useTEM}
+                                            todo={todo}
+                                            allTodos={tmpAllTodos}
+                                            useUISM={useUISM}
+                                        />
+                                    );
+                                }}
+                                style={{
+                                    height: useCM.isSubChatVisible
+                                        ? `${(currentWindowHeight - 180) * 0.43}px`
+                                        : `${currentWindowHeight - 180}px`,
                                 }}
                             />
-                        </Box>
-                        <Stack spacing={0.5} alignItems="center">
-                            <Typography
-                                level="title-sm"
+                        );
+                    }
+                    
+                    // Empty State
+                    return (
+                        <Stack
+                            alignItems="center"
+                            justifyContent="center"
+                            spacing={2}
+                            sx={{
+                                height: "100%",
+                                py: 8,
+                            }}
+                        >
+                            <Box
                                 sx={{
-                                    fontWeight: 600,
-                                    color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.55)",
+                                    width: 64,
+                                    height: 64,
+                                    borderRadius: "16px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    background: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
                                 }}
                             >
-                                {useCM.showOnlyInCompleteTodos ? "All caught up!" : "No todos yet"}
-                            </Typography>
-                            <Typography
-                                level="body-xs"
-                                sx={{
-                                    color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)",
-                                    textAlign: "center",
-                                    maxWidth: 200,
-                                }}
-                            >
-                                {useCM.showOnlyInCompleteTodos
-                                    ? "You've completed all your tasks"
-                                    : "Create your first todo to get started"}
-                            </Typography>
+                                <CheckCircleOutlineRoundedIcon
+                                    sx={{
+                                        fontSize: 32,
+                                        color: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)",
+                                    }}
+                                />
+                            </Box>
+                            <Stack spacing={0.5} alignItems="center">
+                                <Typography
+                                    level="title-sm"
+                                    sx={{
+                                        fontWeight: 600,
+                                        color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.55)",
+                                    }}
+                                >
+                                    {useCM.showOnlyInCompleteTodos ? "All caught up!" : "No todos yet"}
+                                </Typography>
+                                <Typography
+                                    level="body-xs"
+                                    sx={{
+                                        color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)",
+                                        textAlign: "center",
+                                        maxWidth: 200,
+                                    }}
+                                >
+                                    {useCM.showOnlyInCompleteTodos
+                                        ? "You've completed all your tasks"
+                                        : "Create your first todo to get started"}
+                                </Typography>
+                            </Stack>
                         </Stack>
-                    </Stack>
-                )}
+                    );
+                })()}
             </Box>
         </Box>
     );
