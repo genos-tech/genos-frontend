@@ -32,7 +32,7 @@ type TodoBubbleProps = {
     useTEM: TeamManagementState;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
-    todos: ToDoFactProps[];
+    allTodos: ToDoFactProps[];
     setTodos: (value: ToDoFactProps[]) => void;
     useUISM: UIStateManagementState;
     useCM: ChatManagementState;
@@ -42,7 +42,7 @@ export const TodoBubble = (props: TodoBubbleProps) => {
     const {
         myself,
         todo,
-        todos,
+        allTodos,
         setTodos,
         currentIndex,
         isExistingTodaysTodo,
@@ -77,7 +77,7 @@ export const TodoBubble = (props: TodoBubbleProps) => {
             ...todo,
             todoContent: body,
         });
-        setTodos(todos.map((t) => (t.todoId === updatedTodo.todoId ? updatedTodo : t)));
+        setTodos(allTodos.map((t) => (t.todoId === updatedTodo.todoId ? updatedTodo : t)));
         setBodyEdited(false);
         setStartIntervalUpdatingTodo(false);
     };
