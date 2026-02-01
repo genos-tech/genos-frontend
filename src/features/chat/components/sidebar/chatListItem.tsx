@@ -11,6 +11,7 @@ import { ChatListItemActions } from "./ChatListItemActions";
 import { ChatListItemAvatar } from "./ChatListItemAvatar";
 import { ChatListItemMessage } from "./ChatListItemMessage";
 import { ChatListItemTitle } from "./ChatListItemTitle";
+import { ModalAddMembers } from "../modals/ModalAddMembers";
 
 export const ChatListItem = memo((props: ChatListItemProps) => {
     const {
@@ -32,6 +33,7 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const [isHovered, setIsHovered] = useState(false);
+    const [openAddMembers, setOpenAddMembers] = useState(false);
 
     const {
         isPinned,
@@ -59,6 +61,11 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
     const handleSplitClick = (event: React.MouseEvent) => {
         event.stopPropagation();
         splitOpenHandler(useCM);
+    };
+
+    const handleAddMembersClick = (event: React.MouseEvent) => {
+        event.stopPropagation();
+        setOpenAddMembers(true);
     };
 
     // Check if there are unread messages
@@ -187,6 +194,7 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                                 myself={myself}
                                 onPinClick={handlePinClick}
                                 onSplitClick={handleSplitClick}
+                                onAddMembersClick={handleAddMembersClick}
                                 setIsToDoVisible={setIsToDoVisible}
                                 isToDoVisible={isToDoVisible}
                             />
@@ -196,6 +204,19 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                     <ChatListItemMessage chat={chat} />
                 </Stack>
             </ListItemButton>
+            
+            {/* Add Members Modal for DM/MDM chats */}
+            {(chat.chatType === 1 || chat.chatType === 4) && (
+                <ModalAddMembers
+                    socket={socket}
+                    myself={myself}
+                    chat={chat}
+                    open={openAddMembers}
+                    setOpen={setOpenAddMembers}
+                    useCM={useCM}
+                    useTEM={useTEM}
+                />
+            )}
         </ListItem>
     );
 });
