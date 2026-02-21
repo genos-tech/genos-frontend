@@ -73,14 +73,14 @@ export const ModalAddMembers: React.FC<Props> = ({
             // Determine existing members based on chat type
             const existingIds = new Set<string>();
             existingIds.add(myself.userId); // Always exclude myself
-            
+
             if (chat.chatType === 1 && chat.dmPartnerUser) {
                 // DM - the partner is already a member
                 existingIds.add(chat.dmPartnerUser.userId);
             }
             // For MDM, we would need to fetch existing members from API
             // For now, we'll just exclude myself
-            
+
             setExistingMemberIds(existingIds);
         }
     }, [open, myself, useTEM.teamMembers, chat]);
@@ -100,7 +100,7 @@ export const ModalAddMembers: React.FC<Props> = ({
         if (existingMemberIds.has(member.userId)) {
             return false;
         }
-        
+
         const query = searchQuery.toLowerCase();
         return (
             member.userName.toLowerCase().includes(query) ||
@@ -150,20 +150,6 @@ export const ModalAddMembers: React.FC<Props> = ({
         } finally {
             setIsLoading(false);
         }
-    };
-
-    const getModalTitle = () => {
-        if (chat.chatType === 1) {
-            return "Add Members to Start Group DM";
-        }
-        return "Add Members";
-    };
-
-    const getModalDescription = () => {
-        if (chat.chatType === 1) {
-            return `Adding members will create a new group conversation with ${chat.dmPartnerUser?.userName || "the current member"} and the selected people.`;
-        }
-        return "Add more people to this group conversation.";
     };
 
     return (
@@ -217,14 +203,9 @@ export const ModalAddMembers: React.FC<Props> = ({
                             fontWeight: 600,
                         }}
                     >
-                        {getModalTitle()}
+                        Talk with more members
                     </Typography>
                 </Box>
-
-                {/* Description */}
-                <Typography level="body-sm" sx={{ mb: 2, color: "rgba(255, 255, 255, 0.6)" }}>
-                    {getModalDescription()}
-                </Typography>
 
                 {/* Current chat info */}
                 {chat.chatType === 1 && chat.dmPartnerUser && (
@@ -240,10 +221,7 @@ export const ModalAddMembers: React.FC<Props> = ({
                             border: "1px solid rgba(59, 130, 246, 0.2)",
                         }}
                     >
-                        <Avatar
-                            size="sm"
-                            src={chat.dmPartnerUser.avatarImgPath}
-                        >
+                        <Avatar size="sm" src={chat.dmPartnerUser.avatarImgPath}>
                             {chat.dmPartnerUser.userName?.[0]?.toUpperCase()}
                         </Avatar>
                         <Box>
@@ -486,7 +464,7 @@ export const ModalAddMembers: React.FC<Props> = ({
                             },
                         }}
                     >
-                        {chat.chatType === 1 ? "Start Group Conversation" : "Add Members"}
+                        Add Members
                     </Button>
                 </Stack>
             </ModalDialog>

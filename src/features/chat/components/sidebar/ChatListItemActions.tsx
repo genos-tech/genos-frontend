@@ -48,7 +48,7 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
 }) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
-    
+
     // Show add members option for DM and MDM chats (chatType 1 and 4)
     const showAddMembers = (chat.chatType === 1 || chat.chatType === 4) && onAddMembersClick;
 
@@ -158,9 +158,7 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                             ? "rgba(30, 30, 40, 0.98)"
                             : "rgba(255, 255, 255, 0.98)",
                         border: "1px solid",
-                        borderColor: isDark
-                            ? "rgba(255,255,255,0.08)"
-                            : "rgba(0,0,0,0.06)",
+                        borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
                     }}
                 >
                     {/* Add Members Option (for DM and MDM chats) */}
@@ -178,11 +176,13 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                                 py: 1,
                             }}
                         >
-                            <PersonAddRoundedIcon sx={{ fontSize: 18, color: isDark ? "#60a5fa" : "#3b82f6" }} />
+                            <PersonAddRoundedIcon
+                                sx={{ fontSize: 18, color: isDark ? "#60a5fa" : "#3b82f6" }}
+                            />
                             Add Members
                         </MenuItem>
                     )}
-                    
+
                     {/* Split View Option */}
                     <MenuItem
                         onClick={(e) => {
@@ -197,7 +197,9 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                             py: 1,
                         }}
                     >
-                        <OpenInNewIcon sx={{ fontSize: 18 }} />
+                        <OpenInNewIcon
+                            sx={{ fontSize: 18, color: isDark ? "#60a5fa" : "#3b82f6" }}
+                        />
                         Split View
                     </MenuItem>
                 </Menu>
