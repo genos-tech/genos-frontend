@@ -243,6 +243,7 @@ export type SearchListProps = {
     dmPartnerUser: UserProps;
     isPrivate: boolean;
     isJoined: boolean;
+    profileImagePath?: string;
 };
 
 export type LoadSearchListResponse = {

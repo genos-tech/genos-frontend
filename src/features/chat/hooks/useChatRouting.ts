@@ -69,6 +69,8 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
     const isNavigatingFromUrl = useRef(false);
     // Ref to track the last URL we navigated to (to avoid duplicate navigations)
     const lastNavigatedPath = useRef("");
+    // Ref to track pathname changes vs allChats.length changes in the URL sync effect
+    const prevPathnameRef = useRef("");
 
     // Memoized parsed route - only recalculates when pathname changes
     const parsedRoute = useMemo((): ParsedRoute => {
@@ -221,6 +223,9 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
     useEffect(() => {
         const { chatType, chatId, threadId, messageId } = parsedRoute;
 
+        const isPathnameChange = prevPathnameRef.current !== pathname;
+        prevPathnameRef.current = pathname;
+
         // If no chat type in URL, redirect to default (dm)
         if (!chatType) {
             const lastChatType = localStorage.getItem("lastChatType");
@@ -265,6 +270,11 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
         }
         // If it's a different chat, load it
         else if (currentMainChatId !== chatId) {
+            // When only allChats.length changed (not the URL), and currentMainChat is
+            // already set, don't override it. This prevents the URL sync from reverting
+            // a chat that was just set programmatically (e.g. via moveToSelectedChat).
+            if (!isPathnameChange && currentMainChatId !== undefined) return;
+
             isNavigatingFromUrl.current = true;
 
             popSpecificMessages(chatId, existingChat.chatType)

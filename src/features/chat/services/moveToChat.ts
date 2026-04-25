@@ -1,5 +1,6 @@
 import { Socket } from "socket.io-client";
 
+import { ChatService } from "../../../db/services/chat.service";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps, MessageProps } from "../../../types/chat";
@@ -142,9 +143,7 @@ export const moveToSelectedChat = async (
 
                     // For GM
                     if (chatType === 2) {
-                        let loadedChat: ChatProps[] | undefined;
-                        // Load the existing messages in the chat.
-                        loadedChat = await loadSpecificGM(
+                        const loadedData = await loadSpecificGM(
                             myself.teamId,
                             myself.teamName,
                             myself.userId,
@@ -152,26 +151,29 @@ export const moveToSelectedChat = async (
                             accessToken
                         );
 
-                        if (loadedChat) {
-                            const sortedMessages = loadedChat[0].messages.sort(
+                        const gmChat: ChatProps | undefined =
+                            loadedData?.chat_history?.[0];
+
+                        if (gmChat) {
+                            const sortedMessages = gmChat.messages.sort(
                                 (a, b) => a.messageId - b.messageId
                             );
                             const newChat: AllChatProps = {
                                 chatType: chatType,
-                                chatId: loadedChat[0].chatId,
-                                chatName: loadedChat[0].chatName,
-                                lastReadMessageId: loadedChat[0].lastReadMessageId,
-                                dmPartnerUser: loadedChat[0].dmPartnerUser,
-                                latestMessage: loadedChat[0].latestMessage,
-                                latestMessageText: loadedChat[0].latestMessageText,
-                                TSLastMessage: loadedChat[0].TSLastMessage,
-                                isPrivate: loadedChat[0].isPrivate,
-                                profileImagePath: loadedChat[0].profileImagePath,
-                                isPinned: loadedChat[0].isPinned,
-                                tsLastAllReadActivity: loadedChat[0].tsLastAllReadActivity,
+                                chatId: gmChat.chatId,
+                                chatName: gmChat.chatName,
+                                lastReadMessageId: gmChat.lastReadMessageId,
+                                dmPartnerUser: gmChat.dmPartnerUser,
+                                latestMessage: gmChat.latestMessage,
+                                latestMessageText: gmChat.latestMessageText,
+                                TSLastMessage: gmChat.TSLastMessage,
+                                isPrivate: gmChat.isPrivate,
+                                profileImagePath: gmChat.profileImagePath,
+                                isPinned: gmChat.isPinned,
+                                tsLastAllReadActivity: gmChat.tsLastAllReadActivity,
                             };
                             await addChat(newChat, newChat.chatType);
-                            await addMessage(newChat.latestMessage, newChat.chatType);
+                            await new ChatService().batchInsertGMMessages(sortedMessages);
 
                             useCM.setCurrentMainChat({ ...newChat, messages: sortedMessages });
                             useCM.setAllChats([newChat, ...useCM.allChats]);

@@ -168,15 +168,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
     }, [showEmojiPicker, isSent]);
 
     useEffect(() => {
-        if (message.reactions) {
-            setReactions(message.reactions);
-        }
-    }, []);
-
-    useEffect(() => {
-        if (message.reactions) {
-            setReactions(message.reactions);
-        }
+        setReactions(message.reactions || []);
     }, [message]);
 
     useEffect(() => {
