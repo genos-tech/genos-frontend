@@ -102,8 +102,8 @@ export const ChatHome = (props: ChatHomeProps) => {
     }, [useCM.currentSubChat]);
 
     useEffect(() => {
-        if (currentThreadChatId !== -1) {
-            setCurrentThreadChatId(currentThreadChatId);
+        if (useCM.currentThreadChat && useCM.currentThreadChat.chatId !== -1) {
+            setCurrentThreadChatId(useCM.currentThreadChat.chatId);
         }
     }, [useCM.currentThreadChat]);
 

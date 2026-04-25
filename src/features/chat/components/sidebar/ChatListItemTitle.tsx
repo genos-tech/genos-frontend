@@ -1,6 +1,6 @@
 import React from "react";
 import LockOutlineRoundedIcon from "@mui/icons-material/LockOutlineRounded";
-import { Box, Stack, Typography } from "@mui/joy";
+import { Box, Chip, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -43,7 +43,7 @@ export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
     return (
         <Box sx={{ minWidth: 0 }}>
             <Stack direction="column" spacing={0.25} sx={{ minWidth: 0 }}>
-                {/* Name row with lock icon */}
+                {/* Name row with lock icon and group indicator */}
                 <Stack direction="row" spacing={0.5} alignItems="center" sx={{ minWidth: 0 }}>
                     {chat.isPrivate && (
                         <LockOutlineRoundedIcon
@@ -67,6 +67,29 @@ export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
                     >
                         {isYou ? `${chat.chatName} (you)` : chat.chatName}
                     </Typography>
+                    {/* MDM (Multi-user DM) indicator */}
+                    {chat.chatType === 4 && (
+                        <Chip
+                            size="sm"
+                            variant="soft"
+                            sx={{
+                                fontSize: "0.6rem",
+                                fontWeight: 600,
+                                height: 16,
+                                minHeight: 16,
+                                px: 0.5,
+                                borderRadius: "4px",
+                                flexShrink: 0,
+                                background: isDark
+                                    ? "rgba(59, 130, 246, 0.2)"
+                                    : "rgba(59, 130, 246, 0.15)",
+                                color: isDark ? "#60a5fa" : "#3b82f6",
+                                border: "none",
+                            }}
+                        >
+                            Group
+                        </Chip>
+                    )}
                 </Stack>
 
                 {/* Custom status row - only shown when status exists */}

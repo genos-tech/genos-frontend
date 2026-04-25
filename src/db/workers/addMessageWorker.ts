@@ -14,6 +14,9 @@ self.onmessage = async (event) => {
     } else if (chatType === 3) {
         const pmMessageRepo = ChatRepositoryFactory.createPMMessageRepository();
         await pmMessageRepo.put(message);
+    } else if (chatType === 4) {
+        const mdmMessageRepo = ChatRepositoryFactory.createMDMMessageRepository();
+        await mdmMessageRepo.put(message);
     }
 
     self.postMessage("done");

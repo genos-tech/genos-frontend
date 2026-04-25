@@ -32,7 +32,7 @@ const ActivitiesSection = (props: InboxHomeProps & { items: any[]; virtuosoRef: 
             emptyTitle="No activities yet"
             emptySubtitle="New updates and notifications will appear here"
             isRequest={false}
-            selectedItemId={itemId ? parseInt(itemId, 10) : undefined}
+            selectedItemId={itemId && !Number.isNaN(parseInt(itemId, 10)) ? parseInt(itemId, 10) : undefined}
         />
     );
 };
@@ -56,7 +56,7 @@ const RequestsSection = (props: InboxHomeProps & { items: any[]; virtuosoRef: an
             emptyTitle="No pending requests"
             emptySubtitle="Team and project requests will show up here"
             isRequest={true}
-            selectedItemId={itemId ? parseInt(itemId, 10) : undefined}
+            selectedItemId={itemId && !Number.isNaN(parseInt(itemId, 10)) ? parseInt(itemId, 10) : undefined}
         />
     );
 };

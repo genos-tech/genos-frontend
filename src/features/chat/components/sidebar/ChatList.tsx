@@ -124,6 +124,7 @@ const useScrollToBottomOnChatPaneChange = (
 type ChatListProps = {
     socket: Socket | null;
     targetChatType: number;
+    includeMDM?: boolean; // When true, include MDM (type 4) chats along with DM (type 1)
     currentActivityMessageType: number;
     useCM: ChatManagementState;
     state: ChatListState;
@@ -139,16 +140,25 @@ type ChatListProps = {
 const useFilteredChats = (
     allChats: AllChatProps[],
     targetChatType: number,
-    showOnlyUnreadItems: boolean
+    showOnlyUnreadItems: boolean,
+    includeMDM: boolean = false
 ) => {
+    // Filter function that includes MDM (type 4) when viewing DM (type 1) if includeMDM is true
+    const chatTypeFilter = (chat: AllChatProps) => {
+        if (includeMDM && targetChatType === 1) {
+            return chat.chatType === 1 || chat.chatType === 4;
+        }
+        return chat.chatType === targetChatType;
+    };
+
     const [filteredChats, setFilteredChats] = useState<AllChatProps[]>(
-        sortAllChatByPinned(allChats.filter((chat) => chat.chatType === targetChatType))
+        sortAllChatByPinned(allChats.filter(chatTypeFilter))
     );
 
     useEffect(() => {
         if (showOnlyUnreadItems) {
             const filteredChats = allChats
-                .filter((chat) => chat.chatType === targetChatType)
+                .filter(chatTypeFilter)
                 .filter(
                     (item) =>
                         item.lastReadMessageId <
@@ -160,11 +170,11 @@ const useFilteredChats = (
         } else {
             setFilteredChats(
                 sortAllChatByPinned([
-                    ...allChats.filter((chat) => chat.chatType === targetChatType),
+                    ...allChats.filter(chatTypeFilter),
                 ])
             );
         }
-    }, [showOnlyUnreadItems, allChats]);
+    }, [showOnlyUnreadItems, allChats, includeMDM]);
 
     return filteredChats;
 };
@@ -508,6 +518,7 @@ export const ChatList = (props: ChatListProps) => {
     const {
         socket,
         targetChatType,
+        includeMDM = false,
         currentActivityMessageType,
         state,
         actions,
@@ -542,7 +553,8 @@ export const ChatList = (props: ChatListProps) => {
     const targetChats = useFilteredChats(
         useCM.allChats,
         targetChatType,
-        state.showOnlyUnreadItems
+        state.showOnlyUnreadItems,
+        includeMDM
     );
     const tmpActivityMessages = useFilteredActivityMessages(
         useCM.activityMessages,

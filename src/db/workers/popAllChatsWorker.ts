@@ -5,10 +5,11 @@ self.onmessage = async (event) => {
     const chatService = new ChatService();
     const dmChats: AllChatProps[] = await chatService.getDMChats();
     const gmChats: AllChatProps[] = await chatService.getGMChats();
+    const mdmChats: AllChatProps[] = await chatService.getMDMChats();
     const pmChats: AllChatProps[] = await chatService.getPMChats();
 
     // Sort messages by TSLastMessage in desc
-    const sortedAllChats = [...dmChats, ...gmChats, ...pmChats].sort((a, b) => {
+    const sortedAllChats = [...dmChats, ...gmChats, ...mdmChats, ...pmChats].sort((a, b) => {
         return new Date(b.TSLastMessage).getTime() - new Date(a.TSLastMessage).getTime();
     });
 

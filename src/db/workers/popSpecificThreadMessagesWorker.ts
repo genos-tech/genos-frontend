@@ -5,6 +5,7 @@ const storeNameLookup: { [key: number]: string } = {
     1: STORES.DM_THREAD_MESSAGES,
     2: STORES.GM_THREAD_MESSAGES,
     3: STORES.PM_THREAD_MESSAGES,
+    4: STORES.MDM_THREAD_MESSAGES,
 };
 
 self.onmessage = async (event) => {

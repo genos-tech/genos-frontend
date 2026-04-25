@@ -1,10 +1,11 @@
 import { useState } from "react";
 import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
+import GroupsIcon from "@mui/icons-material/Groups";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
+import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import {
     Badge,
@@ -32,6 +33,7 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { useChatRouting } from "../../hooks/useChatRouting";
 import { ModalCreateGM } from "../modals/ModalCreateGM";
+import { ModalCreateMDM } from "../modals/ModalCreateMDM";
 import { ModalJoinGM } from "../modals/ModalJoinGM";
 import { ChatList } from "./ChatList";
 import { ChatSearch } from "./ChatSearch";
@@ -42,11 +44,13 @@ const CHAT_PANE_TYPES = {
     DM: 1,
     GM: 2,
     PM: 3,
+    MDM: 4,
     ACTIVITY: 5,
     FLAGGED: 6,
 } as const;
 
 // Navigation item configuration
+// Note: MDM (Multi-user DM) is now integrated into DM section, not shown as separate nav item
 const NAV_ITEMS = [
     {
         type: CHAT_PANE_TYPES.DM,
@@ -120,6 +124,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
 
     const [openSearchBox, setOpenSearchBox] = useState(false);
     const [openCreateGM, setOpenCreateGM] = useState(false);
+    const [openCreateMDM, setOpenCreateMDM] = useState(false);
     const [showOnlyUnreadItems, setShowOnlyUnreadItems] = useState(false);
     const [openJoinGM, setOpenJoinGM] = useState({
         flag: false,
@@ -138,6 +143,10 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
         if (chatType === CHAT_PANE_TYPES.ACTIVITY) {
             return useCM.unReadActivityMessageCounts;
         }
+        // DM tab includes both DM and MDM unread counts
+        if (chatType === CHAT_PANE_TYPES.DM) {
+            return (useCM.unReadChatCounts?.[1] || 0) + (useCM.unReadChatCounts?.[4] || 0);
+        }
         return useCM.unReadChatCounts?.[chatType] || 0;
     };
 
@@ -145,7 +154,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
     const totalUnread =
         (useCM.unReadChatCounts?.[1] || 0) +
         (useCM.unReadChatCounts?.[2] || 0) +
-        (useCM.unReadChatCounts?.[3] || 0);
+        (useCM.unReadChatCounts?.[3] || 0) +
+        (useCM.unReadChatCounts?.[4] || 0);
 
     const handleNavClick = (type: number) => {
         // Navigate via URL - the useChatRouting hook will sync state
@@ -410,6 +420,19 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                     }}
                                 >
                                     <MenuItem
+                                        onClick={() => setOpenCreateMDM(true)}
+                                        sx={{
+                                            borderRadius: "8px",
+                                            gap: 1.5,
+                                            fontSize: "0.85rem",
+                                        }}
+                                    >
+                                        <PeopleRoundedIcon
+                                            sx={{ fontSize: 18, color: "#10b981" }}
+                                        />
+                                        New Multi-user DM
+                                    </MenuItem>
+                                    <MenuItem
                                         onClick={() => setOpenCreateGM(true)}
                                         sx={{
                                             borderRadius: "8px",
@@ -417,7 +440,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                             fontSize: "0.85rem",
                                         }}
                                     >
-                                        <AddRoundedIcon sx={{ fontSize: 18 }} />
+                                        <GroupsIcon sx={{ fontSize: 18, color: "#4ade80" }} />
                                         New Group
                                     </MenuItem>
                                 </Menu>
@@ -459,11 +482,12 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         flexDirection: "column",
                     }}
                 >
-                    {/* Direct Messages */}
+                    {/* Direct Messages (includes both DM and MDM) */}
                     {useCM.currentChatPaneType === CHAT_PANE_TYPES.DM && (
                         <ChatList
                             usePM={usePM}
                             targetChatType={1}
+                            includeMDM={true}
                             useCM={useCM}
                             currentActivityMessageType={-1}
                             socket={socket}
@@ -575,6 +599,14 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 myself={myself}
                 open={openCreateGM}
                 setOpen={setOpenCreateGM}
+                socket={socket}
+            />
+            <ModalCreateMDM
+                useCM={useCM}
+                useTEM={useTEM}
+                myself={myself}
+                open={openCreateMDM}
+                setOpen={setOpenCreateMDM}
                 socket={socket}
             />
         </Box>

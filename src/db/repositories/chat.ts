@@ -7,30 +7,35 @@ const ChatIndexMap = {
     1: INDEX_NAMES.DM_CHATS,
     2: INDEX_NAMES.GM_CHATS,
     3: INDEX_NAMES.PM_CHATS,
+    4: INDEX_NAMES.MDM_CHATS,
 };
 
 const MessageIndexMap = {
     1: INDEX_NAMES.DM_MESSAGES,
     2: INDEX_NAMES.GM_MESSAGES,
     3: INDEX_NAMES.PM_MESSAGES,
+    4: INDEX_NAMES.MDM_MESSAGES,
 };
 
 const MessageCompoundIndexMap = {
     1: INDEX_NAMES.DM_MESSAGES_COMPOUND,
     2: INDEX_NAMES.GM_MESSAGES_COMPOUND,
     3: INDEX_NAMES.PM_MESSAGES_COMPOUND,
+    4: INDEX_NAMES.MDM_MESSAGES_COMPOUND,
 };
 
 const ThreadMessageIndexMap = {
     1: INDEX_NAMES.DM_THREAD_MESSAGES,
     2: INDEX_NAMES.GM_THREAD_MESSAGES,
     3: INDEX_NAMES.PM_THREAD_MESSAGES,
+    4: INDEX_NAMES.MDM_THREAD_MESSAGES,
 };
 
 const ThreadMessageCompoundIndexMap = {
     1: INDEX_NAMES.DM_THREAD_MESSAGES_COMPOUND,
     2: INDEX_NAMES.GM_THREAD_MESSAGES_COMPOUND,
     3: INDEX_NAMES.PM_THREAD_MESSAGES_COMPOUND,
+    4: INDEX_NAMES.MDM_THREAD_MESSAGES_COMPOUND,
 };
 
 // Chat repository for managing chat-related data
@@ -180,6 +185,12 @@ export class ChatRepositoryFactory {
         return repo;
     }
 
+    static createMDMChatRepository(): ChatRepository {
+        const repo = new ChatRepository(STORES.MDM_CHATS);
+        (repo as any).storeName = STORES.MDM_CHATS;
+        return repo;
+    }
+
     static createPMChatRepository(): ChatRepository {
         const repo = new ChatRepository(STORES.PM_CHATS);
         (repo as any).storeName = STORES.PM_CHATS;
@@ -194,6 +205,10 @@ export class ChatRepositoryFactory {
         return new MessageRepository(STORES.GM_MESSAGES);
     }
 
+    static createMDMMessageRepository(): MessageRepository {
+        return new MessageRepository(STORES.MDM_MESSAGES);
+    }
+
     static createPMMessageRepository(): MessageRepository {
         return new MessageRepository(STORES.PM_MESSAGES);
     }
@@ -204,6 +219,10 @@ export class ChatRepositoryFactory {
 
     static createGMThreadMessageRepository(): ThreadMessageRepository {
         return new ThreadMessageRepository(STORES.GM_THREAD_MESSAGES);
+    }
+
+    static createMDMThreadMessageRepository(): ThreadMessageRepository {
+        return new ThreadMessageRepository(STORES.MDM_THREAD_MESSAGES);
     }
 
     static createPMThreadMessageRepository(): ThreadMessageRepository {
