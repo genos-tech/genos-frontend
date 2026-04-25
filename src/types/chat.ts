@@ -51,6 +51,7 @@ export type ChatProps = {
     profileImagePath?: string;
     isPinned?: boolean;
     tsLastAllReadActivity?: string;
+    mdmMembers?: MDMMemberProps[];
 };
 
 // Thread Props
