@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
 import NotificationsNoneRoundedIcon from "@mui/icons-material/NotificationsNoneRounded";
@@ -14,9 +14,7 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ActivityMessageProps, AllChatProps, FlaggedMessageProps } from "../../../../types/chat";
-import {
-    useScrollToBottomOnNewActivity
-} from "../../hooks/messageBubbleHooks";
+import { useScrollToBottomOnNewActivity } from "../../hooks/messageBubbleHooks";
 import { ChatListItemForActivity } from "./activity/chatListItemForActivity";
 import { ChatListItem } from "./chatListItem";
 import { ChatListItemForFlagMessages } from "./chatListItemForFlagMessages";
@@ -102,25 +100,6 @@ const sortAllChatByPinned = (allChats: AllChatProps[]) => {
     });
 };
 
-const useScrollToBottomOnChatPaneChange = (
-    virtuosoRef: React.RefObject<VirtuosoHandle>,
-    allChats: AllChatProps[]
-) => {
-    useEffect(() => {
-        const virtuoso = virtuosoRef.current;
-        if (virtuoso === null) {
-            return;
-        } else {
-            setTimeout(() => {
-                virtuoso.scrollToIndex({
-                    index: 0,
-                    behavior: "auto",
-                });
-            }, 300); // wait 300ms
-        }
-    }, [allChats]);
-};
-
 type ChatListProps = {
     socket: Socket | null;
     targetChatType: number;
@@ -143,40 +122,26 @@ const useFilteredChats = (
     showOnlyUnreadItems: boolean,
     includeMDM: boolean = false
 ) => {
-    // Filter function that includes MDM (type 4) when viewing DM (type 1) if includeMDM is true
-    const chatTypeFilter = (chat: AllChatProps) => {
-        if (includeMDM && targetChatType === 1) {
-            return chat.chatType === 1 || chat.chatType === 4;
-        }
-        return chat.chatType === targetChatType;
-    };
+    return useMemo(() => {
+        const chatTypeFilter = (chat: AllChatProps) => {
+            if (includeMDM && targetChatType === 1) {
+                return chat.chatType === 1 || chat.chatType === 4;
+            }
+            return chat.chatType === targetChatType;
+        };
 
-    const [filteredChats, setFilteredChats] = useState<AllChatProps[]>(
-        sortAllChatByPinned(allChats.filter(chatTypeFilter))
-    );
-
-    useEffect(() => {
+        let filtered = allChats.filter(chatTypeFilter);
         if (showOnlyUnreadItems) {
-            const filteredChats = allChats
-                .filter(chatTypeFilter)
-                .filter(
-                    (item) =>
-                        item.lastReadMessageId <
-                        (item.latestMessage
-                            ? item.latestMessage.messageId
-                            : item.lastReadMessageId + 1)
-                );
-            setFilteredChats(sortAllChatByPinned(filteredChats));
-        } else {
-            setFilteredChats(
-                sortAllChatByPinned([
-                    ...allChats.filter(chatTypeFilter),
-                ])
+            filtered = filtered.filter(
+                (item) =>
+                    item.lastReadMessageId <
+                    (item.latestMessage
+                        ? item.latestMessage.messageId
+                        : item.lastReadMessageId + 1)
             );
         }
-    }, [showOnlyUnreadItems, allChats, includeMDM]);
-
-    return filteredChats;
+        return sortAllChatByPinned([...filtered]);
+    }, [allChats, targetChatType, showOnlyUnreadItems, includeMDM]);
 };
 
 // Custom hook for managing filtered activity messages
@@ -567,27 +532,23 @@ export const ChatList = (props: ChatListProps) => {
     const [selectedActivityId, setSelectedActivityId] = useState<string>("");
     const [selectedFlaggedMessageId, setSelectedFlaggedMessageId] = useState<string>("");
 
+    // Scroll to top when a non-pinned chat reorders to the top (e.g., new message sent/received)
+    const prevFirstNonPinnedKeyRef = useRef<string>("");
+    useEffect(() => {
+        if (targetChats.length === 0) return;
+        const firstNonPinned = targetChats.find((c) => !c.isPinned);
+        if (!firstNonPinned) return;
+        const key = `${firstNonPinned.chatId}-${firstNonPinned.chatType}`;
+        if (prevFirstNonPinnedKeyRef.current && prevFirstNonPinnedKeyRef.current !== key) {
+            const ref = chatTypeLookup[targetChatType];
+            requestAnimationFrame(() => {
+                ref?.current?.scrollTo({ top: 0, behavior: "smooth" });
+            });
+        }
+        prevFirstNonPinnedKeyRef.current = key;
+    }, [targetChats]);
+
     // Scroll hooks
-    useScrollToBottomOnChatPaneChange(
-        virtuosoDMRef as React.RefObject<VirtuosoHandle>,
-        useCM.allChats
-    );
-    useScrollToBottomOnChatPaneChange(
-        virtuosoGMRef as React.RefObject<VirtuosoHandle>,
-        useCM.allChats
-    );
-    useScrollToBottomOnChatPaneChange(
-        virtuosoPMRef as React.RefObject<VirtuosoHandle>,
-        useCM.allChats
-    );
-    useScrollToBottomOnChatPaneChange(
-        virtuosoPinnedRef as React.RefObject<VirtuosoHandle>,
-        useCM.allChats
-    );
-    useScrollToBottomOnChatPaneChange(
-        virtuosoFlaggedRef as React.RefObject<VirtuosoHandle>,
-        useCM.allChats
-    );
     useScrollToBottomOnNewActivity(
         virtuosoActivityRef as React.RefObject<VirtuosoHandle>,
         useCM.activityMessages,

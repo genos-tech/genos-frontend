@@ -61,6 +61,18 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
     const isDark = mode === "dark";
     const styles = isDark ? HEADER_STYLES.dark : HEADER_STYLES.light;
 
+    const mdmMembers =
+        chat?.chatType === 4
+            ? useCM.allChats.find((c) => c.chatId === chat.chatId && c.chatType === 4)?.mdmMembers
+            : undefined;
+    const mdmDisplayName = (() => {
+        if (!mdmMembers || mdmMembers.length === 0) return chat?.chatName;
+        const MAX_DISPLAY = 3;
+        const names = mdmMembers.map((m) => m.userName);
+        if (names.length <= MAX_DISPLAY) return names.join(", ");
+        return `${names.slice(0, MAX_DISPLAY).join(", ")} +${names.length - MAX_DISPLAY}`;
+    })();
+
     const headerUser: UserProps | undefined = chat
         ? useTEM.teamMemberProfiles[chat.dmPartnerUser.userId]
         : undefined;
@@ -185,7 +197,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                                 }}
                                 noWrap
                             >
-                                {chat?.chatName}
+                                {mdmDisplayName || chat?.chatName}
                             </Typography>
                         </Tooltip>
                     ) : (
