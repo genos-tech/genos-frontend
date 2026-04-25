@@ -278,7 +278,7 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
         1: "dm",
         2: "gm",
         3: "pm",
-        4: "pm",
+        4: "mdm",
     };
 
     const handleCopyLinkClick = async () => {

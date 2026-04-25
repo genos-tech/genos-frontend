@@ -7,7 +7,7 @@ const chatTypeNameLookup: { [key: number]: string } = {
     1: "dm",
     2: "gm",
     3: "pm",
-    4: "pm",
+    4: "mdm",
 };
 
 export const loadSpecificThreadMessagesByTaskId = async (
