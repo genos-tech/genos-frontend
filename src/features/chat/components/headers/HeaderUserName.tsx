@@ -136,6 +136,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                             )?.mdmMembers
                         }
                         size="md"
+                        teamMemberProfiles={useTEM.teamMemberProfiles}
                     />
                 ) : null}
             </Box>

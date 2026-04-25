@@ -1,22 +1,28 @@
+import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import { Avatar, Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 
+import { UserProps } from "../../../types/admin";
 import { MDMMemberProps } from "../../../types/chat";
+import { PulseDot } from "../misc/PulseDot";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type MDMAvatarProps = {
     members?: MDMMemberProps[];
     size?: "sm" | "md";
+    teamMemberProfiles?: Record<string, UserProps>;
 };
 
-export const MDMAvatar: React.FC<MDMAvatarProps> = ({ members, size = "sm" }) => {
+export const MDMAvatar: React.FC<MDMAvatarProps> = ({
+    members,
+    size = "sm",
+    teamMemberProfiles,
+}) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
 
-    const avatarSize = size === "sm" ? 32 : 40;
-    const miniSize = size === "sm" ? 20 : 24;
+    const miniSize = size === "sm" ? 28 : 32;
     const maxVisible = 3;
 
     if (!members || members.length === 0) {
@@ -31,47 +37,94 @@ export const MDMAvatar: React.FC<MDMAvatarProps> = ({ members, size = "sm" }) =>
                     borderColor: isDark ? "rgba(59, 130, 246, 0.4)" : "rgba(59, 130, 246, 0.3)",
                 }}
             >
-                <PeopleRoundedIcon sx={{ fontSize: size === "sm" ? 18 : 22, color: isDark ? "#60a5fa" : "#3b82f6" }} />
+                <PeopleRoundedIcon
+                    sx={{
+                        fontSize: size === "sm" ? 18 : 22,
+                        color: isDark ? "#60a5fa" : "#3b82f6",
+                    }}
+                />
             </Avatar>
         );
     }
 
     const visibleMembers = members.slice(0, maxVisible);
+    const step = miniSize * 0.55;
+    const totalWidth = miniSize + (visibleMembers.length - 1) * step;
 
     return (
-        <Box sx={{ position: "relative", width: avatarSize, height: avatarSize, flexShrink: 0 }}>
+        <Box
+            sx={{
+                position: "relative",
+                width: totalWidth,
+                height: miniSize,
+                flexShrink: 0,
+                alignSelf: "center",
+            }}
+        >
             {visibleMembers.map((member, index) => {
-                const offset = index * (miniSize * 0.55);
                 const imgSrc = member.avatarImgPath
-                    ? `${media_url}${member.avatarImgPath}`
+                    ? `${media_url}/${member.avatarImgPath}`
                     : undefined;
+                const profile = teamMemberProfiles?.[member.userId];
+                const isOnline = profile?.isOnline === true && profile?.isOfflineForced !== "true";
+                const dotSize = Math.max(6, miniSize * 0.28);
 
                 return (
-                    <Avatar
+                    <Box
                         key={member.userId}
-                        size="sm"
-                        src={imgSrc}
                         sx={{
                             position: "absolute",
+                            top: 0,
+                            left: index * step,
+                            zIndex: maxVisible - index,
                             width: miniSize,
                             height: miniSize,
-                            fontSize: 10,
-                            fontWeight: 700,
-                            bottom: 0,
-                            left: offset,
-                            zIndex: maxVisible - index,
-                            border: "2px solid",
-                            borderColor: isDark ? "#1a1a2e" : "#ffffff",
-                            background: isDark
-                                ? `hsl(${(index * 90 + 200) % 360}, 50%, 30%)`
-                                : `hsl(${(index * 90 + 200) % 360}, 60%, 85%)`,
-                            color: isDark
-                                ? `hsl(${(index * 90 + 200) % 360}, 70%, 75%)`
-                                : `hsl(${(index * 90 + 200) % 360}, 60%, 40%)`,
                         }}
                     >
-                        {member.userName?.[0]?.toUpperCase() || "?"}
-                    </Avatar>
+                        <Avatar
+                            size="sm"
+                            src={imgSrc}
+                            sx={{
+                                width: miniSize,
+                                height: miniSize,
+                                fontSize: 10,
+                                fontWeight: 700,
+                                border: "1.5px solid",
+                                borderColor: isDark
+                                    ? "var(--joy-palette-background-surface)"
+                                    : "#fff",
+                                background: isDark
+                                    ? `hsl(${(index * 90 + 200) % 360}, 50%, 30%)`
+                                    : `hsl(${(index * 90 + 200) % 360}, 60%, 85%)`,
+                                color: isDark
+                                    ? `hsl(${(index * 90 + 200) % 360}, 70%, 75%)`
+                                    : `hsl(${(index * 90 + 200) % 360}, 60%, 40%)`,
+                            }}
+                        >
+                            {member.userName?.[0]?.toUpperCase() || "?"}
+                        </Avatar>
+                        {teamMemberProfiles && (
+                            <Box
+                                sx={{
+                                    position: "absolute",
+                                    bottom: 7,
+                                    right: 2,
+                                    width: dotSize,
+                                    height: dotSize,
+                                    zIndex: 1,
+                                }}
+                            >
+                                <PulseDot
+                                    color={isOnline ? "#4caf50" : "#999"}
+                                    sx={{
+                                        width: dotSize,
+                                        height: dotSize,
+                                        marginLeft: 0,
+                                    }}
+                                />
+                            </Box>
+                        )}
+                    </Box>
                 );
             })}
         </Box>

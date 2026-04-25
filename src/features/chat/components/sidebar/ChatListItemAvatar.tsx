@@ -89,7 +89,7 @@ export const ChatListItemAvatar: React.FC<ChatListItemAvatarProps> = ({
 
     // MDM (Multi-user DM) Chat - show overlapping member avatars
     if (chatType === 4) {
-        return <MDMAvatar members={chat.mdmMembers} />;
+        return <MDMAvatar members={chat.mdmMembers} teamMemberProfiles={useTEM.teamMemberProfiles} />;
     }
 
     return null;
