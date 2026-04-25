@@ -19,6 +19,8 @@
     --scrollbar-width: 8px;
     --scrollbar-height: 8px;
     --scrollbar-track-bg: transparent;
+    --scrollbar-track-bg-light: transparent;
+    --scrollbar-track-bg-dark: transparent;
     --scrollbar-thumb-bg-light: #bfbfbf;
     --scrollbar-thumb-bg-dark: #626262;
     --scrollbar-thumb-bg-hover-light: #626262;
