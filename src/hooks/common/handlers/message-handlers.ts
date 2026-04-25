@@ -32,10 +32,7 @@ export const handleThreadMessage = async (
     const newThreadMessage: ThreadMessageProps = {
         chatType: newMessage.chatType,
         systemUserId: newMessage.systemUserId,
-        messageIdWithChatIdAndThreadId:
-            newMessage.chatType === 3
-                ? `${newMessage.chatId}-${newMessage.threadId}-${newMessage.messageId}`
-                : `${newMessage.chatId}-${newMessage.taskId}-${newMessage.messageId}`,
+        messageIdWithChatIdAndThreadId: `${newMessage.chatId}-${newMessage.threadId}-${newMessage.messageId}`,
         chatId: newMessage.chatId,
         threadId: newMessage.threadId,
         messageId: newMessage.messageId,
