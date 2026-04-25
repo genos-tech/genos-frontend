@@ -44,10 +44,19 @@ export const moveToGMChat = async (
     isPrivate: boolean,
     useCM: ChatManagementState
 ) => {
+    const existingChat = useCM.allChats?.find((c) => c.chatId === chatId);
     const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, 2);
     if (fetchedMessages) {
         useCM.setCurrentMainChat(
-            defineNewChat(chatId, chatName, 2, defaultDmPartner, fetchedMessages, isPrivate)
+            defineNewChat(
+                chatId,
+                chatName,
+                2,
+                defaultDmPartner,
+                fetchedMessages,
+                isPrivate,
+                existingChat?.profileImagePath
+            )
         );
     } else {
         console.error("Failed to fetch thread GM fetchedMessages:", fetchedMessages);

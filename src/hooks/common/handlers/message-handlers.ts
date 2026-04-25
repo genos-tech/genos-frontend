@@ -290,7 +290,7 @@ const handleGMMessage = async (
     context: any,
     useCM: ChatManagementState
 ) => {
-    const updatedChat = await makeGMUpdatedChat(newMessage);
+    const updatedChat = await makeGMUpdatedChat(newMessage, useCM.allChats);
 
     if (newMessage.isEdited) {
         updateCurrentChat(updatedChat, useCM);
@@ -324,7 +324,7 @@ const handlePMMessage = async (
         setIsTaskUpdatedBySomeone(true);
     }
 
-    const updatedChat = await makePMUpdatedChat(newMessage);
+    const updatedChat = await makePMUpdatedChat(newMessage, useCM.allChats);
 
     if (newMessage.isEdited) {
         updateCurrentChat(updatedChat, useCM);

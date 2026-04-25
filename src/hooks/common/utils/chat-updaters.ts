@@ -82,8 +82,12 @@ export const makeDMUpdatedChat = async (
     };
 };
 
-export const makeGMUpdatedChat = async (newMessage: NewMessageProps): Promise<ChatProps> => {
+export const makeGMUpdatedChat = async (
+    newMessage: NewMessageProps,
+    allChats: AllChatProps[]
+): Promise<ChatProps> => {
     const updatedChat = await popSpecificMessages(newMessage.chatId, newMessage.chatType);
+    const existingChat = allChats.find((c) => c.chatId === newMessage.chatId);
     return {
         chatId: newMessage.chatId,
         chatName: newMessage.chatName,
@@ -98,11 +102,16 @@ export const makeGMUpdatedChat = async (newMessage: NewMessageProps): Promise<Ch
         project: newMessage.project,
         notMove: true,
         isPrivate: newMessage.isPrivate,
+        profileImagePath: existingChat?.profileImagePath,
     };
 };
 
-export const makePMUpdatedChat = async (newMessage: NewMessageProps): Promise<ChatProps> => {
+export const makePMUpdatedChat = async (
+    newMessage: NewMessageProps,
+    allChats: AllChatProps[]
+): Promise<ChatProps> => {
     const updatedChat = await popSpecificMessages(newMessage.chatId, newMessage.chatType);
+    const existingChat = allChats.find((c) => c.chatId === newMessage.chatId);
     return {
         chatId: newMessage.chatId,
         chatName: newMessage.chatName,
@@ -116,5 +125,6 @@ export const makePMUpdatedChat = async (newMessage: NewMessageProps): Promise<Ch
         TSLastMessage: newMessage.tsSent,
         project: newMessage.project,
         notMove: true,
+        profileImagePath: existingChat?.profileImagePath,
     };
 };
