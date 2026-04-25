@@ -279,6 +279,9 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                         taskStatus: null,
                     };
                     if (latestMessage) {
+                        const existingAllChat = useCM.allChats.find(
+                            (c) => c.chatId === chat.chatId && c.chatType === chat.chatType
+                        );
                         const newChat: AllChatProps = {
                             chatId: chat.chatId,
                             chatName: chat.chatName,
@@ -291,6 +294,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                             latestMessageText: contentText,
                             TSLastMessage: getLocalCurrentTimestamp(),
                             profileImagePath: chat.profileImagePath,
+                            mdmMembers: existingAllChat?.mdmMembers,
                         };
 
                         if (newChat) {

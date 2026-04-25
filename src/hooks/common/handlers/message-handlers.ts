@@ -1,11 +1,13 @@
 import { Socket } from "socket.io-client";
 
 import { ChatService } from "../../../db/services/chat.service";
+import { addChat } from "../../../features/chat/services/addChat";
 import { addMessage } from "../../../features/chat/services/addMessage";
 import { addThreadMessage } from "../../../features/chat/services/addThreadMessage";
 import { loadSpecificThreadMessages } from "../../../features/chat/services/loadSpecificThreadMessages";
 import { UserProps } from "../../../types/admin";
 import {
+    AllChatProps,
     MessageProps,
     NewMessageProps,
     NewThreadMessageProps,
@@ -16,7 +18,6 @@ import { ChatManagementState } from "../../chats/useChatManagement";
 import {
     makeDMUpdatedChat,
     makeGMUpdatedChat,
-    makeMDMUpdatedChat,
     makePMUpdatedChat,
     updateAllChat,
 } from "../utils/chat-updaters";
@@ -174,7 +175,7 @@ export const handleRegularMessage = async (
             useCM
         );
     } else if (newMessage.chatType === 4) {
-        await handleMDMMessage(newMessage, newChatMessage, context, useCM);
+        await handleMDMMessage(newMessage, newChatMessage, context, useCM, socket);
     }
 };
 
@@ -316,32 +317,182 @@ const handleMDMMessage = async (
     newMessage: NewMessageProps,
     newChatMessage: MessageProps,
     context: any,
+    useCM: ChatManagementState,
+    socket: Socket
+) => {
+    if (newMessage.isEdited) {
+        updateMDMMessageInCurrentChat(newMessage, newChatMessage, useCM);
+    } else if (newMessage.isReactionUpdated) {
+        updateMDMMessageInCurrentChat(newMessage, newChatMessage, useCM);
+    } else if (context.fromMe) {
+        await ensureMDMInAllChats(newMessage, newChatMessage, useCM);
+        if (newMessage.messageId === 1) {
+            updateMDMCurrentChatForInitialMessage(newMessage, newChatMessage, useCM);
+        }
+    } else {
+        const isNewMDM = !useCM.allChats.some(
+            (c) => c.chatId === newMessage.chatId && c.chatType === 4
+        );
+        await ensureMDMInAllChats(newMessage, newChatMessage, useCM);
+        appendMDMMessageToCurrentChat(newMessage, newChatMessage, useCM);
+
+        if (isNewMDM && socket) {
+            socket.emit("join", {
+                joiningCGId: newMessage.chatId,
+                joiningCGName: newMessage.chatName,
+                chatType: 4,
+            });
+        }
+    }
+};
+
+const ensureMDMInAllChats = async (
+    newMessage: NewMessageProps,
+    newChatMessage: MessageProps,
     useCM: ChatManagementState
 ) => {
-    const updatedChat = await makeMDMUpdatedChat(newMessage);
+    const defaultPartner = {
+        teamId: "", teamName: "", userName: "", userId: "",
+        userEmail: "", avatarImgPath: "", tsLastSeen: "",
+        tsJoined: "", customStatus: "",
+    };
 
-    if (newMessage.isEdited) {
-        updateCurrentChat(updatedChat, useCM);
-    } else if (context.fromMe && newMessage.messageId === 1) {
-        if (!newMessage.isReactionUpdated) {
-            await updateAllChat(
-                updatedChat,
-                newChatMessage,
-                useCM.allChats,
-                useCM.funcSetAllChats
+    const buildAllChat = (existing?: AllChatProps): AllChatProps => ({
+        chatType: 4,
+        chatId: newMessage.chatId,
+        chatName: newMessage.chatName,
+        systemUserId: newMessage.systemUserId || existing?.systemUserId,
+        dmPartnerUser: existing?.dmPartnerUser || defaultPartner,
+        lastReadMessageId: existing?.lastReadMessageId || -1,
+        latestMessage: newChatMessage,
+        latestMessageText: newChatMessage.contentText,
+        TSLastMessage: newChatMessage.tsSent,
+        profileImagePath: existing?.profileImagePath,
+        isPinned: existing?.isPinned,
+        tsLastAllReadActivity: existing?.tsLastAllReadActivity,
+        mdmMembers: existing?.mdmMembers,
+    });
+
+    const chatForIDB = buildAllChat(
+        useCM.allChats.find((c) => c.chatId === newMessage.chatId && c.chatType === 4)
+    );
+    await addChat(chatForIDB, 4);
+
+    useCM.setAllChats((prev: AllChatProps[]) => {
+        const existing = prev.find(
+            (c) => c.chatId === newMessage.chatId && c.chatType === 4
+        );
+        const updatedChat = buildAllChat(existing);
+        if (existing) {
+            return prev.map((c) =>
+                c.chatId === newMessage.chatId && c.chatType === 4
+                    ? updatedChat
+                    : c
             );
         }
-        updateCurrentChat(updatedChat, useCM);
-    } else if (!context.fromMe) {
-        if (useCM.allChats.length > 0 && !newMessage.isReactionUpdated) {
-            await updateAllChat(
-                updatedChat,
-                newChatMessage,
-                useCM.allChats,
-                useCM.funcSetAllChats
-            );
+        return [updatedChat, ...prev];
+    });
+};
+
+const updateMDMCurrentChatForInitialMessage = (
+    newMessage: NewMessageProps,
+    newChatMessage: MessageProps,
+    useCM: ChatManagementState
+) => {
+    if (
+        useCM.currentMainChat &&
+        newMessage.chatId === useCM.currentMainChat.chatId &&
+        useCM.currentMainChat.chatType === 4
+    ) {
+        const hasMessage = useCM.currentMainChat.messages.some(
+            (m) => m.messageId === newChatMessage.messageId
+        );
+        if (!hasMessage) {
+            useCM.setCurrentMainChat({
+                ...useCM.currentMainChat,
+                messages: [...useCM.currentMainChat.messages, newChatMessage],
+                latestMessage: newChatMessage,
+                latestMessageText: newMessage.contentText,
+                TSLastMessage: newMessage.tsSent,
+                notMove: true,
+            });
         }
-        updateCurrentChat(updatedChat, useCM);
+    }
+};
+
+const appendMDMMessageToCurrentChat = (
+    newMessage: NewMessageProps,
+    newChatMessage: MessageProps,
+    useCM: ChatManagementState
+) => {
+    if (
+        useCM.currentMainChat &&
+        newMessage.chatId === useCM.currentMainChat.chatId &&
+        useCM.currentMainChat.chatType === 4
+    ) {
+        const hasMessage = useCM.currentMainChat.messages.some(
+            (m) => m.messageId === newChatMessage.messageId
+        );
+        if (!hasMessage) {
+            useCM.setCurrentMainChat({
+                ...useCM.currentMainChat,
+                messages: [...useCM.currentMainChat.messages, newChatMessage],
+                latestMessage: newChatMessage,
+                latestMessageText: newMessage.contentText,
+                TSLastMessage: newMessage.tsSent,
+                notMove: true,
+            });
+        }
+    } else if (
+        useCM.currentSubChat &&
+        newMessage.chatId === useCM.currentSubChat.chatId &&
+        useCM.currentSubChat.chatType === 4
+    ) {
+        const hasMessage = useCM.currentSubChat.messages.some(
+            (m) => m.messageId === newChatMessage.messageId
+        );
+        if (!hasMessage) {
+            useCM.setCurrentSubChat({
+                ...useCM.currentSubChat,
+                messages: [...useCM.currentSubChat.messages, newChatMessage],
+                latestMessage: newChatMessage,
+                latestMessageText: newMessage.contentText,
+                TSLastMessage: newMessage.tsSent,
+                notMove: true,
+            });
+        }
+    }
+};
+
+const updateMDMMessageInCurrentChat = (
+    newMessage: NewMessageProps,
+    newChatMessage: MessageProps,
+    useCM: ChatManagementState
+) => {
+    if (
+        useCM.currentMainChat &&
+        newMessage.chatId === useCM.currentMainChat.chatId &&
+        useCM.currentMainChat.chatType === 4
+    ) {
+        useCM.setCurrentMainChat({
+            ...useCM.currentMainChat,
+            messages: useCM.currentMainChat.messages.map((m) =>
+                m.messageId === newChatMessage.messageId ? newChatMessage : m
+            ),
+            notMove: true,
+        });
+    } else if (
+        useCM.currentSubChat &&
+        newMessage.chatId === useCM.currentSubChat.chatId &&
+        useCM.currentSubChat.chatType === 4
+    ) {
+        useCM.setCurrentSubChat({
+            ...useCM.currentSubChat,
+            messages: useCM.currentSubChat.messages.map((m) =>
+                m.messageId === newChatMessage.messageId ? newChatMessage : m
+            ),
+            notMove: true,
+        });
     }
 };
 
@@ -380,9 +531,17 @@ const handlePMMessage = async (
 };
 
 const updateCurrentChat = (updatedChat: any, useCM: ChatManagementState) => {
-    if (useCM.currentMainChat && updatedChat.chatId === useCM.currentMainChat.chatId) {
+    if (
+        useCM.currentMainChat &&
+        updatedChat.chatId === useCM.currentMainChat.chatId &&
+        updatedChat.chatType === useCM.currentMainChat.chatType
+    ) {
         useCM.setCurrentMainChat(updatedChat);
-    } else if (useCM.currentSubChat && updatedChat.chatId === useCM.currentSubChat.chatId) {
+    } else if (
+        useCM.currentSubChat &&
+        updatedChat.chatId === useCM.currentSubChat.chatId &&
+        updatedChat.chatType === useCM.currentSubChat.chatType
+    ) {
         useCM.setCurrentSubChat(updatedChat);
     }
 };

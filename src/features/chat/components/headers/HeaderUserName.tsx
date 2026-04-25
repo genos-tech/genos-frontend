@@ -1,10 +1,11 @@
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import { Box, Chip, Stack, Typography } from "@mui/joy";
+import { Box, Chip, Stack, Tooltip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
+import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { PulseDot } from "../../../../components/ui/misc/PulseDot";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -127,6 +128,15 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                         useTEM={useTEM}
                         useUISM={useUISM}
                     />
+                ) : chat && chat.chatType === 4 ? (
+                    <MDMAvatar
+                        members={
+                            useCM.allChats.find(
+                                (c) => c.chatId === chat.chatId && c.chatType === 4
+                            )?.mdmMembers
+                        }
+                        size="md"
+                    />
                 ) : null}
             </Box>
 
@@ -152,17 +162,44 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                     )}
 
                     {/* Chat name */}
-                    <Typography
-                        level="title-md"
-                        sx={{
-                            fontWeight: 700,
-                            color: styles.textColor,
-                            letterSpacing: "-0.01em",
-                        }}
-                        noWrap
-                    >
-                        {isYou ? `${chat?.chatName} (you)` : chat?.chatName}
-                    </Typography>
+                    {chat?.chatType === 4 ? (
+                        <Tooltip
+                            title={
+                                useCM.allChats
+                                    .find((c) => c.chatId === chat.chatId && c.chatType === 4)
+                                    ?.mdmMembers?.map((m) => m.userName)
+                                    .join(", ") || chat?.chatName
+                            }
+                            placement="bottom"
+                            arrow
+                        >
+                            <Typography
+                                level="title-md"
+                                sx={{
+                                    fontWeight: 700,
+                                    color: styles.textColor,
+                                    letterSpacing: "-0.01em",
+                                    maxWidth: 300,
+                                    cursor: "default",
+                                }}
+                                noWrap
+                            >
+                                {chat?.chatName}
+                            </Typography>
+                        </Tooltip>
+                    ) : (
+                        <Typography
+                            level="title-md"
+                            sx={{
+                                fontWeight: 700,
+                                color: styles.textColor,
+                                letterSpacing: "-0.01em",
+                            }}
+                            noWrap
+                        >
+                            {isYou ? `${chat?.chatName} (you)` : chat?.chatName}
+                        </Typography>
+                    )}
 
                     {/* Online/Offline status chip */}
                     {chat && chat.chatType === 1 && (

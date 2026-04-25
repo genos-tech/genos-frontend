@@ -1,11 +1,10 @@
 import React from "react";
-import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
-import { Avatar, Box } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
+import { Avatar } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
+import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -36,9 +35,6 @@ export const ChatListItemAvatar: React.FC<ChatListItemAvatarProps> = ({
     socket,
     useCM,
 }) => {
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
-
     // DM Chat with partner
     if (chatType === 1 && chat.dmPartnerUser.userId !== "") {
         return (
@@ -91,31 +87,9 @@ export const ChatListItemAvatar: React.FC<ChatListItemAvatarProps> = ({
         );
     }
 
-    // MDM (Multi-user DM) Chat - show group-style avatar with icon
+    // MDM (Multi-user DM) Chat - show overlapping member avatars
     if (chatType === 4) {
-        return (
-            <Box sx={{ position: "relative" }}>
-                <Avatar
-                    size="sm"
-                    sx={{
-                        background: isDark
-                            ? "linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(37, 99, 235, 0.3) 100%)"
-                            : "linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.2) 100%)",
-                        border: "1px solid",
-                        borderColor: isDark
-                            ? "rgba(59, 130, 246, 0.4)"
-                            : "rgba(59, 130, 246, 0.3)",
-                    }}
-                >
-                    <PeopleRoundedIcon
-                        sx={{
-                            fontSize: 18,
-                            color: isDark ? "#60a5fa" : "#3b82f6",
-                        }}
-                    />
-                </Avatar>
-            </Box>
-        );
+        return <MDMAvatar members={chat.mdmMembers} />;
     }
 
     return null;

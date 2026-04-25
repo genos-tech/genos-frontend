@@ -259,6 +259,10 @@ export const loadInitialData = (
                             popSpecificMessagesWorker.onmessage = (event) => {
                                 const fetchedMessages: MessageProps[] = event.data;
                                 if (fetchedMessages !== undefined) {
+                                    const lastMsg =
+                                        fetchedMessages.length > 0
+                                            ? fetchedMessages[fetchedMessages.length - 1]
+                                            : fetchedChat.latestMessage;
                                     const currentMainChat: ChatProps = {
                                         chatId: fetchedChat.chatId,
                                         chatName: fetchedChat.chatName,
@@ -266,10 +270,9 @@ export const loadInitialData = (
                                         dmPartnerUser: fetchedChat.dmPartnerUser,
                                         lastReadMessageId: fetchedChat.lastReadMessageId,
                                         messages: fetchedMessages,
-                                        latestMessage: fetchedMessages[fetchedMessages.length - 1],
+                                        latestMessage: lastMsg,
                                         latestMessageText:
-                                            fetchedMessages[fetchedMessages.length - 1]
-                                                .contentText,
+                                            lastMsg?.contentText ?? "",
                                         TSLastMessage: fetchedChat.TSLastMessage,
                                         project: fetchedChat.project,
                                         isPrivate: fetchedChat.isPrivate,
@@ -282,6 +285,8 @@ export const loadInitialData = (
                                         "Failed due to fetchedMessages:",
                                         fetchedMessages
                                     );
+                                    setCurrentMainChat(defaultChat);
+                                    setIsInitialChatLoaded(true);
                                 }
                             };
 

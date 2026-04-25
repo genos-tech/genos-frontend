@@ -3,7 +3,7 @@ import { Socket } from "socket.io-client";
 import { ChatService } from "../../../db/services/chat.service";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { UserProps } from "../../../types/admin";
-import { AllChatProps, ChatProps, MessageProps } from "../../../types/chat";
+import { AllChatProps, ChatProps, MDMMemberProps, MessageProps } from "../../../types/chat";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { addChat } from "./addChat";
 import { addMessage } from "./addMessage";
@@ -26,7 +26,8 @@ const addMDMChatAndMessage = async (
     myself: UserProps,
     chatId: number,
     chatName: string,
-    useCM: ChatManagementState
+    useCM: ChatManagementState,
+    mdmMembers?: MDMMemberProps[]
 ) => {
     const ts = getLocalCurrentTimestamp();
 
@@ -54,6 +55,7 @@ const addMDMChatAndMessage = async (
         latestMessage: newMessage,
         latestMessageText: mdmCreatedMessage,
         TSLastMessage: ts,
+        mdmMembers: mdmMembers,
     };
 
     await addChat(newAllChat, 4);
@@ -72,7 +74,11 @@ const addMDMChatAndMessage = async (
     };
 
     useCM.setCurrentMainChat(newChat);
-    useCM.setAllChats([newAllChat, ...useCM.allChats]);
+    useCM.setAllChats((prev: AllChatProps[]) => {
+        const exists = prev.some((c) => c.chatId === chatId && c.chatType === 4);
+        if (exists) return prev;
+        return [newAllChat, ...prev];
+    });
 };
 
 const openExistingMDM = async (
@@ -125,13 +131,18 @@ const openExistingMDM = async (
             latestMessage: mdmChat.latestMessage,
             latestMessageText: mdmChat.latestMessageText,
             TSLastMessage: mdmChat.TSLastMessage,
+            mdmMembers: (mdmChat as any).mdmMembers,
         };
 
         await addChat(newAllChat, 4);
         await new ChatService().batchInsertMDMMessages(sortedMessages);
 
         useCM.setCurrentMainChat({ ...newAllChat, messages: sortedMessages });
-        useCM.setAllChats([newAllChat, ...useCM.allChats]);
+        useCM.setAllChats((prev: AllChatProps[]) => {
+            const exists = prev.some((c) => c.chatId === mdmId && c.chatType === 4);
+            if (exists) return prev;
+            return [newAllChat, ...prev];
+        });
 
         if (socket) {
             socket.emit("join", {
@@ -151,7 +162,8 @@ export const createMDMChatGroup = async (
     socket: Socket | null,
     setErrorMessage: (msg: string) => void,
     setOpen: (e: boolean) => void,
-    accessToken: string
+    accessToken: string,
+    selectedMembers?: UserProps[]
 ) => {
     const data = await createMDMChat(
         accessToken,
@@ -202,7 +214,25 @@ export const createMDMChatGroup = async (
         );
     }
 
-    await addMDMChatAndMessage(myself, chatId, chatName, useCM);
+    const allMembers: MDMMemberProps[] = [
+        {
+            userId: myself.userId,
+            userName: myself.userName,
+            userEmail: myself.userEmail,
+            avatarImgPath: myself.avatarImgPath,
+            teamId: myself.teamId,
+            teamName: myself.teamName,
+        },
+        ...(selectedMembers || []).map((m) => ({
+            userId: m.userId,
+            userName: m.userName,
+            userEmail: m.userEmail,
+            avatarImgPath: m.avatarImgPath,
+            teamId: m.teamId,
+            teamName: m.teamName,
+        })),
+    ];
+    await addMDMChatAndMessage(myself, chatId, chatName, useCM, allMembers);
     useCM.setCurrentChatPaneType(1);
     useCM.setIsMainChatVisible(true);
     setOpen(false);

@@ -47,7 +47,7 @@ export interface ChatManagementState {
     currentThreadChat: ThreadProps | undefined;
     setCurrentThreadChat: (value: ThreadProps | undefined) => void;
     allChats: AllChatProps[];
-    setAllChats: (value: AllChatProps[]) => void;
+    setAllChats: (value: AllChatProps[] | ((prev: AllChatProps[]) => AllChatProps[])) => void;
     flaggedMessages: FlaggedMessageProps[];
     setFlaggedMessages: (value: FlaggedMessageProps[]) => void;
     activityMessages: ActivityMessageProps[];
@@ -133,17 +133,15 @@ export const useChatManagement = (
     const funcSetAllChats = async () => {
         const rawAllChats: AllChatProps[] = await popAllChats();
         if (rawAllChats) {
-            // Exclude the chats that have not any messages except the first message, which is "Has joined".
             const allChatsWithoutInitialDMChat = rawAllChats.filter(
-                (chat) => !(chat.chatType === 1 && chat.latestMessage.messageId <= 1)
+                (chat) => !(chat.chatType === 1 && chat.latestMessage?.messageId <= 1)
             );
 
-            // But only if the current main chat is the chat without no messages, keep the chat displayed.
             const initialDMChatIdx = rawAllChats.findIndex(
                 (chat) =>
                     chat.chatType === 1 &&
                     currentMainChat?.chatId === chat.chatId &&
-                    chat.latestMessage.messageId <= 1
+                    chat.latestMessage?.messageId <= 1
             );
 
             let finalAllChats: AllChatProps[];
@@ -163,7 +161,15 @@ export const useChatManagement = (
                 finalAllChats = allChatsWithoutInitialDMChat;
             }
 
-            setAllChats(finalAllChats);
+            const idbKeys = new Set(
+                finalAllChats.map((c) => `${c.chatType}-${c.chatId}`)
+            );
+            setAllChats((prev) => {
+                const preserved = prev.filter(
+                    (c) => !idbKeys.has(`${c.chatType}-${c.chatId}`)
+                );
+                return [...finalAllChats, ...preserved];
+            });
             setUnReadChatCounts(countUnreadChats(allChatsWithoutInitialDMChat));
         }
     };
@@ -195,16 +201,17 @@ export const useChatManagement = (
     };
 
     const defineNewChat = (chat: AllChatProps, messages: any): ChatProps => {
+        const lastMsg = messages.length > 0 ? messages[messages.length - 1] : chat.latestMessage;
         return {
             chatId: chat.chatId,
             chatName: chat.chatName,
             chatType: chat.chatType,
             dmPartnerUser: chat.dmPartnerUser,
-            lastReadMessageId: messages[messages.length - 1].messageId,
+            lastReadMessageId: lastMsg?.messageId ?? -1,
             messages: messages,
-            latestMessage: messages[messages.length - 1],
-            latestMessageText: messages[messages.length - 1].contentText,
-            TSLastMessage: messages[messages.length - 1].tsSent,
+            latestMessage: lastMsg ?? chat.latestMessage,
+            latestMessageText: lastMsg?.contentText ?? chat.latestMessageText ?? "",
+            TSLastMessage: lastMsg?.tsSent ?? chat.TSLastMessage ?? "",
             systemUserId: chat.systemUserId,
             project: chat.project,
             isPrivate: chat.isPrivate,
@@ -344,7 +351,7 @@ export const useChatManagement = (
     }, [unReadChatCounts, unReadActivityMessageCounts]);
 
     useEffect(() => {
-        setTimeout(() => {
+        const timerId = setTimeout(() => {
             funcSetAllChats();
             if (currentMainChat) {
                 if (currentMainChat.chatType === 1 && currentMainChat.chatId !== -1) {
@@ -360,11 +367,12 @@ export const useChatManagement = (
                     localStorage.setItem("lastPMChatId", currentMainChat.chatId.toString() || "");
                 }
                 if (currentMainChat.chatType === 4 && currentMainChat.chatId !== -1) {
-                    localStorage.setItem("lastChatType", "1");
+                    localStorage.setItem("lastChatType", "4");
                     localStorage.setItem("lastMDMChatId", currentMainChat.chatId.toString() || "");
                 }
             }
-        }, 500); // wait 500ms
+        }, 500);
+        return () => clearTimeout(timerId);
     }, [currentMainChat, currentSubChat]);
 
     return {

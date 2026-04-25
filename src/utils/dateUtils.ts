@@ -85,11 +85,13 @@ const monthNameLookUp: { [key: string]: string } = {
 };
 
 export const extractMMDDHHMMSSs = (ts: string) => {
+    if (!ts || ts.trim() === "") return "";
     const tsLocal = convertAlmostIsoUtcToLocalFormatted(ts);
     return tsLocal;
 };
 
 export const extractYYYYMMDDHHMM = (ts: string) => {
+    if (!ts || ts.trim() === "") return "";
     const tsLocal = convertAlmostIsoUtcToLocalFormatted(ts);
     const tsDay: string = checkTimestampDay(ts);
 

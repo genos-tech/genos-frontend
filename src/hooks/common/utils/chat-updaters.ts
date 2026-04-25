@@ -9,38 +9,26 @@ export const updateAllChat = async (
     allChats: AllChatProps[],
     funcSetAllChats: () => void
 ) => {
+    const existingChat = allChats.find(
+        (chat) => chat.chatId === currentChat.chatId && chat.chatType === currentChat.chatType
+    );
+
     const newChat: AllChatProps = {
         chatType: currentChat.chatType,
         chatId: currentChat.chatId,
         chatName: currentChat.chatName,
-        systemUserId:
-            currentChat.systemUserId ||
-            allChats.find((chat) => chat.chatId === currentChat.chatId)?.systemUserId,
-        dmPartnerUser:
-            currentChat.dmPartnerUser ||
-            allChats.find((chat) => chat.chatId === currentChat.chatId)?.dmPartnerUser,
-        lastReadMessageId:
-            currentChat.lastReadMessageId ||
-            allChats.find((chat) => chat.chatId === currentChat.chatId)?.lastReadMessageId ||
-            -1,
+        systemUserId: currentChat.systemUserId || existingChat?.systemUserId,
+        dmPartnerUser: currentChat.dmPartnerUser || existingChat?.dmPartnerUser,
+        lastReadMessageId: currentChat.lastReadMessageId || existingChat?.lastReadMessageId || -1,
         latestMessage: newChatMessage,
         latestMessageText: newChatMessage.contentText,
         TSLastMessage: newChatMessage.tsSent,
-        project:
-            currentChat.project ||
-            allChats.find((chat) => chat.chatId === currentChat.chatId)?.project,
-        isPrivate:
-            currentChat.isPrivate ||
-            allChats.find((chat) => chat.chatId === currentChat.chatId)?.isPrivate,
-        profileImagePath:
-            currentChat.profileImagePath ||
-            allChats.find((chat) => chat.chatId === currentChat.chatId)?.profileImagePath,
-        isPinned:
-            currentChat.isPinned ||
-            allChats.find((chat) => chat.chatId === currentChat.chatId)?.isPinned,
+        project: currentChat.project || existingChat?.project,
+        isPrivate: currentChat.isPrivate || existingChat?.isPrivate,
+        profileImagePath: currentChat.profileImagePath || existingChat?.profileImagePath,
+        isPinned: currentChat.isPinned || existingChat?.isPinned,
         tsLastAllReadActivity:
-            currentChat.tsLastAllReadActivity ||
-            allChats.find((chat) => chat.chatId === currentChat.chatId)?.tsLastAllReadActivity,
+            currentChat.tsLastAllReadActivity || existingChat?.tsLastAllReadActivity,
     };
 
     if (newChat) {
@@ -87,7 +75,9 @@ export const makeGMUpdatedChat = async (
     allChats: AllChatProps[]
 ): Promise<ChatProps> => {
     const updatedChat = await popSpecificMessages(newMessage.chatId, newMessage.chatType);
-    const existingChat = allChats.find((c) => c.chatId === newMessage.chatId);
+    const existingChat = allChats.find(
+        (c) => c.chatId === newMessage.chatId && c.chatType === newMessage.chatType
+    );
     return {
         chatId: newMessage.chatId,
         chatName: newMessage.chatName,
@@ -111,7 +101,9 @@ export const makePMUpdatedChat = async (
     allChats: AllChatProps[]
 ): Promise<ChatProps> => {
     const updatedChat = await popSpecificMessages(newMessage.chatId, newMessage.chatType);
-    const existingChat = allChats.find((c) => c.chatId === newMessage.chatId);
+    const existingChat = allChats.find(
+        (c) => c.chatId === newMessage.chatId && c.chatType === newMessage.chatType
+    );
     return {
         chatId: newMessage.chatId,
         chatName: newMessage.chatName,

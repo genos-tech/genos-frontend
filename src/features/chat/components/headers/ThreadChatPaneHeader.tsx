@@ -7,6 +7,7 @@ import { Box, Chip, IconButton, Stack, Tooltip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 
+import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
@@ -143,8 +144,8 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                 minHeight: "64px",
             }}
         >
-            {/* Left section: Thread badge + Name */}
-            <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
+            {/* Left section: Thread badge + Avatar + Name */}
+            <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", minWidth: 0 }}>
                 {/* Thread badge */}
                 <Box
                     sx={{
@@ -156,6 +157,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         borderRadius: "10px",
                         background: styles.threadBadgeBg,
                         boxShadow: `0 2px 8px ${styles.glowColor}`,
+                        flexShrink: 0,
                     }}
                 >
                     <ReplyRoundedIcon sx={{ fontSize: 16, color: "#fff" }} />
@@ -167,20 +169,67 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     </Typography>
                 </Box>
 
+                {/* MDM Avatar */}
+                {useCM.currentThreadChat?.chatType === 4 && (
+                    <Box sx={{ flexShrink: 0 }}>
+                        <MDMAvatar
+                            members={
+                                useCM.allChats.find(
+                                    (c) =>
+                                        c.chatId === useCM.currentThreadChat?.chatId &&
+                                        c.chatType === 4
+                                )?.mdmMembers
+                            }
+                            size="sm"
+                        />
+                    </Box>
+                )}
+
                 {/* Chat name */}
-                <Typography
-                    level="title-md"
-                    sx={{
-                        fontWeight: 600,
-                        color: styles.textColor,
-                        letterSpacing: "-0.01em",
-                    }}
-                    noWrap
-                >
-                    {isYou
-                        ? `${useCM.currentThreadChat?.chatName} (you)`
-                        : useCM.currentThreadChat?.chatName}
-                </Typography>
+                {useCM.currentThreadChat?.chatType === 4 ? (
+                    <Tooltip
+                        title={
+                            useCM.allChats
+                                .find(
+                                    (c) =>
+                                        c.chatId === useCM.currentThreadChat?.chatId &&
+                                        c.chatType === 4
+                                )
+                                ?.mdmMembers?.map((m) => m.userName)
+                                .join(", ") || useCM.currentThreadChat?.chatName
+                        }
+                        placement="bottom"
+                        arrow
+                    >
+                        <Typography
+                            level="title-md"
+                            sx={{
+                                fontWeight: 600,
+                                color: styles.textColor,
+                                letterSpacing: "-0.01em",
+                                maxWidth: 200,
+                                cursor: "default",
+                            }}
+                            noWrap
+                        >
+                            {useCM.currentThreadChat?.chatName}
+                        </Typography>
+                    </Tooltip>
+                ) : (
+                    <Typography
+                        level="title-md"
+                        sx={{
+                            fontWeight: 600,
+                            color: styles.textColor,
+                            letterSpacing: "-0.01em",
+                        }}
+                        noWrap
+                    >
+                        {isYou
+                            ? `${useCM.currentThreadChat?.chatName} (you)`
+                            : useCM.currentThreadChat?.chatName}
+                    </Typography>
+                )}
             </Stack>
 
             {/* Right section: Task info + Actions */}
