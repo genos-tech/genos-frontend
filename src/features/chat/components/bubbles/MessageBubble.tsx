@@ -40,6 +40,10 @@ const BUBBLE_COLORS = {
         dark: { bg: "#14532d", border: "#22c55e", text: "#dcfce7" },
         light: { bg: "#dcfce7", border: "#22c55e", text: "#14532d" },
     },
+    threadActive: {
+        dark: { bg: "#1e1b4b", border: "#6366f1", text: "#e0e7ff" },
+        light: { bg: "#eef2ff", border: "#818cf8", text: "#1e1b4b" },
+    },
 } as const;
 
 type MessageBubbleProps = {
@@ -50,7 +54,7 @@ type MessageBubbleProps = {
     chat: ChatProps;
     message: MessageProps;
     isScrolling: boolean;
-    isFocused: boolean;
+    isFocused: "focused" | "threadActive" | false;
     isSimpleBubble: boolean;
     socket: Socket | null;
     useUISM: UIStateManagementState;
@@ -92,6 +96,8 @@ export const MessageBubble = (props: MessageBubbleProps) => {
     const bubbleColors = isSent ? BUBBLE_COLORS.sent : BUBBLE_COLORS.received;
     const colors = isDark ? bubbleColors.dark : bubbleColors.light;
     const focusedColors = isDark ? BUBBLE_COLORS.focused.dark : BUBBLE_COLORS.focused.light;
+    const threadActiveColors = isDark ? BUBBLE_COLORS.threadActive.dark : BUBBLE_COLORS.threadActive.light;
+    const highlightColors = isFocused === "threadActive" ? threadActiveColors : focusedColors;
 
     // Chat type to URL path mapping
     const CHAT_TYPE_PATH: Record<number, string> = {
@@ -553,17 +559,21 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                 ? { borderTopRightRadius: "4px", borderTopLeftRadius: "16px" }
                                 : { borderTopRightRadius: "16px", borderTopLeftRadius: "4px" }),
                             // Background styling - solid colors for better text contrast
-                            background: isFocused ? focusedColors.bg : colors.bg,
+                            background: isFocused ? highlightColors.bg : colors.bg,
                             // Text color for proper contrast
-                            color: isFocused ? focusedColors.text : colors.text,
+                            color: isFocused ? highlightColors.text : colors.text,
                             // Border styling
                             border: "1px solid",
-                            borderColor: isFocused ? focusedColors.border : colors.border,
+                            borderColor: isFocused ? highlightColors.border : colors.border,
                             // Shadow for depth
                             boxShadow: isFocused
-                                ? isDark
-                                    ? `0 4px 20px rgba(34,197,94,0.2), inset 0 1px 0 rgba(255,255,255,0.05)`
-                                    : `0 4px 20px rgba(22,163,74,0.15)`
+                                ? isFocused === "focused"
+                                    ? isDark
+                                        ? `0 4px 20px rgba(34,197,94,0.2), inset 0 1px 0 rgba(255,255,255,0.05)`
+                                        : `0 4px 20px rgba(22,163,74,0.15)`
+                                    : isDark
+                                        ? `0 4px 20px rgba(99,102,241,0.2), inset 0 1px 0 rgba(255,255,255,0.05)`
+                                        : `0 4px 20px rgba(99,102,241,0.15)`
                                 : isDark
                                   ? "0 2px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.03)"
                                   : "0 2px 8px rgba(0,0,0,0.06)",

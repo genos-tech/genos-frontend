@@ -46,7 +46,7 @@ type threadMessageBubbleProps = {
     variant: "sent" | "received";
     message: ThreadMessageProps;
     isScrolling: boolean;
-    isFocused: boolean;
+    isFocused: "focused" | "threadActive" | false;
     isSimpleBubble: boolean;
     useUISM: UIStateManagementState;
     setIsInEdit: (value: boolean) => void;
