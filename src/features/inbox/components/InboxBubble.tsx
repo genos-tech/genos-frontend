@@ -1,6 +1,7 @@
 import { useState } from "react";
 import ChatRoundedIcon from "@mui/icons-material/ChatRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import { Box, Button, Card, Chip, Stack, Typography } from "@mui/joy";
@@ -21,26 +22,30 @@ const ITEM_TYPE_CONFIG: Record<
     {
         label: string;
         icon: React.ReactNode;
-        socketEvent: string;
+        approveEvent: string;
+        rejectEvent: string;
         colorScheme: { dark: string; light: string };
     }
 > = {
     1: {
         label: "Team Request",
         icon: <GroupsRoundedIcon sx={{ fontSize: 14 }} />,
-        socketEvent: "approve_join_team_request",
+        approveEvent: "approve_join_team_request",
+        rejectEvent: "reject_join_team_request",
         colorScheme: { dark: "#60a5fa", light: "#3b82f6" },
     },
     2: {
         label: "Project Request",
         icon: <FolderRoundedIcon sx={{ fontSize: 14 }} />,
-        socketEvent: "approve_join_project_request",
+        approveEvent: "approve_join_project_request",
+        rejectEvent: "reject_join_project_request",
         colorScheme: { dark: "#4ade80", light: "#22c55e" },
     },
     3: {
         label: "GM Request",
         icon: <ChatRoundedIcon sx={{ fontSize: 14 }} />,
-        socketEvent: "approve_join_gm_request",
+        approveEvent: "approve_join_gm_request",
+        rejectEvent: "reject_join_gm_request",
         colorScheme: { dark: "#f472b6", light: "#ec4899" },
     },
 };
@@ -59,17 +64,25 @@ export const InboxBubble = (props: InboxBubbleProps) => {
     const { useTEM, socket, myself, setMyself, inboxItem, useUISM, useCM } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
-    const [requestApproved, setRequestApproved] = useState<boolean>(false);
+    const [localStatus, setLocalStatus] = useState<"approved" | "rejected" | null>(null);
     const [isHovered, setIsHovered] = useState<boolean>(false);
 
     const config = ITEM_TYPE_CONFIG[inboxItem.itemType];
-    const isApproved = inboxItem.isRead === true || requestApproved === true;
     const isRequest = inboxItem.itemType >= 1 && inboxItem.itemType <= 3;
+    const resolvedStatus = localStatus ?? inboxItem.requestStatus;
+    const isHandled = resolvedStatus === "approved" || resolvedStatus === "rejected";
 
     const handleApprove = () => {
         if (socket && config) {
-            socket.emit(config.socketEvent, { item_id: inboxItem.itemId });
-            setRequestApproved(true);
+            socket.emit(config.approveEvent, { item_id: inboxItem.itemId });
+            setLocalStatus("approved");
+        }
+    };
+
+    const handleReject = () => {
+        if (socket && config) {
+            socket.emit(config.rejectEvent, { item_id: inboxItem.itemId });
+            setLocalStatus("rejected");
         }
     };
 
@@ -193,67 +206,125 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                     </Box>
                 )}
 
-                {/* Action Button */}
+                {/* Action Buttons */}
                 {isRequest && (
-                    <Stack direction="row" justifyContent="flex-end">
-                        {isApproved ? (
+                    <Stack direction="row" justifyContent="flex-end" spacing={1}>
+                        {isHandled ? (
                             <Button
                                 size="sm"
                                 variant="soft"
-                                color="success"
+                                color={resolvedStatus === "rejected" ? "neutral" : "success"}
                                 disabled
-                                startDecorator={<CheckRoundedIcon sx={{ fontSize: 16 }} />}
+                                startDecorator={
+                                    resolvedStatus === "rejected" ? (
+                                        <CloseRoundedIcon sx={{ fontSize: 16 }} />
+                                    ) : (
+                                        <CheckRoundedIcon sx={{ fontSize: 16 }} />
+                                    )
+                                }
                                 sx={{
                                     borderRadius: "10px",
                                     fontWeight: 600,
                                     fontSize: "0.75rem",
                                     px: 2,
                                     py: 0.75,
-                                    background: isDark
-                                        ? "rgba(74,222,128,0.12)"
-                                        : "rgba(34,197,94,0.1)",
-                                    color: isDark ? "#4ade80" : "#16a34a",
+                                    background:
+                                        resolvedStatus === "rejected"
+                                            ? isDark
+                                                ? "rgba(239,68,68,0.12)"
+                                                : "rgba(239,68,68,0.1)"
+                                            : isDark
+                                              ? "rgba(74,222,128,0.12)"
+                                              : "rgba(34,197,94,0.1)",
+                                    color:
+                                        resolvedStatus === "rejected"
+                                            ? isDark
+                                                ? "#f87171"
+                                                : "#dc2626"
+                                            : isDark
+                                              ? "#4ade80"
+                                              : "#16a34a",
                                     "&.Mui-disabled": {
                                         opacity: 0.9,
                                     },
                                 }}
                             >
-                                Approved
+                                {resolvedStatus === "rejected" ? "Rejected" : "Approved"}
                             </Button>
                         ) : (
-                            <Button
-                                size="sm"
-                                variant="solid"
-                                onClick={handleApprove}
-                                sx={{
-                                    borderRadius: "10px",
-                                    fontWeight: 600,
-                                    fontSize: "0.75rem",
-                                    px: 2.5,
-                                    py: 0.75,
-                                    background: isDark
-                                        ? "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)"
-                                        : "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
-                                    boxShadow: isDark
-                                        ? "0 4px 12px rgba(99,102,241,0.35)"
-                                        : "0 4px 12px rgba(79,70,229,0.3)",
-                                    transition: "all 0.2s ease",
-                                    "&:hover": {
+                            <>
+                                <Button
+                                    size="sm"
+                                    variant="outlined"
+                                    color="danger"
+                                    onClick={handleReject}
+                                    startDecorator={
+                                        <CloseRoundedIcon sx={{ fontSize: 16 }} />
+                                    }
+                                    sx={{
+                                        borderRadius: "10px",
+                                        fontWeight: 600,
+                                        fontSize: "0.75rem",
+                                        px: 2,
+                                        py: 0.75,
+                                        borderColor: isDark
+                                            ? "rgba(239,68,68,0.4)"
+                                            : "rgba(239,68,68,0.3)",
+                                        color: isDark ? "#f87171" : "#dc2626",
+                                        transition: "all 0.2s ease",
+                                        "&:hover": {
+                                            background: isDark
+                                                ? "rgba(239,68,68,0.15)"
+                                                : "rgba(239,68,68,0.08)",
+                                            borderColor: isDark
+                                                ? "rgba(239,68,68,0.6)"
+                                                : "rgba(239,68,68,0.5)",
+                                            transform: "translateY(-1px)",
+                                        },
+                                        "&:active": {
+                                            transform: "translateY(0)",
+                                        },
+                                    }}
+                                >
+                                    Reject
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="solid"
+                                    onClick={handleApprove}
+                                    startDecorator={
+                                        <CheckRoundedIcon sx={{ fontSize: 16 }} />
+                                    }
+                                    sx={{
+                                        borderRadius: "10px",
+                                        fontWeight: 600,
+                                        fontSize: "0.75rem",
+                                        px: 2.5,
+                                        py: 0.75,
                                         background: isDark
-                                            ? "linear-gradient(135deg, #818cf8 0%, #a78bfa 100%)"
-                                            : "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
-                                        transform: "translateY(-1px)",
+                                            ? "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)"
+                                            : "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
                                         boxShadow: isDark
-                                            ? "0 6px 16px rgba(99,102,241,0.45)"
-                                            : "0 6px 16px rgba(79,70,229,0.4)",
-                                    },
-                                    "&:active": {
-                                        transform: "translateY(0)",
-                                    },
-                                }}
-                            >
-                                Approve
-                            </Button>
+                                            ? "0 4px 12px rgba(99,102,241,0.35)"
+                                            : "0 4px 12px rgba(79,70,229,0.3)",
+                                        transition: "all 0.2s ease",
+                                        "&:hover": {
+                                            background: isDark
+                                                ? "linear-gradient(135deg, #818cf8 0%, #a78bfa 100%)"
+                                                : "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                                            transform: "translateY(-1px)",
+                                            boxShadow: isDark
+                                                ? "0 6px 16px rgba(99,102,241,0.45)"
+                                                : "0 6px 16px rgba(79,70,229,0.4)",
+                                        },
+                                        "&:active": {
+                                            transform: "translateY(0)",
+                                        },
+                                    }}
+                                >
+                                    Approve
+                                </Button>
+                            </>
                         )}
                     </Stack>
                 )}
