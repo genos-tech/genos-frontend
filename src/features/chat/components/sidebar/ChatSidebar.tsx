@@ -596,6 +596,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
 
             <ModalCreateGM
                 useCM={useCM}
+                useTEM={useTEM}
                 myself={myself}
                 open={openCreateGM}
                 setOpen={setOpenCreateGM}
