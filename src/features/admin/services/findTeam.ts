@@ -22,14 +22,16 @@ export const findTeam = async (
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
             console.error("API error:", error.response?.status, error.response?.data);
-            if (setErrorMessage) {
-                setErrorMessage(`API error: ${error.response?.status}`);
+            if (!error.response) {
+                setErrorMessage?.("Network error. Please check your connection and try again.");
+            } else if (error.response.status === 404 || error.response.status === 500) {
+                setErrorMessage?.("Team not found. Please check the Team ID and try again.");
+            } else {
+                setErrorMessage?.("Something went wrong. Please try again later.");
             }
         } else {
             console.error("Unexpected error:", error);
-            if (setErrorMessage) {
-                setErrorMessage("Unexpected error");
-            }
+            setErrorMessage?.("An unexpected error occurred. Please try again.");
         }
     }
 };
