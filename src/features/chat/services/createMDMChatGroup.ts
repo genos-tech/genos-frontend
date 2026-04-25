@@ -1,5 +1,6 @@
 import { Socket } from "socket.io-client";
 
+import { ChatService } from "../../../db/services/chat.service";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps, MessageProps } from "../../../types/chat";
@@ -8,6 +9,7 @@ import { addChat } from "./addChat";
 import { addMessage } from "./addMessage";
 import { defaultDmPartner } from "./constants";
 import { createMDMChat } from "./createMDMChat";
+import { loadMDMHistory } from "./loadMDMHistory";
 import { popSpecificMessages } from "./popSpecificMessages";
 
 const mdmCreatedMessage = "Started this conversation";
@@ -20,35 +22,14 @@ const createMDMMessage = [
     { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] },
 ];
 
-const moveToMDMChat = async (
-    chat: AllChatProps,
-    useCM: ChatManagementState
-) => {
-    const fetchedMessages: MessageProps[] = await popSpecificMessages(chat.chatId, 4);
-    if (fetchedMessages && fetchedMessages.length !== 0) {
-        const newChat: ChatProps = {
-            chatId: chat.chatId,
-            chatName: chat.chatName,
-            chatType: 4,
-            dmPartnerUser: defaultDmPartner,
-            lastReadMessageId: fetchedMessages[fetchedMessages.length - 1].messageId,
-            messages: fetchedMessages,
-            latestMessage: fetchedMessages[fetchedMessages.length - 1],
-            latestMessageText: fetchedMessages[fetchedMessages.length - 1].contentText || "",
-            TSLastMessage: fetchedMessages[fetchedMessages.length - 1].tsSent,
-        };
-        useCM.setCurrentMainChat(newChat);
-    } else {
-        console.error("Failed to fetch MDM messages:", fetchedMessages);
-    }
-};
-
 const addMDMChatAndMessage = async (
     myself: UserProps,
     chatId: number,
     chatName: string,
     useCM: ChatManagementState
 ) => {
+    const ts = getLocalCurrentTimestamp();
+
     const newMessage: MessageProps = {
         chatType: 4,
         messageIdWithChatId: `${chatId}-1`,
@@ -57,14 +38,14 @@ const addMDMChatAndMessage = async (
         content: createMDMMessage,
         contentText: mdmCreatedMessage,
         sender: myself,
-        tsSent: getLocalCurrentTimestamp(),
-        tsUpdated: getLocalCurrentTimestamp(),
+        tsSent: ts,
+        tsUpdated: ts,
         numReplies: 0,
         taskId: null,
         taskStatus: null,
     };
 
-    const newChat: AllChatProps = {
+    const newAllChat: AllChatProps = {
         chatId: chatId,
         chatName: chatName,
         chatType: 4,
@@ -72,27 +53,95 @@ const addMDMChatAndMessage = async (
         lastReadMessageId: -1,
         latestMessage: newMessage,
         latestMessageText: mdmCreatedMessage,
-        TSLastMessage: getLocalCurrentTimestamp(),
+        TSLastMessage: ts,
     };
 
-    await addChat(newChat, 4);
+    await addChat(newAllChat, 4);
     await addMessage(newMessage, 4);
 
-    useCM.setAllChats([
-        ...useCM.allChats,
-        {
-            chatId: newChat.chatId,
-            chatName: newChat.chatName,
-            lastReadMessageId: -1,
-            chatType: 4,
-            dmPartnerUser: defaultDmPartner,
-            latestMessage: newChat.latestMessage,
-            latestMessageText: newChat.latestMessageText,
-            TSLastMessage: getLocalCurrentTimestamp(),
-        },
-    ]);
+    const newChat: ChatProps = {
+        chatId: chatId,
+        chatName: chatName,
+        chatType: 4,
+        dmPartnerUser: defaultDmPartner,
+        lastReadMessageId: 1,
+        messages: [newMessage],
+        latestMessage: newMessage,
+        latestMessageText: mdmCreatedMessage,
+        TSLastMessage: ts,
+    };
 
-    moveToMDMChat(newChat, useCM);
+    useCM.setCurrentMainChat(newChat);
+    useCM.setAllChats([newAllChat, ...useCM.allChats]);
+};
+
+const openExistingMDM = async (
+    myself: UserProps,
+    mdmId: number,
+    useCM: ChatManagementState,
+    socket: Socket | null,
+    accessToken: string
+) => {
+    const existingAllChat = useCM.allChats.find(
+        (c) => c.chatType === 4 && c.chatId === mdmId
+    );
+
+    if (existingAllChat) {
+        const messages = await popSpecificMessages(mdmId, 4);
+        const existingChat: ChatProps = {
+            chatId: existingAllChat.chatId,
+            chatName: existingAllChat.chatName,
+            chatType: 4,
+            dmPartnerUser: existingAllChat.dmPartnerUser,
+            lastReadMessageId: messages.length > 0 ? messages[messages.length - 1].messageId : -1,
+            messages: messages,
+            latestMessage: existingAllChat.latestMessage,
+            latestMessageText: existingAllChat.latestMessageText,
+            TSLastMessage: existingAllChat.TSLastMessage,
+        };
+        useCM.setCurrentMainChat(existingChat);
+        return;
+    }
+
+    const loadedData = await loadMDMHistory(
+        myself.teamId,
+        myself.teamName,
+        myself.userId,
+        accessToken,
+        mdmId
+    );
+
+    const mdmChat: ChatProps | undefined = loadedData?.chat_history?.[0];
+    if (mdmChat) {
+        const sortedMessages = mdmChat.messages.sort(
+            (a: MessageProps, b: MessageProps) => a.messageId - b.messageId
+        );
+        const newAllChat: AllChatProps = {
+            chatType: 4,
+            chatId: mdmChat.chatId,
+            chatName: mdmChat.chatName,
+            lastReadMessageId: mdmChat.lastReadMessageId,
+            dmPartnerUser: defaultDmPartner,
+            latestMessage: mdmChat.latestMessage,
+            latestMessageText: mdmChat.latestMessageText,
+            TSLastMessage: mdmChat.TSLastMessage,
+        };
+
+        await addChat(newAllChat, 4);
+        await new ChatService().batchInsertMDMMessages(sortedMessages);
+
+        useCM.setCurrentMainChat({ ...newAllChat, messages: sortedMessages });
+        useCM.setAllChats([newAllChat, ...useCM.allChats]);
+
+        if (socket) {
+            socket.emit("join", {
+                joiningCGId: mdmId,
+                joiningCGName: mdmChat.chatName,
+                chatType: 4,
+                dmPartnerUser: defaultDmPartner,
+            });
+        }
+    }
 };
 
 export const createMDMChatGroup = async (
@@ -112,10 +161,22 @@ export const createMDMChatGroup = async (
         setErrorMessage
     );
 
-    if (data && socket !== null) {
-        const chatId = data.chatId || data.mdm_id;
-        const chatName = data.chatName;
+    if (!data) return;
 
+    if (data.mdm_exists) {
+        const mdmId = data.mdm_id;
+        await openExistingMDM(myself, mdmId, useCM, socket, accessToken);
+        useCM.setCurrentChatPaneType(1);
+        useCM.setIsMainChatVisible(true);
+        setOpen(false);
+        setErrorMessage("");
+        return data;
+    }
+
+    const chatId = data.chatId || data.mdm_id;
+    const chatName = data.chatName;
+
+    if (socket !== null) {
         socket.emit(
             "join",
             {
@@ -139,24 +200,12 @@ export const createMDMChatGroup = async (
                 });
             }
         );
-
-        await addMDMChatAndMessage(myself, chatId, chatName, useCM);
-        // Set to DM pane type (1) since MDM is now displayed within DM section
-        useCM.setCurrentChatPaneType(1);
-        useCM.setIsMainChatVisible(true);
-        setOpen(false);
-        setErrorMessage("");
-        return data;
-    } else if (data && socket === null) {
-        // Handle case where socket is not available
-        const chatId = data.chatId || data.mdm_id;
-        const chatName = data.chatName;
-        await addMDMChatAndMessage(myself, chatId, chatName, useCM);
-        // Set to DM pane type (1) since MDM is now displayed within DM section
-        useCM.setCurrentChatPaneType(1);
-        useCM.setIsMainChatVisible(true);
-        setOpen(false);
-        setErrorMessage("");
-        return data;
     }
+
+    await addMDMChatAndMessage(myself, chatId, chatName, useCM);
+    useCM.setCurrentChatPaneType(1);
+    useCM.setIsMainChatVisible(true);
+    setOpen(false);
+    setErrorMessage("");
+    return data;
 };

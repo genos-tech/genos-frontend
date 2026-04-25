@@ -161,7 +161,7 @@ export const ModalCreateGM: React.FC<Props> = ({
                             fontWeight: 600,
                         }}
                     >
-                        Create New Group
+                        Create New Group Message
                     </Typography>
                 </Box>
 

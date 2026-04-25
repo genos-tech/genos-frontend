@@ -128,3 +128,22 @@ export const makePMUpdatedChat = async (
         profileImagePath: existingChat?.profileImagePath,
     };
 };
+
+export const makeMDMUpdatedChat = async (
+    newMessage: NewMessageProps
+): Promise<ChatProps> => {
+    const updatedChat = await popSpecificMessages(newMessage.chatId, newMessage.chatType);
+    return {
+        chatId: newMessage.chatId,
+        chatName: newMessage.chatName,
+        systemUserId: newMessage.systemUserId,
+        chatType: newMessage.chatType,
+        dmPartnerUser: emptyDmPartnerUser,
+        lastReadMessageId: newMessage.lastReadMessageId,
+        messages: updatedChat,
+        latestMessage: newMessage,
+        latestMessageText: newMessage.contentText,
+        TSLastMessage: newMessage.tsSent,
+        notMove: true,
+    };
+};

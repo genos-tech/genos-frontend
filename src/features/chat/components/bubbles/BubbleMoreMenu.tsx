@@ -328,7 +328,7 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
     // Check conditions for showing each menu item
     const isOwnMessage = message.sender.userId === myself.userId;
     const isSystemMessage = message.sender.isSystemUser === true;
-    const isProjectChat = chat.chatType === 3 || chat.chatType === 4;
+    const isProjectChat = chat.chatType === 3;
     const canDelete = message.numReplies < 2 && isOwnMessage;
 
     const menuItems: MenuItemConfig[] = [

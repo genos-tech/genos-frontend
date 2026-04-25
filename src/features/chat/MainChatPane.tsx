@@ -128,7 +128,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
     }, [useCM.currentMainChat]);
 
     const virtuosoHeight =
-        useCM.currentMainChat?.chatType === 3 || useCM.currentMainChat?.chatType === 4
+        useCM.currentMainChat?.chatType === 3
             ? 0.95 * window.innerHeight
             : useCM.isSubChatVisible
               ? calculateVirtuosoSubHight(
@@ -231,8 +231,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                 useTM={useTM}
                             />
 
-                            {useCM.currentMainChat?.chatType !== 3 &&
-                                useCM.currentMainChat?.chatType !== 4 && (
+                            {useCM.currentMainChat?.chatType !== 3 && (
                                     <ChatEditorSection
                                         chat={useCM.currentMainChat as ChatProps | ThreadProps}
                                         useCM={useCM}

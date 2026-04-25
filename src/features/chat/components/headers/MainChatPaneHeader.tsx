@@ -173,7 +173,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
 
             <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
                 {/* Create Task Button */}
-                {(chat.chatType === 3 || chat.chatType === 4) && (
+                {chat.chatType === 3 && (
                     <Tooltip
                         size="sm"
                         title="Create a new task"

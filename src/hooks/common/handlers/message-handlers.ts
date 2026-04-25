@@ -16,6 +16,7 @@ import { ChatManagementState } from "../../chats/useChatManagement";
 import {
     makeDMUpdatedChat,
     makeGMUpdatedChat,
+    makeMDMUpdatedChat,
     makePMUpdatedChat,
     updateAllChat,
 } from "../utils/chat-updaters";
@@ -172,6 +173,8 @@ export const handleRegularMessage = async (
             setIsTaskUpdatedBySomeone,
             useCM
         );
+    } else if (newMessage.chatType === 4) {
+        await handleMDMMessage(newMessage, newChatMessage, context, useCM);
     }
 };
 
@@ -189,6 +192,8 @@ const handleMessageDeletion = async (newMessage: NewMessageProps, useCM: ChatMan
             newMessage.messageId,
             newMessage.taskId || undefined
         );
+    } else if (newMessage.chatType === 4) {
+        await chatService.deleteMDMMessage(newMessage.chatId, newMessage.messageId);
     }
 
     // Update current chat if it matches
@@ -293,6 +298,39 @@ const handleGMMessage = async (
     const updatedChat = await makeGMUpdatedChat(newMessage, useCM.allChats);
 
     if (newMessage.isEdited) {
+        updateCurrentChat(updatedChat, useCM);
+    } else if (!context.fromMe) {
+        if (useCM.allChats.length > 0 && !newMessage.isReactionUpdated) {
+            await updateAllChat(
+                updatedChat,
+                newChatMessage,
+                useCM.allChats,
+                useCM.funcSetAllChats
+            );
+        }
+        updateCurrentChat(updatedChat, useCM);
+    }
+};
+
+const handleMDMMessage = async (
+    newMessage: NewMessageProps,
+    newChatMessage: MessageProps,
+    context: any,
+    useCM: ChatManagementState
+) => {
+    const updatedChat = await makeMDMUpdatedChat(newMessage);
+
+    if (newMessage.isEdited) {
+        updateCurrentChat(updatedChat, useCM);
+    } else if (context.fromMe && newMessage.messageId === 1) {
+        if (!newMessage.isReactionUpdated) {
+            await updateAllChat(
+                updatedChat,
+                newChatMessage,
+                useCM.allChats,
+                useCM.funcSetAllChats
+            );
+        }
         updateCurrentChat(updatedChat, useCM);
     } else if (!context.fromMe) {
         if (useCM.allChats.length > 0 && !newMessage.isReactionUpdated) {

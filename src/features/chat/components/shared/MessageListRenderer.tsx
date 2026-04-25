@@ -119,7 +119,7 @@ export const MessageListRenderer = ({
             return (
                 prevMessage.sender.userId === message.sender.userId &&
                 getTimeDiffSeconds(prevMessage.tsSent, message.tsSent) < limitSeconds &&
-                (isThread || (chat.chatType !== 3 && chat.chatType !== 4))
+                (isThread || chat.chatType !== 3)
             );
         }
         return false;

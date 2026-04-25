@@ -69,6 +69,8 @@ export const ModalDeleteMessage: React.FC<Props> = ({
                         await chatService.deleteGMThreadMessage(message.chatId, message.messageId);
                     } else if (message.chatType === 3) {
                         await chatService.deletePMThreadMessage(message.chatId, message.messageId);
+                    } else if (message.chatType === 4) {
+                        await chatService.deleteMDMThreadMessage(message.chatId, message.messageId);
                     }
 
                     // Delete message from the pane/message array
@@ -114,6 +116,8 @@ export const ModalDeleteMessage: React.FC<Props> = ({
                         await chatService.deleteGMMessage(message.chatId, message.messageId);
                     } else if (message.chatType === 3) {
                         await chatService.deletePMMessage(message.chatId, message.messageId);
+                    } else if (message.chatType === 4) {
+                        await chatService.deleteMDMMessage(message.chatId, message.messageId);
                     }
 
                     // Delete message from the pane/message array

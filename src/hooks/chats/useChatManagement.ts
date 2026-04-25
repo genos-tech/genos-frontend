@@ -22,6 +22,7 @@ const CHAT_TYPE_REVERSE_MAP: Record<number, string> = {
     1: "dm",
     2: "gm",
     3: "pm",
+    4: "mdm",
 };
 
 export interface ChatManagementState {
@@ -357,6 +358,10 @@ export const useChatManagement = (
                 if (currentMainChat.chatType === 3 && currentMainChat.chatId !== -1) {
                     localStorage.setItem("lastChatType", "3");
                     localStorage.setItem("lastPMChatId", currentMainChat.chatId.toString() || "");
+                }
+                if (currentMainChat.chatType === 4 && currentMainChat.chatId !== -1) {
+                    localStorage.setItem("lastChatType", "1");
+                    localStorage.setItem("lastMDMChatId", currentMainChat.chatId.toString() || "");
                 }
             }
         }, 500); // wait 500ms

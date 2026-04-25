@@ -430,7 +430,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                         <PeopleRoundedIcon
                                             sx={{ fontSize: 18, color: "#10b981" }}
                                         />
-                                        New Multi-user DM
+                                        New DM with friends
                                     </MenuItem>
                                     <MenuItem
                                         onClick={() => setOpenCreateGM(true)}
@@ -441,7 +441,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                         }}
                                     >
                                         <GroupsIcon sx={{ fontSize: 18, color: "#4ade80" }} />
-                                        New Group
+                                        New Group Message
                                     </MenuItem>
                                 </Menu>
                             </Dropdown>

@@ -98,6 +98,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         1: "dm",
         2: "gm",
         3: "pm",
+        4: "mdm",
     };
 
     // Handle message click to update URL
