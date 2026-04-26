@@ -26,7 +26,7 @@ const EMPTY_CHAT: ChatProps = {
     chatId: -1,
     chatName: "",
     chatType: 0,
-    dmPartnerUser: { teamId: 0, teamName: "", userId: "", userName: "", userEmail: "", avatarImgPath: "", tsLastSeen: "", tsJoined: "" },
+    dmPartnerUser: { teamId: "", teamName: "", userId: "", userName: "", userEmail: "", avatarImgPath: "", tsLastSeen: "", tsJoined: "" },
     lastReadMessageId: 0,
     messages: [],
     latestMessage: undefined as any,

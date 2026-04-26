@@ -27,7 +27,7 @@ interface MainChatPanelProps {
     isToDoVisible: boolean;
     setIsToDoVisible: (value: boolean) => void;
     todos: ToDoFactProps[];
-    setTodos: (todos: ToDoFactProps[]) => void;
+    setTodos: React.Dispatch<React.SetStateAction<ToDoFactProps[]>>;
     setIsExistingTodaysTodo: (value: boolean) => void;
     socket: any;
     setMyself: (me: UserProps) => void;
