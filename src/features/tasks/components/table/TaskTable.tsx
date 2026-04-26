@@ -104,8 +104,8 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
                     filterModel: {
                         items: [],
                     },
-                    lightModeColor: "#ffffff",
-                    darkModeColor: "#ffffff",
+                    lightModeColor: "#6b7280",
+                    darkModeColor: "#9ca3af",
                 };
                 const tagBasedFilters: FilterProps[] = loadedProjectTags.map((tag) => ({
                     label: tag.tagName,

@@ -56,17 +56,24 @@ type TaskFilterMenuProps = {
     useTM: TaskManagementState;
     predefinedTagsFilters: FilterProps[];
     setCurrentDisplayingTasks: (tasks: TaskTableProps[]) => void;
+    hideStatusFilter?: boolean;
 };
 
 export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
-    const { isTaskUpdated, useTM, predefinedTagsFilters, setCurrentDisplayingTasks } = props;
+    const {
+        isTaskUpdated,
+        useTM,
+        predefinedTagsFilters,
+        setCurrentDisplayingTasks,
+        hideStatusFilter,
+    } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const styles = isDark ? FILTER_STYLES.dark : FILTER_STYLES.light;
 
-    // Status filter
+    // Status filter — when status filter is hidden (e.g. sprint board), default to "All"
     const [selectedStatus, setSelectedStatus] = React.useState<FilterProps[]>(
-        predefinedStatusFilters.slice(1, 4)
+        hideStatusFilter ? [predefinedStatusFilters[0]] : predefinedStatusFilters.slice(1, 4)
     );
     const [anchorElStatusFilter, setAnchorElStatusFilter] = React.useState<null | HTMLElement>(
         null
@@ -423,157 +430,161 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                 />
 
                 {/* Status Filter */}
-                <Tooltip
-                    placement="top"
-                    title={selectedStatus.map((status) => status.label).join(", ")}
-                    slotProps={{
-                        popper: {
-                            sx: {
-                                [`& .${tooltipClasses.tooltip}`]: {
-                                    background: styles.menuBg,
-                                    color: styles.textColor,
-                                    border: `1px solid ${styles.menuBorder}`,
-                                    boxShadow: isDark
-                                        ? "0 4px 12px rgba(0,0,0,0.4)"
-                                        : "0 4px 12px rgba(0,0,0,0.1)",
-                                    fontSize: 11,
-                                    borderRadius: "8px",
-                                    px: 1.5,
-                                    py: 0.5,
-                                },
-                            },
-                        },
-                    }}
-                >
-                    <Button
-                        aria-controls={openStatusFilter ? "fade-menu" : undefined}
-                        aria-expanded={openStatusFilter ? "true" : undefined}
-                        aria-haspopup="true"
-                        id="fade-button"
-                        variant="contained"
-                        sx={getFilterButtonStyle(
-                            selectedStatus[0],
-                            selectedStatus[0].label === "All"
-                        )}
-                        onClick={handleClickStatusFilter}
-                    >
-                        Status: {selectedStatus[0].label}
-                        {selectedStatus.length > 1 && (
-                            <Chip
-                                label={`+${selectedStatus.length - 1}`}
-                                size="small"
-                                sx={{
-                                    ml: 0.5,
-                                    height: "18px",
-                                    fontSize: "10px",
-                                    fontWeight: 700,
-                                    background: "rgba(255,255,255,0.2)",
-                                    color: "inherit",
-                                }}
-                            />
-                        )}
-                    </Button>
-                </Tooltip>
-                <Menu
-                    anchorEl={anchorElStatusFilter}
-                    id="fade-menu"
-                    open={openStatusFilter}
-                    slots={{ transition: Fade }}
-                    slotProps={{
-                        list: {
-                            "aria-labelledby": "fade-button",
-                        },
-                        paper: {
-                            sx: {
-                                background: styles.menuBg,
-                                border: `1px solid ${styles.menuBorder}`,
-                                borderRadius: "12px",
-                                boxShadow: isDark
-                                    ? "0 8px 32px rgba(0,0,0,0.5)"
-                                    : "0 8px 32px rgba(0,0,0,0.15)",
-                                mt: 1,
-                                minWidth: "160px",
-                            },
-                        },
-                    }}
-                    onClose={() => setAnchorElStatusFilter(null)}
-                >
-                    {predefinedStatusFilters.map((status) => {
-                        const isSelected = selectedStatus.some(
-                            (items) => items.label === status.label
-                        );
-                        return (
-                            <MenuItem
-                                key={status.label}
-                                onClick={() => handleCloseStatusFilter(status)}
-                                sx={{
-                                    borderRadius: "8px",
-                                    mx: 0.5,
-                                    my: 0.25,
-                                    transition: "all 0.2s ease",
-                                    "&:hover": {
-                                        background: styles.buttonHoverBg,
+                {!hideStatusFilter && (
+                    <>
+                        <Tooltip
+                            placement="top"
+                            title={selectedStatus.map((status) => status.label).join(", ")}
+                            slotProps={{
+                                popper: {
+                                    sx: {
+                                        [`& .${tooltipClasses.tooltip}`]: {
+                                            background: styles.menuBg,
+                                            color: styles.textColor,
+                                            border: `1px solid ${styles.menuBorder}`,
+                                            boxShadow: isDark
+                                                ? "0 4px 12px rgba(0,0,0,0.4)"
+                                                : "0 4px 12px rgba(0,0,0,0.1)",
+                                            fontSize: 11,
+                                            borderRadius: "8px",
+                                            px: 1.5,
+                                            py: 0.5,
+                                        },
                                     },
-                                }}
+                                },
+                            }}
+                        >
+                            <Button
+                                aria-controls={openStatusFilter ? "fade-menu" : undefined}
+                                aria-expanded={openStatusFilter ? "true" : undefined}
+                                aria-haspopup="true"
+                                id="fade-button"
+                                variant="contained"
+                                sx={getFilterButtonStyle(
+                                    selectedStatus[0],
+                                    selectedStatus[0].label === "All"
+                                )}
+                                onClick={handleClickStatusFilter}
                             >
-                                <Box
-                                    sx={{
-                                        width: "100%",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 1,
-                                    }}
-                                >
-                                    <Box
+                                Status: {selectedStatus[0].label}
+                                {selectedStatus.length > 1 && (
+                                    <Chip
+                                        label={`+${selectedStatus.length - 1}`}
+                                        size="small"
                                         sx={{
-                                            width: 8,
-                                            height: 8,
-                                            borderRadius: "50%",
-                                            background: isDark
-                                                ? status.darkModeColor
-                                                : status.lightModeColor,
-                                            boxShadow: `0 0 6px ${isDark ? status.darkModeColor : status.lightModeColor}`,
+                                            ml: 0.5,
+                                            height: "18px",
+                                            fontSize: "10px",
+                                            fontWeight: 700,
+                                            background: "rgba(255,255,255,0.2)",
+                                            color: "inherit",
                                         }}
                                     />
-                                    <Typography
+                                )}
+                            </Button>
+                        </Tooltip>
+                        <Menu
+                            anchorEl={anchorElStatusFilter}
+                            id="fade-menu"
+                            open={openStatusFilter}
+                            slots={{ transition: Fade }}
+                            slotProps={{
+                                list: {
+                                    "aria-labelledby": "fade-button",
+                                },
+                                paper: {
+                                    sx: {
+                                        background: styles.menuBg,
+                                        border: `1px solid ${styles.menuBorder}`,
+                                        borderRadius: "12px",
+                                        boxShadow: isDark
+                                            ? "0 8px 32px rgba(0,0,0,0.5)"
+                                            : "0 8px 32px rgba(0,0,0,0.15)",
+                                        mt: 1,
+                                        minWidth: "160px",
+                                    },
+                                },
+                            }}
+                            onClose={() => setAnchorElStatusFilter(null)}
+                        >
+                            {predefinedStatusFilters.map((status) => {
+                                const isSelected = selectedStatus.some(
+                                    (items) => items.label === status.label
+                                );
+                                return (
+                                    <MenuItem
+                                        key={status.label}
+                                        onClick={() => handleCloseStatusFilter(status)}
                                         sx={{
-                                            fontSize: "13px",
-                                            fontWeight: isSelected ? 700 : 500,
-                                            color: isSelected
-                                                ? isDark
-                                                    ? status.darkModeColor
-                                                    : status.lightModeColor
-                                                : styles.textColor,
-                                            flex: 1,
+                                            borderRadius: "8px",
+                                            mx: 0.5,
+                                            my: 0.25,
+                                            transition: "all 0.2s ease",
+                                            "&:hover": {
+                                                background: styles.buttonHoverBg,
+                                            },
                                         }}
                                     >
-                                        {status.label}
-                                    </Typography>
-                                    {isSelected && (
                                         <Box
                                             sx={{
-                                                width: 16,
-                                                height: 16,
-                                                borderRadius: "4px",
-                                                background: isDark
-                                                    ? status.darkModeColor
-                                                    : status.lightModeColor,
+                                                width: "100%",
                                                 display: "flex",
                                                 alignItems: "center",
-                                                justifyContent: "center",
-                                                fontSize: "10px",
-                                                color: "#fff",
-                                                fontWeight: 700,
+                                                gap: 1,
                                             }}
                                         >
-                                            ✓
+                                            <Box
+                                                sx={{
+                                                    width: 8,
+                                                    height: 8,
+                                                    borderRadius: "50%",
+                                                    background: isDark
+                                                        ? status.darkModeColor
+                                                        : status.lightModeColor,
+                                                    boxShadow: `0 0 6px ${isDark ? status.darkModeColor : status.lightModeColor}`,
+                                                }}
+                                            />
+                                            <Typography
+                                                sx={{
+                                                    fontSize: "13px",
+                                                    fontWeight: isSelected ? 700 : 500,
+                                                    color: isSelected
+                                                        ? isDark
+                                                            ? status.darkModeColor
+                                                            : status.lightModeColor
+                                                        : styles.textColor,
+                                                    flex: 1,
+                                                }}
+                                            >
+                                                {status.label}
+                                            </Typography>
+                                            {isSelected && (
+                                                <Box
+                                                    sx={{
+                                                        width: 16,
+                                                        height: 16,
+                                                        borderRadius: "4px",
+                                                        background: isDark
+                                                            ? status.darkModeColor
+                                                            : status.lightModeColor,
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        fontSize: "10px",
+                                                        color: "#fff",
+                                                        fontWeight: 700,
+                                                    }}
+                                                >
+                                                    ✓
+                                                </Box>
+                                            )}
                                         </Box>
-                                    )}
-                                </Box>
-                            </MenuItem>
-                        );
-                    })}
-                </Menu>
+                                    </MenuItem>
+                                );
+                            })}
+                        </Menu>
+                    </>
+                )}
 
                 {/* Tags Filter */}
                 {selectedTags.length > 0 && (
