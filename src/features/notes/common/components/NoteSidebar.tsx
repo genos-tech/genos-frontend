@@ -119,6 +119,8 @@ function getChatTypeLabel(chatType: number): string {
             return "GM";
         case 3:
             return "PM";
+        case 4:
+            return "MDM";
         default:
             return "Chat";
     }

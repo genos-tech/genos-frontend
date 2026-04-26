@@ -361,7 +361,8 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                 useCM.currentThreadChat?.chatType as number,
                                 useCM.currentThreadChat?.chatId as number,
                                 true,
-                                useCM.currentThreadChat?.threadId as number
+                                useCM.currentThreadChat?.threadId as number,
+                                useCM.currentMainChat?.chatName || useCM.currentThreadChat?.chatName
                             );
                             useCM.setIsChatNoteVisibleInChat(true);
                             useCM.setIsMainChatVisible(false);

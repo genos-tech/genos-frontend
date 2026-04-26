@@ -106,14 +106,16 @@ export interface NoteManagementState {
         chatType: number,
         chatId: number,
         isThread: boolean,
-        threadId: number
+        threadId: number,
+        chatName?: string
     ) => Promise<void>;
 
     handleCreateNewChatNoteIfNotExist: (
         chatType: number,
         chatId: number,
         isThread: boolean,
-        threadId: number
+        threadId: number,
+        chatName?: string
     ) => Promise<void>;
 
     handleCreateNewTaskNote: (
@@ -192,13 +194,21 @@ export const useNoteManagement = (
     );
     const [allNoteIdChains, setAllNoteIdChains] = useState<Record<string, number[]>>({});
 
+    const chatTypeLabels: Record<number, string> = {
+        1: "DM",
+        2: "GM",
+        3: "PM",
+        4: "MDM",
+    };
+
     // Chat Note related
     const handleCreateNewChatNote = async (
         parentNoteId: number | null,
         chatType: number,
         chatId: number,
         isThread: boolean,
-        threadId: number
+        threadId: number,
+        chatName?: string
     ) => {
         if (!accessToken) return;
 
@@ -229,6 +239,8 @@ export const useNoteManagement = (
                         noteId: chatNote.noteId,
                         parentNoteId: chatNote.parentNoteId,
                         chatType: chatNote.chatType,
+                        chatTypeName: chatTypeLabels[chatNote.chatType] || "Chat",
+                        chatName: chatName || `${chatTypeLabels[chatNote.chatType] || "Chat"} ${chatNote.chatId}`,
                         chatId: chatNote.chatId,
                         isThread: chatNote.isThread,
                         threadId: chatNote.threadId,
@@ -247,7 +259,8 @@ export const useNoteManagement = (
         chatType: number,
         chatId: number,
         isThread: boolean,
-        threadId: number
+        threadId: number,
+        chatName?: string
     ) => {
         if (!accessToken) return;
 
@@ -266,7 +279,7 @@ export const useNoteManagement = (
                 setCurrentChatNote(newNote);
                 addNote(3, newNote);
             } else {
-                await handleCreateNewChatNote(null, chatType, chatId, isThread, threadId);
+                await handleCreateNewChatNote(null, chatType, chatId, isThread, threadId, chatName);
             }
         } catch (error) {
             console.error("Error loading or creating chat note:", error);
