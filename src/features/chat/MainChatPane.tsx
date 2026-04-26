@@ -38,7 +38,7 @@ type MessagesPaneProps = {
     setIsToDoVisible: (value: boolean) => void;
     isToDoVisible: boolean;
     todos: ToDoFactProps[];
-    setTodos: (value: ToDoFactProps[]) => void;
+    setTodos: React.Dispatch<React.SetStateAction<ToDoFactProps[]>>;
     isExistingTodaysTodo: boolean;
     setIsExistingTodaysTodo: (value: boolean) => void;
     incompleteTodoCount: number;

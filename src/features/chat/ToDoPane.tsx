@@ -26,7 +26,7 @@ type ToDoPaneProps = {
     socket: Socket | null;
     useUISM: UIStateManagementState;
     todos: ToDoFactProps[];
-    setTodos: (value: ToDoFactProps[]) => void;
+    setTodos: React.Dispatch<React.SetStateAction<ToDoFactProps[]>>;
     isExistingTodaysTodo: boolean;
     setIsExistingTodaysTodo: (value: boolean) => void;
     currentWindowHeight: number;
@@ -49,7 +49,9 @@ export const ToDoPane = (props: ToDoPaneProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const [tmpAllTodos, setTmpAllTodos] = useState<ToDoFactProps[]>(todos);
-    const [tmpIncompleteTodos, setTmpIncompleteTodos] = useState<ToDoFactProps[]>(todos.filter((todo) => !todo.isCompleted));
+    const [tmpIncompleteTodos, setTmpIncompleteTodos] = useState<ToDoFactProps[]>(
+        todos.filter((todo) => !todo.isCompleted)
+    );
 
     const handleCreateNewTodo = async () => {
         const todoContent = await createNewTodo(
@@ -61,13 +63,13 @@ export const ToDoPane = (props: ToDoPaneProps) => {
             }
         );
         if (todoContent) {
-            setTodos([todoContent, ...todos]);
+            setTodos((prev) => [todoContent, ...prev]);
             setIsExistingTodaysTodo(true);
         }
     };
 
     useEffect(() => {
-        console.log(3, todos)
+        console.log(3, todos);
         setTmpAllTodos(todos);
         setTmpIncompleteTodos(todos.filter((todo) => !todo.isCompleted));
     }, [todos]);
@@ -220,7 +222,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                 color: !useCM.showOnlyInCompleteTodos
                                     ? isDark
                                         ? "rgba(255,255,255,0.9)"
-                                        : "rgba(0,0,0,0.8)"
+                                        : "white"
                                     : isDark
                                       ? "rgba(255,255,255,0.5)"
                                       : "rgba(0,0,0,0.45)",
@@ -251,7 +253,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                 color: useCM.showOnlyInCompleteTodos
                                     ? isDark
                                         ? "#fcd34d"
-                                        : "#b45309"
+                                        : "rgba(255, 255, 32, 0.93)"
                                     : isDark
                                       ? "rgba(255,255,255,0.5)"
                                       : "rgba(0,0,0,0.45)",
@@ -284,8 +286,10 @@ export const ToDoPane = (props: ToDoPaneProps) => {
             <Box sx={{ flex: 1, px: 0.5, py: 0.5, overflow: "hidden" }}>
                 {(() => {
                     // Determine which todos to display based on filter
-                    const displayTodos = useCM.showOnlyInCompleteTodos ? tmpIncompleteTodos : tmpAllTodos;
-                    
+                    const displayTodos = useCM.showOnlyInCompleteTodos
+                        ? tmpIncompleteTodos
+                        : tmpAllTodos;
+
                     if (displayTodos.length > 0) {
                         return (
                             <Virtuoso
@@ -309,7 +313,6 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                             socket={socket}
                                             useTEM={useTEM}
                                             todo={todo}
-                                            allTodos={tmpAllTodos}
                                             useUISM={useUISM}
                                         />
                                     );
@@ -322,7 +325,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                             />
                         );
                     }
-                    
+
                     // Empty State
                     return (
                         <Stack
@@ -342,13 +345,17 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
-                                    background: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
+                                    background: isDark
+                                        ? "rgba(255,255,255,0.04)"
+                                        : "rgba(0,0,0,0.03)",
                                 }}
                             >
                                 <CheckCircleOutlineRoundedIcon
                                     sx={{
                                         fontSize: 32,
-                                        color: isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)",
+                                        color: isDark
+                                            ? "rgba(255,255,255,0.2)"
+                                            : "rgba(0,0,0,0.15)",
                                     }}
                                 />
                             </Box>
@@ -357,15 +364,21 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                     level="title-sm"
                                     sx={{
                                         fontWeight: 600,
-                                        color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.55)",
+                                        color: isDark
+                                            ? "rgba(255,255,255,0.6)"
+                                            : "rgba(0,0,0,0.55)",
                                     }}
                                 >
-                                    {useCM.showOnlyInCompleteTodos ? "All caught up!" : "No todos yet"}
+                                    {useCM.showOnlyInCompleteTodos
+                                        ? "All caught up!"
+                                        : "No todos yet"}
                                 </Typography>
                                 <Typography
                                     level="body-xs"
                                     sx={{
-                                        color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)",
+                                        color: isDark
+                                            ? "rgba(255,255,255,0.35)"
+                                            : "rgba(0,0,0,0.35)",
                                         textAlign: "center",
                                         maxWidth: 200,
                                     }}

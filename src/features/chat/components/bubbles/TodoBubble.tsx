@@ -32,8 +32,7 @@ type TodoBubbleProps = {
     useTEM: TeamManagementState;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
-    allTodos: ToDoFactProps[];
-    setTodos: (value: ToDoFactProps[]) => void;
+    setTodos: React.Dispatch<React.SetStateAction<ToDoFactProps[]>>;
     useUISM: UIStateManagementState;
     useCM: ChatManagementState;
 };
@@ -42,7 +41,6 @@ export const TodoBubble = (props: TodoBubbleProps) => {
     const {
         myself,
         todo,
-        allTodos,
         setTodos,
         currentIndex,
         isExistingTodaysTodo,
@@ -71,13 +69,14 @@ export const TodoBubble = (props: TodoBubbleProps) => {
           : TODO_COLORS.incomplete;
     const colors = isDark ? statusColor.dark : statusColor.light;
 
-    // Send updated task to the backend when task is updated
     const sendUpdatedTodo = async () => {
         const updatedTodo = await updateTodo(accessToken, myself, {
             ...todo,
             todoContent: body,
         });
-        setTodos(allTodos.map((t) => (t.todoId === updatedTodo.todoId ? updatedTodo : t)));
+        if (updatedTodo) {
+            setTodos((prev) => prev.map((t) => (t.todoId === updatedTodo.todoId ? updatedTodo : t)));
+        }
         setBodyEdited(false);
         setStartIntervalUpdatingTodo(false);
     };
