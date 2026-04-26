@@ -50,99 +50,103 @@ export const ModalDeleteMessage: React.FC<Props> = ({
     const chatService = new ChatService();
 
     const handleDeleteMessage = async () => {
-        if (message) {
-            if (isThread) {
-                if (socket && currentThreadChat && setCurrentThreadChat && message.threadId) {
-                    // Delete message from backend
-                    await deleteThreadMessage(
-                        accessToken,
-                        message.chatType,
-                        message.chatId,
-                        message.threadId,
-                        message.messageId
-                    );
+        if (!message) return;
 
-                    // Delete message from indexedDB
-                    if (message.chatType === 1) {
-                        await chatService.deleteDMThreadMessage(message.chatId, message.messageId);
-                    } else if (message.chatType === 2) {
-                        await chatService.deleteGMThreadMessage(message.chatId, message.messageId);
-                    } else if (message.chatType === 3) {
-                        await chatService.deletePMThreadMessage(message.chatId, message.messageId);
-                    } else if (message.chatType === 4) {
-                        await chatService.deleteMDMThreadMessage(message.chatId, message.messageId);
-                    }
+        if (isThread) {
+            if (!socket || !currentThreadChat || !setCurrentThreadChat || !message.threadId) {
+                console.error(
+                    "socket or currentThreadChat or setCurrentThreadChat is not defined"
+                );
+                setErrorMessage("Failed to delete message from thread");
+                return;
+            }
 
-                    // Delete message from the pane/message array
-                    setCurrentThreadChat({
-                        ...currentThreadChat,
-                        messages: currentThreadChat.messages.filter(
-                            (m) => m.messageId !== message.messageId
-                        ) as ThreadMessageProps[],
-                        notMove: true,
-                    });
+            // Update UI immediately
+            setCurrentThreadChat({
+                ...currentThreadChat,
+                messages: currentThreadChat.messages.filter(
+                    (m) => m.messageId !== message.messageId
+                ) as ThreadMessageProps[],
+                notMove: true,
+            });
+            setOpenDeleteMessage(false);
+            setErrorMessage(null);
 
-                    socket.emit("thread_message", {
-                        methodType: "DELETE",
-                        chatType: message.chatType,
-                        destCGId: message.chatId,
-                        threadId: message.threadId,
-                        messageIdForDelete: message.messageId,
-                    });
+            // Broadcast delete to other members
+            socket.emit("thread_message", {
+                methodType: "DELETE",
+                chatType: message.chatType,
+                destCGId: message.chatId,
+                threadId: message.threadId,
+                messageIdForDelete: message.messageId,
+            });
 
-                    // Close modal
-                    setOpenDeleteMessage(false);
-                    setErrorMessage(null);
-                } else {
-                    console.error(
-                        "socket or currentThreadChat or setCurrentThreadChat is not defined"
-                    );
-                    setErrorMessage("Failed to delete message from thread");
+            // Backend & IndexedDB cleanup (non-blocking for UI)
+            try {
+                await deleteThreadMessage(
+                    accessToken,
+                    message.chatType,
+                    message.chatId,
+                    message.threadId,
+                    message.messageId
+                );
+                if (message.chatType === 1) {
+                    await chatService.deleteDMThreadMessage(message.chatId, message.messageId);
+                } else if (message.chatType === 2) {
+                    await chatService.deleteGMThreadMessage(message.chatId, message.messageId);
+                } else if (message.chatType === 3) {
+                    await chatService.deletePMThreadMessage(message.chatId, message.messageId);
+                } else if (message.chatType === 4) {
+                    await chatService.deleteMDMThreadMessage(message.chatId, message.messageId);
                 }
-            } else {
-                if (socket && currentChat && setCurrentChat) {
-                    // Delete message from backend
-                    await deleteMessage(
-                        accessToken,
-                        message.chatType,
-                        message.chatId,
-                        message.messageId
-                    );
+            } catch (err) {
+                console.error("Failed to delete thread message from backend/IndexedDB:", err);
+            }
+        } else {
+            if (!socket || !currentChat || !setCurrentChat) {
+                console.error("socket or currentChat or setCurrentChat is not defined");
+                setErrorMessage("Failed to delete message from chat");
+                return;
+            }
 
-                    // Delete message from indexedDB
-                    if (message.chatType === 1) {
-                        await chatService.deleteDMMessage(message.chatId, message.messageId);
-                    } else if (message.chatType === 2) {
-                        await chatService.deleteGMMessage(message.chatId, message.messageId);
-                    } else if (message.chatType === 3) {
-                        await chatService.deletePMMessage(message.chatId, message.messageId);
-                    } else if (message.chatType === 4) {
-                        await chatService.deleteMDMMessage(message.chatId, message.messageId);
-                    }
+            // Update UI immediately
+            setCurrentChat({
+                ...currentChat,
+                messages: currentChat.messages.filter(
+                    (m) => m.messageId !== message.messageId
+                ) as MessageProps[],
+                notMove: true,
+            });
+            setOpenDeleteMessage(false);
+            setErrorMessage(null);
 
-                    // Delete message from the pane/message array
-                    setCurrentChat({
-                        ...currentChat,
-                        messages: currentChat.messages.filter(
-                            (m) => m.messageId !== message.messageId
-                        ) as MessageProps[],
-                        notMove: true,
-                    });
+            // Broadcast delete to other members
+            socket.emit("message", {
+                methodType: "DELETE",
+                chatType: message.chatType,
+                destCGId: message.chatId,
+                messageIdForDelete: message.messageId,
+            });
 
-                    socket.emit("message", {
-                        methodType: "DELETE",
-                        chatType: message.chatType,
-                        destCGId: message.chatId,
-                        messageIdForDelete: message.messageId,
-                    });
-
-                    // Close modal
-                    setOpenDeleteMessage(false);
-                    setErrorMessage(null);
-                } else {
-                    console.error("socket or currentChat or setCurrentChat is not defined");
-                    setErrorMessage("Failed to delete message from chat");
+            // Backend & IndexedDB cleanup (non-blocking for UI)
+            try {
+                await deleteMessage(
+                    accessToken,
+                    message.chatType,
+                    message.chatId,
+                    message.messageId
+                );
+                if (message.chatType === 1) {
+                    await chatService.deleteDMMessage(message.chatId, message.messageId);
+                } else if (message.chatType === 2) {
+                    await chatService.deleteGMMessage(message.chatId, message.messageId);
+                } else if (message.chatType === 3) {
+                    await chatService.deletePMMessage(message.chatId, message.messageId);
+                } else if (message.chatType === 4) {
+                    await chatService.deleteMDMMessage(message.chatId, message.messageId);
                 }
+            } catch (err) {
+                console.error("Failed to delete message from backend/IndexedDB:", err);
             }
         }
     };
