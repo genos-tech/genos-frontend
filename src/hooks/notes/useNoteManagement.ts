@@ -198,7 +198,7 @@ export const useNoteManagement = (
         1: "DM",
         2: "GM",
         3: "PM",
-        4: "MDM",
+        4: "DM",
     };
 
     // Chat Note related
@@ -233,22 +233,10 @@ export const useNoteManagement = (
                 setCurrentChatNote(chatNote);
                 addNote(3, chatNote);
 
-                setChatNoteMeta((prev) => [
-                    {
-                        noteType: chatNote.noteType,
-                        noteId: chatNote.noteId,
-                        parentNoteId: chatNote.parentNoteId,
-                        chatType: chatNote.chatType,
-                        chatTypeName: chatTypeLabels[chatNote.chatType] || "Chat",
-                        chatName: chatName || `${chatTypeLabels[chatNote.chatType] || "Chat"} ${chatNote.chatId}`,
-                        chatId: chatNote.chatId,
-                        isThread: chatNote.isThread,
-                        threadId: chatNote.threadId,
-                        title: chatNote.title,
-                        tsUpdated: chatNote.tsUpdated,
-                    },
-                    ...prev,
-                ]);
+                const freshMeta: ChatNoteMetaProps[] = await loadChatNoteMeta(myself, accessToken);
+                if (freshMeta.length > 0) {
+                    setChatNoteMeta(freshMeta);
+                }
             }
         } catch (error) {
             console.error("Error creating chat note:", error);
@@ -278,6 +266,11 @@ export const useNoteManagement = (
                 const newNote = chatNotes[0];
                 setCurrentChatNote(newNote);
                 addNote(3, newNote);
+
+                const freshMeta: ChatNoteMetaProps[] = await loadChatNoteMeta(myself, accessToken);
+                if (freshMeta.length > 0) {
+                    setChatNoteMeta(freshMeta);
+                }
             } else {
                 await handleCreateNewChatNote(null, chatType, chatId, isThread, threadId, chatName);
             }

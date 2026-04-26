@@ -285,9 +285,8 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     </>
                 )}
 
-                {/* Create Task Button (for DM/GM threads without task) */}
+                {/* Create Task Button (for threads without a task, excluding PM) */}
                 {useCM.currentThreadChat?.chatType !== 3 &&
-                    useCM.currentThreadChat?.chatType !== 4 &&
                     currentThreadTaskId === -1 && (
                         <Tooltip
                             size="sm"
@@ -315,12 +314,8 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         </Tooltip>
                     )}
 
-                {/* Open Task Button */}
-                {!(
-                    useCM.currentThreadChat?.chatType !== 3 &&
-                    useCM.currentThreadChat?.chatType !== 4 &&
-                    currentThreadTaskId === -1
-                ) && (
+                {/* Open Task Button (only when a task exists) */}
+                {currentThreadTaskId !== -1 && (
                     <Tooltip
                         size="sm"
                         title="Open Task"
@@ -357,12 +352,35 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         variant="plain"
                         sx={actionButtonStyle}
                         onClick={() => {
+                            const chatType = useCM.currentThreadChat?.chatType;
+                            const chatId = useCM.currentThreadChat?.chatId;
+                            useNM.setTabItems(
+                                useNM.tabItems.filter(
+                                    (item: any) =>
+                                        item.noteType === 3 &&
+                                        item.chatType === chatType &&
+                                        item.chatId === chatId
+                                )
+                            );
+                            const matchedChat = useCM.allChats.find(
+                                (c) => c.chatId === chatId && c.chatType === chatType
+                            );
+                            let chatName = matchedChat?.chatName
+                                || useCM.currentMainChat?.chatName
+                                || useCM.currentThreadChat?.chatName;
+                            if (chatType === 4 && matchedChat?.mdmMembers && matchedChat.mdmMembers.length > 0) {
+                                const MAX_DISPLAY = 3;
+                                const names = matchedChat.mdmMembers.map((m) => m.userName);
+                                chatName = names.length <= MAX_DISPLAY
+                                    ? names.join(", ")
+                                    : `${names.slice(0, MAX_DISPLAY).join(", ")} +${names.length - MAX_DISPLAY}`;
+                            }
                             useNM.handleCreateNewChatNoteIfNotExist(
-                                useCM.currentThreadChat?.chatType as number,
-                                useCM.currentThreadChat?.chatId as number,
+                                chatType as number,
+                                chatId as number,
                                 true,
                                 useCM.currentThreadChat?.threadId as number,
-                                useCM.currentMainChat?.chatName || useCM.currentThreadChat?.chatName
+                                chatName
                             );
                             useCM.setIsChatNoteVisibleInChat(true);
                             useCM.setIsMainChatVisible(false);
