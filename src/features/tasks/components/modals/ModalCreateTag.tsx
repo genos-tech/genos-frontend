@@ -1,8 +1,8 @@
 import React, { useState } from "react";
+import { keyframes } from "@emotion/react";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import { Alert, Box, Button, Chip, Input, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { keyframes } from "@emotion/react";
 import { alpha } from "@mui/system";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -36,12 +36,20 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, usePM, useTM }) => {
     });
 
     const handleCreateTag = () => {
-        if (tagName.trim()) {
-            createTag();
+        const trimmed = tagName.trim();
+        if (!trimmed) {
+            setErrorTagCreateMessage("Tag name cannot be empty.");
+            return;
         }
+        if (/\s/.test(trimmed)) {
+            setErrorTagCreateMessage("Tag name must not contain spaces.");
+            return;
+        }
+        setErrorTagCreateMessage(null);
+        createTag(trimmed);
     };
 
-    async function createTag(): Promise<void> {
+    async function createTag(trimmedName: string): Promise<void> {
         try {
             const response = await fetch(`${base_url}/project/tag/`, {
                 method: "POST",
@@ -52,7 +60,7 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, usePM, useTM }) => {
                 body: JSON.stringify({
                     team_id: myself.teamId,
                     project_id: usePM.currentProject?.projectId ?? -1,
-                    tag_name: tagName,
+                    tag_name: trimmedName,
                     tag_color: selectedColor.chipColor,
                     tag_text_color: selectedColor.textColor,
                 }),
@@ -92,7 +100,8 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, usePM, useTM }) => {
                         "linear-gradient(145deg, rgba(30, 30, 40, 0.95) 0%, rgba(20, 20, 28, 0.98) 100%)",
                     border: "1px solid rgba(34, 197, 94, 0.2)",
                     borderRadius: "16px",
-                    boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(34, 197, 94, 0.1)",
+                    boxShadow:
+                        "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(34, 197, 94, 0.1)",
                     minWidth: "360px",
                     p: 3,
                 }}
@@ -107,7 +116,8 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, usePM, useTM }) => {
                             width: 40,
                             height: 40,
                             borderRadius: "10px",
-                            background: "linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(16, 185, 129, 0.2) 100%)",
+                            background:
+                                "linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(16, 185, 129, 0.2) 100%)",
                             border: "1px solid rgba(34, 197, 94, 0.3)",
                         }}
                     >
@@ -148,7 +158,7 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, usePM, useTM }) => {
                         value={tagName}
                         onChange={(e) => setTagName(e.target.value)}
                         onKeyDown={(e) => {
-                            if (e.key === "Enter" && tagName.trim()) {
+                            if (e.key === "Enter") {
                                 handleCreateTag();
                             }
                         }}
@@ -159,6 +169,7 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, usePM, useTM }) => {
                             backgroundColor: "rgba(255, 255, 255, 0.05)",
                             border: "1px solid rgba(255, 255, 255, 0.1)",
                             borderRadius: "10px",
+                            color: "#fff",
                             transition: "all 0.2s ease",
                             "&:hover": {
                                 borderColor: "rgba(34, 197, 94, 0.3)",
@@ -195,7 +206,7 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, usePM, useTM }) => {
                         <Chip
                             variant="outlined"
                             sx={{
-                                color: mode === "dark" ? "white" : "black",
+                                color: "white",
                                 fontWeight: "bold",
                                 borderRadius: "6px",
                                 borderWidth: "2px",
