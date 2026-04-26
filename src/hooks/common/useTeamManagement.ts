@@ -56,28 +56,27 @@ export const useTeamManagement = (
         if (myself.userId !== "") {
             const popTeamUsersWorker = new PopTeamUsersWorker();
 
-            // Initial load
-            popTeamUsersWorker.postMessage({ myself });
-            popTeamUsersWorker.onmessage = (event) => {
+            const handleWorkerResponse = (event: MessageEvent) => {
                 const data = event.data;
                 if (data.error) {
                     console.error("Worker failed:", data.error);
                 } else {
                     setTeamMemberProfiles(data);
+                    const members = Object.values(data) as UserProps[];
+                    if (members.length > 0) {
+                        setTeamMembers(members);
+                    }
                 }
             };
+
+            // Initial load
+            popTeamUsersWorker.postMessage({ myself });
+            popTeamUsersWorker.onmessage = handleWorkerResponse;
 
             // Run every minute
             const interval = setInterval(() => {
                 popTeamUsersWorker.postMessage({ myself });
-                popTeamUsersWorker.onmessage = (event) => {
-                    const data = event.data;
-                    if (data.error) {
-                        console.error("Worker failed:", data.error);
-                    } else {
-                        setTeamMemberProfiles(data);
-                    }
-                };
+                popTeamUsersWorker.onmessage = handleWorkerResponse;
             }, 60_000);
 
             return () => {

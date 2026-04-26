@@ -84,6 +84,13 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
     const { accessToken } = useAuth();
     const bnBoxClassName: string = `bn-chat-editor-box-${mode}`;
 
+    const teamMembersRef = useRef(useTEM.teamMembers);
+    const teamMemberProfilesRef = useRef(useTEM.teamMemberProfiles);
+    useEffect(() => {
+        teamMembersRef.current = useTEM.teamMembers;
+        teamMemberProfilesRef.current = useTEM.teamMemberProfiles;
+    }, [useTEM.teamMembers, useTEM.teamMemberProfiles]);
+
     // Disable the Audio and Image blocks from the built-in schema
     // This is done by picking out the blocks you want to disable
     const { audio, video, ...remainingBlockSpecs } = defaultBlockSpecs;
@@ -425,12 +432,11 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                     <SuggestionMenuController
                         triggerCharacter={"@"}
                         getItems={async (query) =>
-                            // Gets the mentions menu items
                             filterSuggestionItems(
                                 MentionMenuItems(
-                                    useTEM.teamMemberProfiles,
+                                    teamMemberProfilesRef.current,
                                     editor,
-                                    useTEM.teamMembers
+                                    teamMembersRef.current
                                 ),
                                 query
                             )
