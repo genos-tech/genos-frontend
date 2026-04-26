@@ -6,7 +6,14 @@ import { Alert, Box, Button, Modal, ModalDialog, Stack, Typography } from "@mui/
 import { Socket } from "socket.io-client";
 
 import { ChatService } from "../../../../db/services/chat.service";
-import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
+import { FlaggedService } from "../../../../db/services/flagged.service";
+import {
+    ChatProps,
+    FlaggedMessageProps,
+    MessageProps,
+    ThreadMessageProps,
+    ThreadProps,
+} from "../../../../types/chat";
 import { deleteMessage } from "../../services/deleteMessage";
 import { deleteThreadMessage } from "../../services/deleteThreadMessage";
 
@@ -32,6 +39,8 @@ type Props = {
     setCurrentChat?: (chat: ChatProps) => void;
     currentThreadChat?: ThreadProps;
     setCurrentThreadChat?: (chat: ThreadProps) => void;
+    flaggedMessages?: FlaggedMessageProps[];
+    setFlaggedMessages?: (messages: FlaggedMessageProps[]) => void;
 };
 
 export const ModalDeleteMessage: React.FC<Props> = ({
@@ -45,9 +54,26 @@ export const ModalDeleteMessage: React.FC<Props> = ({
     setCurrentChat,
     currentThreadChat,
     setCurrentThreadChat,
+    flaggedMessages,
+    setFlaggedMessages,
 }) => {
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const chatService = new ChatService();
+
+    const cleanupFlaggedMessage = async (chatType: number, chatId: number, threadId: number, messageId: number) => {
+        if (!flaggedMessages || !setFlaggedMessages) return;
+        const flaggedId = `${chatType}-${chatId}-${threadId}-${messageId}`;
+        const match = flaggedMessages.find((fm) => fm.flaggedMessageId === flaggedId);
+        if (match) {
+            setFlaggedMessages(flaggedMessages.filter((fm) => fm.flaggedMessageId !== flaggedId));
+            try {
+                const flaggedService = new FlaggedService();
+                await flaggedService.deleteFlaggedMessage(flaggedId);
+            } catch {
+                // Non-critical
+            }
+        }
+    };
 
     const handleDeleteMessage = async () => {
         if (!message) return;
@@ -71,6 +97,9 @@ export const ModalDeleteMessage: React.FC<Props> = ({
             });
             setOpenDeleteMessage(false);
             setErrorMessage(null);
+
+            // Remove from flagged messages if flagged
+            cleanupFlaggedMessage(message.chatType, message.chatId, message.threadId, message.messageId);
 
             // Broadcast delete to other members
             socket.emit("thread_message", {
@@ -118,6 +147,9 @@ export const ModalDeleteMessage: React.FC<Props> = ({
                 notMove: true,
             });
             setOpenDeleteMessage(false);
+
+            // Remove from flagged messages if flagged
+            cleanupFlaggedMessage(message.chatType, message.chatId, 0, message.messageId);
             setErrorMessage(null);
 
             // Broadcast delete to other members

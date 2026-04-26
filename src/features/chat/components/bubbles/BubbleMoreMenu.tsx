@@ -618,6 +618,8 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
                 setCurrentChat={setCurrentChat}
                 setOpenDeleteMessage={setOpenDeleteMessage}
                 socket={socket}
+                flaggedMessages={flaggedMessages}
+                setFlaggedMessages={setFlaggedMessages}
             />
         </Box>
     );

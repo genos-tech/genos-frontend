@@ -372,6 +372,9 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
 
         if (!currentMainChat || currentMainChat.chatId === -1) return;
 
+        // When a thread is visible, let the thread URL effect handle the full URL
+        if (useCM.isThreadVisible && useCM.currentThreadChat) return;
+
         const typePath = CHAT_TYPE_REVERSE_MAP[currentMainChat.chatType];
         if (!typePath) return;
 
@@ -405,8 +408,17 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
             ? currentThreadChat.taskId 
             : currentThreadChat.threadId;
 
-        // Get the message id from the current path
-        const { messageId } = parsedRoute;
+        // Try to get message ID from the current path first, then from moveToSpecificIndex
+        let { messageId } = parsedRoute;
+        if (!messageId && currentThreadChat.moveToSpecificIndex) {
+            const parts = currentThreadChat.moveToSpecificIndex.split("-");
+            if (parts.length >= 3) {
+                const parsedMsgId = Number(parts[parts.length - 1]);
+                if (!isNaN(parsedMsgId) && parsedMsgId > 0) {
+                    messageId = parsedMsgId;
+                }
+            }
+        }
 
         const newPath = messageId
             ? buildChatPath(typePath, currentMainChat.chatId, threadId, messageId)

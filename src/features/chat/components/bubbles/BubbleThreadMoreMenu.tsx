@@ -568,6 +568,8 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
                 setCurrentThreadChat={useCM.setCurrentThreadChat}
                 setOpenDeleteMessage={setOpenDeleteMessage}
                 socket={socket}
+                flaggedMessages={flaggedMessages}
+                setFlaggedMessages={setFlaggedMessages}
             />
         </Box>
     );
