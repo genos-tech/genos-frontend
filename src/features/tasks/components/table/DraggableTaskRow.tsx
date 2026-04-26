@@ -1,6 +1,9 @@
 import { useState } from "react";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
+import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
+import KeyboardArrowRightRoundedIcon from "@mui/icons-material/KeyboardArrowRightRounded";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import SubdirectoryArrowRightRoundedIcon from "@mui/icons-material/SubdirectoryArrowRightRounded";
 import { Avatar, Box, Typography } from "@mui/joy";
 import {
     Autocomplete,
@@ -30,28 +33,55 @@ import { ColumnDef, statusOptions } from "./DraggableTaskTable";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
+// Depth-based background colors for nested task rows
+const DEPTH_COLORS_DARK = [
+    "transparent",
+    "rgba(56, 189, 248, 0.08)",
+    "rgba(45, 212, 191, 0.09)",
+    "rgba(251, 191, 36, 0.08)",
+];
+const DEPTH_COLORS_LIGHT = [
+    "transparent",
+    "rgba(14, 165, 233, 0.07)",
+    "rgba(20, 184, 166, 0.07)",
+    "rgba(245, 158, 11, 0.07)",
+];
+const DEPTH_HOVER_DARK = [
+    "rgba(255, 255, 255, 0.04)",
+    "rgba(56, 189, 248, 0.16)",
+    "rgba(45, 212, 191, 0.17)",
+    "rgba(251, 191, 36, 0.15)",
+];
+const DEPTH_HOVER_LIGHT = [
+    "rgba(0, 0, 0, 0.02)",
+    "rgba(14, 165, 233, 0.12)",
+    "rgba(20, 184, 166, 0.12)",
+    "rgba(245, 158, 11, 0.11)",
+];
+const DEPTH_BORDER_COLORS = ["transparent", "#38bdf8", "#2dd4bf", "#fbbf24"];
+
 // Style helpers
 // NOTE: Do NOT apply transform here - react-beautiful-dnd manages transforms for positioning
 const getTableRowStyles = (
     isDragging: boolean,
     isHovered: boolean,
     isSelected: boolean,
-    mode: "light" | "dark" | undefined
+    mode: "light" | "dark" | undefined,
+    rowDepth: number
 ): React.CSSProperties => {
-    // Determine background color based on state priority: dragging > selected > hovered > default
+    const depthIdx = Math.min(rowDepth, 3);
+
     const getBackgroundColor = () => {
         if (isDragging) {
             return mode === "dark" ? "#1e3a5f" : "#e3f2fd";
         }
         if (isSelected) {
-            return mode === "dark"
-                ? "rgba(99, 102, 241, 0.15)" // Indigo tint for dark mode
-                : "rgba(99, 102, 241, 0.08)"; // Indigo tint for light mode
+            return mode === "dark" ? "rgba(99, 102, 241, 0.15)" : "rgba(99, 102, 241, 0.08)";
         }
         if (isHovered) {
-            return mode === "dark" ? "rgba(255, 255, 255, 0.04)" : "rgba(0, 0, 0, 0.02)";
+            return mode === "dark" ? DEPTH_HOVER_DARK[depthIdx] : DEPTH_HOVER_LIGHT[depthIdx];
         }
-        return "transparent";
+        return mode === "dark" ? DEPTH_COLORS_DARK[depthIdx] : DEPTH_COLORS_LIGHT[depthIdx];
     };
 
     return {
@@ -64,12 +94,13 @@ const getTableRowStyles = (
               ? "1px solid rgba(255, 255, 255, 0.08)"
               : "1px solid rgba(0, 0, 0, 0.08)",
         backgroundColor: getBackgroundColor(),
-        // Add left border accent for selected row
         borderLeft: isSelected
             ? mode === "dark"
-                ? "3px solid #818cf8" // Indigo-400
-                : "3px solid #6366f1" // Indigo-500
-            : "3px solid transparent",
+                ? "3px solid #818cf8"
+                : "3px solid #6366f1"
+            : rowDepth > 0
+              ? `3px solid ${DEPTH_BORDER_COLORS[depthIdx]}`
+              : "3px solid transparent",
         boxShadow: isDragging
             ? mode === "dark"
                 ? "0 8px 24px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3)"
@@ -147,6 +178,10 @@ type DraggableTaskRowProps = {
     useUISM: UIStateManagementState;
     socket: Socket | null;
     setMyself: (value: UserProps) => void;
+    expandedRows: Set<string>;
+    toggleExpand: (id: string) => void;
+    childrenByParent: Map<string, TaskTableProps[]>;
+    depth: number;
 };
 
 export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
@@ -165,7 +200,16 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
         useUISM,
         socket,
         setMyself,
+        expandedRows,
+        toggleExpand,
+        childrenByParent,
+        depth,
     } = props;
+
+    const isChild = depth > 0;
+    const taskIdStr = String(task.id);
+    const hasChildren = childrenByParent.has(taskIdStr);
+    const isExpanded = expandedRows.has(taskIdStr);
 
     // Hover state for better UX
     const [isHovered, setIsHovered] = useState(false);
@@ -206,6 +250,45 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
         const value = task[column.field as keyof TaskTableProps];
 
         switch (column.field) {
+            case "__expand":
+                if (isChild && !hasChildren) {
+                    return (
+                        <SubdirectoryArrowRightRoundedIcon
+                            sx={{
+                                fontSize: 15,
+                                color:
+                                    mode === "dark" ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.18)",
+                            }}
+                        />
+                    );
+                }
+                if (!hasChildren) return null;
+                return (
+                    <IconButton
+                        size="small"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            toggleExpand(taskIdStr);
+                        }}
+                        sx={{
+                            color: mode === "dark" ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.45)",
+                            p: 0,
+                            minWidth: 24,
+                            minHeight: 24,
+                            "&:hover": {
+                                color:
+                                    mode === "dark" ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.8)",
+                            },
+                        }}
+                    >
+                        {isExpanded ? (
+                            <KeyboardArrowDownRoundedIcon sx={{ fontSize: 18 }} />
+                        ) : (
+                            <KeyboardArrowRightRoundedIcon sx={{ fontSize: 18 }} />
+                        )}
+                    </IconButton>
+                );
+
             case "id":
                 return (
                     <IconButton
@@ -424,6 +507,7 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                                 "& .MuiOutlinedInput-root": {
                                     borderRadius: "6px",
                                 },
+                                ml: depth > 0 ? depth * 1.5 : 0,
                             }}
                         />
                     );
@@ -434,7 +518,9 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                         onClick={() => handleStartEdit("title", task.title || "")}
                         sx={{
                             cursor: "pointer",
-                            fontWeight: 500,
+                            fontWeight: depth > 0 ? 400 : 500,
+                            opacity: depth > 0 ? 0.85 : 1,
+                            pl: depth > 0 ? depth * 1.5 : 0,
                             "&:hover": {
                                 color: mode === "dark" ? "#90caf9" : "#1976d2",
                             },
@@ -1095,7 +1181,13 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                     ref={provided.innerRef}
                     {...provided.draggableProps}
                     style={{
-                        ...getTableRowStyles(snapshot.isDragging, isHovered, isSelected, mode),
+                        ...getTableRowStyles(
+                            snapshot.isDragging,
+                            isHovered,
+                            isSelected,
+                            mode,
+                            depth
+                        ),
                         ...provided.draggableProps.style,
                     }}
                     onMouseEnter={() => setIsHovered(true)}

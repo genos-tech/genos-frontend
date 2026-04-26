@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
@@ -41,6 +41,7 @@ export type ColumnDef = {
 };
 
 export const defaultColumns: ColumnDef[] = [
+    { field: "__expand", headerName: "", width: 32, align: "center", resizable: false },
     { field: "id", headerName: "ID", width: 80, align: "center", resizable: false },
     {
         field: "status",
@@ -271,10 +272,57 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         colorMode === "light" || colorMode === "dark" ? colorMode : undefined;
 
     const [currentDisplayingTasks, setCurrentDisplayingTasks] = useState<TaskTableProps[]>([]);
+    const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
     const [sortConfig, setSortConfig] = useState<{ field: string; direction: "asc" | "desc" }>({
         field: "updatedAt",
         direction: "desc",
     });
+
+    const toggleExpand = useCallback((id: string) => {
+        setExpandedRows((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    }, []);
+
+    const childrenByParent = useMemo(() => {
+        const map = new Map<string, TaskTableProps[]>();
+        for (const task of useTM.allTasks) {
+            if (task.parentTaskId != null) {
+                const parentId = String(task.parentTaskId);
+                const arr = map.get(parentId) || [];
+                arr.push(task);
+                map.set(parentId, arr);
+            }
+        }
+        return map;
+    }, [useTM.allTasks]);
+
+    const depthMap = useMemo(() => new Map<string, number>(), []);
+
+    const displayRows = useMemo(() => {
+        depthMap.clear();
+        const result: TaskTableProps[] = [];
+
+        const insertWithChildren = (task: TaskTableProps, depth: number) => {
+            depthMap.set(String(task.id), depth);
+            result.push(task);
+            if (task.id && expandedRows.has(String(task.id))) {
+                const children = childrenByParent.get(String(task.id)) || [];
+                for (const child of children) {
+                    insertWithChildren(child, depth + 1);
+                }
+            }
+        };
+
+        const parentRows = currentDisplayingTasks.filter((t) => t.parentTaskId == null);
+        for (const row of parentRows) {
+            insertWithChildren(row, 0);
+        }
+        return result;
+    }, [currentDisplayingTasks, expandedRows, childrenByParent]);
 
     // Column widths state - initialize from default column widths
     const [columnWidths, setColumnWidths] = useState<Record<string, number>>(() => {
@@ -703,7 +751,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                         transition: "background-color 0.25s ease",
                                     }}
                                 >
-                                    {currentDisplayingTasks.map((task, index) => (
+                                    {displayRows.map((task, index) => (
                                         <DraggableTaskRow
                                             key={task.id}
                                             task={task}
@@ -720,6 +768,10 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                             useUISM={useUISM}
                                             socket={socket}
                                             setMyself={setMyself}
+                                            expandedRows={expandedRows}
+                                            toggleExpand={toggleExpand}
+                                            childrenByParent={childrenByParent}
+                                            depth={depthMap.get(String(task.id)) ?? 0}
                                         />
                                     ))}
                                     {provided.placeholder}
@@ -729,7 +781,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     </DragDropContext>
 
                     {/* Empty state */}
-                    {currentDisplayingTasks.length === 0 && (
+                    {displayRows.length === 0 && (
                         <Box
                             sx={{
                                 display: "flex",

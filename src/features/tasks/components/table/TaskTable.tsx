@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useColorScheme } from "@mui/joy/styles";
 import { Box } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
@@ -39,6 +39,41 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
     const apiRef = useGridApiRef();
 
     const [currentDisplayingTasks, setCurrentDisplayingTasks] = useState<TaskTableProps[]>([]);
+    const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+    const toggleExpand = useCallback((id: string) => {
+        setExpandedRows((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    }, []);
+
+    const childrenByParent = useMemo(() => {
+        const map = new Map<string, TaskTableProps[]>();
+        for (const task of useTM.allTasks) {
+            if (task.parentTaskId) {
+                const arr = map.get(task.parentTaskId) || [];
+                arr.push(task);
+                map.set(task.parentTaskId, arr);
+            }
+        }
+        return map;
+    }, [useTM.allTasks]);
+
+    const displayRows = useMemo(() => {
+        const parentRows = currentDisplayingTasks.filter((t) => !t.parentTaskId);
+        const result: TaskTableProps[] = [];
+        for (const row of parentRows) {
+            result.push(row);
+            if (row.id && expandedRows.has(row.id)) {
+                const children = childrenByParent.get(row.id) || [];
+                result.push(...children);
+            }
+        }
+        return result;
+    }, [currentDisplayingTasks, expandedRows, childrenByParent]);
 
     // Update Project and Tag list
     const getTeamMembers = () => {
@@ -95,9 +130,10 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
         updateTagOptions();
     }, [usePM.currentProject, useTM.allTasks]);
 
-    // Reset filter
+    // Reset filter and expanded rows
     useEffect(() => {
         apiRef.current.setFilterModel({ items: [] });
+        setExpandedRows(new Set());
     }, [usePM.currentProject]);
 
     // Handle row update when cells are edited
@@ -195,13 +231,16 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
                     <DataGrid
                         apiRef={apiRef}
                         className={className}
-                        rows={currentDisplayingTasks}
+                        rows={displayRows}
                         columns={getTaskColumns({
                             useTM: useTM,
                             teamMemberProfiles: teamMemberProfiles,
                             myself: myself,
                             accessToken: accessToken,
                             teamMembers: teamMembers,
+                            expandedRows: expandedRows,
+                            toggleExpand: toggleExpand,
+                            childrenByParent: childrenByParent,
                         })}
                         processRowUpdate={processRowUpdate}
                         onProcessRowUpdateError={handleProcessRowUpdateError}
@@ -222,6 +261,7 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
                             },
                             columns: {
                                 columnVisibilityModel: {
+                                    __expand: true,
                                     id: true,
                                     summary: true,
                                     priority: true,
@@ -244,16 +284,31 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
                             borderColor: "transparent",
                             fontWeight: "bold",
                         }}
+                        getRowClassName={(params) =>
+                            params.row.parentTaskId ? "child-task-row" : ""
+                        }
                         sx={{
                             "& .MuiDataGrid-columnHeaderTitle": {
                                 fontSize: "0.875rem",
                                 fontWeight: "bold",
                             },
                             "& .MuiDataGrid-row.Mui-selected": {
-                                backgroundColor: "rgba(0, 123, 255, 0.2) !important", // light blue
+                                backgroundColor: "rgba(0, 123, 255, 0.2) !important",
                             },
                             "& .MuiDataGrid-row.Mui-selected:hover": {
-                                backgroundColor: "rgba(0, 123, 255, 0.3) !important", // slightly darker on hover
+                                backgroundColor: "rgba(0, 123, 255, 0.3) !important",
+                            },
+                            "& .child-task-row": {
+                                backgroundColor:
+                                    mode === "dark"
+                                        ? "rgba(99, 102, 241, 0.06)"
+                                        : "rgba(99, 102, 241, 0.04)",
+                            },
+                            "& .child-task-row:hover": {
+                                backgroundColor:
+                                    mode === "dark"
+                                        ? "rgba(99, 102, 241, 0.12) !important"
+                                        : "rgba(99, 102, 241, 0.08) !important",
                             },
                         }}
                         // disableRowSelectionOnClick
