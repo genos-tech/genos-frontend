@@ -124,6 +124,7 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
             {/* More Options Menu */}
             <Dropdown>
                 <MenuButton
+                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
                     slots={{ root: IconButton }}
                     slotProps={{
                         root: {
