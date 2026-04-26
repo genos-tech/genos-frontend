@@ -102,6 +102,47 @@ export const STORE_CONFIGS: Record<string, StoreConfig> = {
             },
         ],
     },
+    [STORES.MDM_CHATS]: {
+        name: STORES.MDM_CHATS,
+        keyPath: KEY_PATHS.MDM_CHATS,
+        indexes: [
+            { name: INDEX_NAMES.MDM_CHATS, keyPath: INDEX_KEY_PATHS.MDM_CHATS, unique: false },
+        ],
+    },
+    [STORES.MDM_MESSAGES]: {
+        name: STORES.MDM_MESSAGES,
+        keyPath: KEY_PATHS.MDM_MESSAGES,
+        indexes: [
+            { name: INDEX_NAMES.MDM_MESSAGES, keyPath: INDEX_KEY_PATHS.MDM_MESSAGES, unique: false },
+            {
+                name: INDEX_NAMES.MDM_MESSAGES_COMPOUND,
+                keyPath: [
+                    INDEX_KEY_PATHS.MDM_MESSAGES_COMPOUND[0],
+                    INDEX_KEY_PATHS.MDM_MESSAGES_COMPOUND[1],
+                ],
+                unique: true,
+            },
+        ],
+    },
+    [STORES.MDM_THREAD_MESSAGES]: {
+        name: STORES.MDM_THREAD_MESSAGES,
+        keyPath: KEY_PATHS.MDM_THREAD_MESSAGES,
+        indexes: [
+            {
+                name: INDEX_NAMES.MDM_THREAD_MESSAGES,
+                keyPath: INDEX_KEY_PATHS.MDM_THREAD_MESSAGES,
+                unique: false,
+            },
+            {
+                name: INDEX_NAMES.MDM_THREAD_MESSAGES_COMPOUND,
+                keyPath: [
+                    INDEX_KEY_PATHS.MDM_THREAD_MESSAGES_COMPOUND[0],
+                    INDEX_KEY_PATHS.MDM_THREAD_MESSAGES_COMPOUND[1],
+                ],
+                unique: false,
+            },
+        ],
+    },
     [STORES.PM_CHATS]: {
         name: STORES.PM_CHATS,
         keyPath: KEY_PATHS.PM_CHATS,

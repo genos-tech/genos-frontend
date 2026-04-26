@@ -16,6 +16,7 @@ const CHAT_TYPE_MAP: Record<string, number> = {
     dm: 1,
     gm: 2,
     pm: 3,
+    mdm: 4,
     activity: 5,
     flagged: 6,
 };
@@ -24,6 +25,7 @@ const CHAT_TYPE_REVERSE_MAP: Record<number, string> = {
     1: "dm",
     2: "gm",
     3: "pm",
+    4: "mdm",
     5: "activity",
     6: "flagged",
 };
@@ -231,10 +233,14 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
         const paneType = CHAT_TYPE_MAP[chatType];
         if (!paneType) return;
 
+        // MDM (type 4) is now displayed within the DM section (type 1)
+        // So when navigating to MDM, set the pane type to DM
+        const effectivePaneType = paneType === 4 ? 1 : paneType;
+
         // Update chat pane type from URL
-        if (useCM.currentChatPaneType !== paneType && useCM.notMoveChatPaneType === false) {
-            useCM.setCurrentChatPaneType(paneType);
-            localStorage.setItem("currentChatPaneType", paneType.toString());
+        if (useCM.currentChatPaneType !== effectivePaneType && useCM.notMoveChatPaneType === false) {
+            useCM.setCurrentChatPaneType(effectivePaneType);
+            localStorage.setItem("currentChatPaneType", effectivePaneType.toString());
             useCM.setNotMoveChatPaneType(false); // set to false by default
         }
 

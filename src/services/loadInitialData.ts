@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import LoadActivityHistoryWorker from "../db/workers/loadActivityHistoryWorker.ts?worker";
 import LoadDMHistoryWorker from "../db/workers/loadDMHistoryWorker.ts?worker";
 import LoadGMHistoryWorker from "../db/workers/loadGMHistoryWorker.ts?worker";
+import LoadMDMHistoryWorker from "../db/workers/loadMDMHistoryWorker.ts?worker";
 import LoadInboxWorker from "../db/workers/loadInboxWorker.ts?worker";
 import LoadPMHistoryWorker from "../db/workers/loadPMHistoryWorker.ts?worker";
 import LoadProjectTasksWorker from "../db/workers/loadProjectTasksWorker.ts?worker";
@@ -23,6 +24,7 @@ export const loadInitialData = (
     const [isActivityHistoryLoaded, setIsActivityHistoryLoaded] = useState<boolean | null>(false);
     const [isDMHistoryLoaded, setIsDMHistoryLoaded] = useState<boolean | null>(false);
     const [isGMHistoryLoaded, setIsGMHistoryLoaded] = useState<boolean | null>(false);
+    const [isMDMHistoryLoaded, setIsMDMHistoryLoaded] = useState<boolean | null>(false);
     const [isPMHistoryLoaded, setIsPMHistoryLoaded] = useState<boolean | null>(false);
     const [isTeamMembersLoaded, setIsTeamMembersLoaded] = useState<boolean | null>(false);
     const [isInitialChatLoaded, setIsInitialChatLoaded] = useState<boolean | null>(false);
@@ -113,6 +115,28 @@ export const loadInitialData = (
         }
     }, [myself, accessToken]);
 
+    // Load MDM history
+    useEffect(() => {
+        if (accessToken && myself.userId !== "" && myself.userName !== "") {
+            const loadMDMHistoryWorker = new LoadMDMHistoryWorker();
+            loadMDMHistoryWorker.postMessage({
+                myself: myself,
+                accessToken: accessToken,
+            });
+            loadMDMHistoryWorker.onmessage = (event) => {
+                if (event.data === "done") {
+                    setIsMDMHistoryLoaded(true);
+                } else {
+                    console.error("Failed initial MDM history data loading");
+                    console.error("event.data:", event.data);
+                }
+            };
+            return () => {
+                loadMDMHistoryWorker.terminate();
+            };
+        }
+    }, [myself, accessToken]);
+
     // Load PM history
     useEffect(() => {
         if (accessToken && myself.userId !== "" && myself.userName !== "") {
@@ -182,7 +206,7 @@ export const loadInitialData = (
 
     // Fetch initial DM chat info after the initial DM chat messages are loaded
     useEffect(() => {
-        if (isDMHistoryLoaded && isGMHistoryLoaded && isPMHistoryLoaded) {
+        if (isDMHistoryLoaded && isGMHistoryLoaded && isMDMHistoryLoaded && isPMHistoryLoaded) {
             // Get the last chat type
             const tmpLastChatType = localStorage.getItem("lastChatType");
             const lastChatType =
@@ -207,7 +231,7 @@ export const loadInitialData = (
                         tmpLastChatId && tmpLastChatId !== "" ? Number(tmpLastChatId) : null;
                 }
                 if (lastChatType === 4) {
-                    const tmpLastChatId = localStorage.getItem("lastPinnedChatId");
+                    const tmpLastChatId = localStorage.getItem("lastMDMChatId");
                     lastChatId =
                         tmpLastChatId && tmpLastChatId !== "" ? Number(tmpLastChatId) : null;
                 }
@@ -289,7 +313,7 @@ export const loadInitialData = (
             console.warn("lastChatType is not set");
             setIsInitialChatLoaded(true);
         }
-    }, [isDMHistoryLoaded, isGMHistoryLoaded, isPMHistoryLoaded]);
+    }, [isDMHistoryLoaded, isGMHistoryLoaded, isMDMHistoryLoaded, isPMHistoryLoaded]);
 
     // Set "isLoading" true after initialization is completed
     useEffect(() => {
@@ -298,6 +322,7 @@ export const loadInitialData = (
             isActivityHistoryLoaded &&
             isDMHistoryLoaded &&
             isGMHistoryLoaded &&
+            isMDMHistoryLoaded &&
             isPMHistoryLoaded &&
             isTeamMembersLoaded &&
             isInitialChatLoaded &&
@@ -310,6 +335,7 @@ export const loadInitialData = (
         isActivityHistoryLoaded,
         isDMHistoryLoaded,
         isGMHistoryLoaded,
+        isMDMHistoryLoaded,
         isPMHistoryLoaded,
         isTeamMembersLoaded,
         isInitialChatLoaded,

@@ -11,23 +11,29 @@ import { MessageQuery } from "../types";
 export class ChatService {
     private dmChatRepo: ChatRepository;
     private gmChatRepo: ChatRepository;
+    private mdmChatRepo: ChatRepository;
     private pmChatRepo: ChatRepository;
     private dmMessageRepo: MessageRepository;
     private gmMessageRepo: MessageRepository;
+    private mdmMessageRepo: MessageRepository;
     private pmMessageRepo: MessageRepository;
     private dmThreadRepo: ThreadMessageRepository;
     private gmThreadRepo: ThreadMessageRepository;
+    private mdmThreadRepo: ThreadMessageRepository;
     private pmThreadRepo: ThreadMessageRepository;
 
     constructor() {
         this.dmChatRepo = ChatRepositoryFactory.createDMChatRepository();
         this.gmChatRepo = ChatRepositoryFactory.createGMChatRepository();
+        this.mdmChatRepo = ChatRepositoryFactory.createMDMChatRepository();
         this.pmChatRepo = ChatRepositoryFactory.createPMChatRepository();
         this.dmMessageRepo = ChatRepositoryFactory.createDMMessageRepository();
         this.gmMessageRepo = ChatRepositoryFactory.createGMMessageRepository();
+        this.mdmMessageRepo = ChatRepositoryFactory.createMDMMessageRepository();
         this.pmMessageRepo = ChatRepositoryFactory.createPMMessageRepository();
         this.dmThreadRepo = ChatRepositoryFactory.createDMThreadMessageRepository();
         this.gmThreadRepo = ChatRepositoryFactory.createGMThreadMessageRepository();
+        this.mdmThreadRepo = ChatRepositoryFactory.createMDMThreadMessageRepository();
         this.pmThreadRepo = ChatRepositoryFactory.createPMThreadMessageRepository();
     }
 
@@ -39,6 +45,11 @@ export class ChatService {
     // Get all GM chats
     async getGMChats(): Promise<AllChatProps[]> {
         return this.gmChatRepo.getAllChats();
+    }
+
+    // Get all MDM chats
+    async getMDMChats(): Promise<AllChatProps[]> {
+        return this.mdmChatRepo.getAllChats();
     }
 
     // Get all PM chats
@@ -56,6 +67,11 @@ export class ChatService {
         return this.gmChatRepo.getChat(chatId);
     }
 
+    // Get MDM chat by ID
+    async getMDMChat(chatId: number): Promise<AllChatProps | null> {
+        return this.mdmChatRepo.getChat(chatId);
+    }
+
     // Get PM chat by ID
     async getPMChat(chatId: number): Promise<AllChatProps | null> {
         return this.pmChatRepo.getChat(chatId);
@@ -71,6 +87,11 @@ export class ChatService {
         return this.gmChatRepo.getLatestChat(2);
     }
 
+    // Get latest MDM chat
+    async getLatestMDMChat(): Promise<AllChatProps | null> {
+        return this.mdmChatRepo.getLatestChat(4);
+    }
+
     // Get latest PM chat
     async getLatestPMChat(): Promise<AllChatProps | null> {
         return this.pmChatRepo.getLatestChat(3);
@@ -84,6 +105,11 @@ export class ChatService {
     // Get GM messages
     async getGMMessages(query: MessageQuery): Promise<MessageProps[]> {
         return this.gmMessageRepo.getMessages(query);
+    }
+
+    // Get MDM messages
+    async getMDMMessages(query: MessageQuery): Promise<MessageProps[]> {
+        return this.mdmMessageRepo.getMessages(query);
     }
 
     // Get PM messages
@@ -146,6 +172,11 @@ export class ChatService {
         return this.gmMessageRepo.batchInsertMessages(messages);
     }
 
+    // Batch insert MDM messages
+    async batchInsertMDMMessages(messages: MessageProps[]): Promise<boolean> {
+        return this.mdmMessageRepo.batchInsertMessages(messages);
+    }
+
     // Batch insert PM messages
     async batchInsertPMMessages(messages: MessageProps[]): Promise<boolean> {
         return this.pmMessageRepo.batchInsertMessages(messages);
@@ -161,6 +192,11 @@ export class ChatService {
         return this.gmThreadRepo.batchInsertThreadMessages(messages);
     }
 
+    // Batch insert MDM thread messages
+    async batchInsertMDMThreadMessages(messages: ThreadMessageProps[]): Promise<boolean> {
+        return this.mdmThreadRepo.batchInsertThreadMessages(messages);
+    }
+
     // Batch insert PM thread messages
     async batchInsertPMThreadMessages(messages: ThreadMessageProps[]): Promise<boolean> {
         return this.pmThreadRepo.batchInsertThreadMessages(messages);
@@ -174,6 +210,11 @@ export class ChatService {
     // Check if GM chat exists
     async isKnownGMChat(chatId: number): Promise<boolean> {
         return this.gmChatRepo.exists(chatId);
+    }
+
+    // Check if MDM chat exists
+    async isKnownMDMChat(chatId: number): Promise<boolean> {
+        return this.mdmChatRepo.exists(chatId);
     }
 
     // Check if PM chat exists

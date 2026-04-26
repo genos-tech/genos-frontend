@@ -1,10 +1,23 @@
 import React from "react";
 import ChecklistIcon from "@mui/icons-material/Checklist";
 import CircleIcon from "@mui/icons-material/Circle";
+import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import PersonAddRoundedIcon from "@mui/icons-material/PersonAddRounded";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
-import { Badge, IconButton, Stack, Tooltip, Typography } from "@mui/joy";
+import {
+    Badge,
+    Dropdown,
+    IconButton,
+    Menu,
+    MenuButton,
+    MenuItem,
+    Stack,
+    Tooltip,
+    Typography,
+} from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
@@ -17,6 +30,7 @@ interface ChatListItemActionsProps {
     isPinned: boolean;
     onPinClick: (event: React.MouseEvent) => void;
     onSplitClick: (event: React.MouseEvent) => void;
+    onAddMembersClick?: (event: React.MouseEvent) => void;
     setIsToDoVisible: (value: boolean) => void;
     isToDoVisible: boolean;
 }
@@ -28,9 +42,16 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
     isPinned,
     onPinClick,
     onSplitClick,
+    onAddMembersClick,
     setIsToDoVisible,
     isToDoVisible,
 }) => {
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
+
+    // Show add members option for DM and MDM chats (chatType 1 and 4)
+    const showAddMembers = (chat.chatType === 1 || chat.chatType === 4) && onAddMembersClick;
+
     return (
         <Stack alignItems="center" direction="row">
             <Typography
@@ -95,17 +116,94 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                 </IconButton>
             </Tooltip>
 
-            {/* Split View Button */}
-            <Tooltip size="sm" title="Split View" variant="outlined">
-                <IconButton component="a" sx={{ mt: 0.6 }} onClick={onSplitClick}>
-                    <OpenInNewIcon sx={{ fontSize: 16 }} />
-                </IconButton>
-            </Tooltip>
-
             {/* Unread Indicator */}
             {chat.latestMessage && chat.lastReadMessageId < chat.latestMessage?.messageId && (
-                <CircleIcon color="primary" sx={{ mr: 1, fontSize: 12, mt: 0.5 }} />
+                <CircleIcon color="primary" sx={{ mr: 0.5, fontSize: 12, mt: 0.5 }} />
             )}
+
+            {/* More Options Menu */}
+            <Dropdown>
+                <MenuButton
+                    slots={{ root: IconButton }}
+                    slotProps={{
+                        root: {
+                            size: "sm",
+                            variant: "plain",
+                            color: "neutral",
+                            sx: {
+                                mt: 0.6,
+                                borderRadius: "8px",
+                                "&:hover": {
+                                    background: isDark
+                                        ? "rgba(255,255,255,0.08)"
+                                        : "rgba(0,0,0,0.06)",
+                                },
+                            },
+                        },
+                    }}
+                >
+                    <MoreVertRoundedIcon sx={{ fontSize: 18 }} />
+                </MenuButton>
+                <Menu
+                    size="sm"
+                    placement="bottom-end"
+                    sx={{
+                        zIndex: 10010,
+                        borderRadius: "10px",
+                        minWidth: 160,
+                        boxShadow: isDark
+                            ? "0 8px 24px rgba(0,0,0,0.5)"
+                            : "0 8px 24px rgba(0,0,0,0.12)",
+                        background: isDark
+                            ? "rgba(30, 30, 40, 0.98)"
+                            : "rgba(255, 255, 255, 0.98)",
+                        border: "1px solid",
+                        borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+                    }}
+                >
+                    {/* Add Members Option (for DM and MDM chats) */}
+                    {showAddMembers && (
+                        <MenuItem
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onAddMembersClick?.(e as unknown as React.MouseEvent);
+                            }}
+                            sx={{
+                                borderRadius: "6px",
+                                mx: 0.5,
+                                gap: 1.5,
+                                fontSize: "0.85rem",
+                                py: 1,
+                            }}
+                        >
+                            <PersonAddRoundedIcon
+                                sx={{ fontSize: 18, color: isDark ? "#60a5fa" : "#3b82f6" }}
+                            />
+                            Add Members
+                        </MenuItem>
+                    )}
+
+                    {/* Split View Option */}
+                    <MenuItem
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onSplitClick(e as unknown as React.MouseEvent);
+                        }}
+                        sx={{
+                            borderRadius: "6px",
+                            mx: 0.5,
+                            gap: 1.5,
+                            fontSize: "0.85rem",
+                            py: 1,
+                        }}
+                    >
+                        <OpenInNewIcon
+                            sx={{ fontSize: 18, color: isDark ? "#60a5fa" : "#3b82f6" }}
+                        />
+                        Split View
+                    </MenuItem>
+                </Menu>
+            </Dropdown>
         </Stack>
     );
 };
