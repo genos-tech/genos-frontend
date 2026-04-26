@@ -28,6 +28,7 @@ export const App = () => {
         myself,
         accessToken: accessToken || "",
         currentTeamId: useTEM.currentTeamId,
+        openingService: useUISM.openingService,
     });
 
     // Service-specific initialization and management

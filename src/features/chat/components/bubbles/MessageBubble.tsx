@@ -96,7 +96,9 @@ export const MessageBubble = (props: MessageBubbleProps) => {
     const bubbleColors = isSent ? BUBBLE_COLORS.sent : BUBBLE_COLORS.received;
     const colors = isDark ? bubbleColors.dark : bubbleColors.light;
     const focusedColors = isDark ? BUBBLE_COLORS.focused.dark : BUBBLE_COLORS.focused.light;
-    const threadActiveColors = isDark ? BUBBLE_COLORS.threadActive.dark : BUBBLE_COLORS.threadActive.light;
+    const threadActiveColors = isDark
+        ? BUBBLE_COLORS.threadActive.dark
+        : BUBBLE_COLORS.threadActive.light;
     const highlightColors = isFocused === "threadActive" ? threadActiveColors : focusedColors;
 
     // Chat type to URL path mapping
@@ -238,8 +240,12 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                 if (typePath) {
                                     // For PM (chatType 3), use taskId as thread identifier to match indexMap key format
                                     const threadIdentifier =
-                                        chat.chatType === 3 && message.taskId ? message.taskId : message.messageId;
-                                    navigate(`/Home/chat/${typePath}/${chat.chatId}/thread/${threadIdentifier}`);
+                                        chat.chatType === 3 && message.taskId
+                                            ? message.taskId
+                                            : message.messageId;
+                                    navigate(
+                                        `/Home/chat/${typePath}/${chat.chatId}/thread/${threadIdentifier}`
+                                    );
                                 }
                             }
                         }
@@ -572,8 +578,8 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                         ? `0 4px 20px rgba(34,197,94,0.2), inset 0 1px 0 rgba(255,255,255,0.05)`
                                         : `0 4px 20px rgba(22,163,74,0.15)`
                                     : isDark
-                                        ? `0 4px 20px rgba(99,102,241,0.2), inset 0 1px 0 rgba(255,255,255,0.05)`
-                                        : `0 4px 20px rgba(99,102,241,0.15)`
+                                      ? `0 4px 20px rgba(99,102,241,0.2), inset 0 1px 0 rgba(255,255,255,0.05)`
+                                      : `0 4px 20px rgba(99,102,241,0.15)`
                                 : isDark
                                   ? "0 2px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.03)"
                                   : "0 2px 8px rgba(0,0,0,0.06)",
@@ -682,7 +688,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                         if (message.taskId !== null) {
                                             useCM.setIsMainChatVisible(true);
                                             useCM.setIsThreadVisible(false);
-                                            useTM.setIsTaskPreviewVisible(true);
+                                            // useTM.setIsTaskPreviewVisible(true);
                                             useTM.setIsCreatingTask({
                                                 ...useTM.isCreatingTask,
                                                 flag: false,
