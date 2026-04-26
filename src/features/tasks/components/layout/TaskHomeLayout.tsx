@@ -100,7 +100,9 @@ export const TaskHomeLayout = ({
                 borderRight: mode === "dark" ? "1px black inset" : "1px lightgrey inset",
             }}
         >
-            {useTM.isDashboardVisible && <TaskDashboard useTM={useTM} usePM={usePM} />}
+            {useTM.isDashboardVisible && (
+                <TaskDashboard useTM={useTM} usePM={usePM} useTEM={useTEM} />
+            )}
             {useTM.isTaskHomeVisible && (
                 <>
                     <TaskHomeHeader
