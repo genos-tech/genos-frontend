@@ -654,8 +654,29 @@ input[type="checkbox"] {
 }
 
 /* BlockNote utility styles */
+.bn-file-name-with-icon {
+    color: #1e3a5f !important;
+}
 .bn-file-name-with-icon:hover {
-    color: #000000;
+    color: #000000 !important;
+}
+
+/* Dark mode file block text colors */
+.bn-message-bubble-box-dark .bn-file-name-with-icon,
+.bn-message-bubble-box-dark-me .bn-file-name-with-icon,
+.bn-chat-editor-box-dark .bn-file-name-with-icon {
+    color: #1b60ae !important;
+}
+.bn-message-bubble-box-dark .bn-file-name-with-icon:hover,
+.bn-message-bubble-box-dark-me .bn-file-name-with-icon:hover,
+.bn-chat-editor-box-dark .bn-file-name-with-icon:hover {
+    color: #0800ff !important;
+}
+
+.bn-message-bubble-box-dark .bn-file-size,
+.bn-message-bubble-box-dark-me .bn-file-size,
+.bn-chat-editor-box-dark .bn-file-size {
+    color: #af9c9e !important;
 }
 
 /* Hide the drag preview completely */

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Sheet } from "@mui/joy";
 import { VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
@@ -12,7 +12,7 @@ import { useMessageManagement } from "./hooks/useMessageManagement";
 import { useReadStatusManagement } from "./hooks/useReadStatusManagement";
 import { useScrollManagement } from "./hooks/useScrollManagement";
 import { calculateVirtuosoHight } from "./services/calculateVirtuosoHight";
-import { handleFileDrop } from "./services/handleFileDrop";
+import { createFileDropHandler } from "./services/handleFileDrop";
 
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
@@ -53,6 +53,11 @@ export const ThreadPane = (props: MessagesPaneProps) => {
     } = props;
 
     const { setCurrentThreadTaskId } = useChatContext();
+
+    // File drag-and-drop state
+    const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+    const clearPendingFiles = useCallback(() => setPendingFiles([]), []);
+    const handleDrop = useCallback(createFileDropHandler(setPendingFiles), []);
 
     // Update currentThreadTaskId when thread panel mounts or thread changes
     useEffect(() => {
@@ -123,7 +128,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                 height: "100%",
             }}
             onDragOver={(e) => e.preventDefault()}
-            onDrop={handleFileDrop}
+            onDrop={handleDrop}
         >
             <Sheet
                 sx={{
@@ -185,6 +190,8 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                     useTEM={useTEM}
                     thread={useCM.currentThreadChat as ThreadProps}
                     useUISM={useUISM}
+                    pendingFiles={pendingFiles}
+                    clearPendingFiles={clearPendingFiles}
                     setCurrentChat={
                         useCM.setCurrentThreadChat as (chat: ChatProps | ThreadProps) => void
                     }

@@ -61,6 +61,8 @@ type BnThreadEditorProps = {
     numEditorLines: number;
     setNumEditorLines: (value: number) => void;
     useCM: ChatManagementState;
+    pendingFiles?: File[];
+    clearPendingFiles?: () => void;
 };
 export const BnThreadEditor = (props: BnThreadEditorProps) => {
     const {
@@ -75,6 +77,8 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
         numEditorLines,
         setNumEditorLines,
         useCM,
+        pendingFiles,
+        clearPendingFiles,
     } = props;
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
@@ -170,6 +174,33 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
             insertEmoji(selectedEmoji);
         }
     }, [selectedEmoji]);
+
+    // Process files dropped on the thread pane (outside the editor)
+    useEffect(() => {
+        if (pendingFiles && pendingFiles.length > 0 && clearPendingFiles) {
+            const insertFiles = async () => {
+                for (const file of pendingFiles) {
+                    try {
+                        const url = await uploadFile(file);
+                        const isImage = file.type.startsWith("image/");
+                        editor.insertBlocks(
+                            [
+                                isImage
+                                    ? { type: "image", props: { url, name: file.name } }
+                                    : { type: "file", props: { url, name: file.name } },
+                            ],
+                            editor.document[editor.document.length - 1],
+                            "after"
+                        );
+                    } catch (err) {
+                        console.error("Failed to insert dropped file:", err);
+                    }
+                }
+                clearPendingFiles();
+            };
+            insertFiles();
+        }
+    }, [pendingFiles]);
 
     const [editorDocLength, setEditorDocLength] = useState<number>(0);
 

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Sheet } from "@mui/joy";
 import { VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
@@ -11,7 +11,7 @@ import { useMessageManagement } from "./hooks/useMessageManagement";
 import { useReadStatusManagement } from "./hooks/useReadStatusManagement";
 import { useScrollManagement } from "./hooks/useScrollManagement";
 import { calculateVirtuosoSubHight } from "./services/calculateVirtuosoHight";
-import { handleFileDrop } from "./services/handleFileDrop";
+import { createFileDropHandler } from "./services/handleFileDrop";
 
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
@@ -64,6 +64,11 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
         todos,
         useTM,
     } = props;
+
+    // File drag-and-drop state
+    const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+    const clearPendingFiles = useCallback(() => setPendingFiles([]), []);
+    const handleDrop = useCallback(createFileDropHandler(setPendingFiles), []);
 
     if (!useCM.currentSubChat) {
         return null;
@@ -128,7 +133,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                 height: "100%",
             }}
             onDragOver={(e) => e.preventDefault()}
-            onDrop={handleFileDrop}
+            onDrop={handleDrop}
         >
             <Sheet sx={{ backgroundColor: "background.level1" }}>
                 <ErrorSnackbar
@@ -218,6 +223,8 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                                 socket={socket}
                                 useTEM={useTEM}
                                 useUISM={useUISM}
+                                pendingFiles={pendingFiles}
+                                clearPendingFiles={clearPendingFiles}
                                 setCurrentChat={
                                     useCM.setCurrentSubChat as (
                                         chat: ChatProps | ThreadProps

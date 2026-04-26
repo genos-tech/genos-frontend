@@ -173,8 +173,39 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
             const flaggedService = new FlaggedService();
             await flaggedService.deleteFlaggedMessage(flaggedMessage.flaggedMessageId);
 
-            // Update messages and chat
-            await updateMessagesAndChat();
+            // Update the isFlagged status in IndexedDB without navigating away
+            try {
+                const messages = await popSpecificMessages(
+                    flaggedMessage.chatId,
+                    flaggedMessage.chatType
+                );
+                const updatedMessage = messages.find(
+                    (m: MessageProps) => m.messageId === flaggedMessage.messageId
+                );
+                if (updatedMessage) {
+                    await addMessage(
+                        { ...updatedMessage, isFlagged: false },
+                        flaggedMessage.chatType
+                    );
+                }
+            } catch {
+                // Non-critical: IndexedDB message update can fail silently
+            }
+
+            // If the user is currently viewing this chat, update isFlagged in the pane
+            if (
+                useCM.currentMainChat &&
+                useCM.currentMainChat.chatId === flaggedMessage.chatId &&
+                useCM.currentMainChat.chatType === flaggedMessage.chatType
+            ) {
+                useCM.setCurrentMainChat({
+                    ...useCM.currentMainChat,
+                    messages: useCM.currentMainChat.messages.map((m) =>
+                        m.messageId === flaggedMessage.messageId ? { ...m, isFlagged: false } : m
+                    ),
+                    notMove: true,
+                });
+            }
         } catch (error) {
             console.error("Error updating flag status:", error);
         }

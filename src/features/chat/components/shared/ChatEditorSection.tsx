@@ -28,6 +28,8 @@ interface ChatEditorSectionProps {
     isThread?: boolean;
     thread?: ThreadProps;
     setCurrentThreadChat?: (chat: ThreadProps) => void;
+    pendingFiles?: File[];
+    clearPendingFiles?: () => void;
 }
 
 export const ChatEditorSection = ({
@@ -47,6 +49,8 @@ export const ChatEditorSection = ({
     isThread = false,
     thread,
     setCurrentThreadChat,
+    pendingFiles,
+    clearPendingFiles,
 }: ChatEditorSectionProps) => {
     if (isThread) {
         return (
@@ -81,6 +85,8 @@ export const ChatEditorSection = ({
                         useTEM={useTEM}
                         thread={thread!}
                         useUISM={useUISM}
+                        pendingFiles={pendingFiles}
+                        clearPendingFiles={clearPendingFiles}
                     />
                 )}
             </Box>
@@ -117,6 +123,8 @@ export const ChatEditorSection = ({
                     socket={socket}
                     useTEM={useTEM}
                     useUISM={useUISM}
+                    pendingFiles={pendingFiles}
+                    clearPendingFiles={clearPendingFiles}
                 />
             )}
         </Box>

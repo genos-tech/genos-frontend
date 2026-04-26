@@ -61,6 +61,8 @@ type BnChatEditorProps = {
     useUISM: UIStateManagementState;
     numEditorLines: number;
     setNumEditorLines: (value: number) => void;
+    pendingFiles?: File[];
+    clearPendingFiles?: () => void;
 };
 export const BnChatEditor = (props: BnChatEditorProps) => {
     const {
@@ -74,6 +76,8 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
         useUISM,
         numEditorLines,
         setNumEditorLines,
+        pendingFiles,
+        clearPendingFiles,
     } = props;
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
@@ -168,6 +172,33 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
             insertEmoji(selectedEmoji);
         }
     }, [selectedEmoji]);
+
+    // Process files dropped on the chat pane (outside the editor)
+    useEffect(() => {
+        if (pendingFiles && pendingFiles.length > 0 && clearPendingFiles) {
+            const insertFiles = async () => {
+                for (const file of pendingFiles) {
+                    try {
+                        const url = await uploadFile(file);
+                        const isImage = file.type.startsWith("image/");
+                        editor.insertBlocks(
+                            [
+                                isImage
+                                    ? { type: "image", props: { url, name: file.name } }
+                                    : { type: "file", props: { url, name: file.name } },
+                            ],
+                            editor.document[editor.document.length - 1],
+                            "after"
+                        );
+                    } catch (err) {
+                        console.error("Failed to insert dropped file:", err);
+                    }
+                }
+                clearPendingFiles();
+            };
+            insertFiles();
+        }
+    }, [pendingFiles]);
 
     const [editorDocLength, setEditorDocLength] = useState<number>(0);
 
