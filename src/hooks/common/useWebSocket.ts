@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
 import { UserProps } from "../../types/admin";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 
 const ws_url = import.meta.env.VITE_WS_BASE_URL;
+
+const SNACKBAR_DELAY_ATTEMPTS = 5;
 
 const createSocket = (accessToken: string | null): Socket => {
     return io(ws_url, {
@@ -33,8 +35,10 @@ export const useWebSocket = (
     currentTeamId: string
 ) => {
     const [socketInstance, setSocketInstance] = useState<Socket | null>(null);
+    const [showDisconnected, setShowDisconnected] = useState(false);
+    const attemptCountRef = useRef(0);
 
-    const sendHeartBeat = () => {
+    const sendHeartBeat = useCallback(() => {
         if (socketInstance) {
             const isOfflineForced: string = localStorage.getItem("isOfflineForced") || "false";
             const role: string = localStorage.getItem("role") || "";
@@ -56,7 +60,7 @@ export const useWebSocket = (
                 },
             });
         }
-    };
+    }, [socketInstance, myself]);
 
     // Initialize WebSocket connection
     useEffect(() => {
@@ -75,12 +79,36 @@ export const useWebSocket = (
         }
     }, [myself, accessToken, currentTeamId]);
 
-    // Setup socket events and heartbeat
+    // Poll socket.connected status instead of relying on event listeners,
+    // because cleanupWebSocketHandlers removes all listeners for shared events.
+    useEffect(() => {
+        if (!socketInstance) return;
+
+        const pollId = setInterval(() => {
+            if (socketInstance.connected) {
+                if (showDisconnected) {
+                    setShowDisconnected(false);
+                }
+                attemptCountRef.current = 0;
+            } else {
+                attemptCountRef.current += 1;
+                if (attemptCountRef.current >= SNACKBAR_DELAY_ATTEMPTS && !showDisconnected) {
+                    setShowDisconnected(true);
+                }
+            }
+        }, 1000);
+
+        return () => {
+            clearInterval(pollId);
+        };
+    }, [socketInstance, showDisconnected]);
+
+    // Setup join and heartbeat
     useEffect(() => {
         if (socketInstance) {
             socketInstance.emit("join", {
-                joiningCGId: -1, // dm_id or gm_id
-                joiningCGName: myself.userName, // dm_name or gm_name
+                joiningCGId: -1,
+                joiningCGName: myself.userName,
                 chatType: 1,
                 dmPartnerUserId: myself.userId,
             });
@@ -95,10 +123,11 @@ export const useWebSocket = (
                 clearInterval(intervalId);
             };
         }
-    }, [socketInstance, myself]);
+    }, [socketInstance, myself, sendHeartBeat]);
 
     return {
         socketInstance,
+        showDisconnected,
     };
 };
 

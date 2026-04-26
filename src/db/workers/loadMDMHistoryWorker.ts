@@ -27,8 +27,6 @@ self.onmessage = async (event) => {
             flagged_messages: FlaggedMessageProps[];
         } = await loadMDMHistory(myself.teamId, myself.teamName, myself.userId, accessToken);
 
-        console.log("[loadMDMHistoryWorker] MDM history loaded:", mdmHistory.chat_history.length, "chats");
-
         for (let i = 0; i < mdmHistory.chat_history.length; i += 1) {
             const mdmChat: ChatProps = mdmHistory.chat_history[i];
 
