@@ -13,8 +13,6 @@ import {
 import { en } from "@blocknote/core/locales";
 import { BlockNoteView } from "@blocknote/mantine";
 import {
-    AddCommentButton,
-    AddTiptapCommentButton,
     BasicTextStyleButton,
     BlockColorsItem,
     BlockTypeSelect,
@@ -184,6 +182,8 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
     const { editor } = useCollaborativeBlockNote({
         documentName,
         user: collabUser,
+        userId: myself.userId,
+        myself,
         accessToken,
         schema,
         dictionary,
@@ -349,8 +349,6 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                             <CreateLinkButton key={"createLinkButton"} />
                             <FileCaptionButton key={"fileCaptionButton"} />
                             <FileReplaceButton key={"fileReplaceButton"} />
-                            <AddCommentButton key={"addCommentButton"} />
-                            <AddTiptapCommentButton key={"addTiptapCommentButton"} />
                             <FileDeleteButton key={"fileDeleteButton"} />
                             <FileDownloadButton key={"fileDownloadButton"} />
                             <FilePreviewButton key={"filePreviewButton"} />
@@ -377,9 +375,13 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                 />
                 <SuggestionMenuController
                     triggerCharacter={"/"}
-                    // Replaces the default Slash Menu items with our custom ones.
                     getItems={async (query) =>
-                        filterSuggestionItems(getCustomSlashMenuItems(editor), query)
+                        filterSuggestionItems(
+                            getCustomSlashMenuItems(
+                                editor as unknown as typeof schema.BlockNoteEditor
+                            ),
+                            query
+                        )
                     }
                 />
             </BlockNoteView>

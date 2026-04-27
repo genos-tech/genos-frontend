@@ -653,6 +653,17 @@ input[type="checkbox"] {
     opacity: 1 !important;
 }
 
+/* Comment composer overrides – prevent parent .bn-editor styles from leaking
+   into the nested editor inside the floating comment / thread composer. */
+.bn-comment-editor .bn-editor {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: 200px !important;
+    padding: 0 !important;
+    overflow-y: auto !important;
+    background-color: transparent !important;
+}
+
 /* BlockNote utility styles */
 .bn-file-name-with-icon {
     color: #1e3a5f !important;

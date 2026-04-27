@@ -29,7 +29,7 @@
         "@emoji-mart/react": "^1.1.1",
         "@emotion/react": "^11.14.0",
         "@emotion/styled": "^11.14.1",
-        "@hocuspocus/provider": "^4.0.0",
+        "@hocuspocus/provider": "^2.15.3",
         "@mantine/core": "^7.17.8",
         "@mui/icons-material": "^7.3.2",
         "@mui/joy": "^5.0.0-beta.52",

@@ -14,7 +14,6 @@ import { en } from "@blocknote/core/locales";
 import { BlockNoteView } from "@blocknote/mantine";
 import {
     AddCommentButton,
-    AddTiptapCommentButton,
     BasicTextStyleButton,
     BlockColorsItem,
     BlockTypeSelect,
@@ -183,11 +182,15 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
     const { editor } = useCollaborativeBlockNote({
         documentName,
         user: collabUser,
+        userId: myself.userId,
+        myself,
         accessToken,
         schema,
         dictionary,
         uploadFile,
         initialBody: body,
+        enableComments: true,
+        teamMemberProfiles: useTEM.teamMemberProfiles,
     });
 
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
@@ -326,7 +329,6 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                             <FileCaptionButton key={"fileCaptionButton"} />
                             <FileReplaceButton key={"fileReplaceButton"} />
                             <AddCommentButton key={"addCommentButton"} />
-                            <AddTiptapCommentButton key={"addTiptapCommentButton"} />
                             <FileDeleteButton key={"fileDeleteButton"} />
                             <FileDownloadButton key={"fileDownloadButton"} />
                             <FilePreviewButton key={"filePreviewButton"} />
@@ -353,9 +355,13 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                 />
                 <SuggestionMenuController
                     triggerCharacter={"/"}
-                    // Replaces the default Slash Menu items with our custom ones.
                     getItems={async (query) =>
-                        filterSuggestionItems(getCustomSlashMenuItems(editor), query)
+                        filterSuggestionItems(
+                            getCustomSlashMenuItems(
+                                editor as unknown as typeof schema.BlockNoteEditor
+                            ),
+                            query
+                        )
                     }
                 />
             </BlockNoteView>
