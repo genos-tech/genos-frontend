@@ -83,17 +83,23 @@ export function useCollaborativeBlockNote({
     const initialBodyRef = useRef(initialBody);
     initialBodyRef.current = initialBody;
 
+    const syncedRef = useRef(false);
+    const fragmentRef = useRef<Y.XmlFragment | null>(null);
+
     const seedDocument = useCallback((fragment: Y.XmlFragment) => {
         if (seededRef.current) return;
-        seededRef.current = true;
 
         const body = initialBodyRef.current;
         if (!body || body.length === 0) return;
 
         const content = fragment.toJSON();
         const isEmpty = !content || content === "" || content === "<undefined></undefined>";
-        if (!isEmpty) return;
+        if (!isEmpty) {
+            seededRef.current = true;
+            return;
+        }
 
+        seededRef.current = true;
         setTimeout(() => {
             const editor = editorRef.current;
             if (!editor) return;
@@ -107,6 +113,8 @@ export function useCollaborativeBlockNote({
 
     const { doc, provider, fragment } = useMemo(() => {
         seededRef.current = false;
+        syncedRef.current = false;
+        fragmentRef.current = null;
 
         const yjsDoc = new Y.Doc();
         const frag = yjsDoc.getXmlFragment("document-store");
@@ -124,12 +132,21 @@ export function useCollaborativeBlockNote({
             onDisconnect: () => setConnectionStatus("disconnected"),
             onSynced: () => {
                 setConnectionStatus("connected");
+                syncedRef.current = true;
+                fragmentRef.current = frag;
                 seedDocument(frag);
             },
         });
 
         return { doc: yjsDoc, provider: hocuspocusProvider, fragment: frag };
     }, [documentName, accessToken, seedDocument]);
+
+    // Retry seeding when initialBody arrives after onSynced already fired
+    useEffect(() => {
+        if (syncedRef.current && !seededRef.current && fragmentRef.current && initialBody && initialBody.length > 0) {
+            seedDocument(fragmentRef.current);
+        }
+    }, [initialBody, seedDocument]);
 
     const threadStore = useMemo(() => {
         if (!enableComments || !provider) return null;
