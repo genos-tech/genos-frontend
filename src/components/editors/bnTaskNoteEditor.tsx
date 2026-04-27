@@ -2,8 +2,7 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import "../../App.css";
 
-import { useEffect, useState } from "react";
-import { codeBlock } from "@blocknote/code-block";
+import { useEffect, useMemo, useState } from "react";
 import {
     BlockNoteSchema,
     defaultBlockSpecs,
@@ -41,7 +40,6 @@ import {
     SuggestionMenuController,
     TableCellMergeButton,
     TextAlignButton,
-    useCreateBlockNote,
 } from "@blocknote/react";
 import DownloadIcon from "@mui/icons-material/Download";
 import { Box, IconButton, Modal, ModalDialog, Tooltip } from "@mui/joy";
@@ -51,10 +49,12 @@ import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { useCollaborativeBlockNote } from "../../hooks/common/useCollaborativeBlockNote";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { TaskNoteProps } from "../../types/notes";
+import { getUserColor } from "../../utils/collabUtils";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
@@ -159,47 +159,36 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
         return `${django_url}/${uploadNoteAttachmentData.noteAttachmentUrl}`;
     }
 
-    // We use the English, default dictionary
     const locale = en;
-    const editor =
-        body.length > 0
-            ? useCreateBlockNote({
-                  schema,
-                  codeBlock,
-                  // We override the `placeholders` in our dictionary
-                  dictionary: {
-                      ...locale,
-                      placeholders: {
-                          ...locale.placeholders,
-                          // We override the empty document placeholder
-                          emptyDocument: "Start typing...",
-                          // We override the default placeholder
-                          default: "Type something...",
-                          // We override the heading placeholder
-                          heading: "Custom heading placeholder",
-                      },
-                  },
-                  initialContent: body,
-                  uploadFile,
-              })
-            : useCreateBlockNote({
-                  schema,
-                  codeBlock,
-                  uploadFile,
-                  // We override the `placeholders` in our dictionary
-                  dictionary: {
-                      ...locale,
-                      placeholders: {
-                          ...locale.placeholders,
-                          // We override the empty document placeholder
-                          emptyDocument: "Start typing...",
-                          // We override the default placeholder
-                          default: "Type something...",
-                          // We override the heading placeholder
-                          heading: "Custom heading placeholder",
-                      },
-                  },
-              });
+    const dictionary = useMemo(
+        () => ({
+            ...locale,
+            placeholders: {
+                ...locale.placeholders,
+                emptyDocument: "Start typing...",
+                default: "Type something...",
+                heading: "Custom heading placeholder",
+            },
+        }),
+        []
+    );
+
+    const collabUser = useMemo(
+        () => ({ name: myself.userName, color: getUserColor(myself.userId) }),
+        [myself.userName, myself.userId]
+    );
+
+    const documentName = `task-note:${currentTaskNote.noteId}`;
+
+    const { editor } = useCollaborativeBlockNote({
+        documentName,
+        user: collabUser,
+        accessToken,
+        schema,
+        dictionary,
+        uploadFile,
+        initialBody: body,
+    });
 
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
