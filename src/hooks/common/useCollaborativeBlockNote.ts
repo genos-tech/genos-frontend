@@ -148,13 +148,27 @@ export function useCollaborativeBlockNote({
             return { doc: yjsDoc, provider: null, fragment: frag };
         }
 
+        const trySeedFallback = () => {
+            if (!seededRef.current) {
+                seedDocument(frag);
+            }
+        };
+
         const hocuspocusProvider = new HocuspocusProvider({
             url: COLLAB_URL,
             name: documentName,
             document: yjsDoc,
             token: accessToken,
             onConnect: () => setConnectionStatus("connected"),
-            onDisconnect: () => setConnectionStatus("disconnected"),
+            onDisconnect: () => {
+                setConnectionStatus("disconnected");
+                // If we disconnected before ever syncing, seed immediately
+                if (!syncedRef.current) trySeedFallback();
+            },
+            onAuthenticationFailed: () => {
+                setConnectionStatus("disconnected");
+                trySeedFallback();
+            },
             onSynced: () => {
                 setConnectionStatus("connected");
                 syncedRef.current = true;
@@ -166,30 +180,15 @@ export function useCollaborativeBlockNote({
         return { doc: yjsDoc, provider: hocuspocusProvider, fragment: frag };
     }, [documentName, accessToken, seedDocument]);
 
-    // Retry seeding when initialBody arrives after onSynced already fired
+    // Retry seeding when initialBody arrives after sync or connection failure
     useEffect(() => {
-        if (
-            syncedRef.current &&
-            !seededRef.current &&
-            fragmentRef.current &&
-            initialBody &&
-            initialBody.length > 0
-        ) {
-            seedDocument(fragmentRef.current);
-        }
-    }, [initialBody, seedDocument]);
-
-    // Fallback: if provider hasn't synced within 3s, seed from initialBody anyway
-    useEffect(() => {
-        if (!provider || !fragment) return;
-        const timer = setTimeout(() => {
-            if (!syncedRef.current && !seededRef.current && initialBody && initialBody.length > 0) {
-                console.warn("[collab] Provider did not sync in time, seeding from local data");
+        if (!seededRef.current && fragment && initialBody && initialBody.length > 0) {
+            // Seed if we've already synced or if connection already failed
+            if (syncedRef.current || connectionStatus === "disconnected") {
                 seedDocument(fragment);
             }
-        }, 3000);
-        return () => clearTimeout(timer);
-    }, [provider, fragment, initialBody, seedDocument]);
+        }
+    }, [initialBody, seedDocument, fragment, connectionStatus]);
 
     const threadStore = useMemo(() => {
         if (!enableComments || !provider) return null;
