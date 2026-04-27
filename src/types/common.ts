@@ -24,5 +24,6 @@ export type InboxItemProps = {
     itemBody: PartialBlock[] | any[];
     itemType: number;
     isRead: boolean;
+    requestStatus: "pending" | "approved" | "rejected";
     tsSent: string;
 };

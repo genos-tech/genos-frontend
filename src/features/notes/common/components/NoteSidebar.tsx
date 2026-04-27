@@ -10,6 +10,7 @@ import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { AllChatProps } from "../../../../types/chat";
 import { ChatNoteMetaProps, MyNoteMetaProps, TaskNoteMetaProps } from "../../../../types/notes";
 import { ChildNoteCreator } from "../../chat-notes/components/ChildNoteCreator";
 import { useNoteTreeState } from "../hooks/useNoteTreeState";
@@ -35,6 +36,7 @@ interface ProjectGroup {
 
 interface ChatGroup {
     chatId: number;
+    chatType: number;
     chatName: string;
     notes: ChatNoteMetaTreeNode[];
 }
@@ -78,28 +80,33 @@ function groupTaskNotes(notes: TaskNoteMetaTreeNode[]): ProjectGroup[] {
 }
 
 // Utility function to group chat notes by chat type, then by chat name
-function groupChatNotes(notes: ChatNoteMetaTreeNode[]): ChatTypeGroup[] {
+function groupChatNotes(notes: ChatNoteMetaTreeNode[], allChats: AllChatProps[]): ChatTypeGroup[] {
     const chatTypeMap: Map<number, ChatTypeGroup> = new Map();
 
     for (const note of notes) {
         const chatTypeName = note.chatTypeName || getChatTypeLabel(note.chatType);
+        const groupKey = note.chatType === 4 ? 1 : note.chatType;
 
-        // Get or create chat type group
-        if (!chatTypeMap.has(note.chatType)) {
-            chatTypeMap.set(note.chatType, {
-                chatType: note.chatType,
-                chatTypeName,
+        if (!chatTypeMap.has(groupKey)) {
+            chatTypeMap.set(groupKey, {
+                chatType: groupKey,
+                chatTypeName: getChatTypeLabel(groupKey),
                 chats: [],
             });
         }
-        const chatTypeGroup = chatTypeMap.get(note.chatType)!;
+        const chatTypeGroup = chatTypeMap.get(groupKey)!;
 
-        // Find or create chat group within chat type
-        let chatGroup = chatTypeGroup.chats.find((c) => c.chatId === note.chatId);
+        let chatGroup = chatTypeGroup.chats.find(
+            (c) => c.chatType === note.chatType && c.chatId === note.chatId
+        );
         if (!chatGroup) {
+            const resolvedName = note.chatName
+                || allChats.find((c) => c.chatType === note.chatType && c.chatId === note.chatId)?.chatName
+                || `${chatTypeName} ${note.chatId}`;
             chatGroup = {
                 chatId: note.chatId,
-                chatName: note.chatName || `${chatTypeName} ${note.chatId}`,
+                chatType: note.chatType,
+                chatName: resolvedName,
                 notes: [],
             };
             chatTypeGroup.chats.push(chatGroup);
@@ -114,6 +121,7 @@ function groupChatNotes(notes: ChatNoteMetaTreeNode[]): ChatTypeGroup[] {
 function getChatTypeLabel(chatType: number): string {
     switch (chatType) {
         case 1:
+        case 4:
             return "DM";
         case 2:
             return "GM";
@@ -126,10 +134,11 @@ function getChatTypeLabel(chatType: number): string {
 
 type NoteSidebarProps = {
     useNM: NoteManagementState;
+    allChats?: AllChatProps[];
 };
 
 export const NoteSidebar = (props: NoteSidebarProps) => {
-    const { useNM } = props;
+    const { useNM, allChats = [] } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
 
@@ -211,8 +220,8 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
 
     // Grouped chat notes by chat type and name
     const groupedChatNotes = useMemo(
-        () => groupChatNotes(chatNoteState.tmpMetaTree as ChatNoteMetaTreeNode[]),
-        [chatNoteState.tmpMetaTree]
+        () => groupChatNotes(chatNoteState.tmpMetaTree as ChatNoteMetaTreeNode[], allChats),
+        [chatNoteState.tmpMetaTree, allChats]
     );
 
     // Render grouped task notes (Project → Task → Notes)
@@ -255,8 +264,8 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             >
                 {chatTypeGroup.chats.map((chatGroup) => (
                     <GroupedNoteSection
-                        key={`chat-${chatTypeGroup.chatType}-${chatGroup.chatId}`}
-                        groupKey={`chat-${chatTypeGroup.chatType}-${chatGroup.chatId}`}
+                        key={`chat-${chatGroup.chatType}-${chatGroup.chatId}`}
+                        groupKey={`chat-${chatGroup.chatType}-${chatGroup.chatId}`}
                         groupLabel={chatGroup.chatName}
                         defaultExpanded={chatGroup.notes.some(
                             (note) => note.noteId === useNM.currentChatNote?.noteId

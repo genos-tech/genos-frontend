@@ -39,7 +39,7 @@ export const ModalCreateProject: React.FC<Props> = ({ myself, usePM, setIsNewPro
     const { accessToken } = useAuth();
 
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [isPrivate, setIsPrivate] = useState(true);
+    const [isPrivate, setIsPrivate] = useState(false);
     const [projectName, setProjectName] = useState("");
     const handleCreateProject = () => {
         if (projectName.trim()) {
@@ -121,12 +121,16 @@ export const ModalCreateProject: React.FC<Props> = ({ myself, usePM, setIsNewPro
                             );
 
                             if (prjJoinTeamRes && meJoinTeamRes && createProjectData.project_id) {
-                                usePM.setCurrentProject({
+                                const newProject = {
                                     projectId: createProjectData.project_id,
                                     projectName: createProjectData.project_name,
                                     projectTags: [],
+                                    isPrivate: isPrivate,
                                     systemUserId: createProjectData.project_system_user,
-                                });
+                                    isJoined: true,
+                                };
+                                usePM.setTeamProjects([...usePM.teamProjects, newProject]);
+                                usePM.setCurrentProject(newProject);
                                 usePM.setOpenCreateProject(false);
                                 if (setIsNewProjectCreated) {
                                     setIsNewProjectCreated(true);
@@ -222,11 +226,12 @@ export const ModalCreateProject: React.FC<Props> = ({ myself, usePM, setIsNewPro
                         backgroundColor: "rgba(255, 255, 255, 0.05)",
                         border: "1px solid rgba(255, 255, 255, 0.1)",
                         borderRadius: "10px",
+                        color: "#e0e0e0",
                         transition: "all 0.2s ease",
                         "&:hover": {
                             borderColor: "rgba(99, 102, 241, 0.3)",
                         },
-                        "&::placeholder": {
+                        "& input::placeholder": {
                             color: "rgba(255, 255, 255, 0.4)",
                         },
                     }}

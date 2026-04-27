@@ -173,8 +173,39 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
             const flaggedService = new FlaggedService();
             await flaggedService.deleteFlaggedMessage(flaggedMessage.flaggedMessageId);
 
-            // Update messages and chat
-            await updateMessagesAndChat();
+            // Update the isFlagged status in IndexedDB without navigating away
+            try {
+                const messages = await popSpecificMessages(
+                    flaggedMessage.chatId,
+                    flaggedMessage.chatType
+                );
+                const updatedMessage = messages.find(
+                    (m: MessageProps) => m.messageId === flaggedMessage.messageId
+                );
+                if (updatedMessage) {
+                    await addMessage(
+                        { ...updatedMessage, isFlagged: false },
+                        flaggedMessage.chatType
+                    );
+                }
+            } catch {
+                // Non-critical: IndexedDB message update can fail silently
+            }
+
+            // If the user is currently viewing this chat, update isFlagged in the pane
+            if (
+                useCM.currentMainChat &&
+                useCM.currentMainChat.chatId === flaggedMessage.chatId &&
+                useCM.currentMainChat.chatType === flaggedMessage.chatType
+            ) {
+                useCM.setCurrentMainChat({
+                    ...useCM.currentMainChat,
+                    messages: useCM.currentMainChat.messages.map((m) =>
+                        m.messageId === flaggedMessage.messageId ? { ...m, isFlagged: false } : m
+                    ),
+                    notMove: true,
+                });
+            }
         } catch (error) {
             console.error("Error updating flag status:", error);
         }
@@ -308,6 +339,10 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
 
             if (threadMessages?.length > 0) {
                 const newThread = createThreadFromMessages(threadMessages);
+
+                // Set thread visible BEFORE setting main chat to prevent
+                // the main chat URL effect from stripping thread info
+                useCM.setIsThreadVisible(true);
                 useCM.setCurrentThreadChat(newThread);
 
                 if (flaggedMessage.project?.projectId) {
@@ -319,7 +354,6 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                 }
 
                 await handleThreadNavigation();
-                useCM.setIsThreadVisible(true);
             }
         } catch (error) {
             console.error("Error handling thread message:", error);
@@ -347,7 +381,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
             project: flaggedMessage.project,
             TSLastMessage: getLocalCurrentTimestamp(),
             taskExist: threadMessages[0].taskExist,
-            moveToSpecificIndex: flaggedMessage.flaggedMessageId,
+            moveToSpecificIndex: `${flaggedMessage.chatId}-${flaggedMessage.threadId}-${flaggedMessage.messageId}`,
         };
     };
 
@@ -375,10 +409,6 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
             }
 
             useCM.setIsMainChatVisible(true);
-
-            if (shouldHideThread(useTM.isCreatingTask.flag, useTM.isTaskPreviewVisible)) {
-                useCM.setIsThreadVisible(false);
-            }
         } catch (error) {
             console.error("Error handling thread navigation:", error);
         }
@@ -412,7 +442,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                 />
             );
         }
-        return <Avatar size="sm">{flaggedMessage.chatName[0].toUpperCase()}</Avatar>;
+        return <Avatar size="sm">{(resolvedChatName || "?")[0].toUpperCase()}</Avatar>;
     };
 
     const renderGMAvatar = () => {
@@ -490,6 +520,14 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
     };
 
     // Chip rendering components
+    const resolvedChatName = (() => {
+        if (flaggedMessage.chatName) return flaggedMessage.chatName;
+        const chat = useCM.allChats.find(
+            (c) => c.chatId === flaggedMessage.chatId && c.chatType === flaggedMessage.chatType
+        );
+        return chat?.chatName || "";
+    })();
+
     const renderChatNameChip = () => {
         if (
             flaggedMessage.chatType === CHAT_TYPES.DM ||
@@ -504,7 +542,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                     }}
                     noWrap
                 >
-                    {isYou ? `${flaggedMessage.chatName} (you)` : flaggedMessage.chatName}
+                    {isYou ? `${resolvedChatName} (you)` : resolvedChatName}
                 </Typography>
             );
         }
@@ -530,7 +568,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                             height: "20px",
                         }}
                     >
-                        {flaggedMessage.chatName}
+                        {resolvedChatName}
                     </Chip>
                     <Chip
                         size="sm"

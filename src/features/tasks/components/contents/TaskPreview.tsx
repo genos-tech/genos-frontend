@@ -417,6 +417,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                                 isPreviewMode={true}
                                 myself={myself}
                                 projectTags={projectTags}
+                                setProjectTags={setProjectTags}
                                 reporter={reporter}
                                 setAssignee={setAssignee}
                                 setIsOpenProjectList={setIsOpenProjectList}

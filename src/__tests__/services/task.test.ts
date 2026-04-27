@@ -10,6 +10,7 @@ import { loadTeamTasks } from "../../features/tasks/services/loadTeamTasks";
 
 const mockMyself = {
     teamId: "team1",
+    teamName: "Team One",
     userId: "user1",
     userName: "Test User",
     userEmail: "test@test.com",

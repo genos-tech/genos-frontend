@@ -75,11 +75,10 @@ export const ModalAddMembers: React.FC<Props> = ({
             existingIds.add(myself.userId); // Always exclude myself
 
             if (chat.chatType === 1 && chat.dmPartnerUser) {
-                // DM - the partner is already a member
                 existingIds.add(chat.dmPartnerUser.userId);
+            } else if (chat.chatType === 4 && chat.mdmMembers) {
+                chat.mdmMembers.forEach((m) => existingIds.add(m.userId));
             }
-            // For MDM, we would need to fetch existing members from API
-            // For now, we'll just exclude myself
 
             setExistingMemberIds(existingIds);
         }
@@ -142,7 +141,8 @@ export const ModalAddMembers: React.FC<Props> = ({
                 useCM,
                 socket,
                 (msg: string) => setErrorMessage(msg),
-                setOpen
+                setOpen,
+                selectedMembers
             );
         } catch (error) {
             console.error("Failed to add members:", error);
@@ -232,6 +232,24 @@ export const ModalAddMembers: React.FC<Props> = ({
                                 {chat.dmPartnerUser.userName}
                             </Typography>
                         </Box>
+                    </Box>
+                )}
+                {chat.chatType === 4 && chat.mdmMembers && chat.mdmMembers.length > 0 && (
+                    <Box
+                        sx={{
+                            mb: 2,
+                            p: 1.5,
+                            borderRadius: "10px",
+                            backgroundColor: "rgba(59, 130, 246, 0.1)",
+                            border: "1px solid rgba(59, 130, 246, 0.2)",
+                        }}
+                    >
+                        <Typography level="body-sm" sx={{ color: "rgba(255, 255, 255, 0.9)", mb: 0.5 }}>
+                            Current members:
+                        </Typography>
+                        <Typography level="body-xs" sx={{ color: "rgba(255, 255, 255, 0.6)" }}>
+                            {chat.mdmMembers.map((m) => m.userName).join(", ")}
+                        </Typography>
                     </Box>
                 )}
 

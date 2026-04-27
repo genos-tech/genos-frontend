@@ -2,8 +2,7 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import "../../App.css";
 
-import { useEffect, useState } from "react";
-import { codeBlock } from "@blocknote/code-block";
+import { useEffect, useMemo, useState } from "react";
 import {
     BlockNoteSchema,
     defaultBlockSpecs,
@@ -15,7 +14,6 @@ import { en } from "@blocknote/core/locales";
 import { BlockNoteView } from "@blocknote/mantine";
 import {
     AddCommentButton,
-    AddTiptapCommentButton,
     BasicTextStyleButton,
     BlockColorsItem,
     BlockTypeSelect,
@@ -25,7 +23,6 @@ import {
     CreateLinkButton,
     DefaultReactSuggestionItem,
     DragHandleMenu,
-    DragHandleMenuProps,
     FileCaptionButton,
     FileDeleteButton,
     FileDownloadButton,
@@ -39,10 +36,13 @@ import {
     SideMenu,
     SideMenuController,
     SuggestionMenuController,
+    BlockNoteViewEditor,
+    FloatingComposerController,
+    FloatingThreadController,
     TableCellMergeButton,
     TextAlignButton,
-    useCreateBlockNote,
 } from "@blocknote/react";
+import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import DownloadIcon from "@mui/icons-material/Download";
 import { Box, IconButton, Modal, ModalDialog, Tooltip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -51,15 +51,19 @@ import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { useCollaborativeBlockNote } from "../../hooks/common/useCollaborativeBlockNote";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { TaskNoteProps } from "../../types/notes";
+import { getUserColor } from "../../utils/collabUtils";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 import { Alert } from "./sub/Alert";
 import { ResetBlockTypeItem } from "./sub/ResetBlockTypeItem";
+import { ThreadsSidebarErrorBoundary } from "./sub/ThreadsSidebarErrorBoundary";
+import { ThreadsSidebarWithPreload } from "./sub/ThreadsSidebarWithPreload";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const django_url = import.meta.env.VITE_DJANGO_URL;
@@ -99,12 +103,12 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
     // To avoid rendering issues, it's good practice to define your custom drag
     // handle menu in a separate component, instead of inline within the `sideMenu`
     // prop of `SideMenuController`.
-    const CustomDragHandleMenu = (props: DragHandleMenuProps) => (
-        <DragHandleMenu {...props}>
-            <RemoveBlockItem {...props}>Delete</RemoveBlockItem>
-            <BlockColorsItem {...props}>Colors</BlockColorsItem>
+    const CustomDragHandleMenu = () => (
+        <DragHandleMenu>
+            <RemoveBlockItem>Delete</RemoveBlockItem>
+            <BlockColorsItem>Colors</BlockColorsItem>
             {/* Item which resets the hovered block's type. */}
-            <ResetBlockTypeItem {...props}>Reset Type</ResetBlockTypeItem>
+            <ResetBlockTypeItem>Reset Type</ResetBlockTypeItem>
         </DragHandleMenu>
     );
 
@@ -128,7 +132,7 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
         },
         blockSpecs: {
             ...remainingBlockSpecs,
-            alert: Alert,
+            alert: Alert(),
         },
     });
 
@@ -159,48 +163,42 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
         return `${django_url}/${uploadNoteAttachmentData.noteAttachmentUrl}`;
     }
 
-    // We use the English, default dictionary
     const locale = en;
-    const editor =
-        body.length > 0
-            ? useCreateBlockNote({
-                  schema,
-                  codeBlock,
-                  // We override the `placeholders` in our dictionary
-                  dictionary: {
-                      ...locale,
-                      placeholders: {
-                          ...locale.placeholders,
-                          // We override the empty document placeholder
-                          emptyDocument: "Start typing...",
-                          // We override the default placeholder
-                          default: "Type something...",
-                          // We override the heading placeholder
-                          heading: "Custom heading placeholder",
-                      },
-                  },
-                  initialContent: body,
-                  uploadFile,
-              })
-            : useCreateBlockNote({
-                  schema,
-                  codeBlock,
-                  uploadFile,
-                  // We override the `placeholders` in our dictionary
-                  dictionary: {
-                      ...locale,
-                      placeholders: {
-                          ...locale.placeholders,
-                          // We override the empty document placeholder
-                          emptyDocument: "Start typing...",
-                          // We override the default placeholder
-                          default: "Type something...",
-                          // We override the heading placeholder
-                          heading: "Custom heading placeholder",
-                      },
-                  },
-              });
+    const dictionary = useMemo(
+        () => ({
+            ...locale,
+            placeholders: {
+                ...locale.placeholders,
+                emptyDocument: "Start typing...",
+                default: "Type something...",
+                heading: "Custom heading placeholder",
+            },
+        }),
+        []
+    );
 
+    const collabUser = useMemo(
+        () => ({ name: myself.userName, color: getUserColor(myself.userId) }),
+        [myself.userName, myself.userId]
+    );
+
+    const documentName = `task-note:${currentTaskNote.noteId}`;
+
+    const { editor, threadStore } = useCollaborativeBlockNote({
+        documentName,
+        user: collabUser,
+        userId: myself.userId,
+        myself,
+        accessToken,
+        schema,
+        dictionary,
+        uploadFile,
+        initialBody: body,
+        enableComments: true,
+        teamMemberProfiles: useTEM.teamMemberProfiles,
+    });
+
+    const [showThreadsSidebar, setShowThreadsSidebar] = useState(false);
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
     const insertEmoji = (emoji: any) => {
@@ -249,14 +247,33 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
 
     return (
         <Box className={bnBoxClassName} sx={{ position: "relative" }}>
+            <Tooltip
+                placement="left"
+                size="sm"
+                title={showThreadsSidebar ? "Hide Comments" : "Show Comments"}
+                variant="outlined"
+            >
+                <IconButton
+                    color="neutral"
+                    size="sm"
+                    sx={{ position: "absolute", top: 8, right: 8, zIndex: 10 }}
+                    variant={showThreadsSidebar ? "solid" : "outlined"}
+                    onClick={() => setShowThreadsSidebar((prev) => !prev)}
+                >
+                    <ChatBubbleOutlineIcon sx={{ fontSize: 18 }} />
+                </IconButton>
+            </Tooltip>
+
             <BlockNoteView
                 className="bn-box"
-                editor={editor}
+                editor={editor as any}
                 emojiPicker={false}
                 formattingToolbar={false}
                 sideMenu={false}
+                comments={false}
+                renderEditor={false}
                 theme={mode === "dark" ? "dark" : "light"}
-                data-changing-font-demo // custom font
+                data-changing-font-demo
                 onChange={() => {
                     setBody(editor.document);
                     if (setNoteBodyEdited) {
@@ -266,109 +283,136 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                         }
                     }
                 }}
-                onClick={(e) => {
-                    const target = e.target as HTMLElement;
-                    if (target.tagName === "IMG") {
-                        handleImageClick((target as HTMLImageElement).src);
-                    }
-                }}
-                onKeyDown={(event) => {
-                    if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-                        if (editor.document.length > 1) {
-                            //Auto saving logic here
-                        }
-                    }
-                }}
             >
-                <SideMenuController
-                    sideMenu={(props) => (
-                        <SideMenu {...props} dragHandleMenu={CustomDragHandleMenu} />
-                    )}
-                />
-                <FormattingToolbarController
-                    formattingToolbar={() => (
-                        <FormattingToolbar>
-                            <BlockTypeSelect
-                                key={"blockTypeSelect"}
-                                items={[
-                                    // Gets the default Block Type Select items.
-                                    ...blockTypeSelectItems(editor.dictionary),
-                                    // Adds an item for the Alert block.
-                                    {
-                                        name: "Alert",
-                                        type: "alert",
-                                        icon: RiAlertFill,
-                                        isSelected: (block) => block.type === "alert",
-                                    } satisfies BlockTypeSelectItem,
-                                ]}
+                <div
+                    className="bn-editor-with-sidebar"
+                    onClick={(e) => {
+                        const target = e.target as HTMLElement;
+                        if (target.tagName === "IMG") {
+                            handleImageClick((target as HTMLImageElement).src);
+                        }
+                    }}
+                    onKeyDown={(event) => {
+                        if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+                            if (editor.document.length > 1) {
+                                //Auto saving logic here
+                            }
+                        }
+                    }}
+                >
+                    <div className="bn-editor-section">
+                        <BlockNoteViewEditor>
+                            <SideMenuController
+                                sideMenu={(props) => (
+                                    <SideMenu
+                                        {...props}
+                                        dragHandleMenu={CustomDragHandleMenu}
+                                    />
+                                )}
+                            />
+                            <FormattingToolbarController
+                                formattingToolbar={() => (
+                                    <FormattingToolbar>
+                                        <BlockTypeSelect
+                                            key={"blockTypeSelect"}
+                                            items={[
+                                                ...blockTypeSelectItems(editor.dictionary),
+                                                {
+                                                    name: "Alert",
+                                                    type: "alert",
+                                                    icon: RiAlertFill,
+                                                } satisfies BlockTypeSelectItem,
+                                            ]}
+                                        />
+
+                                        <BasicTextStyleButton
+                                            key={"boldStyleButton"}
+                                            basicTextStyle={"bold"}
+                                        />
+                                        <BasicTextStyleButton
+                                            key={"italicStyleButton"}
+                                            basicTextStyle={"italic"}
+                                        />
+                                        <BasicTextStyleButton
+                                            key={"underlineStyleButton"}
+                                            basicTextStyle={"underline"}
+                                        />
+                                        <BasicTextStyleButton
+                                            key={"strikeStyleButton"}
+                                            basicTextStyle={"strike"}
+                                        />
+                                        <BasicTextStyleButton
+                                            key={"codeStyleButton"}
+                                            basicTextStyle={"code"}
+                                        />
+                                        <TextAlignButton
+                                            key={"textAlignLeftButton"}
+                                            textAlignment={"left"}
+                                        />
+                                        <TextAlignButton
+                                            key={"textAlignCenterButton"}
+                                            textAlignment={"center"}
+                                        />
+                                        <TextAlignButton
+                                            key={"textAlignRightButton"}
+                                            textAlignment={"right"}
+                                        />
+                                        <ColorStyleButton key={"colorStyleButton"} />
+                                        <CreateLinkButton key={"createLinkButton"} />
+                                        <FileCaptionButton key={"fileCaptionButton"} />
+                                        <FileReplaceButton key={"fileReplaceButton"} />
+                                        <AddCommentButton key={"addCommentButton"} />
+                                        <FileDeleteButton key={"fileDeleteButton"} />
+                                        <FileDownloadButton key={"fileDownloadButton"} />
+                                        <FilePreviewButton key={"filePreviewButton"} />
+                                        <FileRenameButton key={"fileRenameButton"} />
+                                        <TableCellMergeButton
+                                            key={"tableCellMergeButton"}
+                                        />
+                                    </FormattingToolbar>
+                                )}
                             />
 
-                            <BasicTextStyleButton
-                                key={"boldStyleButton"}
-                                basicTextStyle={"bold"}
+                            <SuggestionMenuController
+                                triggerCharacter={"@"}
+                                getItems={async (query) =>
+                                    filterSuggestionItems(
+                                        MentionMenuItems(
+                                            useTEM.teamMemberProfiles,
+                                            editor,
+                                            useTEM.teamMembers
+                                        ),
+                                        query
+                                    )
+                                }
                             />
-                            <BasicTextStyleButton
-                                key={"italicStyleButton"}
-                                basicTextStyle={"italic"}
+                            <SuggestionMenuController
+                                triggerCharacter={"/"}
+                                getItems={async (query) =>
+                                    filterSuggestionItems(
+                                        getCustomSlashMenuItems(
+                                            editor as unknown as typeof schema.BlockNoteEditor
+                                        ),
+                                        query
+                                    )
+                                }
                             />
-                            <BasicTextStyleButton
-                                key={"underlineStyleButton"}
-                                basicTextStyle={"underline"}
-                            />
-                            <BasicTextStyleButton
-                                key={"strikeStyleButton"}
-                                basicTextStyle={"strike"}
-                            />
-                            <BasicTextStyleButton
-                                key={"codeStyleButton"}
-                                basicTextStyle={"code"}
-                            />
-                            <TextAlignButton key={"textAlignLeftButton"} textAlignment={"left"} />
-                            <TextAlignButton
-                                key={"textAlignCenterButton"}
-                                textAlignment={"center"}
-                            />
-                            <TextAlignButton
-                                key={"textAlignRightButton"}
-                                textAlignment={"right"}
-                            />
-                            <ColorStyleButton key={"colorStyleButton"} />
-                            <CreateLinkButton key={"createLinkButton"} />
-                            <FileCaptionButton key={"fileCaptionButton"} />
-                            <FileReplaceButton key={"fileReplaceButton"} />
-                            <AddCommentButton key={"addCommentButton"} />
-                            <AddTiptapCommentButton key={"addTiptapCommentButton"} />
-                            <FileDeleteButton key={"fileDeleteButton"} />
-                            <FileDownloadButton key={"fileDownloadButton"} />
-                            <FilePreviewButton key={"filePreviewButton"} />
-                            <FileRenameButton key={"fileRenameButton"} />
-                            <TableCellMergeButton key={"tableCellMergeButton"} />
-                        </FormattingToolbar>
-                    )}
-                />
 
-                {/* Adds a mentions menu which opens with the "@" key */}
-                <SuggestionMenuController
-                    triggerCharacter={"@"}
-                    getItems={async (query) =>
-                        // Gets the mentions menu items
-                        filterSuggestionItems(
-                            MentionMenuItems(
-                                useTEM.teamMemberProfiles,
-                                editor,
-                                useTEM.teamMembers
-                            ),
-                            query
-                        )
-                    }
-                />
-                <SuggestionMenuController
-                    triggerCharacter={"/"}
-                    // Replaces the default Slash Menu items with our custom ones.
-                    getItems={async (query) =>
-                        filterSuggestionItems(getCustomSlashMenuItems(editor), query)
-                    }
-                />
+                            <FloatingComposerController />
+                            {!showThreadsSidebar && (
+                                <ThreadsSidebarErrorBoundary>
+                                    <FloatingThreadController />
+                                </ThreadsSidebarErrorBoundary>
+                            )}
+                        </BlockNoteViewEditor>
+                    </div>
+
+                    {showThreadsSidebar && threadStore && (
+                        <div className="bn-threads-sidebar-panel">
+                            <ThreadsSidebarWithPreload filter="all" sort="position" />
+                        </div>
+                    )}
+                </div>
             </BlockNoteView>
 
             <Modal open={opened} sx={{ zIndex: 10010 }} onClose={() => setOpened(false)}>

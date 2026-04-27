@@ -243,6 +243,12 @@ export class ChatService {
         return result.success;
     }
 
+    async deleteMDMMessage(chatId: number, messageId: number): Promise<boolean> {
+        const key = `${chatId}-${messageId}`;
+        const result = await this.mdmMessageRepo.delete(key);
+        return result.success;
+    }
+
     // Delete DM thread message
     async deleteDMThreadMessage(chatId: number, messageId: number): Promise<boolean> {
         const key = `${chatId}-${messageId}`;
@@ -254,6 +260,13 @@ export class ChatService {
     async deleteGMThreadMessage(chatId: number, messageId: number): Promise<boolean> {
         const key = `${chatId}-${messageId}`;
         const result = await this.gmThreadRepo.delete(key);
+        return result.success;
+    }
+
+    // Delete MDM thread message
+    async deleteMDMThreadMessage(chatId: number, messageId: number): Promise<boolean> {
+        const key = `${chatId}-${messageId}`;
+        const result = await this.mdmThreadRepo.delete(key);
         return result.success;
     }
 

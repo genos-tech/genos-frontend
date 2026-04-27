@@ -118,13 +118,15 @@ interface JoinTeamFormElement extends HTMLFormElement {
     readonly elements: JoinTeamFormElements;
 }
 
+const base_url = import.meta.env.VITE_API_BASE_URL;
+
 const JoinTeamContent = () => {
     const navigate = useNavigate();
     const [searchTeamMessage, setSearchMessage] = useState<string | null>(null);
     const [moveToTeamErrorMessage, setMoveToTeamErrorMessage] = useState<string | null>(null);
     const [searchTeamErrorMessage, setSearchTeamErrorMessage] = useState<string | null>(null);
     const [createTeamErrorMessage, setCreateTeamErrorMessage] = useState<string | null>(null);
-    const { accessToken } = useAuth();
+    const { accessToken, setAccessToken } = useAuth();
     const [joinedTeams, setJoinedTeams] = useState<Team[]>([]);
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -820,14 +822,15 @@ const JoinTeamContent = () => {
                         </form>
                     </Box>
 
-                    {/* Back to Sign In */}
+                    {/* Sign Out */}
                     <Typography
                         level="body-sm"
                         textAlign="center"
                         sx={{ color: styles.subtitleColor }}
                     >
                         <Link
-                            href="SignIn"
+                            component="button"
+                            type="button"
                             level="title-sm"
                             sx={{
                                 color: styles.linkColor,
@@ -840,9 +843,22 @@ const JoinTeamContent = () => {
                                     color: styles.linkHover,
                                 },
                             }}
+                            onClick={async () => {
+                                try {
+                                    await fetch(`${base_url}/user/signout/`, {
+                                        method: "POST",
+                                        credentials: "include",
+                                    });
+                                } catch (error) {
+                                    console.error("Error signing out:", error);
+                                }
+                                localStorage.setItem("isSigningIn", "");
+                                setAccessToken(null);
+                                navigate("/SignIn");
+                            }}
                         >
                             <ArrowBackRoundedIcon sx={{ fontSize: 16 }} />
-                            Back to Sign In
+                            Sign Out
                         </Link>
                     </Typography>
                 </Box>

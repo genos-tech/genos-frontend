@@ -13,16 +13,19 @@ export const signIn = async (
         return res.data;
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
-            if (error.response?.status === 401) {
+            if (!error.response) {
+                console.error("Network error:", error.message);
+                setErrorMessage?.("Network error. Please check your connection and try again.");
+            } else if (error.response.status === 401) {
                 console.error("Unauthorized. Please log in again.");
-                if (setErrorMessage) {
-                    setErrorMessage("Unauthorized. Please log in again.");
-                }
+                setErrorMessage?.("Unauthorized. Please log in again.");
             } else {
-                console.error("API error:", error.response?.status, error.response?.data);
+                console.error("API error:", error.response.status, error.response.data);
+                setErrorMessage?.("Something went wrong. Please try again later.");
             }
         } else {
             console.error("Unexpected error:", error);
+            setErrorMessage?.("An unexpected error occurred. Please try again.");
         }
     }
 };

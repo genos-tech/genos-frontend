@@ -116,7 +116,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                                 mode === "dark" ? "1px black inset" : "1px lightgrey inset",
                         }}
                     >
-                        <NoteSidebar useNM={useNM} />
+                        <NoteSidebar useNM={useNM} allChats={useCM.allChats} />
                     </Box>
                 </Panel>
 

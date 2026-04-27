@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import GroupsIcon from "@mui/icons-material/Groups";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import {
     Autocomplete,
     AutocompleteOption,
+    Avatar,
     Box,
     ListItemContent,
     Stack,
@@ -51,6 +53,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
 
+    const mediaUrl = useMemo(() => import.meta.env.VITE_MEDIA_ROOT_DJANGO, []);
     const [options, setOptions] = useState<SearchListProps[]>([]);
     const loading = openSearchBox && options.length === 0;
 
@@ -246,7 +249,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
                                             }
                                         />
                                     )}
-                                    {option.type === "Group" && gmChat && (
+                                    {option.type === "Group" && gmChat ? (
                                         <GMAvatar
                                             useCM={useCM}
                                             gmChat={gmChat}
@@ -257,7 +260,18 @@ export const ChatSearch = (props: ChatSearchProps) => {
                                             useTEM={useTEM}
                                             useUISM={useUISM}
                                         />
-                                    )}
+                                    ) : option.type === "Group" ? (
+                                        <Avatar
+                                            size="sm"
+                                            src={
+                                                option.profileImagePath
+                                                    ? `${mediaUrl}/${option.profileImagePath}`
+                                                    : undefined
+                                            }
+                                        >
+                                            <GroupsIcon sx={{ fontSize: 20 }} />
+                                        </Avatar>
+                                    ) : null}
                                     <Box>
                                         <Typography
                                             level="body-sm"

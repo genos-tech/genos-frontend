@@ -21,20 +21,23 @@ export const signUp = async (
         return res.data;
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
-            if (error.response?.status === 400) {
-                console.error("HTTP 400 error:", error.response?.data);
-                if (setErrorMessage) {
-                    if (isSystemUser) {
-                        setErrorMessage("Please try with a different name.");
-                    } else {
-                        setErrorMessage("Please try with a different email.");
-                    }
+            if (!error.response) {
+                console.error("Network error:", error.message);
+                setErrorMessage?.("Network error. Please check your connection and try again.");
+            } else if (error.response.status === 400) {
+                console.error("HTTP 400 error:", error.response.data);
+                if (isSystemUser) {
+                    setErrorMessage?.("Please try with a different name.");
+                } else {
+                    setErrorMessage?.("Please try with a different email.");
                 }
             } else {
-                console.error("API error:", error.response?.status, error.response?.data);
+                console.error("API error:", error.response.status, error.response.data);
+                setErrorMessage?.("Something went wrong. Please try again later.");
             }
         } else {
             console.error("Unexpected error:", error);
+            setErrorMessage?.("An unexpected error occurred. Please try again.");
         }
     }
 };

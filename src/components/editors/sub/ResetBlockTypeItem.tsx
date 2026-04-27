@@ -1,17 +1,28 @@
-import { DragHandleMenuProps, useBlockNoteEditor, useComponentsContext } from "@blocknote/react";
+import { ReactNode } from "react";
+import { SideMenuExtension } from "@blocknote/core/extensions";
+import { useBlockNoteEditor, useComponentsContext, useExtensionState } from "@blocknote/react";
 
-export function ResetBlockTypeItem(props: DragHandleMenuProps) {
-    const editor = useBlockNoteEditor();
+export function ResetBlockTypeItem(props: { children?: ReactNode }) {
+    const editor = useBlockNoteEditor<any, any, any>();
 
     const Components = useComponentsContext()!;
+
+    const block = useExtensionState(SideMenuExtension, {
+        editor,
+        selector: (state) => state?.block,
+    });
+
+    if (block === undefined) {
+        return null;
+    }
 
     return (
         <Components.Generic.Menu.Item
             onClick={() => {
-                editor.updateBlock(props.block, { type: "paragraph" });
+                editor.updateBlock(block, { type: "paragraph" });
             }}
         >
-            Reset Type
+            {props.children || "Reset Type"}
         </Components.Generic.Menu.Item>
     );
 }

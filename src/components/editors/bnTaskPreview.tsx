@@ -2,8 +2,7 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import "../../App.css";
 
-import { useEffect, useRef, useState } from "react";
-import { codeBlock } from "@blocknote/code-block";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
     BlockNoteSchema,
     defaultBlockSpecs,
@@ -15,7 +14,6 @@ import { en } from "@blocknote/core/locales";
 import { BlockNoteView } from "@blocknote/mantine";
 import {
     AddCommentButton,
-    AddTiptapCommentButton,
     BasicTextStyleButton,
     BlockColorsItem,
     BlockTypeSelect,
@@ -25,7 +23,6 @@ import {
     CreateLinkButton,
     DefaultReactSuggestionItem,
     DragHandleMenu,
-    DragHandleMenuProps,
     FileCaptionButton,
     FileDeleteButton,
     FileDownloadButton,
@@ -41,7 +38,8 @@ import {
     SuggestionMenuController,
     TableCellMergeButton,
     TextAlignButton,
-    useCreateBlockNote,
+    FloatingComposerController,
+    FloatingThreadController,
 } from "@blocknote/react";
 import DownloadIcon from "@mui/icons-material/Download";
 import { Box, IconButton, Modal, ModalDialog, Tooltip } from "@mui/joy";
@@ -51,14 +49,17 @@ import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { useCollaborativeBlockNote } from "../../hooks/common/useCollaborativeBlockNote";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
+import { getUserColor } from "../../utils/collabUtils";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 import { Alert } from "./sub/Alert";
 import { ResetBlockTypeItem } from "./sub/ResetBlockTypeItem";
+import { ThreadsSidebarErrorBoundary } from "./sub/ThreadsSidebarErrorBoundary";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const django_url = import.meta.env.VITE_DJANGO_URL;
@@ -98,12 +99,12 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
     // To avoid rendering issues, it's good practice to define your custom drag
     // handle menu in a separate component, instead of inline within the `sideMenu`
     // prop of `SideMenuController`.
-    const CustomDragHandleMenu = (props: DragHandleMenuProps) => (
-        <DragHandleMenu {...props}>
-            <RemoveBlockItem {...props}>Delete</RemoveBlockItem>
-            <BlockColorsItem {...props}>Colors</BlockColorsItem>
+    const CustomDragHandleMenu = () => (
+        <DragHandleMenu>
+            <RemoveBlockItem>Delete</RemoveBlockItem>
+            <BlockColorsItem>Colors</BlockColorsItem>
             {/* Item which resets the hovered block's type. */}
-            <ResetBlockTypeItem {...props}>Reset Type</ResetBlockTypeItem>
+            <ResetBlockTypeItem>Reset Type</ResetBlockTypeItem>
         </DragHandleMenu>
     );
 
@@ -127,7 +128,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         },
         blockSpecs: {
             ...remainingBlockSpecs,
-            alert: Alert,
+            alert: Alert(),
         },
     });
 
@@ -160,47 +161,40 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         return `${django_url}/${uploadTaskBodyAttachmentData.taskBodyAttachmentUrl}`;
     }
 
-    // We use the English, default dictionary
     const locale = en;
-    const editor =
-        body.length > 0
-            ? useCreateBlockNote({
-                  schema,
-                  codeBlock,
-                  // We override the `placeholders` in our dictionary
-                  dictionary: {
-                      ...locale,
-                      placeholders: {
-                          ...locale.placeholders,
-                          // We override the empty document placeholder
-                          emptyDocument: "Start typing...",
-                          // We override the default placeholder
-                          default: "Type something...",
-                          // We override the heading placeholder
-                          heading: "Custom heading placeholder",
-                      },
-                  },
-                  initialContent: body,
-                  uploadFile,
-              })
-            : useCreateBlockNote({
-                  schema,
-                  codeBlock,
-                  uploadFile,
-                  // We override the `placeholders` in our dictionary
-                  dictionary: {
-                      ...locale,
-                      placeholders: {
-                          ...locale.placeholders,
-                          // We override the empty document placeholder
-                          emptyDocument: "Start typing...",
-                          // We override the default placeholder
-                          default: "Type something...",
-                          // We override the heading placeholder
-                          heading: "Custom heading placeholder",
-                      },
-                  },
-              });
+    const dictionary = useMemo(
+        () => ({
+            ...locale,
+            placeholders: {
+                ...locale.placeholders,
+                emptyDocument: "Start typing...",
+                default: "Type something...",
+                heading: "Custom heading placeholder",
+            },
+        }),
+        []
+    );
+
+    const collabUser = useMemo(
+        () => ({ name: myself.userName, color: getUserColor(myself.userId) }),
+        [myself.userName, myself.userId]
+    );
+
+    const documentName = `task-body:${taskId}`;
+
+    const { editor } = useCollaborativeBlockNote({
+        documentName,
+        user: collabUser,
+        userId: myself.userId,
+        myself,
+        accessToken,
+        schema,
+        dictionary,
+        uploadFile,
+        initialBody: body,
+        enableComments: true,
+        teamMemberProfiles: useTEM.teamMemberProfiles,
+    });
 
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
@@ -275,11 +269,12 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         <Box ref={editorRef} className={bnBoxClassName} sx={{ position: "relative" }}>
             <BlockNoteView
                 className="bn-box"
-                editor={editor}
+                editor={editor as any}
                 formattingToolbar={false}
-                sideMenu={true} // false for Chat/comment, true for Task content
+                sideMenu={true}
+                comments={false}
                 theme={mode === "dark" ? "dark" : "light"}
-                data-changing-font-demo // custom font
+                data-changing-font-demo
                 onChange={() => {
                     const comments: any[] = editor.document;
                     setNumEditorLines(countLines(comments));
@@ -322,7 +317,6 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                                         name: "Alert",
                                         type: "alert",
                                         icon: RiAlertFill,
-                                        isSelected: (block) => block.type === "alert",
                                     } satisfies BlockTypeSelectItem,
                                 ]}
                             />
@@ -361,7 +355,6 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                             <FileCaptionButton key={"fileCaptionButton"} />
                             <FileReplaceButton key={"fileReplaceButton"} />
                             <AddCommentButton key={"addCommentButton"} />
-                            <AddTiptapCommentButton key={"addTiptapCommentButton"} />
                             <FileDeleteButton key={"fileDeleteButton"} />
                             <FileDownloadButton key={"fileDownloadButton"} />
                             <FilePreviewButton key={"filePreviewButton"} />
@@ -388,11 +381,20 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                 />
                 <SuggestionMenuController
                     triggerCharacter={"/"}
-                    // Replaces the default Slash Menu items with our custom ones.
                     getItems={async (query) =>
-                        filterSuggestionItems(getCustomSlashMenuItems(editor), query)
+                        filterSuggestionItems(
+                            getCustomSlashMenuItems(
+                                editor as unknown as typeof schema.BlockNoteEditor
+                            ),
+                            query
+                        )
                     }
                 />
+
+                <FloatingComposerController />
+                <ThreadsSidebarErrorBoundary>
+                    <FloatingThreadController />
+                </ThreadsSidebarErrorBoundary>
             </BlockNoteView>
 
             <Modal open={opened} sx={{ zIndex: 10010 }} onClose={() => setOpened(false)}>

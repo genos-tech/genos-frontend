@@ -72,6 +72,7 @@ export const BubbleFlagButton = (props: BubbleFlagButtonTypes) => {
                 addFlaggedMessage({
                     flaggedMessageId: `${currentChat.chatType}-${currentChat.chatId}-${0}-${message.messageId}`,
                     chatType: currentChat.chatType,
+                    chatName: currentChat.chatName,
                     chatId: currentChat.chatId,
                     threadId: 0,
                     messageId: message.messageId,
@@ -137,6 +138,7 @@ export const BubbleFlagButton = (props: BubbleFlagButtonTypes) => {
                 addFlaggedMessage({
                     flaggedMessageId: `${currentThreadChat.chatType}-${currentThreadChat.chatId}-${threadId}-${message.messageId}`,
                     chatType: currentThreadChat.chatType,
+                    chatName: currentThreadChat.chatName,
                     chatId: currentThreadChat.chatId,
                     threadId: threadId,
                     messageId: message.messageId,

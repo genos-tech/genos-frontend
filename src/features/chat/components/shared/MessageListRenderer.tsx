@@ -119,7 +119,7 @@ export const MessageListRenderer = ({
             return (
                 prevMessage.sender.userId === message.sender.userId &&
                 getTimeDiffSeconds(prevMessage.tsSent, message.tsSent) < limitSeconds &&
-                (isThread || (chat.chatType !== 3 && chat.chatType !== 4))
+                (isThread || chat.chatType !== 3)
             );
         }
         return false;
@@ -155,22 +155,30 @@ export const MessageListRenderer = ({
         return { paddingTop, paddingBottom };
     };
 
-    const getFocusedState = (message: MessageProps | ThreadMessageProps) => {
+    const getFocusedState = (message: MessageProps | ThreadMessageProps): "focused" | "threadActive" | false => {
         if (isThread) {
-            // For thread messages, check against currentThreadChat's moveToSpecificIndex
-            return (
+            if (
                 (message as ThreadMessageProps).messageIdWithChatIdAndThreadId ===
                 useCM.currentThreadChat?.moveToSpecificIndex
-            );
+            ) {
+                return "focused";
+            }
+            return false;
         }
-        return (
+        if (
             (message as MessageProps).messageIdWithChatId ===
-                useCM.currentMainChat?.moveToSpecificIndex ||
-            (useCM.isThreadVisible &&
-                useCM.currentThreadChat &&
-                message.messageId === useCM.currentThreadChat.threadId) ||
-            false
-        );
+            useCM.currentMainChat?.moveToSpecificIndex
+        ) {
+            return "focused";
+        }
+        if (
+            useCM.isThreadVisible &&
+            useCM.currentThreadChat &&
+            message.messageId === useCM.currentThreadChat.threadId
+        ) {
+            return "threadActive";
+        }
+        return false;
     };
 
     return (

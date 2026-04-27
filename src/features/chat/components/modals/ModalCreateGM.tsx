@@ -1,13 +1,17 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { keyframes } from "@emotion/react";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import PublicIcon from "@mui/icons-material/Public";
+import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import {
     Alert,
+    Avatar,
     Box,
     Button,
     Checkbox,
+    Chip,
     Input,
     Modal,
     ModalDialog,
@@ -18,6 +22,7 @@ import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UserProps } from "../../../../types/admin";
 import { createChatGroup } from "../../services/createChatGroup";
 
@@ -32,16 +37,63 @@ type Props = {
     open: boolean;
     setOpen: (value: boolean) => void;
     useCM: ChatManagementState;
+    useTEM: TeamManagementState;
 };
 
-export const ModalCreateGM: React.FC<Props> = ({ socket, myself, open, setOpen, useCM }) => {
+export const ModalCreateGM: React.FC<Props> = ({
+    socket,
+    myself,
+    open,
+    setOpen,
+    useCM,
+    useTEM,
+}) => {
     const { accessToken } = useAuth();
 
     const [isPrivate, setIsPrivate] = useState(true);
     const [CreateCGErrorMessage, setCreateCGErrorMessage] = useState<string | null>(null);
     const [chatName, setGroupName] = useState("");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [selectedMembers, setSelectedMembers] = useState<UserProps[]>([]);
+
+    useEffect(() => {
+        if (!open) {
+            setSearchQuery("");
+            setSelectedMembers([]);
+            setCreateCGErrorMessage(null);
+        }
+    }, [open]);
+
+    const availableMembers = useMemo(() => {
+        return useTEM.teamMembers.filter((m) => m.userId !== myself.userId);
+    }, [useTEM.teamMembers, myself.userId]);
+
+    const filteredMembers = useMemo(() => {
+        if (!searchQuery.trim()) return availableMembers;
+        const query = searchQuery.toLowerCase();
+        return availableMembers.filter(
+            (m) =>
+                m.userName.toLowerCase().includes(query) ||
+                m.userEmail.toLowerCase().includes(query)
+        );
+    }, [availableMembers, searchQuery]);
+
+    const handleToggleMember = (member: UserProps) => {
+        setSelectedMembers((prev) => {
+            const isSelected = prev.some((m) => m.userId === member.userId);
+            return isSelected
+                ? prev.filter((m) => m.userId !== member.userId)
+                : [...prev, member];
+        });
+    };
+
+    const handleRemoveMember = (memberId: string) => {
+        setSelectedMembers((prev) => prev.filter((m) => m.userId !== memberId));
+    };
+
     const handleCreateGroup = () => {
         if (chatName.trim()) {
+            const memberIds = selectedMembers.map((m) => m.userId);
             createChatGroup(
                 myself,
                 chatName,
@@ -51,7 +103,8 @@ export const ModalCreateGM: React.FC<Props> = ({ socket, myself, open, setOpen, 
                 setOpen,
                 setGroupName,
                 accessToken ? accessToken : "",
-                isPrivate
+                isPrivate,
+                memberIds
             );
         }
     };
@@ -75,8 +128,11 @@ export const ModalCreateGM: React.FC<Props> = ({ socket, myself, open, setOpen, 
                     borderRadius: "16px",
                     boxShadow:
                         "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(59, 130, 246, 0.1)",
-                    minWidth: "360px",
+                    minWidth: "420px",
+                    maxWidth: "500px",
+                    maxHeight: "85vh",
                     p: 3,
+                    overflow: "auto",
                 }}
             >
                 {/* Header */}
@@ -105,11 +161,11 @@ export const ModalCreateGM: React.FC<Props> = ({ socket, myself, open, setOpen, 
                             fontWeight: 600,
                         }}
                     >
-                        Create New Group
+                        Create New Group Message
                     </Typography>
                 </Box>
 
-                {/* Input */}
+                {/* Group Name Input */}
                 <Input
                     placeholder="Enter group name..."
                     value={chatName}
@@ -133,7 +189,7 @@ export const ModalCreateGM: React.FC<Props> = ({ socket, myself, open, setOpen, 
                     }}
                 />
 
-                {/* Checkbox */}
+                {/* Private/Public Toggle */}
                 <Box
                     sx={{
                         display: "flex",
@@ -176,6 +232,182 @@ export const ModalCreateGM: React.FC<Props> = ({ socket, myself, open, setOpen, 
                         {isPrivate ? "Private Group" : "Public Group"}
                     </Typography>
                 </Box>
+
+                {/* Selected Members Chips */}
+                {selectedMembers.length > 0 && (
+                    <Box
+                        sx={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            gap: 0.5,
+                            mb: 2,
+                            p: 1.5,
+                            borderRadius: "10px",
+                            backgroundColor: "rgba(59, 130, 246, 0.1)",
+                            border: "1px solid rgba(59, 130, 246, 0.2)",
+                        }}
+                    >
+                        {selectedMembers.map((member) => (
+                            <Chip
+                                key={member.userId}
+                                size="sm"
+                                variant="soft"
+                                color="primary"
+                                endDecorator={
+                                    <CloseRoundedIcon
+                                        sx={{ fontSize: 14, cursor: "pointer" }}
+                                        onClick={() => handleRemoveMember(member.userId)}
+                                    />
+                                }
+                                sx={{
+                                    "--Chip-gap": "4px",
+                                    backgroundColor: "rgba(59, 130, 246, 0.2)",
+                                }}
+                            >
+                                {member.userName}
+                            </Chip>
+                        ))}
+                    </Box>
+                )}
+
+                {/* Member Search */}
+                <Input
+                    placeholder="Search team members..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    startDecorator={
+                        <SearchRoundedIcon sx={{ color: "rgba(255, 255, 255, 0.4)" }} />
+                    }
+                    sx={{
+                        mb: 1,
+                        "--Input-focusedThickness": "1px",
+                        "--Input-focusedHighlight": "rgba(59, 130, 246, 0.5)",
+                        backgroundColor: "rgba(255, 255, 255, 0.05)",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        borderRadius: "10px",
+                        transition: "all 0.2s ease",
+                        "&:hover": {
+                            borderColor: "rgba(59, 130, 246, 0.3)",
+                        },
+                    }}
+                />
+
+                {/* Member List */}
+                <Box
+                    sx={{
+                        maxHeight: "200px",
+                        overflowY: "auto",
+                        mb: 1,
+                        borderRadius: "10px",
+                        backgroundColor: "rgba(255, 255, 255, 0.02)",
+                        border: "1px solid rgba(255, 255, 255, 0.05)",
+                    }}
+                >
+                    {filteredMembers.length === 0 ? (
+                        <Typography
+                            level="body-sm"
+                            sx={{
+                                p: 3,
+                                textAlign: "center",
+                                color: "rgba(255, 255, 255, 0.4)",
+                            }}
+                        >
+                            {searchQuery
+                                ? "No members found matching your search."
+                                : "No team members available."}
+                        </Typography>
+                    ) : (
+                        filteredMembers.map((member) => {
+                            const isSelected = selectedMembers.some(
+                                (m) => m.userId === member.userId
+                            );
+                            return (
+                                <Box
+                                    key={member.userId}
+                                    onClick={() => handleToggleMember(member)}
+                                    sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 1.5,
+                                        p: 1.5,
+                                        cursor: "pointer",
+                                        borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
+                                        transition: "all 0.15s ease",
+                                        backgroundColor: isSelected
+                                            ? "rgba(59, 130, 246, 0.1)"
+                                            : "transparent",
+                                        "&:hover": {
+                                            backgroundColor: isSelected
+                                                ? "rgba(59, 130, 246, 0.15)"
+                                                : "rgba(255, 255, 255, 0.05)",
+                                        },
+                                        "&:last-child": {
+                                            borderBottom: "none",
+                                        },
+                                    }}
+                                >
+                                    <Checkbox
+                                        checked={isSelected}
+                                        color="primary"
+                                        variant="soft"
+                                        sx={{ pointerEvents: "none" }}
+                                    />
+                                    <Avatar
+                                        size="sm"
+                                        src={member.avatarImgPath}
+                                        sx={{
+                                            border: isSelected
+                                                ? "2px solid rgba(59, 130, 246, 0.5)"
+                                                : "2px solid transparent",
+                                        }}
+                                    >
+                                        {member.userName?.[0]?.toUpperCase()}
+                                    </Avatar>
+                                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                                        <Typography
+                                            level="body-sm"
+                                            sx={{
+                                                fontWeight: 500,
+                                                color: "rgba(255, 255, 255, 0.9)",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
+                                            }}
+                                        >
+                                            {member.userName}
+                                        </Typography>
+                                        <Typography
+                                            level="body-xs"
+                                            sx={{
+                                                color: "rgba(255, 255, 255, 0.4)",
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
+                                            }}
+                                        >
+                                            {member.userEmail}
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                            );
+                        })
+                    )}
+                </Box>
+
+                {/* Selected Count */}
+                <Typography
+                    level="body-xs"
+                    sx={{
+                        mb: 2,
+                        color:
+                            selectedMembers.length > 0
+                                ? "rgba(59, 130, 246, 0.8)"
+                                : "rgba(255, 255, 255, 0.4)",
+                    }}
+                >
+                    {selectedMembers.length} member{selectedMembers.length !== 1 ? "s" : ""}{" "}
+                    selected (optional)
+                </Typography>
 
                 {/* Error Alert */}
                 {CreateCGErrorMessage && (

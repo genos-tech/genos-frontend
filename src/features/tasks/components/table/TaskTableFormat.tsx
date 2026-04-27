@@ -1,8 +1,11 @@
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
+import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
+import KeyboardArrowRightRoundedIcon from "@mui/icons-material/KeyboardArrowRightRounded";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import PendingIcon from "@mui/icons-material/Pending";
+import SubdirectoryArrowRightRoundedIcon from "@mui/icons-material/SubdirectoryArrowRightRounded";
 import { Avatar, Box, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Chip, IconButton, MenuItem, Select } from "@mui/material";
@@ -13,6 +16,7 @@ import dayjs from "dayjs";
 import { PulseDot } from "../../../../components/ui/misc/PulseDot";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
+import { TaskTableProps } from "../../../../types/tasks";
 import { effortLevels, priorities } from "../../utils/taskMeta";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
@@ -68,13 +72,61 @@ type getTaskColumnsProps = {
     accessToken: string | null;
     teamMembers: UserProps[];
     useTM: TaskManagementState;
+    expandedRows: Set<string>;
+    toggleExpand: (id: string) => void;
+    childrenByParent: Map<string, TaskTableProps[]>;
 };
 
 export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
-    const { myself, teamMembers, useTM } = props;
+    const { myself, teamMembers, useTM, expandedRows, toggleExpand, childrenByParent } = props;
     const { mode } = useColorScheme();
 
     return [
+        {
+            field: "__expand",
+            headerName: "",
+            width: 40,
+            sortable: false,
+            filterable: false,
+            disableColumnMenu: true,
+            resizable: false,
+            renderCell: (params: GridRenderCellParams) => {
+                const isChild = !!params.row.parentTaskId;
+                if (isChild) {
+                    return (
+                        <SubdirectoryArrowRightRoundedIcon
+                            sx={{
+                                fontSize: 16,
+                                color:
+                                    mode === "dark" ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.2)",
+                            }}
+                        />
+                    );
+                }
+                const hasChildren = childrenByParent.has(String(params.row.id));
+                if (!hasChildren) return null;
+                const isExpanded = expandedRows.has(String(params.row.id));
+                return (
+                    <IconButton
+                        size="small"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            toggleExpand(String(params.row.id));
+                        }}
+                        sx={{
+                            color: mode === "dark" ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.5)",
+                            p: 0.25,
+                        }}
+                    >
+                        {isExpanded ? (
+                            <KeyboardArrowDownRoundedIcon sx={{ fontSize: 20 }} />
+                        ) : (
+                            <KeyboardArrowRightRoundedIcon sx={{ fontSize: 20 }} />
+                        )}
+                    </IconButton>
+                );
+            },
+        },
         {
             field: "id",
             headerName: "ID",
@@ -232,6 +284,24 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
             width: 300,
             editable: true,
             headerAlign: "left",
+            renderCell: (params: GridRenderCellParams) => {
+                const isChild = !!params.row.parentTaskId;
+                return (
+                    <Box
+                        sx={{
+                            pl: isChild ? 2 : 0,
+                            display: "flex",
+                            alignItems: "center",
+                            width: "100%",
+                            height: "100%",
+                            fontWeight: isChild ? 400 : "inherit",
+                            opacity: isChild ? 0.85 : 1,
+                        }}
+                    >
+                        {params.value}
+                    </Box>
+                );
+            },
         },
         {
             field: "assigneeId",

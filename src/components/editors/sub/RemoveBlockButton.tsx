@@ -1,11 +1,20 @@
-import { SideMenuProps, useBlockNoteEditor, useComponentsContext } from "@blocknote/react";
+import { SideMenuExtension } from "@blocknote/core/extensions";
+import { useBlockNoteEditor, useComponentsContext, useExtensionState } from "@blocknote/react";
 import { MdDelete } from "react-icons/md";
 
-// Custom Side Menu button to remove the hovered block.
-export function RemoveBlockButton(props: SideMenuProps) {
-    const editor = useBlockNoteEditor();
+export function RemoveBlockButton() {
+    const editor = useBlockNoteEditor<any, any, any>();
 
     const Components = useComponentsContext()!;
+
+    const block = useExtensionState(SideMenuExtension, {
+        editor,
+        selector: (state) => state?.block,
+    });
+
+    if (block === undefined) {
+        return null;
+    }
 
     return (
         <Components.SideMenu.Button
@@ -14,7 +23,7 @@ export function RemoveBlockButton(props: SideMenuProps) {
                 <MdDelete
                     size={24}
                     onClick={() => {
-                        editor.removeBlocks([props.block]);
+                        editor.removeBlocks([block]);
                     }}
                 />
             }

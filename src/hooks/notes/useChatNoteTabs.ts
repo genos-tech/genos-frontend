@@ -21,16 +21,19 @@ export interface UseChatNoteTabsProps {
 export const useChatNoteTabs = ({ useNM }: UseChatNoteTabsProps): ChatNoteTabActions => {
     const handleCloseTab = useCallback(
         async (tabIndex: number, closingNoteId: number) => {
-            const indexOfNextNote = tabIndex === 0 ? 1 : tabIndex - 1;
+            const remainingTabs = useNM.tabItems.filter((t) => t.noteId !== closingNoteId);
             const nextTabIndex = Math.max(tabIndex - 1, 0);
 
-            useNM.setTabItems(useNM.tabItems.filter((t) => t.noteId !== closingNoteId));
+            useNM.setTabItems(remainingTabs);
 
-            await useNM.loadNote(
-                useNM.tabItems[indexOfNextNote].noteType,
-                useNM.tabItems[indexOfNextNote].noteId,
-                nextTabIndex
-            );
+            if (remainingTabs.length > 0) {
+                const safeIndex = Math.min(nextTabIndex, remainingTabs.length - 1);
+                await useNM.loadNote(
+                    remainingTabs[safeIndex].noteType,
+                    remainingTabs[safeIndex].noteId,
+                    safeIndex
+                );
+            }
         },
         [useNM]
     );

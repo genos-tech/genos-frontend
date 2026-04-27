@@ -13,6 +13,8 @@ import {
     GlobalStyles,
     Input,
     Link,
+    Modal,
+    ModalDialog,
     Stack,
     Typography,
 } from "@mui/joy";
@@ -79,6 +81,7 @@ const SignInContent = () => {
     const navigate = useNavigate();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [rememberEmail, setRememberEmail] = useState<boolean>(false);
+    const [openForgotPassword, setOpenForgotPassword] = useState<boolean>(false);
     const { setAccessToken } = useAuth();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -322,7 +325,8 @@ const SignInContent = () => {
                                         }}
                                     />
                                     <Link
-                                        href="#"
+                                        component="button"
+                                        type="button"
                                         level="body-sm"
                                         sx={{
                                             color: styles.linkColor,
@@ -332,6 +336,7 @@ const SignInContent = () => {
                                                 color: styles.linkHover,
                                             },
                                         }}
+                                        onClick={() => setOpenForgotPassword(true)}
                                     >
                                         Forgot password?
                                     </Link>
@@ -373,6 +378,73 @@ const SignInContent = () => {
                     </Typography>
                 </Box>
             </Box>
+
+            <Modal
+                open={openForgotPassword}
+                onClose={() => setOpenForgotPassword(false)}
+                sx={{ backdropFilter: "blur(4px)" }}
+            >
+                <ModalDialog
+                    sx={{
+                        background: styles.cardBg,
+                        border: `1px solid ${styles.cardBorder}`,
+                        borderRadius: "16px",
+                        boxShadow: styles.cardShadow,
+                        p: 3,
+                        maxWidth: 400,
+                    }}
+                >
+                    <Typography
+                        level="title-lg"
+                        sx={{
+                            background: styles.titleGradient,
+                            backgroundClip: "text",
+                            WebkitBackgroundClip: "text",
+                            WebkitTextFillColor: "transparent",
+                            fontWeight: 700,
+                            mb: 1,
+                        }}
+                    >
+                        Forgot Password?
+                    </Typography>
+                    <Typography level="body-md" sx={{ color: styles.subtitleColor, mb: 2 }}>
+                        Please contact the app owner to reset your password.
+                    </Typography>
+                    <Typography
+                        component="a"
+                        href="mailto:ken@genos.tech?subject=Password%20Reset%20Request&body=Hi%2C%0A%0AI%20forgot%20my%20password.%20Could%20you%20please%20reset%20it%3F%0A%0AMy%20email%3A<replace_with_your_email>%20%0A%0AThank%20you."
+                        startDecorator={
+                            <EmailRoundedIcon sx={{ color: styles.accentColor, fontSize: 20 }} />
+                        }
+                        sx={{
+                            textDecoration: "none",
+                            color: styles.linkColor,
+                            fontWeight: 600,
+                            fontSize: "15px",
+                            transition: "all 0.2s ease",
+                            "&:hover": { color: styles.linkHover },
+                        }}
+                    >
+                        ken@genos.tech
+                    </Typography>
+                    <Button
+                        variant="outlined"
+                        sx={{
+                            mt: 2,
+                            borderRadius: "10px",
+                            borderColor: styles.cardBorder,
+                            color: styles.linkColor,
+                            "&:hover": {
+                                borderColor: styles.accentColor,
+                                background: `${styles.accentColor}15`,
+                            },
+                        }}
+                        onClick={() => setOpenForgotPassword(false)}
+                    >
+                        Close
+                    </Button>
+                </ModalDialog>
+            </Modal>
         </Box>
     );
 };

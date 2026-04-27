@@ -1,6 +1,7 @@
 import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
+import { authApi } from "../../../services/api";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps, CreateGMResponse, MessageProps } from "../../../types/chat";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
@@ -110,7 +111,8 @@ export const createChatGroup = async (
     setOpen: (e: boolean) => void,
     setGroupName: (e: string) => void,
     accessToken: string,
-    isPrivate: boolean
+    isPrivate: boolean,
+    selectedMemberIds: string[] = []
 ) => {
     const data: CreateGMResponse = await createGMChat(
         accessToken,
@@ -145,6 +147,20 @@ export const createChatGroup = async (
                 });
             }
         );
+
+        for (const memberId of selectedMemberIds) {
+            try {
+                const api = authApi(accessToken);
+                if (api) {
+                    await api.post("/gm/join/", {
+                        gm_id: data.chatId,
+                        attendee_id: memberId,
+                    });
+                }
+            } catch (error) {
+                console.error(`Failed to add member ${memberId} to GM:`, error);
+            }
+        }
 
         addGMChatAndMessage(myself, data, isPrivate, useCM);
         setOpen(false);

@@ -5,6 +5,15 @@ import { ReactionProps } from "./common";
 import { ProjectProps } from "./tasks";
 
 // Chat Props
+export type MDMMemberProps = {
+    userId: string;
+    userName: string;
+    userEmail?: string;
+    avatarImgPath?: string;
+    teamId?: string;
+    teamName?: string;
+};
+
 export type AllChatProps = {
     chatType: number;
     chatId: number;
@@ -20,6 +29,7 @@ export type AllChatProps = {
     profileImagePath?: string;
     isPinned?: boolean;
     tsLastAllReadActivity?: string;
+    mdmMembers?: MDMMemberProps[];
 };
 
 export type ChatProps = {
@@ -41,6 +51,7 @@ export type ChatProps = {
     profileImagePath?: string;
     isPinned?: boolean;
     tsLastAllReadActivity?: string;
+    mdmMembers?: MDMMemberProps[];
 };
 
 // Thread Props
@@ -243,6 +254,7 @@ export type SearchListProps = {
     dmPartnerUser: UserProps;
     isPrivate: boolean;
     isJoined: boolean;
+    profileImagePath?: string;
 };
 
 export type LoadSearchListResponse = {

@@ -2,11 +2,13 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../../context/AuthContext";
+import { ChatService } from "../../../db/services/chat.service";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../types/admin";
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../types/chat";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
+import { loadMDMHistory } from "../services/loadMDMHistory";
 import { popSpecificMessages } from "../services/popSpecificMessages";
 import { loadSpecificThreadMessagesByTaskId } from "../services/loadSpecificThreadMessagesByTaskId";
 import { loadSpecificThreadMessages } from "../services/loadSpecificThreadMessages";
@@ -69,6 +71,8 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
     const isNavigatingFromUrl = useRef(false);
     // Ref to track the last URL we navigated to (to avoid duplicate navigations)
     const lastNavigatedPath = useRef("");
+    // Ref to track pathname changes vs allChats.length changes in the URL sync effect
+    const prevPathnameRef = useRef("");
 
     // Memoized parsed route - only recalculates when pathname changes
     const parsedRoute = useMemo((): ParsedRoute => {
@@ -221,6 +225,9 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
     useEffect(() => {
         const { chatType, chatId, threadId, messageId } = parsedRoute;
 
+        const isPathnameChange = prevPathnameRef.current !== pathname;
+        prevPathnameRef.current = pathname;
+
         // If no chat type in URL, redirect to default (dm)
         if (!chatType) {
             const lastChatType = localStorage.getItem("lastChatType");
@@ -248,7 +255,9 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
         const allChatsLength = useCM.allChats.length;
         if (!chatId || allChatsLength === 0) return;
 
-        const existingChat = useCM.allChats.find((c) => c.chatId === chatId);
+        const existingChat = useCM.allChats.find(
+            (c) => c.chatId === chatId && c.chatType === paneType
+        );
         if (!existingChat) return;
 
         const currentMainChatId = useCM.currentMainChat?.chatId;
@@ -265,20 +274,42 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
         }
         // If it's a different chat, load it
         else if (currentMainChatId !== chatId) {
+            // When only allChats.length changed (not the URL), and currentMainChat is
+            // already set, don't override it. This prevents the URL sync from reverting
+            // a chat that was just set programmatically (e.g. via moveToSelectedChat).
+            if (!isPathnameChange && currentMainChatId !== undefined) return;
+
             isNavigatingFromUrl.current = true;
 
             popSpecificMessages(chatId, existingChat.chatType)
-                .then((messages: MessageProps[]) => {
-                    if (messages.length === 0) return;
+                .then(async (messages: MessageProps[]) => {
+                    let resolvedMessages = messages;
+                    if (resolvedMessages.length === 0 && existingChat.chatType === 4) {
+                        try {
+                            const data = await loadMDMHistory(
+                                myself.teamId, myself.teamName, myself.userId, accessToken, chatId
+                            );
+                            const mdmChat = data?.chat_history?.[0];
+                            if (mdmChat?.messages?.length > 0) {
+                                resolvedMessages = [...mdmChat.messages].sort(
+                                    (a: MessageProps, b: MessageProps) => a.messageId - b.messageId
+                                );
+                                await new ChatService().batchInsertMDMMessages(resolvedMessages);
+                            }
+                        } catch (e) {
+                            console.error("Failed to load MDM messages from backend:", e);
+                        }
+                    }
+                    if (resolvedMessages.length === 0) return;
 
-                    const lastMessage = messages[messages.length - 1];
+                    const lastMessage = resolvedMessages[resolvedMessages.length - 1];
                     const newChat: ChatProps = {
                         chatId: existingChat.chatId,
                         chatName: existingChat.chatName,
                         chatType: existingChat.chatType,
                         dmPartnerUser: existingChat.dmPartnerUser,
                         lastReadMessageId: lastMessage.messageId,
-                        messages,
+                        messages: resolvedMessages,
                         latestMessage: existingChat.latestMessage,
                         latestMessageText: existingChat.latestMessageText,
                         TSLastMessage: existingChat.TSLastMessage,
@@ -327,15 +358,22 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
 
     // Update URL when main chat changes (user navigates via UI)
     useEffect(() => {
-        const { chatId: urlChatId } = parsedRoute;
+        const { chatId: urlChatId, chatType: urlChatType } = parsedRoute;
 
         // Skip if we're currently navigating from URL (to avoid circular updates)
-        if (isNavigatingFromUrl.current || urlChatId === useCM.currentMainChat?.chatId) {
+        const currentMainChat = useCM.currentMainChat;
+        const urlChatTypeNum = urlChatType ? CHAT_TYPE_MAP[urlChatType] : undefined;
+        if (
+            isNavigatingFromUrl.current ||
+            (urlChatId === currentMainChat?.chatId && urlChatTypeNum === currentMainChat?.chatType)
+        ) {
             return;
         }
 
-        const currentMainChat = useCM.currentMainChat;
         if (!currentMainChat || currentMainChat.chatId === -1) return;
+
+        // When a thread is visible, let the thread URL effect handle the full URL
+        if (useCM.isThreadVisible && useCM.currentThreadChat) return;
 
         const typePath = CHAT_TYPE_REVERSE_MAP[currentMainChat.chatType];
         if (!typePath) return;
@@ -347,7 +385,7 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
             navigate(newPath, { replace: true });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [useCM.currentMainChat?.chatId]);
+    }, [useCM.currentMainChat?.chatId, useCM.currentMainChat?.chatType]);
 
     // Update URL when thread opens
     useEffect(() => {
@@ -370,8 +408,17 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
             ? currentThreadChat.taskId 
             : currentThreadChat.threadId;
 
-        // Get the message id from the current path
-        const { messageId } = parsedRoute;
+        // Try to get message ID from the current path first, then from moveToSpecificIndex
+        let { messageId } = parsedRoute;
+        if (!messageId && currentThreadChat.moveToSpecificIndex) {
+            const parts = currentThreadChat.moveToSpecificIndex.split("-");
+            if (parts.length >= 3) {
+                const parsedMsgId = Number(parts[parts.length - 1]);
+                if (!isNaN(parsedMsgId) && parsedMsgId > 0) {
+                    messageId = parsedMsgId;
+                }
+            }
+        }
 
         const newPath = messageId
             ? buildChatPath(typePath, currentMainChat.chatId, threadId, messageId)
