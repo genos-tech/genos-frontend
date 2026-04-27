@@ -2,7 +2,7 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
 import { useState } from "react";
-import { codeBlock } from "@blocknote/code-block";
+import { codeBlockOptions } from "@blocknote/code-block";
 import {
     BlockNoteSchema,
     defaultBlockSpecs,
@@ -72,7 +72,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
 
     const editor = useCreateBlockNote({
         schema,
-        codeBlock,
+        codeBlock: codeBlockOptions,
         initialContent: content.slice(0, -1),
     });
 

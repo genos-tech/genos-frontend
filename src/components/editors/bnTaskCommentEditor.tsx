@@ -3,7 +3,7 @@ import "@blocknote/mantine/style.css";
 import "../../App.css";
 
 import { useEffect, useRef, useState } from "react";
-import { codeBlock } from "@blocknote/code-block";
+import { codeBlockOptions } from "@blocknote/code-block";
 import {
     BlockNoteSchema,
     defaultBlockSpecs,
@@ -113,7 +113,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
 
     const editor = useCreateBlockNote({
         schema,
-        codeBlock,
+        codeBlock: codeBlockOptions,
         // We override the `placeholders` in our dictionary
         dictionary: {
             ...locale,

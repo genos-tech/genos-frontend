@@ -3,7 +3,7 @@ import "@blocknote/mantine/style.css";
 import "../../App.css";
 
 import { useEffect, useState } from "react";
-import { codeBlock } from "@blocknote/code-block";
+import { codeBlockOptions } from "@blocknote/code-block";
 import {
     BlockNoteSchema,
     defaultBlockSpecs,
@@ -25,7 +25,6 @@ import {
     CreateLinkButton,
     DefaultReactSuggestionItem,
     DragHandleMenu,
-    DragHandleMenuProps,
     FileCaptionButton,
     FileDeleteButton,
     FileDownloadButton,
@@ -99,12 +98,12 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
     // To avoid rendering issues, it's good practice to define your custom drag
     // handle menu in a separate component, instead of inline within the `sideMenu`
     // prop of `SideMenuController`.
-    const CustomDragHandleMenu = (props: DragHandleMenuProps) => (
-        <DragHandleMenu {...props}>
-            <RemoveBlockItem {...props}>Delete</RemoveBlockItem>
-            <BlockColorsItem {...props}>Colors</BlockColorsItem>
+    const CustomDragHandleMenu = () => (
+        <DragHandleMenu>
+            <RemoveBlockItem>Delete</RemoveBlockItem>
+            <BlockColorsItem>Colors</BlockColorsItem>
             {/* Item which resets the hovered block's type. */}
-            <ResetBlockTypeItem {...props}>Reset Type</ResetBlockTypeItem>
+            <ResetBlockTypeItem>Reset Type</ResetBlockTypeItem>
         </DragHandleMenu>
     );
 
@@ -128,7 +127,7 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
         },
         blockSpecs: {
             ...remainingBlockSpecs,
-            alert: Alert,
+            alert: Alert(),
         },
     });
 
@@ -165,7 +164,7 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
         body.length > 0
             ? useCreateBlockNote({
                   schema,
-                  codeBlock,
+                  codeBlock: codeBlockOptions,
                   // We override the `placeholders` in our dictionary
                   dictionary: {
                       ...locale,
@@ -184,7 +183,7 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
               })
             : useCreateBlockNote({
                   schema,
-                  codeBlock,
+                  codeBlock: codeBlockOptions,
                   uploadFile,
                   // We override the `placeholders` in our dictionary
                   dictionary: {
@@ -298,7 +297,6 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                                         name: "Alert",
                                         type: "alert",
                                         icon: RiAlertFill,
-                                        isSelected: (block) => block.type === "alert",
                                     } satisfies BlockTypeSelectItem,
                                 ]}
                             />

@@ -23,7 +23,6 @@ import {
     CreateLinkButton,
     DefaultReactSuggestionItem,
     DragHandleMenu,
-    DragHandleMenuProps,
     FileCaptionButton,
     FileDeleteButton,
     FileDownloadButton,
@@ -98,12 +97,12 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
     // To avoid rendering issues, it's good practice to define your custom drag
     // handle menu in a separate component, instead of inline within the `sideMenu`
     // prop of `SideMenuController`.
-    const CustomDragHandleMenu = (props: DragHandleMenuProps) => (
-        <DragHandleMenu {...props}>
-            <RemoveBlockItem {...props}>Delete</RemoveBlockItem>
-            <BlockColorsItem {...props}>Colors</BlockColorsItem>
+    const CustomDragHandleMenu = () => (
+        <DragHandleMenu>
+            <RemoveBlockItem>Delete</RemoveBlockItem>
+            <BlockColorsItem>Colors</BlockColorsItem>
             {/* Item which resets the hovered block's type. */}
-            <ResetBlockTypeItem {...props}>Reset Type</ResetBlockTypeItem>
+            <ResetBlockTypeItem>Reset Type</ResetBlockTypeItem>
         </DragHandleMenu>
     );
 
@@ -127,7 +126,7 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
         },
         blockSpecs: {
             ...remainingBlockSpecs,
-            alert: Alert,
+            alert: Alert(),
         },
     });
 
@@ -243,12 +242,12 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
         <Box className={bnBoxClassName} sx={{ position: "relative" }}>
             <BlockNoteView
                 className="bn-box"
-                editor={editor}
+                editor={editor as any}
                 emojiPicker={false}
                 formattingToolbar={false}
                 sideMenu={false}
                 theme={mode === "dark" ? "dark" : "light"}
-                data-changing-font-demo // custom font
+                data-changing-font-demo
                 onChange={() => {
                     setBody(editor.document);
                     if (setNoteBodyEdited) {
@@ -290,7 +289,6 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
                                         name: "Alert",
                                         type: "alert",
                                         icon: RiAlertFill,
-                                        isSelected: (block) => block.type === "alert",
                                     } satisfies BlockTypeSelectItem,
                                 ]}
                             />

@@ -22,7 +22,6 @@ import {
     CreateLinkButton,
     DefaultReactSuggestionItem,
     DragHandleMenu,
-    DragHandleMenuProps,
     FileCaptionButton,
     FileDeleteButton,
     FileDownloadButton,
@@ -96,12 +95,12 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
     // To avoid rendering issues, it's good practice to define your custom drag
     // handle menu in a separate component, instead of inline within the `sideMenu`
     // prop of `SideMenuController`.
-    const CustomDragHandleMenu = (props: DragHandleMenuProps) => (
-        <DragHandleMenu {...props}>
-            <RemoveBlockItem {...props}>Delete</RemoveBlockItem>
-            <BlockColorsItem {...props}>Colors</BlockColorsItem>
+    const CustomDragHandleMenu = () => (
+        <DragHandleMenu>
+            <RemoveBlockItem>Delete</RemoveBlockItem>
+            <BlockColorsItem>Colors</BlockColorsItem>
             {/* Item which resets the hovered block's type. */}
-            <ResetBlockTypeItem {...props}>Reset Type</ResetBlockTypeItem>
+            <ResetBlockTypeItem>Reset Type</ResetBlockTypeItem>
         </DragHandleMenu>
     );
 
@@ -125,7 +124,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         },
         blockSpecs: {
             ...remainingBlockSpecs,
-            alert: Alert,
+            alert: Alert(),
         },
     });
 
@@ -264,11 +263,11 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         <Box ref={editorRef} className={bnBoxClassName} sx={{ position: "relative" }}>
             <BlockNoteView
                 className="bn-box"
-                editor={editor}
+                editor={editor as any}
                 formattingToolbar={false}
-                sideMenu={true} // false for Chat/comment, true for Task content
+                sideMenu={true}
                 theme={mode === "dark" ? "dark" : "light"}
-                data-changing-font-demo // custom font
+                data-changing-font-demo
                 onChange={() => {
                     const comments: any[] = editor.document;
                     setNumEditorLines(countLines(comments));
@@ -311,7 +310,6 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                                         name: "Alert",
                                         type: "alert",
                                         icon: RiAlertFill,
-                                        isSelected: (block) => block.type === "alert",
                                     } satisfies BlockTypeSelectItem,
                                 ]}
                             />

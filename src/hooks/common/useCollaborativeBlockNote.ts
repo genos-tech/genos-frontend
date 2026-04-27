@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { HocuspocusProvider } from "@hocuspocus/provider";
-import * as Y from "yjs";
+import { codeBlockOptions } from "@blocknote/code-block";
 import { BlockNoteSchema, PartialBlock } from "@blocknote/core";
 import {
+    CommentsExtension,
     DefaultThreadStoreAuth,
     YjsThreadStore,
+    type User,
 } from "@blocknote/core/comments";
-import type { User } from "@blocknote/core/comments";
 import { useCreateBlockNote } from "@blocknote/react";
-import { codeBlock } from "@blocknote/code-block";
+import { HocuspocusProvider } from "@hocuspocus/provider";
+import * as Y from "yjs";
 
 import { UserProps } from "../../types/admin";
 
@@ -35,10 +36,7 @@ type UseCollaborativeBlockNoteOptions = {
 
 export type ConnectionStatus = "connecting" | "connected" | "disconnected";
 
-function buildResolveUsers(
-    profiles: Record<string, UserProps>,
-    myself: UserProps
-) {
+function buildResolveUsers(profiles: Record<string, UserProps>, myself: UserProps) {
     return async (userIds: string[]): Promise<User[]> => {
         const allProfiles: Record<string, UserProps> = {
             ...profiles,
@@ -73,36 +71,27 @@ export function useCollaborativeBlockNote({
     const initialBodyRef = useRef(initialBody);
     initialBodyRef.current = initialBody;
 
-    const seedDocument = useCallback(
-        (fragment: Y.XmlFragment) => {
-            if (seededRef.current) return;
-            seededRef.current = true;
+    const seedDocument = useCallback((fragment: Y.XmlFragment) => {
+        if (seededRef.current) return;
+        seededRef.current = true;
 
-            const body = initialBodyRef.current;
-            if (!body || body.length === 0) return;
+        const body = initialBodyRef.current;
+        if (!body || body.length === 0) return;
 
-            const content = fragment.toJSON();
-            const isEmpty =
-                !content || content === "" || content === "<undefined></undefined>";
-            if (!isEmpty) return;
+        const content = fragment.toJSON();
+        const isEmpty = !content || content === "" || content === "<undefined></undefined>";
+        if (!isEmpty) return;
 
-            // Defer to the next macrotask so Yjs sync completes and
-            // ProseMirror positions are consistent.
-            setTimeout(() => {
-                const editor = editorRef.current;
-                if (!editor) return;
-                try {
-                    editor.replaceBlocks(
-                        editor.document,
-                        body as PartialBlock[]
-                    );
-                } catch {
-                    // Seeding failed; document starts empty
-                }
-            }, 0);
-        },
-        []
-    );
+        setTimeout(() => {
+            const editor = editorRef.current;
+            if (!editor) return;
+            try {
+                editor.replaceBlocks(editor.document, body as PartialBlock[]);
+            } catch {
+                // Seeding failed; document starts empty
+            }
+        }, 0);
+    }, []);
 
     const { doc, provider, fragment } = useMemo(() => {
         seededRef.current = false;
@@ -140,10 +129,7 @@ export function useCollaborativeBlockNote({
     }, [doc, provider, userId, enableComments]);
 
     const resolveUsers = useMemo(
-        () =>
-            teamMemberProfiles
-                ? buildResolveUsers(teamMemberProfiles, myself)
-                : undefined,
+        () => (teamMemberProfiles ? buildResolveUsers(teamMemberProfiles, myself) : undefined),
         [teamMemberProfiles, myself]
     );
 
@@ -153,21 +139,25 @@ export function useCollaborativeBlockNote({
         };
     }, [provider]);
 
+    const commentsExtension = useMemo(() => {
+        if (!threadStore || !resolveUsers) return null;
+        return CommentsExtension({ threadStore, resolveUsers });
+    }, [threadStore, resolveUsers]);
+
     const editorOptions = useMemo(() => {
         if (!provider) {
             return {
                 schema,
-                codeBlock,
+                codeBlock: codeBlockOptions,
                 dictionary,
                 uploadFile,
-                initialContent:
-                    initialBody && initialBody.length > 0 ? initialBody : undefined,
+                initialContent: initialBody && initialBody.length > 0 ? initialBody : undefined,
             };
         }
 
         const opts: Record<string, any> = {
             schema,
-            codeBlock,
+            codeBlock: codeBlockOptions,
             dictionary,
             uploadFile,
             collaboration: {
@@ -177,29 +167,17 @@ export function useCollaborativeBlockNote({
             },
         };
 
-        if (threadStore) {
-            opts.comments = { threadStore };
-        }
-        if (resolveUsers) {
-            opts.resolveUsers = resolveUsers;
+        if (commentsExtension) {
+            opts.extensions = [commentsExtension];
         }
 
         return opts;
-    }, [
-        provider,
-        schema,
-        dictionary,
-        uploadFile,
-        fragment,
-        user,
-        threadStore,
-        resolveUsers,
-    ]);
+    }, [provider, schema, dictionary, uploadFile, fragment, user, commentsExtension]);
 
     const editor = useCreateBlockNote(editorOptions as any, [
         provider,
         documentName,
-        threadStore,
+        commentsExtension,
     ]);
 
     editorRef.current = editor;

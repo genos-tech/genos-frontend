@@ -723,7 +723,7 @@ input[type="checkbox"] {
     scrollbar-color: #888 transparent;
 }
 
-.bn-container[data-changing-font-demo] .bn-editor * {
+.bn-root[data-changing-font-demo] .bn-editor * {
     font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
