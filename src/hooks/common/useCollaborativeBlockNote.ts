@@ -179,6 +179,18 @@ export function useCollaborativeBlockNote({
         }
     }, [initialBody, seedDocument]);
 
+    // Fallback: if provider hasn't synced within 3s, seed from initialBody anyway
+    useEffect(() => {
+        if (!provider || !fragment) return;
+        const timer = setTimeout(() => {
+            if (!syncedRef.current && !seededRef.current && initialBody && initialBody.length > 0) {
+                console.warn("[collab] Provider did not sync in time, seeding from local data");
+                seedDocument(fragment);
+            }
+        }, 3000);
+        return () => clearTimeout(timer);
+    }, [provider, fragment, initialBody, seedDocument]);
+
     const threadStore = useMemo(() => {
         if (!enableComments || !provider) return null;
         return new YjsThreadStore(
