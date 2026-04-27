@@ -13,6 +13,7 @@ import {
 import { en } from "@blocknote/core/locales";
 import { BlockNoteView } from "@blocknote/mantine";
 import {
+    AddCommentButton,
     BasicTextStyleButton,
     BlockColorsItem,
     BlockTypeSelect,
@@ -188,6 +189,8 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         dictionary,
         uploadFile,
         initialBody: body,
+        enableComments: true,
+        teamMemberProfiles: useTEM.teamMemberProfiles,
     });
 
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
@@ -347,6 +350,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                             <CreateLinkButton key={"createLinkButton"} />
                             <FileCaptionButton key={"fileCaptionButton"} />
                             <FileReplaceButton key={"fileReplaceButton"} />
+                            <AddCommentButton key={"addCommentButton"} />
                             <FileDeleteButton key={"fileDeleteButton"} />
                             <FileDownloadButton key={"fileDownloadButton"} />
                             <FilePreviewButton key={"filePreviewButton"} />

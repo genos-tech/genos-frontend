@@ -76,7 +76,8 @@
 
 #root {
     display: var(--root-display);
-    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    grid-template-columns: 1fr;
+    width: 100%;
     overflow-x: var(--root-overflow);
     overflow: var(--root-overflow);
 }

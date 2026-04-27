@@ -2,8 +2,7 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import "../../App.css";
 
-import { useEffect, useState } from "react";
-import { codeBlockOptions } from "@blocknote/code-block";
+import { useEffect, useMemo, useState } from "react";
 import {
     BlockNoteSchema,
     defaultBlockSpecs,
@@ -15,7 +14,6 @@ import { en } from "@blocknote/core/locales";
 import { BlockNoteView } from "@blocknote/mantine";
 import {
     AddCommentButton,
-    AddTiptapCommentButton,
     BasicTextStyleButton,
     BlockColorsItem,
     BlockTypeSelect,
@@ -40,7 +38,6 @@ import {
     SuggestionMenuController,
     TableCellMergeButton,
     TextAlignButton,
-    useCreateBlockNote,
 } from "@blocknote/react";
 import DownloadIcon from "@mui/icons-material/Download";
 import { Box, IconButton, Modal, ModalDialog, Tooltip } from "@mui/joy";
@@ -50,10 +47,12 @@ import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { useCollaborativeBlockNote } from "../../hooks/common/useCollaborativeBlockNote";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { MyNoteProps } from "../../types/notes";
+import { getUserColor } from "../../utils/collabUtils";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
@@ -158,47 +157,40 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
         return `${django_url}/${uploadNoteAttachmentData.noteAttachmentUrl}`;
     }
 
-    // We use the English, default dictionary
     const locale = en;
-    const editor =
-        body.length > 0
-            ? useCreateBlockNote({
-                  schema,
-                  codeBlock: codeBlockOptions,
-                  // We override the `placeholders` in our dictionary
-                  dictionary: {
-                      ...locale,
-                      placeholders: {
-                          ...locale.placeholders,
-                          // We override the empty document placeholder
-                          emptyDocument: "Start typing...",
-                          // We override the default placeholder
-                          default: "Type something...",
-                          // We override the heading placeholder
-                          heading: "Custom heading placeholder",
-                      },
-                  },
-                  initialContent: body,
-                  uploadFile,
-              })
-            : useCreateBlockNote({
-                  schema,
-                  codeBlock: codeBlockOptions,
-                  uploadFile,
-                  // We override the `placeholders` in our dictionary
-                  dictionary: {
-                      ...locale,
-                      placeholders: {
-                          ...locale.placeholders,
-                          // We override the empty document placeholder
-                          emptyDocument: "Start typing...",
-                          // We override the default placeholder
-                          default: "Type something...",
-                          // We override the heading placeholder
-                          heading: "Custom heading placeholder",
-                      },
-                  },
-              });
+    const dictionary = useMemo(
+        () => ({
+            ...locale,
+            placeholders: {
+                ...locale.placeholders,
+                emptyDocument: "Start typing...",
+                default: "Type something...",
+                heading: "Custom heading placeholder",
+            },
+        }),
+        []
+    );
+
+    const collabUser = useMemo(
+        () => ({ name: myself.userName, color: getUserColor(myself.userId) }),
+        [myself.userName, myself.userId]
+    );
+
+    const documentName = `my-note:${currentMyNote.noteId}`;
+
+    const { editor } = useCollaborativeBlockNote({
+        documentName,
+        user: collabUser,
+        userId: myself.userId,
+        myself,
+        accessToken,
+        schema,
+        dictionary,
+        uploadFile,
+        initialBody: body,
+        enableComments: true,
+        teamMemberProfiles: useTEM.teamMemberProfiles,
+    });
 
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
@@ -250,12 +242,12 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
         <Box className={bnBoxClassName} sx={{ position: "relative" }}>
             <BlockNoteView
                 className="bn-box"
-                editor={editor}
+                editor={editor as any}
                 emojiPicker={false}
                 formattingToolbar={false}
                 sideMenu={false}
                 theme={mode === "dark" ? "dark" : "light"}
-                data-changing-font-demo // custom font
+                data-changing-font-demo
                 onChange={() => {
                     setBody(editor.document);
                     if (setNoteBodyEdited) {
@@ -335,7 +327,6 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                             <FileCaptionButton key={"fileCaptionButton"} />
                             <FileReplaceButton key={"fileReplaceButton"} />
                             <AddCommentButton key={"addCommentButton"} />
-                            <AddTiptapCommentButton key={"addTiptapCommentButton"} />
                             <FileDeleteButton key={"fileDeleteButton"} />
                             <FileDownloadButton key={"fileDownloadButton"} />
                             <FilePreviewButton key={"filePreviewButton"} />
@@ -368,7 +359,12 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                     triggerCharacter={"/"}
                     // Replaces the default Slash Menu items with our custom ones.
                     getItems={async (query) =>
-                        filterSuggestionItems(getCustomSlashMenuItems(editor), query)
+                        filterSuggestionItems(
+                            getCustomSlashMenuItems(
+                                editor as unknown as typeof schema.BlockNoteEditor
+                            ),
+                            query
+                        )
                     }
                 />
             </BlockNoteView>
