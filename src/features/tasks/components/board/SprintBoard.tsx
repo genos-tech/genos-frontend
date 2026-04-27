@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useColorScheme } from "@mui/joy/styles";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { DragDropContext, DropResult } from "react-beautiful-dnd";
 import { Socket } from "socket.io-client";
 
@@ -7,9 +8,14 @@ import { useAuth } from "../../../../context/AuthContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
-import { TaskTableProps } from "../../../../types/tasks";
+import { TagListProps, TaskTableProps } from "../../../../types/tasks";
+import { loadProjectTags } from "../../services/loadProjectTags";
 import { updateTaskFromTable } from "../../services/updateTaskFromTable";
+import { FilterProps } from "../../types/TaskTableTypes";
+import { TaskFilterMenu } from "../table/TaskFilterMenu";
 import { ColumnConfig, SprintBoardColumn } from "./SprintBoardColumn";
+
+const theme = createTheme({ cssVariables: true });
 
 // Column definitions
 const COLUMNS: ColumnConfig[] = [
@@ -76,6 +82,46 @@ export const SprintBoard = (props: SprintBoardProps) => {
     const mode: "light" | "dark" | undefined =
         colorMode === "light" || colorMode === "dark" ? colorMode : undefined;
 
+    // Filtered tasks from TaskFilterMenu
+    const [filteredTasks, setFilteredTasks] = useState<TaskTableProps[]>([]);
+
+    // Tag filter setup
+    const [predefinedTagsFilters, setPredefinedTagsFilters] = useState<FilterProps[]>([]);
+    useEffect(() => {
+        (async () => {
+            if (useTM.allTasks.length > 0) {
+                const loadedProjectTags: TagListProps[] = await loadProjectTags(
+                    myself,
+                    useTM.allTasks[0].projectId || -1,
+                    accessToken
+                );
+                if (loadedProjectTags.length > 0) {
+                    const allTagFilter: FilterProps = {
+                        label: "All",
+                        filterModel: { items: [] },
+                        lightModeColor: "#6b7280",
+                        darkModeColor: "#9ca3af",
+                    };
+                    const tagBasedFilters: FilterProps[] = loadedProjectTags.map((tag) => ({
+                        label: tag.tagName,
+                        filterModel: {
+                            items: [
+                                {
+                                    field: "concatTags",
+                                    operator: "contains",
+                                    value: `/${tag.tagName}/`,
+                                },
+                            ],
+                        },
+                        lightModeColor: tag.tagColor,
+                        darkModeColor: tag.tagColor,
+                    }));
+                    setPredefinedTagsFilters([allTagFilter, ...tagBasedFilters]);
+                }
+            }
+        })();
+    }, [usePM.currentProject, useTM.allTasks]);
+
     // Local state for board tasks organized by column
     const [boardTasks, setBoardTasks] = useState<Record<string, TaskTableProps[]>>({
         open: [],
@@ -84,9 +130,9 @@ export const SprintBoard = (props: SprintBoardProps) => {
         closed: [],
     });
 
-    // Initialize board tasks from all tasks
+    // Organize filtered tasks into board columns
     useEffect(() => {
-        const tasks = useTM.allTasks || [];
+        const tasks = filteredTasks || [];
         const organized: Record<string, TaskTableProps[]> = {
             open: [],
             wip: [],
@@ -100,11 +146,10 @@ export const SprintBoard = (props: SprintBoardProps) => {
             else if (status === "wip") organized.wip.push(task);
             else if (status === "pending") organized.pending.push(task);
             else if (status === "closed") organized.closed.push(task);
-            // Ignore "Deleted" tasks in the board view
         });
 
         setBoardTasks(organized);
-    }, [useTM.allTasks]);
+    }, [filteredTasks]);
 
     // Handle drag end
     const handleDragEnd = async (result: DropResult) => {
@@ -192,20 +237,31 @@ export const SprintBoard = (props: SprintBoardProps) => {
     };
 
     return (
-        <DragDropContext onDragEnd={handleDragEnd}>
-            <div style={getBoardContainerStyles(mode)}>
-                {COLUMNS.map((column) => (
-                    <SprintBoardColumn
-                        key={column.id}
-                        column={column}
-                        tasks={boardTasks[column.id] || []}
-                        myself={myself}
-                        teamMemberProfiles={teamMemberProfiles}
-                        onTaskClick={handleTaskClick}
-                        selectedTaskId={useTM.currentPreviewTaskId}
-                    />
-                ))}
+        <ThemeProvider theme={theme}>
+            <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+                <TaskFilterMenu
+                    isTaskUpdated={useTM.isTaskUpdated}
+                    predefinedTagsFilters={predefinedTagsFilters}
+                    setCurrentDisplayingTasks={setFilteredTasks}
+                    useTM={useTM}
+                    hideStatusFilter
+                />
+                <DragDropContext onDragEnd={handleDragEnd}>
+                    <div style={getBoardContainerStyles(mode)}>
+                        {COLUMNS.map((column) => (
+                            <SprintBoardColumn
+                                key={column.id}
+                                column={column}
+                                tasks={boardTasks[column.id] || []}
+                                myself={myself}
+                                teamMemberProfiles={teamMemberProfiles}
+                                onTaskClick={handleTaskClick}
+                                selectedTaskId={useTM.currentPreviewTaskId}
+                            />
+                        ))}
+                    </div>
+                </DragDropContext>
             </div>
-        </DragDropContext>
+        </ThemeProvider>
     );
 };

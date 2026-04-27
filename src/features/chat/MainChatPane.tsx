@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Box, Sheet, useColorScheme } from "@mui/joy";
 import { VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
@@ -14,7 +14,7 @@ import {
     calculateVirtuosoHight,
     calculateVirtuosoSubHight,
 } from "./services/calculateVirtuosoHight";
-import { handleFileDrop } from "./services/handleFileDrop";
+import { createFileDropHandler } from "./services/handleFileDrop";
 
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
@@ -38,7 +38,7 @@ type MessagesPaneProps = {
     setIsToDoVisible: (value: boolean) => void;
     isToDoVisible: boolean;
     todos: ToDoFactProps[];
-    setTodos: (value: ToDoFactProps[]) => void;
+    setTodos: React.Dispatch<React.SetStateAction<ToDoFactProps[]>>;
     isExistingTodaysTodo: boolean;
     setIsExistingTodaysTodo: (value: boolean) => void;
     incompleteTodoCount: number;
@@ -69,6 +69,11 @@ export const MessagesPane = (props: MessagesPaneProps) => {
     } = props;
 
     const { mode } = useColorScheme();
+
+    // File drag-and-drop state
+    const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+    const clearPendingFiles = useCallback(() => setPendingFiles([]), []);
+    const handleDrop = useCallback(createFileDropHandler(setPendingFiles), []);
 
     // Use shared hooks
     const messageManagement = useMessageManagement({
@@ -128,7 +133,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
     }, [useCM.currentMainChat]);
 
     const virtuosoHeight =
-        useCM.currentMainChat?.chatType === 3 || useCM.currentMainChat?.chatType === 4
+        useCM.currentMainChat?.chatType === 3
             ? 0.95 * window.innerHeight
             : useCM.isSubChatVisible
               ? calculateVirtuosoSubHight(
@@ -145,7 +150,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                 height: "100%",
             }}
             onDragOver={(e) => e.preventDefault()}
-            onDrop={handleFileDrop}
+            onDrop={handleDrop}
         >
             <Sheet sx={{ backgroundColor: "background.surface" }}>
                 <Box
@@ -231,8 +236,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                 useTM={useTM}
                             />
 
-                            {useCM.currentMainChat?.chatType !== 3 &&
-                                useCM.currentMainChat?.chatType !== 4 && (
+                            {useCM.currentMainChat?.chatType !== 3 && (
                                     <ChatEditorSection
                                         chat={useCM.currentMainChat as ChatProps | ThreadProps}
                                         useCM={useCM}
@@ -249,6 +253,8 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                         useTEM={useTEM}
                                         thread={undefined}
                                         useUISM={useUISM}
+                                        pendingFiles={pendingFiles}
+                                        clearPendingFiles={clearPendingFiles}
                                         setCurrentChat={
                                             useCM.setCurrentMainChat as (
                                                 chat: ChatProps | ThreadProps

@@ -54,10 +54,13 @@ a:hover {
 /* Body */
 body {
     margin: 0;
-    display: flex;
-    place-items: center;
     min-width: var(--min-width);
     min-height: var(--min-height);
+}
+
+html, :root {
+    max-width: none !important;
+    width: 100%;
 }
 
 /* Typography */

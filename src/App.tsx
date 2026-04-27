@@ -1,5 +1,9 @@
 import "./App.css";
 
+import { useCallback, useEffect, useRef, useState } from "react";
+import CloudOffRoundedIcon from "@mui/icons-material/CloudOffRounded";
+import WifiOffRoundedIcon from "@mui/icons-material/WifiOffRounded";
+import { Snackbar, Stack, Typography } from "@mui/joy";
 import CssBaseline from "@mui/joy/CssBaseline";
 import { CssVarsProvider } from "@mui/joy/styles";
 import { Navigate, Route, Routes } from "react-router-dom";
@@ -15,19 +19,64 @@ import { useServiceInitialization } from "./hooks/common/useServiceInitializatio
 import { webSocketSync } from "./hooks/common/useSyncManagement";
 import { useThreadTaskHandling } from "./hooks/common/useThreadTaskHandling";
 import { useWebSocket } from "./hooks/common/useWebSocket";
+import { registerApiHealthListener, unregisterApiHealthListener } from "./services/api";
+
+const API_DOWN_THRESHOLD = 3;
 
 export const App = () => {
     // Initialize app with authentication and basic setup
     const { accessToken, myself, setMyself, useUISM, useTEM } = useAppInitialization();
 
     // WebSocket management
-    const { socketInstance } = useWebSocket(accessToken, myself, useTEM.currentTeamId);
+    const { socketInstance, showDisconnected: showWsDisconnected } = useWebSocket(
+        accessToken,
+        myself,
+        useTEM.currentTeamId
+    );
+
+    // API server health tracking
+    const [showApiDown, setShowApiDown] = useState(false);
+    const apiFailCountRef = useRef(0);
+    const apiRecoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const handleApiHealth = useCallback((isDown: boolean) => {
+        if (isDown) {
+            apiFailCountRef.current += 1;
+            if (apiRecoverTimerRef.current) {
+                clearTimeout(apiRecoverTimerRef.current);
+                apiRecoverTimerRef.current = null;
+            }
+            if (apiFailCountRef.current >= API_DOWN_THRESHOLD) {
+                setShowApiDown(true);
+            }
+        } else {
+            apiFailCountRef.current = 0;
+            if (apiRecoverTimerRef.current) {
+                clearTimeout(apiRecoverTimerRef.current);
+            }
+            apiRecoverTimerRef.current = setTimeout(() => {
+                setShowApiDown(false);
+                apiRecoverTimerRef.current = null;
+            }, 1000);
+        }
+    }, []);
+
+    useEffect(() => {
+        registerApiHealthListener(handleApiHealth);
+        return () => {
+            unregisterApiHealthListener();
+            if (apiRecoverTimerRef.current) {
+                clearTimeout(apiRecoverTimerRef.current);
+            }
+        };
+    }, [handleApiHealth]);
 
     // Project and task management
     const { usePM, useTM } = useProjectTaskManagement({
         myself,
         accessToken: accessToken || "",
         currentTeamId: useTEM.currentTeamId,
+        openingService: useUISM.openingService,
     });
 
     // Service-specific initialization and management
@@ -60,6 +109,34 @@ export const App = () => {
     return (
         <CssVarsProvider disableTransitionOnChange>
             <CssBaseline />
+            <Snackbar
+                anchorOrigin={{ vertical: "top", horizontal: "center" }}
+                open={showWsDisconnected || showApiDown}
+                color="danger"
+                variant="soft"
+                sx={{ gap: 1 }}
+            >
+                <Stack spacing={0.5}>
+                    {showWsDisconnected && (
+                        <Typography
+                            level="body-sm"
+                            sx={{ fontWeight: 500, display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                            <WifiOffRoundedIcon sx={{ fontSize: 16 }} />
+                            Real-time connection lost. Attempting to reconnect...
+                        </Typography>
+                    )}
+                    {showApiDown && (
+                        <Typography
+                            level="body-sm"
+                            sx={{ fontWeight: 500, display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                            <CloudOffRoundedIcon sx={{ fontSize: 16 }} />
+                            API server is unreachable.
+                        </Typography>
+                    )}
+                </Stack>
+            </Snackbar>
             {useUISM.isLoading ? (
                 <InitialLoad
                     myself={myself}

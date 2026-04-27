@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Sheet } from "@mui/joy";
 import { VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
@@ -11,7 +11,7 @@ import { useMessageManagement } from "./hooks/useMessageManagement";
 import { useReadStatusManagement } from "./hooks/useReadStatusManagement";
 import { useScrollManagement } from "./hooks/useScrollManagement";
 import { calculateVirtuosoSubHight } from "./services/calculateVirtuosoHight";
-import { handleFileDrop } from "./services/handleFileDrop";
+import { createFileDropHandler } from "./services/handleFileDrop";
 
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
@@ -21,6 +21,20 @@ import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
 import { ChatProps, ThreadProps, ToDoFactProps } from "../../types/chat";
 import { ToDoPane } from "./ToDoPane";
+
+const EMPTY_CHAT: ChatProps = {
+    chatId: -1,
+    chatName: "",
+    chatType: 0,
+    dmPartnerUser: { teamId: "", teamName: "", userId: "", userName: "", userEmail: "", avatarImgPath: "", tsLastSeen: "", tsJoined: "" },
+    lastReadMessageId: 0,
+    messages: [],
+    latestMessage: undefined as any,
+    latestMessageText: "",
+    TSLastMessage: "",
+    isPrivate: false,
+    profileImagePath: "",
+};
 
 type MessagesPaneProps = {
     useTEM: TeamManagementState;
@@ -34,7 +48,7 @@ type MessagesPaneProps = {
     isToDoVisible: boolean;
     setIsToDoVisible: (value: boolean) => void;
     todos: ToDoFactProps[];
-    setTodos: (value: ToDoFactProps[]) => void;
+    setTodos: React.Dispatch<React.SetStateAction<ToDoFactProps[]>>;
     isExistingTodaysTodo: boolean;
     setIsExistingTodaysTodo: (value: boolean) => void;
     incompleteTodoCount: number;
@@ -65,26 +79,34 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
         useTM,
     } = props;
 
-    if (!useCM.currentSubChat) {
-        return null;
-    }
+    // File drag-and-drop state
+    const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+    const clearPendingFiles = useCallback(() => setPendingFiles([]), []);
+    const handleDrop = useCallback(createFileDropHandler(setPendingFiles), []);
 
-    // Use shared hooks
-    const messageManagement = useMessageManagement({ chat: useCM.currentSubChat });
+    // Use a stable placeholder when currentSubChat is null so hooks are always called
+    const chatForHooks = useMemo(
+        () => useCM.currentSubChat ?? EMPTY_CHAT,
+        [useCM.currentSubChat]
+    );
+
+    // Use shared hooks (must be called unconditionally)
+    const messageManagement = useMessageManagement({ chat: chatForHooks });
     const readStatusManagement = useReadStatusManagement({
-        currentChat: useCM.currentSubChat,
+        currentChat: chatForHooks,
         myself,
         useCM,
         isThread: false,
     });
     const scrollManagement = useScrollManagement({
-        currentChat: useCM.currentSubChat,
+        currentChat: chatForHooks,
         indexMap: messageManagement.indexMap,
         isThread: false,
     });
 
     // Handle read status updates
     useEffect(() => {
+        if (!useCM.currentSubChat) return;
         setTimeout(() => {
             if (useCM.currentSubChat) {
                 let targetIndex: number;
@@ -110,6 +132,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
     }, [messageManagement.indexMap]);
 
     useEffect(() => {
+        if (!useCM.currentSubChat) return;
         readStatusManagement.handlePeriodicReadStatusUpdate(
             scrollManagement.visibleRange.endIndex
         );
@@ -121,6 +144,10 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
         messageManagement.numEditorLines
     );
 
+    if (!useCM.currentSubChat) {
+        return null;
+    }
+
     return (
         <div
             style={{
@@ -128,7 +155,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                 height: "100%",
             }}
             onDragOver={(e) => e.preventDefault()}
-            onDrop={handleFileDrop}
+            onDrop={handleDrop}
         >
             <Sheet sx={{ backgroundColor: "background.level1" }}>
                 <ErrorSnackbar
@@ -218,6 +245,8 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                                 socket={socket}
                                 useTEM={useTEM}
                                 useUISM={useUISM}
+                                pendingFiles={pendingFiles}
+                                clearPendingFiles={clearPendingFiles}
                                 setCurrentChat={
                                     useCM.setCurrentSubChat as (
                                         chat: ChatProps | ThreadProps

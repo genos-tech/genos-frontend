@@ -10,16 +10,17 @@ export const defineNewChat = (
     isPrivate: boolean,
     profileImagePath?: string
 ) => {
+    const lastMsg = messages.length > 0 ? messages[messages.length - 1] : undefined;
     const newChat: ChatProps = {
         chatId: chatId,
         chatName: chatName,
         chatType: chatType,
         dmPartnerUser: dmPartnerUser,
-        lastReadMessageId: messages[messages.length - 1].messageId,
+        lastReadMessageId: lastMsg?.messageId ?? -1,
         messages: messages,
-        latestMessage: messages[messages.length - 1],
-        latestMessageText: messages[messages.length - 1].contentText,
-        TSLastMessage: messages[messages.length - 1].tsSent,
+        latestMessage: lastMsg as MessageProps,
+        latestMessageText: lastMsg?.contentText ?? "",
+        TSLastMessage: lastMsg?.tsSent ?? "",
         isPrivate: isPrivate,
         profileImagePath: profileImagePath,
     };

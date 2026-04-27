@@ -22,8 +22,8 @@ export const predefinedStatusFilters: FilterProps[] = [
         filterModel: {
             items: [],
         },
-        lightModeColor: "#ffffff",
-        darkModeColor: "#ffffff",
+        lightModeColor: "#6b7280",
+        darkModeColor: "#9ca3af",
     },
     {
         label: "Open",
@@ -81,8 +81,8 @@ export const predefinedPriorityFilters: FilterProps[] = [
         filterModel: {
             items: [],
         },
-        lightModeColor: "#ffffff",
-        darkModeColor: "#ffffff",
+        lightModeColor: "#6b7280",
+        darkModeColor: "#9ca3af",
     },
     {
         label: "Minimal",
@@ -132,8 +132,8 @@ export const predefinedEffortLevelFilters: FilterProps[] = [
         filterModel: {
             items: [],
         },
-        lightModeColor: "#ffffff",
-        darkModeColor: "#ffffff",
+        lightModeColor: "#6b7280",
+        darkModeColor: "#9ca3af",
     },
     {
         label: "Minimal",

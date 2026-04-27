@@ -391,6 +391,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                 isPreviewMode={false}
                                 myself={myself}
                                 projectTags={projectTags}
+                                setProjectTags={setProjectTags}
                                 reporter={reporter}
                                 setAssignee={setAssignee}
                                 setIsOpenProjectList={setIsOpenProjectList}

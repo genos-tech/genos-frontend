@@ -1,5 +1,6 @@
 import { Socket } from "socket.io-client";
 
+import { ChatService } from "../../../db/services/chat.service";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps, MessageProps } from "../../../types/chat";
@@ -8,6 +9,7 @@ import { addChat } from "../services/addChat";
 import { addMessage } from "../services/addMessage";
 import { checkKnownChat } from "../services/checkKnownChat";
 import { defineNewChat } from "../services/defineNewChat";
+import { loadMDMHistory } from "../services/loadMDMHistory";
 import { popSpecificMessages } from "../services/popSpecificMessages";
 import { defaultDmPartner } from "./constants";
 import { loadSpecificGM } from "./loadSpecificGM";
@@ -44,10 +46,19 @@ export const moveToGMChat = async (
     isPrivate: boolean,
     useCM: ChatManagementState
 ) => {
+    const existingChat = useCM.allChats?.find((c) => c.chatId === chatId && c.chatType === 2);
     const fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, 2);
     if (fetchedMessages) {
         useCM.setCurrentMainChat(
-            defineNewChat(chatId, chatName, 2, defaultDmPartner, fetchedMessages, isPrivate)
+            defineNewChat(
+                chatId,
+                chatName,
+                2,
+                defaultDmPartner,
+                fetchedMessages,
+                isPrivate,
+                existingChat?.profileImagePath
+            )
         );
     } else {
         console.error("Failed to fetch thread GM fetchedMessages:", fetchedMessages);
@@ -133,9 +144,7 @@ export const moveToSelectedChat = async (
 
                     // For GM
                     if (chatType === 2) {
-                        let loadedChat: ChatProps[] | undefined;
-                        // Load the existing messages in the chat.
-                        loadedChat = await loadSpecificGM(
+                        const loadedData = await loadSpecificGM(
                             myself.teamId,
                             myself.teamName,
                             myself.userId,
@@ -143,26 +152,29 @@ export const moveToSelectedChat = async (
                             accessToken
                         );
 
-                        if (loadedChat) {
-                            const sortedMessages = loadedChat[0].messages.sort(
+                        const gmChat: ChatProps | undefined =
+                            loadedData?.chat_history?.[0];
+
+                        if (gmChat) {
+                            const sortedMessages = gmChat.messages.sort(
                                 (a, b) => a.messageId - b.messageId
                             );
                             const newChat: AllChatProps = {
                                 chatType: chatType,
-                                chatId: loadedChat[0].chatId,
-                                chatName: loadedChat[0].chatName,
-                                lastReadMessageId: loadedChat[0].lastReadMessageId,
-                                dmPartnerUser: loadedChat[0].dmPartnerUser,
-                                latestMessage: loadedChat[0].latestMessage,
-                                latestMessageText: loadedChat[0].latestMessageText,
-                                TSLastMessage: loadedChat[0].TSLastMessage,
-                                isPrivate: loadedChat[0].isPrivate,
-                                profileImagePath: loadedChat[0].profileImagePath,
-                                isPinned: loadedChat[0].isPinned,
-                                tsLastAllReadActivity: loadedChat[0].tsLastAllReadActivity,
+                                chatId: gmChat.chatId,
+                                chatName: gmChat.chatName,
+                                lastReadMessageId: gmChat.lastReadMessageId,
+                                dmPartnerUser: gmChat.dmPartnerUser,
+                                latestMessage: gmChat.latestMessage,
+                                latestMessageText: gmChat.latestMessageText,
+                                TSLastMessage: gmChat.TSLastMessage,
+                                isPrivate: gmChat.isPrivate,
+                                profileImagePath: gmChat.profileImagePath,
+                                isPinned: gmChat.isPinned,
+                                tsLastAllReadActivity: gmChat.tsLastAllReadActivity,
                             };
                             await addChat(newChat, newChat.chatType);
-                            await addMessage(newChat.latestMessage, newChat.chatType);
+                            await new ChatService().batchInsertGMMessages(sortedMessages);
 
                             useCM.setCurrentMainChat({ ...newChat, messages: sortedMessages });
                             useCM.setAllChats([newChat, ...useCM.allChats]);
@@ -174,12 +186,46 @@ export const moveToSelectedChat = async (
             // If the chat is known, move to the chat.
             if (chatType === 1) {
                 moveToDMChat(socket, chatId, chatName, dmPartnerUser, useCM);
+            } else if (chatType === 4) {
+                const existingChat = useCM.allChats?.find((c) => c.chatId === chatId && c.chatType === 4);
+                let fetchedMessages: MessageProps[] = await popSpecificMessages(chatId, 4);
+                if (fetchedMessages.length === 0) {
+                    try {
+                        const teamId = existingChat?.dmPartnerUser?.teamId || "";
+                        const teamName = existingChat?.dmPartnerUser?.teamName || "";
+                        const userId = myself.userId;
+                        const data = await loadMDMHistory(
+                            teamId || myself.teamId, teamName || myself.teamName,
+                            userId, accessToken, chatId
+                        );
+                        const mdmChat = data?.chat_history?.[0];
+                        if (mdmChat?.messages?.length > 0) {
+                            fetchedMessages = [...mdmChat.messages].sort(
+                                (a: MessageProps, b: MessageProps) => a.messageId - b.messageId
+                            );
+                            await new ChatService().batchInsertMDMMessages(fetchedMessages);
+                        }
+                    } catch (e) {
+                        console.error("Failed to load MDM messages from backend:", e);
+                    }
+                }
+                useCM.setCurrentMainChat(
+                    defineNewChat(
+                        chatId,
+                        chatName,
+                        4,
+                        defaultDmPartner,
+                        fetchedMessages,
+                        false,
+                        existingChat?.profileImagePath
+                    )
+                );
             } else {
                 moveToGMChat(chatId, chatName, isPrivate, useCM);
             }
         }
 
-        useCM.setCurrentChatPaneType(chatType);
+        useCM.setCurrentChatPaneType(chatType === 4 ? 1 : chatType);
     } catch (error) {
         console.error("Worker error:", error);
     }

@@ -2,65 +2,85 @@ import { defaultDmPartner } from "../../features/chat/services/constants";
 import { loadMDMHistory } from "../../features/chat/services/loadMDMHistory";
 import { UserProps } from "../../types/admin";
 import { ChatProps, FlaggedMessageProps, MessageProps } from "../../types/chat";
+import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { ChatRepositoryFactory, FlaggedRepository } from "../repositories";
 import { ChatService } from "../services";
 
 const BATCH_SIZE = 1000;
 
 self.onmessage = async (event) => {
-    const myself: UserProps = event.data.myself;
-    const accessToken: string = event.data.accessToken;
+    try {
+        const myself: UserProps = event.data.myself;
+        const accessToken: string = event.data.accessToken;
 
-    const mdmChatRepo = ChatRepositoryFactory.createMDMChatRepository();
-    const mdmMessageRepo = ChatRepositoryFactory.createMDMMessageRepository();
-    const mdmThreadRepo = ChatRepositoryFactory.createMDMThreadMessageRepository();
-    const flaggedRepo = new FlaggedRepository();
+        const mdmChatRepo = ChatRepositoryFactory.createMDMChatRepository();
+        const mdmMessageRepo = ChatRepositoryFactory.createMDMMessageRepository();
+        const mdmThreadRepo = ChatRepositoryFactory.createMDMThreadMessageRepository();
+        const flaggedRepo = new FlaggedRepository();
 
-    await mdmChatRepo.clear();
-    await mdmMessageRepo.clear();
-    await mdmThreadRepo.clear();
+        await mdmChatRepo.clear();
+        await mdmMessageRepo.clear();
+        await mdmThreadRepo.clear();
 
-    // Load data from backend
-    const mdmHistory: {
-        chat_history: ChatProps[];
-        flagged_messages: FlaggedMessageProps[];
-    } = await loadMDMHistory(myself.teamId, myself.teamName, myself.userId, accessToken);
+        const mdmHistory: {
+            chat_history: ChatProps[];
+            flagged_messages: FlaggedMessageProps[];
+        } = await loadMDMHistory(myself.teamId, myself.teamName, myself.userId, accessToken);
 
-    for (let i = 0; i < mdmHistory.chat_history.length; i += 1) {
-        const mdmChat: ChatProps = mdmHistory.chat_history[i];
+        for (let i = 0; i < mdmHistory.chat_history.length; i += 1) {
+            const mdmChat: ChatProps = mdmHistory.chat_history[i];
 
-        // Insert chat
-        await mdmChatRepo.put({
-            chatId: mdmChat.chatId,
-            chatName: mdmChat.chatName,
-            lastReadMessageId: mdmChat.lastReadMessageId,
-            chatType: 4,
-            dmPartnerUser: defaultDmPartner,
-            latestMessage: mdmChat.latestMessage,
-            latestMessageText: mdmChat.latestMessageText,
-            TSLastMessage: mdmChat.TSLastMessage,
-            isPinned: mdmChat.isPinned,
-            tsLastAllReadActivity: mdmChat.tsLastAllReadActivity,
-        });
+            const fallbackTs = mdmChat.TSLastMessage || getLocalCurrentTimestamp();
+            const defaultLatestMessage: MessageProps = {
+                chatType: 4,
+                messageIdWithChatId: `${mdmChat.chatId}-0`,
+                chatId: mdmChat.chatId,
+                messageId: 0,
+                content: [],
+                contentText: "",
+                sender: { userId: "", userName: "", avatarImgPath: "", tsLastSeen: "", tsJoined: "", customStatus: "" } as any,
+                tsSent: fallbackTs,
+                tsUpdated: fallbackTs,
+                numReplies: 0,
+                taskId: null,
+                taskStatus: null,
+            };
 
-        // Insert messages by mini-batch
-        for (let i = 0; i < mdmChat.messages.length; i += BATCH_SIZE) {
-            const miniBatch: MessageProps[] = mdmChat.messages.slice(i, i + BATCH_SIZE);
-            await new ChatService().batchInsertMDMMessages(miniBatch);
+            await mdmChatRepo.put({
+                chatId: mdmChat.chatId,
+                chatName: mdmChat.chatName,
+                lastReadMessageId: mdmChat.lastReadMessageId ?? -1,
+                chatType: 4,
+                dmPartnerUser: defaultDmPartner,
+                latestMessage: mdmChat.latestMessage ?? defaultLatestMessage,
+                latestMessageText: mdmChat.latestMessageText ?? "",
+                TSLastMessage: fallbackTs,
+                isPinned: mdmChat.isPinned,
+                tsLastAllReadActivity: mdmChat.tsLastAllReadActivity,
+                mdmMembers: (mdmChat as any).mdmMembers,
+            });
+
+            const messages = mdmChat.messages || [];
+            for (let j = 0; j < messages.length; j += BATCH_SIZE) {
+                const miniBatch: MessageProps[] = messages.slice(j, j + BATCH_SIZE);
+                await new ChatService().batchInsertMDMMessages(miniBatch);
+            }
         }
+
+        if (mdmHistory.flagged_messages) {
+            for (let i = 0; i < mdmHistory.flagged_messages.length; i += 1) {
+                const flaggedMessage: FlaggedMessageProps = mdmHistory.flagged_messages[i];
+                await flaggedRepo.put(flaggedMessage);
+            }
+        }
+
+        self.postMessage("done");
+    } catch (error) {
+        console.error("[loadMDMHistoryWorker] Error:", error);
+        self.postMessage("done");
     }
 
-    if (mdmHistory.flagged_messages) {
-        for (let i = 0; i < mdmHistory.flagged_messages.length; i += 1) {
-            const flaggedMessage: FlaggedMessageProps = mdmHistory.flagged_messages[i];
-            await flaggedRepo.put(flaggedMessage);
-        }
-    }
-
-    // Send finish a message
-    self.postMessage("done");
-
-    self.close(); // Terminates itself
+    self.close();
 };
 
 export {};

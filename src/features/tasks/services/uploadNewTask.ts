@@ -102,6 +102,14 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
 
                 setCurrentPreviewTaskId(taskCreateData.task.task_id);
 
+                if (useCM.currentThreadChat) {
+                    useCM.setCurrentThreadChat({
+                        ...useCM.currentThreadChat,
+                        taskId: taskCreateData.task.task_id,
+                        taskExist: true,
+                    });
+                }
+
                 for (const attachment of taskContent.attachments) {
                     const formData = new FormData();
                     formData.append("task", taskCreateData.task.task_id);
@@ -209,7 +217,8 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                                     useCM.currentMainChat &&
                                     useCM.currentThreadChat &&
                                     (useCM.currentMainChat.chatType === 1 ||
-                                        useCM.currentMainChat.chatType === 2) &&
+                                        useCM.currentMainChat.chatType === 2 ||
+                                        useCM.currentMainChat.chatType === 4) &&
                                     useCM.currentThreadChat.threadId !== null &&
                                     useCM.currentThreadChat.threadId !== 0
                                 ) {

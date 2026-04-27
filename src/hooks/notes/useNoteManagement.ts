@@ -106,14 +106,16 @@ export interface NoteManagementState {
         chatType: number,
         chatId: number,
         isThread: boolean,
-        threadId: number
+        threadId: number,
+        chatName?: string
     ) => Promise<void>;
 
     handleCreateNewChatNoteIfNotExist: (
         chatType: number,
         chatId: number,
         isThread: boolean,
-        threadId: number
+        threadId: number,
+        chatName?: string
     ) => Promise<void>;
 
     handleCreateNewTaskNote: (
@@ -192,13 +194,21 @@ export const useNoteManagement = (
     );
     const [allNoteIdChains, setAllNoteIdChains] = useState<Record<string, number[]>>({});
 
+    const chatTypeLabels: Record<number, string> = {
+        1: "DM",
+        2: "GM",
+        3: "PM",
+        4: "DM",
+    };
+
     // Chat Note related
     const handleCreateNewChatNote = async (
         parentNoteId: number | null,
         chatType: number,
         chatId: number,
         isThread: boolean,
-        threadId: number
+        threadId: number,
+        chatName?: string
     ) => {
         if (!accessToken) return;
 
@@ -223,20 +233,10 @@ export const useNoteManagement = (
                 setCurrentChatNote(chatNote);
                 addNote(3, chatNote);
 
-                setChatNoteMeta((prev) => [
-                    {
-                        noteType: chatNote.noteType,
-                        noteId: chatNote.noteId,
-                        parentNoteId: chatNote.parentNoteId,
-                        chatType: chatNote.chatType,
-                        chatId: chatNote.chatId,
-                        isThread: chatNote.isThread,
-                        threadId: chatNote.threadId,
-                        title: chatNote.title,
-                        tsUpdated: chatNote.tsUpdated,
-                    },
-                    ...prev,
-                ]);
+                const freshMeta: ChatNoteMetaProps[] = await loadChatNoteMeta(myself, accessToken);
+                if (freshMeta.length > 0) {
+                    setChatNoteMeta(freshMeta);
+                }
             }
         } catch (error) {
             console.error("Error creating chat note:", error);
@@ -247,7 +247,8 @@ export const useNoteManagement = (
         chatType: number,
         chatId: number,
         isThread: boolean,
-        threadId: number
+        threadId: number,
+        chatName?: string
     ) => {
         if (!accessToken) return;
 
@@ -265,8 +266,13 @@ export const useNoteManagement = (
                 const newNote = chatNotes[0];
                 setCurrentChatNote(newNote);
                 addNote(3, newNote);
+
+                const freshMeta: ChatNoteMetaProps[] = await loadChatNoteMeta(myself, accessToken);
+                if (freshMeta.length > 0) {
+                    setChatNoteMeta(freshMeta);
+                }
             } else {
-                await handleCreateNewChatNote(null, chatType, chatId, isThread, threadId);
+                await handleCreateNewChatNote(null, chatType, chatId, isThread, threadId, chatName);
             }
         } catch (error) {
             console.error("Error loading or creating chat note:", error);

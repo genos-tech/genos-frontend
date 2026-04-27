@@ -225,7 +225,7 @@ export const useTaskManagement = (
                 setCurrentPreviewTask(loadedTask[0]);
             }
 
-            setIsTaskPreviewVisible(true);
+            // setIsTaskPreviewVisible(true);
 
             // Add a new ongoing task
             if (isNewTaskCreated === true || isTaskUpdatedBySomeone === true) {

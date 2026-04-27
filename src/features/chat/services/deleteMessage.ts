@@ -33,6 +33,13 @@ export const deleteMessage = async (
                     is_deleted: true,
                 });
                 return res.data;
+            } else if (chatType === 4) {
+                const res = await api.put("/mdm/message/", {
+                    mdm_id: chatId,
+                    message_id: messageId,
+                    is_deleted: true,
+                });
+                return res.data;
             } else {
                 console.error("Unexpected chat type:", chatType);
             }

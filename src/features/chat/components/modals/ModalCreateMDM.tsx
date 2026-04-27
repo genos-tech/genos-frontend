@@ -119,7 +119,8 @@ export const ModalCreateMDM: React.FC<Props> = ({
                 socket,
                 (msg: string) => setErrorMessage(msg),
                 setOpen,
-                accessToken || ""
+                accessToken || "",
+                selectedMembers
             );
         } catch (error) {
             console.error("Failed to create MDM:", error);

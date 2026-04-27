@@ -2,7 +2,7 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
 import { useState } from "react";
-import { codeBlock } from "@blocknote/code-block";
+import { codeBlockOptions } from "@blocknote/code-block";
 import {
     BlockNoteSchema,
     defaultBlockSpecs,
@@ -72,7 +72,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
 
     const editor = useCreateBlockNote({
         schema,
-        codeBlock,
+        codeBlock: codeBlockOptions,
         initialContent: content.slice(0, -1),
     });
 
@@ -93,6 +93,30 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
         await downloadFile(url, filename);
     };
 
+    const handleEditorClick = (e: React.MouseEvent<HTMLDivElement>) => {
+        const target = e.target as HTMLElement;
+
+        // Handle image clicks
+        if (target.tagName === "IMG") {
+            handleImageClick((target as HTMLImageElement).src);
+            return;
+        }
+
+        // Handle file block clicks - find the closest file block wrapper
+        const fileWrapper = target.closest('[data-content-type="file"]');
+        if (fileWrapper) {
+            e.preventDefault();
+            const blockContainer = fileWrapper.closest("[data-id]");
+            const blockId = blockContainer?.getAttribute("data-id");
+            if (blockId) {
+                const block = editor.document.find((b: any) => b.id === blockId);
+                if (block && block.type === "file" && block.props?.url) {
+                    downloadFile(block.props.url, block.props.name || undefined);
+                }
+            }
+        }
+    };
+
     return (
         <Box className={bnBoxClassName} sx={{ px: "10px" }}>
             <BlockNoteView
@@ -106,12 +130,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
                 slashMenu={false}
                 tableHandles={false}
                 data-changing-font-demo // custom font
-                onClick={(e) => {
-                    const target = e.target as HTMLElement;
-                    if (target.tagName === "IMG") {
-                        handleImageClick((target as HTMLImageElement).src);
-                    }
-                }}
+                onClick={handleEditorClick}
             ></BlockNoteView>
 
             <Modal open={opened} sx={{ zIndex: 10010 }} onClose={() => setOpened(false)}>

@@ -56,10 +56,10 @@ export const useServiceInitialization = ({
 
             // Keep the tabItems when an user changes the page from Notes to other pages.
             useNM.setTmpTabItems(useNM.tabItems);
-            useNM.setTabItems(useNM.tabItems.filter((item) => item.noteType === 3));
+            const chatNoteItems = useNM.tabItems.filter((item) => item.noteType === 3);
+            useNM.setTabItems(chatNoteItems);
 
-            // Initialize the chat note visibility.
-            if (useNM.tabItems.filter((item) => item.noteType === 3).length === 0) {
+            if (chatNoteItems.length === 0) {
                 useCM.setIsChatNoteVisibleInChat(false);
             }
             // Init all notes

@@ -67,29 +67,6 @@ export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
                     >
                         {isYou ? `${chat.chatName} (you)` : chat.chatName}
                     </Typography>
-                    {/* MDM (Multi-user DM) indicator */}
-                    {chat.chatType === 4 && (
-                        <Chip
-                            size="sm"
-                            variant="soft"
-                            sx={{
-                                fontSize: "0.6rem",
-                                fontWeight: 600,
-                                height: 16,
-                                minHeight: 16,
-                                px: 0.5,
-                                borderRadius: "4px",
-                                flexShrink: 0,
-                                background: isDark
-                                    ? "rgba(59, 130, 246, 0.2)"
-                                    : "rgba(59, 130, 246, 0.15)",
-                                color: isDark ? "#60a5fa" : "#3b82f6",
-                                border: "none",
-                            }}
-                        >
-                            Group
-                        </Chip>
-                    )}
                 </Stack>
 
                 {/* Custom status row - only shown when status exists */}

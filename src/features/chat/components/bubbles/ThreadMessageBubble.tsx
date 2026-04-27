@@ -46,7 +46,7 @@ type threadMessageBubbleProps = {
     variant: "sent" | "received";
     message: ThreadMessageProps;
     isScrolling: boolean;
-    isFocused: boolean;
+    isFocused: "focused" | "threadActive" | false;
     isSimpleBubble: boolean;
     useUISM: UIStateManagementState;
     setIsInEdit: (value: boolean) => void;
@@ -168,15 +168,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
     }, [showEmojiPicker, isSent]);
 
     useEffect(() => {
-        if (message.reactions) {
-            setReactions(message.reactions);
-        }
-    }, []);
-
-    useEffect(() => {
-        if (message.reactions) {
-            setReactions(message.reactions);
-        }
+        setReactions(message.reactions || []);
     }, [message]);
 
     useEffect(() => {

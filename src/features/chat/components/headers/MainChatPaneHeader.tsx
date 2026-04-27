@@ -1,6 +1,8 @@
+import { useState } from "react";
 import AddTaskRoundedIcon from "@mui/icons-material/AddTaskRounded";
 import ChecklistRoundedIcon from "@mui/icons-material/ChecklistRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import PersonAddRoundedIcon from "@mui/icons-material/PersonAddRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import SwapVertRoundedIcon from "@mui/icons-material/SwapVertRounded";
 import { Badge, IconButton, Stack, Tooltip } from "@mui/joy";
@@ -12,7 +14,8 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
-import { ChatProps } from "../../../../types/chat";
+import { AllChatProps, ChatProps } from "../../../../types/chat";
+import { ModalAddMembers } from "../modals/ModalAddMembers";
 import { HeaderUserName } from "./HeaderUserName";
 
 // Theme-aware styling - Indigo/Blue theme for chat
@@ -131,6 +134,8 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
         },
     };
 
+    const [openAddMembers, setOpenAddMembers] = useState(false);
+
     const switchSubToMain = () => {
         if (useCM.isSubChatVisible === true) {
             useCM.setCurrentMainChat(useCM.currentSubChat as ChatProps);
@@ -173,7 +178,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
 
             <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
                 {/* Create Task Button */}
-                {(chat.chatType === 3 || chat.chatType === 4) && (
+                {chat.chatType === 3 && (
                     <Tooltip
                         size="sm"
                         title="Create a new task"
@@ -279,6 +284,27 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                     </Tooltip>
                 )}
 
+                {/* Add Members Button (MDM / DM) */}
+                {(chat.chatType === 4 || chat.chatType === 1) && (
+                    <Tooltip
+                        size="sm"
+                        title="Add members"
+                        variant="soft"
+                        sx={{ borderRadius: "8px" }}
+                    >
+                        <IconButton
+                            size="sm"
+                            variant="plain"
+                            sx={actionButtonStyle}
+                            onClick={() => setOpenAddMembers(true)}
+                        >
+                            <PersonAddRoundedIcon
+                                sx={{ fontSize: 18, color: styles.accentColor }}
+                            />
+                        </IconButton>
+                    </Tooltip>
+                )}
+
                 {/* Close Button */}
                 <Tooltip size="sm" title="Close" variant="soft" sx={{ borderRadius: "8px" }}>
                     <IconButton
@@ -291,6 +317,19 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                     </IconButton>
                 </Tooltip>
             </Stack>
+
+            {/* Add Members Modal */}
+            {(chat.chatType === 4 || chat.chatType === 1) && (
+                <ModalAddMembers
+                    socket={socket}
+                    myself={myself}
+                    chat={chat as unknown as AllChatProps}
+                    open={openAddMembers}
+                    setOpen={setOpenAddMembers}
+                    useCM={useCM}
+                    useTEM={useTEM}
+                />
+            )}
         </Stack>
     );
 };

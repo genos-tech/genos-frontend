@@ -2,7 +2,7 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
 import { useEffect, useRef, useState } from "react";
-import { codeBlock } from "@blocknote/code-block";
+import { codeBlockOptions } from "@blocknote/code-block";
 import {
     BlockNoteSchema,
     defaultBlockSpecs,
@@ -61,6 +61,8 @@ type BnThreadEditorProps = {
     numEditorLines: number;
     setNumEditorLines: (value: number) => void;
     useCM: ChatManagementState;
+    pendingFiles?: File[];
+    clearPendingFiles?: () => void;
 };
 export const BnThreadEditor = (props: BnThreadEditorProps) => {
     const {
@@ -75,10 +77,19 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
         numEditorLines,
         setNumEditorLines,
         useCM,
+        pendingFiles,
+        clearPendingFiles,
     } = props;
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
     const bnBoxClassName: string = `bn-chat-editor-box-${mode}`;
+
+    const teamMembersRef = useRef(useTEM.teamMembers);
+    const teamMemberProfilesRef = useRef(useTEM.teamMemberProfiles);
+    useEffect(() => {
+        teamMembersRef.current = useTEM.teamMembers;
+        teamMemberProfilesRef.current = useTEM.teamMemberProfiles;
+    }, [useTEM.teamMembers, useTEM.teamMemberProfiles]);
 
     // Disable the Audio and Image blocks from the built-in schema
     // This is done by picking out the blocks you want to disable
@@ -141,7 +152,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
     const locale = en;
     const editor = useCreateBlockNote({
         schema,
-        codeBlock,
+        codeBlock: codeBlockOptions,
         uploadFile,
         // We override the `placeholders` in our dictionary
         dictionary: {
@@ -170,6 +181,33 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
             insertEmoji(selectedEmoji);
         }
     }, [selectedEmoji]);
+
+    // Process files dropped on the thread pane (outside the editor)
+    useEffect(() => {
+        if (pendingFiles && pendingFiles.length > 0 && clearPendingFiles) {
+            const insertFiles = async () => {
+                for (const file of pendingFiles) {
+                    try {
+                        const url = await uploadFile(file);
+                        const isImage = file.type.startsWith("image/");
+                        editor.insertBlocks(
+                            [
+                                isImage
+                                    ? { type: "image", props: { url, name: file.name } }
+                                    : { type: "file", props: { url, name: file.name } },
+                            ],
+                            editor.document[editor.document.length - 1],
+                            "after"
+                        );
+                    } catch (err) {
+                        console.error("Failed to insert dropped file:", err);
+                    }
+                }
+                clearPendingFiles();
+            };
+            insertFiles();
+        }
+    }, [pendingFiles]);
 
     const [editorDocLength, setEditorDocLength] = useState<number>(0);
 
@@ -394,12 +432,11 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                     <SuggestionMenuController
                         triggerCharacter={"@"}
                         getItems={async (query) =>
-                            // Gets the mentions menu items
                             filterSuggestionItems(
                                 MentionMenuItems(
-                                    useTEM.teamMemberProfiles,
+                                    teamMemberProfilesRef.current,
                                     editor,
-                                    useTEM.teamMembers
+                                    teamMembersRef.current
                                 ),
                                 query
                             )

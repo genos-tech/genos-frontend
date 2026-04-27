@@ -15,3 +15,16 @@ export const AuthGuard = () => {
 
     return localStorage.getItem("isSigningIn") === "yes" ? <Outlet /> : <Navigate to="/SignIn" />;
 };
+
+export const GuestGuard = () => {
+    const { accessToken } = useAuth();
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        setLoading(false);
+    }, [accessToken]);
+
+    if (loading) return <div>Loading...</div>;
+
+    return localStorage.getItem("isSigningIn") === "yes" ? <Navigate to="/JoinTeam" /> : <Outlet />;
+};

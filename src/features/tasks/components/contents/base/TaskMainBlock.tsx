@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import { Box, Chip, Grid, IconButton, List, ListItem, Stack, Tooltip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
@@ -21,6 +22,7 @@ import { ACTaskPriority } from "../../autocompletes/ACTaskPriority";
 import { ACTaskStatus } from "../../autocompletes/ACTaskStatus";
 import { ACTeamProjects } from "../../autocompletes/ACTeamProjects";
 import { ACTeamUsers } from "../../autocompletes/ACTeamUsers";
+import { ModalManageTags } from "../../modals/ModalManageTags";
 import { DynamicURLManager } from "./sub/DynamicURLManager";
 import { TaskDueDateInput } from "./sub/TaskDueDateInput";
 
@@ -45,6 +47,7 @@ type TaskMainBlockProps = {
     taskContent: TaskProps;
     setTaskContent: (value: TaskProps) => void;
     projectTags: TagListProps[];
+    setProjectTags: (tags: TagListProps[]) => void;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     assignee: UserProps;
@@ -73,6 +76,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
         taskContent,
         setTaskContent,
         projectTags,
+        setProjectTags,
         myself,
         setMyself,
         assignee,
@@ -97,6 +101,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
 
+    const [openManageTags, setOpenManageTags] = useState(false);
     const [parentTask, setParentTask] = useState<TaskProps>();
     useEffect(() => {
         (async () => {
@@ -251,6 +256,40 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     <AddRoundedIcon sx={{ fontSize: 18 }} />
                                 </IconButton>
                             </Tooltip>
+                            <Tooltip size="sm" title="Manage Tags" variant="outlined">
+                                <IconButton
+                                    size="sm"
+                                    variant="plain"
+                                    sx={{
+                                        borderRadius: "8px",
+                                        minWidth: 28,
+                                        minHeight: 28,
+                                        color: isDark
+                                            ? "rgba(255,255,255,0.5)"
+                                            : "rgba(0,0,0,0.45)",
+                                        "&:hover": {
+                                            background: isDark
+                                                ? "rgba(255,255,255,0.08)"
+                                                : "rgba(0,0,0,0.06)",
+                                            color: isDark
+                                                ? "rgba(255,255,255,0.8)"
+                                                : "rgba(0,0,0,0.7)",
+                                        },
+                                    }}
+                                    onClick={() => setOpenManageTags(true)}
+                                >
+                                    <SettingsRoundedIcon sx={{ fontSize: 16 }} />
+                                </IconButton>
+                            </Tooltip>
+                            <ModalManageTags
+                                myself={myself}
+                                usePM={usePM}
+                                useTM={useTM}
+                                open={openManageTags}
+                                onClose={() => setOpenManageTags(false)}
+                                projectTags={projectTags}
+                                setProjectTags={setProjectTags}
+                            />
                             <ACProjectTags
                                 isOpenTagList={isOpenTagList}
                                 projectTags={projectTags}

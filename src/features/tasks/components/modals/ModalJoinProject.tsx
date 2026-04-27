@@ -154,6 +154,13 @@ export const ModalJoinProject: React.FC<Props> = ({
                         );
                     } else {
                         if (openJoinProject.projectId) {
+                            usePM.setTeamProjects(
+                                usePM.teamProjects.map((p) =>
+                                    p.projectId === openJoinProject.projectId
+                                        ? { ...p, isJoined: true }
+                                        : p
+                                )
+                            );
                             usePM.setCurrentProject({
                                 projectId: openJoinProject.projectId,
                                 projectName: openJoinProject.projectName,

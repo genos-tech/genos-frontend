@@ -206,7 +206,7 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
             </ListItemButton>
             
             {/* Add Members Modal for DM/MDM chats */}
-            {(chat.chatType === 1) && (
+            {(chat.chatType === 1 || chat.chatType === 4) && (
                 <ModalAddMembers
                     socket={socket}
                     myself={myself}

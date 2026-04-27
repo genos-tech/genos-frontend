@@ -1,24 +1,20 @@
 export const handleFileDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
-    const droppedFiles = Array.from(event.dataTransfer.files);
-    handleFiles(droppedFiles);
 };
 
-export const handleFiles = (selectedFiles: File[]) => {
-    selectedFiles.forEach((file) => {
-        const fileType = file.type;
-        if (fileType === "image/jpeg" || fileType === "image/png") {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                if (e.target?.result) {
-                    const img = new Image();
-                    img.src = e.target.result as string;
-                    img.onload = () => {};
-                }
-            };
-            reader.readAsDataURL(file);
-        } else {
-            const fileURL = URL.createObjectURL(file);
+export const createFileDropHandler = (onFilesDropped: (files: File[]) => void) => {
+    return (event: React.DragEvent<HTMLDivElement>) => {
+        event.preventDefault();
+
+        // If the drop landed inside the BlockNote editor, let BlockNote handle it natively
+        const target = event.target as HTMLElement;
+        if (target.closest(".bn-editor") || target.closest(".bn-container")) {
+            return;
         }
-    });
+
+        const droppedFiles = Array.from(event.dataTransfer.files);
+        if (droppedFiles.length > 0) {
+            onFilesDropped(droppedFiles);
+        }
+    };
 };

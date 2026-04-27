@@ -34,7 +34,7 @@ export const analyzeMessageContext = (
                 fromMe = true;
             }
         }
-    } else if (newMessage.chatType === 2 || newMessage.chatType === 3) {
+    } else if (newMessage.chatType === 2 || newMessage.chatType === 3 || newMessage.chatType === 4) {
         if (newMessage.sender.userId === myself.userId) {
             fromMe = true;
         }
