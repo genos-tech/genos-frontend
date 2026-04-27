@@ -361,7 +361,7 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                                         <CreateLinkButton key={"createLinkButton"} />
                                         <FileCaptionButton key={"fileCaptionButton"} />
                                         <FileReplaceButton key={"fileReplaceButton"} />
-                                        <AddCommentButton key={"addCommentButton"} />
+                                        {threadStore && <AddCommentButton key={"addCommentButton"} />}
                                         <FileDeleteButton key={"fileDeleteButton"} />
                                         <FileDownloadButton key={"fileDownloadButton"} />
                                         <FilePreviewButton key={"filePreviewButton"} />
@@ -398,8 +398,8 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                                 }
                             />
 
-                            <FloatingComposerController />
-                            {!showThreadsSidebar && (
+                            {threadStore && <FloatingComposerController />}
+                            {threadStore && !showThreadsSidebar && (
                                 <ThreadsSidebarErrorBoundary>
                                     <FloatingThreadController />
                                 </ThreadsSidebarErrorBoundary>

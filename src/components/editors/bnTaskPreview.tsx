@@ -182,7 +182,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
 
     const documentName = `task-body:${taskId}`;
 
-    const { editor } = useCollaborativeBlockNote({
+    const { editor, threadStore } = useCollaborativeBlockNote({
         documentName,
         user: collabUser,
         userId: myself.userId,
@@ -354,7 +354,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                             <CreateLinkButton key={"createLinkButton"} />
                             <FileCaptionButton key={"fileCaptionButton"} />
                             <FileReplaceButton key={"fileReplaceButton"} />
-                            <AddCommentButton key={"addCommentButton"} />
+                            {threadStore && <AddCommentButton key={"addCommentButton"} />}
                             <FileDeleteButton key={"fileDeleteButton"} />
                             <FileDownloadButton key={"fileDownloadButton"} />
                             <FilePreviewButton key={"filePreviewButton"} />
@@ -391,10 +391,12 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                     }
                 />
 
-                <FloatingComposerController />
-                <ThreadsSidebarErrorBoundary>
-                    <FloatingThreadController />
-                </ThreadsSidebarErrorBoundary>
+                {threadStore && <FloatingComposerController />}
+                {threadStore && (
+                    <ThreadsSidebarErrorBoundary>
+                        <FloatingThreadController />
+                    </ThreadsSidebarErrorBoundary>
+                )}
             </BlockNoteView>
 
             <Modal open={opened} sx={{ zIndex: 10010 }} onClose={() => setOpened(false)}>
