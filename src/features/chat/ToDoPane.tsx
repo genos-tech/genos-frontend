@@ -69,7 +69,6 @@ export const ToDoPane = (props: ToDoPaneProps) => {
     };
 
     useEffect(() => {
-        console.log(3, todos);
         setTmpAllTodos(todos);
         setTmpIncompleteTodos(todos.filter((todo) => !todo.isCompleted));
     }, [todos]);

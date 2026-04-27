@@ -16,6 +16,7 @@ import {
     AddCommentButton,
     BasicTextStyleButton,
     BlockColorsItem,
+    BlockNoteViewEditor,
     BlockTypeSelect,
     BlockTypeSelectItem,
     blockTypeSelectItems,
@@ -29,6 +30,8 @@ import {
     FilePreviewButton,
     FileRenameButton,
     FileReplaceButton,
+    FloatingComposerController,
+    FloatingThreadController,
     FormattingToolbar,
     FormattingToolbarController,
     getDefaultReactSlashMenuItems,
@@ -36,9 +39,6 @@ import {
     SideMenu,
     SideMenuController,
     SuggestionMenuController,
-    BlockNoteViewEditor,
-    FloatingComposerController,
-    FloatingThreadController,
     TableCellMergeButton,
     TextAlignButton,
 } from "@blocknote/react";
@@ -304,10 +304,7 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                         <BlockNoteViewEditor>
                             <SideMenuController
                                 sideMenu={(props) => (
-                                    <SideMenu
-                                        {...props}
-                                        dragHandleMenu={CustomDragHandleMenu}
-                                    />
+                                    <SideMenu {...props} dragHandleMenu={CustomDragHandleMenu} />
                                 )}
                             />
                             <FormattingToolbarController
@@ -361,14 +358,14 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                                         <CreateLinkButton key={"createLinkButton"} />
                                         <FileCaptionButton key={"fileCaptionButton"} />
                                         <FileReplaceButton key={"fileReplaceButton"} />
-                                        {threadStore && <AddCommentButton key={"addCommentButton"} />}
+                                        {threadStore && (
+                                            <AddCommentButton key={"addCommentButton"} />
+                                        )}
                                         <FileDeleteButton key={"fileDeleteButton"} />
                                         <FileDownloadButton key={"fileDownloadButton"} />
                                         <FilePreviewButton key={"filePreviewButton"} />
                                         <FileRenameButton key={"fileRenameButton"} />
-                                        <TableCellMergeButton
-                                            key={"tableCellMergeButton"}
-                                        />
+                                        <TableCellMergeButton key={"tableCellMergeButton"} />
                                     </FormattingToolbar>
                                 )}
                             />

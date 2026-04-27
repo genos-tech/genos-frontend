@@ -2,8 +2,9 @@ import "./App.css";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import CloudOffRoundedIcon from "@mui/icons-material/CloudOffRounded";
+import ScreenRotationRoundedIcon from "@mui/icons-material/ScreenRotationRounded";
 import WifiOffRoundedIcon from "@mui/icons-material/WifiOffRounded";
-import { Snackbar, Stack, Typography } from "@mui/joy";
+import { Box, Snackbar, Stack, Typography } from "@mui/joy";
 import CssBaseline from "@mui/joy/CssBaseline";
 import { CssVarsProvider } from "@mui/joy/styles";
 import { Navigate, Route, Routes } from "react-router-dom";
@@ -19,11 +20,14 @@ import { useServiceInitialization } from "./hooks/common/useServiceInitializatio
 import { webSocketSync } from "./hooks/common/useSyncManagement";
 import { useThreadTaskHandling } from "./hooks/common/useThreadTaskHandling";
 import { useWebSocket } from "./hooks/common/useWebSocket";
+import { useWindowSize } from "./hooks/common/useWindowSize";
 import { registerApiHealthListener, unregisterApiHealthListener } from "./services/api";
 
 const API_DOWN_THRESHOLD = 3;
 
 export const App = () => {
+    const isTooSmall = useWindowSize();
+
     // Initialize app with authentication and basic setup
     const { accessToken, myself, setMyself, useUISM, useTEM } = useAppInitialization();
 
@@ -105,6 +109,35 @@ export const App = () => {
         setIsTaskUpdatedBySomeone: useTM.setIsTaskUpdatedBySomeone,
         socket: socketInstance,
     });
+
+    if (isTooSmall) {
+        return (
+            <CssVarsProvider disableTransitionOnChange>
+                <CssBaseline />
+                <Box
+                    sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        height: "100dvh",
+                        width: "100vw",
+                        textAlign: "center",
+                        px: 4,
+                        gap: 2,
+                        bgcolor: "background.surface",
+                    }}
+                >
+                    <ScreenRotationRoundedIcon sx={{ fontSize: 56, color: "neutral.400" }} />
+                    <Typography level="h3">Window Size Too Small</Typography>
+                    <Typography level="body-md" sx={{ color: "neutral.500", maxWidth: 360 }}>
+                        This application is designed for desktop use. Please resize your browser
+                        window or switch to a larger screen.
+                    </Typography>
+                </Box>
+            </CssVarsProvider>
+        );
+    }
 
     return (
         <CssVarsProvider disableTransitionOnChange>
