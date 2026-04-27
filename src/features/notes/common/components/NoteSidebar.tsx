@@ -100,9 +100,11 @@ function groupChatNotes(notes: ChatNoteMetaTreeNode[], allChats: AllChatProps[])
             (c) => c.chatType === note.chatType && c.chatId === note.chatId
         );
         if (!chatGroup) {
-            const resolvedName = note.chatName
-                || allChats.find((c) => c.chatType === note.chatType && c.chatId === note.chatId)?.chatName
-                || `${chatTypeName} ${note.chatId}`;
+            const resolvedName =
+                note.chatName ||
+                allChats.find((c) => c.chatType === note.chatType && c.chatId === note.chatId)
+                    ?.chatName ||
+                `${chatTypeName} ${note.chatId}`;
             chatGroup = {
                 chatId: note.chatId,
                 chatType: note.chatType,

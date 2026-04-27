@@ -29,6 +29,8 @@ import {
     FilePreviewButton,
     FileRenameButton,
     FileReplaceButton,
+    FloatingComposerController,
+    FloatingThreadController,
     FormattingToolbar,
     FormattingToolbarController,
     getDefaultReactSlashMenuItems,
@@ -38,8 +40,6 @@ import {
     SuggestionMenuController,
     TableCellMergeButton,
     TextAlignButton,
-    FloatingComposerController,
-    FloatingThreadController,
 } from "@blocknote/react";
 import DownloadIcon from "@mui/icons-material/Download";
 import { Box, IconButton, Modal, ModalDialog, Tooltip } from "@mui/joy";

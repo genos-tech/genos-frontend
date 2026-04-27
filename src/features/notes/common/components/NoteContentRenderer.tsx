@@ -1,6 +1,7 @@
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import NoteAddRoundedIcon from "@mui/icons-material/NoteAddRounded";
 import TouchAppOutlinedIcon from "@mui/icons-material/TouchAppOutlined";
-import { Box, Stack, Typography, useColorScheme } from "@mui/joy";
+import { Box, Button, Stack, Typography, useColorScheme } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -191,9 +192,98 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
 
     // No notes open at all
     if (useNM.tabItems.length === 0) {
-        return renderPlaceholder(
-            "No Note Selected",
-            "Choose a note from the sidebar to start editing"
+        return (
+            <Box
+                sx={{
+                    height: "100%",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    width: "100%",
+                    background: isDark
+                        ? "radial-gradient(ellipse at center, rgba(251,191,36,0.03) 0%, transparent 70%)"
+                        : "radial-gradient(ellipse at center, rgba(251,191,36,0.04) 0%, transparent 70%)",
+                    position: "relative",
+                    overflow: "hidden",
+                }}
+            >
+                <Stack
+                    alignItems="center"
+                    spacing={2.5}
+                    sx={{ maxWidth: 320, textAlign: "center", zIndex: 1 }}
+                >
+                    <Box
+                        sx={{
+                            width: 80,
+                            height: 80,
+                            borderRadius: "20px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            background: isDark
+                                ? "linear-gradient(135deg, rgba(251,191,36,0.12) 0%, rgba(245,158,11,0.12) 100%)"
+                                : "linear-gradient(135deg, rgba(251,191,36,0.08) 0%, rgba(245,158,11,0.08) 100%)",
+                            border: isDark
+                                ? "1px solid rgba(251,191,36,0.15)"
+                                : "1px solid rgba(251,191,36,0.1)",
+                            boxShadow: isDark
+                                ? "0 8px 32px rgba(0,0,0,0.2)"
+                                : "0 8px 32px rgba(251,191,36,0.08)",
+                        }}
+                    >
+                        <DescriptionOutlinedIcon
+                            sx={{
+                                fontSize: 36,
+                                color: isDark ? "#fcd34d" : "#f59e0b",
+                                opacity: 0.8,
+                            }}
+                        />
+                    </Box>
+
+                    <Stack spacing={1}>
+                        <Typography
+                            level="h4"
+                            sx={{
+                                fontWeight: 700,
+                                fontSize: "1.25rem",
+                                color: isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.8)",
+                                letterSpacing: "-0.02em",
+                            }}
+                        >
+                            No Note Selected
+                        </Typography>
+                        <Typography
+                            level="body-sm"
+                            sx={{
+                                color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.45)",
+                                fontSize: "0.875rem",
+                                lineHeight: 1.5,
+                            }}
+                        >
+                            {useNM.currentNoteType === 1
+                                ? "Choose a note from the sidebar, or create a new one"
+                                : "Choose a note from the sidebar to start editing"}
+                        </Typography>
+                    </Stack>
+
+                    {useNM.currentNoteType === 1 && (
+                        <Button
+                            variant="soft"
+                            color="neutral"
+                            startDecorator={<NoteAddRoundedIcon sx={{ fontSize: 18 }} />}
+                            onClick={() => useNM.handleCreateNewMyNote(null)}
+                            sx={{
+                                mt: 0.5,
+                                borderRadius: "10px",
+                                fontWeight: 600,
+                                px: 2.5,
+                            }}
+                        >
+                            New My Note
+                        </Button>
+                    )}
+                </Stack>
+            </Box>
         );
     }
 
