@@ -38,6 +38,8 @@ import {
     SuggestionMenuController,
     TableCellMergeButton,
     TextAlignButton,
+    FloatingComposerController,
+    FloatingThreadController,
 } from "@blocknote/react";
 import DownloadIcon from "@mui/icons-material/Download";
 import { Box, IconButton, Modal, ModalDialog, Tooltip } from "@mui/joy";
@@ -57,6 +59,7 @@ import { downloadFile } from "../../utils/downloadUtils";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 import { Alert } from "./sub/Alert";
 import { ResetBlockTypeItem } from "./sub/ResetBlockTypeItem";
+import { ThreadsSidebarErrorBoundary } from "./sub/ThreadsSidebarErrorBoundary";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const django_url = import.meta.env.VITE_DJANGO_URL;
@@ -269,6 +272,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                 editor={editor as any}
                 formattingToolbar={false}
                 sideMenu={true}
+                comments={false}
                 theme={mode === "dark" ? "dark" : "light"}
                 data-changing-font-demo
                 onChange={() => {
@@ -386,6 +390,11 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                         )
                     }
                 />
+
+                <FloatingComposerController />
+                <ThreadsSidebarErrorBoundary>
+                    <FloatingThreadController />
+                </ThreadsSidebarErrorBoundary>
             </BlockNoteView>
 
             <Modal open={opened} sx={{ zIndex: 10010 }} onClose={() => setOpened(false)}>

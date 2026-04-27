@@ -36,9 +36,13 @@ import {
     SideMenu,
     SideMenuController,
     SuggestionMenuController,
+    BlockNoteViewEditor,
+    FloatingComposerController,
+    FloatingThreadController,
     TableCellMergeButton,
     TextAlignButton,
 } from "@blocknote/react";
+import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import DownloadIcon from "@mui/icons-material/Download";
 import { Box, IconButton, Modal, ModalDialog, Tooltip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -58,6 +62,8 @@ import { downloadFile } from "../../utils/downloadUtils";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 import { Alert } from "./sub/Alert";
 import { ResetBlockTypeItem } from "./sub/ResetBlockTypeItem";
+import { ThreadsSidebarErrorBoundary } from "./sub/ThreadsSidebarErrorBoundary";
+import { ThreadsSidebarWithPreload } from "./sub/ThreadsSidebarWithPreload";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const django_url = import.meta.env.VITE_DJANGO_URL;
@@ -178,7 +184,7 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
 
     const documentName = `task-note:${currentTaskNote.noteId}`;
 
-    const { editor } = useCollaborativeBlockNote({
+    const { editor, threadStore } = useCollaborativeBlockNote({
         documentName,
         user: collabUser,
         userId: myself.userId,
@@ -192,6 +198,7 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
         teamMemberProfiles: useTEM.teamMemberProfiles,
     });
 
+    const [showThreadsSidebar, setShowThreadsSidebar] = useState(false);
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
     const insertEmoji = (emoji: any) => {
@@ -240,12 +247,31 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
 
     return (
         <Box className={bnBoxClassName} sx={{ position: "relative" }}>
+            <Tooltip
+                placement="left"
+                size="sm"
+                title={showThreadsSidebar ? "Hide Comments" : "Show Comments"}
+                variant="outlined"
+            >
+                <IconButton
+                    color="neutral"
+                    size="sm"
+                    sx={{ position: "absolute", top: 8, right: 8, zIndex: 10 }}
+                    variant={showThreadsSidebar ? "solid" : "outlined"}
+                    onClick={() => setShowThreadsSidebar((prev) => !prev)}
+                >
+                    <ChatBubbleOutlineIcon sx={{ fontSize: 18 }} />
+                </IconButton>
+            </Tooltip>
+
             <BlockNoteView
                 className="bn-box"
                 editor={editor as any}
                 emojiPicker={false}
                 formattingToolbar={false}
                 sideMenu={false}
+                comments={false}
+                renderEditor={false}
                 theme={mode === "dark" ? "dark" : "light"}
                 data-changing-font-demo
                 onChange={() => {
@@ -257,111 +283,136 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                         }
                     }
                 }}
-                onClick={(e) => {
-                    const target = e.target as HTMLElement;
-                    if (target.tagName === "IMG") {
-                        handleImageClick((target as HTMLImageElement).src);
-                    }
-                }}
-                onKeyDown={(event) => {
-                    if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-                        if (editor.document.length > 1) {
-                            //Auto saving logic here
-                        }
-                    }
-                }}
             >
-                <SideMenuController
-                    sideMenu={(props) => (
-                        <SideMenu {...props} dragHandleMenu={CustomDragHandleMenu} />
-                    )}
-                />
-                <FormattingToolbarController
-                    formattingToolbar={() => (
-                        <FormattingToolbar>
-                            <BlockTypeSelect
-                                key={"blockTypeSelect"}
-                                items={[
-                                    // Gets the default Block Type Select items.
-                                    ...blockTypeSelectItems(editor.dictionary),
-                                    // Adds an item for the Alert block.
-                                    {
-                                        name: "Alert",
-                                        type: "alert",
-                                        icon: RiAlertFill,
-                                    } satisfies BlockTypeSelectItem,
-                                ]}
+                <div
+                    className="bn-editor-with-sidebar"
+                    onClick={(e) => {
+                        const target = e.target as HTMLElement;
+                        if (target.tagName === "IMG") {
+                            handleImageClick((target as HTMLImageElement).src);
+                        }
+                    }}
+                    onKeyDown={(event) => {
+                        if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+                            if (editor.document.length > 1) {
+                                //Auto saving logic here
+                            }
+                        }
+                    }}
+                >
+                    <div className="bn-editor-section">
+                        <BlockNoteViewEditor>
+                            <SideMenuController
+                                sideMenu={(props) => (
+                                    <SideMenu
+                                        {...props}
+                                        dragHandleMenu={CustomDragHandleMenu}
+                                    />
+                                )}
+                            />
+                            <FormattingToolbarController
+                                formattingToolbar={() => (
+                                    <FormattingToolbar>
+                                        <BlockTypeSelect
+                                            key={"blockTypeSelect"}
+                                            items={[
+                                                ...blockTypeSelectItems(editor.dictionary),
+                                                {
+                                                    name: "Alert",
+                                                    type: "alert",
+                                                    icon: RiAlertFill,
+                                                } satisfies BlockTypeSelectItem,
+                                            ]}
+                                        />
+
+                                        <BasicTextStyleButton
+                                            key={"boldStyleButton"}
+                                            basicTextStyle={"bold"}
+                                        />
+                                        <BasicTextStyleButton
+                                            key={"italicStyleButton"}
+                                            basicTextStyle={"italic"}
+                                        />
+                                        <BasicTextStyleButton
+                                            key={"underlineStyleButton"}
+                                            basicTextStyle={"underline"}
+                                        />
+                                        <BasicTextStyleButton
+                                            key={"strikeStyleButton"}
+                                            basicTextStyle={"strike"}
+                                        />
+                                        <BasicTextStyleButton
+                                            key={"codeStyleButton"}
+                                            basicTextStyle={"code"}
+                                        />
+                                        <TextAlignButton
+                                            key={"textAlignLeftButton"}
+                                            textAlignment={"left"}
+                                        />
+                                        <TextAlignButton
+                                            key={"textAlignCenterButton"}
+                                            textAlignment={"center"}
+                                        />
+                                        <TextAlignButton
+                                            key={"textAlignRightButton"}
+                                            textAlignment={"right"}
+                                        />
+                                        <ColorStyleButton key={"colorStyleButton"} />
+                                        <CreateLinkButton key={"createLinkButton"} />
+                                        <FileCaptionButton key={"fileCaptionButton"} />
+                                        <FileReplaceButton key={"fileReplaceButton"} />
+                                        <AddCommentButton key={"addCommentButton"} />
+                                        <FileDeleteButton key={"fileDeleteButton"} />
+                                        <FileDownloadButton key={"fileDownloadButton"} />
+                                        <FilePreviewButton key={"filePreviewButton"} />
+                                        <FileRenameButton key={"fileRenameButton"} />
+                                        <TableCellMergeButton
+                                            key={"tableCellMergeButton"}
+                                        />
+                                    </FormattingToolbar>
+                                )}
                             />
 
-                            <BasicTextStyleButton
-                                key={"boldStyleButton"}
-                                basicTextStyle={"bold"}
+                            <SuggestionMenuController
+                                triggerCharacter={"@"}
+                                getItems={async (query) =>
+                                    filterSuggestionItems(
+                                        MentionMenuItems(
+                                            useTEM.teamMemberProfiles,
+                                            editor,
+                                            useTEM.teamMembers
+                                        ),
+                                        query
+                                    )
+                                }
                             />
-                            <BasicTextStyleButton
-                                key={"italicStyleButton"}
-                                basicTextStyle={"italic"}
+                            <SuggestionMenuController
+                                triggerCharacter={"/"}
+                                getItems={async (query) =>
+                                    filterSuggestionItems(
+                                        getCustomSlashMenuItems(
+                                            editor as unknown as typeof schema.BlockNoteEditor
+                                        ),
+                                        query
+                                    )
+                                }
                             />
-                            <BasicTextStyleButton
-                                key={"underlineStyleButton"}
-                                basicTextStyle={"underline"}
-                            />
-                            <BasicTextStyleButton
-                                key={"strikeStyleButton"}
-                                basicTextStyle={"strike"}
-                            />
-                            <BasicTextStyleButton
-                                key={"codeStyleButton"}
-                                basicTextStyle={"code"}
-                            />
-                            <TextAlignButton key={"textAlignLeftButton"} textAlignment={"left"} />
-                            <TextAlignButton
-                                key={"textAlignCenterButton"}
-                                textAlignment={"center"}
-                            />
-                            <TextAlignButton
-                                key={"textAlignRightButton"}
-                                textAlignment={"right"}
-                            />
-                            <ColorStyleButton key={"colorStyleButton"} />
-                            <CreateLinkButton key={"createLinkButton"} />
-                            <FileCaptionButton key={"fileCaptionButton"} />
-                            <FileReplaceButton key={"fileReplaceButton"} />
-                            <AddCommentButton key={"addCommentButton"} />
-                            <FileDeleteButton key={"fileDeleteButton"} />
-                            <FileDownloadButton key={"fileDownloadButton"} />
-                            <FilePreviewButton key={"filePreviewButton"} />
-                            <FileRenameButton key={"fileRenameButton"} />
-                            <TableCellMergeButton key={"tableCellMergeButton"} />
-                        </FormattingToolbar>
-                    )}
-                />
 
-                {/* Adds a mentions menu which opens with the "@" key */}
-                <SuggestionMenuController
-                    triggerCharacter={"@"}
-                    getItems={async (query) =>
-                        // Gets the mentions menu items
-                        filterSuggestionItems(
-                            MentionMenuItems(
-                                useTEM.teamMemberProfiles,
-                                editor,
-                                useTEM.teamMembers
-                            ),
-                            query
-                        )
-                    }
-                />
-                <SuggestionMenuController
-                    triggerCharacter={"/"}
-                    getItems={async (query) =>
-                        filterSuggestionItems(
-                            getCustomSlashMenuItems(
-                                editor as unknown as typeof schema.BlockNoteEditor
-                            ),
-                            query
-                        )
-                    }
-                />
+                            <FloatingComposerController />
+                            {!showThreadsSidebar && (
+                                <ThreadsSidebarErrorBoundary>
+                                    <FloatingThreadController />
+                                </ThreadsSidebarErrorBoundary>
+                            )}
+                        </BlockNoteViewEditor>
+                    </div>
+
+                    {showThreadsSidebar && threadStore && (
+                        <div className="bn-threads-sidebar-panel">
+                            <ThreadsSidebarWithPreload filter="all" sort="position" />
+                        </div>
+                    )}
+                </div>
             </BlockNoteView>
 
             <Modal open={opened} sx={{ zIndex: 10010 }} onClose={() => setOpened(false)}>

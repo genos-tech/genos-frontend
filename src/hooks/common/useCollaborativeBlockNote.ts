@@ -14,6 +14,7 @@ import * as Y from "yjs";
 import { UserProps } from "../../types/admin";
 
 const COLLAB_URL = import.meta.env.VITE_COLLAB_URL;
+const MEDIA_URL = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 export type CollaborationUser = {
     name: string;
@@ -36,19 +37,30 @@ type UseCollaborativeBlockNoteOptions = {
 
 export type ConnectionStatus = "connecting" | "connected" | "disconnected";
 
+function buildAvatarUrl(path: string | undefined): string {
+    if (!path) return "";
+    if (path.startsWith("http://") || path.startsWith("https://")) return path;
+    return MEDIA_URL ? `${MEDIA_URL}/${path}` : path;
+}
+
 function buildResolveUsers(profiles: Record<string, UserProps>, myself: UserProps) {
     return async (userIds: string[]): Promise<User[]> => {
         const allProfiles: Record<string, UserProps> = {
             ...profiles,
             [myself.userId]: myself,
         };
-        return userIds
-            .filter((id) => allProfiles[id])
-            .map((id) => ({
-                id,
-                username: allProfiles[id].userName,
-                avatarUrl: allProfiles[id].avatarImgPath || "",
-            }));
+        const result = userIds.map((id) => {
+            const profile = allProfiles[id];
+            if (profile) {
+                return {
+                    id,
+                    username: profile.userName,
+                    avatarUrl: buildAvatarUrl(profile.avatarImgPath),
+                };
+            }
+            return { id, username: "Unknown User", avatarUrl: "" };
+        });
+        return result;
     };
 }
 
