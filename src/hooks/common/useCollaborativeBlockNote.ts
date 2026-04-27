@@ -86,30 +86,55 @@ export function useCollaborativeBlockNote({
     const syncedRef = useRef(false);
     const fragmentRef = useRef<Y.XmlFragment | null>(null);
 
-    const seedDocument = useCallback((fragment: Y.XmlFragment) => {
-        if (seededRef.current) return;
-
-        const body = initialBodyRef.current;
-        if (!body || body.length === 0) return;
-
+    const isDocumentEmpty = useCallback((fragment: Y.XmlFragment, editor: any): boolean => {
         const content = fragment.toJSON();
-        const isEmpty = !content || content === "" || content === "<undefined></undefined>";
-        if (!isEmpty) {
-            seededRef.current = true;
-            return;
-        }
+        if (!content || content === "" || content === "<undefined></undefined>") return true;
 
-        seededRef.current = true;
-        setTimeout(() => {
-            const editor = editorRef.current;
-            if (!editor) return;
-            try {
-                editor.replaceBlocks(editor.document, body as PartialBlock[]);
-            } catch {
-                // Seeding failed; document starts empty
+        // Tiptap initializes Yjs with a default empty paragraph before sync.
+        // Check via the editor's document if the content is just a single empty block.
+        if (editor) {
+            const doc = editor.document;
+            if (!doc || doc.length === 0) return true;
+            if (doc.length === 1) {
+                const block = doc[0];
+                const hasNoContent =
+                    !block.content ||
+                    block.content.length === 0 ||
+                    (block.content.length === 1 &&
+                        block.content[0].type === "text" &&
+                        block.content[0].text === "");
+                const hasNoChildren = !block.children || block.children.length === 0;
+                if (hasNoContent && hasNoChildren) return true;
             }
-        }, 0);
+        }
+        return false;
     }, []);
+
+    const seedDocument = useCallback(
+        (fragment: Y.XmlFragment) => {
+            if (seededRef.current) return;
+
+            const body = initialBodyRef.current;
+            if (!body || body.length === 0) return;
+
+            const editor = editorRef.current;
+            if (!isDocumentEmpty(fragment, editor)) {
+                seededRef.current = true;
+                return;
+            }
+
+            seededRef.current = true;
+            setTimeout(() => {
+                if (!editor) return;
+                try {
+                    editor.replaceBlocks(editor.document, body as PartialBlock[]);
+                } catch {
+                    // Seeding failed; document starts empty
+                }
+            }, 0);
+        },
+        [isDocumentEmpty]
+    );
 
     const { doc, provider, fragment } = useMemo(() => {
         seededRef.current = false;
@@ -143,7 +168,13 @@ export function useCollaborativeBlockNote({
 
     // Retry seeding when initialBody arrives after onSynced already fired
     useEffect(() => {
-        if (syncedRef.current && !seededRef.current && fragmentRef.current && initialBody && initialBody.length > 0) {
+        if (
+            syncedRef.current &&
+            !seededRef.current &&
+            fragmentRef.current &&
+            initialBody &&
+            initialBody.length > 0
+        ) {
             seedDocument(fragmentRef.current);
         }
     }, [initialBody, seedDocument]);
