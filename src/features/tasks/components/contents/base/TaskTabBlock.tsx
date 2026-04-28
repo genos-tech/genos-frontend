@@ -202,6 +202,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
             setIsUploadingFilesUpdated(true);
             setNumOfUploadingFiles(numOfUploadingFiles + selectedFiles.length);
         }
+        event.target.value = "";
     };
 
     const handleDroppedFiles = (event: React.DragEvent<HTMLDivElement>) => {
@@ -263,6 +264,8 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     useEffect(() => {
         setImages([]);
         setTextFiles([]);
+        setUploadingFiles([]);
+        setNumOfUploadingFiles(0);
         setTabIndex(0);
     }, [useTM.currentPreviewTaskId]);
 
@@ -279,7 +282,11 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     }, [isUploadingFilesUpdated]);
 
     useEffect(() => {
-        uploadedFiles.map((attachmentFile) => {
+        setImages([]);
+        setTextFiles([]);
+        const backendFiles: AttachmentFileProps[] = [];
+        uploadedFiles.forEach((attachmentFile) => {
+            if (attachmentFile.attachment_id < 0) return;
             if (attachmentFile.file_base64) {
                 const byteCharacters = atob(attachmentFile.file_base64);
                 const byteNumbers = new Array(byteCharacters.length)
@@ -292,19 +299,17 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                 });
 
                 updateDisplayingFiles(file, attachmentFile.attachment_id);
-                setUploadingFiles((prev) => [
-                    ...prev,
-                    { attachment_id: attachmentFile.attachment_id, file: file },
-                ]);
+                backendFiles.push({ attachment_id: attachmentFile.attachment_id, file: file });
             } else if (attachmentFile.file) {
-                setUploadingFiles((prev) => [
-                    ...prev,
-                    {
-                        attachment_id: attachmentFile.attachment_id,
-                        file: attachmentFile.file,
-                    },
-                ]);
+                backendFiles.push({
+                    attachment_id: attachmentFile.attachment_id,
+                    file: attachmentFile.file,
+                });
             }
+        });
+        setUploadingFiles((prev) => {
+            const pendingUploads = prev.filter((f) => f.attachment_id < 0);
+            return [...backendFiles, ...pendingUploads];
         });
     }, [uploadedFiles]);
 

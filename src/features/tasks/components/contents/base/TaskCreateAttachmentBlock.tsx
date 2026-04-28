@@ -116,6 +116,7 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
             setIsUploadingFilesUpdated(true);
             setNumOfUploadingFiles(numOfUploadingFiles + selectedFiles.length);
         }
+        event.target.value = "";
     };
 
     const handleDroppedFiles = (event: React.DragEvent<HTMLDivElement>) => {
