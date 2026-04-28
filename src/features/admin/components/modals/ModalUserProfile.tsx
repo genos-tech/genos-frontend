@@ -18,6 +18,7 @@ import {
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
 import { EmojiPicker } from "../../../../components/ui/emoji/EmojiPicker";
@@ -88,6 +89,7 @@ export const UserProfile = (props: UserProfileProps) => {
     } = props;
 
     const { accessToken } = useAuth();
+    const navigate = useNavigate();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const styles = isDark ? MODAL_STYLES.dark : MODAL_STYLES.light;
@@ -681,6 +683,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                 );
                                                 useUISM.setOpeningService(1);
                                                 setOpenUserProfile(false);
+                                                navigate("/Home/chat");
                                             }
                                         })();
                                     }}
