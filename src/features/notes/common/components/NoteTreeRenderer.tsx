@@ -300,7 +300,7 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                                     depth={depth + 1}
                                 />
                             ))}
-                        {open && isSelected && createChildNoteList(node)}
+                        {/* {open && isSelected && createChildNoteList(node)} */}
                     </List>
                 </Box>
             </ListItem>
