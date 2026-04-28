@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useColorScheme } from "@mui/joy/styles";
 import { Box } from "@mui/material";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { createTheme, THEME_ID, ThemeProvider } from "@mui/material/styles";
 import { DataGrid, GridRowModel, useGridApiRef } from "@mui/x-data-grid";
 import { Socket } from "socket.io-client";
 
@@ -18,7 +18,7 @@ import { effortLevels, priorities, statuses } from "../../utils/taskMeta";
 import { TaskFilterMenu } from "./TaskFilterMenu";
 import { getTaskColumns } from "./TaskTableFormat";
 
-const theme = createTheme({ cssVariables: true });
+const materialTheme = createTheme({ cssVariables: true });
 
 type ProjectTaskTableProps = {
     teamMembers: UserProps[];
@@ -214,7 +214,7 @@ export const ProjectTaskTable = (props: ProjectTaskTableProps) => {
     };
 
     return (
-        <ThemeProvider theme={theme}>
+        <ThemeProvider theme={{ [THEME_ID]: materialTheme }}>
             <div style={{ height: "100%", overflow: "hidden", borderRadius: "5px" }}>
                 <TaskFilterMenu
                     isTaskUpdated={useTM.isTaskUpdated}

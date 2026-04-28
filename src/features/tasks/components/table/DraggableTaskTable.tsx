@@ -5,7 +5,7 @@ import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import PendingIcon from "@mui/icons-material/Pending";
 import { Box, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { createTheme, THEME_ID, ThemeProvider } from "@mui/material/styles";
 import { DragDropContext, Droppable, DropResult } from "react-beautiful-dnd";
 import { Socket } from "socket.io-client";
 
@@ -25,7 +25,7 @@ import { effortLevels, priorities, statuses } from "../../utils/taskMeta";
 import { DraggableTaskRow } from "./DraggableTaskRow";
 import { TaskFilterMenu } from "./TaskFilterMenu";
 
-const theme = createTheme({ cssVariables: true });
+const materialTheme = createTheme({ cssVariables: true });
 
 // Column definitions for the table
 export type ColumnDef = {
@@ -593,7 +593,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         dragHandleWidth + visibleColumns.reduce((sum, col) => sum + getColumnWidth(col.field), 0);
 
     return (
-        <ThemeProvider theme={theme}>
+        <ThemeProvider theme={{ [THEME_ID]: materialTheme }}>
             <div
                 style={{
                     height: "100%",

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useColorScheme } from "@mui/joy/styles";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { createTheme, THEME_ID, ThemeProvider } from "@mui/material/styles";
 import { DragDropContext, DropResult } from "react-beautiful-dnd";
 import { Socket } from "socket.io-client";
 
@@ -15,7 +15,7 @@ import { FilterProps } from "../../types/TaskTableTypes";
 import { TaskFilterMenu } from "../table/TaskFilterMenu";
 import { ColumnConfig, SprintBoardColumn } from "./SprintBoardColumn";
 
-const theme = createTheme({ cssVariables: true });
+const materialTheme = createTheme({ cssVariables: true });
 
 // Column definitions
 const COLUMNS: ColumnConfig[] = [
@@ -237,7 +237,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
     };
 
     return (
-        <ThemeProvider theme={theme}>
+        <ThemeProvider theme={{ [THEME_ID]: materialTheme }}>
             <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
                 <TaskFilterMenu
                     isTaskUpdated={useTM.isTaskUpdated}
