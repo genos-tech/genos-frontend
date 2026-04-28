@@ -39,7 +39,7 @@ export const setupWebSocketHandlers = (
 
     socket.on("message", async (message) => {
         if (message.wsType === "chat") {
-            console.log("chat_message:", message);
+            // console.log("chat_message:", message);
             if (message.chatId !== null) {
                 if (message.isThread === true) {
                     await handleThreadMessage(message, myself, accessToken, useCM);
@@ -56,21 +56,21 @@ export const setupWebSocketHandlers = (
                 }
             }
         } else if (message.wsType === "task") {
-            console.log("Got a task comment");
-            console.log("task_message:", message);
+            // console.log("Got a task comment");
+            // console.log("task_message:", message);
             if (setIsTaskCommentUpdated) {
                 setIsTaskCommentUpdated({ isUpdate: true, scrollToBottom: false });
             }
         } else if (message.wsType === "activity") {
-            console.log("Got an activity message");
-            console.log("activity_message:", message);
+            // console.log("Got an activity message");
+            // console.log("activity_message:", message);
             await handleActivityMessage(message, myself, useCM);
         } else if (message.wsType === "userStatus") {
             const user: UserProps = message.user;
             await addUser(user);
         } else if (message.wsType === "inbox") {
-            console.log("Got an inbox message");
-            console.log("inbox_message:", message);
+            // console.log("Got an inbox message");
+            // console.log("inbox_message:", message);
 
             const inboxItem: InboxItemProps = message.data;
             if (message.alreadyExist === false) {
