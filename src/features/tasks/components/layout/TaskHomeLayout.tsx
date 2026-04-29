@@ -101,7 +101,16 @@ export const TaskHomeLayout = ({
             }}
         >
             {useTM.isDashboardVisible && (
-                <TaskDashboard useTM={useTM} usePM={usePM} useTEM={useTEM} />
+                <TaskDashboard
+                    useTM={useTM}
+                    usePM={usePM}
+                    useTEM={useTEM}
+                    myself={myself}
+                    setMyself={setMyself}
+                    useCM={useCM}
+                    useUISM={useUISM}
+                    socket={socket}
+                />
             )}
             {useTM.isTaskHomeVisible && (
                 <>

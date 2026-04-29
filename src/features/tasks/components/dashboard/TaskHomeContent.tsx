@@ -30,10 +30,15 @@ import {
 } from "@mui/joy";
 import Avatar from "@mui/joy/Avatar";
 import { useColorScheme } from "@mui/joy/styles";
+import { Socket } from "socket.io-client";
 
+import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
 
 // A task augmented with status/close-date rolled up from its parent chain.
@@ -56,6 +61,11 @@ type TaskHomeContentProps = {
     useTM: TaskManagementState;
     usePM: ProjectManagementState;
     useTEM: TeamManagementState;
+    myself: UserProps;
+    setMyself: (me: UserProps) => void;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
+    socket: Socket | null;
 };
 
 const SPRINT_OPTIONS = [
@@ -107,7 +117,16 @@ const formatRelativeTime = (dateStr: string | null): string => {
     return `${weeks} weeks ago`;
 };
 
-export const TaskHomeContent = ({ useTM, usePM, useTEM }: TaskHomeContentProps) => {
+export const TaskHomeContent = ({
+    useTM,
+    usePM,
+    useTEM,
+    myself,
+    setMyself,
+    useCM,
+    useUISM,
+    socket,
+}: TaskHomeContentProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const [sprintDays, setSprintDays] = useState(14);
@@ -1188,13 +1207,32 @@ export const TaskHomeContent = ({ useTM, usePM, useTEM }: TaskHomeContentProps) 
                                                             alignItems="center"
                                                             spacing={1}
                                                         >
-                                                            <Avatar
-                                                                size="sm"
-                                                                src={a.imgPath || undefined}
-                                                                sx={{ width: 26, height: 26 }}
-                                                            >
-                                                                {(a.name || "?")[0]?.toUpperCase()}
-                                                            </Avatar>
+                                                            {a.id !== "__unassigned__" &&
+                                                            useTEM.teamMemberProfiles[a.id] ? (
+                                                                <AvatarWithStatus
+                                                                    avatarSize={26}
+                                                                    avatarUser={
+                                                                        useTEM.teamMemberProfiles[
+                                                                            a.id
+                                                                        ]
+                                                                    }
+                                                                    isYou={myself.userId === a.id}
+                                                                    myself={myself}
+                                                                    setMyself={setMyself}
+                                                                    socket={socket}
+                                                                    useCM={useCM}
+                                                                    useUISM={useUISM}
+                                                                />
+                                                            ) : (
+                                                                <Avatar
+                                                                    size="sm"
+                                                                    src={a.imgPath || undefined}
+                                                                    sx={{ width: 26, height: 26 }}
+                                                                >
+                                                                    {(a.name ||
+                                                                        "?")[0]?.toUpperCase()}
+                                                                </Avatar>
+                                                            )}
                                                             <Typography
                                                                 level="body-sm"
                                                                 sx={{
