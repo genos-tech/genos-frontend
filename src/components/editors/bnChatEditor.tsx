@@ -45,6 +45,7 @@ import { AllChatProps, ChatProps, MessageProps } from "../../types/chat";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
+import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
@@ -379,6 +380,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                 <BlockNoteView
                     className="bn-box"
                     editor={editor}
+                    emojiPicker={false}
                     formattingToolbar={false}
                     sideMenu={false} // false for Chat/comment, true for Task content
                     theme={mode === "dark" ? "dark" : "light"}
@@ -483,6 +485,11 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                         getItems={async (query) =>
                             filterSuggestionItems(getCustomSlashMenuItems(editor), query)
                         }
+                    />
+                    <SuggestionMenuController
+                        triggerCharacter={":"}
+                        minQueryLength={2}
+                        getItems={async (query) => getEmojiSuggestionItems(editor, query)}
                     />
                 </BlockNoteView>
             </Box>

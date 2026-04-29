@@ -56,6 +56,7 @@ import { UserProps } from "../../types/admin";
 import { getUserColor } from "../../utils/collabUtils";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
+import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 import { Alert } from "./sub/Alert";
 import { ResetBlockTypeItem } from "./sub/ResetBlockTypeItem";
@@ -273,6 +274,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                 formattingToolbar={false}
                 sideMenu={true}
                 comments={false}
+                emojiPicker={false}
                 theme={mode === "dark" ? "dark" : "light"}
                 data-changing-font-demo
                 onChange={() => {
@@ -389,6 +391,11 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                             query
                         )
                     }
+                />
+                <SuggestionMenuController
+                    triggerCharacter={":"}
+                    minQueryLength={2}
+                    getItems={async (query) => getEmojiSuggestionItems(editor, query)}
                 />
 
                 {threadStore && <FloatingComposerController />}

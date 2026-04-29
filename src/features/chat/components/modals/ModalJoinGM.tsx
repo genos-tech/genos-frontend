@@ -55,7 +55,7 @@ export const ModalJoinGM: React.FC<Props> = ({ socket, myself, openJoinGM, setOp
                                 },
                                 content: [
                                     {
-                                        text: "Has sent a request to join the Group: ",
+                                        text: "Has sent a request to join the GM: ",
                                         type: "text",
                                         styles: {},
                                     },

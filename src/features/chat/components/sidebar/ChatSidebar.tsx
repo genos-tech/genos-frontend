@@ -64,28 +64,28 @@ const NAV_ITEMS = [
         icon: GroupsRoundedIcon,
         label: "Group Messages",
         shortLabel: "Groups",
-        colorScheme: { dark: "#4ade80", light: "#22c55e" },
+        colorScheme: { dark: "#60a5fa", light: "#3b82f6" },
     },
     {
         type: CHAT_PANE_TYPES.PM,
         icon: AccountTreeRoundedIcon,
         label: "Project Updates",
         shortLabel: "Projects",
-        colorScheme: { dark: "#f472b6", light: "#ec4899" },
+        colorScheme: { dark: "#60a5fa", light: "#3b82f6" },
     },
     {
         type: CHAT_PANE_TYPES.FLAGGED,
         icon: FlagRoundedIcon,
         label: "Flagged Messages",
         shortLabel: "Flagged",
-        colorScheme: { dark: "#fbbf24", light: "#f59e0b" },
+        colorScheme: { dark: "#60a5fa", light: "#3b82f6" },
     },
     {
         type: CHAT_PANE_TYPES.ACTIVITY,
         icon: NotificationsActiveRoundedIcon,
         label: "Recent Activities",
         shortLabel: "Activity",
-        colorScheme: { dark: "#a78bfa", light: "#7c3aed" },
+        colorScheme: { dark: "#60a5fa", light: "#3b82f6" },
     },
 ];
 
