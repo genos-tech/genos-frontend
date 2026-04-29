@@ -117,6 +117,11 @@ export const useProjectTaskManagement = ({
             parentTaskId: null,
             rootTaskId: null,
         });
+        // We expect to load tasks for the new team's first project shortly.
+        // Flip the loading flag now so the table shows the "waiting" spinner
+        // during the gap before fetchProjectTasks fires. The safety timeout in
+        // useTaskManagement will reset it if no project ever loads.
+        useTM.setIsLoadingTasks(true);
     }, [currentTeamId]);
 
     return {

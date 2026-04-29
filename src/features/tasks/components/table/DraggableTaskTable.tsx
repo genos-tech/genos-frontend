@@ -3,7 +3,7 @@ import AutorenewIcon from "@mui/icons-material/Autorenew";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import PendingIcon from "@mui/icons-material/Pending";
-import { Box, Typography } from "@mui/joy";
+import { Box, CircularProgress, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { createTheme, THEME_ID, ThemeProvider } from "@mui/material/styles";
 import { DragDropContext, Droppable, DropResult } from "react-beautiful-dnd";
@@ -780,30 +780,66 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                         </Droppable>
                     </DragDropContext>
 
-                    {/* Empty state */}
-                    {displayRows.length === 0 && (
-                        <Box
-                            sx={{
-                                display: "flex",
-                                flexDirection: "column",
-                                justifyContent: "center",
-                                alignItems: "center",
-                                height: "200px",
-                                color: mode === "dark" ? "#666" : "#999",
-                                gap: 1,
-                            }}
-                        >
-                            <Typography level="body-lg" sx={{ fontWeight: 500, color: "inherit" }}>
-                                No tasks to display
-                            </Typography>
-                            <Typography
-                                level="body-sm"
-                                sx={{ color: mode === "dark" ? "#555" : "#bbb" }}
+                    {/* Empty state: show a spinner while we are still fetching tasks
+                        (initial mount, team switch, or project switch). Once the load
+                        completes and there is genuinely nothing to show, fall back to
+                        the static "No tasks to display" message. */}
+                    {displayRows.length === 0 &&
+                        (useTM.isLoadingTasks ? (
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    height: "200px",
+                                    gap: 1.5,
+                                    color: mode === "dark" ? "#9aa0c4" : "#6b7280",
+                                }}
                             >
-                                Try adjusting your filters
-                            </Typography>
-                        </Box>
-                    )}
+                                <CircularProgress
+                                    size="md"
+                                    variant="soft"
+                                    sx={{
+                                        "--CircularProgress-size": "36px",
+                                        "--CircularProgress-trackThickness": "3px",
+                                        "--CircularProgress-progressThickness": "3px",
+                                        color: mode === "dark" ? "#818cf8" : "#6366f1",
+                                    }}
+                                />
+                                <Typography
+                                    level="body-md"
+                                    sx={{ fontWeight: 500, color: "inherit" }}
+                                >
+                                    Waiting to load tasks...
+                                </Typography>
+                            </Box>
+                        ) : (
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    height: "200px",
+                                    color: mode === "dark" ? "#666" : "#999",
+                                    gap: 1,
+                                }}
+                            >
+                                <Typography
+                                    level="body-lg"
+                                    sx={{ fontWeight: 500, color: "inherit" }}
+                                >
+                                    No tasks to display
+                                </Typography>
+                                <Typography
+                                    level="body-sm"
+                                    sx={{ color: mode === "dark" ? "#555" : "#bbb" }}
+                                >
+                                    Try adjusting your filters
+                                </Typography>
+                            </Box>
+                        ))}
                 </div>
             </div>
         </ThemeProvider>

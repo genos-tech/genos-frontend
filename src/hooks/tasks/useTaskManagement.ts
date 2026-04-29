@@ -74,6 +74,12 @@ export interface TaskManagementState {
     allTasks: TaskTableProps[];
     setAllTasks: (tasks: TaskTableProps[]) => void;
 
+    // Task list loading state (true while we are actively fetching tasks for the
+    // current project). Used by the table UI to show a "waiting to load tasks"
+    // spinner instead of the empty state during the load.
+    isLoadingTasks: boolean;
+    setIsLoadingTasks: (loading: boolean) => void;
+
     // Task metadata
     taskMetaTree: TaskMetaTreeNode[];
     setTaskMetaTree: (tree: TaskMetaTreeNode[]) => void;
@@ -174,6 +180,18 @@ export const useTaskManagement = (
         deleted: { id: 3, statuses: ["Deleted"], name: "Deleted" },
     };
     const [allTasks, setAllTasks] = useState<TaskTableProps[]>([]);
+    const [isLoadingTasks, setIsLoadingTasks] = useState<boolean>(false);
+
+    // Safety timeout: if isLoadingTasks stays true for too long (e.g. the new team
+    // has no projects so fetchProjectTasks never runs), force it back to false so
+    // the UI doesn't show a stuck spinner forever.
+    useEffect(() => {
+        if (!isLoadingTasks) return;
+        const timer = setTimeout(() => {
+            setIsLoadingTasks(false);
+        }, 8000);
+        return () => clearTimeout(timer);
+    }, [isLoadingTasks]);
 
     // Task metadata
     const [taskMeta, setTaskMeta] = useState<TaskMetaProps[]>([]);
@@ -280,11 +298,16 @@ export const useTaskManagement = (
 
     const fetchProjectTasks = async (projectId: number) => {
         setTsLastLoadProjectTasks(Date.now());
-        const _allTasks: TaskTableProps[] = await popSpecificProjectTasks(
-            projectId,
-            taskTypes.all.statuses
-        );
-        setAllTasks(_allTasks);
+        setIsLoadingTasks(true);
+        try {
+            const _allTasks: TaskTableProps[] = await popSpecificProjectTasks(
+                projectId,
+                taskTypes.all.statuses
+            );
+            setAllTasks(_allTasks);
+        } finally {
+            setIsLoadingTasks(false);
+        }
     };
 
     initCurrentTaskChain({
@@ -387,6 +410,8 @@ export const useTaskManagement = (
         // Task lists
         allTasks,
         setAllTasks,
+        isLoadingTasks,
+        setIsLoadingTasks,
 
         // Task metadata
         taskMetaTree,
