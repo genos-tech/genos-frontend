@@ -29,18 +29,40 @@ export const useServiceInitialization = ({
     const useIM = useInboxManagement();
     const useTEM = useTeamManagement(myself, accessToken);
 
-    // Reset states when team changes
+    // Reset states when team changes.
+    // We MUST clear all team-scoped React state here (in addition to wiping IndexedDB
+    // in useAppInitialization). Otherwise:
+    //   - funcSetAllChats merges previous-team chats into the new team's list
+    //   - currentMainChat / activityMessages / inbox can briefly render stale data
+    //   - notes still reference IDs from the previous team
     useEffect(() => {
+        // Notes
         useNM.initializeNoteStates();
         useNM.setIsTaskNoteVisible(false);
 
+        // Tasks (also reset in useProjectTaskManagement; this instance is local to
+        // useServiceInitialization but we keep the reset for consistency).
         useTM.setAllTasks([]);
         useTM.setIsTaskPreviewVisible(false);
 
+        // Chats: wipe both lists and currently-open chats so the new team starts clean.
+        useCM.setAllChats([]);
+        useCM.setActivityMessages([]);
+        useCM.setFlaggedMessages([]);
+        useCM.setUnReadChatCounts({});
+        useCM.setUnReadActivityMessageCounts(-1);
+        useCM.setUnReadChatAndActivityCounts(0);
+        useCM.setCurrentMainChat(undefined);
+        useCM.setCurrentSubChat(undefined);
+        useCM.setCurrentThreadChat(undefined);
         useCM.setIsThreadTaskVisible(false);
         useCM.setIsChatNoteVisibleInChat(false);
         useCM.setIsSubChatVisible(false);
         useCM.setIsThreadVisible(false);
+
+        // Inbox
+        useIM.setInboxItems([]);
+        useIM.setUnReadInboxItemCount(0);
     }, [currentTeamId]);
 
     // Handle service-specific initialization

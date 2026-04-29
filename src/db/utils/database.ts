@@ -1,6 +1,31 @@
 import { openDB } from "idb";
 
-import { DB_NAME, DB_VERSION } from "../config";
+import { DB_NAME, DB_VERSION, STORES } from "../config";
+
+// Stores that hold team-scoped data and must be wiped when the user switches teams.
+// USER_INFO is intentionally excluded: it is indexed by teamId and shared across teams
+// so it can stay populated for offline access (see loadTeamMembersWorker).
+const TEAM_SCOPED_STORES: readonly string[] = [
+    STORES.INBOX,
+    STORES.ACTIVITY_MESSAGES,
+    STORES.DM_CHATS,
+    STORES.DM_MESSAGES,
+    STORES.DM_THREAD_MESSAGES,
+    STORES.GM_CHATS,
+    STORES.GM_MESSAGES,
+    STORES.GM_THREAD_MESSAGES,
+    STORES.MDM_CHATS,
+    STORES.MDM_MESSAGES,
+    STORES.MDM_THREAD_MESSAGES,
+    STORES.PM_CHATS,
+    STORES.PM_MESSAGES,
+    STORES.PM_THREAD_MESSAGES,
+    STORES.FLAGGED_MESSAGES,
+    STORES.TASKS,
+    STORES.PERSONAL_NOTES,
+    STORES.TASK_NOTES,
+    STORES.CHAT_NOTES,
+];
 
 // Database utility functions
 export class DatabaseUtils {
@@ -40,6 +65,26 @@ export class DatabaseUtils {
             await tx.done;
             return true;
         } catch {
+            return false;
+        }
+    }
+
+    // Clear every team-scoped store in a single transaction.
+    // Used when the user switches teams so no stale data leaks across teams.
+    static async clearTeamScopedStores(): Promise<boolean> {
+        try {
+            const db = await openDB(DB_NAME, DB_VERSION);
+            const presentStores = TEAM_SCOPED_STORES.filter((name) =>
+                db.objectStoreNames.contains(name)
+            );
+            if (presentStores.length === 0) return true;
+
+            const tx = db.transaction(presentStores, "readwrite");
+            await Promise.all(presentStores.map((name) => tx.objectStore(name).clear()));
+            await tx.done;
+            return true;
+        } catch (error) {
+            console.error("Failed to clear team-scoped IndexedDB stores:", error);
             return false;
         }
     }
