@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 
 import { UserProps } from "../../../../types/admin";
@@ -12,9 +12,10 @@ interface UseNoteAutoSaveProps {
     body: PartialBlock[] | undefined;
     myself: UserProps;
     accessToken: string;
-    setTabItems: (items: TaskNoteProps[]) => void;
-    setTaskNoteMeta: (meta: any[]) => void;
 }
+
+// Debounce delay between the user's last body edit and the auto-save firing.
+const AUTO_SAVE_DELAY_MS = 3000;
 
 export const useNoteAutoSave = ({
     currentTaskNote,
@@ -22,25 +23,11 @@ export const useNoteAutoSave = ({
     body,
     myself,
     accessToken,
-    setTabItems,
-    setTaskNoteMeta,
 }: UseNoteAutoSaveProps) => {
     const [noteBodyEdited, setNoteBodyEdited] = useState(false);
     const [noteBodySaved, setNoteBodySaved] = useState(false);
-    const [startIntervalUpdatingNote, setStartIntervalUpdatingNote] = useState(false);
 
-    // Auto save note body every 3 seconds if needed
-    useEffect(() => {
-        const intervalId = setInterval(() => {
-            if (noteBodyEdited === true) {
-                setStartIntervalUpdatingNote(true);
-            }
-        }, 3000);
-
-        return () => clearInterval(intervalId);
-    }, [noteBodyEdited]);
-
-    const updateNote = async () => {
+    const updateNote = useCallback(async () => {
         if (!currentTaskNote) return;
 
         let newNoteTitle = currentTaskNoteTitle;
@@ -63,27 +50,46 @@ export const useNoteAutoSave = ({
             // Add the updated note to the indexedDB
             await addNote(2, newNote);
 
-            setStartIntervalUpdatingNote(false);
             setNoteBodyEdited(false);
             setNoteBodySaved(true);
 
-            // Update the note title on the tab
-            // Note: This would need to be handled by the parent component
-            // as we can't directly update the tab items here
-
-            // Update the note title in the sidebar
-            // Note: This would need to be handled by the parent component
-            // as we can't directly update the task note meta here
+            // Tab items and task note meta are kept in sync by the parent
+            // component (TaskNoteMain) via its noteBodySaved-driven effect.
         } catch (error) {
             console.error("Failed to update note:", error);
         }
-    };
+    }, [currentTaskNote, currentTaskNoteTitle, body, myself, accessToken]);
 
+    // Keep the latest save fn and edited flag in refs so the debounce timer
+    // and unmount flush always read fresh values without resetting themselves.
+    const updateNoteRef = useRef(updateNote);
+    updateNoteRef.current = updateNote;
+
+    const noteBodyEditedRef = useRef(noteBodyEdited);
+    noteBodyEditedRef.current = noteBodyEdited;
+
+    // Debounced auto-save: fires AUTO_SAVE_DELAY_MS after the user's last body
+    // edit. Each new edit resets the timer, so a continuously typing user is
+    // never interrupted mid-stream.
     useEffect(() => {
-        if (startIntervalUpdatingNote) {
-            updateNote();
-        }
-    }, [startIntervalUpdatingNote]);
+        if (!noteBodyEdited) return;
+
+        const timerId = setTimeout(() => {
+            updateNoteRef.current();
+        }, AUTO_SAVE_DELAY_MS);
+
+        return () => clearTimeout(timerId);
+    }, [body, noteBodyEdited]);
+
+    // Best-effort flush on unmount so a navigation while a debounce is pending
+    // still persists the latest edit.
+    useEffect(() => {
+        return () => {
+            if (noteBodyEditedRef.current) {
+                updateNoteRef.current();
+            }
+        };
+    }, []);
 
     return {
         noteBodyEdited,

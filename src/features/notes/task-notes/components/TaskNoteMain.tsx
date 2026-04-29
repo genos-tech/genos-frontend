@@ -65,8 +65,6 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
             body,
             myself,
             accessToken: accessToken || "",
-            setTabItems: useNM.setTabItems,
-            setTaskNoteMeta: useNM.setTaskNoteMeta,
         });
 
     const { currentTask } = useTaskPreview({
@@ -77,13 +75,17 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
     });
 
     // Effects
+    // Re-sync local body/title and refresh the TabPanel key only when the user
+    // actually switches to a different task note. Reference-only updates (e.g.
+    // an in-place save that produces a new currentTaskNote object) must NOT
+    // remount the editor, or the title input loses focus mid-typing.
     useEffect(() => {
         if (useNM.currentTaskNote) {
             setBody(useNM.currentTaskNote.body);
             setTsBody(getLocalCurrentTimestamp());
             setCurrentTaskNoteTitle(useNM.currentTaskNote.title);
         }
-    }, [useNM.currentTaskNote]);
+    }, [useNM.currentTaskNote?.noteType, useNM.currentTaskNote?.noteId]);
 
     useEffect(() => {
         setNoteBodySaved(false);

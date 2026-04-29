@@ -86,12 +86,13 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
         noteEditor.setNoteBodySaved(false);
     }, [useNM.selectedTabIndex]);
 
-    // Update timestamp when current note changes
+    // Refresh the TabPanel key only when the user actually switches to a
+    // different my note. Reference-only updates (e.g. an in-place save that
+    // produces a new currentMyNote object) must NOT remount the editor, or
+    // the title input loses focus mid-typing.
     useEffect(() => {
-        if (useNM.currentMyNote) {
-            setTsBody(getLocalCurrentTimestamp());
-        }
-    }, [useNM.currentMyNote]);
+        setTsBody(getLocalCurrentTimestamp());
+    }, [useNM.currentMyNote?.noteType, useNM.currentMyNote?.noteId]);
 
     // Event handlers
     const handleCreateNewNote = () => {

@@ -5,7 +5,6 @@ import { sendUpdatedChatNote } from "../../features/notes/chat-notes/services/se
 import { addNote } from "../../features/notes/common/services/addNote";
 import { UserProps } from "../../types/admin";
 import { ChatNoteProps } from "../../types/notes";
-import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 
 export interface ChatNoteEditorState {
     currentChatNoteTitle: string;
@@ -35,6 +34,9 @@ export interface ChatNoteEditorProps {
 
 interface UseChatNoteEditorReturn extends ChatNoteEditorState, ChatNoteEditorActions {}
 
+// Debounce delay between the user's last body edit and the auto-save firing.
+const AUTO_SAVE_DELAY_MS = 3000;
+
 /**
  * Custom hook for managing chat note editing functionality
  * Handles title editing, body editing, auto-save, and note updates
@@ -54,7 +56,6 @@ export const useChatNoteEditor = ({
     const [noteBodyEdited, setNoteBodyEdited] = useState(false);
     const [noteBodySaved, setNoteBodySaved] = useState(false);
     const [body, setBody] = useState<PartialBlock[]>();
-    const [startIntervalUpdatingNote, setStartIntervalUpdatingNote] = useState(false);
     const titleInputRef = useRef<HTMLInputElement | null>(null);
 
     // Update note title and body when current note changes
@@ -89,7 +90,6 @@ export const useChatNoteEditor = ({
             // Add the updated note to the indexedDB
             await addNote(3, newNote);
 
-            setStartIntervalUpdatingNote(false);
             setNoteBodyEdited(false);
             setNoteBodySaved(true);
 
@@ -100,22 +100,36 @@ export const useChatNoteEditor = ({
         }
     }, [currentChatNote, currentChatNoteTitle, body, myself, accessToken, onNoteUpdate]);
 
-    // Auto-save functionality
-    useEffect(() => {
-        if (startIntervalUpdatingNote) {
-            updateNote();
-        }
-    }, [startIntervalUpdatingNote, updateNote]);
+    // Keep the latest save fn and edited flag in refs so the debounce timer
+    // and unmount flush always read fresh values without resetting themselves.
+    const updateNoteRef = useRef(updateNote);
+    updateNoteRef.current = updateNote;
 
+    const noteBodyEditedRef = useRef(noteBodyEdited);
+    noteBodyEditedRef.current = noteBodyEdited;
+
+    // Debounced auto-save: fires AUTO_SAVE_DELAY_MS after the user's last body
+    // edit. Each new edit resets the timer, so a continuously typing user is
+    // never interrupted mid-stream.
     useEffect(() => {
-        const intervalId = setInterval(() => {
-            if (noteBodyEdited === true) {
-                setStartIntervalUpdatingNote(true);
+        if (!noteBodyEdited) return;
+
+        const timerId = setTimeout(() => {
+            updateNoteRef.current();
+        }, AUTO_SAVE_DELAY_MS);
+
+        return () => clearTimeout(timerId);
+    }, [body, noteBodyEdited]);
+
+    // Best-effort flush on unmount so a navigation while a debounce is pending
+    // still persists the latest edit (the body is also safe in Yjs collab).
+    useEffect(() => {
+        return () => {
+            if (noteBodyEditedRef.current) {
+                updateNoteRef.current();
             }
-        }, 3000);
-
-        return () => clearInterval(intervalId);
-    }, [noteBodyEdited]);
+        };
+    }, []);
 
     const handleTitleChange = useCallback((value: string) => {
         setCurrentChatNoteTitle(value);
