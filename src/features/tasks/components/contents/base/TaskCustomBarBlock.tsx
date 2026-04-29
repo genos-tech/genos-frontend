@@ -20,7 +20,6 @@ export const TaskCustomBarBlock = (props: TaskCustomBarBlockProps) => {
                 alignItems: "center",
                 gap: 1.5,
                 justifyContent: "flex-end",
-                pb: 1,
             }}
         >
             <Chip
