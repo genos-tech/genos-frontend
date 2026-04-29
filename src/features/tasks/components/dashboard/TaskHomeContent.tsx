@@ -289,7 +289,7 @@ export const TaskHomeContent = ({ useTM, usePM, useTEM }: TaskHomeContentProps) 
 
     // ── Effort breakdown (active tasks only) ──
     const effortBreakdown = useMemo(() => {
-        const levels = ["XL", "L", "M", "S", "XS"];
+        const levels = ["Extensive", "High", "Moderate", "Low", "Minimal"];
         const active = effectiveTasks.filter((t) => t.effectiveStatus !== "Closed");
         const counts: Record<string, number> = {};
         for (const l of levels) counts[l] = 0;
@@ -479,11 +479,11 @@ export const TaskHomeContent = ({ useTM, usePM, useTEM }: TaskHomeContentProps) 
     };
 
     const effortColors: Record<string, string> = {
-        XL: "#8b5cf6",
-        L: "#6366f1",
-        M: "#3b82f6",
-        S: "#06b6d4",
-        XS: "#14b8a6",
+        Extensive: "#EF4444",
+        High: "#F59E0B",
+        Moderate: "#3B82F6",
+        Low: "#34D399",
+        Minimal: "#9CA3AF",
         None: "#94a3b8",
     };
 
