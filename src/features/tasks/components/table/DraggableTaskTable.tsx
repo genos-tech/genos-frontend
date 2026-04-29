@@ -109,7 +109,7 @@ export const defaultColumns: ColumnDef[] = [
     {
         field: "dueDate",
         headerName: "Due Date",
-        width: 100,
+        width: 110,
         minWidth: 80,
         align: "center",
         editable: true,

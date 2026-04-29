@@ -293,7 +293,7 @@ export const TaskHomeContent = ({
     // "Active" uses effectiveStatus, so sub-tasks of Closed parents are
     // correctly excluded from the active count.
     const priorityBreakdown = useMemo(() => {
-        const levels = ["Critical", "High", "Medium", "Low"];
+        const levels = ["Critical", "High", "Normal", "Low", "Minimal"];
         const active = effectiveTasks.filter((t) => t.effectiveStatus !== "Closed");
         const counts: Record<string, number> = {};
         for (const l of levels) counts[l] = 0;
@@ -490,10 +490,11 @@ export const TaskHomeContent = ({
     };
 
     const priorityColors: Record<string, string> = {
-        Critical: "#ef4444",
-        High: "#f97316",
-        Medium: "#eab308",
-        Low: "#3b82f6",
+        Critical: "#EF4444",
+        High: "#F59E0B",
+        Normal: "#3B82F6",
+        Low: "#34D399",
+        Minimal: "#9CA3AF",
         None: "#94a3b8",
     };
 
