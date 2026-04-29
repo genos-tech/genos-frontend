@@ -575,7 +575,7 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
             headerClassName: "task-col--header",
             type: "date",
             editable: true,
-            width: 100,
+            width: 110,
             align: "center",
             headerAlign: "center",
             valueFormatter: (params) => (params ? dayjs(params).format("YYYY-MM-DD") : params),
