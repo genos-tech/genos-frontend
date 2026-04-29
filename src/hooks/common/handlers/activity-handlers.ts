@@ -31,27 +31,27 @@ export const handleActivityMessage = async (
                 tmpNewActivityMessage.mentionedUserIds &&
                 isInArray(myself.userId, tmpNewActivityMessage.mentionedUserIds)
             ) {
-                console.log("Me mentioned");
+                // console.log("Me mentioned");
                 newActivityMessage = {
                     ...tmpNewActivityMessage,
                     activityType: 3,
                 };
                 doUpdateActivityMessage = true;
             } else if (tmpNewActivityMessage.isThread === true) {
-                console.log("thread replay from others");
+                // console.log("thread replay from others");
                 newActivityMessage = tmpNewActivityMessage;
                 doUpdateActivityMessage = true;
             } else if (tmpNewActivityMessage.chatType === 2) {
-                console.log("GM message from others");
+                // console.log("GM message from others");
                 newActivityMessage = tmpNewActivityMessage;
                 doUpdateActivityMessage = true;
             } else if (tmpNewActivityMessage.chatType === 4) {
-                console.log("task comment from others");
+                // console.log("task comment from others");
                 newActivityMessage = tmpNewActivityMessage;
                 doUpdateActivityMessage = true;
             } else {
                 newActivityMessage = undefined;
-                console.log("[IGNORE] Common message or mention but not to me");
+                // console.log("[IGNORE] Common message or mention but not to me");
             }
 
             if (doUpdateActivityMessage && newActivityMessage) {
@@ -59,7 +59,7 @@ export const handleActivityMessage = async (
                 useCM.funcSetActivityMessages();
             }
         } else {
-            console.log("[IGNORE] Thread, task comment or mention from myself");
+            // console.log("[IGNORE] Thread, task comment or mention from myself");
         }
     } else {
         // If it's a reaction activity, add the activity
@@ -68,14 +68,14 @@ export const handleActivityMessage = async (
             tmpNewActivityMessage.senderId === myself.userId &&
             tmpNewActivityMessage.latestReaction.sender.userId !== myself.userId
         ) {
-            console.log("Got reaction to me");
+            // console.log("Got reaction to me");
             newActivityMessage = tmpNewActivityMessage;
             if (newActivityMessage) {
                 await addActivityMessage(newActivityMessage);
                 useCM.funcSetActivityMessages();
             }
         } else {
-            console.log("[IGNORE] Reaction to others message or reacted by myself");
+            // console.log("[IGNORE] Reaction to others message or reacted by myself");
         }
     }
 };

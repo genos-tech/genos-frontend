@@ -137,7 +137,10 @@ export const sendUpdatedSpecificTask = async (
                         formData.append("task", String(updatedTask.id));
                         formData.append("attachment_id", "-1");
                         formData.append("attached_file", attachment.file);
-                        formData.append("attached_type", attachment.file.type);
+                        formData.append(
+                            "attached_type",
+                            attachment.file.type || "application/octet-stream"
+                        );
 
                         const uploadAttachmentResponse = await fetch(
                             `${base_url}/task/attachment/`,

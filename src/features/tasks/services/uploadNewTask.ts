@@ -100,8 +100,6 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                     }
                 }
 
-                setCurrentPreviewTaskId(taskCreateData.task.task_id);
-
                 if (useCM.currentThreadChat) {
                     useCM.setCurrentThreadChat({
                         ...useCM.currentThreadChat,
@@ -115,7 +113,10 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                     formData.append("task", taskCreateData.task.task_id);
                     formData.append("attachment_id", "-1");
                     formData.append("attached_file", attachment.file);
-                    formData.append("attached_type", attachment.file.type);
+                    formData.append(
+                        "attached_type",
+                        attachment.file.type || "application/octet-stream"
+                    );
 
                     const uploadAttachmentResponse = await fetch(`${base_url}/task/attachment/`, {
                         method: "POST",
@@ -133,6 +134,8 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                         );
                     }
                 }
+
+                setCurrentPreviewTaskId(taskCreateData.task.task_id);
 
                 addTask({
                     id: String(taskCreateData.task.task_id),

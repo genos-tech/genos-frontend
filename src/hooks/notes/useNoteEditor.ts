@@ -10,9 +10,11 @@ import {
 import { sendUpdatedMyNote } from "../../features/notes/my-notes/services/sendUpdatedMyNote";
 import { UserProps } from "../../types/admin";
 import { MyNoteProps } from "../../types/notes";
-import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 
 interface UseNoteEditorReturn extends NoteEditorState, NoteEditorActions {}
+
+// Debounce delay between the user's last body edit and the auto-save firing.
+const AUTO_SAVE_DELAY_MS = 3000;
 
 /**
  * Custom hook for managing note editing functionality
@@ -33,7 +35,6 @@ export const useNoteEditor = ({
     const [noteBodyEdited, setNoteBodyEdited] = useState(false);
     const [noteBodySaved, setNoteBodySaved] = useState(false);
     const [body, setBody] = useState<PartialBlock[]>();
-    const [startIntervalUpdatingNote, setStartIntervalUpdatingNote] = useState(false);
     const titleInputRef = useRef<HTMLInputElement | null>(null);
 
     // Update note title when current note changes
@@ -68,7 +69,6 @@ export const useNoteEditor = ({
             // Add the updated note to the indexedDB
             await addNote(1, newNote);
 
-            setStartIntervalUpdatingNote(false);
             setNoteBodyEdited(false);
             setNoteBodySaved(true);
 
@@ -79,22 +79,36 @@ export const useNoteEditor = ({
         }
     }, [currentMyNote, currentMyNoteTitle, body, myself, accessToken, onNoteUpdate]);
 
-    // Auto-save functionality
-    useEffect(() => {
-        if (startIntervalUpdatingNote) {
-            updateNote();
-        }
-    }, [startIntervalUpdatingNote, updateNote]);
+    // Keep the latest save fn and edited flag in refs so the debounce timer
+    // and unmount flush always read fresh values without resetting themselves.
+    const updateNoteRef = useRef(updateNote);
+    updateNoteRef.current = updateNote;
 
+    const noteBodyEditedRef = useRef(noteBodyEdited);
+    noteBodyEditedRef.current = noteBodyEdited;
+
+    // Debounced auto-save: fires AUTO_SAVE_DELAY_MS after the user's last body
+    // edit. Each new edit resets the timer, so a continuously typing user is
+    // never interrupted mid-stream.
     useEffect(() => {
-        const intervalId = setInterval(() => {
-            if (noteBodyEdited === true) {
-                setStartIntervalUpdatingNote(true);
+        if (!noteBodyEdited) return;
+
+        const timerId = setTimeout(() => {
+            updateNoteRef.current();
+        }, AUTO_SAVE_DELAY_MS);
+
+        return () => clearTimeout(timerId);
+    }, [body, noteBodyEdited]);
+
+    // Best-effort flush on unmount so a navigation while a debounce is pending
+    // still persists the latest edit.
+    useEffect(() => {
+        return () => {
+            if (noteBodyEditedRef.current) {
+                updateNoteRef.current();
             }
-        }, 3000);
-
-        return () => clearInterval(intervalId);
-    }, [noteBodyEdited]);
+        };
+    }, []);
 
     const handleTitleChange = useCallback((value: string) => {
         setCurrentMyNoteTitle(value);

@@ -22,6 +22,8 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
     const isNavigatingFromUrl = useRef(false);
     // Ref to track the last URL we navigated to
     const lastNavigatedPath = useRef("");
+    // Ref to track the intended project ID from the URL (survives race conditions with loadProjectsAndTasks)
+    const targetUrlProjectId = useRef<number | undefined>(undefined);
 
     // Parse the current URL to extract task routing info
     const parseCurrentRoute = useCallback((): TaskRouteInfo => {
@@ -76,6 +78,10 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
     useEffect(() => {
         const { projectId, taskId } = parseCurrentRoute();
 
+        if (projectId) {
+            targetUrlProjectId.current = projectId;
+        }
+
         // If there's a projectId in the URL, set it
         if (projectId && usePM.teamProjects.length > 0) {
             const project = usePM.teamProjects.find((p) => p.projectId === projectId);
@@ -123,6 +129,7 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
 
             const newPath = `/Home/tasks/project/${projectId}/task/${taskId}`;
             if (newPath !== location.pathname && newPath !== lastNavigatedPath.current) {
+                targetUrlProjectId.current = projectId;
                 lastNavigatedPath.current = newPath;
                 navigate(newPath, { replace: true });
             }
@@ -130,6 +137,7 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
             // Task preview closed, go back to project view
             const { taskId } = parseCurrentRoute();
             if (taskId) {
+                targetUrlProjectId.current = usePM.currentProject.projectId;
                 const newPath = `/Home/tasks/project/${usePM.currentProject.projectId}`;
                 if (newPath !== lastNavigatedPath.current) {
                     lastNavigatedPath.current = newPath;
@@ -152,17 +160,39 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
 
         if (usePM.currentProject && !useTM.isTaskPreviewVisible) {
             const newPath = `/Home/tasks/project/${usePM.currentProject.projectId}`;
-            const { projectId: urlProjectId } = parseCurrentRoute();
+            const { projectId: urlProjId } = parseCurrentRoute();
 
             if (
-                urlProjectId !== usePM.currentProject.projectId &&
+                urlProjId !== usePM.currentProject.projectId &&
                 newPath !== lastNavigatedPath.current
             ) {
+                targetUrlProjectId.current = usePM.currentProject.projectId;
                 lastNavigatedPath.current = newPath;
                 navigate(newPath, { replace: true });
             }
         }
     }, [usePM.currentProject?.projectId]);
+
+    // Enforce project match: if currentProject drifts from the URL target
+    // (e.g. loadProjectsAndTasks overrides it with localStorage's lastProjectId),
+    // correct it back to the URL's project.
+    useEffect(() => {
+        const targetId = targetUrlProjectId.current;
+        if (
+            targetId !== undefined &&
+            usePM.teamProjects.length > 0 &&
+            usePM.currentProject?.projectId !== targetId
+        ) {
+            const project = usePM.teamProjects.find((p) => p.projectId === targetId);
+            if (project) {
+                isNavigatingFromUrl.current = true;
+                usePM.setCurrentProject(project);
+                setTimeout(() => {
+                    isNavigatingFromUrl.current = false;
+                }, 100);
+            }
+        }
+    }, [usePM.currentProject?.projectId, usePM.teamProjects]);
 
     return {
         parseCurrentRoute,

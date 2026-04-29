@@ -169,7 +169,11 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                 setPickerBottomPosition("auto");
             }
 
-            const leftPos = Math.max(20, Math.min(rect.left, viewportWidth - pickerWidth - 20));
+            // Anchor the picker to the RIGHT edge of the comment bubble:
+            // its right edge should align with rect.right, so its left coordinate
+            // is rect.right - pickerWidth. Then clamp to keep it inside the viewport.
+            const desiredLeft = rect.right - pickerWidth;
+            const leftPos = Math.max(20, Math.min(desiredLeft, viewportWidth - pickerWidth - 20));
             setPickerLeftPosition(leftPos);
             setPickerRightPosition("auto");
             setEmojiPickerPositionCalculated(true);

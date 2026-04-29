@@ -81,7 +81,7 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
 
     const sendUpdatedTask = useCallback(
         async (taskSwitched: boolean) => {
-            const newTaskContent: TaskProps = {
+            let newTaskContent: TaskProps = {
                 ...tmpCurrentTaskContent,
                 title: taskTitle === "" ? initTaskTitle : taskTitle,
                 body: body,
@@ -113,6 +113,14 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
                     }
                 });
                 setUploadedFiles([...uploadedFiles, ...uploadedAttachments]);
+
+                newTaskContent = {
+                    ...newTaskContent,
+                    attachments: [
+                        ...newTaskContent.attachments.filter((a) => a.attachment_id >= 0),
+                        ...uploadedAttachments,
+                    ],
+                };
             }
 
             if (taskSwitched && currentPreviewTask) {

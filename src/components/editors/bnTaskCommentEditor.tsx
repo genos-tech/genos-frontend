@@ -2,7 +2,7 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import "../../App.css";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { codeBlockOptions } from "@blocknote/code-block";
 import {
     BlockNoteSchema,
@@ -253,21 +253,46 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         }
     };
 
-    const [pickerBottomPosition, setPickerBottomPosition] = useState<number>(0);
-    const [pickerRightPosition, setPickerRightPosition] = useState<number>(0);
+    // Picker is rendered via portal into document.body with position:fixed so it
+    // can never be clipped by an overflow:hidden ancestor and always stacks on top.
+    // We anchor its viewport coordinates so it sits directly ABOVE the comment
+    // editor box, with safe-area clamping to keep it inside the window.
+    const PICKER_WIDTH = 360;
+    const PICKER_HEIGHT = 440;
+    const PICKER_MARGIN = 8;
+    const [pickerTopPosition, setPickerTopPosition] = useState<number>(0);
+    const [pickerLeftPosition, setPickerLeftPosition] = useState<number>(0);
+
+    const updatePickerPosition = useCallback(() => {
+        if (!boxRef.current) return;
+        const rect = boxRef.current.getBoundingClientRect();
+        const top = Math.max(PICKER_MARGIN, rect.top - PICKER_HEIGHT - PICKER_MARGIN);
+        const maxLeft = Math.max(PICKER_MARGIN, window.innerWidth - PICKER_WIDTH - PICKER_MARGIN);
+        const left = Math.min(Math.max(PICKER_MARGIN, rect.left), maxLeft);
+        setPickerTopPosition(top);
+        setPickerLeftPosition(left);
+    }, []);
+
     useEffect(() => {
-        if (boxRef.current) {
-            const rect = boxRef.current.getBoundingClientRect();
-            setPickerBottomPosition(rect.bottom - 1350);
-            setPickerRightPosition(rect.left - 800);
-        }
-    }, [task, showEmojiPicker]);
+        if (!showEmojiPicker) return;
+        updatePickerPosition();
+        window.addEventListener("resize", updatePickerPosition);
+        // Use capture so we catch scrolls inside any scrollable ancestor too.
+        window.addEventListener("scroll", updatePickerPosition, true);
+        return () => {
+            window.removeEventListener("resize", updatePickerPosition);
+            window.removeEventListener("scroll", updatePickerPosition, true);
+        };
+    }, [showEmojiPicker, updatePickerPosition]);
 
     return (
         <Box ref={boxRef}>
             <EmojiPicker
-                pickerBottomPosition={pickerBottomPosition}
-                pickerRightPosition={pickerRightPosition}
+                pickerTopPosition={pickerTopPosition}
+                pickerLeftPosition={pickerLeftPosition}
+                pickerBottomPosition="auto"
+                pickerRightPosition="auto"
+                useFixedPosition={true}
                 setSelectedEmoji={setSelectedEmoji}
                 setShowEmojiPicker={setShowEmojiPicker}
                 showEmojiPicker={showEmojiPicker}

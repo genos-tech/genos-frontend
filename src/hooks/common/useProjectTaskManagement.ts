@@ -97,6 +97,33 @@ export const useProjectTaskManagement = ({
         }
     }, [usePM.currentProject]);
 
+    // Wipe all project & task React state when the user switches teams.
+    // Without this, the previous team's projects keep showing in TaskSidebarMain
+    // (loadProjectsAndTasks only replaces teamProjects when the new team has at
+    // least one project) and stale tasks/preview can briefly render in the new team.
+    useEffect(() => {
+        if (!currentTeamId) return;
+        usePM.setTeamProjects([]);
+        usePM.setCurrentProject(null);
+        useTM.setAllTasks([]);
+        useTM.setCurrentPreviewTask(undefined);
+        useTM.setCurrentPreviewTaskId(-1);
+        useTM.setIsTaskPreviewVisible(false);
+        useTM.setIsTaskHomeVisible(true);
+        useTM.setCurrentTaskChain([]);
+        useTM.setTaskMetaTree([]);
+        useTM.setIsCreatingTask({
+            flag: false,
+            parentTaskId: null,
+            rootTaskId: null,
+        });
+        // We expect to load tasks for the new team's first project shortly.
+        // Flip the loading flag now so the table shows the "waiting" spinner
+        // during the gap before fetchProjectTasks fires. The safety timeout in
+        // useTaskManagement will reset it if no project ever loads.
+        useTM.setIsLoadingTasks(true);
+    }, [currentTeamId]);
+
     return {
         usePM,
         useTM,

@@ -142,6 +142,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 taskEditState.setCurrentTaskId(useTM.currentPreviewTask.id);
                 taskEditState.setTaskTitle(useTM.currentPreviewTask.title);
                 taskEditState.setBody(useTM.currentPreviewTask.body || []);
+                taskEditState.setUploadedFiles(useTM.currentPreviewTask.attachments || []);
             }
         }
     }, [useTM.currentPreviewTask]);

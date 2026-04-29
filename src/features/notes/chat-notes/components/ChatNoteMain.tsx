@@ -71,6 +71,16 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
         myself,
         accessToken,
         onNoteUpdate: (updatedNote: ChatNoteProps) => {
+            // Keep the shared current chat note in sync so that the latest title/body
+            // survives across unmount/remount when switching between the chat and note
+            // services (e.g. clicking the Notes tab in the sidebar).
+            if (
+                useNM.currentChatNote?.noteType === updatedNote.noteType &&
+                useNM.currentChatNote?.noteId === updatedNote.noteId
+            ) {
+                useNM.setCurrentChatNote(updatedNote);
+            }
+
             // Update tab items
             useNM.setTabItems(
                 useNM.tabItems.map((item) =>
@@ -109,12 +119,13 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
         chatNoteEditor.setNoteBodySaved(false);
     }, [useNM.selectedTabIndex]);
 
-    // Update timestamp when current note changes
+    // Refresh the TabPanel key only when the user actually switches to a
+    // different chat note. Reference-only updates (e.g. an in-place save that
+    // produces a new currentChatNote object) must NOT remount the editor, or
+    // the title input loses focus mid-typing.
     useEffect(() => {
-        if (useNM.currentChatNote) {
-            setTsBody(getLocalCurrentTimestamp());
-        }
-    }, [useNM.currentChatNote]);
+        setTsBody(getLocalCurrentTimestamp());
+    }, [useNM.currentChatNote?.noteType, useNM.currentChatNote?.noteId]);
 
     // Find the current chat
     const chat = useCM.allChats.find(
