@@ -59,6 +59,7 @@ import { ChatNoteProps } from "../../types/notes";
 import { getUserColor } from "../../utils/collabUtils";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
+import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 import { Alert } from "./sub/Alert";
 import { ResetBlockTypeItem } from "./sub/ResetBlockTypeItem";
@@ -270,6 +271,7 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
                 formattingToolbar={false}
                 sideMenu={false}
                 comments={false}
+                emojiPicker={false}
                 renderEditor={false}
                 theme={mode === "dark" ? "dark" : "light"}
                 data-changing-font-demo
@@ -391,6 +393,13 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
                                         ),
                                         query
                                     )
+                                }
+                            />
+                            <SuggestionMenuController
+                                triggerCharacter={":"}
+                                minQueryLength={2}
+                                getItems={async (query) =>
+                                    getEmojiSuggestionItems(editor, query)
                                 }
                             />
 

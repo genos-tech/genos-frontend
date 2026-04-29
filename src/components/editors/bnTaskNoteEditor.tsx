@@ -59,6 +59,7 @@ import { TaskNoteProps } from "../../types/notes";
 import { getUserColor } from "../../utils/collabUtils";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
+import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 import { Alert } from "./sub/Alert";
 import { ResetBlockTypeItem } from "./sub/ResetBlockTypeItem";
@@ -270,6 +271,7 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                 formattingToolbar={false}
                 sideMenu={false}
                 comments={false}
+                emojiPicker={false}
                 renderEditor={false}
                 theme={mode === "dark" ? "dark" : "light"}
                 data-changing-font-demo
@@ -392,6 +394,11 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                                         query
                                     )
                                 }
+                            />
+                            <SuggestionMenuController
+                                triggerCharacter={":"}
+                                minQueryLength={2}
+                                getItems={async (query) => getEmojiSuggestionItems(editor, query)}
                             />
 
                             {threadStore && <FloatingComposerController />}
