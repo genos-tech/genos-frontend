@@ -48,21 +48,21 @@ const NAV_ITEMS = [
         icon: QuestionAnswerRoundedIcon,
         label: "Chats",
         path: "/Home/chat",
-        colorScheme: { dark: "#60a5fa", light: "#3b82f6" },
+        colorScheme: { dark: "#a78bfa", light: "#7c3aed" },
     },
     {
         id: 2,
         icon: AssignmentRoundedIcon,
         label: "Tasks",
         path: "/Home/tasks",
-        colorScheme: { dark: "#4ade80", light: "#22c55e" },
+        colorScheme: { dark: "#a78bfa", light: "#7c3aed" },
     },
     {
         id: 3,
         icon: NoteAltRoundedIcon,
         label: "Notes",
         path: "/Home/notes",
-        colorScheme: { dark: "#f472b6", light: "#ec4899" },
+        colorScheme: { dark: "#a78bfa", light: "#7c3aed" },
     },
 ];
 

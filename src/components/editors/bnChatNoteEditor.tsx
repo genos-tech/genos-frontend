@@ -267,7 +267,6 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
             <BlockNoteView
                 className="bn-box"
                 editor={editor as any}
-                emojiPicker={false}
                 formattingToolbar={false}
                 sideMenu={false}
                 comments={false}

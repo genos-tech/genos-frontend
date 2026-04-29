@@ -34,11 +34,11 @@ export const SprintBoardListItem = (props: SprintBoardListItemProps) => {
                         backgroundColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
                     },
                     "&.Mui-selected": {
-                        backgroundColor: isDark ? "rgba(34,197,94,0.15)" : "rgba(22,163,74,0.1)",
+                        backgroundColor: isDark ? "rgba(59,130,246,0.15)" : "rgba(37,99,235,0.1)",
                         "&:hover": {
                             backgroundColor: isDark
-                                ? "rgba(34,197,94,0.2)"
-                                : "rgba(22,163,74,0.15)",
+                                ? "rgba(59,130,246,0.2)"
+                                : "rgba(37,99,235,0.15)",
                         },
                     },
                 }}
@@ -53,8 +53,8 @@ export const SprintBoardListItem = (props: SprintBoardListItemProps) => {
                         justifyContent: "center",
                         backgroundColor: isSelected
                             ? isDark
-                                ? "rgba(34,197,94,0.25)"
-                                : "rgba(22,163,74,0.15)"
+                                ? "rgba(59,130,246,0.25)"
+                                : "rgba(37,99,235,0.15)"
                             : isDark
                               ? "rgba(255,255,255,0.08)"
                               : "rgba(0,0,0,0.05)",
@@ -66,8 +66,8 @@ export const SprintBoardListItem = (props: SprintBoardListItemProps) => {
                             fontSize: 16,
                             color: isSelected
                                 ? isDark
-                                    ? "#22c55e"
-                                    : "#16a34a"
+                                    ? "#3b82f6"
+                                    : "#2563eb"
                                 : isDark
                                   ? "rgba(255,255,255,0.75)"
                                   : "rgba(0,0,0,0.65)",
@@ -84,8 +84,8 @@ export const SprintBoardListItem = (props: SprintBoardListItemProps) => {
                             whiteSpace: "nowrap",
                             color: isSelected
                                 ? isDark
-                                    ? "#22c55e"
-                                    : "#16a34a"
+                                    ? "#3b82f6"
+                                    : "#2563eb"
                                 : isDark
                                   ? "rgba(255,255,255,0.9)"
                                   : "rgba(0,0,0,0.8)",
