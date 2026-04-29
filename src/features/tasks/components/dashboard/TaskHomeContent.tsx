@@ -34,6 +34,23 @@ import { useColorScheme } from "@mui/joy/styles";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { TaskTableProps } from "../../../../types/tasks";
+
+// A task augmented with status/close-date rolled up from its parent chain.
+// `effectiveStatus`:
+//   - "Deleted"  → task itself or any ancestor is Deleted (excluded from stats).
+//   - "Closed"   → task itself OR any ancestor is Closed (sub-tasks of a closed
+//                  parent are reported as completed even if their own status
+//                  was never updated).
+//   - otherwise  → the task's own status.
+// `effectiveCloseDate`: when the task became "effectively" closed:
+//   - the task's own `updatedAt` if its own status is Closed,
+//   - else the closest closed ancestor's `updatedAt`,
+//   - else null (task is not effectively closed).
+type EffectiveTask = TaskTableProps & {
+    effectiveStatus: string;
+    effectiveCloseDate: string | null;
+};
 
 type TaskHomeContentProps = {
     useTM: TaskManagementState;
@@ -107,28 +124,82 @@ export const TaskHomeContent = ({ useTM, usePM, useTEM }: TaskHomeContentProps) 
     // ── All-project stats ──
     const allTasks = useTM.allTasks || [];
 
+    // Index every task by id so we can walk the parent chain efficiently.
+    const taskById = useMemo(() => {
+        const map = new Map<string, TaskTableProps>();
+        for (const t of allTasks) {
+            if (t.id) map.set(String(t.id), t);
+        }
+        return map;
+    }, [allTasks]);
+
+    // Rolled-up task list used by every dashboard metric below.
+    // We exclude Deleted tasks and entire branches under a Deleted parent,
+    // and we treat sub-tasks of a Closed parent as Closed themselves.
+    const effectiveTasks = useMemo<EffectiveTask[]>(() => {
+        const result: EffectiveTask[] = [];
+        for (const t of allTasks) {
+            if (!t.id) continue;
+            // Rule 1: ignore tasks that are themselves Deleted.
+            if (t.status === "Deleted") continue;
+
+            // Walk ancestors (including self) to find the closest Closed and
+            // detect any Deleted ancestor.
+            const visited = new Set<string>();
+            let current: TaskTableProps | undefined = t;
+            let ancestorClosedDate: string | null = null;
+            let isInDeletedBranch = false;
+
+            while (current && current.id && !visited.has(current.id)) {
+                visited.add(current.id);
+                if (current.status === "Deleted") {
+                    isInDeletedBranch = true;
+                    break;
+                }
+                if (current.status === "Closed" && ancestorClosedDate === null) {
+                    ancestorClosedDate = current.updatedAt;
+                }
+                if (!current.parentTaskId) break;
+                current = taskById.get(String(current.parentTaskId));
+            }
+
+            // Rule 4: also drop tasks whose ancestor is Deleted (orphan branch).
+            if (isInDeletedBranch) continue;
+
+            // Rule 2: parent Closed ⇒ child treated as Closed.
+            const effectiveStatus = ancestorClosedDate !== null ? "Closed" : t.status || "Open";
+            const effectiveCloseDate = t.status === "Closed" ? t.updatedAt : ancestorClosedDate;
+
+            result.push({ ...t, effectiveStatus, effectiveCloseDate });
+        }
+        return result;
+    }, [allTasks, taskById]);
+
     const stats = useMemo(() => {
-        const openCount = allTasks.filter((t) => t.status === "Open").length;
-        const wipCount = allTasks.filter((t) => t.status === "WIP").length;
-        const pendingCount = allTasks.filter((t) => t.status === "Pending").length;
-        const closedCount = allTasks.filter((t) => t.status === "Closed").length;
+        const openCount = effectiveTasks.filter((t) => t.effectiveStatus === "Open").length;
+        const wipCount = effectiveTasks.filter((t) => t.effectiveStatus === "WIP").length;
+        const pendingCount = effectiveTasks.filter((t) => t.effectiveStatus === "Pending").length;
+        const closedCount = effectiveTasks.filter((t) => t.effectiveStatus === "Closed").length;
         const totalTasks = openCount + wipCount + pendingCount + closedCount;
         const completionRate = totalTasks > 0 ? Math.round((closedCount / totalTasks) * 100) : 0;
         return { openCount, wipCount, pendingCount, closedCount, totalTasks, completionRate };
-    }, [allTasks]);
+    }, [effectiveTasks]);
 
     // ── Sprint-scoped metrics ──
+    // All counts use effectiveTasks so Deleted (and orphans of Deleted parents)
+    // are excluded. "Closed in sprint" uses the effective close date so a
+    // sub-task counts when its parent was closed during the sprint window.
     const sprintStats = useMemo(() => {
-        const createdInSprint = allTasks.filter((t) => {
+        const createdInSprint = effectiveTasks.filter((t) => {
             const d = t.createdDate ? new Date(t.createdDate).getTime() : 0;
             return d >= sprintStart && d <= now;
         });
-        const closedInSprint = allTasks.filter((t) => {
-            if (t.status !== "Closed") return false;
-            const d = t.updatedAt ? new Date(t.updatedAt).getTime() : 0;
+        const closedInSprint = effectiveTasks.filter((t) => {
+            if (t.effectiveStatus !== "Closed") return false;
+            const d = t.effectiveCloseDate ? new Date(t.effectiveCloseDate).getTime() : 0;
             return d >= sprintStart && d <= now;
         });
-        const updatedInSprint = allTasks.filter((t) => {
+        const updatedInSprint = effectiveTasks.filter((t) => {
             const d = t.updatedAt ? new Date(t.updatedAt).getTime() : 0;
             return d >= sprintStart && d <= now;
         });
@@ -138,7 +209,7 @@ export const TaskHomeContent = ({ useTM, usePM, useTEM }: TaskHomeContentProps) 
             updated: updatedInSprint.length,
             net: createdInSprint.length - closedInSprint.length,
         };
-    }, [allTasks, sprintStart, now]);
+    }, [effectiveTasks, sprintStart, now]);
 
     // ── Assignee workload ──
     const assigneeWorkload = useMemo(() => {
@@ -155,7 +226,7 @@ export const TaskHomeContent = ({ useTM, usePM, useTEM }: TaskHomeContentProps) 
                 total: number;
             }
         >();
-        for (const t of allTasks) {
+        for (const t of effectiveTasks) {
             const id = t.assigneeId || "__unassigned__";
             const entry = map.get(id) || {
                 name: t.assigneeName || "Unassigned",
@@ -168,12 +239,12 @@ export const TaskHomeContent = ({ useTM, usePM, useTEM }: TaskHomeContentProps) 
                 total: 0,
             };
             entry.total++;
-            if (t.status === "Open") entry.open++;
-            else if (t.status === "WIP") entry.wip++;
-            else if (t.status === "Pending") entry.pending++;
-            else if (t.status === "Closed") {
+            if (t.effectiveStatus === "Open") entry.open++;
+            else if (t.effectiveStatus === "WIP") entry.wip++;
+            else if (t.effectiveStatus === "Pending") entry.pending++;
+            else if (t.effectiveStatus === "Closed") {
                 entry.closed++;
-                const d = t.updatedAt ? new Date(t.updatedAt).getTime() : 0;
+                const d = t.effectiveCloseDate ? new Date(t.effectiveCloseDate).getTime() : 0;
                 if (d >= sprintStart && d <= now) entry.closedInSprint++;
             }
             map.set(id, entry);
@@ -181,13 +252,13 @@ export const TaskHomeContent = ({ useTM, usePM, useTEM }: TaskHomeContentProps) 
         return Array.from(map.entries())
             .map(([id, v]) => ({ id, ...v }))
             .sort((a, b) => b.total - a.total);
-    }, [allTasks, sprintStart, now]);
+    }, [effectiveTasks, sprintStart, now]);
 
     // ── Recently updated tasks (sprint scoped) ──
+    // effectiveTasks already excludes Deleted and Deleted-branch orphans.
     const recentTasks = useMemo(() => {
-        return allTasks
+        return effectiveTasks
             .filter((t) => {
-                if (t.status === "Deleted") return false;
                 const d = t.updatedAt ? new Date(t.updatedAt).getTime() : 0;
                 return d >= sprintStart;
             })
@@ -197,12 +268,14 @@ export const TaskHomeContent = ({ useTM, usePM, useTEM }: TaskHomeContentProps) 
                 return dB - dA;
             })
             .slice(0, 12);
-    }, [allTasks, sprintStart]);
+    }, [effectiveTasks, sprintStart]);
 
     // ── Priority breakdown (active tasks only) ──
+    // "Active" uses effectiveStatus, so sub-tasks of Closed parents are
+    // correctly excluded from the active count.
     const priorityBreakdown = useMemo(() => {
         const levels = ["Critical", "High", "Medium", "Low"];
-        const active = allTasks.filter((t) => t.status !== "Closed" && t.status !== "Deleted");
+        const active = effectiveTasks.filter((t) => t.effectiveStatus !== "Closed");
         const counts: Record<string, number> = {};
         for (const l of levels) counts[l] = 0;
         counts["None"] = 0;
@@ -212,12 +285,12 @@ export const TaskHomeContent = ({ useTM, usePM, useTEM }: TaskHomeContentProps) 
             else counts["None"]++;
         }
         return counts;
-    }, [allTasks]);
+    }, [effectiveTasks]);
 
     // ── Effort breakdown (active tasks only) ──
     const effortBreakdown = useMemo(() => {
         const levels = ["XL", "L", "M", "S", "XS"];
-        const active = allTasks.filter((t) => t.status !== "Closed" && t.status !== "Deleted");
+        const active = effectiveTasks.filter((t) => t.effectiveStatus !== "Closed");
         const counts: Record<string, number> = {};
         for (const l of levels) counts[l] = 0;
         counts["None"] = 0;
@@ -227,26 +300,28 @@ export const TaskHomeContent = ({ useTM, usePM, useTEM }: TaskHomeContentProps) 
             else counts["None"]++;
         }
         return counts;
-    }, [allTasks]);
+    }, [effectiveTasks]);
 
     // ── Overdue & upcoming ──
+    // Filtering on effectiveStatus !== "Closed" ensures sub-tasks of a closed
+    // parent never appear in Overdue or Due-This-Week.
     const overdueAndUpcoming = useMemo(() => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const weekAhead = new Date(today);
         weekAhead.setDate(weekAhead.getDate() + 7);
 
-        const overdue = allTasks.filter((t) => {
-            if (t.status === "Closed" || t.status === "Deleted" || !t.dueDate) return false;
+        const overdue = effectiveTasks.filter((t) => {
+            if (t.effectiveStatus === "Closed" || !t.dueDate) return false;
             return new Date(t.dueDate) < today;
         });
-        const upcoming = allTasks.filter((t) => {
-            if (t.status === "Closed" || t.status === "Deleted" || !t.dueDate) return false;
+        const upcoming = effectiveTasks.filter((t) => {
+            if (t.effectiveStatus === "Closed" || !t.dueDate) return false;
             const d = new Date(t.dueDate);
             return d >= today && d <= weekAhead;
         });
         return { overdue, upcoming };
-    }, [allTasks]);
+    }, [effectiveTasks]);
 
     // ── Handlers ──
     const projectCount = usePM.teamProjects?.length || 0;
@@ -1257,7 +1332,8 @@ export const TaskHomeContent = ({ useTM, usePM, useTEM }: TaskHomeContentProps) 
                                 <Grid container spacing={1.5}>
                                     {recentTasks.map((task) => {
                                         const sc =
-                                            STATUS_COLORS[task.status || ""] || STATUS_COLORS.Open;
+                                            STATUS_COLORS[task.effectiveStatus] ||
+                                            STATUS_COLORS.Open;
                                         return (
                                             <Grid key={task.id} xs={12} sm={6} md={4}>
                                                 <Card
@@ -1298,7 +1374,7 @@ export const TaskHomeContent = ({ useTM, usePM, useTEM }: TaskHomeContentProps) 
                                                                 size="sm"
                                                                 variant="soft"
                                                                 startDecorator={getStatusIcon(
-                                                                    task.status || ""
+                                                                    task.effectiveStatus
                                                                 )}
                                                                 sx={{
                                                                     fontSize: "0.65rem",
@@ -1306,7 +1382,7 @@ export const TaskHomeContent = ({ useTM, usePM, useTEM }: TaskHomeContentProps) 
                                                                     color: sc.text,
                                                                 }}
                                                             >
-                                                                {task.status}
+                                                                {task.effectiveStatus}
                                                             </Chip>
                                                         </Stack>
                                                         <Typography
@@ -1492,7 +1568,7 @@ export const TaskHomeContent = ({ useTM, usePM, useTEM }: TaskHomeContentProps) 
                                                         handleTaskClick(Number(task.id))
                                                     }
                                                 >
-                                                    {getStatusIcon(task.status || "", 12)}
+                                                    {getStatusIcon(task.effectiveStatus, 12)}
                                                     <Typography
                                                         level="body-xs"
                                                         sx={{
@@ -1608,7 +1684,7 @@ export const TaskHomeContent = ({ useTM, usePM, useTEM }: TaskHomeContentProps) 
                                                             handleTaskClick(Number(task.id))
                                                         }
                                                     >
-                                                        {getStatusIcon(task.status || "", 12)}
+                                                        {getStatusIcon(task.effectiveStatus, 12)}
                                                         <Typography
                                                             level="body-xs"
                                                             sx={{
