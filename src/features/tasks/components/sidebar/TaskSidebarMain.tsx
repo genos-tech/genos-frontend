@@ -70,22 +70,6 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
     }, [loading]);
     // =======================================================================
 
-    const updateProjectTags = async () => {
-        if (usePM.currentProject && usePM.currentProject.projectId) {
-            const loadedProjectTags: TagListProps[] = await loadProjectTags(
-                myself,
-                usePM.currentProject.projectId,
-                accessToken
-            );
-            usePM.setCurrentProject({
-                ...usePM.currentProject,
-                projectTags: loadedProjectTags,
-            });
-        } else {
-            console.error("Failed to set the current project");
-        }
-    };
-
     const [recentTasks, setRecentTasks] = useState<SearchTeamTasksResponse[]>([]);
     const updateRecentTasks = () => {
         const TOP_N = 20;
@@ -106,9 +90,45 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
         updateRecentTasks();
     }, [useTM.currentPreviewTaskId]);
 
+    // Refresh tags whenever the active project changes.
+    //
+    // This used to fire on `[myself]`, which produced a tricky team-switch
+    // race: on team change `myself` flips first, so this effect fired while
+    // `usePM.currentProject` was still the PREVIOUS team's project. It would
+    // request tags for that stale projectId and then call
+    //   setCurrentProject({ ...oldProj_A, projectTags: ... })
+    // — clobbering the new team's auto-picked project (chosen by
+    // useProjectManagement.loadProjectsAndTasks) with the old team's project.
+    // The visible symptom was: after switching teams the project id never
+    // changed, even when the new team had multiple joined projects.
+    //
+    // Tying the effect to `currentProject?.projectId` means it only loads
+    // tags for the project that is actually selected, and the cancelled
+    // flag drops any in-flight response if the user (or the team-switch
+    // reset) moves to a different project before our await resolves.
     useEffect(() => {
-        updateProjectTags();
-    }, [myself]);
+        const projectAtStart = usePM.currentProject;
+        if (!projectAtStart || !projectAtStart.projectId) return;
+        const targetProjectId = projectAtStart.projectId;
+
+        let cancelled = false;
+        (async () => {
+            const loadedProjectTags: TagListProps[] = await loadProjectTags(
+                myself,
+                targetProjectId,
+                accessToken
+            );
+            if (cancelled) return;
+            usePM.setCurrentProject({
+                ...projectAtStart,
+                projectTags: loadedProjectTags,
+            });
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [usePM.currentProject?.projectId]);
 
     return (
         <Sheet

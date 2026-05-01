@@ -19,27 +19,39 @@ export const useProjectTaskManagement = ({
     const usePM = useProjectManagement(myself, accessToken, currentTeamId);
     const useTM = useTaskManagement(myself, accessToken);
 
-    // Auto-fetch project tasks when project changes
+    // Auto-fetch project tasks when:
+    //   (a) loadProjectsAndTasks has just finished writing the tasks for the
+    //       current project into IndexedDB (signaled by tsTasksLoadedToIDB), or
+    //   (b) currentProject changed but no signal has fired (e.g. setCurrentProject
+    //       was called directly from a chat bubble or thread navigation, without
+    //       going through loadProjectsAndTasks). In that case fall back to a
+    //       short delay so any in-flight IDB write has a chance to complete.
+    //
+    // Previously this effect always waited a fixed 1000ms before reading from
+    // IndexedDB, which raced loadProjectTasks on slower networks. When a team
+    // switch fired loadProjectTasks > 1s of API + IDB time, the fetch ran
+    // against an empty store, allTasks was set to [], and nothing re-read the
+    // store afterward — leaving the table empty until the user refreshed.
     useEffect(() => {
-        const intervalMs: number = 1000;
-        const now = Date.now();
-        if (
-            useTM.tsLastLoadProjectTasks === undefined ||
-            (useTM.tsLastLoadProjectTasks && now - useTM.tsLastLoadProjectTasks >= intervalMs)
-        ) {
-            setTimeout(() => {
-                (async () => {
-                    if (usePM.currentProject && usePM.currentProject.projectId) {
-                        await useTM.fetchProjectTasks(usePM.currentProject.projectId);
-                        localStorage.setItem(
-                            "lastProjectId",
-                            usePM.currentProject.projectId.toString()
-                        );
-                    }
-                })();
-            }, 1000);
+        if (!usePM.currentProject || !usePM.currentProject.projectId) return;
+        const projectId = usePM.currentProject.projectId;
+
+        const runFetch = () => {
+            useTM.fetchProjectTasks(projectId);
+            localStorage.setItem("lastProjectId", projectId.toString());
+        };
+
+        // Signal matches the active project: IDB is freshly populated, fetch now.
+        if (usePM.tsTasksLoadedToIDB?.projectId === projectId) {
+            runFetch();
+            return;
         }
-    }, [usePM.currentProject]);
+
+        // Fallback path: schedule a deferred fetch and clear it if the signal
+        // arrives first (which will re-trigger this effect via the dep below).
+        const timer = setTimeout(runFetch, 1000);
+        return () => clearTimeout(timer);
+    }, [usePM.currentProject, usePM.tsTasksLoadedToIDB]);
 
     // Handle new project creation
     useEffect(() => {
