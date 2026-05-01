@@ -37,46 +37,41 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
         return { personalCount, taskCount, chatCount, favoritesCount };
     }, [useNM.myNoteMeta, useNM.taskNoteMeta, useNM.chatNoteMeta, useNM.favoriteNotes]);
 
-    // Get recent notes (combine all types and sort by last modified)
+    // Get recent notes from the server-backed `useNM.recentNotes` state
+    // (populated by NoteSidebar's mount fetch). Each row carries a
+    // `tsOpenedAt` set when the user actually opened the note via the
+    // backend's NoteRecentMaster — replacing the previous client-side
+    // shortcut that ranked by `tsUpdated` (most-recently-MODIFIED), which
+    // wasn't really "recents" at all.
     const recentNotes = useMemo(() => {
+        if (!useNM.recentNotes) return [];
+
         const allNotes: Array<{
             noteId: number;
             title: string;
             noteType: number;
             updatedAt?: string;
-        }> = [];
-
-        // Add personal notes
-        useNM.myNoteMeta?.slice(0, 5).forEach((note) => {
-            allNotes.push({
-                noteId: note.noteId,
-                title: note.title || "Untitled",
+        }> = [
+            ...useNM.recentNotes.personalNotes.map((n) => ({
+                noteId: n.noteId,
+                title: n.title || "Untitled",
                 noteType: 1,
-                updatedAt: note.tsUpdated,
-            });
-        });
-
-        // Add task notes
-        useNM.taskNoteMeta?.slice(0, 5).forEach((note) => {
-            allNotes.push({
-                noteId: note.noteId,
-                title: note.title || "Untitled",
+                updatedAt: n.tsOpenedAt,
+            })),
+            ...useNM.recentNotes.taskNotes.map((n) => ({
+                noteId: n.noteId,
+                title: n.title || "Untitled",
                 noteType: 2,
-                updatedAt: note.tsUpdated,
-            });
-        });
-
-        // Add chat notes
-        useNM.chatNoteMeta?.slice(0, 5).forEach((note) => {
-            allNotes.push({
-                noteId: note.noteId,
-                title: note.title || "Untitled",
+                updatedAt: n.tsOpenedAt,
+            })),
+            ...useNM.recentNotes.chatNotes.map((n) => ({
+                noteId: n.noteId,
+                title: n.title || "Untitled",
                 noteType: 3,
-                updatedAt: note.tsUpdated,
-            });
-        });
+                updatedAt: n.tsOpenedAt,
+            })),
+        ];
 
-        // Sort by updatedAt and take top 6
         return allNotes
             .sort((a, b) => {
                 if (!a.updatedAt) return 1;
@@ -84,7 +79,7 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
                 return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
             })
             .slice(0, 12);
-    }, [useNM.myNoteMeta, useNM.taskNoteMeta, useNM.chatNoteMeta]);
+    }, [useNM.recentNotes]);
 
     const getNoteTypeIcon = (noteType: number) => {
         switch (noteType) {
@@ -557,7 +552,7 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
                                         mb: 0.5,
                                     }}
                                 >
-                                    No notes yet
+                                    No recently opened notes yet
                                 </Typography>
                                 <Typography
                                     level="body-sm"
@@ -567,7 +562,8 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
                                             : "rgba(0,0,0,0.45)",
                                     }}
                                 >
-                                    Start by creating your first note using the quick actions above
+                                    Open notes to see them here, or use the quick actions above to
+                                    create one.
                                 </Typography>
                             </Box>
                         </Stack>

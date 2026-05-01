@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from "react";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
@@ -20,6 +21,7 @@ import { FavoriteNoteSection } from "./FavoriteNoteSection";
 import { GroupedNoteSection } from "./GroupedNoteSection";
 import { NoteTreeRenderer } from "./NoteTreeRenderer";
 import { NoteTypeSection } from "./NoteTypeSection";
+import { RecentNoteItem } from "./RecentNoteItem";
 
 // Types for grouped notes
 interface TaskGroup {
@@ -147,6 +149,13 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     // Load favorite notes on mount
     useEffect(() => {
         useNM.getFavoriteNotesMeta();
+    }, []);
+
+    // Load recent notes on mount (parity with favorites — both seed
+    // their sidebar sections from the server when this component first
+    // appears).
+    useEffect(() => {
+        useNM.getRecentNotesMeta();
     }, []);
 
     // Use custom hooks for each note type
@@ -358,6 +367,73 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         );
     };
 
+    // Render recent notes section content. Flat list ordered by
+    // tsOpenedAt desc — the natural shape for "recents" since
+    // chronology is the primary signal. Each row carries a small
+    // type icon so personal/task/chat notes are still distinguishable.
+    const renderRecentNotes = () => {
+        if (!useNM.recentNotes) return null;
+
+        type RecentRow = {
+            note: MyNoteMetaProps | TaskNoteMetaProps | ChatNoteMetaProps;
+            noteType: number;
+            tsOpenedAt: string;
+        };
+
+        const rows: RecentRow[] = [
+            ...useNM.recentNotes.personalNotes.map((n) => ({
+                note: n,
+                noteType: 1,
+                tsOpenedAt: n.tsOpenedAt,
+            })),
+            ...useNM.recentNotes.taskNotes.map((n) => ({
+                note: n,
+                noteType: 2,
+                tsOpenedAt: n.tsOpenedAt,
+            })),
+            ...useNM.recentNotes.chatNotes.map((n) => ({
+                note: n,
+                noteType: 3,
+                tsOpenedAt: n.tsOpenedAt,
+            })),
+        ];
+
+        if (rows.length === 0) {
+            return (
+                <Box sx={{ px: 2, py: 1 }}>
+                    <Typography
+                        level="body-xs"
+                        sx={{
+                            color: isDark ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)",
+                            fontStyle: "italic",
+                        }}
+                    >
+                        No recent notes yet.
+                    </Typography>
+                </Box>
+            );
+        }
+
+        rows.sort((a, b) => {
+            const aT = a.tsOpenedAt ? new Date(a.tsOpenedAt).getTime() : 0;
+            const bT = b.tsOpenedAt ? new Date(b.tsOpenedAt).getTime() : 0;
+            return bT - aT;
+        });
+
+        return (
+            <Box>
+                {rows.map((row) => (
+                    <RecentNoteItem
+                        key={`recent-${row.noteType}-${row.note.noteId}`}
+                        note={row.note}
+                        noteType={row.noteType}
+                        useNM={useNM}
+                    />
+                ))}
+            </Box>
+        );
+    };
+
     // Note type configurations for cleaner code
     const noteTypesConfig = [
         {
@@ -514,6 +590,16 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         title="Favorites"
                     >
                         {renderFavoriteNotes()}
+                    </NoteTypeSection>
+
+                    {/* Recents Section */}
+                    <NoteTypeSection
+                        icon={<HistoryRoundedIcon sx={{ fontSize: 18, color: "#60a5fa" }} />}
+                        useNM={useNM}
+                        noteType={6} // Use 6 for recents (distinct from 0-5)
+                        title="Recents"
+                    >
+                        {renderRecentNotes()}
                     </NoteTypeSection>
 
                     {/* Section Divider */}
