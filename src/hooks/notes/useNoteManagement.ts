@@ -14,6 +14,11 @@ import {
 } from "../../features/notes/favorite-notes/services";
 import { createEmptyMyNote } from "../../features/notes/my-notes/services/createEmptyMyNote";
 import { loadMyNoteMeta } from "../../features/notes/my-notes/services/loadMyNoteMeta";
+import {
+    loadRecentNotesMeta,
+    RecentNotesMetaResponse,
+    recordNoteOpen as recordNoteOpenApi,
+} from "../../features/notes/recent-notes/services";
 import { createEmptyTaskNote } from "../../features/notes/task-notes/services/createEmptyTaskNote";
 import { loadTaskNoteMeta } from "../../features/notes/task-notes/services/loadTaskNoteMeta";
 import { UserProps } from "../../types/admin";
@@ -83,6 +88,12 @@ export interface NoteManagementState {
     getFavoriteNotesMeta: () => Promise<void>;
     toggleFavorite: (noteId: number, noteType: number) => Promise<boolean>;
     isNoteFavorited: (noteId: number, noteType: number) => boolean;
+
+    // Recent notes
+    recentNotes: RecentNotesMetaResponse | null;
+    setRecentNotes: (notes: RecentNotesMetaResponse | null) => void;
+    getRecentNotesMeta: () => Promise<void>;
+    recordNoteOpen: (noteId: number, noteType: number) => Promise<void>;
 
     // Visibility states
     isTaskNoteVisible: boolean;
@@ -178,6 +189,9 @@ export const useNoteManagement = (
     const [favoriteNotes, setFavoriteNotes] = useState<FavoriteNotesMetaResponse | null>(null);
     const [favoriteNoteIds, setFavoriteNoteIds] = useState<Set<string>>(new Set());
 
+    // Recent notes
+    const [recentNotes, setRecentNotes] = useState<RecentNotesMetaResponse | null>(null);
+
     // Visibility states
     const [isTaskNoteVisible, setIsTaskNoteVisible] = useState(false);
     const [isTaskVisibleInNote, setIsTaskVisibleInNote] = useState(false);
@@ -232,6 +246,7 @@ export const useNoteManagement = (
                 setNewlyCreatedChatNotes([...newlyCreatedChatNotes, chatNote]);
                 setCurrentChatNote(chatNote);
                 addNote(3, chatNote);
+                recordNoteOpen(chatNote.noteId, 3);
 
                 const freshMeta: ChatNoteMetaProps[] = await loadChatNoteMeta(myself, accessToken);
                 if (freshMeta.length > 0) {
@@ -266,13 +281,21 @@ export const useNoteManagement = (
                 const newNote = chatNotes[0];
                 setCurrentChatNote(newNote);
                 addNote(3, newNote);
+                recordNoteOpen(newNote.noteId, 3);
 
                 const freshMeta: ChatNoteMetaProps[] = await loadChatNoteMeta(myself, accessToken);
                 if (freshMeta.length > 0) {
                     setChatNoteMeta(freshMeta);
                 }
             } else {
-                await handleCreateNewChatNote(null, chatType, chatId, isThread, threadId, chatName);
+                await handleCreateNewChatNote(
+                    null,
+                    chatType,
+                    chatId,
+                    isThread,
+                    threadId,
+                    chatName
+                );
             }
         } catch (error) {
             console.error("Error loading or creating chat note:", error);
@@ -342,6 +365,7 @@ export const useNoteManagement = (
                 setNewlyCreatedTaskNotes([...newlyCreatedTaskNotes, newNote]);
                 setCurrentTaskNote(taskNote);
                 addNote(2, taskNote);
+                recordNoteOpen(taskNote.noteId, 2);
 
                 setTaskNoteMeta((prev) => [
                     {
@@ -406,6 +430,7 @@ export const useNoteManagement = (
                 setNewlyCreatedMyNotes([...newlyCreatedMyNotes, newNote]);
                 setCurrentMyNote(newNote);
                 addNote(1, newNote);
+                recordNoteOpen(myNote.noteId, 1);
 
                 setMyNoteMeta((prev) => [
                     {
@@ -515,6 +540,71 @@ export const useNoteManagement = (
         return isFavorited;
     };
 
+    // Recent notes functions
+    const getRecentNotesMeta = async () => {
+        const loadedRecents = await loadRecentNotesMeta(myself, accessToken);
+        if (loadedRecents) {
+            setRecentNotes(loadedRecents);
+        }
+    };
+
+    // Record that the current user just opened a note. Optimistically
+    // promote any locally-known matching meta row to the top of its
+    // array with a fresh `tsOpenedAt` so the sidebar / home cards
+    // reorder immediately, then POST to the backend. If the row isn't
+    // already in local state (newly-created note, or a note that had
+    // dropped out of the cap), refetch the full meta so the new entry
+    // appears with full title/parent/etc.
+    const recordNoteOpen = async (noteId: number, noteType: number) => {
+        if (!accessToken) return;
+
+        const nowIso = new Date().toISOString();
+        let alreadyKnown = false;
+        if (recentNotes) {
+            if (noteType === 1) {
+                alreadyKnown = recentNotes.personalNotes.some((n) => n.noteId === noteId);
+            } else if (noteType === 2) {
+                alreadyKnown = recentNotes.taskNotes.some((n) => n.noteId === noteId);
+            } else if (noteType === 3) {
+                alreadyKnown = recentNotes.chatNotes.some((n) => n.noteId === noteId);
+            }
+        }
+
+        if (alreadyKnown && recentNotes) {
+            const promote = <T extends { noteId: number; tsOpenedAt: string }>(arr: T[]): T[] => {
+                const idx = arr.findIndex((n) => n.noteId === noteId);
+                if (idx === -1) return arr;
+                const updated = { ...arr[idx], tsOpenedAt: nowIso };
+                return [updated, ...arr.slice(0, idx), ...arr.slice(idx + 1)];
+            };
+            if (noteType === 1) {
+                setRecentNotes({
+                    ...recentNotes,
+                    personalNotes: promote(recentNotes.personalNotes),
+                });
+            } else if (noteType === 2) {
+                setRecentNotes({
+                    ...recentNotes,
+                    taskNotes: promote(recentNotes.taskNotes),
+                });
+            } else if (noteType === 3) {
+                setRecentNotes({
+                    ...recentNotes,
+                    chatNotes: promote(recentNotes.chatNotes),
+                });
+            }
+        }
+
+        try {
+            const result = await recordNoteOpenApi(myself, noteId, noteType, accessToken);
+            if (result && !alreadyKnown) {
+                await getRecentNotesMeta();
+            }
+        } catch (error) {
+            console.error("Error recording note open:", error);
+        }
+    };
+
     initCurrentMyNoteChain({
         myNoteMeta: myNoteMeta,
         currentMyNoteChain: currentMyNoteChain,
@@ -564,6 +654,7 @@ export const useNoteManagement = (
         setNewlyCreatedTaskNotes([]);
         setNewlyCreatedChatNotes([]);
         setAllNoteIdChains({});
+        setRecentNotes(null);
     };
 
     // Reset note states (for service switching)
@@ -606,6 +697,7 @@ export const useNoteManagement = (
                         tsUpdated: note.tsUpdated,
                     };
                     setCurrentMyNote(myNote);
+                    recordNoteOpen(noteId, 1);
                 } else {
                     const note: MyNoteProps = await loadSpecificNote(
                         myself,
@@ -619,6 +711,7 @@ export const useNoteManagement = (
                         if (targetTabIndex !== -1) {
                             setSelectedTabIndex(targetTabIndex);
                         }
+                        recordNoteOpen(noteId, 1);
                     }
                 }
                 setCurrentNoteType(1);
@@ -644,6 +737,7 @@ export const useNoteManagement = (
                     if (targetTabIndex !== -1) {
                         setSelectedTabIndex(targetTabIndex);
                     }
+                    recordNoteOpen(noteId, 2);
                 } else {
                     const note: TaskNoteProps = await loadSpecificNote(
                         myself,
@@ -657,6 +751,7 @@ export const useNoteManagement = (
                         if (targetTabIndex !== -1) {
                             setSelectedTabIndex(targetTabIndex);
                         }
+                        recordNoteOpen(noteId, 2);
                     }
                 }
                 setCurrentNoteType(2);
@@ -684,6 +779,7 @@ export const useNoteManagement = (
                     if (targetTabIndex !== -1) {
                         setSelectedTabIndex(targetTabIndex);
                     }
+                    recordNoteOpen(noteId, 3);
                 } else {
                     const note: ChatNoteProps = await loadSpecificNote(
                         myself,
@@ -697,6 +793,7 @@ export const useNoteManagement = (
                         if (targetTabIndex !== -1) {
                             setSelectedTabIndex(targetTabIndex);
                         }
+                        recordNoteOpen(noteId, 3);
                     }
                 }
                 setCurrentNoteType(3);
@@ -772,6 +869,12 @@ export const useNoteManagement = (
         getFavoriteNotesMeta,
         toggleFavorite,
         isNoteFavorited,
+
+        // Recent notes
+        recentNotes,
+        setRecentNotes,
+        getRecentNotesMeta,
+        recordNoteOpen,
 
         // Visibility states
         isTaskNoteVisible,
