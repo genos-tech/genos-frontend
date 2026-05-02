@@ -49,6 +49,7 @@ import { SprintConfigDialog } from "../../sprint-milestone/components/SprintConf
 import { SprintManagerDialog } from "../../sprint-milestone/components/SprintManagerDialog";
 import { SprintMilestonesSection } from "../../sprint-milestone/components/SprintMilestonesSection";
 import { Sprint } from "../../sprint-milestone/types";
+import { predefinedPriorityFilters } from "../../types/TaskTableTypes";
 
 // A task augmented with status/close-date rolled up from its parent chain.
 // `effectiveStatus`:
@@ -90,6 +91,18 @@ const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
     Pending: { bg: "rgba(251,146,60,0.12)", text: "#fb923c" },
     Closed: { bg: "rgba(34,197,94,0.12)", text: "#22c55e" },
 };
+
+// Priority swatches sourced from `predefinedPriorityFilters` so the
+// dashboard chip stays in lockstep with the table's filter chips.
+// `light` / `dark` are kept separate even though the current palette
+// happens to match across modes — keeps the lookup honest for future
+// per-mode tweaks. Non-priority labels (e.g. the "All" filter row) are
+// skipped at build time.
+const PRIORITY_COLORS: Record<string, { light: string; dark: string }> = Object.fromEntries(
+    predefinedPriorityFilters
+        .filter((f) => f.label !== "All")
+        .map((f) => [f.label, { light: f.lightModeColor, dark: f.darkModeColor }])
+);
 
 const STATUS_LABELS: Record<string, string> = {
     Open: "Open",
@@ -1304,14 +1317,37 @@ export const TaskHomeContent = ({
                                                                 direction="row"
                                                                 justifyContent="space-between"
                                                             >
-                                                                {task.priority && (
-                                                                    <Typography
-                                                                        level="body-xs"
-                                                                        sx={{ color: textMuted }}
-                                                                    >
-                                                                        {task.priority}
-                                                                    </Typography>
-                                                                )}
+                                                                {task.priority &&
+                                                                    (() => {
+                                                                        const swatch =
+                                                                            PRIORITY_COLORS[
+                                                                                task.priority
+                                                                            ];
+                                                                        const color = swatch
+                                                                            ? isDark
+                                                                                ? swatch.dark
+                                                                                : swatch.light
+                                                                            : textMuted;
+                                                                        return (
+                                                                            <Chip
+                                                                                size="sm"
+                                                                                variant="soft"
+                                                                                sx={{
+                                                                                    fontSize:
+                                                                                        "0.65rem",
+                                                                                    fontWeight: 600,
+                                                                                    // ~12% alpha
+                                                                                    // matches the
+                                                                                    // adjacent
+                                                                                    // status chip.
+                                                                                    backgroundColor: `${color}1F`,
+                                                                                    color,
+                                                                                }}
+                                                                            >
+                                                                                {task.priority}
+                                                                            </Chip>
+                                                                        );
+                                                                    })()}
                                                                 <Typography
                                                                     level="body-xs"
                                                                     sx={{
