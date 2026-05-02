@@ -4,6 +4,7 @@ import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
+import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import {
     Avatar,
     Badge,
@@ -30,6 +31,7 @@ import { UIStateManagementState } from "../../hooks/common/useUIStateManagement"
 import { InboxManagementState } from "../../hooks/inbox/useInboxManagement";
 import { UserProps } from "../../types/admin";
 import { ColorSchemeToggle } from "./colorSchemeToggle";
+import { SettingsModal } from "./SettingsModal";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
@@ -86,6 +88,7 @@ export const Sidebar = (props: SidebarProps) => {
 
     const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
     const [avatarUserId, setAvatarUserId] = useState<string | undefined>(undefined);
+    const [openSettings, setOpenSettings] = useState<boolean>(false);
 
     const handleLogout = async () => {
         try {
@@ -374,6 +377,63 @@ export const Sidebar = (props: SidebarProps) => {
                         <Tooltip
                             placement="right"
                             size="sm"
+                            title="Settings"
+                            variant="soft"
+                            sx={{ zIndex: 10020 }}
+                        >
+                            <ListItemButton
+                                onClick={() => setOpenSettings(true)}
+                                sx={{
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                    py: 1,
+                                    px: 1.25,
+                                    borderRadius: "12px",
+                                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                    "&:hover": {
+                                        background: isDark
+                                            ? "rgba(255,255,255,0.06)"
+                                            : "rgba(0,0,0,0.04)",
+                                        "& .settings-icon": {
+                                            color: isDark
+                                                ? "rgba(255,255,255,0.85)"
+                                                : "rgba(0,0,0,0.75)",
+                                        },
+                                    },
+                                }}
+                            >
+                                <Box
+                                    sx={{
+                                        width: 32,
+                                        height: 32,
+                                        borderRadius: "10px",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        background: isDark
+                                            ? "rgba(255,255,255,0.04)"
+                                            : "rgba(0,0,0,0.03)",
+                                        transition: "all 0.2s ease",
+                                    }}
+                                >
+                                    <SettingsRoundedIcon
+                                        className="settings-icon"
+                                        sx={{
+                                            fontSize: 18,
+                                            color: isDark
+                                                ? "rgba(255,255,255,0.45)"
+                                                : "rgba(0,0,0,0.4)",
+                                            transition: "color 0.2s ease",
+                                        }}
+                                    />
+                                </Box>
+                            </ListItemButton>
+                        </Tooltip>
+                    </ListItem>
+                    <ListItem>
+                        <Tooltip
+                            placement="right"
+                            size="sm"
                             title="Sign out"
                             variant="soft"
                             sx={{ zIndex: 10020 }}
@@ -544,6 +604,8 @@ export const Sidebar = (props: SidebarProps) => {
                     user={useTEM.teamMemberProfiles[avatarUserId]}
                 />
             )}
+
+            <SettingsModal open={openSettings} onClose={() => setOpenSettings(false)} />
         </Sheet>
     );
 };
