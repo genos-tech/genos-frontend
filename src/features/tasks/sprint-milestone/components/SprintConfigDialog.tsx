@@ -113,13 +113,14 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
                                     size="sm"
                                     value={isPreset ? String(durationDays) : "custom"}
                                     onChange={(_, v) => {
-                                        if (v === "custom") return;
-                                        if (typeof v === "number") setDurationDays(v);
+                                        if (v == null || v === "custom") return;
+                                        const n = parseInt(v, 10);
+                                        if (!Number.isNaN(n) && n > 0) setDurationDays(n);
                                     }}
                                     sx={{ minWidth: 140 }}
                                 >
                                     {DURATION_PRESETS.map((p) => (
-                                        <Option key={p.value} value={p.value}>
+                                        <Option key={p.value} value={String(p.value)}>
                                             {p.label}
                                         </Option>
                                     ))}
