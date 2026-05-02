@@ -15,6 +15,7 @@ import { InboxHome } from "./features/inbox/inboxHome";
 import { NoteHome } from "./features/notes/NoteHome";
 import { TaskHome } from "./features/tasks/taskHome";
 import { useAppInitialization } from "./hooks/common/useAppInitialization";
+import { useGlobalServiceShortcut } from "./hooks/common/useGlobalServiceShortcut";
 import { useProjectTaskManagement } from "./hooks/common/useProjectTaskManagement";
 import { useServiceInitialization } from "./hooks/common/useServiceInitialization";
 import { webSocketSync } from "./hooks/common/useSyncManagement";
@@ -95,6 +96,11 @@ export const App = () => {
 
     // Handle thread task interactions
     useThreadTaskHandling({ useCM, useTM });
+
+    // Global keyboard shortcut for switching services. Modifier is Ctrl+Cmd
+    // on Mac, Ctrl+Alt on Windows/Linux; combine with a letter (I/C/T/N) to
+    // jump directly, or with ArrowLeft/ArrowRight to cycle through services.
+    useGlobalServiceShortcut(useUISM.openingService, useUISM.setOpeningService);
 
     // WebSocket synchronization
     webSocketSync({
