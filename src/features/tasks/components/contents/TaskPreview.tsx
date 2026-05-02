@@ -241,8 +241,14 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         }
     }, [isAttachmentDeleted, deletedAttachmentId]);
 
-    // Get Task Comments
-    const [taskComments, setTaskComments] = useState<TaskCommentProps[]>([]);
+    // Task comments are hoisted into `useTM` (shared with the chat
+    // thread's new "Comments" tab so both views read the same list).
+    // We keep the load effect here because TaskPreview is the path
+    // through which a regular task's comments get refreshed — when
+    // the chat thread is open standalone (no preview pane), the
+    // ThreadCommentsView component runs its own load.
+    const taskComments = useTM.taskComments;
+    const setTaskComments = useTM.setTaskComments;
     useEffect(() => {
         (async () => {
             const loadedTaskComments: TaskCommentProps[] = await loadTaskComments(
@@ -314,8 +320,12 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         }
     }, [isOpenTagList]);
 
-    // Scroll management
-    const [taskCommentLines, setTaskCommentLines] = useState(0);
+    // Scroll management — `taskCommentLines` is hoisted via `useTM`
+    // (same rationale as `taskComments`) so the chat-thread editor
+    // and the task-preview editor agree on line count without an
+    // extra prop bridge.
+    const taskCommentLines = useTM.taskCommentLines;
+    const setTaskCommentLines = useTM.setTaskCommentLines;
     const sheetRef = useRef<HTMLDivElement | null>(null);
 
     // Scroll to top when the task preview is initially opened
@@ -898,9 +908,15 @@ const MilestonePreviewInner = ({
     ]);
 
     // Comments + notes for the backing task (not the milestone id).
-    const [taskComments, setTaskComments] = useState<TaskCommentProps[]>([]);
+    // Comments are read from `useTM` (shared shape with the chat
+    // thread's Comments tab) but the load effect lives below — the
+    // milestone preview keys off `milestone.taskId` directly because
+    // `currentPreviewTask` is undefined in milestone mode.
+    const taskComments = useTM.taskComments;
+    const setTaskComments = useTM.setTaskComments;
     const [taskNotes, setTaskNotes] = useState<TaskNoteProps[]>([]);
-    const [taskCommentLines, setTaskCommentLines] = useState(0);
+    const taskCommentLines = useTM.taskCommentLines;
+    const setTaskCommentLines = useTM.setTaskCommentLines;
     const [tabIndex, setTabIndex] = useState(0);
     const [isInEdit, setIsInEdit] = useState(false);
     const [editTargetComment, setEditTargetComment] = useState<TaskCommentProps>();

@@ -6,6 +6,7 @@ import { loadSpecificTask } from "../../features/tasks/services/loadSpecificTask
 import { buildTaskTree } from "../../features/tasks/utils/buildTaskTree";
 import { UserProps } from "../../types/admin";
 import {
+    TaskCommentProps,
     TaskMetaProps,
     TaskMetaTreeNode,
     TaskProps,
@@ -77,6 +78,17 @@ export interface TaskManagementState {
     // Task update state
     isTaskCommentUpdated: { isUpdate: boolean; scrollToBottom: boolean };
     setIsTaskCommentUpdated: (updated: { isUpdate: boolean; scrollToBottom: boolean }) => void;
+
+    // Comments for the currently-previewed task. Hoisted to the hook
+    // (was local in TaskPreview) so the chat thread's "Comments" tab
+    // and TaskTabBlock's existing comments tab stay in sync without
+    // either side double-fetching. Repopulated automatically by an
+    // effect below whenever `currentPreviewTaskId` or
+    // `isTaskCommentUpdated.isUpdate` changes.
+    taskComments: TaskCommentProps[];
+    setTaskComments: Dispatch<SetStateAction<TaskCommentProps[]>>;
+    taskCommentLines: number;
+    setTaskCommentLines: Dispatch<SetStateAction<number>>;
 
     // Tag and project creation
     openCreateTag: boolean;
@@ -219,6 +231,13 @@ export const useTaskManagement = (
         isUpdate: false,
         scrollToBottom: true,
     });
+
+    // Hoisted task-comment state. See the type-side comment for
+    // rationale; the load effect lives further down so both
+    // TaskTabBlock's Comments tab and the new chat-thread Comments
+    // tab share a single source of truth.
+    const [taskComments, setTaskComments] = useState<TaskCommentProps[]>([]);
+    const [taskCommentLines, setTaskCommentLines] = useState<number>(0);
 
     const [tsLastLoadProjectTasks, setTsLastLoadProjectTasks] = useState<number | undefined>(
         undefined
@@ -495,6 +514,10 @@ export const useTaskManagement = (
         // Task update state
         isTaskCommentUpdated,
         setIsTaskCommentUpdated,
+        taskComments,
+        setTaskComments,
+        taskCommentLines,
+        setTaskCommentLines,
 
         // Tag and project creation
         openCreateTag,

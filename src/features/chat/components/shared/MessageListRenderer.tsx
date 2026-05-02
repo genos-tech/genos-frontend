@@ -39,6 +39,12 @@ interface MessageListRendererProps {
     virtuosoRef: React.RefObject<VirtuosoHandle>;
     useCM: ChatManagementState;
     useTM: TaskManagementState;
+    /** When true, ignore `height` and let Virtuoso fill the parent flex
+     * column instead. Used by editor-less surfaces (e.g. PM thread's
+     * "Activities" tab) where there's no bottom panel to subtract from
+     * the calculated height — the parent's `flex: 1, minHeight: 0`
+     * already does that work. */
+    fillContainer?: boolean;
 }
 
 export const MessageListRenderer = ({
@@ -65,6 +71,7 @@ export const MessageListRenderer = ({
     virtuosoRef,
     useCM,
     useTM,
+    fillContainer = false,
 }: MessageListRendererProps) => {
     useScrollToBottomOnChatChange(
         virtuosoRef,
@@ -155,7 +162,9 @@ export const MessageListRenderer = ({
         return { paddingTop, paddingBottom };
     };
 
-    const getFocusedState = (message: MessageProps | ThreadMessageProps): "focused" | "threadActive" | false => {
+    const getFocusedState = (
+        message: MessageProps | ThreadMessageProps
+    ): "focused" | "threadActive" | false => {
         if (isThread) {
             if (
                 (message as ThreadMessageProps).messageIdWithChatIdAndThreadId ===
@@ -181,8 +190,28 @@ export const MessageListRenderer = ({
         return false;
     };
 
+    // When `fillContainer` is set, the surrounding Sheet uses
+    // `flex: 1` so we let Virtuoso flex into the available height
+    // instead of relying on the magic-number `height` prop. Both modes
+    // need to coexist because the same renderer is used for the main
+    // chat (fixed-height calc, header + editor below) and for the
+    // editor-less PM activities thread (full flex).
+    const wrapperSx = fillContainer
+        ? ({
+              px: 0.3,
+              my: 0.2,
+              flex: 1,
+              minHeight: 0,
+              display: "flex",
+              flexDirection: "column",
+          } as const)
+        : ({ px: 0.3, my: 0.2 } as const);
+    const virtuosoStyle: React.CSSProperties = fillContainer
+        ? { flex: 1, minHeight: 0 }
+        : { height };
+
     return (
-        <Box sx={{ px: 0.3, my: 0.2 }}>
+        <Box sx={wrapperSx}>
             <Virtuoso
                 ref={virtuosoRef}
                 atBottomThreshold={128}
@@ -193,7 +222,7 @@ export const MessageListRenderer = ({
                 initialTopMostItemIndex={messages.length - 1}
                 isScrolling={setIsScrolling}
                 rangeChanged={setVisibleRange}
-                style={{ height }}
+                style={virtuosoStyle}
                 totalCount={messages.length}
                 itemContent={(index, _, { isScrolling }) => {
                     const message = messages[index];

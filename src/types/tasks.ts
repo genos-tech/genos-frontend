@@ -58,6 +58,26 @@ export type TaskCommentProps = {
     isEdited: boolean;
 };
 
+// Audit-log row backing the new "Activity" tab. Mirrors `TaskActivity`
+// in `backend_django/origin/models/task/task_activity_models.py`. The
+// frontend treats `actionType` as an opaque string to keep the diff
+// loose (new types can be added on the backend without a frontend
+// schema bump); `formatActivity` switches on it.
+export type TaskActivityProps = {
+    activityId: number;
+    actionType: string;
+    fieldName: string | null;
+    oldValue: unknown;
+    newValue: unknown;
+    metadata: Record<string, unknown>;
+    actor: {
+        userId: string | number | null;
+        userName: string | null;
+        avatarImgPath: string | null;
+    } | null;
+    tsCreatedAt: string;
+};
+
 export type TaskStatusProps = {
     code: number | null;
     status: string | null;

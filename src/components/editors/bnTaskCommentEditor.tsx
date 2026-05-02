@@ -181,75 +181,94 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     }, [selectedEmoji]);
 
     useEffect(() => {
-        if (
-            useTM.isTaskCommentUpdated &&
-            useTM.isTaskCommentUpdated.isUpdate === true &&
-            task.id
-        ) {
-            setTaskComments([
-                ...taskComments,
-                {
-                    taskId: task.id,
-                    senderId: myself.userId,
-                    senderName: myself.userName,
-                    commentId: taskComments.length + 1,
-                    commentBody: editor.document,
-                    tsSent: getLocalCurrentTimestamp(),
-                    tsUpdated: getLocalCurrentTimestamp(),
-                    isEdited: false,
-                },
-            ]);
-            editor.replaceBlocks(editor.document, []);
-            useTM.setIsTaskCommentUpdated({ isUpdate: false, scrollToBottom: false });
-        }
-    }, [useTM.isTaskCommentUpdated, taskComments]);
-
-    useEffect(() => {
         editor.replaceBlocks(editor.document, []);
     }, [task]);
 
+    // Send a new comment.
+    //
+    // Old behaviour deferred BOTH the optimistic list-append AND the
+    // editor-clear to a side effect that listened for
+    // `useTM.isTaskCommentUpdated.isUpdate === true`. That flag flips
+    // when the server broadcasts the `wsType === "task"` round-trip;
+    // unfortunately, the round-trip races with React render passes and
+    // — in some host configurations — never reaches this component
+    // before the user clicks again. The visible symptom was: comment
+    // is persisted in DB, but the editor stays full and the list stays
+    // stale until the page is refreshed.
+    //
+    // The fix is to make this path purely user-driven:
+    //   1. Snapshot the editor content while it's still valid.
+    //   2. Optimistically append to `taskComments` so the list updates
+    //      *now*.
+    //   3. Clear the editor *now*.
+    //   4. Emit the socket events.
+    //   5. Bump `useTM.isTaskCommentUpdated` so other consumers
+    //      (TaskPreview's load effect, ThreadCommentsView's load
+    //      effect) refetch and replace the optimistic row with server
+    //      truth — covering reconciled timestamps / commentId /
+    //      mentions etc.
     const sendComment = async () => {
-        if (socket) {
-            if (editor.document.length > 1) {
-                socket.emit(
-                    "task_comment",
-                    {
-                        method_type: "POST",
-                        project_id: task.project?.projectId,
-                        project_name: task.project?.projectName,
-                        task_id: task.id,
-                        comment_body: editor.document,
-                        is_private: task.project?.isPrivate || false,
-                    },
-                    (ack: any) => {
-                        useTM.setIsTaskCommentUpdated({ isUpdate: true, scrollToBottom: true });
-                    }
-                );
+        if (!socket) return;
+        if (editor.document.length <= 1) return;
+        if (!task.id) return;
 
-                if (task.project && task.id) {
-                    const updatedTaskThreadMessage =
-                        taskThreadMessageForCommentAddedTemplate(myself);
-                    socket.emit("thread_message", {
-                        methodType: "POST",
-                        isInit: false,
-                        rootMessageTSSent: "",
-                        rootMessageSenderId: null,
-                        rootMessageReceiverId: null,
-                        threadId: null,
-                        threadMessage: updatedTaskThreadMessage,
-                        chatType: 3,
-                        dmPartnerUserId: null,
-                        senderId: task.project.systemUserId,
-                        senderName: task.project.projectName,
-                        destCGName: task.project.projectName,
-                        destCGId: task.project.projectId,
-                        taskId: task.id,
-                        systemUserId: task.project.systemUserId,
-                        messageIdForPut: null,
-                        sendActivity: false,
-                    });
-                }
+        const commentBodySnapshot = editor.document;
+
+        const optimistic = {
+            taskId: task.id,
+            senderId: myself.userId,
+            senderName: myself.userName,
+            commentId: taskComments.length + 1,
+            commentBody: commentBodySnapshot,
+            tsSent: getLocalCurrentTimestamp(),
+            tsUpdated: getLocalCurrentTimestamp(),
+            isEdited: false,
+        };
+
+        setTaskComments([...taskComments, optimistic]);
+        editor.replaceBlocks(editor.document, []);
+        setEditorDocLength(0);
+        setNumEditorLines(0);
+
+        socket.emit(
+            "task_comment",
+            {
+                method_type: "POST",
+                project_id: task.project?.projectId,
+                project_name: task.project?.projectName,
+                task_id: task.id,
+                comment_body: commentBodySnapshot,
+                is_private: task.project?.isPrivate || false,
+            },
+            (_ack: any) => {
+                // Round-trip done: ask the rest of the app to refetch
+                // so the optimistic row is replaced with the canonical
+                // server payload (correct commentId, ts, mentions…).
+                useTM.setIsTaskCommentUpdated({ isUpdate: true, scrollToBottom: true });
             }
+        );
+
+        if (task.project && task.id) {
+            const updatedTaskThreadMessage = taskThreadMessageForCommentAddedTemplate(myself);
+            socket.emit("thread_message", {
+                methodType: "POST",
+                isInit: false,
+                rootMessageTSSent: "",
+                rootMessageSenderId: null,
+                rootMessageReceiverId: null,
+                threadId: null,
+                threadMessage: updatedTaskThreadMessage,
+                chatType: 3,
+                dmPartnerUserId: null,
+                senderId: task.project.systemUserId,
+                senderName: task.project.projectName,
+                destCGName: task.project.projectName,
+                destCGId: task.project.projectId,
+                taskId: task.id,
+                systemUserId: task.project.systemUserId,
+                messageIdForPut: null,
+                sendActivity: false,
+            });
         }
     };
 
