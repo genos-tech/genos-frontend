@@ -1,6 +1,7 @@
 import * as React from "react";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import FilterListIcon from "@mui/icons-material/FilterList";
+import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import { useColorScheme } from "@mui/joy/styles";
 import { Box, Chip, Stack, Tooltip, Typography } from "@mui/material";
@@ -11,14 +12,34 @@ import MenuItem from "@mui/material/MenuItem";
 import { tooltipClasses } from "@mui/material/Tooltip";
 import { alpha } from "@mui/system";
 
+import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { TaskTableProps } from "../../../../types/tasks";
+import {
+    getMilestoneStatusChipColor,
+    selectVisibleMilestones,
+} from "../../sprint-milestone/utils/sortMilestones";
 import {
     FilterProps,
     predefinedEffortLevelFilters,
     predefinedPriorityFilters,
     predefinedStatusFilters,
 } from "../../types/TaskTableTypes";
+
+// Sentinels used by the milestone filter alongside numeric milestone
+// ids. Mirrors the `NO_MILESTONE` pattern in `SprintMilestonePicker`
+// so unattached tasks (`task.milestoneId == null`) can be filtered for
+// or against explicitly.
+type MilestoneFilterKey = "all" | "none" | number;
+const MILESTONE_ALL: MilestoneFilterKey = "all";
+const MILESTONE_NONE: MilestoneFilterKey = "none";
+// Accent colour echoes the sidebar's `FlagRoundedIcon` and the
+// existing milestone-scope chip so the new filter visually belongs to
+// the same family.
+const MILESTONE_ACCENT_DARK = "#fb923c";
+const MILESTONE_ACCENT_LIGHT = "#c2410c";
+const MILESTONE_ACCENT_BG_DARK = "rgba(249,115,22,0.35)";
+const MILESTONE_ACCENT_BG_LIGHT = "rgba(249,115,22,0.6)";
 
 // Modern theme-aware styling
 const FILTER_STYLES = {
@@ -54,6 +75,11 @@ const FILTER_STYLES = {
 type TaskFilterMenuProps = {
     isTaskUpdated?: boolean;
     useTM: TaskManagementState;
+    // Optional: when provided, the filter bar exposes a Milestone
+    // multi-select drawn from the same visible/sorted set as the
+    // sidebar's `MilestonesListItem`. Left optional so the legacy
+    // `ProjectTaskTable` call site can keep working without it.
+    useSM?: SprintMilestoneManagementState;
     predefinedTagsFilters: FilterProps[];
     setCurrentDisplayingTasks: (tasks: TaskTableProps[]) => void;
     hideStatusFilter?: boolean;
@@ -63,6 +89,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     const {
         isTaskUpdated,
         useTM,
+        useSM,
         predefinedTagsFilters,
         setCurrentDisplayingTasks,
         hideStatusFilter,
@@ -106,7 +133,13 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             setAnchorElStatusFilter(null);
         }
 
-        applyFilters(newStatuses, selectedTags, selectedPriorities, selectedEffortLevels);
+        applyFilters(
+            newStatuses,
+            selectedTags,
+            selectedPriorities,
+            selectedEffortLevels,
+            selectedMilestoneKeys
+        );
     };
 
     // Tags filter
@@ -141,7 +174,13 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             setAnchorElTagsFilter(null);
         }
 
-        applyFilters(selectedStatus, newTags, selectedPriorities, selectedEffortLevels);
+        applyFilters(
+            selectedStatus,
+            newTags,
+            selectedPriorities,
+            selectedEffortLevels,
+            selectedMilestoneKeys
+        );
     };
 
     React.useEffect(() => {
@@ -187,7 +226,13 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             setAnchorElPriorityFilter(null);
         }
 
-        applyFilters(selectedStatus, selectedTags, newPriorities, selectedEffortLevels);
+        applyFilters(
+            selectedStatus,
+            selectedTags,
+            newPriorities,
+            selectedEffortLevels,
+            selectedMilestoneKeys
+        );
     };
 
     // Effort level filter
@@ -230,15 +275,99 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             setAnchorElEffortLevelFilter(null);
         }
 
-        applyFilters(selectedStatus, selectedTags, selectedPriorities, newEffortLevels);
+        applyFilters(
+            selectedStatus,
+            selectedTags,
+            selectedPriorities,
+            newEffortLevels,
+            selectedMilestoneKeys
+        );
     };
+
+    // Milestone filter — pulls from the same visible/sorted milestone
+    // set the sidebar shows in `MilestonesListItem` so the user can
+    // narrow the table to one or more milestones (or explicitly the
+    // unattached ones via the "No milestone" sentinel).
+    const currentProjectId = useTM.allTasks[0]?.projectId ?? null;
+    const visibleMilestones = useMemo(() => {
+        if (!useSM || currentProjectId == null) return [];
+        return selectVisibleMilestones(
+            useSM.projectMilestones[currentProjectId] ?? [],
+            useSM.projectSprints[currentProjectId] ?? []
+        );
+    }, [useSM, currentProjectId]);
+    const projectSprints = useMemo(() => {
+        if (!useSM || currentProjectId == null) return [];
+        return useSM.projectSprints[currentProjectId] ?? [];
+    }, [useSM, currentProjectId]);
+    const [selectedMilestoneKeys, setSelectedMilestoneKeys] = React.useState<MilestoneFilterKey[]>(
+        [MILESTONE_ALL]
+    );
+    const [anchorElMilestoneFilter, setAnchorElMilestoneFilter] =
+        React.useState<null | HTMLElement>(null);
+    const openMilestoneFilter = Boolean(anchorElMilestoneFilter);
+    const handleClickMilestoneFilter = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorElMilestoneFilter(event.currentTarget);
+    };
+    // When the project changes (or the visible milestone set drops a
+    // currently-selected id, e.g. a milestone got soft-deleted), keep
+    // the selection consistent so we don't end up filtering by a stale
+    // id and showing an empty table forever.
+    useEffect(() => {
+        if (selectedMilestoneKeys.length === 1 && selectedMilestoneKeys[0] === MILESTONE_ALL) {
+            return;
+        }
+        const validIds = new Set<number>(visibleMilestones.map((m) => m.milestoneId));
+        const pruned = selectedMilestoneKeys.filter(
+            (k) => k === MILESTONE_NONE || (typeof k === "number" && validIds.has(k))
+        );
+        if (pruned.length === selectedMilestoneKeys.length) return;
+        setSelectedMilestoneKeys(pruned.length > 0 ? pruned : [MILESTONE_ALL]);
+    }, [visibleMilestones, currentProjectId]);
+    const handleCloseMilestoneFilter = (key: MilestoneFilterKey) => {
+        let next: MilestoneFilterKey[];
+        if (key === MILESTONE_ALL) {
+            next = [MILESTONE_ALL];
+            setSelectedMilestoneKeys(next);
+            setAnchorElMilestoneFilter(null);
+        } else if (selectedMilestoneKeys.some((k) => k === key)) {
+            next = selectedMilestoneKeys.filter((k) => k !== key);
+            setSelectedMilestoneKeys(next);
+        } else {
+            next = [...selectedMilestoneKeys.filter((k) => k !== MILESTONE_ALL), key];
+            setSelectedMilestoneKeys(next);
+        }
+
+        if (next.length === 0) {
+            next = [MILESTONE_ALL];
+            setSelectedMilestoneKeys(next);
+            setAnchorElMilestoneFilter(null);
+        }
+
+        applyFilters(selectedStatus, selectedTags, selectedPriorities, selectedEffortLevels, next);
+    };
+
+    const milestoneFilterButtonLabel = useMemo(() => {
+        if (selectedMilestoneKeys.length === 1 && selectedMilestoneKeys[0] === MILESTONE_ALL) {
+            return "All";
+        }
+        const first = selectedMilestoneKeys[0];
+        if (first === MILESTONE_NONE) return "No milestone";
+        if (typeof first === "number") {
+            const m = visibleMilestones.find((mm) => mm.milestoneId === first);
+            const title = m?.title ?? `#${first}`;
+            return title.length > 16 ? `${title.slice(0, 16)}…` : title;
+        }
+        return "All";
+    }, [selectedMilestoneKeys, visibleMilestones]);
 
     // Apply filters
     const applyFilters = (
         statuses: FilterProps[],
         tags: FilterProps[],
         priority: FilterProps[],
-        effortLevel: FilterProps[]
+        effortLevel: FilterProps[],
+        milestoneSel: MilestoneFilterKey[]
     ) => {
         // Apply all filters and set the displaying tasks
         // Filters: status, tags, priority, effort level
@@ -312,6 +441,24 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             );
         }
 
+        // Filter by milestone (multi-select). Only narrows when the
+        // user has picked anything other than the default "All". The
+        // sidebar-driven `tableMilestoneFilterId` scope branch below
+        // is intentionally separate and takes precedence visually
+        // (the menu button is hidden while it's active), so we don't
+        // need to do anything special here when both are set — the
+        // narrowing is monotonic.
+        if (!(milestoneSel.length === 1 && milestoneSel[0] === MILESTONE_ALL)) {
+            const allowNone = milestoneSel.includes(MILESTONE_NONE);
+            const ids = new Set<number>(
+                milestoneSel.filter((k): k is number => typeof k === "number")
+            );
+            filteredTasks = filteredTasks.filter((task) => {
+                if (task.milestoneId == null) return allowNone;
+                return ids.has(task.milestoneId);
+            });
+        }
+
         // Milestone-scoped view: show the milestone's backing task as
         // the only root row plus its direct children. This is what the
         // sidebar's "click a milestone item" entry-point hooks into.
@@ -350,21 +497,35 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         setSelectedTags([predefinedTagsFilters[0]]);
         setSelectedPriorities([predefinedPriorityFilters[0]]);
         setSelectedEffortLevels([predefinedEffortLevelFilters[0]]);
+        setSelectedMilestoneKeys([MILESTONE_ALL]);
         applyFilters(
             predefinedStatusFilters.slice(1, 4),
             [predefinedTagsFilters[0]],
             [predefinedPriorityFilters[0]],
-            [predefinedEffortLevelFilters[0]]
+            [predefinedEffortLevelFilters[0]],
+            [MILESTONE_ALL]
         );
     };
 
     useEffect(() => {
-        applyFilters(selectedStatus, selectedTags, selectedPriorities, selectedEffortLevels);
-    }, [useTM.allTasks, useTM.tableMilestoneFilterId]);
+        applyFilters(
+            selectedStatus,
+            selectedTags,
+            selectedPriorities,
+            selectedEffortLevels,
+            selectedMilestoneKeys
+        );
+    }, [useTM.allTasks, useTM.tableMilestoneFilterId, selectedMilestoneKeys]);
 
     useEffect(() => {
         if (isTaskUpdated) {
-            applyFilters(selectedStatus, selectedTags, selectedPriorities, selectedEffortLevels);
+            applyFilters(
+                selectedStatus,
+                selectedTags,
+                selectedPriorities,
+                selectedEffortLevels,
+                selectedMilestoneKeys
+            );
         }
     }, [isTaskUpdated]);
 
@@ -431,14 +592,14 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             }}
         >
             <Stack
-                direction="row"
                 alignItems="center"
-                sx={{ overflowX: "auto" }}
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                direction="row"
                 gap={1.5}
+                sx={{ overflowX: "auto" }}
             >
                 {/* Filter Icon Label */}
-                <Stack direction="row" alignItems="center" gap={0.5} sx={{ flexShrink: 0 }}>
+                <Stack alignItems="center" direction="row" gap={0.5} sx={{ flexShrink: 0 }}>
                     <FilterListIcon
                         sx={{
                             fontSize: "18px",
@@ -554,7 +715,6 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                 return (
                                     <MenuItem
                                         key={status.label}
-                                        onClick={() => handleCloseStatusFilter(status)}
                                         sx={{
                                             borderRadius: "8px",
                                             mx: 0.5,
@@ -564,6 +724,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                                 background: styles.buttonHoverBg,
                                             },
                                         }}
+                                        onClick={() => handleCloseStatusFilter(status)}
                                     >
                                         <Box
                                             sx={{
@@ -708,7 +869,6 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                 return (
                                     <MenuItem
                                         key={tag.label}
-                                        onClick={() => handleCloseTagsFilter(tag)}
                                         sx={{
                                             borderRadius: "8px",
                                             mx: 0.5,
@@ -718,6 +878,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                                 background: styles.buttonHoverBg,
                                             },
                                         }}
+                                        onClick={() => handleCloseTagsFilter(tag)}
                                     >
                                         <Box
                                             sx={{
@@ -858,7 +1019,6 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                         return (
                             <MenuItem
                                 key={priority.label}
-                                onClick={() => handleClosePriorityFilter(priority)}
                                 sx={{
                                     borderRadius: "8px",
                                     mx: 0.5,
@@ -868,6 +1028,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                         background: styles.buttonHoverBg,
                                     },
                                 }}
+                                onClick={() => handleClosePriorityFilter(priority)}
                             >
                                 <Box
                                     sx={{
@@ -1006,7 +1167,6 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                         return (
                             <MenuItem
                                 key={effortLevel.label}
-                                onClick={() => handleCloseEffortLevelFilter(effortLevel)}
                                 sx={{
                                     borderRadius: "8px",
                                     mx: 0.5,
@@ -1016,6 +1176,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                         background: styles.buttonHoverBg,
                                     },
                                 }}
+                                onClick={() => handleCloseEffortLevelFilter(effortLevel)}
                             >
                                 <Box
                                     sx={{
@@ -1076,7 +1237,390 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                     })}
                 </Menu>
 
-                {/* Spacer */}
+                {/* Milestone Filter — multi-select drawn from the same
+                    visible/sorted set the sidebar shows in
+                    `MilestonesListItem`. Hidden while the sidebar's
+                    scope chip is active so users aren't confused by
+                    two competing milestone narrowing controls. */}
+                {useSM && useTM.tableMilestoneFilterId == null && (
+                    <>
+                        <Tooltip
+                            placement="top"
+                            slotProps={{
+                                popper: {
+                                    sx: {
+                                        [`& .${tooltipClasses.tooltip}`]: {
+                                            background: styles.menuBg,
+                                            color: styles.textColor,
+                                            border: `1px solid ${styles.menuBorder}`,
+                                            boxShadow: isDark
+                                                ? "0 4px 12px rgba(0,0,0,0.4)"
+                                                : "0 4px 12px rgba(0,0,0,0.1)",
+                                            fontSize: 11,
+                                            borderRadius: "8px",
+                                            px: 1.5,
+                                            py: 0.5,
+                                        },
+                                    },
+                                },
+                            }}
+                            title={(() => {
+                                if (
+                                    selectedMilestoneKeys.length === 1 &&
+                                    selectedMilestoneKeys[0] === MILESTONE_ALL
+                                ) {
+                                    return "All milestones";
+                                }
+                                return selectedMilestoneKeys
+                                    .map((k) => {
+                                        if (k === MILESTONE_NONE) return "No milestone";
+                                        const m = visibleMilestones.find(
+                                            (mm) => mm.milestoneId === k
+                                        );
+                                        return m?.title ?? `#${k}`;
+                                    })
+                                    .join(", ");
+                            })()}
+                        >
+                            <Button
+                                aria-controls={openMilestoneFilter ? "fade-menu" : undefined}
+                                aria-expanded={openMilestoneFilter ? "true" : undefined}
+                                aria-haspopup="true"
+                                variant="contained"
+                                startIcon={
+                                    <FlagRoundedIcon
+                                        sx={{
+                                            fontSize: "16px",
+                                            color:
+                                                selectedMilestoneKeys.length === 1 &&
+                                                selectedMilestoneKeys[0] === MILESTONE_ALL
+                                                    ? isDark
+                                                        ? MILESTONE_ACCENT_DARK
+                                                        : MILESTONE_ACCENT_LIGHT
+                                                    : "#fff",
+                                        }}
+                                    />
+                                }
+                                sx={{
+                                    color:
+                                        selectedMilestoneKeys.length === 1 &&
+                                        selectedMilestoneKeys[0] === MILESTONE_ALL
+                                            ? styles.textColor
+                                            : "#fff",
+                                    background:
+                                        selectedMilestoneKeys.length === 1 &&
+                                        selectedMilestoneKeys[0] === MILESTONE_ALL
+                                            ? isDark
+                                                ? "rgba(249,115,22,0.15)"
+                                                : "rgba(249,115,22,0.1)"
+                                            : isDark
+                                              ? `linear-gradient(135deg, ${alpha("#f97316", 0.5)} 0%, ${alpha("#f97316", 0.7)} 100%)`
+                                              : `linear-gradient(135deg, ${alpha("#f97316", 0.75)} 0%, ${alpha("#f97316", 0.95)} 100%)`,
+                                    border: `1px solid ${
+                                        isDark
+                                            ? MILESTONE_ACCENT_BG_DARK
+                                            : MILESTONE_ACCENT_BG_LIGHT
+                                    }`,
+                                    borderRadius: "10px",
+                                    fontSize: "12px",
+                                    fontWeight: 600,
+                                    height: "32px",
+                                    whiteSpace: "nowrap",
+                                    px: 1.5,
+                                    my: 0.5,
+                                    textTransform: "none",
+                                    boxShadow: isDark
+                                        ? "0 2px 8px rgba(249,115,22,0.25)"
+                                        : "0 2px 8px rgba(249,115,22,0.2)",
+                                    transition: "all 0.2s ease",
+                                    flexShrink: 0,
+                                    "&:hover": {
+                                        background:
+                                            selectedMilestoneKeys.length === 1 &&
+                                            selectedMilestoneKeys[0] === MILESTONE_ALL
+                                                ? isDark
+                                                    ? "rgba(249,115,22,0.25)"
+                                                    : "rgba(249,115,22,0.2)"
+                                                : isDark
+                                                  ? `linear-gradient(135deg, ${alpha("#f97316", 0.6)} 0%, ${alpha("#f97316", 0.8)} 100%)`
+                                                  : `linear-gradient(135deg, ${alpha("#f97316", 0.85)} 0%, ${alpha("#f97316", 1)} 100%)`,
+                                        transform: "translateY(-1px)",
+                                        boxShadow: isDark
+                                            ? "0 4px 12px rgba(249,115,22,0.35)"
+                                            : "0 4px 12px rgba(249,115,22,0.3)",
+                                    },
+                                }}
+                                onClick={handleClickMilestoneFilter}
+                            >
+                                Milestone: {milestoneFilterButtonLabel}
+                                {selectedMilestoneKeys.length > 1 && (
+                                    <Chip
+                                        label={`+${selectedMilestoneKeys.length - 1}`}
+                                        size="small"
+                                        sx={{
+                                            ml: 0.5,
+                                            height: "18px",
+                                            fontSize: "10px",
+                                            fontWeight: 700,
+                                            background: "rgba(255,255,255,0.2)",
+                                            color: "inherit",
+                                        }}
+                                    />
+                                )}
+                            </Button>
+                        </Tooltip>
+                        <Menu
+                            anchorEl={anchorElMilestoneFilter}
+                            open={openMilestoneFilter}
+                            slots={{ transition: Fade }}
+                            slotProps={{
+                                paper: {
+                                    className: `custom-scrollbar-${isDark ? "dark" : "light"}`,
+                                    sx: {
+                                        background: styles.menuBg,
+                                        border: `1px solid ${styles.menuBorder}`,
+                                        borderRadius: "12px",
+                                        boxShadow: isDark
+                                            ? "0 8px 32px rgba(0,0,0,0.5)"
+                                            : "0 8px 32px rgba(0,0,0,0.15)",
+                                        mt: 1,
+                                        minWidth: "220px",
+                                        maxHeight: "320px",
+                                    },
+                                },
+                            }}
+                            onClose={() => setAnchorElMilestoneFilter(null)}
+                        >
+                            {([MILESTONE_ALL, MILESTONE_NONE] as MilestoneFilterKey[]).map(
+                                (key) => {
+                                    const isSelected = selectedMilestoneKeys.some(
+                                        (k) => k === key
+                                    );
+                                    const label = key === MILESTONE_ALL ? "All" : "No milestone";
+                                    return (
+                                        <MenuItem
+                                            key={`milestone-key-${String(key)}`}
+                                            sx={{
+                                                borderRadius: "8px",
+                                                mx: 0.5,
+                                                my: 0.25,
+                                                transition: "all 0.2s ease",
+                                                "&:hover": {
+                                                    background: styles.buttonHoverBg,
+                                                },
+                                            }}
+                                            onClick={() => handleCloseMilestoneFilter(key)}
+                                        >
+                                            <Box
+                                                sx={{
+                                                    width: "100%",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: 1,
+                                                }}
+                                            >
+                                                <FlagRoundedIcon
+                                                    sx={{
+                                                        fontSize: 14,
+                                                        color: isDark
+                                                            ? MILESTONE_ACCENT_DARK
+                                                            : MILESTONE_ACCENT_LIGHT,
+                                                        opacity: key === MILESTONE_ALL ? 0.5 : 1,
+                                                    }}
+                                                />
+                                                <Typography
+                                                    sx={{
+                                                        fontSize: "13px",
+                                                        fontWeight: isSelected ? 700 : 500,
+                                                        color: isSelected
+                                                            ? isDark
+                                                                ? MILESTONE_ACCENT_DARK
+                                                                : MILESTONE_ACCENT_LIGHT
+                                                            : styles.textColor,
+                                                        flex: 1,
+                                                    }}
+                                                >
+                                                    {label}
+                                                </Typography>
+                                                {isSelected && (
+                                                    <Box
+                                                        sx={{
+                                                            width: 16,
+                                                            height: 16,
+                                                            borderRadius: "4px",
+                                                            background: isDark
+                                                                ? MILESTONE_ACCENT_DARK
+                                                                : MILESTONE_ACCENT_LIGHT,
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            justifyContent: "center",
+                                                            fontSize: "10px",
+                                                            color: "#fff",
+                                                            fontWeight: 700,
+                                                        }}
+                                                    >
+                                                        ✓
+                                                    </Box>
+                                                )}
+                                            </Box>
+                                        </MenuItem>
+                                    );
+                                }
+                            )}
+                            {visibleMilestones.length > 0 && (
+                                <Box
+                                    sx={{
+                                        height: "1px",
+                                        background: styles.containerBorder,
+                                        mx: 1,
+                                        my: 0.5,
+                                    }}
+                                />
+                            )}
+                            {visibleMilestones.map((m) => {
+                                const isSelected = selectedMilestoneKeys.some(
+                                    (k) => k === m.milestoneId
+                                );
+                                const sprintName =
+                                    m.sprintId == null
+                                        ? "No sprint"
+                                        : (projectSprints.find((s) => s.sprintId === m.sprintId)
+                                              ?.name ?? "Sprint");
+                                return (
+                                    <MenuItem
+                                        key={`milestone-${m.milestoneId}`}
+                                        sx={{
+                                            borderRadius: "8px",
+                                            mx: 0.5,
+                                            my: 0.25,
+                                            transition: "all 0.2s ease",
+                                            "&:hover": {
+                                                background: styles.buttonHoverBg,
+                                            },
+                                        }}
+                                        onClick={() => handleCloseMilestoneFilter(m.milestoneId)}
+                                    >
+                                        <Box
+                                            sx={{
+                                                width: "100%",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 1,
+                                                minWidth: 0,
+                                            }}
+                                        >
+                                            <FlagRoundedIcon
+                                                sx={{
+                                                    fontSize: 14,
+                                                    color: isDark
+                                                        ? MILESTONE_ACCENT_DARK
+                                                        : MILESTONE_ACCENT_LIGHT,
+                                                    flexShrink: 0,
+                                                }}
+                                            />
+                                            <Box
+                                                sx={{
+                                                    flex: 1,
+                                                    minWidth: 0,
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    lineHeight: 1.2,
+                                                }}
+                                            >
+                                                <Typography
+                                                    sx={{
+                                                        fontSize: "13px",
+                                                        fontWeight: isSelected ? 700 : 500,
+                                                        color: isSelected
+                                                            ? isDark
+                                                                ? MILESTONE_ACCENT_DARK
+                                                                : MILESTONE_ACCENT_LIGHT
+                                                            : styles.textColor,
+                                                        overflow: "hidden",
+                                                        textOverflow: "ellipsis",
+                                                        whiteSpace: "nowrap",
+                                                    }}
+                                                >
+                                                    {m.title}
+                                                </Typography>
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        gap: 0.75,
+                                                        minWidth: 0,
+                                                    }}
+                                                >
+                                                    <Typography
+                                                        sx={{
+                                                            fontSize: "10px",
+                                                            color: styles.mutedText,
+                                                            overflow: "hidden",
+                                                            textOverflow: "ellipsis",
+                                                            whiteSpace: "nowrap",
+                                                            minWidth: 0,
+                                                        }}
+                                                    >
+                                                        {sprintName}
+                                                    </Typography>
+                                                    {m.status
+                                                        ? (() => {
+                                                              const tone =
+                                                                  getMilestoneStatusChipColor(
+                                                                      m.status as string
+                                                                  );
+                                                              return (
+                                                                  <Chip
+                                                                      label={m.status}
+                                                                      size="small"
+                                                                      sx={{
+                                                                          height: 16,
+                                                                          fontSize: "9px",
+                                                                          fontWeight: 700,
+                                                                          backgroundColor:
+                                                                              tone.color,
+                                                                          color: tone.textColor,
+                                                                          flexShrink: 0,
+                                                                          "& .MuiChip-label": {
+                                                                              px: 0.75,
+                                                                              lineHeight: 1,
+                                                                          },
+                                                                      }}
+                                                                  />
+                                                              );
+                                                          })()
+                                                        : null}
+                                                </Box>
+                                            </Box>
+                                            {isSelected && (
+                                                <Box
+                                                    sx={{
+                                                        width: 16,
+                                                        height: 16,
+                                                        borderRadius: "4px",
+                                                        background: isDark
+                                                            ? MILESTONE_ACCENT_DARK
+                                                            : MILESTONE_ACCENT_LIGHT,
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        fontSize: "10px",
+                                                        color: "#fff",
+                                                        fontWeight: 700,
+                                                        flexShrink: 0,
+                                                    }}
+                                                >
+                                                    ✓
+                                                </Box>
+                                            )}
+                                        </Box>
+                                    </MenuItem>
+                                );
+                            })}
+                        </Menu>
+                    </>
+                )}
+
                 {/* Milestone scope chip — appears when the user clicked
                     a milestone item in the sidebar. Clicking the X
                     clears the milestone-scoped view. */}
@@ -1089,7 +1633,6 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                             );
                             return `Milestone: ${m?.title?.slice(0, 10) ?? `#${target}`}${m?.title?.length && m?.title?.length > 10 ? "..." : ""}`;
                         })()}
-                        onDelete={() => useTM.setTableMilestoneFilterId(null)}
                         sx={{
                             fontSize: 12,
                             fontWeight: 600,
@@ -1104,6 +1647,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                 color: isDark ? "#fb923c" : "#c2410c",
                             },
                         }}
+                        onDelete={() => useTM.setTableMilestoneFilterId(null)}
                     />
                 )}
 
@@ -1130,8 +1674,8 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                     }}
                 >
                     <Button
-                        variant="outlined"
                         startIcon={<RestartAltIcon sx={{ fontSize: "16px" }} />}
+                        variant="outlined"
                         sx={{
                             color: isDark ? "#f87171" : "#dc2626",
                             background: styles.resetBg,

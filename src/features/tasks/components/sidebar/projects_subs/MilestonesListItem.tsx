@@ -30,21 +30,12 @@ import { SprintMilestoneManagementState } from "../../../../../hooks/tasks/useSp
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../../types/admin";
 import { Milestone, MilestoneStatus } from "../../../sprint-milestone/types";
-import { compareMilestones } from "../../../sprint-milestone/utils/sortMilestones";
+import {
+    getMilestoneStatusChipColor,
+    selectVisibleMilestones,
+} from "../../../sprint-milestone/utils/sortMilestones";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
-
-// Mirror of the table's `statusOptions` palette in
-// DraggableTaskTable.tsx so the milestone status chip looks identical
-// to the row's status chip (avoids a runtime cross-import for what is
-// essentially a small, slow-changing color map).
-const STATUS_CHIP: Record<string, { color: string; textColor: string }> = {
-    Open: { color: "#0044c2", textColor: "#ffffff" },
-    WIP: { color: "#ff8c00", textColor: "#ffffff" },
-    Pending: { color: "#b900ff", textColor: "#ffffff" },
-    Closed: { color: "#1dc200", textColor: "#ffffff" },
-    Deleted: { color: "#ff2323", textColor: "#ffffff" },
-};
 
 type Props = {
     currentProjectId: number;
@@ -57,12 +48,6 @@ type Props = {
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
 };
-
-// Sprint statuses that count as "the sprint is over". Closed
-// milestones tied to one of these sprints fall off the sidebar so
-// the list doesn't accumulate forever; "active" / "upcoming"
-// sprints keep their milestones visible regardless of status.
-const ENDED_SPRINT_STATUSES = new Set(["completed", "archived"]);
 
 export const MilestonesListItem = ({
     currentProjectId,
@@ -80,42 +65,10 @@ export const MilestonesListItem = ({
 
     const sprints = useSM.projectSprints[currentProjectId] ?? [];
 
-    const milestones: Milestone[] = useMemo(() => {
-        const list = useSM.projectMilestones[currentProjectId] ?? [];
-        // Build the set of past-sprint ids once per dep change instead
-        // of on every milestone iteration. Soft-deleted sprints are
-        // excluded so a deleted sprint can't accidentally hide a
-        // milestone that should still be visible.
-        const endedSprintIds = new Set<number>(
-            sprints
-                .filter((s) => !s.isDeleted && ENDED_SPRINT_STATUSES.has(s.status))
-                .map((s) => s.sprintId)
-        );
-        // Visibility rules (mirrors the plan):
-        //   - Always hide soft-deleted milestones and the "Deleted"
-        //     status.
-        //   - Hide a Closed milestone only when its sprint is known
-        //     AND already ended. Closed-without-sprint and Closed
-        //     whose sprint hasn't loaded yet stay visible so we don't
-        //     flicker rows out before sprint data arrives.
-        //   - Anything else (Open / WIP / Pending in any sprint or
-        //     no sprint, plus Closed in active / upcoming sprints)
-        //     stays.
-        return (
-            list
-                .filter((m) => {
-                    if (m.isDeleted || m.status === "Deleted") return false;
-                    if (m.status === "Closed" && m.sprintId != null) {
-                        return !endedSprintIds.has(m.sprintId);
-                    }
-                    return true;
-                })
-                // Three-level sort (due-date → status → title) shared
-                // with the SprintMilestonePicker via
-                // `sprint-milestone/utils/sortMilestones`.
-                .sort(compareMilestones)
-        );
-    }, [useSM.projectMilestones, currentProjectId, sprints]);
+    const milestones: Milestone[] = useMemo(
+        () => selectVisibleMilestones(useSM.projectMilestones[currentProjectId] ?? [], sprints),
+        [useSM.projectMilestones, currentProjectId, sprints]
+    );
 
     const handleOpen = (milestoneId: number) => {
         // Open the milestone preview AND scope the task table to this
@@ -143,7 +96,7 @@ export const MilestonesListItem = ({
     if (milestones.length === 0) {
         return (
             <List sx={{ gap: 0.25 }}>
-                <AddMilestoneRow onClick={handleAddMilestone} isDark={isDark} />
+                <AddMilestoneRow isDark={isDark} onClick={handleAddMilestone} />
             </List>
         );
     }
@@ -159,18 +112,18 @@ export const MilestonesListItem = ({
                     <ListItem key={m.milestoneId} sx={{ pl: 0, pr: 1 }}>
                         <ListItemButton
                             sx={{ borderRadius: 8, ml: 5, py: 0.5, pr: 0.5 }}
-                            onClick={() => handleOpen(m.milestoneId)}
                             selected={
                                 useTM.currentPreviewKind === "milestone" &&
                                 useTM.currentPreviewMilestoneId === m.milestoneId
                             }
+                            onClick={() => handleOpen(m.milestoneId)}
                         >
                             <FlagRoundedIcon sx={{ fontSize: 14, color: "#f97316", mr: 0.75 }} />
                             <ListItemContent>
                                 <Stack
+                                    alignItems="center"
                                     direction="row"
                                     spacing={0.5}
-                                    alignItems="center"
                                     sx={{ minWidth: 0 }}
                                 >
                                     <Typography
@@ -192,17 +145,16 @@ export const MilestonesListItem = ({
                                     </Chip>
                                 </Stack>
                                 <Stack
+                                    alignItems="center"
                                     direction="row"
                                     spacing={0.5}
-                                    alignItems="center"
                                     sx={{ mt: 0.25 }}
                                 >
                                     <Chip size="sm" variant="outlined">
                                         {sprintName}
                                     </Chip>
                                     {(() => {
-                                        const tone =
-                                            STATUS_CHIP[m.status as string] ?? STATUS_CHIP.Open;
+                                        const tone = getMilestoneStatusChipColor(m.status);
                                         return (
                                             <Chip
                                                 size="sm"
@@ -249,12 +201,12 @@ export const MilestonesListItem = ({
                                             ) : (
                                                 <Avatar
                                                     key={userIdKey || `idx-${a.username}`}
+                                                    sx={{ fontSize: 10 }}
                                                     src={
                                                         a.profileImageUrl
                                                             ? `${media_url}/${a.profileImageUrl}`
                                                             : undefined
                                                     }
-                                                    sx={{ fontSize: 10 }}
                                                 >
                                                     {(a.username?.[0] || "?").toUpperCase()}
                                                 </Avatar>
@@ -312,7 +264,7 @@ export const MilestonesListItem = ({
                     </ListItem>
                 );
             })}
-            <AddMilestoneRow onClick={handleAddMilestone} isDark={isDark} />
+            <AddMilestoneRow isDark={isDark} onClick={handleAddMilestone} />
         </List>
     );
 };

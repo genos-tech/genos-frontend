@@ -106,24 +106,24 @@ export const TaskHomeLayout = ({
         >
             {useTM.isDashboardVisible && (
                 <TaskDashboard
-                    useTM={useTM}
-                    usePM={usePM}
-                    useTEM={useTEM}
-                    useSM={useSM}
                     myself={myself}
                     setMyself={setMyself}
-                    useCM={useCM}
-                    useUISM={useUISM}
                     socket={socket}
+                    useCM={useCM}
+                    usePM={usePM}
+                    useSM={useSM}
+                    useTEM={useTEM}
+                    useTM={useTM}
+                    useUISM={useUISM}
                 />
             )}
             {useTM.isTaskHomeVisible && (
                 <>
                     <TaskHomeHeader
-                        useCM={useCM}
-                        usePM={usePM}
                         myself={myself}
                         setMyself={setMyself}
+                        useCM={useCM}
+                        usePM={usePM}
                         useTEM={useTEM}
                         useTM={useTM}
                         useUISM={useUISM}
@@ -133,26 +133,27 @@ export const TaskHomeLayout = ({
                         onDeleteProject={onDeleteProject}
                     />
                     <DraggableTaskTable
-                        usePM={usePM}
                         myself={myself}
-                        setTeamMembers={useTEM.setTeamMembers}
-                        teamMembers={useTEM.teamMembers}
-                        useTM={useTM}
-                        socket={socket}
-                        useTEM={useTEM}
-                        useCM={useCM}
-                        useUISM={useUISM}
                         setMyself={setMyself}
+                        setTeamMembers={useTEM.setTeamMembers}
+                        socket={socket}
+                        teamMembers={useTEM.teamMembers}
+                        useCM={useCM}
+                        usePM={usePM}
+                        useSM={useSM}
+                        useTEM={useTEM}
+                        useTM={useTM}
+                        useUISM={useUISM}
                     />
                 </>
             )}
             {useTM.isSprintBoardVisible && (
                 <>
                     <TaskHomeHeader
-                        useCM={useCM}
-                        usePM={usePM}
                         myself={myself}
                         setMyself={setMyself}
+                        useCM={useCM}
+                        usePM={usePM}
                         useTEM={useTEM}
                         useTM={useTM}
                         useUISM={useUISM}
@@ -162,14 +163,14 @@ export const TaskHomeLayout = ({
                         onDeleteProject={onDeleteProject}
                     />
                     <SprintBoard
-                        usePM={usePM}
-                        useSM={useSM}
                         myself={myself}
                         setTeamMembers={useTEM.setTeamMembers}
+                        socket={socket}
                         teamMemberProfiles={useTEM.teamMemberProfiles}
                         teamMembers={useTEM.teamMembers}
+                        usePM={usePM}
+                        useSM={useSM}
                         useTM={useTM}
-                        socket={socket}
                     />
                 </>
             )}
@@ -200,16 +201,16 @@ export const TaskHomeLayout = ({
                 >
                     <CreateTaskForm
                         chatType={-1}
-                        useCM={useCM}
                         myself={myself}
-                        usePM={usePM}
                         setMyself={setMyself}
                         socket={socket}
+                        useCM={useCM}
+                        useNM={useNM}
+                        usePM={usePM}
+                        useSM={useSM}
                         useTEM={useTEM}
                         useTM={useTM}
-                        useSM={useSM}
                         useUISM={useUISM}
-                        useNM={useNM}
                     />
                 </Box>
             </Panel>
@@ -238,15 +239,15 @@ export const TaskHomeLayout = ({
                     }}
                 >
                     <TaskPreview
-                        useCM={useCM}
-                        useNM={useNM}
                         myself={myself}
-                        usePM={usePM}
                         setMyself={setMyself}
                         socket={socket}
+                        useCM={useCM}
+                        useNM={useNM}
+                        usePM={usePM}
+                        useSM={useSM}
                         useTEM={useTEM}
                         useTM={useTM}
-                        useSM={useSM}
                         useUISM={useUISM}
                     />
                 </Box>
@@ -285,12 +286,12 @@ export const TaskHomeLayout = ({
                     }}
                 >
                     <TaskNoteMain
-                        useCM={useCM}
                         isInTaskPage={true}
                         myself={myself}
-                        useNM={useNM}
                         setMyself={setMyself}
                         socket={socket}
+                        useCM={useCM}
+                        useNM={useNM}
                         useTEM={useTEM}
                         useTM={useTM}
                         useUISM={useUISM}
@@ -326,8 +327,8 @@ export const TaskHomeLayout = ({
                         }}
                     >
                         <Stack
-                            spacing={2.5}
                             alignItems="center"
+                            spacing={2.5}
                             sx={{
                                 width: "100%",
                                 maxWidth: 460,
@@ -374,7 +375,7 @@ export const TaskHomeLayout = ({
                                 />
                             </Box>
 
-                            <Stack spacing={0.75} alignItems="center">
+                            <Stack alignItems="center" spacing={0.75}>
                                 <Typography level="h4" sx={{ fontWeight: 700 }}>
                                     No project selected
                                 </Typography>
@@ -395,7 +396,6 @@ export const TaskHomeLayout = ({
                             <Button
                                 size="lg"
                                 startDecorator={<AddRoundedIcon />}
-                                onClick={() => usePM.setOpenCreateProject(true)}
                                 sx={{
                                     mt: 0.5,
                                     px: 2.5,
@@ -414,6 +414,7 @@ export const TaskHomeLayout = ({
                                         transform: "translateY(0)",
                                     },
                                 }}
+                                onClick={() => usePM.setOpenCreateProject(true)}
                             >
                                 Create new project
                             </Button>
@@ -438,14 +439,14 @@ export const TaskHomeLayout = ({
                     <TaskSidebar
                         myself={myself}
                         setMyself={setMyself}
-                        usePM={usePM}
                         setOpenJoinProject={setOpenJoinProject}
-                        useTM={useTM}
+                        socket={socket}
+                        useCM={useCM}
+                        usePM={usePM}
                         useSM={useSM}
                         useTEM={useTEM}
-                        useCM={useCM}
+                        useTM={useTM}
                         useUISM={useUISM}
-                        socket={socket}
                     />
                 </Box>
             </Panel>

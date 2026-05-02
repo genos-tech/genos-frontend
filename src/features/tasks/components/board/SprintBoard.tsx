@@ -274,6 +274,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
                     isTaskUpdated={useTM.isTaskUpdated}
                     predefinedTagsFilters={predefinedTagsFilters}
                     setCurrentDisplayingTasks={setFilteredTasks}
+                    useSM={useSM}
                     useTM={useTM}
                     hideStatusFilter
                 />
@@ -283,13 +284,13 @@ export const SprintBoard = (props: SprintBoardProps) => {
                             <SprintBoardColumn
                                 key={column.id}
                                 column={column}
-                                tasks={boardTasks[column.id] || []}
+                                isMilestonePreviewActive={useTM.currentPreviewKind === "milestone"}
                                 myself={myself}
+                                selectedMilestoneId={useTM.currentPreviewMilestoneId}
+                                selectedTaskId={useTM.currentPreviewTaskId}
+                                tasks={boardTasks[column.id] || []}
                                 teamMemberProfiles={teamMemberProfiles}
                                 onTaskClick={handleTaskClick}
-                                selectedTaskId={useTM.currentPreviewTaskId}
-                                selectedMilestoneId={useTM.currentPreviewMilestoneId}
-                                isMilestonePreviewActive={useTM.currentPreviewKind === "milestone"}
                             />
                         ))}
                     </div>

@@ -14,6 +14,7 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
@@ -244,6 +245,7 @@ type DraggableTaskTableProps = {
     myself: UserProps;
     usePM: ProjectManagementState;
     useTM: TaskManagementState;
+    useSM: SprintMilestoneManagementState;
     socket: Socket | null;
     useTEM: TeamManagementState;
     useCM: ChatManagementState;
@@ -258,6 +260,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         myself,
         usePM,
         useTM,
+        useSM,
         socket,
         useTEM,
         useCM,
@@ -628,6 +631,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     isTaskUpdated={useTM.isTaskUpdated}
                     predefinedTagsFilters={predefinedTagsFilters}
                     setCurrentDisplayingTasks={setCurrentDisplayingTasks}
+                    useSM={useSM}
                     useTM={useTM}
                 />
                 <div
@@ -676,6 +680,14 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                             >
                                 {/* Header content - clickable for sorting */}
                                 <div
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        gap: 4,
+                                        flex: 1,
+                                        overflow: "hidden",
+                                    }}
                                     onClick={() => handleHeaderClick(column.field)}
                                     onMouseEnter={(e) => {
                                         if (!resizingColumn) {
@@ -684,14 +696,6 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                     }}
                                     onMouseLeave={(e) => {
                                         e.currentTarget.style.opacity = "1";
-                                    }}
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        gap: 4,
-                                        flex: 1,
-                                        overflow: "hidden",
                                     }}
                                 >
                                     <span
@@ -719,6 +723,11 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                 {/* Resize handle */}
                                 {column.resizable !== false && (
                                     <div
+                                        title="Drag to resize column"
+                                        style={getResizeHandleStyles(
+                                            resizingColumn === column.field,
+                                            mode
+                                        )}
                                         onMouseDown={(e) => handleResizeStart(e, column.field)}
                                         onMouseEnter={(e) => {
                                             if (!resizingColumn) {
@@ -734,11 +743,6 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                                     "transparent";
                                             }
                                         }}
-                                        style={getResizeHandleStyles(
-                                            resizingColumn === column.field,
-                                            mode
-                                        )}
-                                        title="Drag to resize column"
                                     />
                                 )}
                             </div>
@@ -748,11 +752,11 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     {/* Draggable Table Body */}
                     <DragDropContext onDragEnd={handleDragEnd}>
                         <Droppable
-                            droppableId="task-table"
                             direction="vertical"
-                            isDropDisabled={false}
-                            isCombineEnabled={false}
+                            droppableId="task-table"
                             ignoreContainerClipping={false}
+                            isCombineEnabled={false}
+                            isDropDisabled={false}
                         >
                             {(provided, snapshot) => (
                                 <div
@@ -774,24 +778,24 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                     {displayRows.map((task, index) => (
                                         <DraggableTaskRow
                                             key={task.id}
-                                            task={task}
-                                            index={index}
+                                            childrenByParent={childrenByParent}
                                             columns={columnsWithWidths}
+                                            depth={depthMap.get(String(task.id)) ?? 0}
+                                            expandedRows={expandedRows}
+                                            index={index}
                                             mode={mode}
                                             myself={myself}
-                                            teamMembers={teamMembers}
-                                            onRowUpdate={handleRowUpdate}
-                                            onRowDoubleClick={handleRowDoubleClick}
-                                            useTM={useTM}
-                                            useTEM={useTEM}
-                                            useCM={useCM}
-                                            useUISM={useUISM}
-                                            socket={socket}
                                             setMyself={setMyself}
-                                            expandedRows={expandedRows}
+                                            socket={socket}
+                                            task={task}
+                                            teamMembers={teamMembers}
                                             toggleExpand={toggleExpand}
-                                            childrenByParent={childrenByParent}
-                                            depth={depthMap.get(String(task.id)) ?? 0}
+                                            useCM={useCM}
+                                            useTEM={useTEM}
+                                            useTM={useTM}
+                                            useUISM={useUISM}
+                                            onRowDoubleClick={handleRowDoubleClick}
+                                            onRowUpdate={handleRowUpdate}
                                         />
                                     ))}
                                     {provided.placeholder}
