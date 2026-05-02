@@ -6,6 +6,7 @@ import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
 import { InboxManagementState } from "../../../hooks/inbox/useInboxManagement";
 import { NoteManagementState } from "../../../hooks/notes/useNoteManagement";
+import { SprintMilestoneManagementState } from "../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../types/chat";
@@ -21,6 +22,7 @@ export interface TaskHomeProps {
     useNM: NoteManagementState;
     usePM: ProjectManagementState;
     useTM: TaskManagementState;
+    useSM: SprintMilestoneManagementState;
 }
 
 export interface TaskHomeState {
@@ -95,6 +97,7 @@ export interface TaskHomeLayoutProps {
     usePM: ProjectManagementState;
     useTM: TaskManagementState;
     useNM: NoteManagementState;
+    useSM: SprintMilestoneManagementState;
 
     // Props
     myself: UserProps;
@@ -126,6 +129,7 @@ export interface TaskHomeModalsProps {
     myself: UserProps;
     usePM: ProjectManagementState;
     useTM: TaskManagementState;
+    useSM: SprintMilestoneManagementState;
     allChats: AllChatProps[];
     setAllChats: (value: AllChatProps[]) => void;
     socket: Socket | null;

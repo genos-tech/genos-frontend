@@ -7,6 +7,7 @@ import { ProjectManagementState } from "../../../../hooks/common/useProjectManag
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { TaskPreview } from "../../../tasks/components/contents/TaskPreview";
@@ -21,6 +22,11 @@ interface TaskPreviewPanelProps {
     socket: any;
     setMyself: (me: UserProps) => void;
     useUISM: UIStateManagementState;
+    // Threaded through so TaskPreview's milestone reroute (which gates
+    // on `useSM`) can fire when the user opens a task that's actually
+    // a milestone backing row — e.g. via the ThreadChatPaneHeader's
+    // "Open Task" button on a milestone-tied thread.
+    useSM: SprintMilestoneManagementState;
 }
 
 export const TaskPreviewPanel = ({
@@ -33,6 +39,7 @@ export const TaskPreviewPanel = ({
     socket,
     setMyself,
     useUISM,
+    useSM,
 }: TaskPreviewPanelProps) => {
     const { mode } = useColorScheme();
 
@@ -65,6 +72,7 @@ export const TaskPreviewPanel = ({
                     socket={socket}
                     useTEM={useTEM}
                     useTM={useTM}
+                    useSM={useSM}
                     useUISM={useUISM}
                     useNM={useNM}
                     usePM={usePM}

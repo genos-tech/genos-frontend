@@ -76,6 +76,8 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
                 flag: false,
                 parentTaskId: null,
                 rootTaskId: useTM.currentPreviewTask?.rootTaskId || null,
+                creationKind: "task",
+                milestoneId: null,
             });
         }
 

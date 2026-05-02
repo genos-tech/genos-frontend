@@ -107,6 +107,15 @@ export type TaskProps = {
     attachments: AttachmentFileProps[];
     parentTaskId: number | null;
     rootTaskId: number | null;
+    // True if this task row is the backing task of a milestone (i.e.
+    // `MilestoneMaster` points to it via its `task` FK). When true the
+    // preview pane routes to MilestonePreview instead of TaskPreview.
+    isMilestone?: boolean | null;
+    // FK back to MilestoneMaster.milestone_id when this task either is
+    // the milestone (alongside `isMilestone=true`) or is a child task
+    // inside the milestone.
+    milestoneId?: number | null;
+    sprintId?: number | null;
 };
 
 export type TaskTableProps = {
@@ -124,11 +133,20 @@ export type TaskTableProps = {
     assigneeName: string | null;
     assigneeImgPath: string | null;
     parentTaskId: string | null;
+    rootTaskId?: number | null;
     threadId: number | null;
     tags: TagListProps[];
     concatTags: string | null;
     teamId: string | null;
     projectId: number | null;
+    // True for the backing task of a milestone. Renders with a flag
+    // icon in the table and double-click routes to MilestonePreview.
+    isMilestone?: boolean | null;
+    // FK back to MilestoneMaster.milestone_id when this task belongs to
+    // a milestone (either is the milestone itself, or is a child task
+    // inside the milestone).
+    milestoneId?: number | null;
+    sprintId?: number | null;
 };
 
 export type TaskType = {

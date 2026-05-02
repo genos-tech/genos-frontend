@@ -8,6 +8,7 @@ import { ProjectManagementState } from "../../../../hooks/common/useProjectManag
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { TaskPreview } from "../../../tasks/components/contents/TaskPreview";
@@ -22,10 +23,12 @@ type TaskPreviewPanelProps = {
     useNM: NoteManagementState;
     useCM: ChatManagementState;
     useTM: TaskManagementState;
+    useSM?: SprintMilestoneManagementState;
 };
 
 export const TaskPreviewPanel = (props: TaskPreviewPanelProps) => {
-    const { myself, setMyself, useUISM, socket, useTEM, usePM, useNM, useCM, useTM } = props;
+    const { myself, setMyself, useUISM, socket, useTEM, usePM, useNM, useCM, useTM, useSM } =
+        props;
     const { mode } = useColorScheme();
 
     if (!useNM.currentTaskNoteChain || !useNM.isTaskVisibleInNote || !useTM.currentPreviewTask) {
@@ -74,6 +77,7 @@ export const TaskPreviewPanel = (props: TaskPreviewPanelProps) => {
                         socket={socket}
                         useTEM={useTEM}
                         useTM={useTM}
+                        useSM={useSM}
                         useUISM={useUISM}
                     />
                 </Box>

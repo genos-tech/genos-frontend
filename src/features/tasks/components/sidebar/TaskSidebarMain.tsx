@@ -3,9 +3,14 @@ import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import { Box, Divider, List, ListItem, ListItemContent, Sheet, Typography } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
+import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { SearchTeamTasksResponse, TagListProps } from "../../../../types/tasks";
@@ -19,6 +24,10 @@ import { TaskTableListItem } from "./TaskTableListItem";
 
 type TaskSidebarProps = {
     myself: UserProps;
+    // Forwarded down to MilestonesListItem so its assignee avatars
+    // can use AvatarWithStatus (which surfaces a UserProfile modal
+    // and online-pulse dot just like the rest of the app).
+    setMyself: (value: UserProps) => void;
     setOpenJoinProject: (value: {
         flag: boolean;
         projectId: number;
@@ -28,10 +37,26 @@ type TaskSidebarProps = {
     }) => void;
     usePM: ProjectManagementState;
     useTM: TaskManagementState;
+    useSM: SprintMilestoneManagementState;
+    useTEM: TeamManagementState;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
+    socket: Socket | null;
 };
 
 export const TaskSidebar = (props: TaskSidebarProps) => {
-    const { myself, setOpenJoinProject, usePM, useTM } = props;
+    const {
+        myself,
+        setMyself,
+        setOpenJoinProject,
+        usePM,
+        useTM,
+        useSM,
+        useTEM,
+        useCM,
+        useUISM,
+        socket,
+    } = props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -311,6 +336,13 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                         setIsTaskHomeVisible={useTM.setIsTaskHomeVisible}
                         setOpenJoinProject={setOpenJoinProject}
                         useTM={useTM}
+                        useSM={useSM}
+                        useTEM={useTEM}
+                        useCM={useCM}
+                        useUISM={useUISM}
+                        myself={myself}
+                        setMyself={setMyself}
+                        socket={socket}
                     />
                 </List>
             </Box>

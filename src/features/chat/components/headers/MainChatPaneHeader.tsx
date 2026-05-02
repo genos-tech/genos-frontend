@@ -197,6 +197,8 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                                     flag: true,
                                     parentTaskId: null,
                                     rootTaskId: null,
+                                    creationKind: "task",
+                                    milestoneId: null,
                                 });
                             }}
                         >

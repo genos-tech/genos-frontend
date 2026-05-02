@@ -261,13 +261,18 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         }
     };
 
+    // We watch the *currently rendered* task id rather than
+    // `useTM.currentPreviewTaskId` so this block can also drive the
+    // milestone preview, which feeds in the milestone's backing task
+    // through `taskContent.id` (the milestone-id and task-id channels
+    // are kept distinct on `useTM`).
     useEffect(() => {
         setImages([]);
         setTextFiles([]);
         setUploadingFiles([]);
         setNumOfUploadingFiles(0);
         setTabIndex(0);
-    }, [useTM.currentPreviewTaskId]);
+    }, [taskContent?.id]);
 
     useEffect(() => {
         if (isUploadingFilesUpdated === true) {
@@ -683,7 +688,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                 useNM.handleCreateNewTaskNote(
                                                     null,
                                                     taskContent.project.projectId,
-                                                    useTM.currentPreviewTaskId,
+                                                    Number(taskContent.id),
                                                     taskContent.title
                                                 );
                                             }

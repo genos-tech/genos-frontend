@@ -46,6 +46,11 @@ export const sendUpdatedSpecificTask = async (
                 due_date: updatedTask.dueDate !== "" ? updatedTask.dueDate : null,
                 links: updatedTask.links,
                 tags: updatedTask.tags,
+                // Persist milestone / sprint linkage on tasks. Only
+                // include the keys when set so the backend's None-strip
+                // doesn't silently drop them.
+                ...(updatedTask.milestoneId != null ? { milestone: updatedTask.milestoneId } : {}),
+                ...(updatedTask.sprintId != null ? { sprint: updatedTask.sprintId } : {}),
             });
 
             if (res && res.data.newly_mentioned_user_ids) {
@@ -127,6 +132,9 @@ export const sendUpdatedSpecificTask = async (
                         concatTags: updatedTask.concatTags || null,
                         teamId: myself.teamId,
                         projectId: updatedTask.project.projectId,
+                        isMilestone: updatedTask.isMilestone ?? false,
+                        milestoneId: updatedTask.milestoneId ?? null,
+                        sprintId: updatedTask.sprintId ?? null,
                     });
                 }
 

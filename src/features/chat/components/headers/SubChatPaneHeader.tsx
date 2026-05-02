@@ -184,6 +184,8 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                                         flag: true,
                                         parentTaskId: null,
                                         rootTaskId: null,
+                                        creationKind: "task",
+                                        milestoneId: null,
                                     });
                                 }}
                             >

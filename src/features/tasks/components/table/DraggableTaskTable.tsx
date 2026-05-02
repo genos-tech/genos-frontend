@@ -287,6 +287,26 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         });
     }, []);
 
+    // When the sidebar scopes the table to a single milestone, auto-
+    // expand its backing task row so the milestone's child tasks are
+    // visible without an extra click. The backing task is the only
+    // top-level row that survives the milestone-scope filter, so
+    // without this its children would otherwise stay collapsed.
+    useEffect(() => {
+        if (useTM.tableMilestoneFilterId == null) return;
+        const target = useTM.tableMilestoneFilterId;
+        const backing = useTM.allTasks.find(
+            (t) => t.isMilestone === true && t.milestoneId === target
+        );
+        if (backing?.id == null) return;
+        setExpandedRows((prev) => {
+            if (prev.has(String(backing.id))) return prev;
+            const nextSet = new Set(prev);
+            nextSet.add(String(backing.id));
+            return nextSet;
+        });
+    }, [useTM.tableMilestoneFilterId, useTM.allTasks]);
+
     const childrenByParent = useMemo(() => {
         const map = new Map<string, TaskTableProps[]>();
         for (const task of useTM.allTasks) {

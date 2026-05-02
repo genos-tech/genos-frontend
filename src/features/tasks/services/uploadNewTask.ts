@@ -77,6 +77,16 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                     parent_task_id: taskContent.parentTaskId,
                     root_task_id: taskContent.rootTaskId,
                     is_init_task: false,
+                    // Persist milestone / sprint linkage on tasks so a
+                    // task created inside a milestone (or planned for a
+                    // sprint) keeps that link instead of silently
+                    // dropping it. Only include the keys when set so a
+                    // missing field doesn't get serialized as null and
+                    // hit the backend's None-strip behaviour.
+                    ...(taskContent.milestoneId != null
+                        ? { milestone: taskContent.milestoneId }
+                        : {}),
+                    ...(taskContent.sprintId != null ? { sprint: taskContent.sprintId } : {}),
                 }),
             });
 
@@ -157,6 +167,9 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                     concatTags: taskContent.concatTags || null,
                     teamId: myself.teamId,
                     projectId: taskContent.project.projectId,
+                    isMilestone: taskContent.isMilestone ?? false,
+                    milestoneId: taskContent.milestoneId ?? null,
+                    sprintId: taskContent.sprintId ?? null,
                 });
 
                 // Send "task created" message

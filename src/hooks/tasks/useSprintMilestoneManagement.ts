@@ -1,0 +1,415 @@
+import { useCallback, useState } from "react";
+
+import {
+    addMilestoneAssignee,
+    createMilestone,
+    CreateMilestoneInput,
+    createSprint,
+    CreateSprintInput,
+    deleteMilestone,
+    deleteSprint,
+    loadMilestone,
+    loadProjectMilestones,
+    LoadProjectMilestonesOptions,
+    loadProjectSprints,
+    LoadProjectSprintsOptions,
+    loadSprintConfig,
+    moveMilestoneToSprint,
+    removeMilestoneAssignee,
+    SprintConfigInput,
+    updateMilestone,
+    UpdateMilestoneInput,
+    updateSprint,
+    UpdateSprintInput,
+    upsertSprintConfig,
+} from "../../features/tasks/sprint-milestone/services";
+import { Milestone, Sprint, SprintConfig } from "../../features/tasks/sprint-milestone/types";
+
+export interface SprintMilestoneManagementState {
+    // Per-project sprint config (the cadence settings).
+    sprintConfig: SprintConfig | null;
+    setSprintConfig: (config: SprintConfig | null) => void;
+    // All known sprints for the current project, keyed by projectId so
+    // a project switch keeps neighbour data in cache for free.
+    projectSprints: Record<number, Sprint[]>;
+    setProjectSprints: (next: Record<number, Sprint[]>) => void;
+    // Sprint the user is currently inspecting in the dashboard. Defaults
+    // to the active sprint when sprints load.
+    currentSprint: Sprint | null;
+    setCurrentSprint: (s: Sprint | null) => void;
+
+    // Milestones, keyed by projectId.
+    projectMilestones: Record<number, Milestone[]>;
+    setProjectMilestones: (next: Record<number, Milestone[]>) => void;
+    currentMilestone: Milestone | null;
+    setCurrentMilestone: (m: Milestone | null) => void;
+
+    // Mutation flags so other parts of the app can react.
+    tsLastMilestonesLoaded: number | undefined;
+    tsLastSprintsLoaded: number | undefined;
+
+    // Loaders
+    loadConfigForProject: (projectId: number) => Promise<SprintConfig | null>;
+    saveConfig: (input: SprintConfigInput) => Promise<SprintConfig | null>;
+    loadSprintsForProject: (
+        projectId: number,
+        opts?: LoadProjectSprintsOptions
+    ) => Promise<Sprint[]>;
+    loadMilestonesForProject: (
+        projectId: number,
+        opts?: LoadProjectMilestonesOptions
+    ) => Promise<Milestone[]>;
+    refreshMilestone: (milestoneId: number) => Promise<Milestone | null>;
+
+    // CRUD
+    createNewSprint: (input: CreateSprintInput) => Promise<Sprint | null>;
+    updateExistingSprint: (input: UpdateSprintInput) => Promise<Sprint | null>;
+    removeSprint: (sprintId: number, projectId: number) => Promise<boolean>;
+
+    createNewMilestone: (input: CreateMilestoneInput) => Promise<Milestone | null>;
+    updateExistingMilestone: (
+        input: UpdateMilestoneInput,
+        projectId: number
+    ) => Promise<Milestone | null>;
+    moveMilestone: (
+        milestoneId: number,
+        sprintId: number | null,
+        projectId: number
+    ) => Promise<Milestone | null>;
+    removeMilestone: (milestoneId: number, projectId: number) => Promise<boolean>;
+
+    assignMilestoneMember: (
+        milestoneId: number,
+        userId: number | string,
+        projectId: number
+    ) => Promise<Milestone | null>;
+    unassignMilestoneMember: (
+        milestoneId: number,
+        userId: number | string,
+        projectId: number
+    ) => Promise<Milestone | null>;
+
+    // Reset (used on team switch).
+    initializeSprintMilestoneStates: () => void;
+}
+
+export const useSprintMilestoneManagement = (
+    accessToken: string | null
+): SprintMilestoneManagementState => {
+    const [sprintConfig, setSprintConfig] = useState<SprintConfig | null>(null);
+    const [projectSprints, setProjectSprintsState] = useState<Record<number, Sprint[]>>({});
+    const [currentSprint, setCurrentSprint] = useState<Sprint | null>(null);
+
+    const [projectMilestones, setProjectMilestonesState] = useState<Record<number, Milestone[]>>(
+        {}
+    );
+    const [currentMilestone, setCurrentMilestone] = useState<Milestone | null>(null);
+
+    const [tsLastSprintsLoaded, setTsLastSprintsLoaded] = useState<number | undefined>(undefined);
+    const [tsLastMilestonesLoaded, setTsLastMilestonesLoaded] = useState<number | undefined>(
+        undefined
+    );
+
+    const setProjectSprints = useCallback((next: Record<number, Sprint[]>) => {
+        setProjectSprintsState(next);
+    }, []);
+
+    const setProjectMilestones = useCallback((next: Record<number, Milestone[]>) => {
+        setProjectMilestonesState(next);
+    }, []);
+
+    const initializeSprintMilestoneStates = useCallback(() => {
+        setSprintConfig(null);
+        setProjectSprintsState({});
+        setCurrentSprint(null);
+        setProjectMilestonesState({});
+        setCurrentMilestone(null);
+        setTsLastSprintsLoaded(undefined);
+        setTsLastMilestonesLoaded(undefined);
+    }, []);
+
+    const loadConfigForProject = useCallback(
+        async (projectId: number): Promise<SprintConfig | null> => {
+            const res = await loadSprintConfig(projectId, accessToken);
+            const next = res?.config ?? null;
+            setSprintConfig(next);
+            return next;
+        },
+        [accessToken]
+    );
+
+    const saveConfig = useCallback(
+        async (input: SprintConfigInput): Promise<SprintConfig | null> => {
+            const res = await upsertSprintConfig(input, accessToken);
+            const next = res?.config ?? null;
+            setSprintConfig(next);
+            return next;
+        },
+        [accessToken]
+    );
+
+    const loadSprintsForProject = useCallback(
+        async (projectId: number, opts?: LoadProjectSprintsOptions): Promise<Sprint[]> => {
+            const res = await loadProjectSprints(projectId, accessToken, opts);
+            const sprints = res?.sprints ?? [];
+            setProjectSprintsState((prev) => ({ ...prev, [projectId]: sprints }));
+            setTsLastSprintsLoaded(Date.now());
+            // If we don't have a `currentSprint` yet, default to the
+            // active sprint when one exists, otherwise the first
+            // upcoming one. This keeps the dashboard non-empty.
+            if (!currentSprint || currentSprint.projectId !== projectId) {
+                const active = sprints.find((s) => s.status === "active");
+                const upcoming = sprints.find((s) => s.status === "upcoming");
+                setCurrentSprint(active ?? upcoming ?? null);
+            }
+            return sprints;
+        },
+        [accessToken, currentSprint]
+    );
+
+    const loadMilestonesForProject = useCallback(
+        async (projectId: number, opts?: LoadProjectMilestonesOptions): Promise<Milestone[]> => {
+            const res = await loadProjectMilestones(projectId, accessToken, opts);
+            const milestones = res?.milestones ?? [];
+            setProjectMilestonesState((prev) => ({ ...prev, [projectId]: milestones }));
+            setTsLastMilestonesLoaded(Date.now());
+            return milestones;
+        },
+        [accessToken]
+    );
+
+    const refreshMilestone = useCallback(
+        async (milestoneId: number): Promise<Milestone | null> => {
+            const res = await loadMilestone(milestoneId, accessToken);
+            const m = res?.milestone ?? null;
+            if (m) {
+                setProjectMilestonesState((prev) => {
+                    const list = prev[m.projectId] ?? [];
+                    const next = list.some((x) => x.milestoneId === m.milestoneId)
+                        ? list.map((x) => (x.milestoneId === m.milestoneId ? m : x))
+                        : [m, ...list];
+                    return { ...prev, [m.projectId]: next };
+                });
+                if (currentMilestone?.milestoneId === m.milestoneId) {
+                    setCurrentMilestone(m);
+                }
+            }
+            return m;
+        },
+        [accessToken, currentMilestone]
+    );
+
+    const createNewSprint = useCallback(
+        async (input: CreateSprintInput): Promise<Sprint | null> => {
+            const res = await createSprint(input, accessToken);
+            if (res?.sprint) {
+                setProjectSprintsState((prev) => {
+                    const list = prev[input.projectId] ?? [];
+                    return {
+                        ...prev,
+                        [input.projectId]: [...list, res.sprint].sort((a, b) =>
+                            a.startDate.localeCompare(b.startDate)
+                        ),
+                    };
+                });
+            }
+            return res?.sprint ?? null;
+        },
+        [accessToken]
+    );
+
+    const updateExistingSprint = useCallback(
+        async (input: UpdateSprintInput): Promise<Sprint | null> => {
+            const res = await updateSprint(input, accessToken);
+            if (res?.sprint) {
+                const updated = res.sprint;
+                setProjectSprintsState((prev) => {
+                    const list = prev[updated.projectId] ?? [];
+                    return {
+                        ...prev,
+                        [updated.projectId]: list.map((s) =>
+                            s.sprintId === updated.sprintId ? updated : s
+                        ),
+                    };
+                });
+                if (currentSprint?.sprintId === updated.sprintId) {
+                    setCurrentSprint(updated);
+                }
+            }
+            return res?.sprint ?? null;
+        },
+        [accessToken, currentSprint]
+    );
+
+    const removeSprint = useCallback(
+        async (sprintId: number, projectId: number): Promise<boolean> => {
+            const ok = await deleteSprint(sprintId, accessToken);
+            if (ok) {
+                setProjectSprintsState((prev) => {
+                    const list = prev[projectId] ?? [];
+                    return {
+                        ...prev,
+                        [projectId]: list.filter((s) => s.sprintId !== sprintId),
+                    };
+                });
+                // Detach the deleted sprint from in-memory milestones
+                // so the UI doesn't keep referencing it.
+                setProjectMilestonesState((prev) => {
+                    const list = prev[projectId] ?? [];
+                    return {
+                        ...prev,
+                        [projectId]: list.map((m) =>
+                            m.sprintId === sprintId ? { ...m, sprintId: null } : m
+                        ),
+                    };
+                });
+                if (currentSprint?.sprintId === sprintId) {
+                    setCurrentSprint(null);
+                }
+            }
+            return ok;
+        },
+        [accessToken, currentSprint]
+    );
+
+    const upsertMilestoneInList = (
+        prev: Record<number, Milestone[]>,
+        m: Milestone
+    ): Record<number, Milestone[]> => {
+        const list = prev[m.projectId] ?? [];
+        const exists = list.some((x) => x.milestoneId === m.milestoneId);
+        const next = exists
+            ? list.map((x) => (x.milestoneId === m.milestoneId ? m : x))
+            : [m, ...list];
+        return { ...prev, [m.projectId]: next };
+    };
+
+    const createNewMilestone = useCallback(
+        async (input: CreateMilestoneInput): Promise<Milestone | null> => {
+            const res = await createMilestone(input, accessToken);
+            if (res?.milestone) {
+                setProjectMilestonesState((prev) => upsertMilestoneInList(prev, res.milestone));
+            }
+            return res?.milestone ?? null;
+        },
+        [accessToken]
+    );
+
+    const updateExistingMilestone = useCallback(
+        async (input: UpdateMilestoneInput, _projectId: number): Promise<Milestone | null> => {
+            const res = await updateMilestone(input, accessToken);
+            if (res?.milestone) {
+                setProjectMilestonesState((prev) => upsertMilestoneInList(prev, res.milestone));
+                if (currentMilestone?.milestoneId === res.milestone.milestoneId) {
+                    setCurrentMilestone(res.milestone);
+                }
+            }
+            return res?.milestone ?? null;
+        },
+        [accessToken, currentMilestone]
+    );
+
+    const moveMilestone = useCallback(
+        async (
+            milestoneId: number,
+            sprintId: number | null,
+            _projectId: number
+        ): Promise<Milestone | null> => {
+            const res = await moveMilestoneToSprint(milestoneId, sprintId, accessToken);
+            if (res?.milestone) {
+                setProjectMilestonesState((prev) => upsertMilestoneInList(prev, res.milestone));
+                if (currentMilestone?.milestoneId === res.milestone.milestoneId) {
+                    setCurrentMilestone(res.milestone);
+                }
+            }
+            return res?.milestone ?? null;
+        },
+        [accessToken, currentMilestone]
+    );
+
+    const removeMilestone = useCallback(
+        async (milestoneId: number, projectId: number): Promise<boolean> => {
+            const ok = await deleteMilestone(milestoneId, accessToken);
+            if (ok) {
+                setProjectMilestonesState((prev) => {
+                    const list = prev[projectId] ?? [];
+                    return {
+                        ...prev,
+                        [projectId]: list.filter((m) => m.milestoneId !== milestoneId),
+                    };
+                });
+                if (currentMilestone?.milestoneId === milestoneId) {
+                    setCurrentMilestone(null);
+                }
+            }
+            return ok;
+        },
+        [accessToken, currentMilestone]
+    );
+
+    const assignMilestoneMember = useCallback(
+        async (
+            milestoneId: number,
+            userId: number | string,
+            _projectId: number
+        ): Promise<Milestone | null> => {
+            const res = await addMilestoneAssignee(milestoneId, userId, accessToken);
+            if (res?.milestone) {
+                setProjectMilestonesState((prev) => upsertMilestoneInList(prev, res.milestone));
+                if (currentMilestone?.milestoneId === res.milestone.milestoneId) {
+                    setCurrentMilestone(res.milestone);
+                }
+            }
+            return res?.milestone ?? null;
+        },
+        [accessToken, currentMilestone]
+    );
+
+    const unassignMilestoneMember = useCallback(
+        async (
+            milestoneId: number,
+            userId: number | string,
+            _projectId: number
+        ): Promise<Milestone | null> => {
+            const res = await removeMilestoneAssignee(milestoneId, userId, accessToken);
+            if (res?.milestone) {
+                setProjectMilestonesState((prev) => upsertMilestoneInList(prev, res.milestone));
+                if (currentMilestone?.milestoneId === res.milestone.milestoneId) {
+                    setCurrentMilestone(res.milestone);
+                }
+            }
+            return res?.milestone ?? null;
+        },
+        [accessToken, currentMilestone]
+    );
+
+    return {
+        sprintConfig,
+        setSprintConfig,
+        projectSprints,
+        setProjectSprints,
+        currentSprint,
+        setCurrentSprint,
+        projectMilestones,
+        setProjectMilestones,
+        currentMilestone,
+        setCurrentMilestone,
+        tsLastMilestonesLoaded,
+        tsLastSprintsLoaded,
+        loadConfigForProject,
+        saveConfig,
+        loadSprintsForProject,
+        loadMilestonesForProject,
+        refreshMilestone,
+        createNewSprint,
+        updateExistingSprint,
+        removeSprint,
+        createNewMilestone,
+        updateExistingMilestone,
+        moveMilestone,
+        removeMilestone,
+        assignMilestoneMember,
+        unassignMilestoneMember,
+        initializeSprintMilestoneStates,
+    };
+};

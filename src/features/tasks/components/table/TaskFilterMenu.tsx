@@ -244,10 +244,19 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         // Filters: status, tags, priority, effort level
         let filteredTasks = useTM.allTasks;
 
+        // When the sidebar scopes the table to a single milestone, the
+        // "show only root tasks" short-circuit (parentTaskId === null)
+        // would drop the milestone's child tasks before the milestone-
+        // scope branch below ever sees them. Keep them in the candidate
+        // pool so the milestone scope can decide what stays.
+        const milestoneScopeActive = useTM.tableMilestoneFilterId != null;
+
         // Filter by status
         if (statuses.length === 1) {
             if (statuses[0].label === "All") {
-                filteredTasks = filteredTasks.filter((task) => task.parentTaskId === null);
+                if (!milestoneScopeActive) {
+                    filteredTasks = filteredTasks.filter((task) => task.parentTaskId === null);
+                }
             } else if (statuses[0].label === "Expired") {
                 filteredTasks = filteredTasks.filter(
                     (task) => task.dueDate && new Date(task.dueDate) < new Date()
@@ -270,8 +279,9 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         // Filter by tags
         if (tags.length > 0) {
             if (tags.length === 1 && tags[0].label === "All") {
-                // Include all tasks
-                filteredTasks = filteredTasks.filter((task) => task.parentTaskId === null);
+                if (!milestoneScopeActive) {
+                    filteredTasks = filteredTasks.filter((task) => task.parentTaskId === null);
+                }
             } else {
                 // Include tasks with the selected tags
                 filteredTasks = filteredTasks.filter((task) =>
@@ -282,7 +292,9 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
 
         // Filter by priority
         if (priority.length === 1 && priority[0].label === "All") {
-            filteredTasks = filteredTasks.filter((task) => task.parentTaskId === null);
+            if (!milestoneScopeActive) {
+                filteredTasks = filteredTasks.filter((task) => task.parentTaskId === null);
+            }
         } else {
             filteredTasks = filteredTasks.filter((task) =>
                 priority.some((priority) => priority.label === task.priority)
@@ -291,11 +303,39 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
 
         // Filter by effort level
         if (effortLevel.length === 1 && effortLevel[0].label === "All") {
-            filteredTasks = filteredTasks.filter((task) => task.parentTaskId === null);
+            if (!milestoneScopeActive) {
+                filteredTasks = filteredTasks.filter((task) => task.parentTaskId === null);
+            }
         } else {
             filteredTasks = filteredTasks.filter((task) =>
                 effortLevel.some((effortLevel) => effortLevel.label === task.effortLevel)
             );
+        }
+
+        // Milestone-scoped view: show the milestone's backing task as
+        // the only root row plus its direct children. This is what the
+        // sidebar's "click a milestone item" entry-point hooks into.
+        if (useTM.tableMilestoneFilterId != null) {
+            const target = useTM.tableMilestoneFilterId;
+            const allByProject = useTM.allTasks;
+            // Find the backing task for this milestone (a root task
+            // with `isMilestone === true` and `milestoneId === target`).
+            const milestoneTask = allByProject.find(
+                (t) => t.isMilestone === true && t.milestoneId === target
+            );
+            const backingTaskId = milestoneTask?.id ?? null;
+            filteredTasks = filteredTasks.filter((task) => {
+                if (task.isMilestone === true && task.milestoneId === target) return true;
+                if (task.milestoneId === target) return true;
+                if (
+                    backingTaskId != null &&
+                    task.parentTaskId != null &&
+                    String(task.parentTaskId) === String(backingTaskId)
+                ) {
+                    return true;
+                }
+                return false;
+            });
         }
 
         if (filteredTasks.length > 0) {
@@ -320,7 +360,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
 
     useEffect(() => {
         applyFilters(selectedStatus, selectedTags, selectedPriorities, selectedEffortLevels);
-    }, [useTM.allTasks]);
+    }, [useTM.allTasks, useTM.tableMilestoneFilterId]);
 
     useEffect(() => {
         if (isTaskUpdated) {
@@ -1037,6 +1077,36 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                 </Menu>
 
                 {/* Spacer */}
+                {/* Milestone scope chip — appears when the user clicked
+                    a milestone item in the sidebar. Clicking the X
+                    clears the milestone-scoped view. */}
+                {useTM.tableMilestoneFilterId != null && (
+                    <Chip
+                        label={(() => {
+                            const target = useTM.tableMilestoneFilterId;
+                            const m = useTM.allTasks.find(
+                                (t) => t.isMilestone === true && t.milestoneId === target
+                            );
+                            return `Milestone: ${m?.title?.slice(0, 10) ?? `#${target}`}${m?.title?.length && m?.title?.length > 10 ? "..." : ""}`;
+                        })()}
+                        onDelete={() => useTM.setTableMilestoneFilterId(null)}
+                        sx={{
+                            fontSize: 12,
+                            fontWeight: 600,
+                            background: isDark ? "rgba(249,115,22,0.15)" : "rgba(249,115,22,0.1)",
+                            color: isDark ? "#fb923c" : "#c2410c",
+                            border: `1px solid ${
+                                isDark ? "rgba(249,115,22,0.35)" : "rgba(249,115,22,0.25)"
+                            }`,
+                            borderRadius: "10px",
+                            height: 32,
+                            "& .MuiChip-deleteIcon": {
+                                color: isDark ? "#fb923c" : "#c2410c",
+                            },
+                        }}
+                    />
+                )}
+
                 <Box sx={{ flex: 1 }} />
 
                 {/* Reset Filters Button */}

@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 
+import { useSprintMilestoneManagement } from "../tasks/useSprintMilestoneManagement";
 import { useTaskManagement } from "../tasks/useTaskManagement";
 import { useProjectManagement } from "./useProjectManagement";
 
@@ -18,6 +19,7 @@ export const useProjectTaskManagement = ({
 }: UseProjectTaskManagementProps) => {
     const usePM = useProjectManagement(myself, accessToken, currentTeamId);
     const useTM = useTaskManagement(myself, accessToken);
+    const useSM = useSprintMilestoneManagement(accessToken);
 
     // Auto-fetch project tasks when:
     //   (a) loadProjectsAndTasks has just finished writing the tasks for the
@@ -52,6 +54,21 @@ export const useProjectTaskManagement = ({
         const timer = setTimeout(runFetch, 1000);
         return () => clearTimeout(timer);
     }, [usePM.currentProject, usePM.tsTasksLoadedToIDB]);
+
+    // Load sprint config + sprints + milestones whenever the active
+    // project changes. Each loader is idempotent and replaces only its
+    // own slice in the per-project keyed maps.
+    useEffect(() => {
+        if (!usePM.currentProject || !usePM.currentProject.projectId) return;
+        const projectId = usePM.currentProject.projectId;
+        (async () => {
+            await useSM.loadConfigForProject(projectId);
+            await useSM.loadSprintsForProject(projectId);
+            await useSM.loadMilestonesForProject(projectId, {
+                statuses: ["Open", "WIP", "Pending", "Closed"],
+            });
+        })();
+    }, [usePM.currentProject?.projectId]);
 
     // Handle new project creation
     useEffect(() => {
@@ -105,6 +122,8 @@ export const useProjectTaskManagement = ({
                 flag: false,
                 parentTaskId: null,
                 rootTaskId: null,
+                creationKind: "task",
+                milestoneId: null,
             });
         }
     }, [usePM.currentProject]);
@@ -128,7 +147,10 @@ export const useProjectTaskManagement = ({
             flag: false,
             parentTaskId: null,
             rootTaskId: null,
+            creationKind: "task",
+            milestoneId: null,
         });
+        useSM.initializeSprintMilestoneStates();
         // We expect to load tasks for the new team's first project shortly.
         // Flip the loading flag now so the table shows the "waiting" spinner
         // during the gap before fetchProjectTasks fires. The safety timeout in
@@ -139,5 +161,6 @@ export const useProjectTaskManagement = ({
     return {
         usePM,
         useTM,
+        useSM,
     };
 };

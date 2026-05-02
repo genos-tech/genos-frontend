@@ -76,7 +76,7 @@ export const App = () => {
     }, [handleApiHealth]);
 
     // Project and task management
-    const { usePM, useTM } = useProjectTaskManagement({
+    const { usePM, useTM, useSM } = useProjectTaskManagement({
         myself,
         accessToken: accessToken || "",
         currentTeamId: useTEM.currentTeamId,
@@ -206,6 +206,7 @@ export const App = () => {
                                     socket={socketInstance}
                                     useTEM={useTEM}
                                     useTM={useTM}
+                                    useSM={useSM}
                                     useUISM={useUISM}
                                 />
                             }
@@ -223,6 +224,7 @@ export const App = () => {
                                     socket={socketInstance}
                                     useTEM={useTEM}
                                     useTM={useTM}
+                                    useSM={useSM}
                                     useUISM={useUISM}
                                 />
                             }
@@ -240,6 +242,7 @@ export const App = () => {
                                     socket={socketInstance}
                                     useTEM={useTEM}
                                     useTM={useTM}
+                                    useSM={useSM}
                                     useUISM={useUISM}
                                 />
                             }

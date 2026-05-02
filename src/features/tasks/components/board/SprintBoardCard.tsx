@@ -76,7 +76,10 @@ type SprintBoardCardProps = {
     index: number;
     myself: UserProps;
     teamMemberProfiles: Record<string, UserProps>;
-    onTaskClick?: (taskId: string) => void;
+    // Pass the whole task so the parent can branch on `isMilestone` and
+    // route the click to a milestone preview instead of a regular task
+    // preview (mirrors DraggableTaskRow's openPreview behaviour).
+    onTaskClick?: (task: TaskTableProps) => void;
     isSelected?: boolean;
 };
 
@@ -124,7 +127,7 @@ export const SprintBoardCard = ({
                     }}
                     onMouseEnter={() => setIsHovered(true)}
                     onMouseLeave={() => setIsHovered(false)}
-                    onClick={() => onTaskClick?.(task.id || "")}
+                    onClick={() => onTaskClick?.(task)}
                 >
                     {/* Header: ID + Priority */}
                     <Box

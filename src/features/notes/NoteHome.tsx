@@ -10,6 +10,7 @@ import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { InboxManagementState } from "../../hooks/inbox/useInboxManagement";
 import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
+import { SprintMilestoneManagementState } from "../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
 import { NoteContentRenderer } from "./common/components/NoteContentRenderer";
@@ -30,10 +31,22 @@ type NoteHomeProps = {
     useNM: NoteManagementState;
     useCM: ChatManagementState;
     useTM: TaskManagementState;
+    useSM: SprintMilestoneManagementState;
 };
 export const NoteHome = (props: NoteHomeProps) => {
-    const { useTEM, socket, myself, setMyself, useUISM, useIM, useNM, useCM, usePM, useTM } =
-        props;
+    const {
+        useTEM,
+        socket,
+        myself,
+        setMyself,
+        useUISM,
+        useIM,
+        useNM,
+        useCM,
+        usePM,
+        useTM,
+        useSM,
+    } = props;
 
     // URL-based routing for notes
     useNoteRouting({ useNM });
@@ -133,6 +146,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                     socket={socket}
                     useTEM={useTEM}
                     useTM={useTM}
+                    useSM={useSM}
                     useUISM={useUISM}
                 />
             </PanelGroup>

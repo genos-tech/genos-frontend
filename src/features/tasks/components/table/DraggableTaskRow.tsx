@@ -1,5 +1,6 @@
 import { useState } from "react";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
+import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
 import KeyboardArrowRightRoundedIcon from "@mui/icons-material/KeyboardArrowRightRounded";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
@@ -214,9 +215,29 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
     // Hover state for better UX
     const [isHovered, setIsHovered] = useState(false);
 
-    // Check if this row is the currently selected/previewed task
-    const isSelected =
-        useTM.isTaskPreviewVisible && useTM.currentPreviewTaskId === Number(task.id);
+    // Check if this row is the currently selected/previewed task.
+    // Milestone rows are selected when the milestone preview is open
+    // for this task's milestoneId.
+    const isMilestoneRow = task.isMilestone === true;
+    const isSelected = isMilestoneRow
+        ? useTM.isTaskPreviewVisible &&
+          useTM.currentPreviewKind === "milestone" &&
+          useTM.currentPreviewMilestoneId === task.milestoneId
+        : useTM.isTaskPreviewVisible && useTM.currentPreviewTaskId === Number(task.id);
+
+    // Centralized click handler for opening either a task or a
+    // milestone preview, keeping the bug-fix invariants from
+    // useTaskManagement (mutual exclusivity of preview kinds).
+    const openPreview = () => {
+        useTM.setIsTaskPreviewVisible(true);
+        if (isMilestoneRow && task.milestoneId != null) {
+            useTM.setCurrentPreviewKind("milestone");
+            useTM.setCurrentPreviewMilestoneId(task.milestoneId);
+        } else {
+            useTM.setCurrentPreviewKind("task");
+            useTM.setCurrentPreviewTaskId(Number(task.id));
+        }
+    };
 
     // Edit states for different fields
     const [editingField, setEditingField] = useState<string | null>(null);
@@ -295,17 +316,21 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                         size="small"
                         onClick={(e) => {
                             e.stopPropagation();
-                            useTM.setIsTaskPreviewVisible(true);
-                            useTM.setCurrentPreviewTaskId(Number(task.id));
+                            openPreview();
                         }}
                         sx={{
-                            color: mode === "dark" ? "#90caf9" : "#1976d2",
+                            color: isMilestoneRow
+                                ? "#f97316"
+                                : mode === "dark"
+                                  ? "#90caf9"
+                                  : "#1976d2",
                             fontWeight: 600,
                             "&:hover": {
-                                backgroundColor:
-                                    mode === "dark"
-                                        ? "rgba(144, 202, 249, 0.15)"
-                                        : "rgba(25, 118, 210, 0.1)",
+                                backgroundColor: isMilestoneRow
+                                    ? "rgba(249, 115, 22, 0.12)"
+                                    : mode === "dark"
+                                      ? "rgba(144, 202, 249, 0.15)"
+                                      : "rgba(25, 118, 210, 0.1)",
                             },
                         }}
                     >
@@ -313,7 +338,11 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                             fontSize="13px"
                             sx={{
                                 fontWeight: 600,
-                                color: mode === "dark" ? "#90caf9" : "#1976d2",
+                                color: isMilestoneRow
+                                    ? "#f97316"
+                                    : mode === "dark"
+                                      ? "#90caf9"
+                                      : "#1976d2",
                             }}
                         >
                             #{task.id}
@@ -513,26 +542,45 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                     );
                 }
                 return (
-                    <Typography
-                        level="body-sm"
+                    <Box
                         onClick={() => handleStartEdit("title", task.title || "")}
                         sx={{
                             cursor: "pointer",
-                            fontWeight: depth > 0 ? 400 : 500,
-                            opacity: depth > 0 ? 0.85 : 1,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 0.5,
                             pl: depth > 0 ? depth * 1.5 : 0,
-                            "&:hover": {
-                                color: mode === "dark" ? "#90caf9" : "#1976d2",
-                            },
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
                             width: "100%",
-                            transition: "color 0.15s ease",
+                            "&:hover .task-row-title": {
+                                color: isMilestoneRow
+                                    ? "#f97316"
+                                    : mode === "dark"
+                                      ? "#90caf9"
+                                      : "#1976d2",
+                            },
                         }}
                     >
-                        {task.title}
-                    </Typography>
+                        {isMilestoneRow && (
+                            <FlagRoundedIcon
+                                sx={{ fontSize: 14, color: "#f97316", flexShrink: 0 }}
+                            />
+                        )}
+                        <Typography
+                            level="body-sm"
+                            className="task-row-title"
+                            sx={{
+                                fontWeight: isMilestoneRow ? 600 : depth > 0 ? 400 : 500,
+                                opacity: depth > 0 ? 0.85 : 1,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                                flex: 1,
+                                transition: "color 0.15s ease",
+                            }}
+                        >
+                            {task.title}
+                        </Typography>
+                    </Box>
                 );
 
             case "assigneeId":
@@ -1192,7 +1240,16 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                     }}
                     onMouseEnter={() => setIsHovered(true)}
                     onMouseLeave={() => setIsHovered(false)}
-                    onDoubleClick={() => onRowDoubleClick(Number(task.id))}
+                    onDoubleClick={() => {
+                        // Milestone rows always go through the milestone
+                        // preview path; regular tasks fall through to
+                        // the table-level handler.
+                        if (isMilestoneRow) {
+                            openPreview();
+                        } else {
+                            onRowDoubleClick(Number(task.id));
+                        }
+                    }}
                 >
                     {/* Drag Handle */}
                     <div

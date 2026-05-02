@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
-import { Box, Divider, Sheet, Typography } from "@mui/joy";
+import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
+import { Box, Button, Divider, Sheet, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -10,6 +12,7 @@ import { ProjectManagementState } from "../../../../hooks/common/useProjectManag
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskProps } from "../../../../types/tasks";
@@ -20,6 +23,7 @@ import {
     updateTagOptions,
     updateTeamMembersOptions,
 } from "../../services/updateTaskAutoCompleteOptions";
+import { sendMilestoneCreatedMessage } from "../../sprint-milestone/services";
 import { TaskCreateAttachmentBlock } from "./base/TaskCreateAttachmentBlock";
 import { TaskCreateBodyBlock } from "./base/TaskCreateBodyBlock";
 import { TaskCreateFooter } from "./base/TaskCreateFooter";
@@ -164,13 +168,25 @@ type CreateTaskProps = {
     useUISM: UIStateManagementState;
     usePM: ProjectManagementState;
     useTM: TaskManagementState;
+    useSM?: SprintMilestoneManagementState;
     useCM: ChatManagementState;
     useNM: NoteManagementState;
 };
 
 export const CreateTaskForm = (props: CreateTaskProps) => {
-    const { useTEM, socket, myself, setMyself, chatType, useCM, useUISM, usePM, useTM, useNM } =
-        props;
+    const {
+        useTEM,
+        socket,
+        myself,
+        setMyself,
+        chatType,
+        useCM,
+        useUISM,
+        usePM,
+        useTM,
+        useSM,
+        useNM,
+    } = props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -182,6 +198,24 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     const [assignee, setAssignee] = useState<UserProps>(myself);
     const [reporter, setReporter] = useState<UserProps>(myself);
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [isCreatingMilestone, setIsCreatingMilestone] = useState(false);
+    // Milestones can't be nested under another milestone or under any
+    // task (no "milestone sub-task"). Force creationKind to "task"
+    // whenever the form is opened inside a milestone or beneath a
+    // parent task, and hide the toggle below.
+    const creationKind: "task" | "milestone" =
+        useTM.isCreatingTask.milestoneId != null || useTM.isCreatingTask.parentTaskId != null
+            ? "task"
+            : useTM.isCreatingTask.creationKind === "milestone"
+              ? "milestone"
+              : "task";
+
+    const switchKind = (kind: "task" | "milestone") => {
+        useTM.setIsCreatingTask({
+            ...useTM.isCreatingTask,
+            creationKind: kind,
+        });
+    };
 
     useEffect(() => {
         createEmptyTask({
@@ -218,7 +252,12 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 attachments: [],
                 parentTaskId: useTM.isCreatingTask.parentTaskId,
                 rootTaskId: useTM.isCreatingTask.rootTaskId,
-            });
+                // When created from inside a milestone, pre-select that
+                // milestone in SprintMilestonePicker. The backend also
+                // infers milestone_id from parent_task_id, so the value
+                // here is mostly to drive the picker UI.
+                milestoneId: useTM.isCreatingTask.milestoneId ?? null,
+            } as TaskProps);
         }
     }, [useTM.initialEmptyTaskId]);
 
@@ -250,6 +289,8 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                     flag: false,
                     parentTaskId: null,
                     rootTaskId: null,
+                    creationKind: "task",
+                    milestoneId: null,
                 });
             }
             if (useTM.setIsNewTaskCreated) {
@@ -259,6 +300,106 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             }
         }
     }, [isSubmitted]);
+
+    const handleCreateMilestone = async () => {
+        if (!useSM || !taskContent || !taskContent.project?.projectId) return;
+        if (!taskTitle.trim()) return;
+        setIsCreatingMilestone(true);
+        const projectId = taskContent.project.projectId;
+        const created = await useSM.createNewMilestone({
+            projectId,
+            title: taskTitle.trim(),
+            description: body,
+            sprintId: (taskContent as any)?.sprintId ?? null,
+            dueDate: taskContent.dueDate || null,
+            priority: taskContent.priority?.priority || null,
+            tags: taskContent.tags || [],
+            reporterId: myself.userId,
+            assigneeIds: assignee?.userId ? [assignee.userId] : [],
+        });
+        setIsCreatingMilestone(false);
+        if (created) {
+            // Reset creation pane and refresh milestones list. We
+            // include "Closed" so the dashboard's SprintMilestonesSection
+            // can keep showing milestones that flip to Closed without
+            // them vanishing on the next refresh.
+            useTM.setIsCreatingTask({
+                flag: false,
+                parentTaskId: null,
+                rootTaskId: null,
+                creationKind: "task",
+                milestoneId: null,
+            });
+            await useSM.loadMilestonesForProject(projectId, {
+                statuses: ["Open", "WIP", "Pending", "Closed"],
+            });
+            // Pull the freshest copy (backing task / aggregates / assignees)
+            // before opening the preview so MilestonePreviewInner doesn't
+            // briefly land on its "Loading milestone…" early-return.
+            await useSM.refreshMilestone(created.milestoneId);
+            // Pull the new milestone's backing task into `useTM.allTasks`
+            // (via IDB → fetchProjectTasks chain in useProjectTaskManagement).
+            // Without this, TaskFilterMenu's milestone-scope chip can't
+            // resolve the title and falls back to "Milestone: #<id>",
+            // and the table/sprint board can't enumerate the milestone's
+            // children either.
+            await usePM.loadProjectsAndTasks(projectId);
+            // Mirror the "task created" socket fan-out for milestones so
+            // teammates see a chat bubble in the project's PM channel
+            // (and any open thread) when a new milestone lands. Wrapped
+            // defensively because a chat hiccup must not block the
+            // milestone preview from opening below.
+            try {
+                if (taskContent.project) {
+                    const linkedSprint =
+                        created.sprintId != null
+                            ? useSM.projectSprints[projectId]?.find(
+                                  (s) => s.sprintId === created.sprintId
+                              )
+                            : null;
+                    const resolvedAssignees: UserProps[] = (created.assignees ?? [])
+                        .map((a) =>
+                            a.userId != null
+                                ? useTEM.teamMemberProfiles[String(a.userId)]
+                                : undefined
+                        )
+                        .filter((u): u is UserProps => !!u);
+                    sendMilestoneCreatedMessage({
+                        socket,
+                        myself,
+                        project: taskContent.project,
+                        milestone: created,
+                        sprintName: linkedSprint?.name ?? "No sprint",
+                        reporter: myself,
+                        assignees:
+                            resolvedAssignees.length > 0
+                                ? resolvedAssignees
+                                : assignee
+                                  ? [assignee]
+                                  : [myself],
+                        useCM,
+                    });
+                }
+            } catch (err) {
+                console.error("Failed to send 'milestone created' chat message:", err);
+            }
+            // Auto-open the new milestone for parity with the task
+            // creation flow (which routes via `setCurrentPreviewTaskId`
+            // inside `uploadNewTask`).
+            useTM.setCurrentPreviewMilestoneId(created.milestoneId);
+            useTM.setIsTaskPreviewVisible(true);
+            // "+ Add milestone" from the sidebar hides the task home
+            // panel; if no other main panel is visible, restore the task
+            // home so the user always lands somewhere sensible.
+            if (
+                !useTM.isTaskHomeVisible &&
+                !useTM.isDashboardVisible &&
+                !useTM.isSprintBoardVisible
+            ) {
+                useTM.setIsTaskHomeVisible(true);
+            }
+        }
+    };
 
     const [titleErrorOpen, setTitleErrorOpen] = useState(false);
     const [titleError, setTitleError] = useState("");
@@ -340,6 +481,51 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         }}
                     />
 
+                    {/* Task vs Milestone toggle (only visible when sprint
+                        management is wired in for this surface). Hidden
+                        entirely when the form is opened inside a milestone
+                        or under a parent task, because milestones can't
+                        be a child of either. */}
+                    {useSM &&
+                        useTM.isCreatingTask.milestoneId == null &&
+                        useTM.isCreatingTask.parentTaskId == null && (
+                            <Box
+                                sx={{
+                                    px: 2.5,
+                                    pt: 2,
+                                    pb: 0.5,
+                                }}
+                            >
+                                <Stack direction="row" spacing={1} alignItems="center">
+                                    <Typography level="body-xs" sx={{ color: "neutral.500" }}>
+                                        Create:
+                                    </Typography>
+                                    <Button
+                                        size="sm"
+                                        variant={creationKind === "task" ? "solid" : "soft"}
+                                        color={creationKind === "task" ? "primary" : "neutral"}
+                                        startDecorator={
+                                            <AssignmentRoundedIcon sx={{ fontSize: 14 }} />
+                                        }
+                                        onClick={() => switchKind("task")}
+                                    >
+                                        Task
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant={creationKind === "milestone" ? "solid" : "soft"}
+                                        color={
+                                            creationKind === "milestone" ? "primary" : "neutral"
+                                        }
+                                        startDecorator={<FlagRoundedIcon sx={{ fontSize: 14 }} />}
+                                        onClick={() => switchKind("milestone")}
+                                    >
+                                        Milestone
+                                    </Button>
+                                </Stack>
+                            </Box>
+                        )}
+
                     {/* Header with Task Title Block */}
                     <Box
                         sx={{
@@ -363,6 +549,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                             titleErrorOpen={titleErrorOpen}
                             useTM={useTM}
                             useUISM={useUISM}
+                            isMilestone={creationKind === "milestone"}
                         />
                     </Box>
 
@@ -404,8 +591,10 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                 taskContent={taskContent}
                                 useTEM={useTEM}
                                 useTM={useTM}
+                                useSM={useSM}
                                 useUISM={useUISM}
                                 usePM={usePM}
+                                isMilestone={creationKind === "milestone"}
                             />
                         </Box>
 
@@ -459,19 +648,50 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                             background: isDark ? "rgba(255,255,255,0.01)" : "rgba(0,0,0,0.01)",
                         }}
                     >
-                        <TaskCreateFooter
-                            accessToken={accessToken}
-                            useCM={useCM}
-                            useTM={useTM}
-                            myself={myself}
-                            usePM={usePM}
-                            setIsSubmitted={setIsSubmitted}
-                            setTitleError={setTitleError}
-                            setTitleErrorOpen={setTitleErrorOpen}
-                            socket={socket}
-                            taskContent={taskContent}
-                            taskTitle={taskTitle}
-                        />
+                        {creationKind === "milestone" ? (
+                            <Stack direction="row" sx={{ justifyContent: "flex-end", gap: 1.5 }}>
+                                <Button
+                                    size="sm"
+                                    variant="plain"
+                                    color="neutral"
+                                    onClick={() => {
+                                        useTM.setIsCreatingTask({
+                                            flag: false,
+                                            parentTaskId: null,
+                                            rootTaskId: null,
+                                            creationKind: "task",
+                                            milestoneId: null,
+                                        });
+                                    }}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    color="primary"
+                                    startDecorator={<FlagRoundedIcon sx={{ fontSize: 14 }} />}
+                                    disabled={!taskTitle.trim() || !taskContent.project?.projectId}
+                                    loading={isCreatingMilestone}
+                                    onClick={handleCreateMilestone}
+                                >
+                                    Create Milestone
+                                </Button>
+                            </Stack>
+                        ) : (
+                            <TaskCreateFooter
+                                accessToken={accessToken}
+                                useCM={useCM}
+                                useTM={useTM}
+                                myself={myself}
+                                usePM={usePM}
+                                setIsSubmitted={setIsSubmitted}
+                                setTitleError={setTitleError}
+                                setTitleErrorOpen={setTitleErrorOpen}
+                                socket={socket}
+                                taskContent={taskContent}
+                                taskTitle={taskTitle}
+                            />
+                        )}
                     </Box>
                 </Sheet>
             )}
