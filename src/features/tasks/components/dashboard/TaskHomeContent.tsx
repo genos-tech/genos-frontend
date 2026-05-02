@@ -445,7 +445,7 @@ export const TaskHomeContent = ({
         >
             {segments.map((seg, i) =>
                 seg.value > 0 ? (
-                    <Tooltip key={i} title={`${Math.round((seg.value / total) * 100)}%`} size="sm">
+                    <Tooltip key={i} size="sm" title={`${Math.round((seg.value / total) * 100)}%`}>
                         <Box
                             sx={{
                                 width: `${(seg.value / total) * 100}%`,
@@ -478,12 +478,12 @@ export const TaskHomeContent = ({
                 }}
             >
                 <Stack spacing={2}>
-                    <Stack direction="row" alignItems="center" spacing={1}>
+                    <Stack alignItems="center" direction="row" spacing={1}>
                         {icon}
                         <Typography level="title-sm" sx={{ fontWeight: 600, color: textPrimary }}>
                             {title}
                         </Typography>
-                        <Chip size="sm" variant="soft" sx={{ ml: "auto" }}>
+                        <Chip size="sm" sx={{ ml: "auto" }} variant="soft">
                             {total} tasks
                         </Chip>
                     </Stack>
@@ -501,11 +501,11 @@ export const TaskHomeContent = ({
                         {Object.entries(data).map(([label, count]) => (
                             <Stack
                                 key={label}
-                                direction="row"
                                 alignItems="center"
+                                direction="row"
                                 justifyContent="space-between"
                             >
-                                <Stack direction="row" alignItems="center" spacing={1}>
+                                <Stack alignItems="center" direction="row" spacing={1}>
                                     <Box
                                         sx={{
                                             width: 8,
@@ -564,19 +564,20 @@ export const TaskHomeContent = ({
                 <>
                     <SprintConfigDialog
                         open={sprintConfigOpen}
-                        onClose={() => setSprintConfigOpen(false)}
                         projectId={usePM.currentProject.projectId}
                         useSM={useSM}
+                        onClose={() => setSprintConfigOpen(false)}
                     />
                     <SprintManagerDialog
                         open={sprintManagerOpen}
-                        onClose={() => setSprintManagerOpen(false)}
                         projectId={usePM.currentProject.projectId}
                         useSM={useSM}
+                        onClose={() => setSprintManagerOpen(false)}
                     />
                 </>
             )}
             <Box
+                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 sx={{
                     height: "100%",
                     overflow: "auto",
@@ -585,12 +586,11 @@ export const TaskHomeContent = ({
                         ? "linear-gradient(180deg, rgba(18, 18, 19, 0.95) 0%, rgb(25, 26, 28) 100%)"
                         : "linear-gradient(180deg, rgba(248,250,252,1) 0%, rgba(241,245,249,1) 100%)",
                 }}
-                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
             >
                 <Stack spacing={3} sx={{ maxWidth: 1200, mx: "auto" }}>
                     {/* ════════ Dashboard Title ════════ */}
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                        <Stack direction="row" alignItems="center" spacing={1.5}>
+                    <Stack alignItems="center" direction="row" justifyContent="space-between">
+                        <Stack alignItems="center" direction="row" spacing={1.5}>
                             <Box
                                 sx={{
                                     width: 36,
@@ -642,13 +642,13 @@ export const TaskHomeContent = ({
                             <Stack spacing={2.5}>
                                 {/* Project selector + sprint selector row */}
                                 <Stack
-                                    direction="row"
                                     alignItems="center"
-                                    justifyContent="space-between"
+                                    direction="row"
                                     flexWrap="wrap"
                                     gap={2}
+                                    justifyContent="space-between"
                                 >
-                                    <Stack direction="row" alignItems="center" spacing={1.5}>
+                                    <Stack alignItems="center" direction="row" spacing={1.5}>
                                         <Box
                                             sx={{
                                                 width: 40,
@@ -685,12 +685,21 @@ export const TaskHomeContent = ({
                                                 Current Project
                                             </Typography>
                                             <Select
-                                                value={usePM.currentProject.projectId}
-                                                onChange={(_, value) => {
-                                                    if (value)
-                                                        handleProjectChange(value as number);
-                                                }}
                                                 indicator={<KeyboardArrowDownRoundedIcon />}
+                                                value={usePM.currentProject.projectId}
+                                                slotProps={{
+                                                    listbox: {
+                                                        sx: {
+                                                            backgroundColor: isDark
+                                                                ? "rgba(30,30,32,0.98)"
+                                                                : "rgba(255,255,255,0.98)",
+                                                            border: "1px solid",
+                                                            borderColor: isDark
+                                                                ? "rgba(255,255,255,0.1)"
+                                                                : "rgba(0,0,0,0.1)",
+                                                        },
+                                                    },
+                                                }}
                                                 startDecorator={
                                                     <SwapHorizRoundedIcon sx={{ fontSize: 18 }} />
                                                 }
@@ -716,18 +725,9 @@ export const TaskHomeContent = ({
                                                         color: isDark ? "#fb923c" : "#ea580c",
                                                     },
                                                 }}
-                                                slotProps={{
-                                                    listbox: {
-                                                        sx: {
-                                                            backgroundColor: isDark
-                                                                ? "rgba(30,30,32,0.98)"
-                                                                : "rgba(255,255,255,0.98)",
-                                                            border: "1px solid",
-                                                            borderColor: isDark
-                                                                ? "rgba(255,255,255,0.1)"
-                                                                : "rgba(0,0,0,0.1)",
-                                                        },
-                                                    },
+                                                onChange={(_, value) => {
+                                                    if (value)
+                                                        handleProjectChange(value as number);
                                                 }}
                                             >
                                                 {joinedProjects.map((project) => (
@@ -750,29 +750,31 @@ export const TaskHomeContent = ({
                                     </Stack>
 
                                     {/* Sprint period selector */}
-                                    <Stack direction="row" alignItems="center" spacing={1}>
+                                    <Stack alignItems="center" direction="row" spacing={1}>
                                         <Select<number | string>
-                                            value={selectedSprint?.sprintId ?? null}
-                                            onChange={(_, value) => {
-                                                if (value === null || value === undefined) {
-                                                    useSM.setCurrentSprint(null);
-                                                    return;
-                                                }
-                                                if (typeof value === "string") return;
-                                                const found = projectSprints.find(
-                                                    (s) => s.sprintId === value
-                                                );
-                                                if (found) useSM.setCurrentSprint(found);
-                                            }}
                                             indicator={<KeyboardArrowDownRoundedIcon />}
-                                            startDecorator={
-                                                <CalendarMonthRoundedIcon sx={{ fontSize: 18 }} />
-                                            }
                                             size="sm"
+                                            value={selectedSprint?.sprintId ?? null}
                                             placeholder={
                                                 projectSprints.length === 0
                                                     ? "No sprints — configure"
                                                     : "Pick a sprint"
+                                            }
+                                            slotProps={{
+                                                listbox: {
+                                                    sx: {
+                                                        backgroundColor: isDark
+                                                            ? "rgba(30,30,32,0.98)"
+                                                            : "rgba(255,255,255,0.98)",
+                                                        border: "1px solid",
+                                                        borderColor: isDark
+                                                            ? "rgba(255,255,255,0.1)"
+                                                            : "rgba(0,0,0,0.1)",
+                                                    },
+                                                },
+                                            }}
+                                            startDecorator={
+                                                <CalendarMonthRoundedIcon sx={{ fontSize: 18 }} />
                                             }
                                             sx={{
                                                 minWidth: 220,
@@ -794,18 +796,16 @@ export const TaskHomeContent = ({
                                                     color: isDark ? "#a5b4fc" : "#6366f1",
                                                 },
                                             }}
-                                            slotProps={{
-                                                listbox: {
-                                                    sx: {
-                                                        backgroundColor: isDark
-                                                            ? "rgba(30,30,32,0.98)"
-                                                            : "rgba(255,255,255,0.98)",
-                                                        border: "1px solid",
-                                                        borderColor: isDark
-                                                            ? "rgba(255,255,255,0.1)"
-                                                            : "rgba(0,0,0,0.1)",
-                                                    },
-                                                },
+                                            onChange={(_, value) => {
+                                                if (value === null || value === undefined) {
+                                                    useSM.setCurrentSprint(null);
+                                                    return;
+                                                }
+                                                if (typeof value === "string") return;
+                                                const found = projectSprints.find(
+                                                    (s) => s.sprintId === value
+                                                );
+                                                if (found) useSM.setCurrentSprint(found);
                                             }}
                                         >
                                             {(["current", "upcoming", "past"] as const).map(
@@ -816,11 +816,11 @@ export const TaskHomeContent = ({
                                                         <Option
                                                             key={`hdr-${bucket}`}
                                                             value={`__hdr_${bucket}`}
-                                                            disabled
                                                             sx={{
                                                                 opacity: 0.6,
                                                                 fontSize: "0.75rem",
                                                             }}
+                                                            disabled
                                                         >
                                                             {bucket === "current"
                                                                 ? "Current"
@@ -843,27 +843,27 @@ export const TaskHomeContent = ({
                                         </Select>
                                         <Tooltip title="Sprint settings">
                                             <IconButton
+                                                disabled={!usePM.currentProject?.projectId}
                                                 size="sm"
                                                 variant="soft"
                                                 onClick={() => setSprintConfigOpen(true)}
-                                                disabled={!usePM.currentProject?.projectId}
                                             >
                                                 <SettingsRoundedIcon />
                                             </IconButton>
                                         </Tooltip>
                                         <Tooltip title="Manage sprints">
                                             <IconButton
+                                                disabled={!usePM.currentProject?.projectId}
                                                 size="sm"
                                                 variant="soft"
                                                 onClick={() => setSprintManagerOpen(true)}
-                                                disabled={!usePM.currentProject?.projectId}
                                             >
                                                 <TuneRoundedIcon />
                                             </IconButton>
                                         </Tooltip>
                                         <Tooltip
-                                            title="Closed in sprint / Created in sprint"
                                             size="sm"
+                                            title="Closed in sprint / Created in sprint"
                                         >
                                             <Chip
                                                 size="lg"
@@ -919,9 +919,8 @@ export const TaskHomeContent = ({
                                         </Typography>
                                     </Stack>
                                     <LinearProgress
-                                        determinate
-                                        value={sprintProgressPct}
                                         color="success"
+                                        value={sprintProgressPct}
                                         sx={{
                                             "--LinearProgress-thickness": "8px",
                                             "--LinearProgress-radius": "4px",
@@ -930,15 +929,16 @@ export const TaskHomeContent = ({
                                                 ? "rgba(255,255,255,0.1)"
                                                 : "rgba(0,0,0,0.08)",
                                         }}
+                                        determinate
                                     />
                                 </Box>
 
                                 {/* Sprint-scoped quick chips */}
-                                <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+                                <Stack direction="row" flexWrap="wrap" spacing={1.5} useFlexGap>
                                     <Chip
                                         size="md"
-                                        variant="soft"
                                         startDecorator={<AddRoundedIcon sx={{ fontSize: 16 }} />}
+                                        variant="soft"
                                         sx={{
                                             backgroundColor: isDark
                                                 ? "rgba(59,130,246,0.12)"
@@ -1014,7 +1014,7 @@ export const TaskHomeContent = ({
                                 borderColor: cardBorder,
                             }}
                         >
-                            <Stack spacing={2} alignItems="center">
+                            <Stack alignItems="center" spacing={2}>
                                 <Box
                                     sx={{
                                         width: 64,
@@ -1054,10 +1054,9 @@ export const TaskHomeContent = ({
                             {/* ════════ Quick Actions (compact) ════════ */}
                             <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
                                 <Button
-                                    variant="soft"
                                     size="sm"
                                     startDecorator={<AddRoundedIcon />}
-                                    onClick={handleCreateTask}
+                                    variant="soft"
                                     sx={{
                                         flex: 1,
                                         py: 1,
@@ -1071,14 +1070,14 @@ export const TaskHomeContent = ({
                                                 : "rgba(34,197,94,0.14)",
                                         },
                                     }}
+                                    onClick={handleCreateTask}
                                 >
                                     New Task
                                 </Button>
                                 <Button
-                                    variant="soft"
                                     size="sm"
                                     startDecorator={<FolderOpenRoundedIcon />}
-                                    onClick={handleGoToTable}
+                                    variant="soft"
                                     sx={{
                                         flex: 1,
                                         py: 1,
@@ -1092,14 +1091,14 @@ export const TaskHomeContent = ({
                                                 : "rgba(59,130,246,0.14)",
                                         },
                                     }}
+                                    onClick={handleGoToTable}
                                 >
                                     Task Table
                                 </Button>
                                 <Button
-                                    variant="soft"
                                     size="sm"
                                     startDecorator={<ViewKanbanRoundedIcon />}
-                                    onClick={handleGoToBoard}
+                                    variant="soft"
                                     sx={{
                                         flex: 1,
                                         py: 1,
@@ -1113,6 +1112,7 @@ export const TaskHomeContent = ({
                                                 : "rgba(147,51,234,0.14)",
                                         },
                                     }}
+                                    onClick={handleGoToBoard}
                                 >
                                     Sprint Board
                                 </Button>
@@ -1123,8 +1123,8 @@ export const TaskHomeContent = ({
                             (Sprint Milestones + Recently Updated) so the
                             sprint vs project-wide split is unambiguous. */}
                             <Stack
-                                direction="row"
                                 alignItems="center"
+                                direction="row"
                                 spacing={1}
                                 sx={{ mt: 1, mb: -0.5 }}
                             >
@@ -1138,7 +1138,7 @@ export const TaskHomeContent = ({
                                     Sprint Insights
                                 </Typography>
                                 {selectedSprint && (
-                                    <Chip size="sm" variant="soft" sx={{ ml: 0.5 }}>
+                                    <Chip size="sm" sx={{ ml: 0.5 }} variant="soft">
                                         {selectedSprint.name}
                                     </Chip>
                                 )}
@@ -1154,14 +1154,20 @@ export const TaskHomeContent = ({
 
                             {/* ════════ Section A2: Sprint Milestones ════════ */}
                             <SprintMilestonesSection
-                                selectedSprint={selectedSprint}
-                                projectId={usePM.currentProject?.projectId}
-                                useSM={useSM}
-                                useTM={useTM}
                                 isDark={isDark}
+                                myself={myself}
+                                projectId={usePM.currentProject?.projectId}
+                                selectedSprint={selectedSprint}
+                                setMyself={setMyself}
+                                socket={socket}
+                                textMuted={textMuted}
                                 textPrimary={textPrimary}
                                 textSecondary={textSecondary}
-                                textMuted={textMuted}
+                                useCM={useCM}
+                                useSM={useSM}
+                                useTEM={useTEM}
+                                useTM={useTM}
+                                useUISM={useUISM}
                             />
 
                             {/* ════════ Section D: Recently Updated Tasks (sprint-scoped) ════════ */}
@@ -1181,17 +1187,17 @@ export const TaskHomeContent = ({
                                     >
                                         <AssignmentRoundedIcon sx={{ fontSize: 16 }} />
                                         Recently Updated
-                                        <Chip size="sm" variant="soft" sx={{ ml: 0.5 }}>
+                                        <Chip size="sm" sx={{ ml: 0.5 }} variant="soft">
                                             {recentTasks.length}
                                         </Chip>
                                     </Typography>
-                                    <Grid container spacing={1.5}>
+                                    <Grid spacing={1.5} container>
                                         {recentTasks.map((task) => {
                                             const sc =
                                                 STATUS_COLORS[task.effectiveStatus] ||
                                                 STATUS_COLORS.Open;
                                             return (
-                                                <Grid key={task.id} xs={12} sm={6} md={4}>
+                                                <Grid key={task.id} md={4} sm={6} xs={12}>
                                                     <Card
                                                         variant="outlined"
                                                         sx={{
@@ -1213,13 +1219,13 @@ export const TaskHomeContent = ({
                                                     >
                                                         <Stack spacing={1}>
                                                             <Stack
+                                                                alignItems="flex-start"
                                                                 direction="row"
                                                                 justifyContent="space-between"
-                                                                alignItems="flex-start"
                                                             >
                                                                 <Stack
-                                                                    direction="row"
                                                                     alignItems="center"
+                                                                    direction="row"
                                                                     spacing={0.5}
                                                                 >
                                                                     <Typography
@@ -1233,8 +1239,8 @@ export const TaskHomeContent = ({
                                                                     </Typography>
                                                                     {task.isMilestone === true && (
                                                                         <Tooltip
-                                                                            title="Milestone"
                                                                             size="sm"
+                                                                            title="Milestone"
                                                                         >
                                                                             <FlagRoundedIcon
                                                                                 sx={{
@@ -1273,9 +1279,9 @@ export const TaskHomeContent = ({
                                                                 {task.title || "Untitled Task"}
                                                             </Typography>
                                                             <Stack
+                                                                alignItems="center"
                                                                 direction="row"
                                                                 justifyContent="space-between"
-                                                                alignItems="center"
                                                             >
                                                                 {task.priority && (
                                                                     <Typography
@@ -1319,7 +1325,7 @@ export const TaskHomeContent = ({
                                         borderColor: cardBorder,
                                     }}
                                 >
-                                    <Stack spacing={2} alignItems="center">
+                                    <Stack alignItems="center" spacing={2}>
                                         <Box
                                             sx={{
                                                 width: 56,
@@ -1358,8 +1364,8 @@ export const TaskHomeContent = ({
                             {/* Marks the boundary between sprint-scoped sections
                             (above) and project-wide stats (below). */}
                             <Stack
-                                direction="row"
                                 alignItems="center"
+                                direction="row"
                                 spacing={1}
                                 sx={{ mt: 2, mb: -0.5 }}
                             >
@@ -1370,7 +1376,7 @@ export const TaskHomeContent = ({
                                 >
                                     Overall Insights
                                 </Typography>
-                                <Chip size="sm" variant="soft" sx={{ ml: 0.5 }}>
+                                <Chip size="sm" sx={{ ml: 0.5 }} variant="soft">
                                     Project-wide
                                 </Chip>
                                 <Box
@@ -1428,7 +1434,7 @@ export const TaskHomeContent = ({
                                 )}
 
                                 {/* Status cards */}
-                                <Grid container spacing={1.5}>
+                                <Grid spacing={1.5} container>
                                     {(
                                         [
                                             {
@@ -1459,7 +1465,7 @@ export const TaskHomeContent = ({
                                                 ? Math.round((s.count / stats.totalTasks) * 100)
                                                 : 0;
                                         return (
-                                            <Grid key={s.key} xs={6} md={3}>
+                                            <Grid key={s.key} md={3} xs={6}>
                                                 <Card
                                                     variant="soft"
                                                     sx={{
@@ -1477,8 +1483,8 @@ export const TaskHomeContent = ({
                                                 >
                                                     <Stack spacing={1}>
                                                         <Stack
-                                                            direction="row"
                                                             alignItems="center"
+                                                            direction="row"
                                                             justifyContent="space-between"
                                                         >
                                                             <Box
@@ -1607,14 +1613,19 @@ export const TaskHomeContent = ({
                                                     <tr key={a.id}>
                                                         <td>
                                                             <Stack
-                                                                direction="row"
                                                                 alignItems="center"
+                                                                direction="row"
                                                                 spacing={1}
                                                             >
                                                                 {a.id !== "__unassigned__" &&
                                                                 useTEM.teamMemberProfiles[a.id] ? (
                                                                     <AvatarWithStatus
                                                                         avatarSize={26}
+                                                                        myself={myself}
+                                                                        setMyself={setMyself}
+                                                                        socket={socket}
+                                                                        useCM={useCM}
+                                                                        useUISM={useUISM}
                                                                         avatarUser={
                                                                             useTEM
                                                                                 .teamMemberProfiles[
@@ -1624,11 +1635,6 @@ export const TaskHomeContent = ({
                                                                         isYou={
                                                                             myself.userId === a.id
                                                                         }
-                                                                        myself={myself}
-                                                                        setMyself={setMyself}
-                                                                        socket={socket}
-                                                                        useCM={useCM}
-                                                                        useUISM={useUISM}
                                                                     />
                                                                 ) : (
                                                                     <Avatar
@@ -1800,13 +1806,13 @@ export const TaskHomeContent = ({
                                     >
                                         <Stack spacing={1.5}>
                                             <Stack
-                                                direction="row"
                                                 alignItems="center"
+                                                direction="row"
                                                 justifyContent="space-between"
                                             >
                                                 <Stack
-                                                    direction="row"
                                                     alignItems="center"
+                                                    direction="row"
                                                     spacing={1}
                                                 >
                                                     <WarningAmberRoundedIcon
@@ -1840,8 +1846,8 @@ export const TaskHomeContent = ({
                                                     .map((task) => (
                                                         <Stack
                                                             key={task.id}
-                                                            direction="row"
                                                             alignItems="center"
+                                                            direction="row"
                                                             spacing={1}
                                                             sx={{
                                                                 cursor: "pointer",
@@ -1924,13 +1930,13 @@ export const TaskHomeContent = ({
                                     >
                                         <Stack spacing={1.5}>
                                             <Stack
-                                                direction="row"
                                                 alignItems="center"
+                                                direction="row"
                                                 justifyContent="space-between"
                                             >
                                                 <Stack
-                                                    direction="row"
                                                     alignItems="center"
+                                                    direction="row"
                                                     spacing={1}
                                                 >
                                                     <CalendarMonthRoundedIcon
@@ -1964,8 +1970,8 @@ export const TaskHomeContent = ({
                                                     .map((task) => (
                                                         <Stack
                                                             key={task.id}
-                                                            direction="row"
                                                             alignItems="center"
+                                                            direction="row"
                                                             spacing={1}
                                                             sx={{
                                                                 cursor: "pointer",

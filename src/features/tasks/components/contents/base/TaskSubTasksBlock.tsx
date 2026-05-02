@@ -137,7 +137,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
             <Stack
                 direction="row"
                 spacing={0}
-                sx={{ alignItems: "center", justifyContent: "space-between" }}
+                sx={{ alignItems: "center", justifyContent: "space-between", pb: 0.5 }}
             >
                 <SectionHeader isDark={isDark}>{title}</SectionHeader>
                 <IconButton
