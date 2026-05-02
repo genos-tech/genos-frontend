@@ -21,17 +21,11 @@ import {
 
 import { ThemePreference, useThemePreference } from "../../hooks/common/useThemePreference";
 import { NotificationSettingsPanel } from "../../services/notifications/NotificationSettingsPanel";
+import { getServiceShortcutModifierKeys } from "../../utils/platform";
 
 type Props = {
     open: boolean;
     onClose: () => void;
-};
-
-const isMac = (): boolean => {
-    if (typeof navigator === "undefined") return false;
-    const platform = (navigator.platform || "").toLowerCase();
-    if (platform.includes("mac")) return true;
-    return /macintosh|mac os x/i.test(navigator.userAgent || "");
 };
 
 /**
@@ -119,8 +113,7 @@ const AppearanceSection = () => {
 const KeyboardShortcutsSection = () => {
     // Modifier display reflects what `useGlobalServiceShortcut` actually
     // listens to: Ctrl+Cmd on Mac, Ctrl+Alt elsewhere.
-    const mac = useMemo(isMac, []);
-    const modifierKeys = mac ? ["Ctrl", "⌘"] : ["Ctrl", "Alt"];
+    const modifierKeys = useMemo(getServiceShortcutModifierKeys, []);
 
     const rows: Array<{ label: string; combo: string[] }> = [
         { label: "Open Inbox", combo: [...modifierKeys, "I"] },

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import AllInboxRoundedIcon from "@mui/icons-material/AllInboxRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
@@ -30,19 +30,23 @@ import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { InboxManagementState } from "../../hooks/inbox/useInboxManagement";
 import { UserProps } from "../../types/admin";
+import { getServiceShortcutModifierKeys } from "../../utils/platform";
 import { ColorSchemeToggle } from "./colorSchemeToggle";
 import { SettingsModal } from "./SettingsModal";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
-// Navigation item configuration
+// Navigation item configuration. `shortcutKey` mirrors `SERVICE_BY_KEY` in
+// `hooks/common/useGlobalServiceShortcut.ts` — keep them in sync so the
+// tooltip displays the combo the listener actually responds to.
 const NAV_ITEMS = [
     {
         id: 0,
         icon: AllInboxRoundedIcon,
         label: "Inbox",
         path: "/Home/inbox",
+        shortcutKey: "I",
         colorScheme: { dark: "#a78bfa", light: "#7c3aed" },
     },
     {
@@ -50,6 +54,7 @@ const NAV_ITEMS = [
         icon: QuestionAnswerRoundedIcon,
         label: "Chats",
         path: "/Home/chat",
+        shortcutKey: "C",
         colorScheme: { dark: "#a78bfa", light: "#7c3aed" },
     },
     {
@@ -57,6 +62,7 @@ const NAV_ITEMS = [
         icon: AssignmentRoundedIcon,
         label: "Tasks",
         path: "/Home/tasks",
+        shortcutKey: "T",
         colorScheme: { dark: "#a78bfa", light: "#7c3aed" },
     },
     {
@@ -64,6 +70,7 @@ const NAV_ITEMS = [
         icon: NoteAltRoundedIcon,
         label: "Notes",
         path: "/Home/notes",
+        shortcutKey: "N",
         colorScheme: { dark: "#a78bfa", light: "#7c3aed" },
     },
 ];
@@ -89,6 +96,10 @@ export const Sidebar = (props: SidebarProps) => {
     const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
     const [avatarUserId, setAvatarUserId] = useState<string | undefined>(undefined);
     const [openSettings, setOpenSettings] = useState<boolean>(false);
+
+    // Display string for the shortcut modifier. Computed once because
+    // `navigator.platform` doesn't change at runtime.
+    const shortcutModifierKeys = useMemo(getServiceShortcutModifierKeys, []);
 
     const handleLogout = async () => {
         try {
@@ -242,10 +253,37 @@ export const Sidebar = (props: SidebarProps) => {
                         const badgeCount = getBadgeCount(item.id);
                         const color = isDark ? item.colorScheme.dark : item.colorScheme.light;
 
+                        const shortcutCombo = [...shortcutModifierKeys, item.shortcutKey].join(
+                            " + "
+                        );
+
                         return (
                             <ListItem key={item.id}>
                                 <Tooltip
-                                    title={item.label}
+                                    title={
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 1,
+                                            }}
+                                        >
+                                            <Typography level="body-sm" sx={{ color: "inherit" }}>
+                                                {item.label}
+                                            </Typography>
+                                            <Typography
+                                                level="body-xs"
+                                                sx={{
+                                                    fontFamily: "monospace",
+                                                    opacity: 0.7,
+                                                    color: "inherit",
+                                                    whiteSpace: "nowrap",
+                                                }}
+                                            >
+                                                {shortcutCombo}
+                                            </Typography>
+                                        </Box>
+                                    }
                                     placement="right"
                                     size="sm"
                                     variant="soft"

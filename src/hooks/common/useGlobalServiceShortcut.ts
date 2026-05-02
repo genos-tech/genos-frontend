@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { isMac } from "../../utils/platform";
+
 // Ordered list of services. Index === openingService id, so this also drives
 // the ArrowLeft / ArrowRight cycle order. Mirrors the NAV_ITEMS table in
 // `components/layout/sidebar.tsx`.
@@ -17,13 +19,6 @@ const SERVICE_BY_KEY: Record<string, { id: number; path: string }> = {
     c: SERVICES_BY_ID[1],
     t: SERVICES_BY_ID[2],
     n: SERVICES_BY_ID[3],
-};
-
-const isMac = (): boolean => {
-    if (typeof navigator === "undefined") return false;
-    const platform = (navigator.platform || "").toLowerCase();
-    if (platform.includes("mac")) return true;
-    return /macintosh|mac os x/i.test(navigator.userAgent || "");
 };
 
 /**
