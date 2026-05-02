@@ -9,8 +9,11 @@ import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
+import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
+import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import {
     Box,
+    Button,
     Chip,
     Divider,
     Dropdown,
@@ -25,6 +28,7 @@ import {
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { alpha } from "@mui/system";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -1134,6 +1138,23 @@ const MilestonePreviewInner = ({
         if (updated) syncMilestoneToAllTasks(updated);
     };
 
+    // One-click status transition triggered by the header buttons
+    // ("Start Milestone" / "Complete Milestone"). Mirrors the task-side
+    // pattern in `TaskTitleBlock` but routes through the milestone API
+    // (`PATCH /api/v2/milestone/<id>/`) so the authoritative milestone
+    // record is updated; `syncMilestoneToAllTasks` then mirrors the new
+    // status onto the backing task row so the table / sprint board /
+    // dashboard re-render without a refresh.
+    const handleMilestoneStatusChange = async (newStatus: string) => {
+        if (!milestone) return;
+        if (milestone.status === newStatus) return;
+        const updated = await useSM.updateExistingMilestone(
+            { milestoneId: milestone.milestoneId, status: newStatus },
+            milestone.projectId
+        );
+        if (updated) syncMilestoneToAllTasks(updated);
+    };
+
     // Auto-save body every 3s when edited (mirrors TaskPreview's loop).
     useEffect(() => {
         const id = setInterval(async () => {
@@ -1215,14 +1236,91 @@ const MilestonePreviewInner = ({
                     <Typography level="body-xs" sx={{ color: "neutral.500" }}>
                         Milestone
                     </Typography>
+                    {/* Status Transition Buttons — mirror the task-
+                        header buttons (TaskTitleBlock.tsx:135) so the
+                        milestone preview gets the same one-click
+                        Open/Pending → WIP → Closed flow. */}
+                    {(milestone.status === "Open" || milestone.status === "Pending") && (
+                        <Button
+                            size="sm"
+                            variant="soft"
+                            startDecorator={<PlayArrowRoundedIcon sx={{ fontSize: 16 }} />}
+                            onClick={() => handleMilestoneStatusChange("WIP")}
+                            sx={{
+                                fontWeight: 600,
+                                fontSize: "12px",
+                                borderRadius: "8px",
+                                px: 1.5,
+                                py: 0.5,
+                                background: "linear-gradient(135deg, #ff9500 0%, #ff6b00 100%)",
+                                color: "white",
+                                boxShadow: "0 2px 8px rgba(255, 140, 0, 0.25)",
+                                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                "&:hover": {
+                                    background:
+                                        "linear-gradient(135deg, #ffa726 0%, #ff7043 100%)",
+                                    boxShadow: "0 4px 12px rgba(255, 140, 0, 0.35)",
+                                    transform: "translateY(-1px)",
+                                },
+                                "&:active": {
+                                    transform: "translateY(0)",
+                                    boxShadow: "0 2px 6px rgba(255, 140, 0, 0.2)",
+                                },
+                            }}
+                        >
+                            Start Milestone
+                        </Button>
+                    )}
+                    {milestone.status === "WIP" && (
+                        <Button
+                            size="sm"
+                            variant="soft"
+                            startDecorator={<TaskAltRoundedIcon sx={{ fontSize: 16 }} />}
+                            onClick={() => handleMilestoneStatusChange("Closed")}
+                            sx={{
+                                fontWeight: 600,
+                                fontSize: "12px",
+                                borderRadius: "8px",
+                                px: 1.5,
+                                py: 0.5,
+                                background: "linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)",
+                                color: "white",
+                                boxShadow: "0 2px 8px rgba(76, 175, 80, 0.25)",
+                                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                "&:hover": {
+                                    background:
+                                        "linear-gradient(135deg, #66bb6a 0%, #388e3c 100%)",
+                                    boxShadow: "0 4px 12px rgba(76, 175, 80, 0.35)",
+                                    transform: "translateY(-1px)",
+                                },
+                                "&:active": {
+                                    transform: "translateY(0)",
+                                    boxShadow: "0 2px 6px rgba(76, 175, 80, 0.2)",
+                                },
+                            }}
+                        >
+                            Complete Milestone
+                        </Button>
+                    )}
                     <Chip
-                        size="sm"
+                        key={`milestone-status-${milestone.status}`}
+                        size="md"
                         variant="soft"
                         sx={{
-                            color: STATUS_COLOR[milestone.status as string] ?? "#94a3b8",
-                            backgroundColor: `${
-                                STATUS_COLOR[milestone.status as string] ?? "#94a3b8"
-                            }1A`,
+                            borderRadius: "8px",
+                            fontWeight: 600,
+                            fontSize: "0.75rem",
+                            px: 1.5,
+                            backgroundColor: alpha(
+                                STATUS_COLOR[milestone.status as string] ?? "#666",
+                                isDark ? 0.25 : 0.65
+                            ),
+                            color: "#ffffff",
+                            border: "1px solid",
+                            borderColor: alpha(
+                                STATUS_COLOR[milestone.status as string] ?? "#666",
+                                isDark ? 0.3 : 0.25
+                            ),
                         }}
                     >
                         {milestone.status}
