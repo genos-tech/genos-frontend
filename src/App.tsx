@@ -20,6 +20,7 @@ import { useNotifications } from "./hooks/common/useNotifications";
 import { useProjectTaskManagement } from "./hooks/common/useProjectTaskManagement";
 import { useServiceInitialization } from "./hooks/common/useServiceInitialization";
 import { webSocketSync } from "./hooks/common/useSyncManagement";
+import { ThemePreferenceProvider } from "./hooks/common/useThemePreference";
 import { useThreadTaskHandling } from "./hooks/common/useThreadTaskHandling";
 import { useWebSocket } from "./hooks/common/useWebSocket";
 import { useWindowSize } from "./hooks/common/useWindowSize";
@@ -226,137 +227,139 @@ export const App = () => {
     return (
         <CssVarsProvider disableTransitionOnChange>
             <CssBaseline />
-            <NotificationsProvider value={useNotif}>
-                <NotificationToastHost
-                    subscribeToasts={useNotif.subscribeToasts}
-                    onOpenIntent={openIntent}
-                />
-                <Snackbar
-                    anchorOrigin={{ vertical: "top", horizontal: "center" }}
-                    open={showWsDisconnected || showApiDown}
-                    color="danger"
-                    variant="soft"
-                    sx={{ gap: 1 }}
-                >
-                    <Stack spacing={0.5}>
-                        {showWsDisconnected && (
-                            <Typography
-                                level="body-sm"
-                                sx={{
-                                    fontWeight: 500,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 1,
-                                }}
-                            >
-                                <WifiOffRoundedIcon sx={{ fontSize: 16 }} />
-                                Real-time connection lost. Attempting to reconnect...
-                            </Typography>
-                        )}
-                        {showApiDown && (
-                            <Typography
-                                level="body-sm"
-                                sx={{
-                                    fontWeight: 500,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 1,
-                                }}
-                            >
-                                <CloudOffRoundedIcon sx={{ fontSize: 16 }} />
-                                API server is unreachable.
-                            </Typography>
-                        )}
-                    </Stack>
-                </Snackbar>
-                {useUISM.isLoading ? (
-                    <InitialLoad
-                        myself={myself}
-                        setCurrentMainChat={useCM.setCurrentMainChat}
-                        setIsLoading={useUISM.setIsLoading}
+            <ThemePreferenceProvider>
+                <NotificationsProvider value={useNotif}>
+                    <NotificationToastHost
+                        subscribeToasts={useNotif.subscribeToasts}
+                        onOpenIntent={openIntent}
                     />
-                ) : (
-                    <div className="main-container">
-                        <PermissionBanner
-                            permission={useNotif.permission}
-                            masterEnabled={useNotif.preferences.masterEnabled}
-                            requestPermission={useNotif.requestPermission}
+                    <Snackbar
+                        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+                        open={showWsDisconnected || showApiDown}
+                        color="danger"
+                        variant="soft"
+                        sx={{ gap: 1 }}
+                    >
+                        <Stack spacing={0.5}>
+                            {showWsDisconnected && (
+                                <Typography
+                                    level="body-sm"
+                                    sx={{
+                                        fontWeight: 500,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 1,
+                                    }}
+                                >
+                                    <WifiOffRoundedIcon sx={{ fontSize: 16 }} />
+                                    Real-time connection lost. Attempting to reconnect...
+                                </Typography>
+                            )}
+                            {showApiDown && (
+                                <Typography
+                                    level="body-sm"
+                                    sx={{
+                                        fontWeight: 500,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 1,
+                                    }}
+                                >
+                                    <CloudOffRoundedIcon sx={{ fontSize: 16 }} />
+                                    API server is unreachable.
+                                </Typography>
+                            )}
+                        </Stack>
+                    </Snackbar>
+                    {useUISM.isLoading ? (
+                        <InitialLoad
+                            myself={myself}
+                            setCurrentMainChat={useCM.setCurrentMainChat}
+                            setIsLoading={useUISM.setIsLoading}
                         />
-                        <Routes>
-                            <Route
-                                path="inbox/*"
-                                element={
-                                    <InboxHome
-                                        useCM={useCM}
-                                        useIM={useIM}
-                                        myself={myself}
-                                        setMyself={setMyself}
-                                        socket={socketInstance}
-                                        useTEM={useTEM}
-                                        useUISM={useUISM}
-                                    />
-                                }
+                    ) : (
+                        <div className="main-container">
+                            <PermissionBanner
+                                permission={useNotif.permission}
+                                masterEnabled={useNotif.preferences.masterEnabled}
+                                requestPermission={useNotif.requestPermission}
                             />
-                            <Route
-                                path="chat/*"
-                                element={
-                                    <ChatHome
-                                        useCM={useCM}
-                                        useIM={useIM}
-                                        myself={myself}
-                                        useNM={useNM}
-                                        usePM={usePM}
-                                        setMyself={setMyself}
-                                        socket={socketInstance}
-                                        useTEM={useTEM}
-                                        useTM={useTM}
-                                        useSM={useSM}
-                                        useUISM={useUISM}
-                                    />
-                                }
-                            />
-                            <Route
-                                path="tasks/*"
-                                element={
-                                    <TaskHome
-                                        useCM={useCM}
-                                        useIM={useIM}
-                                        myself={myself}
-                                        useNM={useNM}
-                                        usePM={usePM}
-                                        setMyself={setMyself}
-                                        socket={socketInstance}
-                                        useTEM={useTEM}
-                                        useTM={useTM}
-                                        useSM={useSM}
-                                        useUISM={useUISM}
-                                    />
-                                }
-                            />
-                            <Route
-                                path="notes/*"
-                                element={
-                                    <NoteHome
-                                        useCM={useCM}
-                                        useIM={useIM}
-                                        myself={myself}
-                                        useNM={useNM}
-                                        usePM={usePM}
-                                        setMyself={setMyself}
-                                        socket={socketInstance}
-                                        useTEM={useTEM}
-                                        useTM={useTM}
-                                        useSM={useSM}
-                                        useUISM={useUISM}
-                                    />
-                                }
-                            />
-                            {/* Default redirect to inbox */}
-                            <Route path="" element={<Navigate to="inbox" replace />} />
-                        </Routes>
-                    </div>
-                )}
-            </NotificationsProvider>
+                            <Routes>
+                                <Route
+                                    path="inbox/*"
+                                    element={
+                                        <InboxHome
+                                            useCM={useCM}
+                                            useIM={useIM}
+                                            myself={myself}
+                                            setMyself={setMyself}
+                                            socket={socketInstance}
+                                            useTEM={useTEM}
+                                            useUISM={useUISM}
+                                        />
+                                    }
+                                />
+                                <Route
+                                    path="chat/*"
+                                    element={
+                                        <ChatHome
+                                            useCM={useCM}
+                                            useIM={useIM}
+                                            myself={myself}
+                                            useNM={useNM}
+                                            usePM={usePM}
+                                            setMyself={setMyself}
+                                            socket={socketInstance}
+                                            useTEM={useTEM}
+                                            useTM={useTM}
+                                            useSM={useSM}
+                                            useUISM={useUISM}
+                                        />
+                                    }
+                                />
+                                <Route
+                                    path="tasks/*"
+                                    element={
+                                        <TaskHome
+                                            useCM={useCM}
+                                            useIM={useIM}
+                                            myself={myself}
+                                            useNM={useNM}
+                                            usePM={usePM}
+                                            setMyself={setMyself}
+                                            socket={socketInstance}
+                                            useTEM={useTEM}
+                                            useTM={useTM}
+                                            useSM={useSM}
+                                            useUISM={useUISM}
+                                        />
+                                    }
+                                />
+                                <Route
+                                    path="notes/*"
+                                    element={
+                                        <NoteHome
+                                            useCM={useCM}
+                                            useIM={useIM}
+                                            myself={myself}
+                                            useNM={useNM}
+                                            usePM={usePM}
+                                            setMyself={setMyself}
+                                            socket={socketInstance}
+                                            useTEM={useTEM}
+                                            useTM={useTM}
+                                            useSM={useSM}
+                                            useUISM={useUISM}
+                                        />
+                                    }
+                                />
+                                {/* Default redirect to inbox */}
+                                <Route path="" element={<Navigate to="inbox" replace />} />
+                            </Routes>
+                        </div>
+                    )}
+                </NotificationsProvider>
+            </ThemePreferenceProvider>
         </CssVarsProvider>
     );
 };

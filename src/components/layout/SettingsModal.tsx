@@ -18,8 +18,8 @@ import {
     Stack,
     Typography,
 } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 
+import { ThemePreference, useThemePreference } from "../../hooks/common/useThemePreference";
 import { NotificationSettingsPanel } from "../../services/notifications/NotificationSettingsPanel";
 
 type Props = {
@@ -65,7 +65,7 @@ const Kbd = ({ children }: { children: React.ReactNode }) => (
 );
 
 const AppearanceSection = () => {
-    const { mode, setMode } = useColorScheme();
+    const { preference, setPreference } = useThemePreference();
     return (
         <Sheet variant="outlined" sx={{ p: 2, borderRadius: "lg" }}>
             <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
@@ -73,7 +73,8 @@ const AppearanceSection = () => {
                 <Typography level="title-md">Appearance</Typography>
             </Stack>
             <Typography level="body-xs" sx={{ mb: 1.5 }}>
-                Choose how the app looks. "System" follows your OS theme.
+                Choose how the app looks. "System" follows your OS theme and updates automatically
+                when it changes.
             </Typography>
 
             <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
@@ -85,9 +86,9 @@ const AppearanceSection = () => {
                 </Box>
                 <Select
                     size="sm"
-                    value={mode || "system"}
+                    value={preference}
                     onChange={(_e, value) => {
-                        if (value) setMode(value);
+                        if (value) setPreference(value as ThemePreference);
                     }}
                     sx={{ minWidth: 140 }}
                 >
