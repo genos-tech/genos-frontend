@@ -1,5 +1,6 @@
-import AddIcon from "@mui/icons-material/Add";
-import { Box, IconButton } from "@mui/joy";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import WorkspacesRoundedIcon from "@mui/icons-material/WorkspacesRounded";
+import { Box, Button, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { Socket } from "socket.io-client";
@@ -299,39 +300,129 @@ export const TaskHomeLayout = ({
         </>
     );
 
-    const renderNoProjectPanel = () => (
-        <>
-            {renderResizeHandle()}
-            <Panel id={"6"} maxSize={100} minSize={70} order={6}>
-                <Box
-                    sx={{
-                        height: "100%",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        width: "100%",
-                        borderRight: mode === "dark" ? "1px black inset" : "1px lightgrey inset",
-                    }}
-                >
-                    <IconButton
-                        color="neutral"
-                        component="button"
-                        variant="soft"
+    const renderNoProjectPanel = () => {
+        const isDark = mode === "dark";
+        // Sidebar nav items use this purple palette (#a78bfa dark / #7c3aed
+        // light); reuse it so the empty state feels native to the Tasks
+        // service.
+        const accent = isDark ? "#a78bfa" : "#7c3aed";
+
+        return (
+            <>
+                {renderResizeHandle()}
+                <Panel id={"6"} maxSize={100} minSize={70} order={6}>
+                    <Box
                         sx={{
-                            fontSize: "15px",
-                            paddingRight: "10px",
-                        }}
-                        onClick={() => {
-                            usePM.setOpenCreateProject(true);
+                            height: "100%",
+                            width: "100%",
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            p: 4,
+                            borderRight: isDark ? "1px black inset" : "1px lightgrey inset",
+                            background: isDark
+                                ? `radial-gradient(1200px 600px at 50% 0%, ${accent}10 0%, transparent 60%)`
+                                : `radial-gradient(1200px 600px at 50% 0%, ${accent}0d 0%, transparent 60%)`,
                         }}
                     >
-                        <AddIcon />
-                        New Project
-                    </IconButton>
-                </Box>
-            </Panel>
-        </>
-    );
+                        <Stack
+                            spacing={2.5}
+                            alignItems="center"
+                            sx={{
+                                width: "100%",
+                                maxWidth: 460,
+                                textAlign: "center",
+                                p: { xs: 3, sm: 5 },
+                                borderRadius: "xl",
+                                border: "1px solid",
+                                borderColor: isDark
+                                    ? "rgba(255,255,255,0.08)"
+                                    : "rgba(0,0,0,0.06)",
+                                background: isDark
+                                    ? "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)"
+                                    : "linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.6) 100%)",
+                                backdropFilter: "blur(8px)",
+                                boxShadow: isDark
+                                    ? "0 12px 40px rgba(0,0,0,0.35)"
+                                    : "0 12px 40px rgba(124,58,237,0.08)",
+                            }}
+                        >
+                            <Box
+                                sx={{
+                                    position: "relative",
+                                    width: 72,
+                                    height: 72,
+                                    borderRadius: "20px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    background: isDark
+                                        ? `linear-gradient(135deg, ${accent}30 0%, ${accent}15 100%)`
+                                        : `linear-gradient(135deg, ${accent}20 0%, ${accent}10 100%)`,
+                                    border: "1px solid",
+                                    borderColor: isDark ? `${accent}40` : `${accent}30`,
+                                    boxShadow: isDark
+                                        ? `0 8px 24px ${accent}25`
+                                        : `0 8px 24px ${accent}1f`,
+                                }}
+                            >
+                                <WorkspacesRoundedIcon
+                                    sx={{
+                                        fontSize: 32,
+                                        color: accent,
+                                    }}
+                                />
+                            </Box>
+
+                            <Stack spacing={0.75} alignItems="center">
+                                <Typography level="h4" sx={{ fontWeight: 700 }}>
+                                    No project selected
+                                </Typography>
+                                <Typography
+                                    level="body-sm"
+                                    sx={{
+                                        color: isDark
+                                            ? "rgba(255,255,255,0.65)"
+                                            : "rgba(0,0,0,0.6)",
+                                        maxWidth: 360,
+                                    }}
+                                >
+                                    Pick a project from the sidebar to see its tasks, or spin up a
+                                    new one to get your team organized.
+                                </Typography>
+                            </Stack>
+
+                            <Button
+                                size="lg"
+                                startDecorator={<AddRoundedIcon />}
+                                onClick={() => usePM.setOpenCreateProject(true)}
+                                sx={{
+                                    mt: 0.5,
+                                    px: 2.5,
+                                    py: 1.1,
+                                    borderRadius: "12px",
+                                    fontWeight: 600,
+                                    background: `linear-gradient(135deg, ${accent} 0%, ${accent}cc 100%)`,
+                                    boxShadow: `0 8px 20px ${accent}45`,
+                                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                    "&:hover": {
+                                        background: `linear-gradient(135deg, ${accent} 0%, ${accent}dd 100%)`,
+                                        transform: "translateY(-1px)",
+                                        boxShadow: `0 12px 28px ${accent}55`,
+                                    },
+                                    "&:active": {
+                                        transform: "translateY(0)",
+                                    },
+                                }}
+                            >
+                                Create new project
+                            </Button>
+                        </Stack>
+                    </Box>
+                </Panel>
+            </>
+        );
+    };
 
     return (
         <PanelGroup autoSaveId="conditional" direction="horizontal">
