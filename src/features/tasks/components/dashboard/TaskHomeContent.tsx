@@ -251,6 +251,17 @@ export const TaskHomeContent = ({
     // All counts use effectiveTasks so Deleted (and orphans of Deleted parents)
     // are excluded. "Closed in sprint" uses the effective close date so a
     // sub-task counts when its parent was closed during the sprint window.
+    //
+    // `created` / `closed` / `updated` are three INDEPENDENT counts — they
+    // are not subsets of each other. A task created before the sprint and
+    // closed during it lands in `closed` but not `created`, so `closed >
+    // created` is expected whenever there's carryover from prior work.
+    //
+    // For "X / Y closed" to make sense, the denominator must be the sprint
+    // SCOPE — the set of tasks that moved through the sprint window
+    // (created in sprint ∪ closed in sprint, deduped by id). That set is a
+    // proper superset of `closedInSprint`, so the ratio is always well-
+    // defined and ≤ 100%.
     const sprintStats = useMemo(() => {
         const createdInSprint = effectiveTasks.filter((t) => {
             const d = t.createdDate ? new Date(t.createdDate).getTime() : 0;
@@ -265,11 +276,19 @@ export const TaskHomeContent = ({
             const d = t.updatedAt ? new Date(t.updatedAt).getTime() : 0;
             return d >= sprintStart && d <= now;
         });
+        const scopeIds = new Set<string>();
+        for (const t of createdInSprint) {
+            if (t.id != null) scopeIds.add(String(t.id));
+        }
+        for (const t of closedInSprint) {
+            if (t.id != null) scopeIds.add(String(t.id));
+        }
         return {
             created: createdInSprint.length,
             closed: closedInSprint.length,
             updated: updatedInSprint.length,
             net: createdInSprint.length - closedInSprint.length,
+            scope: scopeIds.size,
         };
     }, [effectiveTasks, sprintStart, now]);
 
@@ -552,10 +571,12 @@ export const TaskHomeContent = ({
 
     // Sprint-scoped progress percentage. Used in place of the previous
     // overall-progress bar inside the Sprint Summary card so the sprint
-    // section's numbers don't mix in project-wide data.
+    // section's numbers don't mix in project-wide data. Denominator is
+    // the sprint SCOPE (created ∪ closed in window) so carryover work
+    // counts toward the bar and the value can never exceed 100%.
     const sprintProgressPct =
-        sprintStats.created > 0
-            ? Math.min(100, Math.round((sprintStats.closed / sprintStats.created) * 100))
+        sprintStats.scope > 0
+            ? Math.min(100, Math.round((sprintStats.closed / sprintStats.scope) * 100))
             : 0;
 
     return (
@@ -915,7 +936,7 @@ export const TaskHomeContent = ({
                                             level="body-sm"
                                             sx={{ color: textSecondary, fontWeight: 500 }}
                                         >
-                                            {sprintStats.closed} / {sprintStats.created} closed
+                                            {sprintStats.closed} / {sprintStats.scope} closed
                                         </Typography>
                                     </Stack>
                                     <LinearProgress
