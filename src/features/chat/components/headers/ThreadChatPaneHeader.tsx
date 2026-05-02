@@ -11,6 +11,7 @@ import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { MuteToggleButton } from "../../../../services/notifications/MuteToggleButton";
 import { UserProps } from "../../../../types/admin";
 import { ThreadProps } from "../../../../types/chat";
 import { useChatContext } from "../../context/ChatContext";
@@ -236,6 +237,16 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
 
             {/* Right section: Task info + Actions */}
             <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                {/* Per-chat mute toggle (mutes the parent chat, which also
+                    silences thread replies and any task-comment activity
+                    rooted in the same chat). */}
+                {useCM.currentThreadChat && (
+                    <MuteToggleButton
+                        chatType={useCM.currentThreadChat.chatType}
+                        chatId={useCM.currentThreadChat.chatId}
+                    />
+                )}
+
                 {/* Task ID and Status chips (for PM/task threads) */}
                 {(((useCM.currentThreadChat?.chatType === 3 ||
                     useCM.currentThreadChat?.chatType === 4) &&

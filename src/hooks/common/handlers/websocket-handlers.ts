@@ -2,6 +2,8 @@ import { Socket } from "socket.io-client";
 
 import { addInboxItem } from "../../../features/admin/services/addInboxItem";
 import { addUser } from "../../../features/admin/services/addUser";
+import { NotificationManager } from "../../../services/notifications/notificationManager";
+import { buildIntentFromMessage } from "../../../services/notifications/notificationRouter";
 import { UserProps } from "../../../types/admin";
 import { InboxItemProps } from "../../../types/common";
 import { ChatManagementState } from "../../chats/useChatManagement";
@@ -17,7 +19,8 @@ export const setupWebSocketHandlers = (
     setIsTaskUpdatedBySomeone: (value: boolean) => void,
     setIsTaskCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void,
     funcSetInboxItems: () => void,
-    useCM: ChatManagementState
+    useCM: ChatManagementState,
+    notificationManager?: NotificationManager
 ) => {
     socket.on("connect", () => {
         console.log("WS connected");
@@ -38,6 +41,18 @@ export const setupWebSocketHandlers = (
     });
 
     socket.on("message", async (message) => {
+        // Run the notification router alongside the existing data-sync
+        // dispatch. Failures here must never break sync, hence the
+        // try/catch.
+        if (notificationManager) {
+            try {
+                const intent = buildIntentFromMessage(message, myself);
+                if (intent) notificationManager.notify(intent);
+            } catch (err) {
+                console.warn("[notifications] router error", err);
+            }
+        }
+
         if (message.wsType === "chat") {
             // console.log("chat_message:", message);
             if (message.chatId !== null) {

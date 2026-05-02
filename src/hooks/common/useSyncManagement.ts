@@ -16,6 +16,7 @@ export const webSocketSync = (props: WebSocketSyncProps) => {
         setIsTaskUpdatedBySomeone,
         setIsTaskCommentUpdated,
         useCM,
+        notificationManager,
     } = props;
 
     useEffect(() => {
@@ -33,7 +34,8 @@ export const webSocketSync = (props: WebSocketSyncProps) => {
             setIsTaskUpdatedBySomeone,
             setIsTaskCommentUpdated,
             funcSetInboxItems,
-            useCM
+            useCM,
+            notificationManager
         );
 
         return () => {
@@ -46,5 +48,6 @@ export const webSocketSync = (props: WebSocketSyncProps) => {
         useCM.currentMainChat,
         useCM.currentSubChat,
         useCM.currentThreadChat,
+        notificationManager,
     ]);
 };

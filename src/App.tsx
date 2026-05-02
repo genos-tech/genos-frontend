@@ -7,7 +7,7 @@ import WifiOffRoundedIcon from "@mui/icons-material/WifiOffRounded";
 import { Box, Snackbar, Stack, Typography } from "@mui/joy";
 import CssBaseline from "@mui/joy/CssBaseline";
 import { CssVarsProvider } from "@mui/joy/styles";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 
 import { InitialLoad } from "./components/ui/misc/InitialLoad";
 import { ChatHome } from "./features/chat/chatHome";
@@ -16,6 +16,7 @@ import { NoteHome } from "./features/notes/NoteHome";
 import { TaskHome } from "./features/tasks/taskHome";
 import { useAppInitialization } from "./hooks/common/useAppInitialization";
 import { useGlobalServiceShortcut } from "./hooks/common/useGlobalServiceShortcut";
+import { useNotifications } from "./hooks/common/useNotifications";
 import { useProjectTaskManagement } from "./hooks/common/useProjectTaskManagement";
 import { useServiceInitialization } from "./hooks/common/useServiceInitialization";
 import { webSocketSync } from "./hooks/common/useSyncManagement";
@@ -23,11 +24,16 @@ import { useThreadTaskHandling } from "./hooks/common/useThreadTaskHandling";
 import { useWebSocket } from "./hooks/common/useWebSocket";
 import { useWindowSize } from "./hooks/common/useWindowSize";
 import { registerApiHealthListener, unregisterApiHealthListener } from "./services/api";
+import { NotificationsProvider } from "./services/notifications/NotificationsContext";
+import { NotificationToastHost } from "./services/notifications/NotificationToastHost";
+import { PermissionBanner } from "./services/notifications/PermissionBanner";
+import { NotificationIntent } from "./services/notifications/types";
 
 const API_DOWN_THRESHOLD = 3;
 
 export const App = () => {
     const isTooSmall = useWindowSize();
+    const navigate = useNavigate();
 
     // Initialize app with authentication and basic setup
     const { accessToken, myself, setMyself, useUISM, useTEM } = useAppInitialization();
@@ -102,6 +108,77 @@ export const App = () => {
     // jump directly, or with ArrowLeft/ArrowRight to cycle through services.
     useGlobalServiceShortcut(useUISM.openingService, useUISM.setOpeningService);
 
+    // Click-to-open: jump to the chat / thread / task / inbox that the
+    // notification refers to. Lives here because this is the layer that has
+    // every store, navigator, and helper in scope at the same time.
+    const openIntent = useCallback(
+        (intent: NotificationIntent) => {
+            const src = intent.source;
+
+            // Inbox: no source -> just switch services.
+            if (intent.category === "inbox" || !src) {
+                useUISM.setOpeningService(0);
+                navigate("/Home/inbox");
+                return;
+            }
+
+            // Task / milestone: navigate to the task deep URL when we have
+            // both ids; otherwise fall through to the chat branch.
+            if (src.taskId !== undefined && src.projectId !== undefined) {
+                useUISM.setOpeningService(2);
+                navigate(`/Home/tasks/project/${src.projectId}/task/${src.taskId}`);
+                return;
+            }
+
+            // Chat / thread: orchestrate via the existing helper which loads
+            // the chat and pushes the right deep URL.
+            if (src.chatType !== undefined && src.chatId !== undefined) {
+                const numericChatId = Number(src.chatId);
+                const threadId = src.threadId ?? 0;
+                useCM.moveToSpecificChat(
+                    src.chatType,
+                    numericChatId,
+                    threadId,
+                    false,
+                    threadId !== 0,
+                    useUISM.setOpeningService,
+                    useTM.setCurrentPreviewTaskId,
+                    usePM.setCurrentProject
+                );
+                return;
+            }
+
+            // Defensive fallback: surface the chat service.
+            useUISM.setOpeningService(1);
+            navigate("/Home/chat");
+        },
+        [useCM, useTM, useUISM, usePM, navigate]
+    );
+
+    // Web notifications: hydrates prefs from backend, owns permission state,
+    // and exposes the manager that the websocket router pushes intents to.
+    const useNotif = useNotifications(myself, accessToken, openIntent);
+
+    // Tell the manager which chat / thread / task is currently in view so it
+    // can suppress notifications for that surface.
+    useEffect(() => {
+        const current = useCM.currentThreadChat
+            ? {
+                  chatType: useCM.currentThreadChat.chatType,
+                  chatId: String(useCM.currentThreadChat.chatId),
+                  threadId: useCM.currentThreadChat.threadId,
+              }
+            : useCM.currentMainChat
+              ? {
+                    chatType: useCM.currentMainChat.chatType,
+                    chatId: String(useCM.currentMainChat.chatId),
+                }
+              : useTM.currentPreviewTaskId
+                ? { taskId: useTM.currentPreviewTaskId }
+                : null;
+        useNotif.setActiveSurface(current);
+    }, [useCM.currentMainChat, useCM.currentThreadChat, useTM.currentPreviewTaskId, useNotif]);
+
     // WebSocket synchronization
     webSocketSync({
         useCM: useCM,
@@ -114,6 +191,7 @@ export const App = () => {
         setIsTaskCommentUpdated: useTM.setIsTaskCommentUpdated,
         setIsTaskUpdatedBySomeone: useTM.setIsTaskUpdatedBySomeone,
         socket: socketInstance,
+        notificationManager: useNotif.manager,
     });
 
     if (isTooSmall) {
@@ -148,116 +226,137 @@ export const App = () => {
     return (
         <CssVarsProvider disableTransitionOnChange>
             <CssBaseline />
-            <Snackbar
-                anchorOrigin={{ vertical: "top", horizontal: "center" }}
-                open={showWsDisconnected || showApiDown}
-                color="danger"
-                variant="soft"
-                sx={{ gap: 1 }}
-            >
-                <Stack spacing={0.5}>
-                    {showWsDisconnected && (
-                        <Typography
-                            level="body-sm"
-                            sx={{ fontWeight: 500, display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                            <WifiOffRoundedIcon sx={{ fontSize: 16 }} />
-                            Real-time connection lost. Attempting to reconnect...
-                        </Typography>
-                    )}
-                    {showApiDown && (
-                        <Typography
-                            level="body-sm"
-                            sx={{ fontWeight: 500, display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                            <CloudOffRoundedIcon sx={{ fontSize: 16 }} />
-                            API server is unreachable.
-                        </Typography>
-                    )}
-                </Stack>
-            </Snackbar>
-            {useUISM.isLoading ? (
-                <InitialLoad
-                    myself={myself}
-                    setCurrentMainChat={useCM.setCurrentMainChat}
-                    setIsLoading={useUISM.setIsLoading}
+            <NotificationsProvider value={useNotif}>
+                <NotificationToastHost
+                    subscribeToasts={useNotif.subscribeToasts}
+                    onOpenIntent={openIntent}
                 />
-            ) : (
-                <div className="main-container">
-                    <Routes>
-                        <Route
-                            path="inbox/*"
-                            element={
-                                <InboxHome
-                                    useCM={useCM}
-                                    useIM={useIM}
-                                    myself={myself}
-                                    setMyself={setMyself}
-                                    socket={socketInstance}
-                                    useTEM={useTEM}
-                                    useUISM={useUISM}
-                                />
-                            }
+                <Snackbar
+                    anchorOrigin={{ vertical: "top", horizontal: "center" }}
+                    open={showWsDisconnected || showApiDown}
+                    color="danger"
+                    variant="soft"
+                    sx={{ gap: 1 }}
+                >
+                    <Stack spacing={0.5}>
+                        {showWsDisconnected && (
+                            <Typography
+                                level="body-sm"
+                                sx={{
+                                    fontWeight: 500,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                }}
+                            >
+                                <WifiOffRoundedIcon sx={{ fontSize: 16 }} />
+                                Real-time connection lost. Attempting to reconnect...
+                            </Typography>
+                        )}
+                        {showApiDown && (
+                            <Typography
+                                level="body-sm"
+                                sx={{
+                                    fontWeight: 500,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                }}
+                            >
+                                <CloudOffRoundedIcon sx={{ fontSize: 16 }} />
+                                API server is unreachable.
+                            </Typography>
+                        )}
+                    </Stack>
+                </Snackbar>
+                {useUISM.isLoading ? (
+                    <InitialLoad
+                        myself={myself}
+                        setCurrentMainChat={useCM.setCurrentMainChat}
+                        setIsLoading={useUISM.setIsLoading}
+                    />
+                ) : (
+                    <div className="main-container">
+                        <PermissionBanner
+                            permission={useNotif.permission}
+                            masterEnabled={useNotif.preferences.masterEnabled}
+                            requestPermission={useNotif.requestPermission}
                         />
-                        <Route
-                            path="chat/*"
-                            element={
-                                <ChatHome
-                                    useCM={useCM}
-                                    useIM={useIM}
-                                    myself={myself}
-                                    useNM={useNM}
-                                    usePM={usePM}
-                                    setMyself={setMyself}
-                                    socket={socketInstance}
-                                    useTEM={useTEM}
-                                    useTM={useTM}
-                                    useSM={useSM}
-                                    useUISM={useUISM}
-                                />
-                            }
-                        />
-                        <Route
-                            path="tasks/*"
-                            element={
-                                <TaskHome
-                                    useCM={useCM}
-                                    useIM={useIM}
-                                    myself={myself}
-                                    useNM={useNM}
-                                    usePM={usePM}
-                                    setMyself={setMyself}
-                                    socket={socketInstance}
-                                    useTEM={useTEM}
-                                    useTM={useTM}
-                                    useSM={useSM}
-                                    useUISM={useUISM}
-                                />
-                            }
-                        />
-                        <Route
-                            path="notes/*"
-                            element={
-                                <NoteHome
-                                    useCM={useCM}
-                                    useIM={useIM}
-                                    myself={myself}
-                                    useNM={useNM}
-                                    usePM={usePM}
-                                    setMyself={setMyself}
-                                    socket={socketInstance}
-                                    useTEM={useTEM}
-                                    useTM={useTM}
-                                    useSM={useSM}
-                                    useUISM={useUISM}
-                                />
-                            }
-                        />
-                        {/* Default redirect to inbox */}
-                        <Route path="" element={<Navigate to="inbox" replace />} />
-                    </Routes>
-                </div>
-            )}
+                        <Routes>
+                            <Route
+                                path="inbox/*"
+                                element={
+                                    <InboxHome
+                                        useCM={useCM}
+                                        useIM={useIM}
+                                        myself={myself}
+                                        setMyself={setMyself}
+                                        socket={socketInstance}
+                                        useTEM={useTEM}
+                                        useUISM={useUISM}
+                                    />
+                                }
+                            />
+                            <Route
+                                path="chat/*"
+                                element={
+                                    <ChatHome
+                                        useCM={useCM}
+                                        useIM={useIM}
+                                        myself={myself}
+                                        useNM={useNM}
+                                        usePM={usePM}
+                                        setMyself={setMyself}
+                                        socket={socketInstance}
+                                        useTEM={useTEM}
+                                        useTM={useTM}
+                                        useSM={useSM}
+                                        useUISM={useUISM}
+                                    />
+                                }
+                            />
+                            <Route
+                                path="tasks/*"
+                                element={
+                                    <TaskHome
+                                        useCM={useCM}
+                                        useIM={useIM}
+                                        myself={myself}
+                                        useNM={useNM}
+                                        usePM={usePM}
+                                        setMyself={setMyself}
+                                        socket={socketInstance}
+                                        useTEM={useTEM}
+                                        useTM={useTM}
+                                        useSM={useSM}
+                                        useUISM={useUISM}
+                                    />
+                                }
+                            />
+                            <Route
+                                path="notes/*"
+                                element={
+                                    <NoteHome
+                                        useCM={useCM}
+                                        useIM={useIM}
+                                        myself={myself}
+                                        useNM={useNM}
+                                        usePM={usePM}
+                                        setMyself={setMyself}
+                                        socket={socketInstance}
+                                        useTEM={useTEM}
+                                        useTM={useTM}
+                                        useSM={useSM}
+                                        useUISM={useUISM}
+                                    />
+                                }
+                            />
+                            {/* Default redirect to inbox */}
+                            <Route path="" element={<Navigate to="inbox" replace />} />
+                        </Routes>
+                    </div>
+                )}
+            </NotificationsProvider>
         </CssVarsProvider>
     );
 };

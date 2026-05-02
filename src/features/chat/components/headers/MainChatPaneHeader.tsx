@@ -13,6 +13,7 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { MuteToggleButton } from "../../../../services/notifications/MuteToggleButton";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../../types/chat";
 import { ModalAddMembers } from "../modals/ModalAddMembers";
@@ -177,6 +178,9 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
             </Stack>
 
             <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                {/* Per-chat mute toggle */}
+                <MuteToggleButton chatType={chat.chatType} chatId={chat.chatId} />
+
                 {/* Create Task Button */}
                 {chat.chatType === 3 && (
                     <Tooltip

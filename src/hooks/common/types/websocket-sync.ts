@@ -1,5 +1,6 @@
 import { Socket } from "socket.io-client";
 
+import { NotificationManager } from "../../../services/notifications/notificationManager";
 import { UserProps } from "../../../types/admin";
 import { ProjectProps } from "../../../types/tasks";
 import { ChatManagementState } from "../../chats/useChatManagement";
@@ -15,6 +16,7 @@ export interface WebSocketSyncProps {
     setIsTaskUpdatedBySomeone: (value: boolean) => void;
     setIsTaskCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
     useCM: ChatManagementState;
+    notificationManager?: NotificationManager;
 }
 
 export interface MessageContext {
