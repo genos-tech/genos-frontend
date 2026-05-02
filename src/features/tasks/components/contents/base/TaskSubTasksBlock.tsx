@@ -77,6 +77,17 @@ type TaskSubTasksBlockProps = {
     useCM: ChatManagementState;
     useUISM: UIStateManagementState;
     useTM: TaskManagementState;
+    // When true, child tasks are loaded regardless of whether
+    // `useTM.currentPreviewTaskId` matches `currentTaskContent.id`.
+    // Use this for milestone preview where the milestone state lives
+    // under `currentPreviewMilestoneId` instead.
+    forceLoad?: boolean;
+    // Section title and button label override. Milestones render this
+    // as "Tasks in this milestone" / "Task" while normal tasks keep
+    // the default "Sub Tasks" / "Sub Task".
+    title?: string;
+    buttonLabel?: string;
+    emptyText?: string;
 };
 export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
     const {
@@ -89,6 +100,10 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
         useUISM,
         useCM,
         useTM,
+        forceLoad = false,
+        title = "Sub Tasks",
+        buttonLabel = "Sub Task",
+        emptyText = "No sub tasks yet",
     } = props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
@@ -98,26 +113,24 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
 
     useEffect(() => {
         (async () => {
-            // Get the child tasks if exist
-            if (
-                currentTaskContent.project &&
-                useTM.currentPreviewTaskId === currentTaskContent.id
-            ) {
-                const childTasks: TaskProps[] = await loadSpecificChildTasks(
-                    myself,
-                    currentTaskContent.project.projectId,
-                    currentTaskContent.id,
-                    accessToken
-                );
-
-                if (childTasks.length > 0) {
-                    setChildTasks(childTasks);
-                } else {
-                    setChildTasks([]);
-                }
-            }
+            // Load when either the row is the active task preview, or
+            // the parent explicitly opted in via `forceLoad` (milestone
+            // preview, where `currentPreviewTaskId` is intentionally
+            // -1).
+            const shouldLoad =
+                currentTaskContent.project != null &&
+                currentTaskContent.id != null &&
+                (forceLoad || useTM.currentPreviewTaskId === currentTaskContent.id);
+            if (!shouldLoad) return;
+            const loaded: TaskProps[] = await loadSpecificChildTasks(
+                myself,
+                currentTaskContent.project!.projectId,
+                currentTaskContent.id!,
+                accessToken
+            );
+            setChildTasks(loaded?.length ? loaded : []);
         })();
-    }, [currentTaskContent]);
+    }, [currentTaskContent, forceLoad]);
 
     return (
         <>
@@ -126,7 +139,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                 spacing={0}
                 sx={{ alignItems: "center", justifyContent: "space-between" }}
             >
-                <SectionHeader isDark={isDark}>Sub Tasks</SectionHeader>
+                <SectionHeader isDark={isDark}>{title}</SectionHeader>
                 <IconButton
                     size="sm"
                     sx={{
@@ -155,10 +168,22 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                             currentTaskContent.id !== undefined &&
                             currentTaskContent.rootTaskId != null
                         ) {
+                            // When the parent is a milestone (or a task
+                            // already inside a milestone chain), inherit
+                            // its milestoneId so the child task lands in
+                            // the same milestone context. The CreateTaskForm
+                            // uses this to hide the Milestone toggle and
+                            // pre-select the milestone in the picker.
+                            const inheritedMilestoneId: number | null =
+                                (currentTaskContent as any).isMilestone === true
+                                    ? ((currentTaskContent as any).milestoneId ?? null)
+                                    : ((currentTaskContent as any).milestoneId ?? null);
                             useTM.setIsCreatingTask({
                                 flag: true,
                                 parentTaskId: currentTaskContent.id,
                                 rootTaskId: currentTaskContent.rootTaskId,
+                                creationKind: "task",
+                                milestoneId: inheritedMilestoneId,
                             });
 
                             // Close task-home when creating a sub task.
@@ -169,7 +194,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                     }}
                 >
                     <AddIcon sx={{ fontSize: "18px" }} />
-                    Sub Task
+                    {buttonLabel}
                 </IconButton>
             </Stack>
 
@@ -310,7 +335,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
 
             {childTasks.length === 0 && (
                 <Typography level="body-sm" sx={{ mb: 2, textAlign: "center" }}>
-                    No sub tasks yet
+                    {emptyText}
                 </Typography>
             )}
         </>

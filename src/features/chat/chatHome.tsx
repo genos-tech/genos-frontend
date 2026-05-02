@@ -24,6 +24,7 @@ import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { InboxManagementState } from "../../hooks/inbox/useInboxManagement";
 import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
+import { SprintMilestoneManagementState } from "../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { usePanelSizes } from "../../hooks/usePanelSizes";
 import { useTodos } from "../../hooks/useTodos";
@@ -43,11 +44,27 @@ type ChatHomeProps = {
     useNM: NoteManagementState;
     usePM: ProjectManagementState;
     useTM: TaskManagementState;
+    // Required so the chat-side TaskPreview can reroute to
+    // MilestonePreviewInner when the opened task is a milestone backing
+    // row (e.g. the thread chat header's "Open Task" button on a
+    // milestone-tied thread).
+    useSM: SprintMilestoneManagementState;
 };
 
 export const ChatHome = (props: ChatHomeProps) => {
-    const { useTEM, socket, myself, setMyself, useUISM, useIM, useCM, useNM, usePM, useTM } =
-        props;
+    const {
+        useTEM,
+        socket,
+        myself,
+        setMyself,
+        useUISM,
+        useIM,
+        useCM,
+        useNM,
+        usePM,
+        useTM,
+        useSM,
+    } = props;
 
     // Common
     const { mode } = useColorScheme();
@@ -294,6 +311,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 socket={socket}
                                 useTEM={useTEM}
                                 useTM={useTM}
+                                useSM={useSM}
                                 useUISM={useUISM}
                             />
                         </>

@@ -12,10 +12,12 @@ import { ChatManagementState } from "../../../../../hooks/chats/useChatManagemen
 import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
+import { SprintMilestoneManagementState } from "../../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../../types/admin";
 import { TagListProps, TaskProps } from "../../../../../types/tasks";
 import { loadSpecificTask } from "../../../services/loadSpecificTask";
+import { SprintMilestonePicker } from "../../../sprint-milestone/components/SprintMilestonePicker";
 import { ACProjectTags } from "../../autocompletes/ACProjectTags";
 import { ACTaskEffortLevel } from "../../autocompletes/ACTaskEffortLevel";
 import { ACTaskPriority } from "../../autocompletes/ACTaskPriority";
@@ -67,6 +69,17 @@ type TaskMainBlockProps = {
     setTaskStatusUpdated?: (value: boolean) => void;
     useTM: TaskManagementState;
     usePM: ProjectManagementState;
+    useSM?: SprintMilestoneManagementState;
+    // When true, this block is rendering a milestone (preview or
+    // create). The sprint picker takes over (a milestone _picks_ a
+    // sprint) and the milestone picker is hidden. Picking a sprint
+    // also propagates the sprint end date onto the due-date field so
+    // milestone deadlines stay aligned with the sprint window.
+    //
+    // When false (a regular task), only the milestone picker is shown;
+    // the sprint is implicit because a task always inherits the sprint
+    // from its parent milestone.
+    isMilestone?: boolean;
 };
 
 export const TaskMainBlock = (props: TaskMainBlockProps) => {
@@ -96,6 +109,8 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
         useTM,
         setTaskStatusUpdated,
         usePM,
+        useSM,
+        isMilestone,
     } = props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
@@ -142,7 +157,14 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                 {/* Assignee */}
                 <ListItem sx={{ display: "flex", alignItems: "center" }}>
                     <FieldLabel isDark={isDark}>Assignee</FieldLabel>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, width: "40%" }}>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                            width: "40%",
+                        }}
+                    >
                         <AvatarWithStatus
                             avatarUser={useTEM.teamMemberProfiles[assignee.userId]}
                             useCM={useCM}
@@ -301,6 +323,59 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         </ListItem>
                     </Grid>
                 </Grid>
+
+                {/* Sprint / Milestone Row.
+                    - Milestones pick a Sprint (and inherit the sprint
+                      end date as their due date).
+                    - Tasks pick a Milestone (and the milestone is the
+                      source of truth for the sprint linkage). */}
+                {useSM && (
+                    <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
+                        <FieldLabel isDark={isDark}>
+                            {isMilestone ? "Sprint" : "Milestone"}
+                        </FieldLabel>
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <SprintMilestonePicker
+                                projectId={taskContent?.project?.projectId}
+                                useSM={useSM}
+                                sprintId={(taskContent as any)?.sprintId ?? null}
+                                milestoneId={(taskContent as any)?.milestoneId ?? null}
+                                showSprint={isMilestone === true}
+                                showMilestone={isMilestone !== true}
+                                onChangeSprint={(sid) => {
+                                    // For milestones, syncing the
+                                    // sprint also pushes its end date
+                                    // onto the due-date field so the
+                                    // two stay aligned without manual
+                                    // bookkeeping.
+                                    let nextDueDate = taskContent.dueDate;
+                                    if (isMilestone && sid != null) {
+                                        const projectId = taskContent?.project?.projectId;
+                                        const sprint = projectId
+                                            ? (useSM.projectSprints[projectId] ?? []).find(
+                                                  (s) => s.sprintId === sid
+                                              )
+                                            : undefined;
+                                        if (sprint) nextDueDate = sprint.endDate;
+                                    }
+                                    setTaskContent({
+                                        ...(taskContent as any),
+                                        sprintId: sid,
+                                        dueDate: nextDueDate,
+                                    } as TaskProps);
+                                    setTaskUpdated?.(true);
+                                }}
+                                onChangeMilestone={(mid) => {
+                                    setTaskContent({
+                                        ...(taskContent as any),
+                                        milestoneId: mid,
+                                    } as TaskProps);
+                                    setTaskUpdated?.(true);
+                                }}
+                            />
+                        </Box>
+                    </ListItem>
+                )}
 
                 {/* Priority and Effort Level Row */}
                 <Grid spacing={1} container>

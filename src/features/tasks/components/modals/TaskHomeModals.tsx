@@ -2,6 +2,7 @@ import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ModalCreateProject } from "./ModalCreateProject";
@@ -14,6 +15,7 @@ interface TaskHomeModalsProps {
     usePM: ProjectManagementState;
     useTM: TaskManagementState;
     useCM: ChatManagementState;
+    useSM: SprintMilestoneManagementState;
     socket: Socket | null;
     openJoinProject: {
         flag: boolean;
@@ -46,6 +48,7 @@ export const TaskHomeModals = ({
     usePM,
     useTM,
     useCM,
+    useSM,
     socket,
     openJoinProject,
     setOpenJoinProject,

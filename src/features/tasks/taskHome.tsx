@@ -9,8 +9,19 @@ import { TaskHomeProps } from "./types/TaskHomeTypes";
 import { Sidebar } from "../../components/layout/sidebar";
 
 export const TaskHome = (props: TaskHomeProps) => {
-    const { useTEM, socket, myself, setMyself, useUISM, useIM, useCM, useNM, usePM, useTM } =
-        props;
+    const {
+        useTEM,
+        socket,
+        myself,
+        setMyself,
+        useUISM,
+        useIM,
+        useCM,
+        useNM,
+        usePM,
+        useTM,
+        useSM,
+    } = props;
 
     // URL-based routing for tasks
     useTaskRouting({ usePM, useTM });
@@ -72,6 +83,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                 socket={socket}
                 useTEM={useTEM}
                 useTM={useTM}
+                useSM={useSM}
                 useUISM={useUISM}
                 onCloseTaskHome={handleCloseTaskHome}
                 onCreateProject={handleCreateProject}
@@ -90,6 +102,7 @@ export const TaskHome = (props: TaskHomeProps) => {
                 setOpenJoinProject={setOpenJoinProject}
                 socket={socket}
                 useTM={useTM}
+                useSM={useSM}
             />
 
             {/* Hover Animation with CSS */}

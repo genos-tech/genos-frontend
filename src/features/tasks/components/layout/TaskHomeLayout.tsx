@@ -9,6 +9,7 @@ import { ProjectManagementState } from "../../../../hooks/common/useProjectManag
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { TaskNoteMain } from "../../../notes/task-notes/components/TaskNoteMain";
@@ -26,6 +27,7 @@ interface TaskHomeLayoutProps {
     usePM: ProjectManagementState;
     useTM: TaskManagementState;
     useNM: NoteManagementState;
+    useSM: SprintMilestoneManagementState;
 
     // Props
     myself: UserProps;
@@ -53,6 +55,7 @@ export const TaskHomeLayout = ({
     usePM,
     useTM,
     useNM,
+    useSM,
     myself,
     setMyself,
     useCM,
@@ -105,6 +108,7 @@ export const TaskHomeLayout = ({
                     useTM={useTM}
                     usePM={usePM}
                     useTEM={useTEM}
+                    useSM={useSM}
                     myself={myself}
                     setMyself={setMyself}
                     useCM={useCM}
@@ -158,6 +162,7 @@ export const TaskHomeLayout = ({
                     />
                     <SprintBoard
                         usePM={usePM}
+                        useSM={useSM}
                         myself={myself}
                         setTeamMembers={useTEM.setTeamMembers}
                         teamMemberProfiles={useTEM.teamMemberProfiles}
@@ -201,6 +206,7 @@ export const TaskHomeLayout = ({
                         socket={socket}
                         useTEM={useTEM}
                         useTM={useTM}
+                        useSM={useSM}
                         useUISM={useUISM}
                         useNM={useNM}
                     />
@@ -239,6 +245,7 @@ export const TaskHomeLayout = ({
                         socket={socket}
                         useTEM={useTEM}
                         useTM={useTM}
+                        useSM={useSM}
                         useUISM={useUISM}
                     />
                 </Box>
@@ -339,9 +346,15 @@ export const TaskHomeLayout = ({
                 >
                     <TaskSidebar
                         myself={myself}
+                        setMyself={setMyself}
                         usePM={usePM}
                         setOpenJoinProject={setOpenJoinProject}
                         useTM={useTM}
+                        useSM={useSM}
+                        useTEM={useTEM}
+                        useCM={useCM}
+                        useUISM={useUISM}
+                        socket={socket}
                     />
                 </Box>
             </Panel>
@@ -360,7 +373,7 @@ export const TaskHomeLayout = ({
                     )}
 
                     {useTM.isTaskPreviewVisible &&
-                        useTM.currentPreviewTask &&
+                        (useTM.currentPreviewTask || useTM.currentPreviewKind === "milestone") &&
                         renderTaskPreviewPanel()}
                     {useTM.isCreatingTask.flag && renderCreateTaskPanel()}
                     {useNM.isTaskNoteVisible &&

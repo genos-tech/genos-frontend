@@ -72,7 +72,9 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
     const styles = isDark ? HEADER_STYLES.dark : HEADER_STYLES.light;
     const { currentThreadTaskId } = useChatContext();
 
-    const isYou: boolean = myself.userId === useCM.currentThreadChat?.dmPartnerUser.userId && useCM.currentThreadChat?.chatType === 1;
+    const isYou: boolean =
+        myself.userId === useCM.currentThreadChat?.dmPartnerUser.userId &&
+        useCM.currentThreadChat?.chatType === 1;
 
     // Action button style
     const actionButtonStyle = {
@@ -286,33 +288,34 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                 )}
 
                 {/* Create Task Button (for threads without a task, excluding PM) */}
-                {useCM.currentThreadChat?.chatType !== 3 &&
-                    currentThreadTaskId === -1 && (
-                        <Tooltip
+                {useCM.currentThreadChat?.chatType !== 3 && currentThreadTaskId === -1 && (
+                    <Tooltip
+                        size="sm"
+                        title="Create a New Task"
+                        variant="soft"
+                        sx={{ borderRadius: "8px" }}
+                    >
+                        <IconButton
                             size="sm"
-                            title="Create a New Task"
-                            variant="soft"
-                            sx={{ borderRadius: "8px" }}
+                            variant="plain"
+                            sx={primaryButtonStyle}
+                            onClick={() => {
+                                useCM.setIsMainChatVisible(true);
+                                useCM.setIsThreadVisible(true);
+                                useTM.setIsTaskPreviewVisible(false);
+                                useTM.setIsCreatingTask({
+                                    flag: true,
+                                    parentTaskId: null,
+                                    rootTaskId: null,
+                                    creationKind: "task",
+                                    milestoneId: null,
+                                });
+                            }}
                         >
-                            <IconButton
-                                size="sm"
-                                variant="plain"
-                                sx={primaryButtonStyle}
-                                onClick={() => {
-                                    useCM.setIsMainChatVisible(true);
-                                    useCM.setIsThreadVisible(true);
-                                    useTM.setIsTaskPreviewVisible(false);
-                                    useTM.setIsCreatingTask({
-                                        flag: true,
-                                        parentTaskId: null,
-                                        rootTaskId: null,
-                                    });
-                                }}
-                            >
-                                <AddTaskRoundedIcon sx={{ fontSize: 18, color: "#fff" }} />
-                            </IconButton>
-                        </Tooltip>
-                    )}
+                            <AddTaskRoundedIcon sx={{ fontSize: 18, color: "#fff" }} />
+                        </IconButton>
+                    </Tooltip>
+                )}
 
                 {/* Open Task Button (only when a task exists) */}
                 {currentThreadTaskId !== -1 && (
@@ -335,6 +338,8 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                     flag: false,
                                     parentTaskId: null,
                                     rootTaskId: null,
+                                    creationKind: "task",
+                                    milestoneId: null,
                                 });
                             }}
                         >
@@ -365,15 +370,21 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                             const matchedChat = useCM.allChats.find(
                                 (c) => c.chatId === chatId && c.chatType === chatType
                             );
-                            let chatName = matchedChat?.chatName
-                                || useCM.currentMainChat?.chatName
-                                || useCM.currentThreadChat?.chatName;
-                            if (chatType === 4 && matchedChat?.mdmMembers && matchedChat.mdmMembers.length > 0) {
+                            let chatName =
+                                matchedChat?.chatName ||
+                                useCM.currentMainChat?.chatName ||
+                                useCM.currentThreadChat?.chatName;
+                            if (
+                                chatType === 4 &&
+                                matchedChat?.mdmMembers &&
+                                matchedChat.mdmMembers.length > 0
+                            ) {
                                 const MAX_DISPLAY = 3;
                                 const names = matchedChat.mdmMembers.map((m) => m.userName);
-                                chatName = names.length <= MAX_DISPLAY
-                                    ? names.join(", ")
-                                    : `${names.slice(0, MAX_DISPLAY).join(", ")} +${names.length - MAX_DISPLAY}`;
+                                chatName =
+                                    names.length <= MAX_DISPLAY
+                                        ? names.join(", ")
+                                        : `${names.slice(0, MAX_DISPLAY).join(", ")} +${names.length - MAX_DISPLAY}`;
                             }
                             useNM.handleCreateNewChatNoteIfNotExist(
                                 chatType as number,

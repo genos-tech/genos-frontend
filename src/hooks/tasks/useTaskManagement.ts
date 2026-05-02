@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
 import { popSpecificProjectTasks } from "../../features/chat/services/popSpecificProjectTasks";
 import { loadTaskMeta } from "../../features/notes/task-notes/services/loadTaskMeta";
@@ -31,11 +31,19 @@ export interface TaskManagementState {
         flag: boolean;
         parentTaskId: number | null;
         rootTaskId: number | null;
+        creationKind: "task" | "milestone";
+        // When set, the new task is being created inside a milestone:
+        // the create form pre-selects this milestone and hides the
+        // "Create as Milestone" toggle (milestones can't have child
+        // milestones).
+        milestoneId: number | null;
     };
     setIsCreatingTask: (creating: {
         flag: boolean;
         parentTaskId: number | null;
         rootTaskId: number | null;
+        creationKind: "task" | "milestone";
+        milestoneId: number | null;
     }) => void;
 
     // Project state
@@ -47,6 +55,24 @@ export interface TaskManagementState {
     setCurrentPreviewTaskId: (id: number) => void;
     currentPreviewTask: TaskProps | undefined;
     setCurrentPreviewTask: (task: TaskProps | undefined) => void;
+    // Whether the right-hand preview pane is showing a task or a
+    // milestone. When `milestone`, `currentPreviewMilestoneId` carries
+    // which milestone to render and `currentPreviewTask*` are unused.
+    currentPreviewKind: "task" | "milestone";
+    setCurrentPreviewKind: (kind: "task" | "milestone") => void;
+    currentPreviewMilestoneId: number;
+    setCurrentPreviewMilestoneId: (id: number) => void;
+
+    // Filter the task table to a single milestone (its backing task +
+    // children). `null` means no milestone-scoped filter.
+    tableMilestoneFilterId: number | null;
+    setTableMilestoneFilterId: (id: number | null) => void;
+
+    // Reset the task / milestone preview pane (closes the pane and
+    // clears `currentPreview*` ids). Use this on project changes so the
+    // right-hand pane doesn't hold a stale milestone/task from the
+    // previous project.
+    closeTaskPreview: () => void;
 
     // Task update state
     isTaskCommentUpdated: { isUpdate: boolean; scrollToBottom: boolean };
@@ -72,7 +98,10 @@ export interface TaskManagementState {
 
     // Task lists
     allTasks: TaskTableProps[];
-    setAllTasks: (tasks: TaskTableProps[]) => void;
+    // Exposed as a full SetStateAction so callers (e.g. the milestone
+    // preview's persistFromTaskContent) can patch a single row by id
+    // without a full reload.
+    setAllTasks: Dispatch<SetStateAction<TaskTableProps[]>>;
 
     // Task list loading state (true while we are actively fetching tasks for the
     // current project). Used by the table UI to show a "waiting to load tasks"
@@ -140,15 +169,50 @@ export const useTaskManagement = (
         flag: boolean;
         parentTaskId: number | null;
         rootTaskId: number | null;
+        creationKind: "task" | "milestone";
+        milestoneId: number | null;
     }>({
         flag: false,
         parentTaskId: null,
         rootTaskId: null,
+        creationKind: "task",
+        milestoneId: null,
     });
 
     // Current task state
-    const [currentPreviewTaskId, setCurrentPreviewTaskId] = useState<number>(-1);
+    const [currentPreviewTaskId, _setCurrentPreviewTaskId] = useState<number>(-1);
     const [currentPreviewTask, setCurrentPreviewTask] = useState<TaskProps | undefined>(undefined);
+    const [currentPreviewKind, setCurrentPreviewKind] = useState<"task" | "milestone">("task");
+    const [currentPreviewMilestoneId, _setCurrentPreviewMilestoneId] = useState<number>(-1);
+    const [tableMilestoneFilterId, setTableMilestoneFilterId] = useState<number | null>(null);
+
+    // The preview pane shows either a task or a milestone, never both.
+    // Picking one resets the other so old state can't bleed through and
+    // freeze the pane on a stale entity (was the root cause of the
+    // "stuck on milestone, can't open another task" bug).
+    const setCurrentPreviewTaskId = (id: number) => {
+        _setCurrentPreviewTaskId(id);
+        if (id !== -1) {
+            setCurrentPreviewKind("task");
+            _setCurrentPreviewMilestoneId(-1);
+        }
+    };
+    const setCurrentPreviewMilestoneId = (id: number) => {
+        _setCurrentPreviewMilestoneId(id);
+        if (id !== -1) {
+            setCurrentPreviewKind("milestone");
+            _setCurrentPreviewTaskId(-1);
+            setCurrentPreviewTask(undefined);
+        }
+    };
+
+    const closeTaskPreview = () => {
+        _setCurrentPreviewTaskId(-1);
+        _setCurrentPreviewMilestoneId(-1);
+        setCurrentPreviewKind("task");
+        setCurrentPreviewTask(undefined);
+        setIsTaskPreviewVisible(false);
+    };
 
     // Task update state
     const [isTaskCommentUpdated, setIsTaskCommentUpdated] = useState({
@@ -245,7 +309,10 @@ export const useTaskManagement = (
 
             // setIsTaskPreviewVisible(true);
 
-            // Add a new ongoing task
+            // Add a new ongoing task. Include milestone-related fields so
+            // a freshly-appended row (e.g. just-created task or an update
+            // pushed by a teammate) doesn't bypass TaskFilterMenu's
+            // milestone-scope filter or the chip's title lookup.
             if (isNewTaskCreated === true || isTaskUpdatedBySomeone === true) {
                 setAllTasks([
                     ...allTasks,
@@ -263,12 +330,18 @@ export const useTaskManagement = (
                         assigneeEmail: loadedTask[0].assignee.userEmail || null,
                         assigneeName: loadedTask[0].assignee.userName || null,
                         assigneeImgPath: loadedTask[0].assignee.avatarImgPath || null,
-                        parentTaskId: String(loadedTask[0].parentTaskId) || null,
+                        parentTaskId: loadedTask[0].parentTaskId
+                            ? String(loadedTask[0].parentTaskId)
+                            : null,
+                        rootTaskId: loadedTask[0].rootTaskId ?? null,
                         threadId: loadedTask[0].threadId || null,
                         tags: loadedTask[0].tags || [],
                         concatTags: loadedTask[0].concatTags || "//",
                         teamId: myself.teamId || null,
                         projectId: loadedTask[0].project?.projectId || null,
+                        isMilestone: loadedTask[0].isMilestone ?? false,
+                        milestoneId: loadedTask[0].milestoneId ?? null,
+                        sprintId: loadedTask[0].sprintId ?? null,
                     },
                 ]);
             }
@@ -289,6 +362,8 @@ export const useTaskManagement = (
             flag: true,
             parentTaskId: null,
             rootTaskId: null,
+            creationKind: "task",
+            milestoneId: null,
         });
 
         if (isTaskPreviewVisible === true) {
@@ -322,35 +397,60 @@ export const useTaskManagement = (
     }, [taskMeta]);
 
     useEffect(() => {
-        // Update an ongoing task
+        // Update an ongoing task. We spread the existing row first so
+        // milestone-only fields (`isMilestone`, `milestoneId`, `sprintId`)
+        // — which `currentPreviewTask` doesn't always carry — survive the
+        // patch. Without this, clicking a milestone backing row would
+        // strip those fields and break TaskFilterMenu's milestone-scope
+        // filter (the chip falls back to "Milestone: #<id>" and the row
+        // disappears from a scoped SprintBoard).
         if (isTaskUpdated && currentPreviewTask) {
             setAllTasks((prevTasks) =>
                 prevTasks.map((task) =>
                     task.id === String(currentPreviewTask.id)
                         ? {
-                              id: String(currentPreviewTask.id) || null,
-                              title: currentPreviewTask.title || null,
-                              priority: currentPreviewTask.priority.priority || null,
-                              effortLevel: currentPreviewTask.effortLevel.level || null,
-                              createdDate: currentPreviewTask.createdDate || getLocalCurrentDate(),
+                              ...task,
+                              id: String(currentPreviewTask.id) || task.id,
+                              title: currentPreviewTask.title || task.title,
+                              priority: currentPreviewTask.priority.priority || task.priority,
+                              effortLevel:
+                                  currentPreviewTask.effortLevel.level || task.effortLevel,
+                              createdDate:
+                                  currentPreviewTask.createdDate ||
+                                  task.createdDate ||
+                                  getLocalCurrentDate(),
                               updatedAt:
                                   currentPreviewTask.updatedAt || getLocalCurrentTimestamp(),
-                              dueDate: currentPreviewTask.dueDate || null,
-                              daysLeft: currentPreviewTask.daysLeft || null,
-                              status: currentPreviewTask.status.status || null,
-                              assigneeId: currentPreviewTask.assignee.userId || null,
-                              assigneeEmail: currentPreviewTask.assignee.userEmail || null,
-                              assigneeName: currentPreviewTask.assignee.userName || null,
-                              assigneeImgPath: currentPreviewTask.assignee.avatarImgPath || null,
+                              dueDate: currentPreviewTask.dueDate ?? task.dueDate,
+                              daysLeft: currentPreviewTask.daysLeft ?? task.daysLeft,
+                              status: currentPreviewTask.status.status || task.status,
+                              assigneeId: currentPreviewTask.assignee.userId ?? task.assigneeId,
+                              assigneeEmail:
+                                  currentPreviewTask.assignee.userEmail ?? task.assigneeEmail,
+                              assigneeName:
+                                  currentPreviewTask.assignee.userName ?? task.assigneeName,
+                              assigneeImgPath:
+                                  currentPreviewTask.assignee.avatarImgPath ??
+                                  task.assigneeImgPath,
                               parentTaskId: currentPreviewTask.parentTaskId
                                   ? String(currentPreviewTask.parentTaskId)
                                   : null,
-                              rootTaskId: currentPreviewTask.rootTaskId,
-                              threadId: currentPreviewTask.threadId || null,
-                              tags: currentPreviewTask.tags || [],
-                              concatTags: currentPreviewTask.concatTags || "//",
-                              teamId: myself.teamId || null,
-                              projectId: currentPreviewTask.project?.projectId || null,
+                              rootTaskId: currentPreviewTask.rootTaskId ?? task.rootTaskId,
+                              threadId: currentPreviewTask.threadId ?? task.threadId,
+                              tags: currentPreviewTask.tags || task.tags,
+                              concatTags: currentPreviewTask.concatTags || task.concatTags,
+                              teamId: myself.teamId || task.teamId,
+                              projectId: currentPreviewTask.project?.projectId ?? task.projectId,
+                              // Carry milestone metadata through. Prefer the
+                              // value from `currentPreviewTask` so a task->
+                              // milestone promotion still propagates, but
+                              // fall back to the existing row when the
+                              // preview payload doesn't include it.
+                              isMilestone:
+                                  currentPreviewTask.isMilestone ?? task.isMilestone ?? false,
+                              milestoneId:
+                                  currentPreviewTask.milestoneId ?? task.milestoneId ?? null,
+                              sprintId: currentPreviewTask.sprintId ?? task.sprintId ?? null,
                           }
                         : task
                 )
@@ -384,6 +484,13 @@ export const useTaskManagement = (
         setCurrentPreviewTaskId,
         currentPreviewTask,
         setCurrentPreviewTask,
+        currentPreviewKind,
+        setCurrentPreviewKind,
+        currentPreviewMilestoneId,
+        setCurrentPreviewMilestoneId,
+        tableMilestoneFilterId,
+        setTableMilestoneFilterId,
+        closeTaskPreview,
 
         // Task update state
         isTaskCommentUpdated,

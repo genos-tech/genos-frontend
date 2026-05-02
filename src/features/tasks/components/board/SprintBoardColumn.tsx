@@ -67,8 +67,13 @@ type SprintBoardColumnProps = {
     tasks: TaskTableProps[];
     myself: UserProps;
     teamMemberProfiles: Record<string, UserProps>;
-    onTaskClick?: (taskId: string) => void;
+    onTaskClick?: (task: TaskTableProps) => void;
+    // Selection state passed in from the parent so milestone backing
+    // rows can light up against `currentPreviewMilestoneId` while
+    // regular rows light up against `currentPreviewTaskId`.
     selectedTaskId?: number;
+    selectedMilestoneId?: number | null;
+    isMilestonePreviewActive?: boolean;
 };
 
 export const SprintBoardColumn = ({
@@ -78,6 +83,8 @@ export const SprintBoardColumn = ({
     teamMemberProfiles,
     onTaskClick,
     selectedTaskId,
+    selectedMilestoneId,
+    isMilestonePreviewActive,
 }: SprintBoardColumnProps) => {
     const { mode: colorMode } = useColorScheme();
     const mode: "light" | "dark" | undefined =
@@ -165,17 +172,30 @@ export const SprintBoardColumn = ({
                                 </Typography>
                             </Box>
                         ) : (
-                            tasks.map((task, index) => (
-                                <SprintBoardCard
-                                    key={task.id}
-                                    task={task}
-                                    index={index}
-                                    myself={myself}
-                                    teamMemberProfiles={teamMemberProfiles}
-                                    onTaskClick={onTaskClick}
-                                    isSelected={selectedTaskId === Number(task.id)}
-                                />
-                            ))
+                            tasks.map((task, index) => {
+                                // For a milestone backing row, the
+                                // matching preview is keyed off the
+                                // milestone id, not the backing task's
+                                // id, since the click handler routes
+                                // through `setCurrentPreviewMilestoneId`.
+                                const isMilestoneRow = task.isMilestone === true;
+                                const isSelected = isMilestoneRow
+                                    ? !!isMilestonePreviewActive &&
+                                      selectedMilestoneId != null &&
+                                      task.milestoneId === selectedMilestoneId
+                                    : selectedTaskId === Number(task.id);
+                                return (
+                                    <SprintBoardCard
+                                        key={task.id}
+                                        task={task}
+                                        index={index}
+                                        myself={myself}
+                                        teamMemberProfiles={teamMemberProfiles}
+                                        onTaskClick={onTaskClick}
+                                        isSelected={isSelected}
+                                    />
+                                );
+                            })
                         )}
                         {provided.placeholder}
                     </div>

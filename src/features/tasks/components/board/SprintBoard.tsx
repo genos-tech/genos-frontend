@@ -6,6 +6,7 @@ import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
@@ -69,12 +70,13 @@ type SprintBoardProps = {
     teamMemberProfiles: Record<string, UserProps>;
     myself: UserProps;
     usePM: ProjectManagementState;
+    useSM: SprintMilestoneManagementState;
     useTM: TaskManagementState;
     socket?: Socket | null;
 };
 
 export const SprintBoard = (props: SprintBoardProps) => {
-    const { teamMembers, teamMemberProfiles, myself, usePM, useTM, socket } = props;
+    const { teamMembers, teamMemberProfiles, myself, usePM, useSM, useTM, socket } = props;
     const { mode: colorMode } = useColorScheme();
     const { accessToken } = useAuth();
 
@@ -130,9 +132,27 @@ export const SprintBoard = (props: SprintBoardProps) => {
         closed: [],
     });
 
-    // Organize filtered tasks into board columns
+    // Organize filtered tasks into board columns. We deliberately do
+    // NOT restrict by sprint binding here:
+    //   1. Without a milestone scope, the board should show every
+    //      milestone (backing tasks) AND every regular root task so
+    //      users can see the full project at a glance — not just the
+    //      handful of things tied to the current sprint. The user's
+    //      sprint scoping happens in the dashboard / sidebar.
+    //   2. With a milestone scope active (clicked from the sidebar),
+    //      `TaskFilterMenu` already narrows `filteredTasks` to the
+    //      milestone's children, so we just trust its output.
+    // Dropping the milestone/sprint deps also means a milestone preview
+    // refreshing its data no longer rebuilds the board's columns, so a
+    // just-clicked card stays put instead of being filtered away by the
+    // momentary state churn.
     useEffect(() => {
-        const tasks = filteredTasks || [];
+        const milestoneScopeActive = useTM.tableMilestoneFilterId != null;
+        const tasks = (filteredTasks || []).filter((task) => {
+            if (milestoneScopeActive) return true;
+            return task.parentTaskId === null;
+        });
+
         const organized: Record<string, TaskTableProps[]> = {
             open: [],
             wip: [],
@@ -149,7 +169,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
         });
 
         setBoardTasks(organized);
-    }, [filteredTasks]);
+    }, [filteredTasks, useTM.tableMilestoneFilterId]);
 
     // Handle drag end
     const handleDragEnd = async (result: DropResult) => {
@@ -230,10 +250,21 @@ export const SprintBoard = (props: SprintBoardProps) => {
         }
     };
 
-    // Handle task click
-    const handleTaskClick = (taskId: string) => {
-        useTM.setCurrentPreviewTaskId(parseInt(taskId));
+    // Handle task click. Milestone backing rows must route through
+    // `setCurrentPreviewMilestoneId` so the preview pane opens directly
+    // in MilestonePreviewInner instead of briefly mounting TaskPreview
+    // with `currentPreviewKind === "task"` before the reroute kicks in
+    // (which also re-runs the `setIsTaskUpdated` cascade and mutates
+    // `useTM.allTasks`). Regular tasks keep the old path.
+    const handleTaskClick = (task: TaskTableProps) => {
         useTM.setIsTaskPreviewVisible(true);
+        if (task.isMilestone === true && task.milestoneId != null) {
+            useTM.setCurrentPreviewMilestoneId(task.milestoneId);
+            return;
+        }
+        if (task.id) {
+            useTM.setCurrentPreviewTaskId(parseInt(task.id));
+        }
     };
 
     return (
@@ -257,6 +288,8 @@ export const SprintBoard = (props: SprintBoardProps) => {
                                 teamMemberProfiles={teamMemberProfiles}
                                 onTaskClick={handleTaskClick}
                                 selectedTaskId={useTM.currentPreviewTaskId}
+                                selectedMilestoneId={useTM.currentPreviewMilestoneId}
+                                isMilestonePreviewActive={useTM.currentPreviewKind === "milestone"}
                             />
                         ))}
                     </div>

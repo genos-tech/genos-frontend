@@ -5,13 +5,19 @@ import WorkIcon from "@mui/icons-material/Work";
 import { Box, List, ListItem, ListItemContent, Typography } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
+import { Socket } from "socket.io-client";
 
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { UserProps } from "../../../../types/admin";
 import { Toggler } from "./common";
 import { JoinProjectListItem } from "./projects_subs/JoinProjectListItem";
+import { MilestonesListItem } from "./projects_subs/MilestonesListItem";
 import { NewProjectListItem } from "./projects_subs/NewProjectListItem";
-import { OngoingsListItem } from "./projects_subs/OngoingsListItem";
 
 type ProjectsListItemProps = {
     usePM: ProjectManagementState;
@@ -24,10 +30,32 @@ type ProjectsListItemProps = {
         systemUserId: string;
     }) => void;
     useTM: TaskManagementState;
+    useSM: SprintMilestoneManagementState;
+    // Forwarded so MilestonesListItem can render `AvatarWithStatus`
+    // (which needs the team profile lookup, online-status presence,
+    // user-profile modal hook, and the dispatch socket).
+    useTEM: TeamManagementState;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
+    myself: UserProps;
+    setMyself: (value: UserProps) => void;
+    socket: Socket | null;
 };
 
 export const ProjectsListItem = (props: ProjectsListItemProps) => {
-    const { usePM, setIsTaskHomeVisible, setOpenJoinProject, useTM } = props;
+    const {
+        usePM,
+        setIsTaskHomeVisible,
+        setOpenJoinProject,
+        useTM,
+        useSM,
+        useTEM,
+        useCM,
+        useUISM,
+        myself,
+        setMyself,
+        socket,
+    } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
 
@@ -135,6 +163,11 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                         projectId !==
                                                         usePM.currentProject?.projectId
                                                     ) {
+                                                        // Close any task/milestone preview from the
+                                                        // previous project so we never carry stale
+                                                        // ids across project boundaries.
+                                                        useTM.closeTaskPreview();
+                                                        useTM.setTableMilestoneFilterId(null);
                                                         // Reset the task table...
                                                         useTM.setAllTasks([]);
                                                         (async () => {
@@ -238,12 +271,17 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                             </ListItemButton>
                                         )}
                                     >
-                                        <List sx={{ gap: 0.25 }}>
-                                            <OngoingsListItem
-                                                currentProjectId={projectId}
-                                                useTM={useTM}
-                                            />
-                                        </List>
+                                        <MilestonesListItem
+                                            currentProjectId={projectId}
+                                            useSM={useSM}
+                                            useTM={useTM}
+                                            useTEM={useTEM}
+                                            useCM={useCM}
+                                            useUISM={useUISM}
+                                            myself={myself}
+                                            setMyself={setMyself}
+                                            socket={socket}
+                                        />
                                     </Toggler>
                                 )
                             );

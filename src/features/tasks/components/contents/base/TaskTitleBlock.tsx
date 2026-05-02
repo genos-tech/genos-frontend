@@ -59,6 +59,9 @@ type TaskTitleBlockProps = {
     useTM: TaskManagementState;
     useNM: NoteManagementState;
     usePM: ProjectManagementState;
+    // When true, the create-mode badge reads "Milestone" instead of
+    // "New Task". Only meaningful when `isPreviewMode` is false.
+    isMilestone?: boolean;
 };
 
 export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
@@ -80,6 +83,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         useTM,
         useNM,
         usePM,
+        isMilestone,
     } = props;
 
     const { accessToken } = useAuth();
@@ -279,7 +283,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 letterSpacing: "0.05em",
                             }}
                         >
-                            New Task
+                            {isMilestone ? "Milestone" : "New Task"}
                         </Typography>
                     </Box>
                 )}
@@ -564,6 +568,9 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                                 flag: true,
                                                 parentTaskId: taskContent.id,
                                                 rootTaskId: taskContent.rootTaskId,
+                                                creationKind: "task",
+                                                milestoneId:
+                                                    (taskContent as any).milestoneId ?? null,
                                             });
                                         }
                                         useTM.setIsTaskHomeVisible(false);
@@ -839,6 +846,8 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                         flag: false,
                                         parentTaskId: null,
                                         rootTaskId: useTM.currentPreviewTask?.rootTaskId || null,
+                                        creationKind: "task",
+                                        milestoneId: null,
                                     });
                                 }
                                 if (isPreviewMode === true && setTaskClosed) {
@@ -870,6 +879,8 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                     flag: false,
                                     parentTaskId: null,
                                     rootTaskId: null,
+                                    creationKind: "task",
+                                    milestoneId: null,
                                 });
 
                                 if (useTM.isTaskPreviewVisible === false) {
