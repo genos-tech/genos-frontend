@@ -75,7 +75,17 @@ export const MilestonesListItem = ({
 
     const milestones: Milestone[] = useMemo(() => {
         const list = useSM.projectMilestones[currentProjectId] ?? [];
-        return list.filter((m) => !m.isDeleted && VISIBLE_STATUSES.has(m.status));
+        // Filtering and sorting by duedate ascending and then title ascending
+        return list
+            .filter((m) => !m.isDeleted && VISIBLE_STATUSES.has(m.status))
+            .sort((a, b) => {
+                const dateA = a.dueDate ? new Date(a.dueDate) : new Date(0);
+                const dateB = b.dueDate ? new Date(b.dueDate) : new Date(0);
+                if (dateA.getTime() !== dateB.getTime()) {
+                    return dateA.getTime() - dateB.getTime();
+                }
+                return a.title.localeCompare(b.title);
+            });
     }, [useSM.projectMilestones, currentProjectId]);
 
     const sprints = useSM.projectSprints[currentProjectId] ?? [];
