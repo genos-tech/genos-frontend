@@ -8,6 +8,8 @@ import { ThreadChatPaneHeader } from "./components/headers/ThreadChatPaneHeader"
 import { ChatEditorSection } from "./components/shared/ChatEditorSection";
 import { ErrorSnackbar } from "./components/shared/ErrorSnackbar";
 import { MessageListRenderer } from "./components/shared/MessageListRenderer";
+import { ThreadCommentsView } from "./components/shared/ThreadCommentsView";
+import { ThreadTabId, ThreadTabStrip } from "./components/shared/ThreadTabStrip";
 import { useMessageManagement } from "./hooks/useMessageManagement";
 import { useReadStatusManagement } from "./hooks/useReadStatusManagement";
 import { useScrollManagement } from "./hooks/useScrollManagement";
@@ -54,10 +56,33 @@ export const ThreadPane = (props: MessagesPaneProps) => {
 
     const { setCurrentThreadTaskId } = useChatContext();
 
-    // File drag-and-drop state
+    // File drag-and-drop state. Used by the non-PM thread editor
+    // (DM/group reply); PM threads route file drops through their
+    // task-comment flow instead.
     const [pendingFiles, setPendingFiles] = useState<File[]>([]);
     const clearPendingFiles = useCallback(() => setPendingFiles([]), []);
     const handleDrop = useCallback(createFileDropHandler(setPendingFiles), []);
+
+    // Two-tab state for PM threads tied to a task / milestone:
+    // "activities" (existing PM message feed, read-only) and
+    // "comments" (TaskCommentList + BlockNote editor reused from
+    // TaskTabBlock — the only place a user can post). The strip
+    // itself is hidden for non-PM threads and for PM threads that
+    // have no associated task.
+    //
+    // Default lands on "comments" because that's the only branch
+    // with an editor; opening straight into a read-only activity
+    // log surprises users who came here to reply.
+    const [threadTabValue, setThreadTabValue] = useState<ThreadTabId>("comments");
+    const threadTaskId = useCM.currentThreadChat?.taskId ?? null;
+    const threadChatType = useCM.currentThreadChat?.chatType;
+    const isPmThread = threadChatType === 3;
+    const showThreadTabStrip = isPmThread && threadTaskId != null && threadTaskId > 0;
+    // Reset on every thread switch so we don't leak the previous
+    // thread's tab choice into a freshly opened one.
+    useEffect(() => {
+        setThreadTabValue("comments");
+    }, [useCM.currentThreadChat?.threadId]);
 
     // Update currentThreadTaskId when thread panel mounts or thread changes
     useEffect(() => {
@@ -146,56 +171,120 @@ export const ThreadPane = (props: MessagesPaneProps) => {
 
                 <ThreadChatPaneHeader useCM={useCM} useNM={useNM} myself={myself} useTM={useTM} />
 
-                <MessageListRenderer
-                    chat={useCM.currentThreadChat as ThreadProps}
-                    useCM={useCM}
-                    currentChatId={currentThreadChatId}
-                    height={virtuosoHeight}
-                    indexMap={messageManagement.indexMap}
-                    isScrolling={scrollManagement.isScrolling}
-                    isThread={true}
-                    messages={messageManagement.messages}
-                    myself={myself}
-                    usePM={usePM}
-                    setEditTargetMessage={messageManagement.setEditTargetMessage}
-                    setErrorMessage={messageManagement.setErrorMessage}
-                    setErrorOpen={messageManagement.setErrorOpen}
-                    setIsInEdit={messageManagement.setIsInEdit}
-                    setIsScrolling={scrollManagement.setIsScrolling}
-                    setMyself={setMyself}
-                    setVisibleRange={scrollManagement.setVisibleRange}
-                    socket={socket}
-                    useTEM={useTEM}
-                    useUISM={useUISM}
-                    virtuosoRef={scrollManagement.virtuosoRef as React.RefObject<VirtuosoHandle>}
-                    visibleRange={scrollManagement.visibleRange}
-                    useTM={useTM}
-                />
+                {showThreadTabStrip && (
+                    <ThreadTabStrip value={threadTabValue} onChange={setThreadTabValue} />
+                )}
 
-                <ChatEditorSection
-                    chat={useCM.currentThreadChat as ThreadProps}
-                    useCM={useCM}
-                    editTargetMessage={messageManagement.editTargetMessage}
-                    isInEdit={messageManagement.isInEdit}
-                    isThread={true}
-                    myself={myself}
-                    numEditorLines={messageManagement.numEditorLines}
-                    setCurrentThreadChat={
-                        useCM.setCurrentThreadChat as (chat: ThreadProps) => void
-                    }
-                    setIsInEdit={messageManagement.setIsInEdit}
-                    setMyself={setMyself}
-                    setNumEditorLines={messageManagement.setNumEditorLines}
-                    socket={socket}
-                    useTEM={useTEM}
-                    thread={useCM.currentThreadChat as ThreadProps}
-                    useUISM={useUISM}
-                    pendingFiles={pendingFiles}
-                    clearPendingFiles={clearPendingFiles}
-                    setCurrentChat={
-                        useCM.setCurrentThreadChat as (chat: ChatProps | ThreadProps) => void
-                    }
-                />
+                {threadTabValue === "comments" && showThreadTabStrip && threadTaskId != null ? (
+                    // Comments view (PM thread + task): own scroller + editor.
+                    <ThreadCommentsView
+                        socket={socket}
+                        myself={myself}
+                        setMyself={setMyself}
+                        useTM={useTM}
+                        useTEM={useTEM}
+                        useCM={useCM}
+                        useUISM={useUISM}
+                        threadTaskId={threadTaskId}
+                    />
+                ) : isPmThread ? (
+                    // Activities (or PM thread without task): read-only
+                    // PM-message feed. No editor — these are
+                    // auto-generated system bubbles ("Task created /
+                    // updated by …") and Project Updates threads are
+                    // read-only by design (mirrors MainChatPane's
+                    // `chatType !== 3` editor gate). Virtuoso flexes
+                    // to fill the freed bottom space.
+                    <MessageListRenderer
+                        chat={useCM.currentThreadChat as ThreadProps}
+                        useCM={useCM}
+                        currentChatId={currentThreadChatId}
+                        height={virtuosoHeight}
+                        indexMap={messageManagement.indexMap}
+                        isScrolling={scrollManagement.isScrolling}
+                        isThread={true}
+                        messages={messageManagement.messages}
+                        myself={myself}
+                        usePM={usePM}
+                        setEditTargetMessage={messageManagement.setEditTargetMessage}
+                        setErrorMessage={messageManagement.setErrorMessage}
+                        setErrorOpen={messageManagement.setErrorOpen}
+                        setIsInEdit={messageManagement.setIsInEdit}
+                        setIsScrolling={scrollManagement.setIsScrolling}
+                        setMyself={setMyself}
+                        setVisibleRange={scrollManagement.setVisibleRange}
+                        socket={socket}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
+                        virtuosoRef={
+                            scrollManagement.virtuosoRef as React.RefObject<VirtuosoHandle>
+                        }
+                        visibleRange={scrollManagement.visibleRange}
+                        useTM={useTM}
+                        fillContainer
+                    />
+                ) : (
+                    // Non-PM thread (DM / group chat reply). Keeps the
+                    // original list + editor pair so users can still
+                    // post replies with the existing fixed-height
+                    // calculation.
+                    <>
+                        <MessageListRenderer
+                            chat={useCM.currentThreadChat as ThreadProps}
+                            useCM={useCM}
+                            currentChatId={currentThreadChatId}
+                            height={virtuosoHeight}
+                            indexMap={messageManagement.indexMap}
+                            isScrolling={scrollManagement.isScrolling}
+                            isThread={true}
+                            messages={messageManagement.messages}
+                            myself={myself}
+                            usePM={usePM}
+                            setEditTargetMessage={messageManagement.setEditTargetMessage}
+                            setErrorMessage={messageManagement.setErrorMessage}
+                            setErrorOpen={messageManagement.setErrorOpen}
+                            setIsInEdit={messageManagement.setIsInEdit}
+                            setIsScrolling={scrollManagement.setIsScrolling}
+                            setMyself={setMyself}
+                            setVisibleRange={scrollManagement.setVisibleRange}
+                            socket={socket}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
+                            virtuosoRef={
+                                scrollManagement.virtuosoRef as React.RefObject<VirtuosoHandle>
+                            }
+                            visibleRange={scrollManagement.visibleRange}
+                            useTM={useTM}
+                        />
+
+                        <ChatEditorSection
+                            chat={useCM.currentThreadChat as ThreadProps}
+                            useCM={useCM}
+                            editTargetMessage={messageManagement.editTargetMessage}
+                            isInEdit={messageManagement.isInEdit}
+                            isThread={true}
+                            myself={myself}
+                            numEditorLines={messageManagement.numEditorLines}
+                            setCurrentThreadChat={
+                                useCM.setCurrentThreadChat as (chat: ThreadProps) => void
+                            }
+                            setIsInEdit={messageManagement.setIsInEdit}
+                            setMyself={setMyself}
+                            setNumEditorLines={messageManagement.setNumEditorLines}
+                            socket={socket}
+                            useTEM={useTEM}
+                            thread={useCM.currentThreadChat as ThreadProps}
+                            useUISM={useUISM}
+                            pendingFiles={pendingFiles}
+                            clearPendingFiles={clearPendingFiles}
+                            setCurrentChat={
+                                useCM.setCurrentThreadChat as (
+                                    chat: ChatProps | ThreadProps
+                                ) => void
+                            }
+                        />
+                    </>
+                )}
             </Sheet>
         </div>
     );

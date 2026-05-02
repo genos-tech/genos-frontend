@@ -5,6 +5,7 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import CommentRoundedIcon from "@mui/icons-material/CommentRounded";
 import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
+import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import InsertDriveFileRoundedIcon from "@mui/icons-material/InsertDriveFileRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import {
@@ -24,7 +25,6 @@ import {
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import Tab, { tabClasses } from "@mui/joy/Tab";
-import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../../context/AuthContext";
@@ -44,10 +44,10 @@ import {
 } from "../../../../../types/tasks";
 import { getLocalCurrentTimestamp } from "../../../../../utils/dateUtils";
 import { downloadFile } from "../../../../../utils/downloadUtils";
-import { useScrollToBottomOnNewTaskComment } from "../../../hooks/taskCommentHooks";
 import { deleteTaskAttachment } from "../../../services/deleteTaskAttachment";
-import { TaskCommentBubble } from "./sub/TaskCommentBubble";
+import { TaskActivityFeed } from "./sub/TaskActivityFeed";
 import { TaskCommentEditorBlock } from "./sub/TaskCommentEditorBlock";
+import { TaskCommentList } from "./sub/TaskCommentList";
 
 const resizeImageToFitBox = (imageSize: ImageSizeProps): ImageSizeProps => {
     const maxWidth = 300;
@@ -318,33 +318,9 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         });
     }, [uploadedFiles]);
 
-    const countLines = (nodes: any[]): number => {
-        let count = 0;
-        for (const node of nodes) {
-            count += 1;
-            if (node.children?.length) {
-                count += countLines(node.children);
-            }
-            if (node.content[0]) {
-                if (node.content[0].text) {
-                    count += node.content[0].text.split("\n").length;
-                }
-            }
-        }
-        return count;
-    };
-
-    const totalCommentLines = taskComments.reduce(
-        (sum, taskComment) => sum + (countLines(taskComment.commentBody) ?? 0),
-        0
-    );
-
-    const virtuosoRef = useRef<VirtuosoHandle | null>(null);
-    useScrollToBottomOnNewTaskComment(
-        virtuosoRef as React.RefObject<VirtuosoHandle>,
-        taskComments,
-        useTM.isTaskCommentUpdated.scrollToBottom
-    );
+    // Comment list rendering (Virtuoso, scroll-to-bottom, line counts)
+    // moved into `TaskCommentList` so the chat-thread Comments tab can
+    // mount the same UI directly.
 
     // State for modal
     const [opened, setOpened] = useState(false);
@@ -362,7 +338,10 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         await downloadFile(url, filename);
     };
 
-    // Tab configuration
+    // Tab configuration. Activity sits in the trailing slot so the
+    // existing 0/1/2 indices that other components reference (e.g.
+    // direct setTabIndex calls when opening notes from the sidebar)
+    // keep their meaning.
     const tabs = [
         {
             label: "Comments",
@@ -378,6 +357,14 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
             label: "Attachments",
             icon: <AttachFileRoundedIcon sx={{ fontSize: 16 }} />,
             count: uploadedFiles.length,
+        },
+        {
+            label: "Activity",
+            icon: <HistoryRoundedIcon sx={{ fontSize: 16 }} />,
+            // Count is intentionally omitted — activity rows can grow
+            // unboundedly so a number badge would be more noisy than
+            // useful. The feed itself shows the count when open.
+            count: undefined,
         },
     ];
 
@@ -428,7 +415,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                         <Tab key={tab.label} indicatorInset>
                             {tab.icon}
                             {tab.label}
-                            {tab.count > 0 && (
+                            {tab.count != null && tab.count > 0 && (
                                 <Box
                                     component="span"
                                     sx={{
@@ -471,93 +458,20 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                 >
                     {/* Comments Tab */}
                     <TabPanel value={0} sx={{ p: 0 }}>
-                        {taskComments.length === 0 ? (
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    justifyContent: "center",
-                                    alignItems: "center",
-                                    py: 4,
-                                    gap: 1,
-                                }}
-                            >
-                                <Box
-                                    sx={{
-                                        width: 48,
-                                        height: 48,
-                                        borderRadius: "12px",
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        background: isDark
-                                            ? "rgba(255,255,255,0.04)"
-                                            : "rgba(0,0,0,0.03)",
-                                        border: "1px dashed",
-                                        borderColor: isDark
-                                            ? "rgba(255,255,255,0.1)"
-                                            : "rgba(0,0,0,0.08)",
-                                    }}
-                                >
-                                    <CommentRoundedIcon
-                                        sx={{
-                                            fontSize: 24,
-                                            color: isDark
-                                                ? "rgba(255,255,255,0.3)"
-                                                : "rgba(0,0,0,0.25)",
-                                        }}
-                                    />
-                                </Box>
-                                <Typography
-                                    level="body-sm"
-                                    sx={{
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.4)"
-                                            : "rgba(0,0,0,0.4)",
-                                    }}
-                                >
-                                    No comments yet
-                                </Typography>
-                            </Box>
-                        ) : (
-                            <Box sx={{ mb: 2 }}>
-                                <Virtuoso
-                                    ref={virtuosoRef}
-                                    atBottomThreshold={128}
-                                    atTopThreshold={64}
-                                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                                    initialTopMostItemIndex={taskComments.length - 1}
-                                    totalCount={taskComments.length}
-                                    itemContent={(index) => {
-                                        const comment = taskComments[index];
-                                        return (
-                                            <TaskCommentBubble
-                                                key={`task-comment-${comment.commentId}-${comment.tsUpdated}`}
-                                                useCM={useCM}
-                                                comment={comment}
-                                                myself={myself}
-                                                setEditTargetComment={setEditTargetComment}
-                                                setIsInEdit={setIsInEdit}
-                                                setMyself={setMyself}
-                                                socket={socket}
-                                                useTEM={useTEM}
-                                                useUISM={useUISM}
-                                                currentProjectId={taskContent.project?.projectId}
-                                                currentProjectName={
-                                                    taskContent.project?.projectName
-                                                }
-                                            />
-                                        );
-                                    }}
-                                    style={{
-                                        height: Math.min(
-                                            taskComments.length * 60 + totalCommentLines * 18,
-                                            800
-                                        ),
-                                    }}
-                                />
-                            </Box>
-                        )}
+                        <TaskCommentList
+                            socket={socket}
+                            myself={myself}
+                            setMyself={setMyself}
+                            taskComments={taskComments}
+                            setIsInEdit={setIsInEdit}
+                            setEditTargetComment={setEditTargetComment}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
+                            useCM={useCM}
+                            useTM={useTM}
+                            currentProjectId={taskContent.project?.projectId}
+                            currentProjectName={taskContent.project?.projectName}
+                        />
                         <TaskCommentEditorBlock
                             useCM={useCM}
                             editTargetComment={editTargetComment}
@@ -1049,6 +963,19 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                 )}
                             </ModalDialog>
                         </Modal>
+                    </TabPanel>
+
+                    {/* Activity Tab — structured audit log. Refetches
+                        on `useTM.isTaskUpdated` / `isTaskCommentUpdated`
+                        flips so it stays in sync with the rest of the
+                        preview without a dedicated socket event. */}
+                    <TabPanel value={3} sx={{ p: 0 }}>
+                        <TaskActivityFeed
+                            task={taskContent}
+                            myself={myself}
+                            useTM={useTM}
+                            useTEM={useTEM}
+                        />
                     </TabPanel>
                 </Box>
             </Tabs>
