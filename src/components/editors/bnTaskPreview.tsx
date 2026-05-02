@@ -77,6 +77,10 @@ type BnTaskPreviewProps = {
     setTaskBodySaved?: (value: boolean) => void;
     useCM: ChatManagementState;
     useUISM: UIStateManagementState;
+    /** Called once after the BlockNote editor instance is ready. Used by the
+     *  task creation form so it can imperatively swap templates via
+     *  `editor.replaceBlocks(...)`. */
+    onEditorReady?: (editor: any) => void;
 };
 export const BnTaskPreview = (props: BnTaskPreviewProps) => {
     const {
@@ -91,6 +95,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         setTaskBodySaved,
         useCM,
         useUISM,
+        onEditorReady,
     } = props;
 
     const { mode } = useColorScheme();
@@ -196,6 +201,16 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         enableComments: true,
         teamMemberProfiles: useTEM.teamMemberProfiles,
     });
+
+    // Forward the editor instance to the parent the first time it becomes
+    // available. CreateTaskForm uses this to swap templates imperatively.
+    const editorReadyRef = useRef(false);
+    useEffect(() => {
+        if (editor && !editorReadyRef.current && onEditorReady) {
+            editorReadyRef.current = true;
+            onEditorReady(editor);
+        }
+    }, [editor, onEditorReady]);
 
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);

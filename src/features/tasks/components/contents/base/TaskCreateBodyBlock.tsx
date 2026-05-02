@@ -18,9 +18,21 @@ type TaskCreateBodyBlockProps = {
     setBody: (value: PartialBlock[]) => void;
     useCM: ChatManagementState;
     useUISM: UIStateManagementState;
+    onEditorReady?: (editor: any) => void;
 };
 export const TaskCreateBodyBlock = (props: TaskCreateBodyBlockProps) => {
-    const { useTEM, myself, setMyself, socket, taskId, body, setBody, useCM, useUISM } = props;
+    const {
+        useTEM,
+        myself,
+        setMyself,
+        socket,
+        taskId,
+        body,
+        setBody,
+        useCM,
+        useUISM,
+        onEditorReady,
+    } = props;
     return (
         <Stack direction={"column"} sx={{ width: "100%" }}>
             <Box sx={{ mt: 2 }}>
@@ -35,6 +47,7 @@ export const TaskCreateBodyBlock = (props: TaskCreateBodyBlockProps) => {
                         taskId={taskId}
                         useTEM={useTEM}
                         useUISM={useUISM}
+                        onEditorReady={onEditorReady}
                     />
                 </div>
             </Box>

@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import DescriptionRoundedIcon from "@mui/icons-material/DescriptionRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
-import { Box, Button, Divider, Sheet, Stack, Typography } from "@mui/joy";
+import { Box, Button, Divider, Option, Select, Sheet, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -57,107 +58,175 @@ const SectionHeader = ({ children, isDark }: { children: React.ReactNode; isDark
     </Typography>
 );
 
-const taskContentTemplate: PartialBlock[] = [
-    {
-        type: "heading",
-        props: {
-            level: 3,
-            textColor: "default",
-            textAlignment: "left",
-            backgroundColor: "default",
-        },
-        content: [{ text: "🧾 Description", type: "text", styles: {} }],
-        children: [],
-    },
-    {
-        type: "paragraph",
-        props: {
-            textColor: "default",
-            textAlignment: "left",
-            backgroundColor: "default",
-        },
-        content: [{ text: "What needs to be done?", type: "text", styles: { code: true } }],
-        children: [],
-    },
-    {
-        type: "paragraph",
-        props: {
-            textColor: "default",
-            textAlignment: "left",
-            backgroundColor: "default",
-        },
-        content: [],
-        children: [],
-    },
-    {
-        type: "heading",
-        props: {
-            level: 3,
-            textColor: "default",
-            textAlignment: "left",
-            backgroundColor: "default",
-        },
-        content: [{ text: "🪜 Motivation", type: "text", styles: {} }],
-        children: [],
-    },
-    {
-        type: "paragraph",
-        props: {
-            textColor: "default",
-            textAlignment: "left",
-            backgroundColor: "default",
-        },
-        content: [
-            {
-                text: "Why is this task needed?",
-                type: "text",
-                styles: { code: true },
-            },
-        ],
-        children: [],
-    },
-    {
-        type: "paragraph",
-        props: {
-            textColor: "default",
-            textAlignment: "left",
-            backgroundColor: "default",
-        },
-        content: [],
-        children: [],
-    },
-    {
-        type: "heading",
-        props: {
-            level: 3,
-            textColor: "default",
-            textAlignment: "left",
-            backgroundColor: "default",
-        },
-        content: [{ text: "🎯 Further Context", type: "text", styles: {} }],
-        children: [],
-    },
-    {
-        type: "paragraph",
-        props: {
-            textColor: "default",
-            textAlignment: "left",
-            backgroundColor: "default",
-        },
-        content: [{ text: "Any other sharing?", type: "text", styles: { code: true } }],
-        children: [],
-    },
-    {
-        type: "paragraph",
-        props: {
-            textColor: "default",
-            textAlignment: "left",
-            backgroundColor: "default",
-        },
-        content: [],
-        children: [],
-    },
+// ---------------------------------------------------------------------------
+// Body templates
+// ---------------------------------------------------------------------------
+//
+// Each template is a small builder so we can vary headings/placeholders
+// without copy-pasting BlockNote's verbose `props` blob. Placeholders use
+// `italic + textColor: "gray"` instead of inline `code` styling, because
+// inline-code stickiness used to bleed into whatever the user typed next.
+
+const HEADING_PROPS = {
+    level: 3,
+    textColor: "default",
+    textAlignment: "left",
+    backgroundColor: "default",
+} as const;
+
+const PARA_PROPS = {
+    textColor: "default",
+    textAlignment: "left",
+    backgroundColor: "default",
+} as const;
+
+const heading = (text: string): PartialBlock => ({
+    type: "heading",
+    props: HEADING_PROPS,
+    content: [{ text, type: "text", styles: {} }],
+    children: [],
+});
+
+const placeholder = (text: string): PartialBlock => ({
+    type: "paragraph",
+    props: PARA_PROPS,
+    content: [{ text, type: "text", styles: { italic: true, textColor: "gray" } }],
+    children: [],
+});
+
+const blank = (): PartialBlock => ({
+    type: "paragraph",
+    props: PARA_PROPS,
+    content: [],
+    children: [],
+});
+
+const bullet = (text: string): PartialBlock => ({
+    type: "bulletListItem",
+    props: PARA_PROPS,
+    content: [{ text, type: "text", styles: { italic: true, textColor: "gray" } }],
+    children: [],
+});
+
+const section = (title: string, ...body: PartialBlock[]): PartialBlock[] => [
+    heading(title),
+    ...body,
+    blank(),
 ];
+
+export type TaskTemplateId = "default" | "bug" | "spike" | "milestone";
+
+interface TaskTemplate {
+    id: TaskTemplateId;
+    label: string;
+    description: string;
+    blocks: PartialBlock[];
+}
+
+const TASK_TEMPLATES: Record<TaskTemplateId, TaskTemplate> = {
+    default: {
+        id: "default",
+        label: "Standard task",
+        description: "Goal, context, and acceptance criteria.",
+        blocks: [
+            ...section("🧾 Summary", placeholder("One or two lines on what this task delivers.")),
+            ...section(
+                "🪜 Motivation",
+                placeholder("Why does this matter? What problem are we solving?")
+            ),
+            ...section(
+                "✅ Acceptance criteria",
+                bullet("First condition that must be true when this is done."),
+                bullet("Second condition…"),
+                bullet("Third condition…")
+            ),
+            ...section("🎯 Notes & links", placeholder("Anything else worth pinning here.")),
+        ],
+    },
+    bug: {
+        id: "bug",
+        label: "Bug report",
+        description: "Repro steps, expected vs. actual behavior.",
+        blocks: [
+            ...section("🐞 Summary", placeholder("One-line description of the bug.")),
+            ...section(
+                "🔁 Steps to reproduce",
+                bullet("Go to …"),
+                bullet("Click on …"),
+                bullet("Observe that …")
+            ),
+            ...section("🎯 Expected behavior", placeholder("What should happen?")),
+            ...section(
+                "💥 Actual behavior",
+                placeholder("What actually happens? Include error messages, screenshots.")
+            ),
+            ...section(
+                "🧪 Environment",
+                placeholder("Browser, OS, app version, user, team, anything that narrows it down.")
+            ),
+        ],
+    },
+    spike: {
+        id: "spike",
+        label: "Research / spike",
+        description: "Question-led investigation with a timebox.",
+        blocks: [
+            ...section("❓ Question", placeholder("What are we trying to learn or decide?")),
+            ...section("💡 Hypothesis", placeholder("What do we currently believe is true?")),
+            ...section(
+                "🧭 Approach",
+                bullet("Where to look first…"),
+                bullet("Experiments / prototypes to try…"),
+                bullet("People to talk to…")
+            ),
+            ...section("⏱ Timebox", placeholder("How long are we willing to spend on this?")),
+            ...section(
+                "📌 Findings",
+                placeholder("Fill in as you learn — link out to docs, PRs, threads.")
+            ),
+            ...section(
+                "🚧 Out of scope",
+                placeholder("Explicitly things we are NOT answering here.")
+            ),
+        ],
+    },
+    milestone: {
+        id: "milestone",
+        label: "Milestone",
+        description: "Goal, scope, success criteria, risks.",
+        blocks: [
+            ...section(
+                "🎯 Goal",
+                placeholder("What outcome does this milestone deliver, and for whom?")
+            ),
+            ...section(
+                "✅ Success criteria",
+                bullet("Measurable signal #1 that we hit the goal."),
+                bullet("Measurable signal #2."),
+                bullet("Measurable signal #3.")
+            ),
+            ...section(
+                "📦 In scope",
+                bullet("Workstream / feature 1"),
+                bullet("Workstream / feature 2")
+            ),
+            ...section("🚫 Out of scope", bullet("Thing we are explicitly NOT doing.")),
+            ...section(
+                "⚠️ Risks & dependencies",
+                placeholder("What could derail this? Who/what are we waiting on?")
+            ),
+        ],
+    },
+};
+
+const TASK_TEMPLATE_OPTIONS: TaskTemplate[] = [
+    TASK_TEMPLATES.default,
+    TASK_TEMPLATES.bug,
+    TASK_TEMPLATES.spike,
+    TASK_TEMPLATES.milestone,
+];
+
+const taskContentTemplate: PartialBlock[] = TASK_TEMPLATES.default.blocks;
 
 type CreateTaskProps = {
     useTEM: TeamManagementState;
@@ -209,6 +278,49 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             : useTM.isCreatingTask.creationKind === "milestone"
               ? "milestone"
               : "task";
+
+    // Body template picker. Default to the milestone template when the user
+    // is creating a milestone; otherwise use the standard task template.
+    const [templateId, setTemplateId] = useState<TaskTemplateId>(
+        creationKind === "milestone" ? "milestone" : "default"
+    );
+    // The BlockNote editor seeds itself once from `body` and afterwards
+    // manages its own state, so re-applying a template requires calling
+    // `editor.replaceBlocks` directly. The editor instance is forwarded
+    // here via `BnTaskPreview`'s `onEditorReady` callback.
+    const editorRef = useRef<any>(null);
+    const handleEditorReady = useCallback((editor: any) => {
+        editorRef.current = editor;
+    }, []);
+
+    const applyTemplate = (nextId: TaskTemplateId) => {
+        const next = TASK_TEMPLATES[nextId];
+        if (!next) return;
+        setTemplateId(nextId);
+        setBody(next.blocks);
+        const editor = editorRef.current;
+        if (editor) {
+            try {
+                editor.replaceBlocks(editor.document, next.blocks);
+            } catch {
+                // Editor not ready yet — the next render's seed will pick
+                // up the new body via `initialBody`.
+            }
+        }
+    };
+
+    // When the user toggles the creationKind chip (task ↔ milestone) we
+    // surface a sensible default template, but only if they haven't picked
+    // a different one themselves yet — if they're already on a non-default
+    // template, leave their choice alone.
+    useEffect(() => {
+        if (creationKind === "milestone" && templateId === "default") {
+            applyTemplate("milestone");
+        } else if (creationKind === "task" && templateId === "milestone") {
+            applyTemplate("default");
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [creationKind]);
 
     const switchKind = (kind: "task" | "milestone") => {
         useTM.setIsCreatingTask({
@@ -601,7 +713,63 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         <SectionDivider isDark={isDark} />
 
                         {/* Body Section */}
-                        <SectionHeader isDark={isDark}>Description</SectionHeader>
+                        <Stack
+                            direction="row"
+                            alignItems="center"
+                            justifyContent="space-between"
+                            sx={{ mb: 1, gap: 1 }}
+                        >
+                            <SectionHeader isDark={isDark}>Description</SectionHeader>
+                            <Select
+                                size="sm"
+                                value={templateId}
+                                onChange={(_e, value) => {
+                                    if (value) applyTemplate(value as TaskTemplateId);
+                                }}
+                                startDecorator={<DescriptionRoundedIcon sx={{ fontSize: 16 }} />}
+                                renderValue={(opt) => {
+                                    const tpl = opt
+                                        ? TASK_TEMPLATES[opt.value as TaskTemplateId]
+                                        : null;
+                                    return (
+                                        <Typography level="body-xs" sx={{ fontWeight: 600 }}>
+                                            Template: {tpl?.label ?? "Standard task"}
+                                        </Typography>
+                                    );
+                                }}
+                                slotProps={{
+                                    listbox: { sx: { maxWidth: 320 } },
+                                }}
+                                sx={{
+                                    minWidth: 220,
+                                    fontSize: 12,
+                                    "--Select-paddingInline": "10px",
+                                    background: isDark
+                                        ? "rgba(255,255,255,0.04)"
+                                        : "rgba(0,0,0,0.025)",
+                                }}
+                            >
+                                {TASK_TEMPLATE_OPTIONS.map((tpl) => (
+                                    <Option key={tpl.id} value={tpl.id}>
+                                        <Stack spacing={0.25} sx={{ minWidth: 0 }}>
+                                            <Typography level="body-sm" sx={{ fontWeight: 600 }}>
+                                                {tpl.label}
+                                            </Typography>
+                                            <Typography
+                                                level="body-xs"
+                                                sx={{
+                                                    color: isDark
+                                                        ? "rgba(255,255,255,0.6)"
+                                                        : "rgba(0,0,0,0.6)",
+                                                }}
+                                            >
+                                                {tpl.description}
+                                            </Typography>
+                                        </Stack>
+                                    </Option>
+                                ))}
+                            </Select>
+                        </Stack>
                         <Box
                             sx={{
                                 p: 2,
@@ -626,6 +794,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                 taskId={taskContent.id}
                                 useTEM={useTEM}
                                 useUISM={useUISM}
+                                onEditorReady={handleEditorReady}
                             />
                         </Box>
 
