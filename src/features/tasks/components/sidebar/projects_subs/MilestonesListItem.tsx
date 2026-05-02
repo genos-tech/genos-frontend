@@ -29,7 +29,7 @@ import { UIStateManagementState } from "../../../../../hooks/common/useUIStateMa
 import { SprintMilestoneManagementState } from "../../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../../types/admin";
-import { Milestone } from "../../../sprint-milestone/types";
+import { Milestone, MilestoneStatus } from "../../../sprint-milestone/types";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
@@ -57,7 +57,36 @@ type Props = {
     socket: Socket | null;
 };
 
-const VISIBLE_STATUSES = new Set(["Open", "WIP", "Pending"]);
+// Sprint statuses that count as "the sprint is over". Closed
+// milestones tied to one of these sprints fall off the sidebar so
+// the list doesn't accumulate forever; "active" / "upcoming"
+// sprints keep their milestones visible regardless of status.
+const ENDED_SPRINT_STATUSES = new Set(["completed", "archived"]);
+
+// Custom display order for the milestone status chip. Anything not
+// in this list is treated as "after Closed" so unknown / future
+// statuses don't silently bubble to the top.
+const MILESTONE_STATUS_ORDER = ["Open", "WIP", "Pending", "Closed"] as const;
+const MILESTONE_STATUS_LAST = MILESTONE_STATUS_ORDER.length;
+
+// Compare two due dates with `null`/`undefined`/empty-string sorted
+// last. Returns the standard Array.sort sign (negative => a first).
+const compareDueDate = (a: string | null | undefined, b: string | null | undefined): number => {
+    const aHas = !!a;
+    const bHas = !!b;
+    if (aHas && !bHas) return -1;
+    if (!aHas && bHas) return 1;
+    if (!aHas && !bHas) return 0;
+    return new Date(a as string).getTime() - new Date(b as string).getTime();
+};
+
+// Compare two milestone statuses against `MILESTONE_STATUS_ORDER`.
+// Unknown values fall to the bottom of the list.
+const compareMilestoneStatus = (a: string, b: string): number => {
+    const ia = MILESTONE_STATUS_ORDER.indexOf(a as (typeof MILESTONE_STATUS_ORDER)[number]);
+    const ib = MILESTONE_STATUS_ORDER.indexOf(b as (typeof MILESTONE_STATUS_ORDER)[number]);
+    return (ia === -1 ? MILESTONE_STATUS_LAST : ia) - (ib === -1 ? MILESTONE_STATUS_LAST : ib);
+};
 
 export const MilestonesListItem = ({
     currentProjectId,
@@ -73,22 +102,56 @@ export const MilestonesListItem = ({
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
 
+    const sprints = useSM.projectSprints[currentProjectId] ?? [];
+
     const milestones: Milestone[] = useMemo(() => {
         const list = useSM.projectMilestones[currentProjectId] ?? [];
-        // Filtering and sorting by duedate ascending and then title ascending
-        return list
-            .filter((m) => !m.isDeleted && VISIBLE_STATUSES.has(m.status))
-            .sort((a, b) => {
-                const dateA = a.dueDate ? new Date(a.dueDate) : new Date(0);
-                const dateB = b.dueDate ? new Date(b.dueDate) : new Date(0);
-                if (dateA.getTime() !== dateB.getTime()) {
-                    return dateA.getTime() - dateB.getTime();
-                }
-                return a.title.localeCompare(b.title);
-            });
-    }, [useSM.projectMilestones, currentProjectId]);
-
-    const sprints = useSM.projectSprints[currentProjectId] ?? [];
+        // Build the set of past-sprint ids once per dep change instead
+        // of on every milestone iteration. Soft-deleted sprints are
+        // excluded so a deleted sprint can't accidentally hide a
+        // milestone that should still be visible.
+        const endedSprintIds = new Set<number>(
+            sprints
+                .filter((s) => !s.isDeleted && ENDED_SPRINT_STATUSES.has(s.status))
+                .map((s) => s.sprintId)
+        );
+        // Visibility rules (mirrors the plan):
+        //   - Always hide soft-deleted milestones and the "Deleted"
+        //     status.
+        //   - Hide a Closed milestone only when its sprint is known
+        //     AND already ended. Closed-without-sprint and Closed
+        //     whose sprint hasn't loaded yet stay visible so we don't
+        //     flicker rows out before sprint data arrives.
+        //   - Anything else (Open / WIP / Pending in any sprint or
+        //     no sprint, plus Closed in active / upcoming sprints)
+        //     stays.
+        return (
+            list
+                .filter((m) => {
+                    if (m.isDeleted || m.status === "Deleted") return false;
+                    if (m.status === "Closed" && m.sprintId != null) {
+                        return !endedSprintIds.has(m.sprintId);
+                    }
+                    return true;
+                })
+                // Three-level sort: due-date asc (null last) -> custom
+                // status order -> title asc. Each level only kicks in
+                // when the previous one tied, so groups stay grouped
+                // (all items sharing a due date are sorted by status
+                // amongst themselves, and within a single (date, status)
+                // bucket the items are sorted by title).
+                .sort((a, b) => {
+                    const dateCmp = compareDueDate(a.dueDate, b.dueDate);
+                    if (dateCmp !== 0) return dateCmp;
+                    const statusCmp = compareMilestoneStatus(
+                        a.status as string,
+                        b.status as string
+                    );
+                    if (statusCmp !== 0) return statusCmp;
+                    return a.title.localeCompare(b.title);
+                })
+        );
+    }, [useSM.projectMilestones, currentProjectId, sprints]);
 
     const handleOpen = (milestoneId: number) => {
         // Open the milestone preview AND scope the task table to this

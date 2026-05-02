@@ -989,6 +989,62 @@ const MilestonePreviewInner = ({
         }
     }, [isOpenTagList]);
 
+    // Mirror a freshly-updated milestone onto its backing-task row in
+    // `useTM.allTasks` so `DraggableTaskTable` (and anything else
+    // reading the table-shaped task list, like the sprint board)
+    // re-renders without a full page reload.
+    //
+    // The table cares about a flattened `TaskTableProps` shape, not
+    // the rich `Milestone` shape, so we patch matching fields directly.
+    // We always rebuild the row from the server response (rather than
+    // diffing per-call-site) so:
+    //   - Title saves, body auto-saves and the multi-field
+    //     `persistFromTaskContent` path all stay in sync through a
+    //     single function.
+    //   - Clearing the assignee (`assignees: []`) properly nukes the
+    //     row's assignee fields instead of leaving the previous
+    //     assignee dangling.
+    //   - `tags`/`concatTags` are recomputed together so the tag
+    //     column doesn't drift away from the chip list.
+    const syncMilestoneToAllTasks = (updated: Milestone) => {
+        const backingId = updated.taskId;
+        if (backingId == null) return;
+        const firstAssignee = updated.assignees?.[0];
+        const hasAssignee = firstAssignee?.userId != null;
+        const tags = (updated.tags as TagListProps[] | null) ?? [];
+        // Match the backend's `concatTags` format ("/tag1/tag2/")
+        // exactly so the table's tag-search filter keeps working.
+        const concatTags =
+            tags.length > 0 ? "/" + tags.map((tg) => tg.tagName).join("/") + "/" : null;
+        useTM.setAllTasks((prev) =>
+            prev.map((t) =>
+                String(t.id) === String(backingId)
+                    ? {
+                          ...t,
+                          title: updated.title ?? t.title,
+                          status: updated.status ?? t.status,
+                          priority: updated.priority ?? t.priority,
+                          effortLevel: updated.effortLevel ?? t.effortLevel,
+                          dueDate: updated.dueDate ?? t.dueDate,
+                          tags,
+                          concatTags,
+                          updatedAt: updated.tsUpdatedAt ?? t.updatedAt,
+                          assigneeId: hasAssignee ? String(firstAssignee.userId) : null,
+                          assigneeName: hasAssignee
+                              ? firstAssignee.username || firstAssignee.email || ""
+                              : null,
+                          assigneeEmail: hasAssignee ? firstAssignee.email || "" : null,
+                          assigneeImgPath: hasAssignee
+                              ? firstAssignee.profileImageUrl || ""
+                              : null,
+                          milestoneId: updated.milestoneId,
+                          sprintId: updated.sprintId ?? t.sprintId,
+                      }
+                    : t
+            )
+        );
+    };
+
     // Persist non-body field changes (sprint, due date, tags, ...) by
     // diffing the synthetic taskContentLike against the server-side
     // milestone whenever we get a "taskUpdated" signal. We keep this
@@ -1059,57 +1115,18 @@ const MilestonePreviewInner = ({
         // No actual changes worth a network round-trip.
         if (Object.keys(patch).length <= 1) return;
         const updated = await useSM.updateExistingMilestone(patch, projectId);
-        // Mirror milestone changes onto the backing-task row in the
-        // project task table so DraggableTaskRow re-renders without a
-        // page reload (assignee avatar, status chip, due date, ...).
-        // `TaskTableProps` is the flattened shape used by the table
-        // (e.g. `status: string`, `assigneeId: string`), not the rich
-        // `TaskProps` shape, so we patch matching fields directly.
-        if (updated) {
-            const backingId = updated.taskId;
-            if (backingId != null) {
-                const firstAssignee = updated.assignees?.[0];
-                useTM.setAllTasks((prev) =>
-                    prev.map((t) =>
-                        String(t.id) === String(backingId)
-                            ? {
-                                  ...t,
-                                  status: updated.status ?? t.status,
-                                  priority: updated.priority ?? t.priority,
-                                  effortLevel: updated.effortLevel ?? t.effortLevel,
-                                  dueDate: updated.dueDate ?? t.dueDate,
-                                  assigneeId: firstAssignee?.userId
-                                      ? String(firstAssignee.userId)
-                                      : t.assigneeId,
-                                  assigneeName: firstAssignee
-                                      ? firstAssignee.username ||
-                                        firstAssignee.email ||
-                                        t.assigneeName
-                                      : t.assigneeName,
-                                  assigneeEmail: firstAssignee
-                                      ? firstAssignee.email || t.assigneeEmail
-                                      : t.assigneeEmail,
-                                  assigneeImgPath: firstAssignee
-                                      ? firstAssignee.profileImageUrl || t.assigneeImgPath
-                                      : t.assigneeImgPath,
-                                  milestoneId: updated.milestoneId,
-                                  sprintId: updated.sprintId ?? t.sprintId,
-                              }
-                            : t
-                    )
-                );
-            }
-        }
+        if (updated) syncMilestoneToAllTasks(updated);
     };
 
     // Title save on blur / Enter.
     const saveTitle = async () => {
         if (!milestone) return;
         if (titleDraft.trim() === milestone.title) return;
-        await useSM.updateExistingMilestone(
+        const updated = await useSM.updateExistingMilestone(
             { milestoneId: milestone.milestoneId, title: titleDraft.trim() },
             milestone.projectId
         );
+        if (updated) syncMilestoneToAllTasks(updated);
     };
 
     // Auto-save body every 3s when edited (mirrors TaskPreview's loop).
@@ -1117,13 +1134,17 @@ const MilestonePreviewInner = ({
         const id = setInterval(async () => {
             if (!milestone) return;
             if (!bodyEdited) return;
-            await useSM.updateExistingMilestone(
+            const updated = await useSM.updateExistingMilestone(
                 {
                     milestoneId: milestone.milestoneId,
                     description: bodyDraft,
                 },
                 milestone.projectId
             );
+            // Body changes don't show in the table, but we still want
+            // tsUpdatedAt to bump there so any "Updated" column / sort
+            // stays correct after a description-only edit.
+            if (updated) syncMilestoneToAllTasks(updated);
             setBodyEdited(false);
             setBodySaved(true);
         }, 3000);
