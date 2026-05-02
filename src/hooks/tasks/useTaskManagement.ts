@@ -328,41 +328,53 @@ export const useTaskManagement = (
 
             // setIsTaskPreviewVisible(true);
 
-            // Add a new ongoing task. Include milestone-related fields so
-            // a freshly-appended row (e.g. just-created task or an update
-            // pushed by a teammate) doesn't bypass TaskFilterMenu's
-            // milestone-scope filter or the chip's title lookup.
+            // Upsert the row in `allTasks`. This branch fires both when a
+            // brand-new task arrives (`isNewTaskCreated`) AND when an
+            // existing task is updated by someone else
+            // (`isTaskUpdatedBySomeone` — pushed via socket). Previously
+            // we unconditionally appended, which silently duplicated the
+            // same id every time a teammate edited a task — corrupting
+            // every dashboard metric that reads `allTasks`. Match by id
+            // first; replace if found, otherwise append.
+            //
+            // Milestone-related fields are included so a freshly-merged
+            // row doesn't bypass TaskFilterMenu's milestone-scope filter
+            // or the chip's title lookup.
             if (isNewTaskCreated === true || isTaskUpdatedBySomeone === true) {
-                setAllTasks([
-                    ...allTasks,
-                    {
-                        id: String(loadedTask[0].id) || null,
-                        title: loadedTask[0].title || "",
-                        priority: loadedTask[0].priority.priority || null,
-                        effortLevel: loadedTask[0].effortLevel.level || null,
-                        createdDate: loadedTask[0].createdDate || null,
-                        updatedAt: loadedTask[0].updatedAt || null,
-                        dueDate: loadedTask[0].dueDate || null,
-                        daysLeft: loadedTask[0].daysLeft || null,
-                        status: loadedTask[0].status.status || null,
-                        assigneeId: loadedTask[0].assignee.userId || null,
-                        assigneeEmail: loadedTask[0].assignee.userEmail || null,
-                        assigneeName: loadedTask[0].assignee.userName || null,
-                        assigneeImgPath: loadedTask[0].assignee.avatarImgPath || null,
-                        parentTaskId: loadedTask[0].parentTaskId
-                            ? String(loadedTask[0].parentTaskId)
-                            : null,
-                        rootTaskId: loadedTask[0].rootTaskId ?? null,
-                        threadId: loadedTask[0].threadId || null,
-                        tags: loadedTask[0].tags || [],
-                        concatTags: loadedTask[0].concatTags || "//",
-                        teamId: myself.teamId || null,
-                        projectId: loadedTask[0].project?.projectId || null,
-                        isMilestone: loadedTask[0].isMilestone ?? false,
-                        milestoneId: loadedTask[0].milestoneId ?? null,
-                        sprintId: loadedTask[0].sprintId ?? null,
-                    },
-                ]);
+                const nextRow: TaskTableProps = {
+                    id: String(loadedTask[0].id) || null,
+                    title: loadedTask[0].title || "",
+                    priority: loadedTask[0].priority.priority || null,
+                    effortLevel: loadedTask[0].effortLevel.level || null,
+                    createdDate: loadedTask[0].createdDate || null,
+                    updatedAt: loadedTask[0].updatedAt || null,
+                    dueDate: loadedTask[0].dueDate || null,
+                    daysLeft: loadedTask[0].daysLeft || null,
+                    status: loadedTask[0].status.status || null,
+                    assigneeId: loadedTask[0].assignee.userId || null,
+                    assigneeEmail: loadedTask[0].assignee.userEmail || null,
+                    assigneeName: loadedTask[0].assignee.userName || null,
+                    assigneeImgPath: loadedTask[0].assignee.avatarImgPath || null,
+                    parentTaskId: loadedTask[0].parentTaskId
+                        ? String(loadedTask[0].parentTaskId)
+                        : null,
+                    rootTaskId: loadedTask[0].rootTaskId ?? null,
+                    threadId: loadedTask[0].threadId || null,
+                    tags: loadedTask[0].tags || [],
+                    concatTags: loadedTask[0].concatTags || "//",
+                    teamId: myself.teamId || null,
+                    projectId: loadedTask[0].project?.projectId || null,
+                    isMilestone: loadedTask[0].isMilestone ?? false,
+                    milestoneId: loadedTask[0].milestoneId ?? null,
+                    sprintId: loadedTask[0].sprintId ?? null,
+                };
+                setAllTasks((prev) => {
+                    const existingIdx = prev.findIndex((t) => t.id != null && t.id === nextRow.id);
+                    if (existingIdx === -1) return [...prev, nextRow];
+                    const next = prev.slice();
+                    next[existingIdx] = nextRow;
+                    return next;
+                });
             }
             setIsNewTaskCreated(false);
             setIsTaskUpdatedBySomeone(false);

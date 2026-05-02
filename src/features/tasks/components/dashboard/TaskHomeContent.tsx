@@ -211,9 +211,15 @@ export const TaskHomeContent = ({
     // Rolled-up task list used by every dashboard metric below.
     // We exclude Deleted tasks and entire branches under a Deleted parent,
     // and we treat sub-tasks of a Closed parent as Closed themselves.
+    //
+    // We iterate `taskById.values()` (not `allTasks` directly) so that any
+    // accidental duplicate rows in `useTM.allTasks` — which can creep in
+    // via socket-driven upserts upstream — collapse to one entry per id.
+    // `taskById` is built with `Map.set`, so the latest row wins, which
+    // matches what a user expects after an edit.
     const effectiveTasks = useMemo<EffectiveTask[]>(() => {
         const result: EffectiveTask[] = [];
-        for (const t of allTasks) {
+        for (const t of taskById.values()) {
             if (!t.id) continue;
             // Rule 1: ignore tasks that are themselves Deleted.
             if (t.status === "Deleted") continue;
@@ -248,7 +254,7 @@ export const TaskHomeContent = ({
             result.push({ ...t, effectiveStatus, effectiveCloseDate });
         }
         return result;
-    }, [allTasks, taskById]);
+    }, [taskById]);
 
     const stats = useMemo(() => {
         const openCount = effectiveTasks.filter((t) => t.effectiveStatus === "Open").length;
