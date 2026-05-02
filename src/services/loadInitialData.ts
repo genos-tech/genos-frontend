@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import LoadActivityHistoryWorker from "../db/workers/loadActivityHistoryWorker.ts?worker";
 import LoadDMHistoryWorker from "../db/workers/loadDMHistoryWorker.ts?worker";
 import LoadGMHistoryWorker from "../db/workers/loadGMHistoryWorker.ts?worker";
-import LoadMDMHistoryWorker from "../db/workers/loadMDMHistoryWorker.ts?worker";
 import LoadInboxWorker from "../db/workers/loadInboxWorker.ts?worker";
+import LoadMDMHistoryWorker from "../db/workers/loadMDMHistoryWorker.ts?worker";
 import LoadPMHistoryWorker from "../db/workers/loadPMHistoryWorker.ts?worker";
 import LoadProjectTasksWorker from "../db/workers/loadProjectTasksWorker.ts?worker";
 import LoadTeamMemberWorker from "../db/workers/loadTeamMembersWorker.ts?worker";
@@ -271,8 +271,7 @@ export const loadInitialData = (
                                         lastReadMessageId: fetchedChat.lastReadMessageId,
                                         messages: fetchedMessages,
                                         latestMessage: lastMsg,
-                                        latestMessageText:
-                                            lastMsg?.contentText ?? "",
+                                        latestMessageText: lastMsg?.contentText ?? "",
                                         TSLastMessage: fetchedChat.TSLastMessage,
                                         project: fetchedChat.project,
                                         isPrivate: fetchedChat.isPrivate,

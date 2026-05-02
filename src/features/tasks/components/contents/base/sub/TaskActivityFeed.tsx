@@ -12,24 +12,30 @@ import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import LocalOfferOutlinedIcon from "@mui/icons-material/LocalOfferOutlined";
 import RestoreRoundedIcon from "@mui/icons-material/RestoreRounded";
 import TimelineRoundedIcon from "@mui/icons-material/TimelineRounded";
-import { Avatar, Box, Chip, Stack, Typography } from "@mui/joy";
+import { Box, Chip, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { Socket } from "socket.io-client";
 
+import { AvatarWithStatus } from "../../../../../../components/ui/avatars/avatarWithStatus";
 import { useAuth } from "../../../../../../context/AuthContext";
+import { ChatManagementState } from "../../../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../../../types/admin";
 import { TaskActivityProps, TaskProps } from "../../../../../../types/tasks";
 import { loadTaskActivities } from "../../../../services/loadTaskActivities";
 import { statusOptions } from "../../../table/DraggableTaskTable";
 
-const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
-
 type TaskActivityFeedProps = {
     task: TaskProps;
     myself: UserProps;
+    setMyself: (value: UserProps) => void;
+    socket: Socket | null;
     useTM: TaskManagementState;
     useTEM: TeamManagementState;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
 };
 
 // Map status → DraggableTaskTable swatch so the chips here match the
@@ -232,7 +238,16 @@ const ValueChip = ({
  * relative timestamp. No virtualization yet — most tasks accumulate
  * tens of rows, not thousands.
  */
-export const TaskActivityFeed = ({ task, myself, useTM, useTEM }: TaskActivityFeedProps) => {
+export const TaskActivityFeed = ({
+    task,
+    myself,
+    setMyself,
+    socket,
+    useTM,
+    useTEM,
+    useCM,
+    useUISM,
+}: TaskActivityFeedProps) => {
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -330,8 +345,16 @@ export const TaskActivityFeed = ({ task, myself, useTM, useTEM }: TaskActivityFe
                 const statusKeyOld = row.fieldName === "status" ? oldFmt.label : null;
                 const statusKeyNew = row.fieldName === "status" ? newFmt.label : null;
 
-                const avatarPath = row.actor?.avatarImgPath;
-                const avatarUrl = avatarPath ? `${media_url}${avatarPath}` : undefined;
+                // Prefer the team-member profile (richer presence /
+                // online status) over `row.actor`, which carries only
+                // the basics needed for the audit log payload. Fall
+                // back to `row.actor` when the actor isn't a current
+                // team member (e.g. ex-member, system actor).
+                const actorId = row.actor?.userId;
+                const avatarUser =
+                    (actorId != null
+                        ? (teamMemberProfiles[String(actorId)] as UserProps | undefined)
+                        : undefined) ?? (row.actor as UserProps | undefined);
 
                 return (
                     <Stack
@@ -348,13 +371,16 @@ export const TaskActivityFeed = ({ task, myself, useTM, useTEM }: TaskActivityFe
                             },
                         }}
                     >
-                        <Avatar
-                            src={avatarUrl}
-                            size="sm"
-                            sx={{ width: 24, height: 24, fontSize: "0.7rem" }}
-                        >
-                            {actorName.slice(0, 1).toUpperCase()}
-                        </Avatar>
+                        <AvatarWithStatus
+                            avatarSize={24}
+                            avatarUser={avatarUser}
+                            isYou={actorId != null && String(myself.userId) === String(actorId)}
+                            myself={myself}
+                            setMyself={setMyself}
+                            socket={socket}
+                            useCM={useCM}
+                            useUISM={useUISM}
+                        />
                         <Box
                             sx={{
                                 flex: 1,

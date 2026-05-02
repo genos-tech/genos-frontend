@@ -973,8 +973,12 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                         <TaskActivityFeed
                             task={taskContent}
                             myself={myself}
+                            setMyself={setMyself}
+                            socket={socket}
                             useTM={useTM}
                             useTEM={useTEM}
+                            useCM={useCM}
+                            useUISM={useUISM}
                         />
                     </TabPanel>
                 </Box>

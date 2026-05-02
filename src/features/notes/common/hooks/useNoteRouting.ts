@@ -21,12 +21,14 @@ const CHAT_TYPE_MAP: Record<string, number> = {
     dm: 1,
     gm: 2,
     pm: 3,
+    mdm: 4,
 };
 
 const CHAT_TYPE_REVERSE_MAP: Record<number, string> = {
     1: "dm",
     2: "gm",
     3: "pm",
+    4: "mdm",
 };
 
 type UseNoteRoutingProps = {

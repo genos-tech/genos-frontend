@@ -128,6 +128,7 @@ export const ChatNoteHeader = ({
         1: "dm",
         2: "gm",
         3: "pm",
+        4: "mdm",
     };
 
     // Action button style
