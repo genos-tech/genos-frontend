@@ -14,6 +14,7 @@ import {
 
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { Milestone, Sprint } from "../types";
+import { compareMilestones } from "../utils/sortMilestones";
 
 type SprintOption = { kind: "sprint"; id: number | null; label: string; sprint: Sprint | null };
 type MilestoneOption = {
@@ -55,11 +56,19 @@ const NO_MILESTONE: MilestoneOption = {
     milestone: null,
 };
 
-const STATUS_COLOR: Record<string, "primary" | "warning" | "success" | "neutral"> = {
+const SPRINT_STATUS_COLOR: Record<string, "primary" | "warning" | "success" | "neutral"> = {
     upcoming: "neutral",
     active: "primary",
     completed: "success",
     archived: "neutral",
+};
+
+const MILESTONE_STATUS_COLOR: Record<string, "primary" | "warning" | "success" | "neutral"> = {
+    Open: "primary",
+    WIP: "warning",
+    Pending: "neutral",
+    Closed: "success",
+    Deleted: "neutral",
 };
 
 // Shared listbox slot styling for both autocompletes. Joy's default
@@ -138,10 +147,16 @@ export const SprintMilestonePicker = ({
     // from the dropdown. The selected milestone is the source of truth
     // for the sprint linkage (see the milestone Autocomplete's onChange
     // below, which auto-syncs the sprint to match the milestone).
+    //
+    // Sort matches the sidebar (`MilestonesListItem`) — three levels:
+    // due-date asc (null last) → custom status order → title asc — so
+    // both surfaces show milestones in the same order. `NO_MILESTONE`
+    // is prepended after sort so the sentinel always stays on top.
     const milestoneOptions: MilestoneOption[] = useMemo(() => {
+        const sorted = [...milestones].sort(compareMilestones);
         return [
             NO_MILESTONE,
-            ...milestones.map<MilestoneOption>((m) => ({
+            ...sorted.map<MilestoneOption>((m) => ({
                 kind: "milestone",
                 id: m.milestoneId,
                 label: m.title,
@@ -191,7 +206,10 @@ export const SprintMilestonePicker = ({
                                         <Chip
                                             size="sm"
                                             variant="soft"
-                                            color={STATUS_COLOR[option.sprint.status] ?? "neutral"}
+                                            color={
+                                                SPRINT_STATUS_COLOR[option.sprint.status] ??
+                                                "neutral"
+                                            }
                                         >
                                             {option.sprint.status}
                                         </Chip>
@@ -261,7 +279,14 @@ export const SprintMilestonePicker = ({
                                             {option.label}
                                         </Typography>
                                         {m && (
-                                            <Chip size="sm" variant="soft">
+                                            <Chip
+                                                size="sm"
+                                                variant="soft"
+                                                color={
+                                                    MILESTONE_STATUS_COLOR[m.status as string] ??
+                                                    "neutral"
+                                                }
+                                            >
                                                 {m.status}
                                             </Chip>
                                         )}
