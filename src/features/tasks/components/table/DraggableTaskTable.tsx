@@ -6,6 +6,7 @@ import PendingIcon from "@mui/icons-material/Pending";
 import { Box, CircularProgress, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { createTheme, THEME_ID, ThemeProvider } from "@mui/material/styles";
+import dayjs from "dayjs";
 import { DragDropContext, Droppable, DropResult } from "react-beautiful-dnd";
 import { Socket } from "socket.io-client";
 
@@ -541,6 +542,101 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
     // Handle row update
     const handleRowUpdate = async (updatedRow: TaskTableProps): Promise<TaskTableProps> => {
         try {
+            // Milestone rows are persisted through the milestone API
+            // (PATCH /api/v2/milestone/<id>/), not the task API. Without
+            // this branch the row's edit only updates the backing
+            // TaskMaster row while the authoritative `MilestoneMaster`
+            // record (which `MilestonePreviewInner` reads from via
+            // `useSM.projectMilestones`) drifts out of sync.
+            //
+            // The backend's milestone PATCH handler calls
+            // `_sync_backing_task` after saving so the table row stays
+            // consistent on the server side too.
+            if (updatedRow.isMilestone === true && updatedRow.milestoneId != null) {
+                const projectId = Number(updatedRow.projectId);
+                if (!Number.isFinite(projectId) || projectId <= 0) {
+                    return updatedRow;
+                }
+                const prevRow = currentDisplayingTasks.find((t) => t.id === updatedRow.id);
+                const patch: Parameters<typeof useSM.updateExistingMilestone>[0] = {
+                    milestoneId: updatedRow.milestoneId,
+                };
+                if ((prevRow?.title ?? "") !== (updatedRow.title ?? "")) {
+                    patch.title = updatedRow.title || "";
+                }
+                if ((prevRow?.status ?? null) !== (updatedRow.status ?? null)) {
+                    patch.status = updatedRow.status || undefined;
+                }
+                if ((prevRow?.priority ?? null) !== (updatedRow.priority ?? null)) {
+                    patch.priority = updatedRow.priority || null;
+                }
+                if ((prevRow?.effortLevel ?? null) !== (updatedRow.effortLevel ?? null)) {
+                    patch.effortLevel = updatedRow.effortLevel || null;
+                }
+                if ((prevRow?.dueDate ?? null) !== (updatedRow.dueDate ?? null)) {
+                    const nextDue = updatedRow.dueDate
+                        ? dayjs(updatedRow.dueDate).format("YYYY-MM-DD")
+                        : null;
+                    patch.dueDate = nextDue;
+                }
+                if ((prevRow?.assigneeId ?? null) !== (updatedRow.assigneeId ?? null)) {
+                    patch.assigneeIds = updatedRow.assigneeId ? [updatedRow.assigneeId] : [];
+                }
+
+                // Nothing actually changed beyond the bookkeeping id; skip
+                // the round-trip so we don't churn `tsUpdatedAt`.
+                if (Object.keys(patch).length <= 1) {
+                    return updatedRow;
+                }
+
+                const updated = await useSM.updateExistingMilestone(patch, projectId);
+                if (!updated) return updatedRow;
+
+                // Mirror the milestone shape back onto the table-row
+                // shape so the table + sprint board (which read
+                // `useTM.allTasks` / `currentDisplayingTasks`) re-render
+                // immediately. Mirrors `syncMilestoneToAllTasks` in
+                // `MilestonePreviewInner` to keep both entry points
+                // converging on the same row format.
+                const firstAssignee = updated.assignees?.[0];
+                const hasAssignee = firstAssignee?.userId != null;
+                const tags = (updated.tags as TagListProps[] | null) ?? [];
+                const concatTags =
+                    tags.length > 0 ? "/" + tags.map((tg) => tg.tagName).join("/") + "/" : null;
+                const dueDateStr = updated.dueDate
+                    ? dayjs(updated.dueDate).format("YYYY-MM-DD")
+                    : null;
+                const mirrored: TaskTableProps = {
+                    ...updatedRow,
+                    title: updated.title ?? updatedRow.title,
+                    status: (updated.status as string) ?? updatedRow.status,
+                    priority: updated.priority ?? updatedRow.priority,
+                    effortLevel: updated.effortLevel ?? updatedRow.effortLevel,
+                    dueDate: dueDateStr ?? updatedRow.dueDate,
+                    tags,
+                    concatTags,
+                    updatedAt: updated.tsUpdatedAt ?? updatedRow.updatedAt,
+                    assigneeId: hasAssignee ? String(firstAssignee.userId) : null,
+                    assigneeName: hasAssignee
+                        ? firstAssignee.username || firstAssignee.email || ""
+                        : null,
+                    assigneeEmail: hasAssignee ? firstAssignee.email || "" : null,
+                    assigneeImgPath: hasAssignee ? firstAssignee.profileImageUrl || "" : null,
+                    milestoneId: updated.milestoneId,
+                    sprintId: updated.sprintId ?? updatedRow.sprintId,
+                    isMilestone: true,
+                };
+
+                setCurrentDisplayingTasks((prev) =>
+                    prev.map((t) => (t.id === mirrored.id ? mirrored : t))
+                );
+                useTM.setAllTasks((prev) =>
+                    prev.map((t) => (String(t.id) === String(mirrored.id) ? mirrored : t))
+                );
+
+                return mirrored;
+            }
+
             const result = await updateTaskFromTable(
                 updatedRow,
                 myself,

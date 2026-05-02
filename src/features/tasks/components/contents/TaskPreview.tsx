@@ -250,10 +250,15 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     const taskComments = useTM.taskComments;
     const setTaskComments = useTM.setTaskComments;
     useEffect(() => {
+        const previewTaskId = Number(useTM.currentPreviewTask?.id);
+        if (!Number.isFinite(previewTaskId) || previewTaskId <= 0) {
+            setTaskComments([]);
+            return;
+        }
         (async () => {
             const loadedTaskComments: TaskCommentProps[] = await loadTaskComments(
                 myself,
-                Number(useTM.currentPreviewTask?.id),
+                previewTaskId,
                 accessToken
             );
             if (loadedTaskComments.length > 0) {
