@@ -189,9 +189,16 @@ export class NotificationManager {
         return this.prefs.mutedChats.some((m) => m.chatType === chatType && m.chatId === chatId);
     }
 
-    mute(chatType: number, chatId: string) {
+    /**
+     * Add a chat to the muted list. `chatName` is optional and only used
+     * for display in the settings panel — leaving it undefined is harmless
+     * (the panel falls back to `chatId`), but supplying it gives the user
+     * something readable next time they open settings.
+     */
+    mute(chatType: number, chatId: string, chatName?: string) {
         if (this.isMuted(chatType, chatId)) return;
-        const next: MutedChatRef[] = [...this.prefs.mutedChats, { chatType, chatId }];
+        const ref: MutedChatRef = chatName ? { chatType, chatId, chatName } : { chatType, chatId };
+        const next: MutedChatRef[] = [...this.prefs.mutedChats, ref];
         this.commitPatch({ mutedChats: next });
     }
 

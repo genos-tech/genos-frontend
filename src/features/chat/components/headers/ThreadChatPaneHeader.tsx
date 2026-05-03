@@ -3,7 +3,7 @@ import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import ReplyRoundedIcon from "@mui/icons-material/ReplyRounded";
-import { Box, Chip, IconButton, Stack, Tooltip, Typography } from "@mui/joy";
+import { Box, IconButton, Stack, Tooltip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 
@@ -89,22 +89,6 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
             background: styles.buttonHover,
             transform: "translateY(-1px)",
             boxShadow: `0 4px 12px ${styles.glowColor}`,
-        },
-    };
-
-    // Primary button style
-    const primaryButtonStyle = {
-        background: styles.primaryButtonBg,
-        border: "none",
-        borderRadius: "10px",
-        minWidth: 36,
-        height: 36,
-        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-        boxShadow: `0 2px 8px ${styles.glowColor}`,
-        "&:hover": {
-            background: styles.primaryButtonHover,
-            transform: "translateY(-2px)",
-            boxShadow: `0 6px 16px ${styles.glowColor}`,
         },
     };
 
@@ -244,122 +228,233 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     <MuteToggleButton
                         chatType={useCM.currentThreadChat.chatType}
                         chatId={useCM.currentThreadChat.chatId}
+                        chatName={useCM.currentThreadChat.chatName}
                     />
                 )}
 
-                {/* Task ID and Status chips (for PM/task threads) */}
-                {(((useCM.currentThreadChat?.chatType === 3 ||
-                    useCM.currentThreadChat?.chatType === 4) &&
-                    currentThreadTaskId !== -1) ||
-                    (currentThreadTaskId !== -1 &&
-                        useTM.currentPreviewTask &&
-                        useCM.currentThreadChat?.taskExist === true)) && (
-                    <>
-                        <Chip
-                            size="sm"
-                            variant="soft"
-                            sx={{
-                                height: 28,
-                                borderRadius: "8px",
-                                background: styles.chipBg,
-                                border: `1px solid ${styles.chipBorder}`,
-                                fontWeight: 600,
-                                fontSize: "12px",
-                            }}
-                        >
-                            ID: {useCM.currentThreadChat?.taskId || "N/A"}
-                        </Chip>
+                {/*
+                    Unified Task pill — replaces the previously-isolated
+                    Task ID chip, Status chip, Open Task button and Create
+                    Task button which sat side-by-side and confused users
+                    about what was clickable vs informational. Two
+                    variants share the same rounded shape so "task" is
+                    perceived as one cohesive control:
+                      - "exists":  clickable; shows Task #<id> plus a
+                                   colored status dot/label when status
+                                   info is trustworthy (chip-visibility
+                                   rule preserved from the original).
+                                   The whole pill is the "open task"
+                                   affordance.
+                      - "create":  primary-styled; shows + Create Task
+                                   label. Suppressed for PM threads
+                                   (chatType === 3) which always have a
+                                   task tied to the thread.
+                */}
+                {(() => {
+                    const hasTask = currentThreadTaskId !== -1;
+                    const chatType = useCM.currentThreadChat?.chatType;
 
-                        {useTM.currentPreviewTask && (
-                            <Chip
+                    if (hasTask) {
+                        // Original chip-visibility rule: only show status
+                        // info when we trust it — PM/MDM threads always
+                        // have a real task; other types only after the
+                        // preview is loaded with taskExist === true.
+                        const showStatus =
+                            chatType === 3 ||
+                            chatType === 4 ||
+                            (!!useTM.currentPreviewTask &&
+                                useCM.currentThreadChat?.taskExist === true);
+                        const status = useTM.currentPreviewTask?.status;
+                        const statusColor = status?.color || styles.accentColor;
+
+                        return (
+                            <Tooltip
                                 size="sm"
+                                title="Open Task"
+                                variant="soft"
+                                sx={{ borderRadius: "8px" }}
+                            >
+                                <Box
+                                    component="button"
+                                    type="button"
+                                    aria-label={`Open Task #${useCM.currentThreadChat?.taskId ?? "N/A"}`}
+                                    onClick={() => {
+                                        useCM.setIsMainChatVisible(false);
+                                        useCM.setIsThreadVisible(true);
+                                        useTM.setCurrentPreviewTaskId(currentThreadTaskId);
+                                        useTM.setIsTaskPreviewVisible(true);
+                                        useTM.setIsCreatingTask({
+                                            flag: false,
+                                            parentTaskId: null,
+                                            rootTaskId: null,
+                                            creationKind: "task",
+                                            milestoneId: null,
+                                        });
+                                    }}
+                                    sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 0.75,
+                                        height: 32,
+                                        px: 1.25,
+                                        borderRadius: "10px",
+                                        border: `1px solid ${styles.chipBorder}`,
+                                        background: styles.chipBg,
+                                        cursor: "pointer",
+                                        font: "inherit",
+                                        color: styles.textColor,
+                                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                        "&:hover": {
+                                            background: styles.buttonHover,
+                                            transform: "translateY(-1px)",
+                                            boxShadow: `0 4px 12px ${styles.glowColor}`,
+                                        },
+                                        "&:focus-visible": {
+                                            outline: `2px solid ${styles.accentColor}`,
+                                            outlineOffset: 2,
+                                        },
+                                    }}
+                                >
+                                    <AssignmentRoundedIcon
+                                        sx={{
+                                            fontSize: 16,
+                                            color: styles.accentColor,
+                                        }}
+                                    />
+                                    <Typography
+                                        level="body-xs"
+                                        sx={{
+                                            fontWeight: 700,
+                                            color: styles.textColor,
+                                            letterSpacing: "-0.01em",
+                                        }}
+                                    >
+                                        Task #{useCM.currentThreadChat?.taskId ?? "N/A"}
+                                    </Typography>
+
+                                    {showStatus && status && (
+                                        <>
+                                            <Box
+                                                sx={{
+                                                    width: "1px",
+                                                    height: 14,
+                                                    bgcolor: styles.chipBorder,
+                                                    mx: 0.25,
+                                                }}
+                                            />
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: 0.5,
+                                                    px: 0.75,
+                                                    py: 0.125,
+                                                    borderRadius: "6px",
+                                                    background: status.color
+                                                        ? alpha(status.color, isDark ? 0.4 : 0.6)
+                                                        : "transparent",
+                                                    color: status.textColor,
+                                                }}
+                                            >
+                                                <Box
+                                                    sx={{
+                                                        width: 6,
+                                                        height: 6,
+                                                        borderRadius: "50%",
+                                                        background: statusColor,
+                                                        boxShadow: `0 0 0 2px ${alpha(
+                                                            statusColor,
+                                                            isDark ? 0.25 : 0.18
+                                                        )}`,
+                                                    }}
+                                                />
+                                                <Typography
+                                                    level="body-xs"
+                                                    sx={{
+                                                        fontWeight: 700,
+                                                        color: "inherit",
+                                                        fontSize: "11px",
+                                                        textTransform: "uppercase",
+                                                        letterSpacing: "0.04em",
+                                                    }}
+                                                >
+                                                    {status.status || "N/A"}
+                                                </Typography>
+                                            </Box>
+                                        </>
+                                    )}
+                                </Box>
+                            </Tooltip>
+                        );
+                    }
+
+                    // No task yet → show Create Task pill (suppressed for
+                    // PM threads, which always have a task by design).
+                    if (chatType === 3) return null;
+
+                    return (
+                        <Tooltip
+                            size="sm"
+                            title="Create a New Task linked to this thread"
+                            variant="soft"
+                            sx={{ borderRadius: "8px" }}
+                        >
+                            <Box
+                                component="button"
+                                type="button"
+                                aria-label="Create a new task linked to this thread"
+                                onClick={() => {
+                                    useCM.setIsMainChatVisible(true);
+                                    useCM.setIsThreadVisible(true);
+                                    useTM.setIsTaskPreviewVisible(false);
+                                    useTM.setIsCreatingTask({
+                                        flag: true,
+                                        parentTaskId: null,
+                                        rootTaskId: null,
+                                        creationKind: "task",
+                                        milestoneId: null,
+                                    });
+                                }}
                                 sx={{
-                                    height: 28,
-                                    borderRadius: "8px",
-                                    backgroundColor: useTM.currentPreviewTask.status.color
-                                        ? alpha(
-                                              useTM.currentPreviewTask.status.color,
-                                              isDark ? 0.5 : 0.75
-                                          )
-                                        : "transparent",
-                                    color: useTM.currentPreviewTask.status.textColor,
-                                    fontWeight: 600,
-                                    fontSize: "12px",
-                                    border: `1px solid ${
-                                        useTM.currentPreviewTask.status.color
-                                            ? alpha(useTM.currentPreviewTask.status.color, 0.4)
-                                            : "transparent"
-                                    }`,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 0.75,
+                                    height: 32,
+                                    px: 1.5,
+                                    borderRadius: "10px",
+                                    border: "none",
+                                    background: styles.primaryButtonBg,
+                                    cursor: "pointer",
+                                    font: "inherit",
+                                    color: "#fff",
+                                    boxShadow: `0 2px 8px ${styles.glowColor}`,
+                                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                    "&:hover": {
+                                        background: styles.primaryButtonHover,
+                                        transform: "translateY(-2px)",
+                                        boxShadow: `0 6px 16px ${styles.glowColor}`,
+                                    },
+                                    "&:focus-visible": {
+                                        outline: `2px solid ${styles.accentColor}`,
+                                        outlineOffset: 2,
+                                    },
                                 }}
                             >
-                                {useTM.currentPreviewTask.status.status || "N/A"}
-                            </Chip>
-                        )}
-                    </>
-                )}
-
-                {/* Create Task Button (for threads without a task, excluding PM) */}
-                {useCM.currentThreadChat?.chatType !== 3 && currentThreadTaskId === -1 && (
-                    <Tooltip
-                        size="sm"
-                        title="Create a New Task"
-                        variant="soft"
-                        sx={{ borderRadius: "8px" }}
-                    >
-                        <IconButton
-                            size="sm"
-                            variant="plain"
-                            sx={primaryButtonStyle}
-                            onClick={() => {
-                                useCM.setIsMainChatVisible(true);
-                                useCM.setIsThreadVisible(true);
-                                useTM.setIsTaskPreviewVisible(false);
-                                useTM.setIsCreatingTask({
-                                    flag: true,
-                                    parentTaskId: null,
-                                    rootTaskId: null,
-                                    creationKind: "task",
-                                    milestoneId: null,
-                                });
-                            }}
-                        >
-                            <AddTaskRoundedIcon sx={{ fontSize: 18, color: "#fff" }} />
-                        </IconButton>
-                    </Tooltip>
-                )}
-
-                {/* Open Task Button (only when a task exists) */}
-                {currentThreadTaskId !== -1 && (
-                    <Tooltip
-                        size="sm"
-                        title="Open Task"
-                        variant="soft"
-                        sx={{ borderRadius: "8px" }}
-                    >
-                        <IconButton
-                            size="sm"
-                            variant="plain"
-                            sx={actionButtonStyle}
-                            onClick={() => {
-                                useCM.setIsMainChatVisible(false);
-                                useCM.setIsThreadVisible(true);
-                                useTM.setCurrentPreviewTaskId(currentThreadTaskId);
-                                useTM.setIsTaskPreviewVisible(true);
-                                useTM.setIsCreatingTask({
-                                    flag: false,
-                                    parentTaskId: null,
-                                    rootTaskId: null,
-                                    creationKind: "task",
-                                    milestoneId: null,
-                                });
-                            }}
-                        >
-                            <AssignmentRoundedIcon
-                                sx={{ fontSize: 18, color: styles.accentColor }}
-                            />
-                        </IconButton>
-                    </Tooltip>
-                )}
+                                <AddTaskRoundedIcon sx={{ fontSize: 16, color: "#fff" }} />
+                                <Typography
+                                    level="body-xs"
+                                    sx={{
+                                        fontWeight: 700,
+                                        color: "#fff",
+                                        letterSpacing: "-0.01em",
+                                    }}
+                                >
+                                    Create Task
+                                </Typography>
+                            </Box>
+                        </Tooltip>
+                    );
+                })()}
 
                 {/* Open Note Button */}
                 <Tooltip size="sm" title="Open Note" variant="soft" sx={{ borderRadius: "8px" }}>

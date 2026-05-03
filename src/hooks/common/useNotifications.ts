@@ -34,7 +34,7 @@ export interface NotificationsState {
     requestPermission: () => Promise<WebNotificationPermission>;
     setMasterEnabled: (value: boolean) => void;
     setCategoryEnabled: (category: NotificationCategory, value: boolean) => void;
-    mute: (chatType: number, chatId: string) => void;
+    mute: (chatType: number, chatId: string, chatName?: string) => void;
     unmute: (chatType: number, chatId: string) => void;
     isMuted: (chatType: number, chatId: string) => boolean;
     setActiveSurface: (surface: ActiveSurface | null) => void;
@@ -170,7 +170,8 @@ export const useNotifications = (
         [manager]
     );
     const mute = useCallback(
-        (chatType: number, chatId: string) => manager.mute(chatType, chatId),
+        (chatType: number, chatId: string, chatName?: string) =>
+            manager.mute(chatType, chatId, chatName),
         [manager]
     );
     const unmute = useCallback(

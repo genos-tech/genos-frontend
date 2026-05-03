@@ -431,8 +431,8 @@ export const NoteTabs = ({
                         <Box
                             sx={{
                                 position: "absolute",
-                                top: "50px",
-                                left: "50%",
+                                top: "52.5px",
+                                right: "1%",
                                 transform: "translateX(-50%)",
                                 zIndex: 100,
                             }}

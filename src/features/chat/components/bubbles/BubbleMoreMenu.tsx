@@ -333,6 +333,15 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
 
     const menuItems: MenuItemConfig[] = [
         {
+            id: "openTask",
+            label: "Open task",
+            icon: <OpenInNewRoundedIcon sx={{ fontSize: 18 }} />,
+            onClick: handleOpenTaskClick,
+            color: { light: "#0d9488", dark: "#2dd4bf" },
+            hoverBg: { light: "rgba(13,148,136,0.12)", dark: "rgba(45,212,191,0.18)" },
+            visible: isProjectChat && isSystemMessage && message.taskId !== null,
+        },
+        {
             id: "reply",
             label: "Reply in thread",
             icon: <ReplyRoundedIcon sx={{ fontSize: 18 }} />,
@@ -372,15 +381,6 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
             color: { light: "#0891b2", dark: "#22d3ee" },
             hoverBg: { light: "rgba(8,145,178,0.12)", dark: "rgba(34,211,238,0.18)" },
             visible: isOwnMessage,
-        },
-        {
-            id: "openTask",
-            label: "Open task",
-            icon: <OpenInNewRoundedIcon sx={{ fontSize: 18 }} />,
-            onClick: handleOpenTaskClick,
-            color: { light: "#0d9488", dark: "#2dd4bf" },
-            hoverBg: { light: "rgba(13,148,136,0.12)", dark: "rgba(45,212,191,0.18)" },
-            visible: isProjectChat && isSystemMessage && message.taskId !== null,
         },
         {
             id: "delete",

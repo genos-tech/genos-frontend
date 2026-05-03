@@ -7,6 +7,10 @@ import { useNotificationsContext } from "./NotificationsContext";
 interface MuteToggleButtonProps {
     chatType: number;
     chatId: string | number | null | undefined;
+    /** Display name persisted alongside the mute entry so the settings
+     *  panel can show a readable label instead of a raw chat id. Optional
+     *  — when omitted the panel falls back to displaying `chatId`. */
+    chatName?: string;
     /** Optional Joy color override; defaults to "neutral". */
     color?: "neutral" | "primary" | "danger" | "success" | "warning";
     /** Optional size override; defaults to "sm". */
@@ -21,6 +25,7 @@ interface MuteToggleButtonProps {
 export const MuteToggleButton = ({
     chatType,
     chatId,
+    chatName,
     color = "neutral",
     size = "sm",
 }: MuteToggleButtonProps) => {
@@ -36,7 +41,7 @@ export const MuteToggleButton = ({
         if (muted) {
             ctx.unmute(chatType, key);
         } else {
-            ctx.mute(chatType, key);
+            ctx.mute(chatType, key, chatName);
         }
     };
 

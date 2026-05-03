@@ -10,6 +10,11 @@ export type NotificationCategory =
 export interface MutedChatRef {
     chatType: number;
     chatId: string;
+    /** Display name shown in the muted-chats settings list. Optional
+     *  because legacy / freshly-hydrated entries from the backend may not
+     *  yet carry a name; consumers should fall back to `chatId` when
+     *  unset. */
+    chatName?: string;
 }
 
 export interface NotificationPreference {

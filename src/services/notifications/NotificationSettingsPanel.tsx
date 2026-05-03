@@ -50,13 +50,13 @@ const CATEGORY_LABELS: Array<{
 const labelForChatType = (chatType: number): string => {
     switch (chatType) {
         case 1:
-            return "DM";
+            return "Direct Messages";
         case 2:
-            return "Group";
+            return "Group Messages";
         case 3:
-            return "Project";
+            return "Project Updates";
         case 4:
-            return "Group DM";
+            return "Direct Messages";
         default:
             return `Chat ${chatType}`;
     }
@@ -186,36 +186,72 @@ export const NotificationSettingsPanel = () => {
                 </Typography>
             ) : (
                 <Stack spacing={0.75} sx={{ mt: 0.5 }}>
-                    {preferences.mutedChats.map((m) => (
-                        <Stack
-                            key={`${m.chatType}:${m.chatId}`}
-                            direction="row"
-                            spacing={1}
-                            alignItems="center"
-                            justifyContent="space-between"
-                            sx={{
-                                px: 1.25,
-                                py: 0.5,
-                                borderRadius: "md",
-                                bgcolor: "background.level1",
-                            }}
-                        >
-                            <Stack direction="row" spacing={1} alignItems="center">
-                                <Chip size="sm" variant="soft">
-                                    {labelForChatType(m.chatType)}
-                                </Chip>
-                                <Typography level="body-sm">{m.chatId}</Typography>
-                            </Stack>
-                            <IconButton
-                                size="sm"
-                                variant="plain"
-                                onClick={() => unmute(m.chatType, m.chatId)}
-                                aria-label="Unmute"
+                    {preferences.mutedChats.map((m) => {
+                        // Prefer the persisted display name; fall back to
+                        // the raw chat id for legacy entries (older mutes
+                        // that pre-date the `chatName` field).
+                        const displayName = m.chatName || m.chatId;
+                        // const showRawId = !!m.chatName && m.chatName !== m.chatId;
+                        const showRawId = false;
+                        return (
+                            <Stack
+                                key={`${m.chatType}:${m.chatId}`}
+                                direction="row"
+                                spacing={1}
+                                alignItems="center"
+                                justifyContent="space-between"
+                                sx={{
+                                    px: 1.25,
+                                    py: 0.5,
+                                    borderRadius: "md",
+                                    bgcolor: "background.level1",
+                                }}
                             >
-                                <NotificationsActiveRounded />
-                            </IconButton>
-                        </Stack>
-                    ))}
+                                <Stack
+                                    direction="row"
+                                    spacing={1}
+                                    alignItems="center"
+                                    sx={{ minWidth: 0, flex: 1 }}
+                                >
+                                    <Chip size="sm" variant="soft">
+                                        {labelForChatType(m.chatType)}
+                                    </Chip>
+                                    <Stack sx={{ minWidth: 0 }}>
+                                        <Typography
+                                            level="body-sm"
+                                            sx={{ fontWeight: 600 }}
+                                            noWrap
+                                            title={displayName}
+                                        >
+                                            {displayName}
+                                        </Typography>
+                                        {showRawId && (
+                                            <Typography
+                                                level="body-xs"
+                                                sx={{
+                                                    color: "neutral.plainColor",
+                                                    opacity: 0.6,
+                                                    fontFamily: "monospace",
+                                                }}
+                                                noWrap
+                                                title={`Chat ID: ${m.chatId}`}
+                                            >
+                                                #{m.chatId}
+                                            </Typography>
+                                        )}
+                                    </Stack>
+                                </Stack>
+                                <IconButton
+                                    size="sm"
+                                    variant="plain"
+                                    onClick={() => unmute(m.chatType, m.chatId)}
+                                    aria-label={`Unmute ${displayName}`}
+                                >
+                                    <NotificationsActiveRounded />
+                                </IconButton>
+                            </Stack>
+                        );
+                    })}
                 </Stack>
             )}
         </Sheet>

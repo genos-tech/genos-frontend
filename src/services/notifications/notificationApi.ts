@@ -9,7 +9,7 @@ interface NotificationPreferenceWire {
     enable_mentions: boolean;
     enable_task_comments: boolean;
     enable_inbox: boolean;
-    muted_chats: Array<{ chat_type: number; chat_id: string }>;
+    muted_chats: Array<{ chat_type: number; chat_id: string; chat_name?: string }>;
     ts_updated_at?: string;
 }
 
@@ -23,6 +23,7 @@ const fromWire = (wire: NotificationPreferenceWire): NotificationPreference => (
     mutedChats: (wire.muted_chats || []).map((m) => ({
         chatType: m.chat_type,
         chatId: m.chat_id,
+        ...(m.chat_name ? { chatName: m.chat_name } : {}),
     })),
 });
 
@@ -44,6 +45,7 @@ export const toWire = (
         wire.muted_chats = patch.mutedChats.map((m) => ({
             chat_type: m.chatType,
             chat_id: m.chatId,
+            ...(m.chatName ? { chat_name: m.chatName } : {}),
         }));
     }
     return wire;

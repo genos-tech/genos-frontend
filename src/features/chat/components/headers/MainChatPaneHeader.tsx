@@ -179,7 +179,11 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
 
             <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
                 {/* Per-chat mute toggle */}
-                <MuteToggleButton chatType={chat.chatType} chatId={chat.chatId} />
+                <MuteToggleButton
+                    chatType={chat.chatType}
+                    chatId={chat.chatId}
+                    chatName={chat.chatName}
+                />
 
                 {/* Create Task Button */}
                 {chat.chatType === 3 && (

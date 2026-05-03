@@ -120,8 +120,10 @@ const KeyboardShortcutsSection = () => {
         { label: "Open Chats", combo: [...modifierKeys, "C"] },
         { label: "Open Tasks", combo: [...modifierKeys, "T"] },
         { label: "Open Notes", combo: [...modifierKeys, "N"] },
-        { label: "Next service", combo: [...modifierKeys, "→"] },
-        { label: "Previous service", combo: [...modifierKeys, "←"] },
+        {
+            label: "Cycle through services",
+            combo: ["Hold ⌘", "Tap Ctrl to cycle", "Release ⌘ to switch"],
+        },
     ];
 
     return (
