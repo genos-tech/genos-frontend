@@ -1,9 +1,9 @@
 import * as React from "react";
 import { useState } from "react";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
-import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import FlagIcon from "@mui/icons-material/Flag";
 import GroupsIcon from "@mui/icons-material/Groups";
+import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import {
     Avatar,
     Box,
@@ -21,6 +21,7 @@ import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
+import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { useAuth } from "../../../../context/AuthContext";
 import { FlaggedService } from "../../../../db/services/flagged.service";
@@ -45,18 +46,24 @@ import { loadSpecificThreadMessages } from "../../services/loadSpecificThreadMes
 import { popSpecificMessages } from "../../services/popSpecificMessages";
 import { updateFlagMessage } from "../../services/updateFlagMessage";
 
-// Constants
+// chat_type=4 carries two semantics in the wider codebase: legacy task
+// comments (live in the PM store, chat_id = project_id) and the newer MDM
+// chats (live in the MDM store, chat_id = mdm_id). The flag UI only exists
+// inside chat bubbles (DM/GM/PM/MDM) — there is no "flag" affordance on a
+// task comment — so every chat_type=4 flagged message we render here is an
+// MDM message. The constant + label are named accordingly.
 const CHAT_TYPES = {
     DM: 1,
     GM: 2,
     PM: 3,
-    TASK: 4,
+    MDM: 4,
 } as const;
 
 const CHAT_TYPE_LABELS = {
     [CHAT_TYPES.DM]: "DM",
     [CHAT_TYPES.GM]: "GM",
     [CHAT_TYPES.PM]: "PM",
+    [CHAT_TYPES.MDM]: "MDM",
 } as const;
 
 // Flagged message color scheme for visual distinction
@@ -80,25 +87,33 @@ type ChatListItemForFlagMessagesProps = ListItemButtonProps & {
 };
 
 // Helper functions
+const findChatForFlag = (
+    allChats: AllChatProps[],
+    flaggedMessage: FlaggedMessageProps
+): AllChatProps | undefined =>
+    allChats.find(
+        (chat) =>
+            chat.chatType === flaggedMessage.chatType && chat.chatId === flaggedMessage.chatId
+    );
+
+/**
+ * Build the ChatProps that the chat pane consumes. Returns `null` when the
+ * underlying chat has been deleted (no longer in `allChats`) or when the
+ * loaded message slice is empty — the caller is expected to surface a
+ * graceful "removed" state instead of trying to navigate.
+ */
 const createChatFromMessages = (
     messages: MessageProps[],
     moveToSpecificIndex: string,
     flaggedMessage: FlaggedMessageProps,
     allChats: AllChatProps[]
-): ChatProps => {
-    const chatType =
-        flaggedMessage.chatType === CHAT_TYPES.TASK ? CHAT_TYPES.PM : flaggedMessage.chatType;
-    const currentChat = allChats.find(
-        (chat) => chat.chatType === chatType && chat.chatId === flaggedMessage.chatId
-    );
-
-    if (!currentChat) {
-        throw new Error(`Chat not found for type ${chatType} and id ${flaggedMessage.chatId}`);
-    }
+): ChatProps | null => {
+    const currentChat = findChatForFlag(allChats, flaggedMessage);
+    if (!currentChat || messages.length === 0) return null;
 
     return {
         chatId: flaggedMessage.chatId,
-        chatName: flaggedMessage.chatName,
+        chatName: flaggedMessage.chatName || currentChat.chatName,
         chatType: flaggedMessage.chatType,
         dmPartnerUser: flaggedMessage.dmPartnerUser,
         lastReadMessageId: Math.max(flaggedMessage.messageId, currentChat.lastReadMessageId),
@@ -109,6 +124,7 @@ const createChatFromMessages = (
         moveToSpecificIndex: moveToSpecificIndex,
         isPrivate: currentChat.isPrivate,
         profileImagePath: currentChat.profileImagePath,
+        mdmMembers: currentChat.mdmMembers,
     };
 };
 
@@ -146,7 +162,20 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
 
     const isYou = myself.userId === flaggedMessage.dmPartnerUser.userId;
     const [tmpIsFlagged, setTmpIsFlagged] = useState(true);
+    // Set when click-time message lookup discovers the source message has
+    // since been deleted (or was scrubbed from IDB). The flagged-message
+    // snapshot still has its content, so we keep rendering the row but mark
+    // it visually and refuse to navigate.
+    const [sourceDeleted, setSourceDeleted] = useState(false);
     const flagColor = FLAGGED_COLOR_SCHEME;
+
+    // The flag entry can outlive the underlying chat (delete a GM, leave an
+    // MDM, drop a project, etc.). When that happens the chat is gone from
+    // `useCM.allChats`, so navigation would crash with "Chat not found".
+    // Detect at render-time and degrade gracefully.
+    const chatRecord = findChatForFlag(useCM.allChats, flaggedMessage);
+    const chatRemoved = chatRecord === undefined;
+    const navigationDisabled = chatRemoved || sourceDeleted;
 
     // Flag status management
     const updateFlagStatus = async () => {
@@ -211,12 +240,31 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         }
     };
 
+    /**
+     * Look up the source message in IDB (via popSpecificMessages) and
+     * return both the unflipped message slice and the target message's
+     * current state. Chat messages are purged from IDB on delete (see
+     * `handleMessageDeletion` in message-handlers.ts) so the only signal
+     * we get is "not present in the result" — that's what `deleted` means
+     * here. `MessageProps` itself has no `isDeleted` field.
+     */
+    const loadMessagesAndTarget = async (): Promise<{
+        messages: MessageProps[];
+        target: MessageProps | undefined;
+        deleted: boolean;
+    }> => {
+        const messages = await popSpecificMessages(flaggedMessage.chatId, flaggedMessage.chatType);
+        const target = messages.find((m) => m.messageId === flaggedMessage.messageId);
+        return { messages, target, deleted: !target };
+    };
+
     const updateMessagesAndChat = async () => {
         try {
-            const messages = await popSpecificMessages(
-                flaggedMessage.chatId,
-                flaggedMessage.chatType
-            );
+            const { messages, target, deleted } = await loadMessagesAndTarget();
+            if (deleted || !target) {
+                setSourceDeleted(true);
+                return;
+            }
 
             // Update the isFlagged status of the target message
             const updatedMessages: MessageProps[] = messages.map((message: MessageProps) =>
@@ -225,24 +273,22 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                     : message
             );
 
-            // Save updated message to IndexedDB
-            const updatedMessage = updatedMessages.find(
-                (message: MessageProps) => message.messageId === flaggedMessage.messageId
+            const updatedTarget = updatedMessages.find(
+                (m) => m.messageId === flaggedMessage.messageId
             );
-            if (updatedMessage) {
-                await addMessage(updatedMessage, flaggedMessage.chatType);
+            if (updatedTarget) {
+                await addMessage(updatedTarget, flaggedMessage.chatType);
             }
 
-            // Update current main chat
-            useCM.setCurrentMainChat(
-                createChatFromMessages(
-                    updatedMessages,
-                    `${flaggedMessage.chatId}-${flaggedMessage.messageId}`,
-                    flaggedMessage,
-                    useCM.allChats
-                )
+            const newChat = createChatFromMessages(
+                updatedMessages,
+                `${flaggedMessage.chatId}-${flaggedMessage.messageId}`,
+                flaggedMessage,
+                useCM.allChats
             );
+            if (!newChat) return; // chat removed concurrently
 
+            useCM.setCurrentMainChat(newChat);
             useCM.setIsMainChatVisible(true);
 
             if (shouldHideThread(useTM.isCreatingTask.flag, useTM.isTaskPreviewVisible)) {
@@ -253,29 +299,29 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         }
     };
 
-    // Navigation handlers
+    /**
+     * Navigate to the source chat for a non-thread flagged message.
+     * Treats DM / GM / PM / MDM uniformly — there's no separate
+     * "task comment" path because flagging is only ever done from a chat
+     * bubble, never from a task comment view.
+     */
     const handleNonThreadMessage = async () => {
-        if (flaggedMessage.chatType === CHAT_TYPES.TASK) {
-            await handleTaskComment();
-        } else {
-            await handleRegularMessage();
-        }
-    };
-
-    const handleRegularMessage = async () => {
         const isCurrentChatVisible = isCurrentChat(useCM.currentSubChat, flaggedMessage);
 
         try {
-            const messages = await popSpecificMessages(
-                flaggedMessage.chatId,
-                flaggedMessage.chatType
-            );
+            const { messages, deleted } = await loadMessagesAndTarget();
+            if (deleted) {
+                setSourceDeleted(true);
+                return;
+            }
+
             const newChat = createChatFromMessages(
                 messages,
                 `${flaggedMessage.chatId}-${flaggedMessage.messageId}`,
                 flaggedMessage,
                 useCM.allChats
             );
+            if (!newChat) return; // chat was removed between render and click
 
             toggleMessagesPane();
 
@@ -291,39 +337,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                 useCM.setIsThreadVisible(false);
             }
         } catch (error) {
-            console.error("Error handling regular message:", error);
-        }
-    };
-
-    const handleTaskComment = async () => {
-        if (!isCurrentChat(useCM.currentSubChat, flaggedMessage)) {
-            try {
-                const messages = await popSpecificMessages(flaggedMessage.chatId, CHAT_TYPES.PM);
-                const newChat = createChatFromMessages(
-                    messages,
-                    `${flaggedMessage.chatId}-${flaggedMessage.messageId}`,
-                    flaggedMessage,
-                    useCM.allChats
-                );
-
-                toggleMessagesPane();
-                useCM.setCurrentMainChat(newChat);
-
-                if (flaggedMessage.project?.projectId) {
-                    setCurrentProject(flaggedMessage.project);
-                    useTM.setCurrentPreviewTaskId(flaggedMessage.taskId);
-                    useCM.setIsThreadVisible(false);
-                    useTM.setIsTaskPreviewVisible(true);
-                }
-
-                useCM.setIsMainChatVisible(true);
-
-                if (shouldHideThread(useTM.isCreatingTask.flag, useTM.isTaskPreviewVisible)) {
-                    useCM.setIsThreadVisible(false);
-                }
-            } catch (error) {
-                console.error("Error handling task comment:", error);
-            }
+            console.error("Error handling non-thread flagged message:", error);
         }
     };
 
@@ -337,24 +351,36 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                 accessToken
             );
 
-            if (threadMessages?.length > 0) {
-                const newThread = createThreadFromMessages(threadMessages);
-
-                // Set thread visible BEFORE setting main chat to prevent
-                // the main chat URL effect from stripping thread info
-                useCM.setIsThreadVisible(true);
-                useCM.setCurrentThreadChat(newThread);
-
-                if (flaggedMessage.project?.projectId) {
-                    setCurrentProject(flaggedMessage.project);
-                }
-
-                if (newThread.taskExist && threadMessages[0].taskId) {
-                    useTM.setCurrentPreviewTaskId(threadMessages[0].taskId);
-                }
-
-                await handleThreadNavigation();
+            // Empty / missing thread response = thread was deleted upstream.
+            if (!threadMessages || threadMessages.length === 0) {
+                setSourceDeleted(true);
+                return;
             }
+
+            const targetThreadMsg = threadMessages.find(
+                (m: ThreadMessageProps) => m.messageId === flaggedMessage.messageId
+            );
+            if (!targetThreadMsg || targetThreadMsg.isDeleted === true) {
+                setSourceDeleted(true);
+                return;
+            }
+
+            const newThread = createThreadFromMessages(threadMessages);
+
+            // Set thread visible BEFORE setting main chat to prevent
+            // the main chat URL effect from stripping thread info
+            useCM.setIsThreadVisible(true);
+            useCM.setCurrentThreadChat(newThread);
+
+            if (flaggedMessage.project?.projectId) {
+                setCurrentProject(flaggedMessage.project);
+            }
+
+            if (newThread.taskExist && threadMessages[0].taskId) {
+                useTM.setCurrentPreviewTaskId(threadMessages[0].taskId);
+            }
+
+            await handleThreadNavigation();
         } catch (error) {
             console.error("Error handling thread message:", error);
         }
@@ -399,6 +425,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                 flaggedMessage,
                 useCM.allChats
             );
+            if (!newChat) return;
 
             toggleMessagesPane();
 
@@ -415,6 +442,15 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
     };
 
     const onClickHandler = async () => {
+        // The chat (or the source message itself) has been removed since
+        // this flag entry was created — short-circuit and let the user
+        // unflag via the right-side icon. Selecting still gives the row a
+        // visual "active" state so the click isn't perceived as broken.
+        if (navigationDisabled) {
+            setSelectedFlaggedMessageId(flaggedMessage.flaggedMessageId);
+            return;
+        }
+
         // set to true to not move chat pane type
         useCM.setNotMoveChatPaneType(true);
 
@@ -473,17 +509,12 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
     };
 
     const renderProjectAvatar = () => {
-        const chat = useCM.allChats.find(
-            (chat) =>
-                chat.chatType === flaggedMessage.chatType && chat.chatId === flaggedMessage.chatId
-        );
-
-        if (chat) {
+        if (chatRecord) {
             return (
                 <ProjectAvatar
                     useCM={useCM}
                     myself={myself}
-                    pmChat={chat}
+                    pmChat={chatRecord}
                     setMyself={setMyself}
                     socket={socket}
                     useTEM={useTEM}
@@ -498,13 +529,23 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         );
     };
 
-    const renderTaskAvatar = () => (
-        <Avatar size="sm">
-            <AssignmentRoundedIcon />
+    const renderMDMAvatar = () => (
+        <MDMAvatar
+            members={chatRecord?.mdmMembers}
+            teamMemberProfiles={useTEM.teamMemberProfiles}
+        />
+    );
+
+    // Fallback for any chat that has been removed entirely — we still need
+    // *something* in the avatar slot so the row layout stays consistent.
+    const renderRemovedAvatar = () => (
+        <Avatar size="sm" sx={{ opacity: 0.55, filter: "grayscale(0.6)" }}>
+            <PeopleRoundedIcon />
         </Avatar>
     );
 
     const renderAvatar = () => {
+        if (chatRemoved) return renderRemovedAvatar();
         switch (flaggedMessage.chatType) {
             case CHAT_TYPES.DM:
                 return renderDMAvatar();
@@ -512,8 +553,8 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                 return renderGMAvatar();
             case CHAT_TYPES.PM:
                 return renderProjectAvatar();
-            case CHAT_TYPES.TASK:
-                return renderTaskAvatar();
+            case CHAT_TYPES.MDM:
+                return renderMDMAvatar();
             default:
                 return null;
         }
@@ -529,9 +570,13 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
     })();
 
     const renderChatNameChip = () => {
+        // DM / GM / MDM all show the (potentially auto-generated) chat name
+        // prominently at the start of the row. PM hides the title here
+        // because the project name is rendered as a coloured chip below.
         if (
             flaggedMessage.chatType === CHAT_TYPES.DM ||
-            flaggedMessage.chatType === CHAT_TYPES.GM
+            flaggedMessage.chatType === CHAT_TYPES.GM ||
+            flaggedMessage.chatType === CHAT_TYPES.MDM
         ) {
             return (
                 <Typography
@@ -550,26 +595,27 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
     };
 
     const renderProjectChips = () => {
-        if (
-            flaggedMessage.chatType === CHAT_TYPES.PM ||
-            flaggedMessage.chatType === CHAT_TYPES.TASK
-        ) {
-            return (
-                <>
-                    <Chip
-                        color="primary"
-                        size="sm"
-                        variant="soft"
-                        sx={{
-                            fontSize: "10px",
-                            borderRadius: "6px",
-                            fontWeight: 600,
-                            px: 0.75,
-                            height: "20px",
-                        }}
-                    >
-                        {resolvedChatName}
-                    </Chip>
+        // PM messages live inside a project, so we show the project chip
+        // and (when applicable) the task ID. MDM intentionally skips this
+        // block — it has no project context.
+        if (flaggedMessage.chatType !== CHAT_TYPES.PM) return null;
+        return (
+            <>
+                <Chip
+                    color="primary"
+                    size="sm"
+                    variant="soft"
+                    sx={{
+                        fontSize: "10px",
+                        borderRadius: "6px",
+                        fontWeight: 600,
+                        px: 0.75,
+                        height: "20px",
+                    }}
+                >
+                    {resolvedChatName}
+                </Chip>
+                {!!flaggedMessage.taskId && (
                     <Chip
                         size="sm"
                         variant="soft"
@@ -583,11 +629,28 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                     >
                         ID:{flaggedMessage.taskId}
                     </Chip>
-                </>
-            );
-        }
-        return null;
+                )}
+            </>
+        );
     };
+
+    const renderRemovedChip = (label: string) => (
+        <Chip
+            color="neutral"
+            size="sm"
+            variant="outlined"
+            sx={{
+                fontSize: "10px",
+                borderRadius: "6px",
+                fontWeight: 600,
+                px: 0.75,
+                height: "20px",
+                opacity: 0.85,
+            }}
+        >
+            {label}
+        </Chip>
+    );
 
     const renderChatTypeChip = () => (
         <Chip
@@ -653,6 +716,8 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                         position: "relative",
                         overflow: "hidden",
                         transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                        opacity: navigationDisabled ? 0.65 : 1,
+                        cursor: navigationDisabled ? "default" : undefined,
                         background: isSelected
                             ? isDark
                                 ? `linear-gradient(135deg, ${flagColor.dark}15 0%, ${flagColor.dark}08 100%)`
@@ -766,6 +831,10 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                                         {renderProjectChips()}
                                         {renderChatTypeChip()}
                                         {renderThreadChip()}
+                                        {chatRemoved && renderRemovedChip("Chat removed")}
+                                        {!chatRemoved &&
+                                            sourceDeleted &&
+                                            renderRemovedChip("Message deleted")}
                                     </Box>
                                 </Stack>
                             </Stack>
@@ -815,8 +884,10 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                                     WebkitBoxOrient: "vertical",
                                     overflow: "hidden",
                                     textOverflow: "ellipsis",
-                                    opacity: 0.85,
+                                    opacity: navigationDisabled ? 0.55 : 0.85,
                                     lineHeight: 1.5,
+                                    textDecoration: navigationDisabled ? "line-through" : "none",
+                                    fontStyle: navigationDisabled ? "italic" : "normal",
                                 }}
                             >
                                 {flaggedMessage.contentText}
