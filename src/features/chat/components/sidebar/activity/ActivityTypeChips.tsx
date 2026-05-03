@@ -93,6 +93,24 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
 
+    // chat_type=4 is dual-purpose: task-comment activities carry a `taskId`
+    // (and a project name in `chatName`); MDM activities never do. We use
+    // `taskId` as the discriminator so MDM activities don't render "#NULL"
+    // or get labeled "Task".
+    const isTaskComment = activity.chatType === 4 && !!activity.taskId;
+    const isMDM = activity.chatType === 4 && !activity.taskId;
+
+    const chatTypeLabel = isMDM
+        ? "MDM"
+        : isTaskComment
+          ? "Task"
+          : chatTypeLookup[activity.chatType];
+
+    // The "project + #taskId" pair only makes sense for PM messages and for
+    // task comments. For MDM we let the chat-name show up in the header
+    // (ActivityHeader) and skip the project chip entirely.
+    const showProjectAndTaskChips = activity.chatType === 3 || isTaskComment;
+
     return (
         <Stack
             direction="row"
@@ -102,8 +120,7 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
                 alignItems: "center",
             }}
         >
-            {/* Chat Name for PM and Task */}
-            {(activity.chatType === 3 || activity.chatType === 4) && (
+            {showProjectAndTaskChips && (
                 <>
                     <ModernChip
                         label={activity.chatName}
@@ -111,16 +128,20 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
                         isDark={isDark}
                         variant="filled"
                     />
-                    <ModernChip
-                        label={`#${activity.taskId}`}
-                        colorScheme={CHIP_COLORS.task}
-                        isDark={isDark}
-                        variant="outlined"
-                    />
+                    {!!activity.taskId && (
+                        <ModernChip
+                            label={`#${activity.taskId}`}
+                            colorScheme={CHIP_COLORS.task}
+                            isDark={isDark}
+                            variant="outlined"
+                        />
+                    )}
                 </>
             )}
 
-            {/* Activity Type Chips */}
+            {/* "Reply" only applies to inline messages, not task comments
+                (which already self-label as "Task") and not MDM messages
+                (which already self-label as "MDM"). */}
             {activity.activityType === 1 && activity.chatType !== 4 && (
                 <ModernChip
                     label="Reply"
@@ -148,15 +169,13 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
                 />
             )}
 
-            {/* Chat Type Chip */}
             <ModernChip
-                label={chatTypeLookup[activity.chatType]}
+                label={chatTypeLabel}
                 colorScheme={CHIP_COLORS.chatType}
                 isDark={isDark}
                 variant="soft"
             />
 
-            {/* Thread Chip */}
             {activity.isThread === true && (
                 <ModernChip
                     label="Thread"

@@ -26,7 +26,9 @@ import { popSpecificMessages } from "../../../services/popSpecificMessages";
 import { ActivityContent } from "./ActivityContent";
 import { ActivityHeader } from "./ActivityHeader";
 
-// chatType = {1: DM, 2: GM, 3: PM, 4: Task}
+// chatType = {1: DM, 2: GM, 3: PM, 4: Task-comment OR MDM}
+//   chat_type=4 is dual-purpose: task-comment activities carry a `taskId`
+//   (and `chatId === project_id`), MDM activities don't (`chatId === mdm_id`).
 // activityType = {1: message or comment, 2: reaction, 3: mention}
 
 // Activity type color schemes for visual distinction
@@ -99,11 +101,14 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
 
     const activityColor = getActivityColor();
 
+    // For task-comment activities (chat_type=4 + taskId truthy), the actual
+    // chat is the underlying PM (chat_type=3) — clicking the activity opens
+    // the project chat. MDM activities (chat_type=4 without taskId) are
+    // their own chats and must NOT be remapped to PM.
+    const isTaskComment = activity.chatType === 4 && !!activity.taskId;
+
     const defineNewChat = (messages: any, moveToSpecificIndex: string) => {
-        let chatType: number = activity.chatType;
-        if (activity.chatType === 4) {
-            chatType = 3;
-        }
+        const chatType: number = isTaskComment ? 3 : activity.chatType;
         const currentChat: AllChatProps = useCM.allChats.filter(
             (chat) => chat.chatType === chatType && chat.chatId === activity.chatId
         )[0];
@@ -282,16 +287,19 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         setSelectedActivityId(activity.activityId);
 
         if (activity.isThread === false) {
-            if (activity.chatType !== 4) {
-                // Handling a message activity in DM, GM, PM
+            if (isTaskComment) {
+                // Handling a task-comment activity (chat_type=4 + taskId)
+                await handleTaskCommentActivity();
+            } else {
+                // Handling a message activity in DM, GM, PM, or MDM
+                // (MDM = chat_type=4 without taskId — same nav flow as
+                // regular chats, just the chat lives under chat_type=4 in
+                // allChats).
                 await handleChatNavigation(
                     activity.chatType,
                     activity.isThread,
                     activity.messageUniqueKey
                 );
-            } else {
-                // Handling a task comment activity
-                await handleTaskCommentActivity();
             }
         } else {
             // Handling a thread message
@@ -303,11 +311,14 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         }
     };
 
+    // ActivityTypeChips replaces the chat-type label with "MDM" / "Task"
+    // when activity.chatType === 4 (using `taskId` as the discriminator),
+    // so this map only needs to cover the unambiguous DM / GM / PM cases.
     const chatTypeLookup: { [key: number]: string } = {
         1: "DM",
         2: "GM",
         3: "PM",
-        4: "Task",
+        4: "MDM",
     };
 
     return (
