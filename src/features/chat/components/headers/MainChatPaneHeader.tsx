@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import AddTaskRoundedIcon from "@mui/icons-material/AddTaskRounded";
 import ChecklistRoundedIcon from "@mui/icons-material/ChecklistRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import DoneAllRoundedIcon from "@mui/icons-material/DoneAllRounded";
 import PersonAddRoundedIcon from "@mui/icons-material/PersonAddRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import SwapVertRoundedIcon from "@mui/icons-material/SwapVertRounded";
@@ -16,6 +17,7 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { MuteToggleButton } from "../../../../services/notifications/MuteToggleButton";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../../types/chat";
+import { useMarkAllChatActivityRead } from "../../hooks/useMarkAllChatActivityRead";
 import { ModalAddMembers } from "../modals/ModalAddMembers";
 import { HeaderUserName } from "./HeaderUserName";
 
@@ -137,6 +139,17 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
 
     const [openAddMembers, setOpenAddMembers] = useState(false);
 
+    const { markAllAsRead } = useMarkAllChatActivityRead({ myself, useCM });
+
+    const unreadActivityCount = useMemo(
+        () =>
+            useCM.activityMessages.filter(
+                (a) =>
+                    a.chatType === chat.chatType && a.chatId === chat.chatId && a.isRead === false
+            ).length,
+        [useCM.activityMessages, chat.chatType, chat.chatId]
+    );
+
     const switchSubToMain = () => {
         if (useCM.isSubChatVisible === true) {
             useCM.setCurrentMainChat(useCM.currentSubChat as ChatProps);
@@ -184,6 +197,28 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                     chatId={chat.chatId}
                     chatName={chat.chatName}
                 />
+
+                {/* Mark all activity in this chat as read */}
+                {unreadActivityCount > 0 && (
+                    <Tooltip
+                        size="sm"
+                        title={`Mark ${unreadActivityCount} unread ${
+                            unreadActivityCount === 1 ? "activity" : "activities"
+                        } in this chat as read`}
+                        variant="soft"
+                        sx={{ borderRadius: "8px" }}
+                    >
+                        <IconButton
+                            size="sm"
+                            variant="plain"
+                            sx={actionButtonStyle}
+                            onClick={() => markAllAsRead(chat.chatType, chat.chatId)}
+                            aria-label="Mark all activity in this chat as read"
+                        >
+                            <DoneAllRoundedIcon sx={{ fontSize: 18, color: styles.accentColor }} />
+                        </IconButton>
+                    </Tooltip>
+                )}
 
                 {/* Create Task Button */}
                 {chat.chatType === 3 && (

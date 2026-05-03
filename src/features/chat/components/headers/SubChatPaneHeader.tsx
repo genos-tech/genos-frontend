@@ -1,6 +1,8 @@
+import { useMemo } from "react";
 import AddTaskRoundedIcon from "@mui/icons-material/AddTaskRounded";
 import ChecklistRoundedIcon from "@mui/icons-material/ChecklistRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import DoneAllRoundedIcon from "@mui/icons-material/DoneAllRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import SwapVertRoundedIcon from "@mui/icons-material/SwapVertRounded";
 import { Badge, IconButton, Stack, Tooltip } from "@mui/joy";
@@ -12,6 +14,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
+import { useMarkAllChatActivityRead } from "../../hooks/useMarkAllChatActivityRead";
 import { HeaderUserName } from "./HeaderUserName";
 
 // Theme-aware styling - Indigo/Blue theme for chat
@@ -135,6 +138,22 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
         }
     };
 
+    const subChat = useCM.currentSubChat;
+    const { markAllAsRead } = useMarkAllChatActivityRead({ myself, useCM });
+
+    const unreadActivityCount = useMemo(
+        () =>
+            subChat
+                ? useCM.activityMessages.filter(
+                      (a) =>
+                          a.chatType === subChat.chatType &&
+                          a.chatId === subChat.chatId &&
+                          a.isRead === false
+                  ).length
+                : 0,
+        [useCM.activityMessages, subChat?.chatType, subChat?.chatId]
+    );
+
     return (
         <Stack
             direction="row"
@@ -162,6 +181,28 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
             </Stack>
 
             <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                {/* Mark all activity in this chat as read */}
+                {subChat && unreadActivityCount > 0 && (
+                    <Tooltip
+                        size="sm"
+                        title={`Mark ${unreadActivityCount} unread ${
+                            unreadActivityCount === 1 ? "activity" : "activities"
+                        } in this chat as read`}
+                        variant="soft"
+                        sx={{ borderRadius: "8px" }}
+                    >
+                        <IconButton
+                            size="sm"
+                            variant="plain"
+                            sx={actionButtonStyle}
+                            onClick={() => markAllAsRead(subChat.chatType, subChat.chatId)}
+                            aria-label="Mark all activity in this chat as read"
+                        >
+                            <DoneAllRoundedIcon sx={{ fontSize: 18, color: styles.accentColor }} />
+                        </IconButton>
+                    </Tooltip>
+                )}
+
                 {/* Create Task Button */}
                 {useCM.currentSubChat &&
                     (useCM.currentSubChat.chatType === 3 ||
