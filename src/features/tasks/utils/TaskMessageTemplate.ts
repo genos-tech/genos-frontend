@@ -1,319 +1,226 @@
 import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
 import { Milestone } from "../sprint-milestone/types";
+import { effortLevels, priorities, statuses } from "./taskMeta";
 
-const statusLine = {
-    Open: {
-        text: "OPEN",
-        type: "text",
-        styles: { bold: true, textColor: "blue" },
-    },
-    WIP: {
-        text: "WIP",
-        type: "text",
-        styles: { bold: true, textColor: "yellow" },
-    },
-    Pending: {
-        text: "PENDING",
-        type: "text",
-        styles: { bold: true, textColor: "pink" },
-    },
-    Closed: {
-        text: "CLOSED",
-        type: "text",
-        styles: { bold: true, textColor: "green" },
-    },
-    Deleted: {
-        text: "DELETED",
-        type: "text",
-        styles: { bold: true, textColor: "red" },
-    },
-    default: {
-        text: "UNKNOWN",
-        type: "text",
-        styles: { bold: true, textColor: "gray" },
-    },
-};
-type StatusKey = keyof typeof statusLine;
-function getStatusConfig(key: string): (typeof statusLine)[StatusKey] {
-    return key in statusLine ? statusLine[key as StatusKey] : statusLine["default"];
-}
+// BlockNote ships a fixed palette for `textColor` (see
+// `@blocknote/core/src/editor/defaultColors.ts`). Anything else gets
+// passed through as a CSS color string and breaks the dark/light
+// theming, so we map taskMeta's hex codes to the closest named slot
+// here. Keep this table in sync if `taskMeta.ts` ever picks new colors.
+type BlockNoteTextColor =
+    | "default"
+    | "gray"
+    | "brown"
+    | "red"
+    | "orange"
+    | "yellow"
+    | "green"
+    | "blue"
+    | "purple"
+    | "pink";
 
-const priorityLine = {
-    Low: { text: "LOW", type: "text", styles: { bold: true, textColor: "blue" } },
-    Medium: {
-        text: "MEDIUM",
-        type: "text",
-        styles: { bold: true, textColor: "green" },
-    },
-    High: {
-        text: "HIGH",
-        type: "text",
-        styles: { bold: true, textColor: "red" },
-    },
-    default: {
-        text: "N/A",
-        type: "text",
-        styles: { bold: true, textColor: "gray" },
-    },
-};
-type PriorityKey = keyof typeof priorityLine;
-function getPriorityConfig(key: string): (typeof priorityLine)[PriorityKey] {
-    return key in priorityLine ? priorityLine[key as PriorityKey] : priorityLine["default"];
-}
+// Tuple list (rather than an object literal) so the entries can stay
+// grouped by what they represent (statuses first, then the
+// priority/effort palette). Object literals would drag every key
+// through the alphabetical `sort-keys` rule which produces a less
+// readable order for arbitrary hex strings.
+const HEX_TO_BLOCKNOTE_PALETTE: Record<string, BlockNoteTextColor> = Object.fromEntries([
+    ["#0044c2", "blue"], // status Open
+    ["#ff8c00", "orange"], // status WIP
+    ["#b900ff", "purple"], // status Pending
+    ["#1dc200", "green"], // status Closed
+    ["#ff2323", "red"], // status Deleted
+    ["#9CA3AF", "gray"], // Minimal (priority/effort)
+    ["#34D399", "green"], // Low (priority/effort)
+    ["#3B82F6", "blue"], // Normal (priority) / Moderate (effort)
+    ["#F59E0B", "orange"], // High (priority/effort)
+    ["#EF4444", "red"], // Critical (priority) / Extensive (effort)
+] as const);
 
-const effortLevelLine = {
-    Low: { text: "LOW", type: "text", styles: { bold: true, textColor: "blue" } },
-    Medium: {
-        text: "MEDIUM",
-        type: "text",
-        styles: { bold: true, textColor: "green" },
-    },
-    High: {
-        text: "HIGH",
-        type: "text",
-        styles: { bold: true, textColor: "red" },
-    },
-    default: {
-        text: "N/A",
-        type: "text",
-        styles: { bold: true, textColor: "gray" },
-    },
+const paletteFromHex = (hex: string | null | undefined): BlockNoteTextColor => {
+    if (!hex) return "default";
+    return HEX_TO_BLOCKNOTE_PALETTE[hex] ?? "default";
 };
-type EffortLevelKey = keyof typeof effortLevelLine;
-function getEffortLevelConfig(key: string): (typeof effortLevelLine)[EffortLevelKey] {
-    return key in effortLevelLine
-        ? effortLevelLine[key as EffortLevelKey]
-        : effortLevelLine["default"];
-}
+
+// Shape every coloured-value chip rendered inside a chat block ends up
+// as. `type: "text"` is required by BlockNote's inline-content schema —
+// the styling is what carries the colour.
+type ColoredValueChip = {
+    styles: { bold: true; textColor: BlockNoteTextColor };
+    text: string;
+    type: "text";
+};
+
+const NEUTRAL_FALLBACK_CHIP: ColoredValueChip = {
+    styles: { bold: true, textColor: "gray" },
+    text: "—",
+    type: "text",
+};
+
+// Build a `{label: chip}` lookup straight from a taskMeta array so the
+// chat colours always match the rest of the task UI. Whatever label
+// the backend sends is the same key we look up — no second translation
+// table to drift.
+const buildChipLookup = <T extends { color: string | null }>(
+    items: readonly T[],
+    labelOf: (item: T) => string | null
+): Record<string, ColoredValueChip> => {
+    const out: Record<string, ColoredValueChip> = {};
+    for (const item of items) {
+        const label = labelOf(item);
+        if (!label) continue;
+        out[label] = {
+            styles: { bold: true, textColor: paletteFromHex(item.color) },
+            text: label,
+            type: "text",
+        };
+    }
+    return out;
+};
+
+const STATUS_CHIPS = buildChipLookup(statuses, (s) => s.status);
+const PRIORITY_CHIPS = buildChipLookup(priorities, (p) => p.priority);
+const EFFORT_CHIPS = buildChipLookup(effortLevels, (e) => e.level);
+
+const getStatusChip = (key: string | null | undefined): ColoredValueChip =>
+    (key && STATUS_CHIPS[key]) || NEUTRAL_FALLBACK_CHIP;
+
+const getPriorityChip = (key: string | null | undefined): ColoredValueChip =>
+    (key && PRIORITY_CHIPS[key]) || NEUTRAL_FALLBACK_CHIP;
+
+const getEffortChip = (key: string | null | undefined): ColoredValueChip =>
+    (key && EFFORT_CHIPS[key]) || NEUTRAL_FALLBACK_CHIP;
+
+// `props` shared by every paragraph/heading we emit. Pulled out so the
+// templates below stay focused on content.
+const DEFAULT_BLOCK_PROPS = {
+    backgroundColor: "default",
+    textAlignment: "left",
+    textColor: "default",
+} as const;
+
+const HEADING_BLOCK_PROPS = {
+    backgroundColor: "default",
+    level: 3,
+    textAlignment: "left",
+    textColor: "default",
+} as const;
+
+// Spacer paragraph appended to every multi-block message so the chat
+// renderer leaves a blank line between this message and the next one.
+const blankParagraph = () => ({
+    children: [],
+    content: [],
+    props: DEFAULT_BLOCK_PROPS,
+    type: "paragraph",
+});
+
+// Bold "Label:" prefix used on every meta line. Puts the visual weight
+// on the label so the value chip pops next to it.
+const labelText = (text: string) => ({
+    styles: { bold: true } as const,
+    text,
+    type: "text",
+});
+
+const plainText = (text: string) => ({
+    styles: {},
+    text,
+    type: "text",
+});
+
+const mentionNode = (myself: UserProps, user: UserProps) => ({
+    props: {
+        avatarImgPath: [""],
+        customStatus: "N/A",
+        teamId: myself.teamId,
+        teamName: "N/A",
+        userEmail: user.userEmail,
+        userId: user.userId,
+        userName: user.userName,
+    },
+    type: "mention",
+});
 
 export const taskMessageTemplate = (myself: UserProps, task: TaskProps) => [
     {
+        children: [],
+        content: [plainText(`🧾 ${task.title}`)],
+        props: HEADING_BLOCK_PROPS,
         type: "heading",
-        props: {
-            level: 3,
-            textColor: "default",
-            textAlignment: "left",
-            backgroundColor: "default",
-        },
-        content: [{ text: `🧾 Title: ${task.title}`, type: "text", styles: {} }],
-        children: [],
     },
     {
-        type: "paragraph",
-        props: {
-            textColor: "default",
-            textAlignment: "left",
-            backgroundColor: "default",
-        },
-        content: [
-            { text: "Priority: ", type: "text", styles: {} },
-            getPriorityConfig(task.priority.priority || "default"),
-        ],
         children: [],
+        content: [labelText("Status: "), getStatusChip(task.status?.status)],
+        props: DEFAULT_BLOCK_PROPS,
+        type: "paragraph",
     },
     {
-        type: "paragraph",
-        props: {
-            textColor: "default",
-            textAlignment: "left",
-            backgroundColor: "default",
-        },
-        content: [
-            { text: "Effort Level: ", type: "text", styles: {} },
-            getEffortLevelConfig(task.effortLevel.level || "default"),
-        ],
         children: [],
+        content: [labelText("Priority: "), getPriorityChip(task.priority?.priority)],
+        props: DEFAULT_BLOCK_PROPS,
+        type: "paragraph",
     },
     {
-        type: "paragraph",
-        props: {
-            textColor: "default",
-            textAlignment: "left",
-            backgroundColor: "default",
-        },
-        content: [
-            {
-                text: "Assignee: ",
-                type: "text",
-                styles: {},
-            },
-            {
-                type: "mention",
-                props: {
-                    teamId: myself.teamId,
-                    userId: task.assignee.userId,
-                    teamName: "N/A",
-                    userName: task.assignee.userName,
-                    userEmail: task.assignee.userEmail,
-                    customStatus: "N/A",
-                    avatarImgPath: [""],
-                },
-            },
-        ],
         children: [],
+        content: [labelText("Effort: "), getEffortChip(task.effortLevel?.level)],
+        props: DEFAULT_BLOCK_PROPS,
+        type: "paragraph",
     },
     {
-        type: "paragraph",
-        props: {
-            textColor: "default",
-            textAlignment: "left",
-            backgroundColor: "default",
-        },
-        content: [
-            {
-                text: "Reporter: ",
-                type: "text",
-                styles: {},
-            },
-            {
-                type: "mention",
-                props: {
-                    teamId: myself.teamId,
-                    userId: task.reporter.userId,
-                    teamName: "N/A",
-                    userName: task.reporter.userName,
-                    userEmail: task.reporter.userEmail,
-                    customStatus: "N/A",
-                    avatarImgPath: [""],
-                },
-            },
-        ],
         children: [],
+        content: [labelText("Assignee: "), mentionNode(myself, task.assignee)],
+        props: DEFAULT_BLOCK_PROPS,
+        type: "paragraph",
     },
     {
-        type: "paragraph",
-        props: {
-            textColor: "default",
-            textAlignment: "left",
-            backgroundColor: "default",
-        },
-        content: [{ text: `Due: ${task.dueDate}`, type: "text", styles: {} }],
         children: [],
+        content: [labelText("Reporter: "), mentionNode(myself, task.reporter)],
+        props: DEFAULT_BLOCK_PROPS,
+        type: "paragraph",
     },
     {
-        type: "paragraph",
-        props: {
-            textColor: "default",
-            textAlignment: "left",
-            backgroundColor: "default",
-        },
-        content: [],
         children: [],
+        content: [labelText("Due: "), plainText(`📅 ${task.dueDate || "—"}`)],
+        props: DEFAULT_BLOCK_PROPS,
+        type: "paragraph",
     },
+    blankParagraph(),
 ];
 
 export const taskCreatedThreadMessageTemplate = (myself: UserProps) => [
     {
-        type: "paragraph",
-        props: {
-            textColor: "default",
-            textAlignment: "left",
-            backgroundColor: "default",
-        },
-        content: [
-            { text: "A new task has been created by ", type: "text", styles: {} },
-            {
-                type: "mention",
-                props: {
-                    teamId: myself.teamId,
-                    userId: myself.userId,
-                    teamName: "N/A",
-                    userName: myself.userName,
-                    userEmail: myself.userEmail,
-                    customStatus: "N/A",
-                    avatarImgPath: [""],
-                },
-            },
-        ],
         children: [],
-    },
-    {
+        content: [plainText("✨ New task created by "), mentionNode(myself, myself)],
+        props: DEFAULT_BLOCK_PROPS,
         type: "paragraph",
-        props: {
-            textColor: "default",
-            textAlignment: "left",
-            backgroundColor: "default",
-        },
-        content: [],
-        children: [],
     },
+    blankParagraph(),
 ];
 
 export const taskThreadMessageTemplate = (myself: UserProps, task: TaskProps) => [
     {
-        type: "paragraph",
-        props: {
-            textColor: "default",
-            textAlignment: "left",
-            backgroundColor: "default",
-        },
+        children: [],
         content: [
-            { text: "The task marked as ", type: "text", styles: {} },
-            getStatusConfig(task.status.status || "default"),
-            { text: " by ", type: "text", styles: {} },
-            {
-                type: "mention",
-                props: {
-                    teamId: myself.teamId,
-                    userId: myself.userId,
-                    teamName: "N/A",
-                    userName: myself.userName,
-                    userEmail: myself.userEmail,
-                    customStatus: "N/A",
-                    avatarImgPath: [""],
-                },
-            },
+            mentionNode(myself, myself),
+            plainText(" moved this task to "),
+            getStatusChip(task.status?.status),
         ],
-        children: [],
-    },
-    {
+        props: DEFAULT_BLOCK_PROPS,
         type: "paragraph",
-        props: {
-            textColor: "default",
-            textAlignment: "left",
-            backgroundColor: "default",
-        },
-        content: [],
-        children: [],
     },
+    blankParagraph(),
 ];
 
 export const taskThreadMessageForCommentAddedTemplate = (myself: UserProps) => [
     {
-        type: "paragraph",
-        props: {
-            textColor: "default",
-            textAlignment: "left",
-            backgroundColor: "default",
-        },
-        content: [
-            { text: "A new comment from ", type: "text", styles: {} },
-            {
-                type: "mention",
-                props: {
-                    teamId: myself.teamId,
-                    userId: myself.userId,
-                    teamName: "N/A",
-                    userName: myself.userName,
-                    userEmail: myself.userEmail,
-                    customStatus: "N/A",
-                    avatarImgPath: [""],
-                },
-            },
-        ],
         children: [],
-    },
-    {
+        content: [plainText("💬 New comment from "), mentionNode(myself, myself)],
+        props: DEFAULT_BLOCK_PROPS,
         type: "paragraph",
-        props: {
-            textColor: "default",
-            textAlignment: "left",
-            backgroundColor: "default",
-        },
-        content: [],
-        children: [],
     },
+    blankParagraph(),
 ];
 
 // Milestone-flavoured equivalents of the task templates above. The
@@ -332,82 +239,43 @@ export const milestoneMessageTemplate = (
 ) => {
     const blocks: Array<Record<string, unknown>> = [
         {
+            children: [],
+            content: [plainText(`🚩 ${milestone.title}`)],
+            props: HEADING_BLOCK_PROPS,
             type: "heading",
-            props: {
-                level: 3,
-                textColor: "default",
-                textAlignment: "left",
-                backgroundColor: "default",
-            },
-            content: [{ text: `🚩 Milestone: ${milestone.title}`, type: "text", styles: {} }],
-            children: [],
         },
         {
-            type: "paragraph",
-            props: {
-                textColor: "default",
-                textAlignment: "left",
-                backgroundColor: "default",
-            },
+            children: [],
             content: [
-                { text: "Sprint: ", type: "text", styles: {} },
+                labelText("Sprint: "),
                 {
-                    text: sprintName,
+                    styles: { bold: true, textColor: "blue" } as const,
+                    text: sprintName || "—",
                     type: "text",
-                    styles: { bold: true, textColor: "blue" },
                 },
             ],
-            children: [],
+            props: DEFAULT_BLOCK_PROPS,
+            type: "paragraph",
         },
         {
-            type: "paragraph",
-            props: {
-                textColor: "default",
-                textAlignment: "left",
-                backgroundColor: "default",
-            },
-            content: [
-                { text: "Status: ", type: "text", styles: {} },
-                getStatusConfig(milestone.status || "Open"),
-            ],
             children: [],
+            // Milestones default to "Open" at create time; the helper
+            // also handles legacy/empty values gracefully.
+            content: [labelText("Status: "), getStatusChip(milestone.status || "Open")],
+            props: DEFAULT_BLOCK_PROPS,
+            type: "paragraph",
         },
         {
-            type: "paragraph",
-            props: {
-                textColor: "default",
-                textAlignment: "left",
-                backgroundColor: "default",
-            },
-            content: [
-                { text: "Priority: ", type: "text", styles: {} },
-                getPriorityConfig(milestone.priority || "default"),
-            ],
             children: [],
+            content: [labelText("Priority: "), getPriorityChip(milestone.priority)],
+            props: DEFAULT_BLOCK_PROPS,
+            type: "paragraph",
         },
         {
-            type: "paragraph",
-            props: {
-                textColor: "default",
-                textAlignment: "left",
-                backgroundColor: "default",
-            },
-            content: [
-                { text: "Reporter: ", type: "text", styles: {} },
-                {
-                    type: "mention",
-                    props: {
-                        teamId: myself.teamId,
-                        userId: reporter.userId,
-                        teamName: "N/A",
-                        userName: reporter.userName,
-                        userEmail: reporter.userEmail,
-                        customStatus: "N/A",
-                        avatarImgPath: [""],
-                    },
-                },
-            ],
             children: [],
+            content: [labelText("Reporter: "), mentionNode(myself, reporter)],
+            props: DEFAULT_BLOCK_PROPS,
+            type: "paragraph",
         },
     ];
 
@@ -415,109 +283,46 @@ export const milestoneMessageTemplate = (
     // node interleaved with a comma + space text node so the chat
     // renderer keeps mention click-through (you can't put commas
     // inside a mention node itself).
-    const assigneeContent: Array<Record<string, unknown>> = [
-        { text: "Assignees: ", type: "text", styles: {} },
-    ];
+    const assigneeContent: Array<Record<string, unknown>> = [labelText("Assignees: ")];
     if (assignees.length === 0) {
         assigneeContent.push({
+            styles: { italic: true, textColor: "gray" },
             text: "Unassigned",
             type: "text",
-            styles: { italic: true, textColor: "gray" },
         });
     } else {
         assignees.forEach((a, idx) => {
             if (idx > 0) {
-                assigneeContent.push({ text: ", ", type: "text", styles: {} });
+                assigneeContent.push(plainText(", "));
             }
-            assigneeContent.push({
-                type: "mention",
-                props: {
-                    teamId: myself.teamId,
-                    userId: a.userId,
-                    teamName: "N/A",
-                    userName: a.userName,
-                    userEmail: a.userEmail,
-                    customStatus: "N/A",
-                    avatarImgPath: [""],
-                },
-            });
+            assigneeContent.push(mentionNode(myself, a));
         });
     }
     blocks.push({
-        type: "paragraph",
-        props: {
-            textColor: "default",
-            textAlignment: "left",
-            backgroundColor: "default",
-        },
+        children: [],
         content: assigneeContent,
-        children: [],
+        props: DEFAULT_BLOCK_PROPS,
+        type: "paragraph",
     });
 
     blocks.push({
-        type: "paragraph",
-        props: {
-            textColor: "default",
-            textAlignment: "left",
-            backgroundColor: "default",
-        },
-        content: [
-            {
-                text: `Due: ${milestone.dueDate ?? "N/A"}`,
-                type: "text",
-                styles: {},
-            },
-        ],
         children: [],
+        content: [labelText("Due: "), plainText(`📅 ${milestone.dueDate ?? "—"}`)],
+        props: DEFAULT_BLOCK_PROPS,
+        type: "paragraph",
     });
 
-    blocks.push({
-        type: "paragraph",
-        props: {
-            textColor: "default",
-            textAlignment: "left",
-            backgroundColor: "default",
-        },
-        content: [],
-        children: [],
-    });
+    blocks.push(blankParagraph());
 
     return blocks;
 };
 
 export const milestoneCreatedThreadMessageTemplate = (myself: UserProps) => [
     {
-        type: "paragraph",
-        props: {
-            textColor: "default",
-            textAlignment: "left",
-            backgroundColor: "default",
-        },
-        content: [
-            { text: "A new milestone has been created by ", type: "text", styles: {} },
-            {
-                type: "mention",
-                props: {
-                    teamId: myself.teamId,
-                    userId: myself.userId,
-                    teamName: "N/A",
-                    userName: myself.userName,
-                    userEmail: myself.userEmail,
-                    customStatus: "N/A",
-                    avatarImgPath: [""],
-                },
-            },
-        ],
         children: [],
-    },
-    {
+        content: [plainText("🚩 New milestone created by "), mentionNode(myself, myself)],
+        props: DEFAULT_BLOCK_PROPS,
         type: "paragraph",
-        props: {
-            textColor: "default",
-            textAlignment: "left",
-            backgroundColor: "default",
-        },
-        content: [],
-        children: [],
     },
+    blankParagraph(),
 ];
