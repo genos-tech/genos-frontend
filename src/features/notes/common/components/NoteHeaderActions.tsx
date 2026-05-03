@@ -8,7 +8,6 @@ import NoteAddRoundedIcon from "@mui/icons-material/NoteAddRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import {
     Box,
-    Chip,
     Divider,
     Dropdown,
     IconButton,
@@ -169,45 +168,6 @@ export const NoteHeaderActions = ({
         },
     };
 
-    // Task chip styles
-    const getTaskChipStyle = (
-        isStatus = false,
-        statusColor?: string | null,
-        textColor?: string | null
-    ) => {
-        if (isStatus && statusColor) {
-            return {
-                height: 32,
-                borderRadius: "8px",
-                fontWeight: 600,
-                fontSize: "12px",
-                backgroundColor: alpha(statusColor, isDark ? 0.5 : 0.75),
-                color: textColor || "#fff",
-                border: `1px solid ${alpha(statusColor, isDark ? 0.6 : 0.4)}`,
-                transition: "all 0.2s ease",
-                "&:hover": {
-                    transform: "translateY(-1px)",
-                    boxShadow: `0 3px 8px ${alpha(statusColor, 0.3)}`,
-                },
-            };
-        }
-        return {
-            height: 32,
-            borderRadius: "8px",
-            fontWeight: 600,
-            fontSize: "12px",
-            background: styles.chipBg,
-            border: `1px solid ${styles.chipBorder}`,
-            color: styles.accentColor,
-            cursor: "pointer",
-            transition: "all 0.2s ease",
-            "&:hover": {
-                transform: "translateY(-1px)",
-                boxShadow: `0 3px 8px ${styles.glowColor}`,
-            },
-        };
-    };
-
     return (
         <Stack alignItems="center" direction="row" spacing={1}>
             {/* My Notes: New Note Button */}
@@ -266,63 +226,160 @@ export const NoteHeaderActions = ({
                         />
                     </Box>
 
-                    {/* Task ID Chip */}
-                    <Tooltip size="sm" title="Open Task on Click" variant="soft">
-                        <Chip
-                            key={`task-note-task-id${currentTask.id}`}
-                            size="sm"
-                            variant="soft"
-                            sx={getTaskChipStyle()}
-                            onClick={onOpenTask}
-                        >
-                            <Stack alignItems="center" direction="row" spacing={0.5}>
-                                <AssignmentRoundedIcon sx={{ fontSize: 14 }} />
-                                <span>ID: {currentTask.id}</span>
-                            </Stack>
-                        </Chip>
-                    </Tooltip>
-
-                    {/* Task Title Chip */}
-                    <Tooltip size="sm" title={currentTask.title} variant="soft">
-                        <Chip
-                            key={`task-title-${currentTask.id}`}
-                            size="sm"
-                            variant="soft"
-                            sx={{
-                                ...getTaskChipStyle(),
-                                maxWidth: 200,
-                            }}
-                            onClick={onOpenTask}
-                        >
-                            <Typography
-                                level="body-xs"
-                                sx={{
-                                    fontWeight: 600,
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    whiteSpace: "nowrap",
-                                    color: "inherit",
-                                }}
+                    {/*
+                        Unified Task pill — replaces the previously-isolated
+                        Task ID chip, Task Title chip, and Task Status chip
+                        which sat side-by-side and read as three independent
+                        controls (two clickable, one not). They are all
+                        descriptions of the same task, so they now share one
+                        rounded shape, one border, and one click target. The
+                        whole pill is the "open task" affordance, mirroring
+                        the unified pill used in ThreadChatPaneHeader.
+                          - Left:    Task #<id> (icon + accent label)
+                          - Middle:  Title (truncated, the prominent piece)
+                          - Right:   Status badge (colored dot + label),
+                                     suppressed when status info is missing.
+                    */}
+                    {(() => {
+                        const status = currentTask.status;
+                        const hasStatus = !!status?.status;
+                        const statusBg = status?.color
+                            ? alpha(status.color, isDark ? 0.4 : 0.6)
+                            : "transparent";
+                        const dotColor = status?.color || styles.accentColor;
+                        return (
+                            <Tooltip
+                                size="sm"
+                                title={`Open Task #${currentTask.id}${
+                                    currentTask.title ? ` — ${currentTask.title}` : ""
+                                }`}
+                                variant="soft"
+                                sx={{ borderRadius: "8px" }}
                             >
-                                {currentTask.title.length > 25
-                                    ? `${currentTask.title.slice(0, 25)}...`
-                                    : currentTask.title || "N/A"}
-                            </Typography>
-                        </Chip>
-                    </Tooltip>
+                                <Box
+                                    component="button"
+                                    type="button"
+                                    aria-label={`Open Task #${currentTask.id}${
+                                        currentTask.title ? `: ${currentTask.title}` : ""
+                                    }`}
+                                    onClick={onOpenTask}
+                                    sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 0.75,
+                                        height: 32,
+                                        px: 1.25,
+                                        borderRadius: "10px",
+                                        border: `1px solid ${styles.chipBorder}`,
+                                        background: styles.chipBg,
+                                        cursor: "pointer",
+                                        font: "inherit",
+                                        color: styles.textColor,
+                                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                        "&:hover": {
+                                            background: styles.buttonHover,
+                                            transform: "translateY(-1px)",
+                                            boxShadow: `0 4px 12px ${styles.glowColor}`,
+                                        },
+                                        "&:focus-visible": {
+                                            outline: `2px solid ${styles.accentColor}`,
+                                            outlineOffset: 2,
+                                        },
+                                    }}
+                                >
+                                    {/* ID section */}
+                                    <AssignmentRoundedIcon
+                                        sx={{ fontSize: 16, color: styles.accentColor }}
+                                    />
+                                    <Typography
+                                        level="body-xs"
+                                        sx={{
+                                            fontWeight: 700,
+                                            color: styles.accentColor,
+                                            letterSpacing: "-0.01em",
+                                        }}
+                                    >
+                                        Task #{currentTask.id}
+                                    </Typography>
 
-                    {/* Task Status Chip */}
-                    <Chip
-                        key={`task-status-${currentTask.status.status}`}
-                        size="sm"
-                        sx={getTaskChipStyle(
-                            true,
-                            currentTask.status.color,
-                            currentTask.status.textColor
-                        )}
-                    >
-                        {currentTask.status.status}
-                    </Chip>
+                                    {/* Title section */}
+                                    <Box
+                                        sx={{
+                                            width: "1px",
+                                            height: 14,
+                                            bgcolor: styles.chipBorder,
+                                            mx: 0.25,
+                                        }}
+                                    />
+                                    <Typography
+                                        level="body-xs"
+                                        sx={{
+                                            fontWeight: 600,
+                                            color: styles.textColor,
+                                            maxWidth: 180,
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                            whiteSpace: "nowrap",
+                                            letterSpacing: "-0.01em",
+                                        }}
+                                    >
+                                        {currentTask.title || "Untitled"}
+                                    </Typography>
+
+                                    {/* Status section */}
+                                    {hasStatus && (
+                                        <>
+                                            <Box
+                                                sx={{
+                                                    width: "1px",
+                                                    height: 14,
+                                                    bgcolor: styles.chipBorder,
+                                                    mx: 0.25,
+                                                }}
+                                            />
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: 0.5,
+                                                    px: 0.75,
+                                                    py: 0.125,
+                                                    borderRadius: "6px",
+                                                    background: statusBg,
+                                                    color: status?.textColor || "#fff",
+                                                }}
+                                            >
+                                                <Box
+                                                    sx={{
+                                                        width: 6,
+                                                        height: 6,
+                                                        borderRadius: "50%",
+                                                        background: dotColor,
+                                                        boxShadow: `0 0 0 2px ${alpha(
+                                                            dotColor,
+                                                            isDark ? 0.25 : 0.18
+                                                        )}`,
+                                                    }}
+                                                />
+                                                <Typography
+                                                    level="body-xs"
+                                                    sx={{
+                                                        fontWeight: 700,
+                                                        color: "inherit",
+                                                        fontSize: "11px",
+                                                        textTransform: "uppercase",
+                                                        letterSpacing: "0.04em",
+                                                    }}
+                                                >
+                                                    {status?.status}
+                                                </Typography>
+                                            </Box>
+                                        </>
+                                    )}
+                                </Box>
+                            </Tooltip>
+                        );
+                    })()}
                 </Stack>
             )}
 
