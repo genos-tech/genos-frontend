@@ -1,6 +1,7 @@
 import AddIcon from "@mui/icons-material/Add";
 import { ListItem, Typography } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
+import { useColorScheme } from "@mui/joy/styles";
 
 import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
 
@@ -9,6 +10,9 @@ type NewProjectListItemProps = {
 };
 export const NewProjectListItem = (props: NewProjectListItemProps) => {
     const { usePM } = props;
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
+
     return (
         <ListItem key={"listitem-createProject"}>
             <ListItemButton
@@ -28,12 +32,16 @@ export const NewProjectListItem = (props: NewProjectListItemProps) => {
             >
                 <AddIcon />
                 <Typography
+                    level="body-sm"
                     sx={{
-                        fontSize: "15px",
+                        fontSize: "14px",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
                         width: "100%", // take full width of button
+                        flex: 1,
+                        fontWeight: 500,
+                        color: isDark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.7)",
                     }}
                     noWrap
                 >

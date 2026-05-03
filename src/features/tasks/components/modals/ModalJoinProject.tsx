@@ -403,7 +403,7 @@ export const ModalJoinProject: React.FC<Props> = ({
                             },
                         }}
                     >
-                        {openJoinProject.isPrivate ? "Send Request" : "Join Project"}
+                        {openJoinProject.isPrivate ? "Send" : "Join"}
                     </Button>
                 </Stack>
             </ModalDialog>

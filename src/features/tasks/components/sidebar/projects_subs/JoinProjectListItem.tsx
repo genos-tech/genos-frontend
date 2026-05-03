@@ -3,6 +3,7 @@ import LockOutlineIcon from "@mui/icons-material/LockOutline";
 import LoginIcon from "@mui/icons-material/Login";
 import { List, ListItem, ListItemContent, Typography } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
+import { useColorScheme } from "@mui/joy/styles";
 
 import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
 import { Toggler } from "../common";
@@ -19,6 +20,8 @@ type JoinProjectListItemProps = {
 };
 export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
     const { usePM, setOpenJoinProject } = props;
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
 
     return (
         <Toggler
@@ -43,12 +46,16 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
                     <LoginIcon />
                     <ListItemContent>
                         <Typography
+                            level="body-sm"
                             sx={{
-                                fontSize: "15px",
+                                fontSize: "14px",
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
                                 whiteSpace: "nowrap",
                                 width: "100%", // take full width of button
+                                flex: 1,
+                                fontWeight: 500,
+                                color: isDark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.7)",
                             }}
                             noWrap
                         >
@@ -107,15 +114,16 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
                                                 ) : undefined
                                             }
                                             sx={{
-                                                color:
-                                                    projectId === usePM.currentProject?.projectId
-                                                        ? "white"
-                                                        : "neutral-500",
                                                 overflow: "hidden",
                                                 textOverflow: "ellipsis",
                                                 whiteSpace: "nowrap",
                                                 width: "100%", // take full width of button
-                                                ml: "35px",
+                                                fontSize: "15px",
+                                                ml: "65px",
+                                                fontWeight: 500,
+                                                color: isDark
+                                                    ? "rgba(255,255,255,0.8)"
+                                                    : "rgba(0,0,0,0.7)",
                                             }}
                                             noWrap
                                         >
@@ -132,12 +140,19 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
                     0 && (
                     <ListItem>
                         <Typography
+                            level="body-sm"
                             sx={{
+                                fontSize: "15px",
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
                                 whiteSpace: "nowrap",
-                                width: "100%",
-                                ml: "40px",
+                                width: "100%", // take full width of button
+                                ml: "50px",
+                                flex: 1,
+                                fontWeight: 500,
+                                color: isDark
+                                    ? "rgba(255, 255, 255, 0.45)"
+                                    : "rgba(0, 0, 0, 0.41)",
                             }}
                             noWrap
                         >

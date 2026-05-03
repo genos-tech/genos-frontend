@@ -190,7 +190,7 @@ export const SettingsModal = ({ open, onClose }: Props) => {
             <ModalDialog
                 size="lg"
                 sx={{
-                    width: { xs: "92vw", sm: 560 },
+                    width: { xs: "92vw", sm: 550, md: 700 },
                     maxHeight: "85vh",
                     overflowY: "auto",
                     overflowX: "hidden",
