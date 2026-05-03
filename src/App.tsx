@@ -9,6 +9,7 @@ import CssBaseline from "@mui/joy/CssBaseline";
 import { CssVarsProvider } from "@mui/joy/styles";
 import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 
+import { ServiceSwitcherOverlay } from "./components/layout/ServiceSwitcherOverlay";
 import { InitialLoad } from "./components/ui/misc/InitialLoad";
 import { ChatHome } from "./features/chat/chatHome";
 import { InboxHome } from "./features/inbox/inboxHome";
@@ -106,8 +107,12 @@ export const App = () => {
 
     // Global keyboard shortcut for switching services. Modifier is Ctrl+Cmd
     // on Mac, Ctrl+Alt on Windows/Linux; combine with a letter (I/C/T/N) to
-    // jump directly, or with ArrowLeft/ArrowRight to cycle through services.
-    useGlobalServiceShortcut(useUISM.openingService, useUISM.setOpeningService);
+    // jump directly, or with ArrowLeft/ArrowRight to cycle through services
+    // via the Cmd+Tab–style overlay (commits on modifier release).
+    const { previewIndex: serviceSwitcherPreviewIndex } = useGlobalServiceShortcut(
+        useUISM.openingService,
+        useUISM.setOpeningService
+    );
 
     // Click-to-open: jump to the chat / thread / task / inbox that the
     // notification refers to. Lives here because this is the layer that has
@@ -233,6 +238,7 @@ export const App = () => {
                         subscribeToasts={useNotif.subscribeToasts}
                         onOpenIntent={openIntent}
                     />
+                    <ServiceSwitcherOverlay previewIndex={serviceSwitcherPreviewIndex} />
                     <Snackbar
                         anchorOrigin={{ vertical: "top", horizontal: "center" }}
                         open={showWsDisconnected || showApiDown}

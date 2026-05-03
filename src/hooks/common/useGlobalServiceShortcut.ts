@@ -1,11 +1,12 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { isMac } from "../../utils/platform";
 
 // Ordered list of services. Index === openingService id, so this also drives
 // the ArrowLeft / ArrowRight cycle order. Mirrors the NAV_ITEMS table in
-// `components/layout/sidebar.tsx`.
+// `components/layout/sidebar.tsx` and the OVERLAY_SERVICES table in
+// `components/layout/ServiceSwitcherOverlay.tsx` — keep all three in sync.
 const SERVICES_BY_ID: Array<{ id: number; path: string }> = [
     { id: 0, path: "/Home/inbox" },
     { id: 1, path: "/Home/chat" },
@@ -21,14 +22,29 @@ const SERVICE_BY_KEY: Record<string, { id: number; path: string }> = {
     n: SERVICES_BY_ID[3],
 };
 
+export type GlobalServiceShortcutState = {
+    /**
+     * Index of the service currently highlighted in the Cmd+Tab–style
+     * overlay, or `null` when the overlay is hidden. The actual route does
+     * not change until the user releases the modifier keys, mirroring how
+     * macOS Cmd+Tab only commits the foreground app on release.
+     */
+    previewIndex: number | null;
+};
+
 /**
  * Registers a global keydown listener that switches the active service via
  * keyboard. The modifier combination is `Ctrl+Cmd` on Mac and `Ctrl+Alt` on
  * Windows/Linux:
  *
- *   - <letter>: I -> Inbox, C -> Chats, T -> Tasks, N -> Notes.
- *   - ArrowRight: cycle forward through the service list (wraps Notes -> Inbox).
- *   - ArrowLeft:  cycle backward through the service list (wraps Inbox -> Notes).
+ *   - <letter>: I -> Inbox, C -> Chats, T -> Tasks, N -> Notes (instant
+ *     switch, no overlay).
+ *   - ArrowRight / ArrowLeft while the modifiers are held: opens an
+ *     overlay and cycles a preview highlight through the service list,
+ *     wrapping around. The actual switch is committed only when the user
+ *     releases the modifier keys (Mac Cmd+Tab semantics).
+ *   - Escape or window blur while the overlay is open: cancel without
+ *     navigating.
  *
  * Both modifier combinations are reliably interceptable from JS (unlike
  * Shift+Cmd+T / Shift+Cmd+N, which are swallowed by Chrome before the page
@@ -38,35 +54,65 @@ const SERVICE_BY_KEY: Record<string, { id: number; path: string }> = {
 export const useGlobalServiceShortcut = (
     openingService: number,
     setOpeningService: (value: number) => void
-) => {
+): GlobalServiceShortcutState => {
     const navigate = useNavigate();
+    const [previewIndex, setPreviewIndex] = useState<number | null>(null);
+
+    // Mirror state into refs so the keyup / blur listeners can read the
+    // latest values without forcing the effect to re-run (which would
+    // detach and re-attach the listeners on every preview change and risk
+    // missing a keyup event mid-gesture).
+    const previewIndexRef = useRef<number | null>(previewIndex);
+    const openingServiceRef = useRef<number>(openingService);
+
+    useEffect(() => {
+        previewIndexRef.current = previewIndex;
+    }, [previewIndex]);
+
+    useEffect(() => {
+        openingServiceRef.current = openingService;
+    }, [openingService]);
 
     useEffect(() => {
         const mac = isMac();
 
-        const handler = (e: KeyboardEvent) => {
+        const commit = (idx: number) => {
+            const target = SERVICES_BY_ID[idx];
+            if (!target) return;
+            setOpeningService(target.id);
+            navigate(target.path);
+        };
+
+        const handleKeyDown = (e: KeyboardEvent) => {
             const modifiersOk = mac
                 ? e.ctrlKey && e.metaKey && !e.altKey && !e.shiftKey
                 : e.ctrlKey && e.altKey && !e.metaKey && !e.shiftKey;
-            if (!modifiersOk) return;
 
-            // Arrow cycling: ArrowRight = next, ArrowLeft = prev. Wrap around
-            // since there are only four services and cycling end-to-end is
-            // the standard "switch tab" behavior.
-            if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
-                const len = SERVICES_BY_ID.length;
-                const delta = e.key === "ArrowRight" ? 1 : -1;
-                // `+ len` keeps the modulo positive when delta is -1.
-                const nextIdx = (openingService + delta + len) % len;
-                const target = SERVICES_BY_ID[nextIdx];
-
+            // Escape closes the overlay without committing, regardless of
+            // whether the modifiers are still held.
+            if (e.key === "Escape" && previewIndexRef.current !== null) {
                 e.preventDefault();
-                setOpeningService(target.id);
-                navigate(target.path);
+                setPreviewIndex(null);
                 return;
             }
 
-            // Letter shortcut.
+            if (!modifiersOk) return;
+
+            // Arrow cycling: open the overlay (if not already open) and
+            // advance the preview highlight. Do NOT navigate — the commit
+            // happens on modifier keyup.
+            if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+                e.preventDefault();
+                const len = SERVICES_BY_ID.length;
+                const delta = e.key === "ArrowRight" ? 1 : -1;
+                setPreviewIndex((prev) => {
+                    const base = prev ?? openingServiceRef.current;
+                    return (base + delta + len) % len;
+                });
+                return;
+            }
+
+            // Letter shortcut: instant switch, no overlay.
             const target = SERVICE_BY_KEY[e.key.toLowerCase()];
             if (!target) return;
 
@@ -75,7 +121,35 @@ export const useGlobalServiceShortcut = (
             navigate(target.path);
         };
 
-        document.addEventListener("keydown", handler);
-        return () => document.removeEventListener("keydown", handler);
-    }, [openingService, setOpeningService, navigate]);
+        const handleKeyUp = (e: KeyboardEvent) => {
+            if (previewIndexRef.current === null) return;
+
+            // Commit when any of the *required* modifiers is released.
+            // Matches Cmd+Tab where releasing the held modifier commits
+            // the highlighted app.
+            const isReleaseKey = mac
+                ? e.key === "Meta" || e.key === "Control"
+                : e.key === "Control" || e.key === "Alt";
+            if (!isReleaseKey) return;
+
+            const idx = previewIndexRef.current;
+            setPreviewIndex(null);
+            if (idx !== null) commit(idx);
+        };
+
+        const handleBlur = () => {
+            if (previewIndexRef.current !== null) setPreviewIndex(null);
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+        document.addEventListener("keyup", handleKeyUp);
+        window.addEventListener("blur", handleBlur);
+        return () => {
+            document.removeEventListener("keydown", handleKeyDown);
+            document.removeEventListener("keyup", handleKeyUp);
+            window.removeEventListener("blur", handleBlur);
+        };
+    }, [setOpeningService, navigate]);
+
+    return { previewIndex };
 };
