@@ -323,7 +323,7 @@ export const NoteHeaderActions = ({
                                             letterSpacing: "-0.01em",
                                         }}
                                     >
-                                        {currentTask.title || "Untitled"}
+                                        {(currentTask.title.slice(0, 18) ?? "") + "..."}
                                     </Typography>
 
                                     {/* Status section */}

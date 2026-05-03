@@ -1678,6 +1678,16 @@ const MilestonePreviewInner = ({
                                     useTM.setCurrentPreviewKind("task");
                                     useTM.setCurrentPreviewMilestoneId(-1);
                                     useTM.setIsTaskPreviewVisible(false);
+                                    // Same dual-gate trap as the milestone Close
+                                    // button: when the preview was opened from a
+                                    // task note, the surrounding `TaskPreviewPanel`
+                                    // is mounted by `useNM.isTaskVisibleInNote`
+                                    // rather than `useTM`, so flipping `useTM`
+                                    // alone leaves the panel showing a now-deleted
+                                    // milestone. Clear the NM flag too.
+                                    if (useNM.setIsTaskVisibleInNote) {
+                                        useNM.setIsTaskVisibleInNote(false);
+                                    }
                                 }}
                             >
                                 <Box
@@ -1731,6 +1741,19 @@ const MilestonePreviewInner = ({
                                     useTM.isDashboardVisible === false
                                 ) {
                                     useTM.setIsTaskHomeVisible(true);
+                                }
+
+                                // When the milestone preview was opened from a
+                                // task note (NoteHeaderActions → onOpenTask
+                                // flips `useNM.isTaskVisibleInNote=true`), the
+                                // surrounding `TaskPreviewPanel` is gated by
+                                // that NM flag rather than by `useTM`. So the
+                                // `setIsTaskPreviewVisible(false)` above has no
+                                // visible effect — the panel only unmounts
+                                // when we also clear the NM flag. Mirror the
+                                // close path in `TaskTitleBlock.tsx`.
+                                if (useNM.setIsTaskVisibleInNote) {
+                                    useNM.setIsTaskVisibleInNote(false);
                                 }
                             }}
                         >
