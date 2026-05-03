@@ -13,7 +13,6 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatNoteProps } from "../../../../types/notes";
-import { getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
 import { ChatNoteEditor } from "./ChatNoteEditor";
 import { ChatNoteHeader } from "./ChatNoteHeader";
 import { ChatNoteTabList } from "./ChatNoteTabList";
@@ -63,7 +62,6 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
     // Local state
     const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
     const [openSearchBox, setOpenSearchBox] = useState(false);
-    const [tsBody, setTsBody] = useState<string>(getLocalCurrentTimestamp());
 
     // Custom hooks for note management
     const chatNoteEditor = useChatNoteEditor({
@@ -118,14 +116,6 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
     useEffect(() => {
         chatNoteEditor.setNoteBodySaved(false);
     }, [useNM.selectedTabIndex]);
-
-    // Refresh the TabPanel key only when the user actually switches to a
-    // different chat note. Reference-only updates (e.g. an in-place save that
-    // produces a new currentChatNote object) must NOT remount the editor, or
-    // the title input loses focus mid-typing.
-    useEffect(() => {
-        setTsBody(getLocalCurrentTimestamp());
-    }, [useNM.currentChatNote?.noteType, useNM.currentChatNote?.noteId]);
 
     // Find the current chat
     const chat = useCM.allChats.find(
@@ -213,42 +203,45 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                     onCloseTab={handleCloseTab}
                                 />
 
-                                {useNM.tabItems.map((tabNote, index) => (
+                                {/* Render exactly one editor (not one per tab). The tab
+                                 * strip lives in <ChatNoteTabList> above; the body
+                                 * content is a singleton because `useNM.currentChatNote`
+                                 * is too. Keying by `noteType-noteId` remounts the
+                                 * BlockNote editor + Hocuspocus provider only when the
+                                 * user actually switches notes — which is what kills
+                                 * the old N-editor remount storm that caused the lag. */}
+                                {useNM.currentChatNote && chatNoteEditor.body && (
                                     <TabPanel
-                                        key={`tab-note-body-${tabNote.noteType}-${tabNote.noteId}-${tsBody}`}
-                                        value={index}
+                                        key={`tab-note-body-${useNM.currentChatNote.noteType}-${useNM.currentChatNote.noteId}`}
+                                        value={useNM.selectedTabIndex}
                                         sx={{
                                             paddingX: "5px",
                                             paddingTop: "0px",
                                             paddingBottom: "5px",
                                         }}
                                     >
-                                        {useNM.currentChatNote && chatNoteEditor.body && (
-                                            <ChatNoteEditor
-                                                body={chatNoteEditor.body}
-                                                useCM={useCM}
-                                                currentChatNote={useNM.currentChatNote}
-                                                myself={myself}
-                                                setMyself={setMyself}
-                                                socket={socket}
-                                                useTEM={useTEM}
-                                                useUISM={useUISM}
-                                                currentChatNoteTitle={
-                                                    chatNoteEditor.currentChatNoteTitle
-                                                }
-                                                noteBodySaved={chatNoteEditor.noteBodySaved}
-                                                setNoteBodyEdited={
-                                                    chatNoteEditor.setNoteBodyEdited
-                                                }
-                                                setNoteBodySaved={chatNoteEditor.setNoteBodySaved}
-                                                titleInputRef={chatNoteEditor.titleInputRef}
-                                                onBodyChange={chatNoteEditor.handleBodyChange}
-                                                onTitleBlur={chatNoteEditor.handleTitleBlur}
-                                                onTitleChange={chatNoteEditor.handleTitleChange}
-                                            />
-                                        )}
+                                        <ChatNoteEditor
+                                            body={chatNoteEditor.body}
+                                            useCM={useCM}
+                                            currentChatNote={useNM.currentChatNote}
+                                            myself={myself}
+                                            setMyself={setMyself}
+                                            socket={socket}
+                                            useTEM={useTEM}
+                                            useUISM={useUISM}
+                                            currentChatNoteTitle={
+                                                chatNoteEditor.currentChatNoteTitle
+                                            }
+                                            noteBodySaved={chatNoteEditor.noteBodySaved}
+                                            setNoteBodyEdited={chatNoteEditor.setNoteBodyEdited}
+                                            setNoteBodySaved={chatNoteEditor.setNoteBodySaved}
+                                            titleInputRef={chatNoteEditor.titleInputRef}
+                                            onBodyChange={chatNoteEditor.handleBodyChange}
+                                            onTitleBlur={chatNoteEditor.handleTitleBlur}
+                                            onTitleChange={chatNoteEditor.handleTitleChange}
+                                        />
                                     </TabPanel>
-                                ))}
+                                )}
                             </Tabs>
                         </Stack>
                     )}

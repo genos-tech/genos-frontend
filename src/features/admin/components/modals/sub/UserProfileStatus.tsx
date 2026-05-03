@@ -185,7 +185,7 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                                 {openCustomStatusEditor === false && (
                                     <Chip
                                         color="neutral"
-                                        size="lg"
+                                        size="md"
                                         sx={{ borderRadius: "sm" }}
                                         variant="outlined"
                                         onClick={() => {
@@ -205,7 +205,7 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                                 {openCustomStatusEditor === false && (
                                     <Chip
                                         color="neutral"
-                                        size="lg"
+                                        size="md"
                                         sx={{ borderRadius: "sm" }}
                                         variant="outlined"
                                         onClick={() => {}}

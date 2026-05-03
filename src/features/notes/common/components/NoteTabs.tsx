@@ -31,7 +31,6 @@ interface NoteTabsProps {
     useNM: NoteManagementState;
     body: PartialBlock[] | undefined;
     noteBodySaved: boolean;
-    tsBody: string;
     myself: any;
     setBody: (body: PartialBlock[]) => void;
     useCM: ChatManagementState;
@@ -51,7 +50,6 @@ export const NoteTabs = ({
     useNM,
     body,
     noteBodySaved,
-    tsBody,
     myself,
     setBody,
     useCM,
@@ -382,10 +380,16 @@ export const NoteTabs = ({
                 )}
             </Box>
 
-            {useNM.tabItems.map((tabNote, index) => (
+            {/* Render exactly one editor (not one per tab). The TabList above
+             * still maps over all tabs for the strip, but the body is a
+             * singleton because `useNM.currentTaskNote` is too. Keying by
+             * `noteType-noteId` remounts the BlockNote editor + Hocuspocus
+             * provider only when the user actually switches notes — which is
+             * what kills the old N-editor remount storm that caused the lag. */}
+            {useNM.currentTaskNote && (
                 <TabPanel
-                    key={`tab-note-body-${tabNote.noteType}-${tabNote.noteId}-${tsBody}`}
-                    value={index}
+                    key={`tab-note-body-${useNM.currentTaskNote.noteType}-${useNM.currentTaskNote.noteId}`}
+                    value={useNM.selectedTabIndex}
                     sx={{
                         paddingX: "5px",
                         paddingTop: "0px",
@@ -453,23 +457,21 @@ export const NoteTabs = ({
                             </Button>
                         </Box>
                     )}
-                    {useNM.currentTaskNote && (
-                        <BnTaskNoteEditor
-                            body={body || []}
-                            useCM={useCM}
-                            currentTaskNote={useNM.currentTaskNote}
-                            myself={myself}
-                            setBody={setBody}
-                            setMyself={setMyself}
-                            setNoteBodyEdited={setNoteBodyEdited}
-                            setNoteBodySaved={setNoteBodySaved}
-                            socket={socket}
-                            useTEM={useTEM}
-                            useUISM={useUISM}
-                        />
-                    )}
+                    <BnTaskNoteEditor
+                        body={body || []}
+                        useCM={useCM}
+                        currentTaskNote={useNM.currentTaskNote}
+                        myself={myself}
+                        setBody={setBody}
+                        setMyself={setMyself}
+                        setNoteBodyEdited={setNoteBodyEdited}
+                        setNoteBodySaved={setNoteBodySaved}
+                        socket={socket}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
+                    />
                 </TabPanel>
-            ))}
+            )}
         </Tabs>
     );
 };

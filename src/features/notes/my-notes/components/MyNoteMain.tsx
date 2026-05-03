@@ -11,7 +11,6 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useNoteTabs } from "../../../../hooks/notes/useNoteTabs";
 import { UserProps } from "../../../../types/admin";
 import { MyNoteProps } from "../../../../types/notes";
-import { getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
 import { EmptyState } from "../../common/components/EmptyState";
 import { NoteEditor } from "../../common/components/NoteEditor";
 import { NoteHeaderActions } from "../../common/components/NoteHeaderActions";
@@ -44,7 +43,6 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
 
     const { accessToken } = useAuth();
     const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
-    const [tsBody, setTsBody] = useState<string>(getLocalCurrentTimestamp());
 
     // Custom hooks for note management
     const noteEditor = useNoteEditor({
@@ -85,14 +83,6 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
     useEffect(() => {
         noteEditor.setNoteBodySaved(false);
     }, [useNM.selectedTabIndex]);
-
-    // Refresh the TabPanel key only when the user actually switches to a
-    // different my note. Reference-only updates (e.g. an in-place save that
-    // produces a new currentMyNote object) must NOT remount the editor, or
-    // the title input loses focus mid-typing.
-    useEffect(() => {
-        setTsBody(getLocalCurrentTimestamp());
-    }, [useNM.currentMyNote?.noteType, useNM.currentMyNote?.noteId]);
 
     // Event handlers
     const handleCreateNewNote = () => {
@@ -193,36 +183,41 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                             >
                                 <NoteTabList useNM={useNM} onCloseTab={handleCloseTab} />
 
-                                {useNM.tabItems.map((tabNote, index) => (
+                                {/* Render exactly one editor (not one per tab). The tab
+                                 * strip lives in <NoteTabList> above; the body content
+                                 * is a singleton because `useNM.currentMyNote` is too.
+                                 * Keying by `noteType-noteId` remounts the BlockNote
+                                 * editor + Hocuspocus provider only when the user
+                                 * actually switches notes — which is what kills the
+                                 * old N-editor remount storm that caused the lag. */}
+                                {useNM.currentMyNote && (
                                     <TabPanel
-                                        key={`tab-note-body-${tabNote.noteType}-${tabNote.noteId}-${tsBody}`}
-                                        value={index}
+                                        key={`tab-note-body-${useNM.currentMyNote.noteType}-${useNM.currentMyNote.noteId}`}
+                                        value={useNM.selectedTabIndex}
                                         sx={{
                                             paddingX: "5px",
                                             paddingTop: "0px",
                                             paddingBottom: "5px",
                                         }}
                                     >
-                                        {useNM.currentMyNote && (
-                                            <NoteEditor
-                                                body={noteEditor.body}
-                                                useCM={useCM}
-                                                useNM={useNM}
-                                                myself={myself}
-                                                noteBodySaved={noteEditor.noteBodySaved}
-                                                setMyself={setMyself}
-                                                socket={socket}
-                                                useTEM={useTEM}
-                                                titleInputRef={noteEditor.titleInputRef}
-                                                useUISM={useUISM}
-                                                currentMyNoteTitle={noteEditor.currentMyNoteTitle}
-                                                onBodyChange={noteEditor.handleBodyChange}
-                                                onTitleBlur={noteEditor.handleTitleBlur}
-                                                onTitleChange={noteEditor.handleTitleChange}
-                                            />
-                                        )}
+                                        <NoteEditor
+                                            body={noteEditor.body}
+                                            useCM={useCM}
+                                            useNM={useNM}
+                                            myself={myself}
+                                            noteBodySaved={noteEditor.noteBodySaved}
+                                            setMyself={setMyself}
+                                            socket={socket}
+                                            useTEM={useTEM}
+                                            titleInputRef={noteEditor.titleInputRef}
+                                            useUISM={useUISM}
+                                            currentMyNoteTitle={noteEditor.currentMyNoteTitle}
+                                            onBodyChange={noteEditor.handleBodyChange}
+                                            onTitleBlur={noteEditor.handleTitleBlur}
+                                            onTitleChange={noteEditor.handleTitleChange}
+                                        />
                                     </TabPanel>
-                                ))}
+                                )}
                             </Tabs>
                         </Stack>
                     )}

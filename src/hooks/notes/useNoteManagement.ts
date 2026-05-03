@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { NoteService } from "../../db/services/note.service";
 import { createEmptyChatNote } from "../../features/notes/chat-notes/services/createEmptyChatNote";
@@ -36,6 +36,7 @@ import {
 import { buildChatNoteTree, buildMyNoteTree, buildTaskNoteTree } from "../../utils/note";
 import { initCurrentChatNoteChain, updataChatNoteChain } from "./chatNote";
 import { initCurrentMyNoteChain, updataMyNoteChain } from "./myNote";
+import { loadPersistedTabs, savePersistedTabs, TabRef, toRefs } from "./noteTabsPersistence";
 import {
     updateTabFromChatNoteUpdate,
     updateTabFromMyNoteUpdate,
@@ -160,6 +161,11 @@ export const useNoteManagement = (
     const [tabItems, setTabItems] = useState<any[]>([]);
     const [tmpTabItems, setTmpTabItems] = useState<any[]>([]);
     const [selectedTabIndex, setSelectedTabIndex] = useState(0);
+
+    // Tracks whether the rehydrate effect below has run for the current
+    // teamId. The persist effect uses this to avoid clobbering a saved
+    // record with React's empty initial state on first render.
+    const hasHydratedRef = useRef(false);
 
     // Chat notes
     const [currentChatNote, setCurrentChatNote] = useState<ChatNoteProps | null>(null);
@@ -803,7 +809,66 @@ export const useNoteManagement = (
         }
     };
 
+    // Resolve a single persisted ref to a full note object, preferring IDB
+    // and falling back to the backend. Returns null when the note is gone
+    // (deleted server-side, or never reachable for this user) so the
+    // caller can drop it from the restored strip.
+    type ResolvedNote = MyNoteProps | TaskNoteProps | ChatNoteProps;
+    const resolveTabRef = async (ref: TabRef): Promise<ResolvedNote | null> => {
+        try {
+            if (ref.noteType === 1) {
+                const cached = await noteService.getPersonalNote(ref.noteId);
+                if (cached) return { ...cached, noteType: 1 };
+                if (!accessToken) return null;
+                const fetched = await loadSpecificNote(myself, 1, ref.noteId, accessToken);
+                return fetched && !fetched.error ? { ...fetched, noteType: 1 } : null;
+            }
+            if (ref.noteType === 2) {
+                const cached = await noteService.getTaskNote(ref.noteId);
+                if (cached) return { ...cached, noteType: 2 };
+                if (!accessToken) return null;
+                const fetched = await loadSpecificNote(myself, 2, ref.noteId, accessToken);
+                return fetched && !fetched.error ? { ...fetched, noteType: 2 } : null;
+            }
+            const cached = await noteService.getChatNote(ref.noteId);
+            if (cached) return { ...cached, noteType: 3 };
+            if (!accessToken) return null;
+            const fetched = await loadSpecificNote(myself, 3, ref.noteId, accessToken);
+            return fetched && !fetched.error ? { ...fetched, noteType: 3 } : null;
+        } catch {
+            return null;
+        }
+    };
+
     const popInitialNote = async () => {
+        // Preferred path: rehydrate already populated tabItems for this team.
+        // Replay the active tab so the editor opens to the same note the user
+        // had focused before the refresh.
+        if (tabItems.length > 0) {
+            const safeIdx = Math.min(selectedTabIndex, tabItems.length - 1);
+            const active = tabItems[safeIdx];
+            if (active && active.noteType && active.noteId !== undefined) {
+                await loadNote(active.noteType, active.noteId, safeIdx);
+                return;
+            }
+        }
+
+        // Fallback A: rehydrate hasn't fired yet (or returned nothing usable),
+        // but the persisted JSON is on disk. Read it directly so we don't
+        // depend on the effect ordering.
+        if (myself.teamId) {
+            const persisted = loadPersistedTabs(myself.teamId);
+            if (persisted && persisted.tabs.length > 0) {
+                const safeIdx = Math.min(persisted.selectedTabIndex, persisted.tabs.length - 1);
+                const active = persisted.tabs[safeIdx];
+                if (active) {
+                    await loadNote(active.noteType, active.noteId, safeIdx);
+                    return;
+                }
+            }
+        }
+
+        // Fallback B: legacy single-note keys from before this change.
         const noteType: string | null = localStorage.getItem("lastOpenNoteType");
         const myNoteId: string | null = localStorage.getItem("lastOpenMyNoteId");
         const taskNoteId: string | null = localStorage.getItem("lastOpenTaskNoteId");
@@ -823,6 +888,74 @@ export const useNoteManagement = (
     useEffect(() => {
         localStorage.setItem("currentNoteType", currentNoteType.toString());
     }, [currentNoteType]);
+
+    // Rehydrate the tab strip from localStorage whenever the active team
+    // changes (also covers first-mount-after-refresh once auth lands).
+    // Each persisted ref is resolved to a full note via NoteService (IDB
+    // first, backend fallback) so the renderers see the latest title and
+    // any deleted notes drop out cleanly.
+    useEffect(() => {
+        if (!myself.teamId) return;
+        let cancelled = false;
+        // Drop the hydrated flag before the async work so any persist-effect
+        // firing in the gap (e.g. `initializeNoteStates` clearing state on
+        // team switch) skips and can't overwrite the new team's saved record
+        // with the previous team's leftover state.
+        hasHydratedRef.current = false;
+
+        (async () => {
+            const persisted = loadPersistedTabs(myself.teamId);
+            if (!persisted) {
+                if (!cancelled) {
+                    setTabItems([]);
+                    setTmpTabItems([]);
+                    setSelectedTabIndex(0);
+                    hasHydratedRef.current = true;
+                }
+                return;
+            }
+
+            const resolveAll = async (refs: TabRef[]): Promise<ResolvedNote[]> => {
+                const resolved = await Promise.all(refs.map((r) => resolveTabRef(r)));
+                return resolved.filter((n): n is ResolvedNote => n !== null);
+            };
+
+            const [tabs, tmpTabs] = await Promise.all([
+                resolveAll(persisted.tabs),
+                resolveAll(persisted.tmpTabs),
+            ]);
+
+            if (cancelled) return;
+
+            setTabItems(tabs);
+            setTmpTabItems(tmpTabs);
+            setSelectedTabIndex(
+                tabs.length === 0 ? 0 : Math.min(persisted.selectedTabIndex, tabs.length - 1)
+            );
+            hasHydratedRef.current = true;
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+        // `accessToken` deliberately not in the deps: a token refresh shouldn't
+        // restart rehydration. We accept that very early renders without a
+        // token will skip the backend fallback for any tabs missing from IDB
+        // (which then surface on next mount).
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [myself.teamId]);
+
+    // Persist the tab strip on every change. Gated by `hasHydratedRef` so
+    // the empty initial state can never overwrite a saved record before
+    // rehydration runs.
+    useEffect(() => {
+        if (!hasHydratedRef.current || !myself.teamId) return;
+        savePersistedTabs(myself.teamId, {
+            selectedTabIndex,
+            tabs: toRefs(tabItems),
+            tmpTabs: toRefs(tmpTabItems),
+        });
+    }, [tabItems, tmpTabItems, selectedTabIndex, myself.teamId]);
 
     return {
         // Note type and tabs

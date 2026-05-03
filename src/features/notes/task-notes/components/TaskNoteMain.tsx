@@ -10,7 +10,6 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
-import { getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
 import { NoteHeaderActions } from "../../common/components/NoteHeaderActions";
 import { NoteTabs } from "../../common/components/NoteTabs";
 import { useNoteAutoSave } from "../../common/hooks/useNoteAutoSave";
@@ -54,7 +53,6 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
     );
     const [openSearchBox, setOpenSearchBox] = useState(false);
     const [body, setBody] = useState<PartialBlock[]>();
-    const [tsBody, setTsBody] = useState<string>(getLocalCurrentTimestamp());
     const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
 
     // Custom hooks
@@ -75,14 +73,15 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
     });
 
     // Effects
-    // Re-sync local body/title and refresh the TabPanel key only when the user
-    // actually switches to a different task note. Reference-only updates (e.g.
-    // an in-place save that produces a new currentTaskNote object) must NOT
-    // remount the editor, or the title input loses focus mid-typing.
+    // Re-sync local body/title only when the user actually switches to a
+    // different task note. Reference-only updates (e.g. an in-place save that
+    // produces a new currentTaskNote object) must NOT trigger this — the
+    // single TabPanel inside <NoteTabs> is keyed by `noteType-noteId` so it
+    // remounts the editor on real switches and leaves the title input alone
+    // during typing.
     useEffect(() => {
         if (useNM.currentTaskNote) {
             setBody(useNM.currentTaskNote.body);
-            setTsBody(getLocalCurrentTimestamp());
             setCurrentTaskNoteTitle(useNM.currentTaskNote.title);
         }
     }, [useNM.currentTaskNote?.noteType, useNM.currentTaskNote?.noteId]);
@@ -280,7 +279,6 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                         setNoteBodySaved={setNoteBodySaved}
                         socket={socket}
                         useTEM={useTEM}
-                        tsBody={tsBody}
                         useUISM={useUISM}
                         onCloseTab={handleCloseTab}
                         onTitleBlur={handleTitleBlur}
