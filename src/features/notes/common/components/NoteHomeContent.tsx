@@ -1,12 +1,10 @@
-import { useMemo } from "react";
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import { ReactNode, useMemo, useRef } from "react";
 import ArticleRoundedIcon from "@mui/icons-material/ArticleRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
-import BookmarkBorderRoundedIcon from "@mui/icons-material/BookmarkBorderRounded";
 import CreateRoundedIcon from "@mui/icons-material/CreateRounded";
 import DescriptionRoundedIcon from "@mui/icons-material/DescriptionRounded";
-import FolderOpenRoundedIcon from "@mui/icons-material/FolderOpenRounded";
+import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import TipsAndUpdatesRoundedIcon from "@mui/icons-material/TipsAndUpdatesRounded";
@@ -15,16 +13,106 @@ import { Box, Button, Card, Chip, Grid, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { ChatNoteMetaProps, MyNoteMetaProps, TaskNoteMetaProps } from "../../../../types/notes";
 
 type NoteHomeContentProps = {
     useNM: NoteManagementState;
+};
+
+// Note-type primitives. Defined once at module scope so the helpers
+// below don't recreate objects on every render and the values stay in
+// sync with the rest of the notes UI (sidebar, FavoriteNoteItem, etc.).
+const NOTE_TYPES = {
+    CHAT: 3,
+    FAVORITES: 0, // virtual — used only by the Favorites stat card
+    PERSONAL: 1,
+    TASK: 2,
+} as const;
+
+type NoteType = number;
+type NoteMeta = MyNoteMetaProps | TaskNoteMetaProps | ChatNoteMetaProps;
+
+const getNoteTypeIcon = (noteType: NoteType, fontSize = 16): ReactNode => {
+    switch (noteType) {
+        case NOTE_TYPES.PERSONAL:
+            return <WindowRoundedIcon sx={{ fontSize }} />;
+        case NOTE_TYPES.TASK:
+            return <AssignmentRoundedIcon sx={{ fontSize }} />;
+        case NOTE_TYPES.CHAT:
+            return <QuestionAnswerRoundedIcon sx={{ fontSize }} />;
+        default:
+            return <DescriptionRoundedIcon sx={{ fontSize }} />;
+    }
+};
+
+const getNoteTypeLabel = (noteType: NoteType): string => {
+    switch (noteType) {
+        case NOTE_TYPES.PERSONAL:
+            return "Personal";
+        case NOTE_TYPES.TASK:
+            return "Task";
+        case NOTE_TYPES.CHAT:
+            return "Chat";
+        default:
+            return "Note";
+    }
+};
+
+const getNoteTypeColor = (noteType: NoteType) => {
+    switch (noteType) {
+        case NOTE_TYPES.PERSONAL:
+            return { bg: "rgba(99,102,241,0.12)", text: "#818cf8" };
+        case NOTE_TYPES.TASK:
+            return { bg: "rgba(34,197,94,0.12)", text: "#4ade80" };
+        case NOTE_TYPES.CHAT:
+            return { bg: "rgba(251,146,60,0.12)", text: "#fb923c" };
+        default:
+            return { bg: "rgba(148,163,184,0.12)", text: "#94a3b8" };
+    }
+};
+
+// Mirror the sub-label rules used in the sidebar's `FavoriteNoteItem`
+// so a task-note pill on the home page reads `Project #123` and a
+// chat-note pill reads its chat-type label, matching the sidebar
+// exactly. Personal notes have no useful sub-label.
+const getChatTypeLabel = (chatType: number): string => {
+    switch (chatType) {
+        case 1:
+            return "DM";
+        case 2:
+            return "GM";
+        case 3:
+            return "PM";
+        case 4:
+            return "MDM";
+        default:
+            return "Chat";
+    }
+};
+
+const getNoteSubLabel = (note: NoteMeta, noteType: NoteType): string | null => {
+    if (noteType === NOTE_TYPES.TASK) {
+        const t = note as TaskNoteMetaProps;
+        if (!t.projectName && !t.taskTitle) return null;
+        return `${t.projectName ?? ""}${t.taskId ? ` #${t.taskId}` : ""}`.trim() || null;
+    }
+    if (noteType === NOTE_TYPES.CHAT) {
+        const c = note as ChatNoteMetaProps;
+        return c.chatName || c.chatTypeName || getChatTypeLabel(c.chatType);
+    }
+    return null;
 };
 
 export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
 
-    // Calculate note statistics
+    // Anchor for the Favorites stat-card → scroll-to-section affordance.
+    // Storing it on a ref (instead of an `id`) keeps the DOM clean and
+    // avoids potential id collisions on pages that render multiple
+    // dashboards.
+    const favoritesSectionRef = useRef<HTMLDivElement | null>(null);
+
     const stats = useMemo(() => {
         const personalCount = useNM.myNoteMeta?.length || 0;
         const taskCount = useNM.taskNoteMeta?.length || 0;
@@ -34,40 +122,42 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
             (useNM.favoriteNotes?.taskNotes?.length || 0) +
             (useNM.favoriteNotes?.chatNotes?.length || 0);
 
-        return { personalCount, taskCount, chatCount, favoritesCount };
+        return { chatCount, favoritesCount, personalCount, taskCount };
     }, [useNM.myNoteMeta, useNM.taskNoteMeta, useNM.chatNoteMeta, useNM.favoriteNotes]);
 
-    // Get recent notes from the server-backed `useNM.recentNotes` state
-    // (populated by NoteSidebar's mount fetch). Each row carries a
-    // `tsOpenedAt` set when the user actually opened the note via the
-    // backend's NoteRecentMaster — replacing the previous client-side
-    // shortcut that ranked by `tsUpdated` (most-recently-MODIFIED), which
-    // wasn't really "recents" at all.
+    // Recent notes — server-backed list ranked by `tsOpenedAt` desc.
+    // See NoteSidebar's mount fetch for the source of truth; this view
+    // just reshapes that data into a flat row list and keeps the most
+    // recent 12.
     const recentNotes = useMemo(() => {
         if (!useNM.recentNotes) return [];
 
         const allNotes: Array<{
+            note: NoteMeta;
             noteId: number;
-            title: string;
             noteType: number;
+            title: string;
             updatedAt?: string;
         }> = [
             ...useNM.recentNotes.personalNotes.map((n) => ({
+                note: n as unknown as NoteMeta,
                 noteId: n.noteId,
+                noteType: NOTE_TYPES.PERSONAL,
                 title: n.title || "Untitled",
-                noteType: 1,
                 updatedAt: n.tsOpenedAt,
             })),
             ...useNM.recentNotes.taskNotes.map((n) => ({
+                note: n as unknown as NoteMeta,
                 noteId: n.noteId,
+                noteType: NOTE_TYPES.TASK,
                 title: n.title || "Untitled",
-                noteType: 2,
                 updatedAt: n.tsOpenedAt,
             })),
             ...useNM.recentNotes.chatNotes.map((n) => ({
+                note: n as unknown as NoteMeta,
                 noteId: n.noteId,
+                noteType: NOTE_TYPES.CHAT,
                 title: n.title || "Untitled",
-                noteType: 3,
                 updatedAt: n.tsOpenedAt,
             })),
         ];
@@ -81,90 +171,89 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
             .slice(0, 12);
     }, [useNM.recentNotes]);
 
-    const getNoteTypeIcon = (noteType: number) => {
-        switch (noteType) {
-            case 1:
-                return <WindowRoundedIcon sx={{ fontSize: 16 }} />;
-            case 2:
-                return <AssignmentRoundedIcon sx={{ fontSize: 16 }} />;
-            case 3:
-                return <QuestionAnswerRoundedIcon sx={{ fontSize: 16 }} />;
-            default:
-                return <DescriptionRoundedIcon sx={{ fontSize: 16 }} />;
-        }
-    };
+    // Flatten favorites into a typed list so we can render them in the
+    // same card grid shape Recent Notes uses. We deliberately keep the
+    // by-type grouping (Personal → Task → Chat) so the order is
+    // predictable across renders and matches the sidebar.
+    const favoriteRows = useMemo(() => {
+        if (!useNM.favoriteNotes) return [];
 
-    const getNoteTypeLabel = (noteType: number) => {
-        switch (noteType) {
-            case 1:
-                return "Personal";
-            case 2:
-                return "Task";
-            case 3:
-                return "Chat";
-            default:
-                return "Note";
-        }
-    };
+        const rows: Array<{
+            note: NoteMeta;
+            noteId: number;
+            noteType: number;
+        }> = [
+            ...useNM.favoriteNotes.personalNotes.map((n) => ({
+                note: n as unknown as NoteMeta,
+                noteId: n.noteId,
+                noteType: NOTE_TYPES.PERSONAL,
+            })),
+            ...useNM.favoriteNotes.taskNotes.map((n) => ({
+                note: n as unknown as NoteMeta,
+                noteId: n.noteId,
+                noteType: NOTE_TYPES.TASK,
+            })),
+            ...useNM.favoriteNotes.chatNotes.map((n) => ({
+                note: n as unknown as NoteMeta,
+                noteId: n.noteId,
+                noteType: NOTE_TYPES.CHAT,
+            })),
+        ];
 
-    const getNoteTypeColor = (noteType: number) => {
-        switch (noteType) {
-            case 1:
-                return { bg: "rgba(99,102,241,0.12)", text: "#818cf8" };
-            case 2:
-                return { bg: "rgba(34,197,94,0.12)", text: "#4ade80" };
-            case 3:
-                return { bg: "rgba(251,146,60,0.12)", text: "#fb923c" };
-            default:
-                return { bg: "rgba(148,163,184,0.12)", text: "#94a3b8" };
-        }
-    };
+        return rows;
+    }, [useNM.favoriteNotes]);
 
+    // `nextTabIndex = -1` lets `loadNote` reuse an existing tab when
+    // the note is already open — matching `FavoriteNoteItem`. Passing
+    // `tabItems.length` (the previous behaviour) caused a duplicate
+    // tab every time the user re-opened a note from the dashboard.
     const handleNoteClick = (noteId: number, noteType: number) => {
         useNM.setCurrentNoteType(noteType);
         localStorage.setItem("lastOpenNoteType", noteType.toString());
-        // Load note and add it as a new tab
-        const nextTabIndex = useNM.tabItems.length;
-        useNM.loadNote(noteType, noteId, nextTabIndex);
+        useNM.loadNote(noteType, noteId, -1);
     };
 
-    const handleQuickCreate = (noteType: number) => {
+    const handleSwitchType = (noteType: number) => {
         useNM.setCurrentNoteType(noteType);
         localStorage.setItem("lastOpenNoteType", noteType.toString());
+    };
+
+    const handleScrollToFavorites = () => {
+        favoritesSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     };
 
     const statCards = [
         {
-            label: "My Notes",
+            bgColor: isDark ? "rgba(99,102,241,0.08)" : "rgba(99,102,241,0.06)",
+            color: "#818cf8",
             count: stats.personalCount,
             icon: <WindowRoundedIcon />,
-            color: "#818cf8",
-            bgColor: isDark ? "rgba(99,102,241,0.08)" : "rgba(99,102,241,0.06)",
-            noteType: 1,
+            label: "My Notes",
+            onClick: () => handleSwitchType(NOTE_TYPES.PERSONAL),
         },
         {
-            label: "Task Notes",
+            bgColor: isDark ? "rgba(34,197,94,0.08)" : "rgba(34,197,94,0.06)",
+            color: "#4ade80",
             count: stats.taskCount,
             icon: <AssignmentRoundedIcon />,
-            color: "#4ade80",
-            bgColor: isDark ? "rgba(34,197,94,0.08)" : "rgba(34,197,94,0.06)",
-            noteType: 2,
+            label: "Task Notes",
+            onClick: () => handleSwitchType(NOTE_TYPES.TASK),
         },
         {
-            label: "Chat Notes",
+            bgColor: isDark ? "rgba(251,146,60,0.08)" : "rgba(251,146,60,0.06)",
+            color: "#fb923c",
             count: stats.chatCount,
             icon: <QuestionAnswerRoundedIcon />,
-            color: "#fb923c",
-            bgColor: isDark ? "rgba(251,146,60,0.08)" : "rgba(251,146,60,0.06)",
-            noteType: 3,
+            label: "Chat Notes",
+            onClick: () => handleSwitchType(NOTE_TYPES.CHAT),
         },
         {
-            label: "Favorites",
+            bgColor: isDark ? "rgba(251,191,36,0.08)" : "rgba(251,191,36,0.06)",
+            color: "#fbbf24",
             count: stats.favoritesCount,
             icon: <StarRoundedIcon />,
-            color: "#fbbf24",
-            bgColor: isDark ? "rgba(251,191,36,0.08)" : "rgba(251,191,36,0.06)",
-            noteType: 0,
+            label: "Favorites",
+            onClick: handleScrollToFavorites,
         },
     ];
 
@@ -173,11 +262,129 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
         "Organize notes with nested hierarchies for better structure",
         "Link notes to tasks and chats for seamless context",
     ];
-
     const randomTip = tips[Math.floor(Math.random() * tips.length)];
+
+    // Shared section header. Pulled out so Recent Notes and Favorites
+    // share the exact same title styling (and any future tweak only
+    // needs to happen in one place).
+    const renderSectionHeader = (icon: ReactNode, label: string, trailing?: ReactNode) => (
+        <Stack
+            alignItems="center"
+            direction="row"
+            spacing={1}
+            sx={{
+                mb: 2,
+                color: isDark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.75)",
+            }}
+        >
+            <Stack alignItems="center" direction="row" spacing={1} sx={{ flex: 1 }}>
+                {icon}
+                <Typography
+                    level="title-md"
+                    sx={{
+                        fontWeight: 600,
+                        color: "inherit",
+                    }}
+                >
+                    {label}
+                </Typography>
+            </Stack>
+            {trailing}
+        </Stack>
+    );
+
+    // Reusable note card used by both the Recent and Favorites grids.
+    // Centralising the styling here keeps the two surfaces visually
+    // coherent — the only difference is whether a `meta` line (date
+    // for recents, sub-label for favorites) is present.
+    const renderNoteCard = (
+        key: string,
+        noteType: number,
+        title: string,
+        meta: ReactNode,
+        onClick: () => void,
+        accent?: { star?: boolean }
+    ) => {
+        const typeColors = getNoteTypeColor(noteType);
+        return (
+            <Grid key={key} md={4} sm={6} xs={12}>
+                <Card
+                    variant="outlined"
+                    sx={{
+                        p: 2,
+                        cursor: "pointer",
+                        background: isDark ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.7)",
+                        borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+                        transition: "all 0.2s ease",
+                        "&:hover": {
+                            borderColor: typeColors.text,
+                            background: isDark
+                                ? "rgba(255,255,255,0.04)"
+                                : "rgba(255,255,255,0.95)",
+                            transform: "translateY(-1px)",
+                        },
+                    }}
+                    onClick={onClick}
+                >
+                    <Stack spacing={1.5}>
+                        <Stack
+                            alignItems="flex-start"
+                            direction="row"
+                            justifyContent="space-between"
+                        >
+                            <Box
+                                sx={{
+                                    p: 0.75,
+                                    borderRadius: "8px",
+                                    backgroundColor: typeColors.bg,
+                                    color: typeColors.text,
+                                    display: "flex",
+                                    alignItems: "center",
+                                }}
+                            >
+                                {getNoteTypeIcon(noteType)}
+                            </Box>
+                            <Stack alignItems="center" direction="row" spacing={0.5}>
+                                {accent?.star && (
+                                    <StarRoundedIcon sx={{ fontSize: 16, color: "#f59e0b" }} />
+                                )}
+                                <Chip
+                                    size="sm"
+                                    variant="soft"
+                                    sx={{
+                                        fontSize: "0.65rem",
+                                        backgroundColor: typeColors.bg,
+                                        color: typeColors.text,
+                                    }}
+                                >
+                                    {getNoteTypeLabel(noteType)}
+                                </Chip>
+                            </Stack>
+                        </Stack>
+                        <Typography
+                            level="title-sm"
+                            sx={{
+                                fontWeight: 600,
+                                color: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.85)",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                            }}
+                        >
+                            {title}
+                        </Typography>
+                        {meta}
+                    </Stack>
+                </Card>
+            </Grid>
+        );
+    };
+
+    const showBigEmptyState = recentNotes.length === 0 && favoriteRows.length === 0;
 
     return (
         <Box
+            className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
             sx={{
                 height: "100%",
                 overflow: "auto",
@@ -186,12 +393,11 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
                     ? "linear-gradient(180deg, rgba(18, 18, 19, 0.95) 0%, rgb(25, 26, 28) 100%)"
                     : "linear-gradient(180deg, rgba(248,250,252,1) 0%, rgba(241,245,249,1) 100%)",
             }}
-            className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
         >
             <Stack spacing={4} sx={{ maxWidth: 1200, mx: "auto" }}>
                 {/* Welcome Header */}
                 <Box>
-                    <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 1 }}>
+                    <Stack alignItems="center" direction="row" spacing={1.5} sx={{ mb: 1 }}>
                         <Box
                             sx={{
                                 width: 40,
@@ -233,9 +439,9 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
                 </Box>
 
                 {/* Stats Grid */}
-                <Grid container spacing={2}>
+                <Grid spacing={2} container>
                     {statCards.map((stat) => (
-                        <Grid key={stat.label} xs={6} md={3}>
+                        <Grid key={stat.label} md={3} xs={6}>
                             <Card
                                 variant="soft"
                                 sx={{
@@ -254,9 +460,7 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
                                             : "0 8px 24px rgba(0,0,0,0.08)",
                                     },
                                 }}
-                                onClick={() =>
-                                    stat.noteType > 0 && handleQuickCreate(stat.noteType)
-                                }
+                                onClick={stat.onClick}
                             >
                                 <Stack spacing={1.5}>
                                     <Box
@@ -306,27 +510,22 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
                     ))}
                 </Grid>
 
-                {/* Quick Actions */}
+                {/* Quick Actions.
+                    These buttons just switch the active sidebar view —
+                    they don't actually create anything yet, so we
+                    label them honestly with "Open …" verbs (the old
+                    "Create Personal Note" / "Browse Task Notes" mix
+                    misled users into expecting a creation flow). */}
                 <Box>
-                    <Typography
-                        level="title-md"
-                        sx={{
-                            fontWeight: 600,
-                            mb: 2,
-                            color: isDark ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.75)",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 1,
-                        }}
-                    >
-                        <CreateRoundedIcon sx={{ fontSize: 18 }} />
-                        Quick Actions
-                    </Typography>
+                    {renderSectionHeader(
+                        <CreateRoundedIcon sx={{ fontSize: 18 }} />,
+                        "Quick Actions"
+                    )}
                     <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
                         <Button
+                            endDecorator={<OpenInNewRoundedIcon sx={{ fontSize: 16 }} />}
+                            startDecorator={<WindowRoundedIcon />}
                             variant="soft"
-                            startDecorator={<AddRoundedIcon />}
-                            onClick={() => handleQuickCreate(1)}
                             sx={{
                                 flex: 1,
                                 py: 1.5,
@@ -340,13 +539,14 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
                                         : "rgba(99,102,241,0.15)",
                                 },
                             }}
+                            onClick={() => handleSwitchType(NOTE_TYPES.PERSONAL)}
                         >
-                            Create Personal Note
+                            Open My Notes
                         </Button>
                         <Button
+                            endDecorator={<OpenInNewRoundedIcon sx={{ fontSize: 16 }} />}
+                            startDecorator={<AssignmentRoundedIcon />}
                             variant="soft"
-                            startDecorator={<FolderOpenRoundedIcon />}
-                            onClick={() => handleQuickCreate(2)}
                             sx={{
                                 flex: 1,
                                 py: 1.5,
@@ -360,13 +560,14 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
                                         : "rgba(34,197,94,0.15)",
                                 },
                             }}
+                            onClick={() => handleSwitchType(NOTE_TYPES.TASK)}
                         >
-                            Browse Task Notes
+                            Open Task Notes
                         </Button>
                         <Button
+                            endDecorator={<OpenInNewRoundedIcon sx={{ fontSize: 16 }} />}
+                            startDecorator={<QuestionAnswerRoundedIcon />}
                             variant="soft"
-                            startDecorator={<BookmarkBorderRoundedIcon />}
-                            onClick={() => handleQuickCreate(3)}
                             sx={{
                                 flex: 1,
                                 py: 1.5,
@@ -380,134 +581,150 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
                                         : "rgba(251,146,60,0.15)",
                                 },
                             }}
+                            onClick={() => handleSwitchType(NOTE_TYPES.CHAT)}
                         >
-                            Browse Chat Notes
+                            Open Chat Notes
                         </Button>
                     </Stack>
                 </Box>
 
-                {/* Recent Notes */}
+                {/* Recent Notes.
+                    Only render the section when there's actually
+                    something to show; the "no recents yet" empty
+                    state lives in the shared big card below. */}
                 {recentNotes.length > 0 && (
                     <Box>
-                        <Typography
-                            level="title-md"
-                            sx={{
-                                fontWeight: 600,
-                                mb: 2,
-                                color: isDark ? "rgba(255,255,255,0.8)" : "rgba(0, 0, 0, 0.75)",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                            }}
-                        >
-                            <ArticleRoundedIcon sx={{ fontSize: 18 }} />
-                            Recent Notes
-                        </Typography>
-                        <Grid container spacing={1.5}>
+                        {renderSectionHeader(
+                            <ArticleRoundedIcon sx={{ fontSize: 18 }} />,
+                            "Recent Notes",
+                            <Chip color="neutral" size="sm" variant="soft">
+                                {recentNotes.length}
+                            </Chip>
+                        )}
+                        <Grid spacing={1.5} container>
                             {recentNotes.map((note) => {
-                                const typeColors = getNoteTypeColor(note.noteType);
-                                return (
-                                    <Grid
-                                        key={`${note.noteType}-${note.noteId}`}
-                                        xs={12}
-                                        sm={6}
-                                        md={4}
+                                const meta = note.updatedAt ? (
+                                    <Typography
+                                        level="body-xs"
+                                        sx={{
+                                            color: isDark
+                                                ? "rgba(255,255,255,0.35)"
+                                                : "rgba(0,0,0,0.4)",
+                                        }}
                                     >
-                                        <Card
-                                            variant="outlined"
-                                            sx={{
-                                                p: 2,
-                                                cursor: "pointer",
-                                                background: isDark
-                                                    ? "rgba(255,255,255,0.02)"
-                                                    : "rgba(255,255,255,0.7)",
-                                                borderColor: isDark
-                                                    ? "rgba(255,255,255,0.06)"
-                                                    : "rgba(0,0,0,0.06)",
-                                                transition: "all 0.2s ease",
-                                                "&:hover": {
-                                                    borderColor: typeColors.text,
-                                                    background: isDark
-                                                        ? "rgba(255,255,255,0.04)"
-                                                        : "rgba(255,255,255,0.9)",
-                                                },
-                                            }}
-                                            onClick={() =>
-                                                handleNoteClick(note.noteId, note.noteType)
-                                            }
-                                        >
-                                            <Stack spacing={1.5}>
-                                                <Stack
-                                                    direction="row"
-                                                    justifyContent="space-between"
-                                                    alignItems="flex-start"
-                                                >
-                                                    <Box
-                                                        sx={{
-                                                            p: 0.75,
-                                                            borderRadius: "8px",
-                                                            backgroundColor: typeColors.bg,
-                                                            color: typeColors.text,
-                                                        }}
-                                                    >
-                                                        {getNoteTypeIcon(note.noteType)}
-                                                    </Box>
-                                                    <Chip
-                                                        size="sm"
-                                                        variant="soft"
-                                                        sx={{
-                                                            fontSize: "0.65rem",
-                                                            backgroundColor: typeColors.bg,
-                                                            color: typeColors.text,
-                                                        }}
-                                                    >
-                                                        {getNoteTypeLabel(note.noteType)}
-                                                    </Chip>
-                                                </Stack>
-                                                <Typography
-                                                    level="title-sm"
-                                                    sx={{
-                                                        fontWeight: 600,
-                                                        color: isDark
-                                                            ? "rgba(255,255,255,0.9)"
-                                                            : "rgba(0,0,0,0.85)",
-                                                        overflow: "hidden",
-                                                        textOverflow: "ellipsis",
-                                                        whiteSpace: "nowrap",
-                                                    }}
-                                                >
-                                                    {note.title}
-                                                </Typography>
-                                                {note.updatedAt && (
-                                                    <Typography
-                                                        level="body-xs"
-                                                        sx={{
-                                                            color: isDark
-                                                                ? "rgba(255,255,255,0.35)"
-                                                                : "rgba(0,0,0,0.4)",
-                                                        }}
-                                                    >
-                                                        {new Date(
-                                                            note.updatedAt
-                                                        ).toLocaleDateString(undefined, {
-                                                            month: "short",
-                                                            day: "numeric",
-                                                            hour: "2-digit",
-                                                            minute: "2-digit",
-                                                        })}
-                                                    </Typography>
-                                                )}
-                                            </Stack>
-                                        </Card>
-                                    </Grid>
+                                        {new Date(note.updatedAt).toLocaleDateString(undefined, {
+                                            month: "short",
+                                            day: "numeric",
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                        })}
+                                    </Typography>
+                                ) : null;
+
+                                return renderNoteCard(
+                                    `recent-${note.noteType}-${note.noteId}`,
+                                    note.noteType,
+                                    note.title,
+                                    meta,
+                                    () => handleNoteClick(note.noteId, note.noteType)
                                 );
                             })}
                         </Grid>
                     </Box>
                 )}
 
-                {/* Empty State for No Notes */}
-                {recentNotes.length === 0 && (
+                {/* Favorites.
+                    Mirrors `NoteSidebar`'s favourites section: shows
+                    each favourited note as a clickable card with the
+                    same type colour scheme, plus a star accent so it's
+                    visually distinguishable from Recent Notes at a
+                    glance. The sub-label (project #task-id for task
+                    notes, chat name for chat notes) matches what the
+                    sidebar shows so context stays consistent across
+                    both surfaces. */}
+                <Box ref={favoritesSectionRef}>
+                    {renderSectionHeader(
+                        <StarRoundedIcon sx={{ fontSize: 18, color: "#f59e0b" }} />,
+                        "Favorites",
+                        favoriteRows.length > 0 ? (
+                            <Chip color="warning" size="sm" variant="soft">
+                                {favoriteRows.length}
+                            </Chip>
+                        ) : undefined
+                    )}
+                    {favoriteRows.length === 0 ? (
+                        <Card
+                            variant="soft"
+                            sx={{
+                                p: 2.5,
+                                background: isDark
+                                    ? "rgba(251,191,36,0.06)"
+                                    : "rgba(251,191,36,0.05)",
+                                border: "1px dashed",
+                                borderColor: isDark
+                                    ? "rgba(251,191,36,0.2)"
+                                    : "rgba(251,191,36,0.25)",
+                            }}
+                        >
+                            <Stack alignItems="center" direction="row" spacing={1.5}>
+                                <StarRoundedIcon
+                                    sx={{
+                                        fontSize: 22,
+                                        color: isDark ? "#fcd34d" : "#f59e0b",
+                                        opacity: 0.7,
+                                    }}
+                                />
+                                <Typography
+                                    level="body-sm"
+                                    sx={{
+                                        color: isDark
+                                            ? "rgba(255,255,255,0.55)"
+                                            : "rgba(0,0,0,0.55)",
+                                        fontStyle: "italic",
+                                    }}
+                                >
+                                    No favorites yet. Star notes to add them here.
+                                </Typography>
+                            </Stack>
+                        </Card>
+                    ) : (
+                        <Grid spacing={1.5} container>
+                            {favoriteRows.map((row) => {
+                                const subLabel = getNoteSubLabel(row.note, row.noteType);
+                                const meta = subLabel ? (
+                                    <Typography
+                                        level="body-xs"
+                                        sx={{
+                                            color: isDark
+                                                ? "rgba(255,255,255,0.4)"
+                                                : "rgba(0,0,0,0.45)",
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                            whiteSpace: "nowrap",
+                                        }}
+                                    >
+                                        {subLabel}
+                                    </Typography>
+                                ) : null;
+
+                                return renderNoteCard(
+                                    `fav-${row.noteType}-${row.noteId}`,
+                                    row.noteType,
+                                    row.note.title || "Untitled",
+                                    meta,
+                                    () => handleNoteClick(row.noteId, row.noteType),
+                                    { star: true }
+                                );
+                            })}
+                        </Grid>
+                    )}
+                </Box>
+
+                {/* Big empty state — only when BOTH recents and favourites
+                    are empty. With either populated the dashboard has
+                    enough surface to act on, and this card just becomes
+                    noise. */}
+                {showBigEmptyState && (
                     <Card
                         variant="soft"
                         sx={{
@@ -520,7 +737,7 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
                             borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
                         }}
                     >
-                        <Stack spacing={2} alignItems="center">
+                        <Stack alignItems="center" spacing={2}>
                             <Box
                                 sx={{
                                     width: 64,
@@ -552,7 +769,7 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
                                         mb: 0.5,
                                     }}
                                 >
-                                    No recently opened notes yet
+                                    No notes opened yet
                                 </Typography>
                                 <Typography
                                     level="body-sm"
@@ -562,8 +779,8 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
                                             : "rgba(0,0,0,0.45)",
                                     }}
                                 >
-                                    Open notes to see them here, or use the quick actions above to
-                                    create one.
+                                    Use the quick actions above to jump into a section, or star a
+                                    note to pin it to your favorites.
                                 </Typography>
                             </Box>
                         </Stack>
@@ -582,7 +799,7 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
                         borderColor: isDark ? "rgba(99,102,241,0.15)" : "rgba(99,102,241,0.1)",
                     }}
                 >
-                    <Stack direction="row" spacing={2} alignItems="center">
+                    <Stack alignItems="center" direction="row" spacing={2}>
                         <Box
                             sx={{
                                 width: 40,
