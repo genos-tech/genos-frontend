@@ -25,7 +25,7 @@ import { TaskManagementState } from "../../../../../../hooks/tasks/useTaskManage
 import { UserProps } from "../../../../../../types/admin";
 import { TaskActivityProps, TaskProps } from "../../../../../../types/tasks";
 import { loadTaskActivities } from "../../../../services/loadTaskActivities";
-import { statusOptions } from "../../../table/DraggableTaskTable";
+import { effortLevels, priorities, statuses } from "../../../../utils/taskMeta";
 
 type TaskActivityFeedProps = {
     task: TaskProps;
@@ -38,15 +38,48 @@ type TaskActivityFeedProps = {
     useUISM: UIStateManagementState;
 };
 
-// Map status → DraggableTaskTable swatch so the chips here match the
-// table's chips. Falls back to the action-type colour for fields that
-// don't have a curated palette (priority/effort/etc.).
-const statusColor = (status: string | null | undefined) => {
-    if (!status) return null;
-    const found = statusOptions.find(
-        (option) => option.value.toLowerCase() === String(status).toLowerCase()
-    );
-    return found ? { background: found.color, color: found.textColor } : null;
+type ChipPalette = { background: string; color: string };
+
+// Map a (fieldName, label) pair to the canonical swatch defined in
+// `taskMeta.ts` so the chips here always match the colors users see in
+// the rest of the task UI (status badges, the priority/effort selectors
+// in the create form, etc.). Returns null for fields without a curated
+// palette (assignee, due date, parent, …) — those fall back to a
+// neutral chip via the `else` branch in `<ValueChip>`.
+//
+// The fieldName values come from the backend signal table:
+//   - "status"        → statuses (Open / WIP / Pending / Closed / …)
+//   - "priority"      → priorities (Minimal / Low / Normal / High / …)
+//   - "effort_level"  → effortLevels (Minimal / Low / Moderate / High / …)
+// See `_TRACKED_TASK_FIELDS` in `backend_django/origin/signals/task_signals.py`.
+const paletteFor = (
+    fieldName: string | null | undefined,
+    label: string | null | undefined
+): ChipPalette | null => {
+    if (!fieldName || !label) return null;
+    const normalized = String(label).toLowerCase();
+
+    const pickPalette = (
+        color: string | null | undefined,
+        textColor: string | null | undefined
+    ): ChipPalette | null => (color ? { background: color, color: textColor || "#fff" } : null);
+
+    switch (fieldName) {
+        case "status": {
+            const found = statuses.find((s) => s.status?.toLowerCase() === normalized);
+            return found ? pickPalette(found.color, found.textColor) : null;
+        }
+        case "priority": {
+            const found = priorities.find((p) => p.priority?.toLowerCase() === normalized);
+            return found ? pickPalette(found.color, found.textColor) : null;
+        }
+        case "effort_level": {
+            const found = effortLevels.find((e) => e.level?.toLowerCase() === normalized);
+            return found ? pickPalette(found.color, found.textColor) : null;
+        }
+        default:
+            return null;
+    }
 };
 
 // Per-action icon. New action types fall back to a neutral history
@@ -199,14 +232,17 @@ const verbFor = (action: string): string => {
 
 const ValueChip = ({
     label,
-    statusKey,
+    fieldName,
     isDark,
 }: {
     label: string;
-    statusKey?: string | null;
+    /** The backend `field_name` for this activity row. Drives the
+     *  palette so status / priority / effort chips inherit the same
+     *  swatches used elsewhere in the task UI. */
+    fieldName?: string | null;
     isDark: boolean;
 }) => {
-    const palette = statusKey ? statusColor(statusKey) : null;
+    const palette = paletteFor(fieldName, label);
     return (
         <Chip
             size="sm"
@@ -339,11 +375,6 @@ export const TaskActivityFeed = ({
                 const newFmt = formatValue(row.newValue, row.fieldName, teamMemberProfiles);
                 const showOldChip = row.oldValue != null && row.oldValue !== "";
                 const showNewChip = row.newValue != null && row.newValue !== "";
-                // Status colours apply only when the field name says
-                // status — guard so a "priority: Closed" payload
-                // doesn't accidentally pick up the green status chip.
-                const statusKeyOld = row.fieldName === "status" ? oldFmt.label : null;
-                const statusKeyNew = row.fieldName === "status" ? newFmt.label : null;
 
                 // Prefer the team-member profile (richer presence /
                 // online status) over `row.actor`, which carries only
@@ -414,7 +445,7 @@ export const TaskActivityFeed = ({
                             {showOldChip && (
                                 <ValueChip
                                     label={oldFmt.label}
-                                    statusKey={statusKeyOld}
+                                    fieldName={row.fieldName}
                                     isDark={isDark}
                                 />
                             )}
@@ -433,7 +464,7 @@ export const TaskActivityFeed = ({
                             {showNewChip && (
                                 <ValueChip
                                     label={newFmt.label}
-                                    statusKey={statusKeyNew}
+                                    fieldName={row.fieldName}
                                     isDark={isDark}
                                 />
                             )}
