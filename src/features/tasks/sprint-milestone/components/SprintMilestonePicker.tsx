@@ -30,16 +30,21 @@ type Props = {
     sprintId: number | null | undefined;
     milestoneId: number | null | undefined;
     onChangeSprint: (sprintId: number | null) => void;
-    onChangeMilestone: (milestoneId: number | null) => void;
+    // Picking a milestone may also auto-sync the sprint linkage when
+    // the milestone points at a sprint different from the current one.
+    // We deliberately bundle both updates into a single callback (and
+    // therefore a single `setState` upstream) — emitting them as two
+    // separate callbacks caused parents that read state via closure
+    // to clobber the milestone update with the sprint update inside
+    // the same React batch (the second `setState({...prev, ...})` only
+    // saw the stale `prev` and dropped `milestoneId`). `autoSyncedSprint`
+    // is non-null iff the picker also wants the parent to update the
+    // sprint linkage in the same step.
+    onChangeMilestone: (milestoneId: number | null, autoSyncedSprint?: Sprint | null) => void;
     showSprint?: boolean;
     showMilestone?: boolean;
     disabled?: boolean;
     size?: "sm" | "md";
-    // Forwarded to onChangeSprint when the milestone picker auto-syncs
-    // the sprint based on the selected milestone. The picker passes the
-    // resolved Sprint so callers can derive other fields (e.g. due
-    // date) without re-looking it up.
-    onMilestoneSprintAutoSync?: (sprint: Sprint) => void;
 };
 
 const NO_SPRINT: SprintOption = {
@@ -119,7 +124,6 @@ export const SprintMilestonePicker = ({
     showMilestone = true,
     disabled,
     size = "sm",
-    onMilestoneSprintAutoSync,
 }: Props) => {
     const sprints: Sprint[] = useMemo(
         () => (projectId ? (useSM.projectSprints[projectId] ?? []) : []),
@@ -236,22 +240,24 @@ export const SprintMilestonePicker = ({
                     disableClearable
                     disabled={disabled}
                     onChange={(_, v) => {
-                        onChangeMilestone(v?.id ?? null);
                         // Auto-sync the sprint to the milestone's
                         // sprint when one is set, so the two pickers
                         // stay coherent without nagging the user.
+                        // Resolve the sprint here and forward it to
+                        // the parent in a SINGLE callback so the
+                        // upstream setState collapses both updates
+                        // into one batch (see `onChangeMilestone`
+                        // doc above for why two callbacks corrupted
+                        // the state).
+                        let autoSyncedSprint: Sprint | null = null;
                         if (v?.milestone) {
                             const linkedSprintId = v.milestone.sprintId;
                             if (linkedSprintId != null && linkedSprintId !== sprintId) {
-                                onChangeSprint(linkedSprintId);
-                                const linkedSprint = sprints.find(
-                                    (s) => s.sprintId === linkedSprintId
-                                );
-                                if (linkedSprint) {
-                                    onMilestoneSprintAutoSync?.(linkedSprint);
-                                }
+                                autoSyncedSprint =
+                                    sprints.find((s) => s.sprintId === linkedSprintId) ?? null;
                             }
                         }
+                        onChangeMilestone(v?.id ?? null, autoSyncedSprint);
                     }}
                     renderOption={(props, option) => {
                         const m = option.milestone;

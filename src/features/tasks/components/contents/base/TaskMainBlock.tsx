@@ -365,10 +365,21 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     } as TaskProps);
                                     setTaskUpdated?.(true);
                                 }}
-                                onChangeMilestone={(mid) => {
+                                onChangeMilestone={(mid, autoSyncedSprint) => {
+                                    // Picking a milestone may also
+                                    // auto-sync the sprint linkage —
+                                    // both updates MUST land in a
+                                    // single `setTaskContent` call so
+                                    // they don't clobber each other
+                                    // inside the same React batch
+                                    // (see the picker's
+                                    // `onChangeMilestone` doc).
                                     setTaskContent({
                                         ...(taskContent as any),
                                         milestoneId: mid,
+                                        ...(autoSyncedSprint
+                                            ? { sprintId: autoSyncedSprint.sprintId }
+                                            : {}),
                                     } as TaskProps);
                                     setTaskUpdated?.(true);
                                 }}
