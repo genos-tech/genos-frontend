@@ -43,9 +43,15 @@ import { useTaskEditState } from "../../../../hooks/tasks/useTaskEditState";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { TaskNoteProps } from "../../../../types/notes";
-import { TagListProps, TaskCommentProps, TaskProps } from "../../../../types/tasks";
+import {
+    TagListProps,
+    TaskActivityProps,
+    TaskCommentProps,
+    TaskProps,
+} from "../../../../types/tasks";
 import { loadTaskNotes } from "../../../notes/task-notes/services/loadTaskNotes";
 import { loadSpecificTask } from "../../services/loadSpecificTask";
+import { loadTaskActivities } from "../../services/loadTaskActivities";
 import { loadTaskComments } from "../../services/loadTaskComments";
 import {
     updateProjectOptions,
@@ -294,6 +300,43 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             }
         })();
     }, [taskEditState.currentTaskId, useNM.taskNoteMeta]);
+
+    // Get Task Activities. The fetch lives here (rather than inside
+    // `TaskActivityFeed`) so the data survives Activity tab unmounts.
+    // JoyUI's TabPanel unmounts hidden children by default, so loading
+    // inside the feed caused a re-fetch + brief loading flash on every
+    // visit to the Activity tab — visually indistinguishable from the
+    // preview "refreshing". Hoisting matches the existing pattern for
+    // `taskComments` / `taskNotes` and makes Activity tab switching
+    // feel as snappy as the others.
+    //
+    // Refetch triggers mirror the previous in-component logic:
+    //   - currentTaskId changes (different task selected)
+    //   - isTaskUpdated / isTaskCommentUpdated / isTaskUpdatedBySomeone
+    //     flip (something elsewhere in the preview reported a change)
+    const [taskActivities, setTaskActivities] = useState<TaskActivityProps[]>([]);
+    const [isLoadingTaskActivities, setIsLoadingTaskActivities] = useState(false);
+    const taskActivitiesRefetchKey = `${useTM.isTaskUpdated ? "u" : ""}${
+        useTM.isTaskCommentUpdated.isUpdate ? "c" : ""
+    }${useTM.isTaskUpdatedBySomeone ? "s" : ""}`;
+    useEffect(() => {
+        const previewTaskId = Number(useTM.currentPreviewTask?.id);
+        if (!Number.isFinite(previewTaskId) || previewTaskId <= 0) {
+            setTaskActivities([]);
+            return;
+        }
+        let cancelled = false;
+        (async () => {
+            setIsLoadingTaskActivities(true);
+            const rows = await loadTaskActivities(myself, previewTaskId, accessToken);
+            if (cancelled) return;
+            setTaskActivities(rows);
+            setIsLoadingTaskActivities(false);
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [taskEditState.currentTaskId, taskActivitiesRefetchKey]);
 
     // Get team members
     const [isOpenTeamMembersList, setIsOpenTeamMembersList] = useState(false);
@@ -623,6 +666,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                             useCM={useCM}
                             editTargetComment={editTargetComment}
                             isInEdit={isInEdit}
+                            isLoadingTaskActivities={isLoadingTaskActivities}
                             myself={myself}
                             setDeletedAttachmentId={setDeletedAttachmentId}
                             setEditTargetComment={setEditTargetComment}
@@ -637,6 +681,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                             setUploadedFiles={taskEditState.setUploadedFiles}
                             socket={socket}
                             tabIndex={tabIndex}
+                            taskActivities={taskActivities}
                             taskCommentLines={taskCommentLines}
                             taskComments={taskComments}
                             taskContent={taskEditState.tmpCurrentTaskContent}
@@ -956,6 +1001,33 @@ const MilestonePreviewInner = ({
             setTaskNotes(loaded?.length ? loaded : []);
         })();
     }, [milestone?.taskId, milestone?.projectId, useNM.taskNoteMeta]);
+
+    // Mirror the regular-task hoist for activities so milestone previews
+    // get the same snappy Activity-tab switching (see comment above the
+    // sibling effect in `TaskPreview`).
+    const [taskActivities, setTaskActivities] = useState<TaskActivityProps[]>([]);
+    const [isLoadingTaskActivities, setIsLoadingTaskActivities] = useState(false);
+    const milestoneActivitiesRefetchKey = `${useTM.isTaskUpdated ? "u" : ""}${
+        useTM.isTaskCommentUpdated.isUpdate ? "c" : ""
+    }${useTM.isTaskUpdatedBySomeone ? "s" : ""}`;
+    useEffect(() => {
+        const taskId = milestone?.taskId;
+        if (taskId == null) {
+            setTaskActivities([]);
+            return;
+        }
+        let cancelled = false;
+        (async () => {
+            setIsLoadingTaskActivities(true);
+            const rows = await loadTaskActivities(myself, taskId, accessToken);
+            if (cancelled) return;
+            setTaskActivities(rows);
+            setIsLoadingTaskActivities(false);
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [milestone?.taskId, milestoneActivitiesRefetchKey]);
 
     useEffect(() => {
         if (deletedAttachmentId !== -1 && isAttachmentDeleted) {
@@ -1895,6 +1967,7 @@ const MilestonePreviewInner = ({
                         useCM={useCM}
                         editTargetComment={editTargetComment}
                         isInEdit={isInEdit}
+                        isLoadingTaskActivities={isLoadingTaskActivities}
                         myself={myself}
                         setDeletedAttachmentId={setDeletedAttachmentId}
                         setEditTargetComment={setEditTargetComment}
@@ -1909,6 +1982,7 @@ const MilestonePreviewInner = ({
                         setUploadedFiles={setUploadedFiles}
                         socket={socket}
                         tabIndex={tabIndex}
+                        taskActivities={taskActivities}
                         taskCommentLines={taskCommentLines}
                         taskComments={taskComments}
                         taskContent={taskContentLike}

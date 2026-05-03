@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import AddCircleOutlineRoundedIcon from "@mui/icons-material/AddCircleOutlineRounded";
 import AssignmentIndRoundedIcon from "@mui/icons-material/AssignmentIndRounded";
 import AttachFileRoundedIcon from "@mui/icons-material/AttachFileRounded";
@@ -17,22 +17,26 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../../../components/ui/avatars/avatarWithStatus";
-import { useAuth } from "../../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";
-import { TaskManagementState } from "../../../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../../../types/admin";
-import { TaskActivityProps, TaskProps } from "../../../../../../types/tasks";
-import { loadTaskActivities } from "../../../../services/loadTaskActivities";
+import { TaskActivityProps } from "../../../../../../types/tasks";
 import { effortLevels, priorities, statuses } from "../../../../utils/taskMeta";
 
 type TaskActivityFeedProps = {
-    task: TaskProps;
+    /** Pre-loaded audit rows. Owned + fetched by `TaskPreview` so this
+     *  feed can come and go (JoyUI `TabPanel` unmounts hidden children
+     *  by default) without losing data or refetching every time. */
+    activities: TaskActivityProps[];
+    /** True while the parent is fetching `activities`. Shown only as a
+     *  silent gate against the empty state — we never render an
+     *  intermediate spinner because the typical fetch is sub-100ms and
+     *  a flicker would itself read as a "refresh". */
+    isLoading: boolean;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     socket: Socket | null;
-    useTM: TaskManagementState;
     useTEM: TeamManagementState;
     useCM: ChatManagementState;
     useUISM: UIStateManagementState;
@@ -264,9 +268,11 @@ const ValueChip = ({
 };
 
 /**
- * Audit-log feed mounted on the new "Activity" tab. Pulls from
- * `/api/v2/task/activity/` and refetches whenever the task or any of
- * its comments are flagged updated by the existing socket handlers.
+ * Audit-log feed for the "Activity" tab. The data is owned + fetched by
+ * `TaskPreview` (alongside `taskComments` / `taskNotes`) and passed in
+ * pre-loaded, so this component can be unmounted/remounted by the
+ * JoyUI `TabPanel` without triggering a refetch + loading flash on
+ * every visit.
  *
  * Rendering strategy: simple chronological list (newest at top — the
  * API already orders that way). Each row has a tiny actor avatar, an
@@ -275,55 +281,21 @@ const ValueChip = ({
  * tens of rows, not thousands.
  */
 export const TaskActivityFeed = ({
-    task,
+    activities,
+    isLoading,
     myself,
     setMyself,
     socket,
-    useTM,
     useTEM,
     useCM,
     useUISM,
 }: TaskActivityFeedProps) => {
-    const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
-
-    const [activities, setActivities] = useState<TaskActivityProps[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
-
-    // Cheap stable key — `task.id` + the two flip-flags the rest of
-    // the preview uses to signal "something changed". Avoids a
-    // dedicated socket event for v1.
-    const taskId = task?.id;
-    const refetchTriggers = `${useTM.isTaskUpdated ? "u" : ""}${
-        useTM.isTaskCommentUpdated.isUpdate ? "c" : ""
-    }${useTM.isTaskUpdatedBySomeone ? "s" : ""}`;
-
-    useEffect(() => {
-        if (taskId == null) {
-            setActivities([]);
-            return;
-        }
-        let cancelled = false;
-        (async () => {
-            setIsLoading(true);
-            const rows = await loadTaskActivities(myself, Number(taskId), accessToken);
-            if (cancelled) return;
-            setActivities(rows);
-            setIsLoading(false);
-        })();
-        return () => {
-            cancelled = true;
-        };
-    }, [taskId, refetchTriggers, myself, accessToken]);
 
     const teamMemberProfiles = useTEM.teamMemberProfiles ?? {};
 
     const empty = useMemo(() => activities.length === 0, [activities]);
-
-    if (taskId == null) {
-        return null;
-    }
 
     return (
         <Stack spacing={0.5} sx={{ p: 1 }}>

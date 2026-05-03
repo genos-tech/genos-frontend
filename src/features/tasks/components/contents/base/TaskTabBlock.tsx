@@ -39,6 +39,7 @@ import {
     AttachmentFileProps,
     FileProps,
     ImageSizeProps,
+    TaskActivityProps,
     TaskCommentProps,
     TaskProps,
 } from "../../../../../types/tasks";
@@ -78,6 +79,13 @@ type TaskTabBlockProps = {
     setIsInEdit: (value: boolean) => void;
     setEditTargetComment: (value: TaskCommentProps) => void;
     taskNotes: TaskNoteProps[];
+    /** Pre-loaded activity rows. Hoisted out of TaskActivityFeed so the
+     *  Activity tab does not refetch on every visit (which used to make
+     *  the preview look like it was "refreshing" on every Notes →
+     *  Activity hop). */
+    taskActivities: TaskActivityProps[];
+    /** True while the parent is fetching `taskActivities`. */
+    isLoadingTaskActivities: boolean;
     editTargetComment: TaskCommentProps | undefined;
     isInEdit: boolean;
     setTaskCommentLines: (value: number) => void;
@@ -115,6 +123,8 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         setIsInEdit,
         setEditTargetComment,
         taskNotes,
+        taskActivities,
+        isLoadingTaskActivities,
         editTargetComment,
         isInEdit,
         setTaskCommentLines,
@@ -965,17 +975,18 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                         </Modal>
                     </TabPanel>
 
-                    {/* Activity Tab — structured audit log. Refetches
-                        on `useTM.isTaskUpdated` / `isTaskCommentUpdated`
-                        flips so it stays in sync with the rest of the
-                        preview without a dedicated socket event. */}
+                    {/* Activity Tab — structured audit log. The fetch
+                        lives in `TaskPreview` (passed in via
+                        `taskActivities` / `isLoadingTaskActivities`)
+                        so switching into this tab does not refetch and
+                        flash the feed every time. */}
                     <TabPanel value={3} sx={{ p: 0 }}>
                         <TaskActivityFeed
-                            task={taskContent}
+                            activities={taskActivities}
+                            isLoading={isLoadingTaskActivities}
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}
-                            useTM={useTM}
                             useTEM={useTEM}
                             useCM={useCM}
                             useUISM={useUISM}
