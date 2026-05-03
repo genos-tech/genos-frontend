@@ -28,6 +28,7 @@ import {
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
+import { useLocation } from "react-router-dom";
 
 import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
@@ -89,6 +90,12 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const location = useLocation();
+    // True when the user is currently inside the Tasks service (any URL
+    // under `/Home/tasks`). Mirrors the active-route detection used by the
+    // sidebar so we don't depend on `openingService` for a check the URL
+    // already encodes.
+    const isOnTasksRoute = location.pathname.includes("/Home/tasks");
     const [openDeleteTask, setOpenDeleteTask] = useState<boolean>(false);
     const titleInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -290,7 +297,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
 
                 {/* Right side: Action buttons */}
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, ml: "auto" }}>
-                    {useUISM.openingService === 2 && taskContent.threadId !== null && (
+                    {isOnTasksRoute && taskContent.threadId !== null && (
                         <Tooltip size="sm" title="Check Thread" variant="outlined">
                             <IconButton
                                 size="sm"
@@ -320,7 +327,6 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                             taskContent.threadId,
                                             false,
                                             true,
-                                            useUISM.setOpeningService,
                                             useTM.setCurrentPreviewTaskId,
                                             usePM.setCurrentProject
                                         );
@@ -459,7 +465,6 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                             taskContent.threadId!,
                                             false,
                                             true,
-                                            useUISM.setOpeningService,
                                             useTM.setCurrentPreviewTaskId,
                                             usePM.setCurrentProject
                                         );

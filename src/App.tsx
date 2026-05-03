@@ -89,7 +89,6 @@ export const App = () => {
         myself,
         accessToken: accessToken || "",
         currentTeamId: useTEM.currentTeamId,
-        openingService: useUISM.openingService,
     });
 
     // Service-specific initialization and management
@@ -98,7 +97,6 @@ export const App = () => {
         accessToken: accessToken || "",
         currentTeamId: useTEM.currentTeamId,
         isLoading: useUISM.isLoading,
-        openingService: useUISM.openingService,
         socketInstance,
     });
 
@@ -110,7 +108,7 @@ export const App = () => {
     // jump directly, or with ArrowLeft/ArrowRight to cycle through services
     // via the Cmd+Tab–style overlay (commits on modifier release).
     const { previewIndex: serviceSwitcherPreviewIndex, mruOrder: serviceSwitcherMruOrder } =
-        useGlobalServiceShortcut(useUISM.openingService, useUISM.setOpeningService);
+        useGlobalServiceShortcut();
 
     // Click-to-open: jump to the chat / thread / task / inbox that the
     // notification refers to. Lives here because this is the layer that has
@@ -121,7 +119,6 @@ export const App = () => {
 
             // Inbox: no source -> just switch services.
             if (intent.category === "inbox" || !src) {
-                useUISM.setOpeningService(0);
                 navigate("/Home/inbox");
                 return;
             }
@@ -129,7 +126,6 @@ export const App = () => {
             // Task / milestone: navigate to the task deep URL when we have
             // both ids; otherwise fall through to the chat branch.
             if (src.taskId !== undefined && src.projectId !== undefined) {
-                useUISM.setOpeningService(2);
                 navigate(`/Home/tasks/project/${src.projectId}/task/${src.taskId}`);
                 return;
             }
@@ -145,7 +141,6 @@ export const App = () => {
                     threadId,
                     false,
                     threadId !== 0,
-                    useUISM.setOpeningService,
                     useTM.setCurrentPreviewTaskId,
                     usePM.setCurrentProject
                 );
@@ -153,7 +148,6 @@ export const App = () => {
             }
 
             // Defensive fallback: surface the chat service.
-            useUISM.setOpeningService(1);
             navigate("/Home/chat");
         },
         [useCM, useTM, useUISM, usePM, navigate]

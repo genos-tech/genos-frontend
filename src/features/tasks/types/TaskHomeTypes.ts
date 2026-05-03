@@ -66,8 +66,6 @@ export interface TaskHomeHeaderProps {
     setMyself: (me: UserProps) => void;
     allChats: AllChatProps[];
     setCurrentMainChat: (chat: ChatProps) => void;
-    setOpeningService: (service: number) => void;
-    openingService: number;
     teamMemberProfiles: any[];
     funcSetAllChats: () => Promise<void>;
     currentProject: any;
@@ -103,8 +101,6 @@ export interface TaskHomeLayoutProps {
     myself: UserProps;
     setMyself: (me: UserProps) => void;
     setCurrentMainChat: (chat: ChatProps) => void;
-    setOpeningService: (service: number) => void;
-    openingService: number;
     allChats: AllChatProps[];
     setAllChats: (value: AllChatProps[]) => void;
     funcSetAllChats: () => Promise<void>;
@@ -114,7 +110,6 @@ export interface TaskHomeLayoutProps {
         threadId: number,
         openTaskNoteInChat: boolean,
         openThreadTaskPreview: boolean,
-        setOpeningService: (service: number) => void,
         setCurrentPreviewTaskId: (id: number) => void,
         setCurrentProject: (project: any) => void
     ) => void;

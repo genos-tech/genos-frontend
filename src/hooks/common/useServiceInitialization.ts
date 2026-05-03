@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
+import { useLocation } from "react-router-dom";
 
 import { useChatManagement } from "../chats/useChatManagement";
 import { useInboxManagement } from "../inbox/useInboxManagement";
@@ -11,18 +12,36 @@ interface UseServiceInitializationProps {
     accessToken: string;
     currentTeamId: string;
     isLoading: boolean;
-    openingService: number;
     socketInstance: any;
 }
+
+// Service identifier derived from the current URL. Using a discrete tag
+// (instead of `location.pathname` directly) keeps the service-init effect
+// firing only when the user crosses a service boundary — re-deriving on
+// every intra-service URL change (e.g. moving between two tasks) would
+// rerun the init blocks and clobber state.
+type ActiveService = "inbox" | "chat" | "tasks" | "notes" | null;
+
+const deriveActiveService = (pathname: string): ActiveService => {
+    if (pathname.includes("/Home/inbox")) return "inbox";
+    if (pathname.includes("/Home/chat")) return "chat";
+    if (pathname.includes("/Home/tasks")) return "tasks";
+    if (pathname.includes("/Home/notes")) return "notes";
+    return null;
+};
 
 export const useServiceInitialization = ({
     myself,
     accessToken,
     currentTeamId,
     isLoading,
-    openingService,
     socketInstance,
 }: UseServiceInitializationProps) => {
+    const location = useLocation();
+    const activeService = useMemo<ActiveService>(
+        () => deriveActiveService(location.pathname),
+        [location.pathname]
+    );
     const useNM = useNoteManagement(myself, accessToken);
     const useTM = useTaskManagement(myself, accessToken);
     const useCM = useChatManagement(myself, accessToken);
@@ -65,14 +84,15 @@ export const useServiceInitialization = ({
         useIM.setUnReadInboxItemCount(0);
     }, [currentTeamId]);
 
-    // Handle service-specific initialization
+    // Handle service-specific initialization. Fires only when the URL
+    // crosses into a different service (see `deriveActiveService`).
     useEffect(() => {
-        if (openingService === 0) {
+        if (activeService === "inbox") {
             // Init all notes
             useNM.setCurrentMyNote(null);
             useNM.setCurrentTaskNote(null);
             useNM.setCurrentChatNote(null);
-        } else if (openingService === 1) {
+        } else if (activeService === "chat") {
             // Initialize the task visibility.
             useTM.setIsTaskPreviewVisible(false);
 
@@ -87,7 +107,7 @@ export const useServiceInitialization = ({
             // Init all notes
             useNM.setCurrentMyNote(null);
             useNM.setCurrentTaskNote(null);
-        } else if (openingService === 2) {
+        } else if (activeService === "tasks") {
             // Keep the tabItems when an user changes the page from Notes to other pages.
             useNM.setTmpTabItems(useNM.tabItems);
             useNM.setTabItems(useNM.tabItems.filter((item) => item.noteType === 2));
@@ -99,7 +119,7 @@ export const useServiceInitialization = ({
             useNM.setCurrentMyNote(null);
             useNM.setCurrentTaskNote(null);
             useNM.setCurrentChatNote(null);
-        } else if (openingService === 3) {
+        } else if (activeService === "notes") {
             // Keep the tabItems when an user changes the page from Notes to other pages.
             useNM.setTabItems(useNM.tmpTabItems);
             useNM.setTmpTabItems([]);
@@ -108,7 +128,7 @@ export const useServiceInitialization = ({
                 useNM.popInitialNote();
             }
         }
-    }, [openingService]);
+    }, [activeService]);
 
     // Initialize data when loading completes
     useEffect(() => {

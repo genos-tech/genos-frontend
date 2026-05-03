@@ -67,7 +67,6 @@ export interface ChatManagementState {
         threadId: number,
         openTaskNoteInChat: boolean,
         openThreadTaskPreview: boolean,
-        setOpeningService: (service: number) => void,
         setCurrentPreviewTaskId: (id: number) => void,
         setCurrentProject: (project: any) => void
     ) => Promise<void>;
@@ -161,13 +160,9 @@ export const useChatManagement = (
                 finalAllChats = allChatsWithoutInitialDMChat;
             }
 
-            const idbKeys = new Set(
-                finalAllChats.map((c) => `${c.chatType}-${c.chatId}`)
-            );
+            const idbKeys = new Set(finalAllChats.map((c) => `${c.chatType}-${c.chatId}`));
             setAllChats((prev) => {
-                const preserved = prev.filter(
-                    (c) => !idbKeys.has(`${c.chatType}-${c.chatId}`)
-                );
+                const preserved = prev.filter((c) => !idbKeys.has(`${c.chatType}-${c.chatId}`));
                 return [...finalAllChats, ...preserved];
             });
             setUnReadChatCounts(countUnreadChats(allChatsWithoutInitialDMChat));
@@ -254,7 +249,6 @@ export const useChatManagement = (
         threadId: number,
         openTaskNoteInChat: boolean,
         openThreadTaskPreview: boolean,
-        setOpeningService: (service: number) => void,
         setCurrentPreviewTaskId: (id: number) => void,
         setCurrentProject: (project: any) => void
     ) => {
@@ -265,7 +259,9 @@ export const useChatManagement = (
             return;
         }
 
-        setOpeningService(1); // move to chat
+        // Switching to the chat service is implicit: every code path below
+        // calls `navigate("/Home/chat/...")`, and the URL is now the source
+        // of truth for the active service (see useGlobalServiceShortcut).
         setIsMainChatVisible(false);
         setIsChatNoteVisibleInChat(openTaskNoteInChat);
         setIsThreadTaskVisible(openThreadTaskPreview);

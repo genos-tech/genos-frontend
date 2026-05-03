@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { isMac } from "../../utils/platform";
 
-// Ordered list of services. Index === openingService id, so this also drives
-// the cycle order. Mirrors the NAV_ITEMS table in
+// Ordered list of services. The array index doubles as the service id,
+// which is what `mruOrder` stores. Mirrors the NAV_ITEMS table in
 // `components/layout/sidebar.tsx` and the OVERLAY_SERVICES table in
 // `components/layout/ServiceSwitcherOverlay.tsx` — keep all three in sync.
 const SERVICES_BY_ID: Array<{ id: number; path: string }> = [
@@ -22,10 +22,22 @@ const SERVICE_BY_KEY: Record<string, { id: number; path: string }> = {
     n: SERVICES_BY_ID[3],
 };
 
+// Derive the active service id from the current URL. Returns -1 when the
+// URL is not under any known service (e.g. the initial `/Home` redirect),
+// which we treat as "unknown — leave the MRU list alone".
+const deriveServiceId = (pathname: string): number => {
+    for (const service of SERVICES_BY_ID) {
+        if (pathname.includes(service.path)) return service.id;
+    }
+    return -1;
+};
+
 // Build the initial MRU (most-recently-used) order: the current service is
-// at position 0; the rest fall back to the static SERVICES_BY_ID order.
+// at position 0; the rest fall back to the static SERVICES_BY_ID order. If
+// the current service is unknown (-1) we just use the static order.
 const buildInitialMruOrder = (currentServiceId: number): number[] => {
     const ids = SERVICES_BY_ID.map((s) => s.id);
+    if (currentServiceId < 0) return ids;
     return [currentServiceId, ...ids.filter((id) => id !== currentServiceId)];
 };
 
@@ -43,13 +55,17 @@ export type GlobalServiceShortcutState = {
      * currently active service, `mruOrder[1]` is the previously active
      * one, etc. Stable for the duration of a cycle gesture (so the
      * overlay does not visually reorder while the user is mid-tap), and
-     * promoted whenever `openingService` changes outside a gesture.
+     * promoted whenever the active service (derived from the URL) changes
+     * outside a gesture.
      */
     mruOrder: number[];
 };
 
 /**
  * Registers a global keyboard listener that switches the active service.
+ * The active service is read directly from the URL via `useLocation`, and
+ * navigation is performed via `useNavigate` — there is no external
+ * "openingService" state to keep in sync.
  *
  * Cycle gesture (Cmd+Tab analog, walks the services in MRU order):
  *   - Mac:   hold `Cmd`, tap `Ctrl` to advance the highlight one step.
@@ -68,20 +84,24 @@ export type GlobalServiceShortcutState = {
  *   - If a letter shortcut fires while a cycle preview is in progress, the
  *     preview is canceled and the letter target wins.
  */
-export const useGlobalServiceShortcut = (
-    openingService: number,
-    setOpeningService: (value: number) => void
-): GlobalServiceShortcutState => {
+export const useGlobalServiceShortcut = (): GlobalServiceShortcutState => {
     const navigate = useNavigate();
+    const location = useLocation();
+    const currentServiceId = useMemo(
+        () => deriveServiceId(location.pathname),
+        [location.pathname]
+    );
+
     const [previewIndex, setPreviewIndex] = useState<number | null>(null);
-    const [mruOrder, setMruOrder] = useState<number[]>(() => buildInitialMruOrder(openingService));
+    const [mruOrder, setMruOrder] = useState<number[]>(() =>
+        buildInitialMruOrder(currentServiceId)
+    );
 
     // Mirror state into refs so the keydown / keyup / blur listeners can
     // read the latest values without forcing the effect to re-run (which
     // would detach and re-attach the listeners on every state change and
     // risk missing a keyup event mid-gesture).
     const previewIndexRef = useRef<number | null>(previewIndex);
-    const openingServiceRef = useRef<number>(openingService);
     const mruOrderRef = useRef<number[]>(mruOrder);
 
     useEffect(() => {
@@ -89,24 +109,22 @@ export const useGlobalServiceShortcut = (
     }, [previewIndex]);
 
     useEffect(() => {
-        openingServiceRef.current = openingService;
-    }, [openingService]);
-
-    useEffect(() => {
         mruOrderRef.current = mruOrder;
     }, [mruOrder]);
 
-    // Promote the active service to the front of the MRU list whenever it
-    // changes — whether triggered by the cycle, a letter shortcut, the
-    // sidebar, or any other navigation. Skipped while a cycle preview is
-    // in progress so the overlay does not visually reorder mid-tap.
+    // Promote the active service to the front of the MRU list whenever the
+    // URL crosses into a different service — whether triggered by the
+    // cycle, a letter shortcut, the sidebar, or any other navigation.
+    // Skipped while a cycle preview is in progress so the overlay does not
+    // visually reorder mid-tap, and skipped for unknown services (-1).
     useEffect(() => {
         if (previewIndexRef.current !== null) return;
+        if (currentServiceId < 0) return;
         setMruOrder((prev) => {
-            if (prev[0] === openingService) return prev;
-            return [openingService, ...prev.filter((id) => id !== openingService)];
+            if (prev[0] === currentServiceId) return prev;
+            return [currentServiceId, ...prev.filter((id) => id !== currentServiceId)];
         });
-    }, [openingService]);
+    }, [currentServiceId]);
 
     useEffect(() => {
         const mac = isMac();
@@ -115,7 +133,6 @@ export const useGlobalServiceShortcut = (
             const serviceId = mruOrderRef.current[positionInMru];
             const target = SERVICES_BY_ID[serviceId];
             if (!target) return;
-            setOpeningService(target.id);
             navigate(target.path);
         };
 
@@ -139,7 +156,6 @@ export const useGlobalServiceShortcut = (
                 if (letterTarget) {
                     e.preventDefault();
                     if (previewIndexRef.current !== null) setPreviewIndex(null);
-                    setOpeningService(letterTarget.id);
                     navigate(letterTarget.path);
                     return;
                 }
@@ -197,7 +213,7 @@ export const useGlobalServiceShortcut = (
             document.removeEventListener("keyup", handleKeyUp);
             window.removeEventListener("blur", handleBlur);
         };
-    }, [setOpeningService, navigate]);
+    }, [navigate]);
 
     return { previewIndex, mruOrder };
 };

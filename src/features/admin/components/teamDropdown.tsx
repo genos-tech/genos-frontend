@@ -155,7 +155,6 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
         localStorage.setItem("teamId", teamId);
         localStorage.setItem("teamName", teamName);
         localStorage.removeItem("lastProjectId");
-        localStorage.removeItem("openingService");
         setMyself({
             teamId: teamId,
             teamName: teamName,

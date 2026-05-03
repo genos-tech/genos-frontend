@@ -681,7 +681,6 @@ export const UserProfile = (props: UserProfileProps) => {
                                                     profileUser,
                                                     useCM
                                                 );
-                                                useUISM.setOpeningService(1);
                                                 setOpenUserProfile(false);
                                                 navigate("/Home/chat");
                                             }

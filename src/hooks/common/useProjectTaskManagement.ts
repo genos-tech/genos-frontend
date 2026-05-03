@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 
 import { useSprintMilestoneManagement } from "../tasks/useSprintMilestoneManagement";
 import { useTaskManagement } from "../tasks/useTaskManagement";
@@ -8,15 +9,14 @@ interface UseProjectTaskManagementProps {
     myself: any;
     accessToken: string;
     currentTeamId: string;
-    openingService: number;
 }
 
 export const useProjectTaskManagement = ({
     myself,
     accessToken,
     currentTeamId,
-    openingService,
 }: UseProjectTaskManagementProps) => {
+    const location = useLocation();
     const usePM = useProjectManagement(myself, accessToken, currentTeamId);
     const useTM = useTaskManagement(myself, accessToken);
     const useSM = useSprintMilestoneManagement(accessToken);
@@ -106,7 +106,13 @@ export const useProjectTaskManagement = ({
     useEffect(() => {
         if (usePM.currentProject && useTM.currentPreviewTaskId !== -1) {
             useTM.loadTask(usePM.currentProject.projectId, useTM.currentPreviewTaskId);
-            if (openingService !== 1) {
+            // Suppress the task preview pane when the user is currently
+            // inside the Chat service — there the task preview is rendered
+            // as a side panel and the visibility flag is owned elsewhere.
+            // Mirrors the active-route detection used by the sidebar so we
+            // don't depend on `openingService` for a check the URL already
+            // encodes.
+            if (!location.pathname.includes("/Home/chat")) {
                 useTM.setIsTaskPreviewVisible(true);
             }
         }

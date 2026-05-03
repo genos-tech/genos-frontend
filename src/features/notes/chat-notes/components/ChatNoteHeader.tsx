@@ -324,7 +324,6 @@ export const ChatNoteHeader = ({
                                 if (note) {
                                     const chatTypePath = CHAT_TYPE_PATH_MAP[note.chatType];
                                     if (chatTypePath) {
-                                        useUISM.setOpeningService(3);
                                         navigate(
                                             `/Home/notes/chat/${chatTypePath}/${note.chatId}/thread/${note.threadId}/note/${note.noteId}`
                                         );
@@ -361,7 +360,6 @@ export const ChatNoteHeader = ({
                                     useNM.currentChatNote?.threadId || 0,
                                     true,
                                     false,
-                                    useUISM.setOpeningService,
                                     useTM.setCurrentPreviewTaskId,
                                     usePM.setCurrentProject
                                 );
