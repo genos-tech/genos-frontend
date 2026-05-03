@@ -43,27 +43,6 @@ function buildAvatarUrl(path: string | undefined): string {
     return MEDIA_URL ? `${MEDIA_URL}/${path}` : path;
 }
 
-function buildResolveUsers(profiles: Record<string, UserProps>, myself: UserProps) {
-    return async (userIds: string[]): Promise<User[]> => {
-        const allProfiles: Record<string, UserProps> = {
-            ...profiles,
-            [myself.userId]: myself,
-        };
-        const result = userIds.map((id) => {
-            const profile = allProfiles[id];
-            if (profile) {
-                return {
-                    id,
-                    username: profile.userName,
-                    avatarUrl: buildAvatarUrl(profile.avatarImgPath),
-                };
-            }
-            return { id, username: "Unknown User", avatarUrl: "" };
-        });
-        return result;
-    };
-}
-
 export function useCollaborativeBlockNote({
     documentName,
     user,
@@ -199,10 +178,45 @@ export function useCollaborativeBlockNote({
         );
     }, [doc, provider, userId, enableComments]);
 
-    const resolveUsers = useMemo(
-        () => (teamMemberProfiles ? buildResolveUsers(teamMemberProfiles, myself) : undefined),
-        [teamMemberProfiles, myself]
-    );
+    // `resolveUsers` is invoked by the comments extension on demand to look up
+    // display info for a given user id. We MUST keep its identity stable across
+    // re-renders, otherwise `commentsExtension` (which depends on it) becomes a
+    // new reference, which makes `useCreateBlockNote`'s deps array change,
+    // which destroys and rebuilds the entire BlockNote editor — caret + Yjs
+    // awareness included.
+    //
+    // `teamMemberProfiles` is refreshed every 60s by `useTeamManagement` (a
+    // setInterval that re-runs the `popTeamUsers` worker). Without the ref
+    // indirection here, every minute that ticked the editor was being torn
+    // down mid-typing and the cursor disappeared.
+    const teamMemberProfilesRef = useRef(teamMemberProfiles);
+    const myselfRef = useRef(myself);
+    useEffect(() => {
+        teamMemberProfilesRef.current = teamMemberProfiles;
+    }, [teamMemberProfiles]);
+    useEffect(() => {
+        myselfRef.current = myself;
+    }, [myself]);
+
+    const resolveUsers = useCallback(async (userIds: string[]): Promise<User[]> => {
+        const profiles = teamMemberProfilesRef.current ?? {};
+        const me = myselfRef.current;
+        const allProfiles: Record<string, UserProps> = {
+            ...profiles,
+            [me.userId]: me,
+        };
+        return userIds.map((id) => {
+            const profile = allProfiles[id];
+            if (profile) {
+                return {
+                    id,
+                    username: profile.userName,
+                    avatarUrl: buildAvatarUrl(profile.avatarImgPath),
+                };
+            }
+            return { id, username: "Unknown User", avatarUrl: "" };
+        });
+    }, []);
 
     useEffect(() => {
         return () => {
@@ -211,7 +225,7 @@ export function useCollaborativeBlockNote({
     }, [provider]);
 
     const commentsExtension = useMemo(() => {
-        if (!threadStore || !resolveUsers) return null;
+        if (!threadStore) return null;
         return CommentsExtension({ threadStore, resolveUsers });
     }, [threadStore, resolveUsers]);
 
