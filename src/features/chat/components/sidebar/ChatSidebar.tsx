@@ -83,7 +83,7 @@ const NAV_ITEMS = [
     {
         type: CHAT_PANE_TYPES.ACTIVITY,
         icon: NotificationsActiveRoundedIcon,
-        label: "Recent Activities",
+        label: "Recent Activities (last 30 days)",
         shortLabel: "Activity",
         colorScheme: { dark: "#60a5fa", light: "#3b82f6" },
     },

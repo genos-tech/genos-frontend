@@ -4,7 +4,7 @@ import { authApi } from "../../../services/api";
 import { UserProps } from "../../../types/admin";
 
 // How many days of activities extracting
-const periodDays: number = 7;
+const periodDays: number = 30;
 
 export const loadActivityHistory = async (myself: UserProps, accessToken: string | null) => {
     try {
