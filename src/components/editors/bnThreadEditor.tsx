@@ -28,8 +28,7 @@ import {
     SuggestionMenuController,
     useCreateBlockNote,
 } from "@blocknote/react";
-import SendIcon from "@mui/icons-material/Send";
-import { Box, IconButton } from "@mui/joy";
+import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -45,6 +44,7 @@ import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
+import { EditorSendButton } from "./sub/EditorSendButton";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const django_url = import.meta.env.VITE_DJANGO_URL;
@@ -358,23 +358,10 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                         }
                     }}
                 >
-                    <IconButton
-                        color="success"
+                    <EditorSendButton
                         disabled={editorDocLength < 2}
-                        size="sm"
-                        variant="solid"
-                        sx={{
-                            position: "absolute",
-                            bottom: "5%",
-                            right: "1%",
-                            zIndex: 1,
-                            p: 0.7,
-                        }}
-                        onClick={sendingThreadMessage}
-                    >
-                        <SendIcon sx={{ mr: "3px" }} />
-                        Send
-                    </IconButton>
+                        onSend={sendingThreadMessage}
+                    />
 
                     <Box
                         className="bn-editor-toolbar"

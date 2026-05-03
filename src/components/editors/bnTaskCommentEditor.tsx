@@ -25,8 +25,7 @@ import {
     SuggestionMenuController,
     useCreateBlockNote,
 } from "@blocknote/react";
-import SendIcon from "@mui/icons-material/Send";
-import { Box, IconButton } from "@mui/joy";
+import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -41,6 +40,7 @@ import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
+import { EditorSendButton } from "./sub/EditorSendButton";
 
 type BnTaskCommentEditorProps = {
     useTEM: TeamManagementState;
@@ -340,23 +340,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                         }
                     }}
                 >
-                    <IconButton
-                        color="success"
-                        disabled={editorDocLength < 2}
-                        size="sm"
-                        variant="solid"
-                        sx={{
-                            position: "absolute",
-                            bottom: "5%",
-                            right: "1%",
-                            zIndex: 1,
-                            p: 0.7,
-                        }}
-                        onClick={sendComment}
-                    >
-                        <SendIcon sx={{ mr: "3px" }} />
-                        Send
-                    </IconButton>
+                    <EditorSendButton disabled={editorDocLength < 2} onSend={sendComment} />
 
                     <Box
                         className="bn-editor-toolbar"
