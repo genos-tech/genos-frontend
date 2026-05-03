@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { isMac } from "../../utils/platform";
 
 // Ordered list of services. Index === openingService id, so this also drives
-// the ArrowLeft / ArrowRight cycle order. Mirrors the NAV_ITEMS table in
+// the cycle order. Mirrors the NAV_ITEMS table in
 // `components/layout/sidebar.tsx` and the OVERLAY_SERVICES table in
 // `components/layout/ServiceSwitcherOverlay.tsx` — keep all three in sync.
 const SERVICES_BY_ID: Array<{ id: number; path: string }> = [
@@ -22,34 +22,51 @@ const SERVICE_BY_KEY: Record<string, { id: number; path: string }> = {
     n: SERVICES_BY_ID[3],
 };
 
+// Build the initial MRU (most-recently-used) order: the current service is
+// at position 0; the rest fall back to the static SERVICES_BY_ID order.
+const buildInitialMruOrder = (currentServiceId: number): number[] => {
+    const ids = SERVICES_BY_ID.map((s) => s.id);
+    return [currentServiceId, ...ids.filter((id) => id !== currentServiceId)];
+};
+
 export type GlobalServiceShortcutState = {
     /**
-     * Index of the service currently highlighted in the Cmd+Tab–style
-     * overlay, or `null` when the overlay is hidden. The actual route does
-     * not change until the user releases the modifier keys, mirroring how
-     * macOS Cmd+Tab only commits the foreground app on release.
+     * Position (within `mruOrder`) of the service currently highlighted in
+     * the Cmd+Tab–style overlay, or `null` when the overlay is hidden. The
+     * actual route does not change until the user releases the hold
+     * modifier, mirroring how macOS Cmd+Tab only commits the foreground
+     * app on release.
      */
     previewIndex: number | null;
+    /**
+     * Service ids in most-recently-used order: `mruOrder[0]` is the
+     * currently active service, `mruOrder[1]` is the previously active
+     * one, etc. Stable for the duration of a cycle gesture (so the
+     * overlay does not visually reorder while the user is mid-tap), and
+     * promoted whenever `openingService` changes outside a gesture.
+     */
+    mruOrder: number[];
 };
 
 /**
- * Registers a global keydown listener that switches the active service via
- * keyboard. The modifier combination is `Ctrl+Cmd` on Mac and `Ctrl+Alt` on
- * Windows/Linux:
+ * Registers a global keyboard listener that switches the active service.
  *
- *   - <letter>: I -> Inbox, C -> Chats, T -> Tasks, N -> Notes (instant
- *     switch, no overlay).
- *   - ArrowRight / ArrowLeft while the modifiers are held: opens an
- *     overlay and cycles a preview highlight through the service list,
- *     wrapping around. The actual switch is committed only when the user
- *     releases the modifier keys (Mac Cmd+Tab semantics).
- *   - Escape or window blur while the overlay is open: cancel without
- *     navigating.
+ * Cycle gesture (Cmd+Tab analog, walks the services in MRU order):
+ *   - Mac:   hold `Cmd`, tap `Ctrl` to advance the highlight one step.
+ *            Release `Cmd` to commit the highlighted service.
+ *   - Other: hold `Alt`, tap `Ctrl` to advance. Release `Alt` to commit.
+ *   - Holding `Shift` while tapping `Ctrl` cycles backward (mirrors
+ *     `Shift+Tab` in macOS Cmd+Tab).
+ *   - The first tap jumps to position 1 (the *previously* active service)
+ *     so a single tap toggles between the two most-recent services, as in
+ *     macOS Cmd+Tab.
+ *   - `Escape` or `window.blur` cancels without navigating.
  *
- * Both modifier combinations are reliably interceptable from JS (unlike
- * Shift+Cmd+T / Shift+Cmd+N, which are swallowed by Chrome before the page
- * sees them) and do not collide with copy/paste/undo, so the listener stays
- * active even while the user is typing in an editor.
+ * Letter shortcuts (instant switch, no overlay):
+ *   - `Ctrl+Cmd+<letter>` on Mac, `Ctrl+Alt+<letter>` elsewhere.
+ *   - `I` -> Inbox, `C` -> Chats, `T` -> Tasks, `N` -> Notes.
+ *   - If a letter shortcut fires while a cycle preview is in progress, the
+ *     preview is canceled and the letter target wins.
  */
 export const useGlobalServiceShortcut = (
     openingService: number,
@@ -57,13 +74,15 @@ export const useGlobalServiceShortcut = (
 ): GlobalServiceShortcutState => {
     const navigate = useNavigate();
     const [previewIndex, setPreviewIndex] = useState<number | null>(null);
+    const [mruOrder, setMruOrder] = useState<number[]>(() => buildInitialMruOrder(openingService));
 
-    // Mirror state into refs so the keyup / blur listeners can read the
-    // latest values without forcing the effect to re-run (which would
-    // detach and re-attach the listeners on every preview change and risk
-    // missing a keyup event mid-gesture).
+    // Mirror state into refs so the keydown / keyup / blur listeners can
+    // read the latest values without forcing the effect to re-run (which
+    // would detach and re-attach the listeners on every state change and
+    // risk missing a keyup event mid-gesture).
     const previewIndexRef = useRef<number | null>(previewIndex);
     const openingServiceRef = useRef<number>(openingService);
+    const mruOrderRef = useRef<number[]>(mruOrder);
 
     useEffect(() => {
         previewIndexRef.current = previewIndex;
@@ -74,63 +93,92 @@ export const useGlobalServiceShortcut = (
     }, [openingService]);
 
     useEffect(() => {
+        mruOrderRef.current = mruOrder;
+    }, [mruOrder]);
+
+    // Promote the active service to the front of the MRU list whenever it
+    // changes — whether triggered by the cycle, a letter shortcut, the
+    // sidebar, or any other navigation. Skipped while a cycle preview is
+    // in progress so the overlay does not visually reorder mid-tap.
+    useEffect(() => {
+        if (previewIndexRef.current !== null) return;
+        setMruOrder((prev) => {
+            if (prev[0] === openingService) return prev;
+            return [openingService, ...prev.filter((id) => id !== openingService)];
+        });
+    }, [openingService]);
+
+    useEffect(() => {
         const mac = isMac();
 
-        const commit = (idx: number) => {
-            const target = SERVICES_BY_ID[idx];
+        const commit = (positionInMru: number) => {
+            const serviceId = mruOrderRef.current[positionInMru];
+            const target = SERVICES_BY_ID[serviceId];
             if (!target) return;
             setOpeningService(target.id);
             navigate(target.path);
         };
 
         const handleKeyDown = (e: KeyboardEvent) => {
-            const modifiersOk = mac
-                ? e.ctrlKey && e.metaKey && !e.altKey && !e.shiftKey
-                : e.ctrlKey && e.altKey && !e.metaKey && !e.shiftKey;
-
             // Escape closes the overlay without committing, regardless of
-            // whether the modifiers are still held.
+            // which modifiers are still held.
             if (e.key === "Escape" && previewIndexRef.current !== null) {
                 e.preventDefault();
                 setPreviewIndex(null);
                 return;
             }
 
-            if (!modifiersOk) return;
+            // Letter shortcuts: instant switch. Allow Shift either way so
+            // an in-progress backward-cycle (Shift held) still surrenders
+            // to a letter press.
+            const lettersModifiersOk = mac
+                ? e.ctrlKey && e.metaKey && !e.altKey
+                : e.ctrlKey && e.altKey && !e.metaKey;
+            if (lettersModifiersOk) {
+                const letterTarget = SERVICE_BY_KEY[e.key.toLowerCase()];
+                if (letterTarget) {
+                    e.preventDefault();
+                    if (previewIndexRef.current !== null) setPreviewIndex(null);
+                    setOpeningService(letterTarget.id);
+                    navigate(letterTarget.path);
+                    return;
+                }
+            }
 
-            // Arrow cycling: open the overlay (if not already open) and
-            // advance the preview highlight. Do NOT navigate — the commit
-            // happens on modifier keyup.
-            if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+            // Cycle gesture: hold-key (Cmd/mac, Alt/other) is held AND the
+            // event itself is the Ctrl tap. Each Ctrl keydown advances the
+            // preview. Shift inverts the direction.
+            const holdHeld = mac ? e.metaKey : e.altKey;
+            const isCycleTap = e.key === "Control";
+            // Disallow the "wrong" modifier (e.g. Alt held on mac) so we
+            // never collide with system shortcuts.
+            const wrongModifierHeld = mac ? e.altKey : e.metaKey;
+            if (holdHeld && isCycleTap && !wrongModifierHeld) {
                 e.preventDefault();
-                const len = SERVICES_BY_ID.length;
-                const delta = e.key === "ArrowRight" ? 1 : -1;
+                const len = mruOrderRef.current.length;
+                if (len === 0) return;
+                const delta = e.shiftKey ? -1 : 1;
                 setPreviewIndex((prev) => {
-                    const base = prev ?? openingServiceRef.current;
-                    return (base + delta + len) % len;
+                    // First tap: jump straight to position 1 (the
+                    // previously active service) on forward cycles or
+                    // position len-1 on backward cycles, matching Cmd+Tab.
+                    if (prev === null) {
+                        return delta === 1 ? 1 % len : (len - 1) % len;
+                    }
+                    return (prev + delta + len) % len;
                 });
                 return;
             }
-
-            // Letter shortcut: instant switch, no overlay.
-            const target = SERVICE_BY_KEY[e.key.toLowerCase()];
-            if (!target) return;
-
-            e.preventDefault();
-            setOpeningService(target.id);
-            navigate(target.path);
         };
 
         const handleKeyUp = (e: KeyboardEvent) => {
             if (previewIndexRef.current === null) return;
 
-            // Commit when any of the *required* modifiers is released.
-            // Matches Cmd+Tab where releasing the held modifier commits
-            // the highlighted app.
-            const isReleaseKey = mac
-                ? e.key === "Meta" || e.key === "Control"
-                : e.key === "Control" || e.key === "Alt";
-            if (!isReleaseKey) return;
+            // Commit only when the *hold* key is released. Releasing Ctrl
+            // (the cycle key) just ends a tap and must NOT commit, or the
+            // user could never advance more than once.
+            const isHoldRelease = mac ? e.key === "Meta" : e.key === "Alt";
+            if (!isHoldRelease) return;
 
             const idx = previewIndexRef.current;
             setPreviewIndex(null);
@@ -151,5 +199,5 @@ export const useGlobalServiceShortcut = (
         };
     }, [setOpeningService, navigate]);
 
-    return { previewIndex };
+    return { previewIndex, mruOrder };
 };

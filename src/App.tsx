@@ -109,10 +109,8 @@ export const App = () => {
     // on Mac, Ctrl+Alt on Windows/Linux; combine with a letter (I/C/T/N) to
     // jump directly, or with ArrowLeft/ArrowRight to cycle through services
     // via the Cmd+Tab–style overlay (commits on modifier release).
-    const { previewIndex: serviceSwitcherPreviewIndex } = useGlobalServiceShortcut(
-        useUISM.openingService,
-        useUISM.setOpeningService
-    );
+    const { previewIndex: serviceSwitcherPreviewIndex, mruOrder: serviceSwitcherMruOrder } =
+        useGlobalServiceShortcut(useUISM.openingService, useUISM.setOpeningService);
 
     // Click-to-open: jump to the chat / thread / task / inbox that the
     // notification refers to. Lives here because this is the layer that has
@@ -238,7 +236,10 @@ export const App = () => {
                         subscribeToasts={useNotif.subscribeToasts}
                         onOpenIntent={openIntent}
                     />
-                    <ServiceSwitcherOverlay previewIndex={serviceSwitcherPreviewIndex} />
+                    <ServiceSwitcherOverlay
+                        previewIndex={serviceSwitcherPreviewIndex}
+                        mruOrder={serviceSwitcherMruOrder}
+                    />
                     <Snackbar
                         anchorOrigin={{ vertical: "top", horizontal: "center" }}
                         open={showWsDisconnected || showApiDown}

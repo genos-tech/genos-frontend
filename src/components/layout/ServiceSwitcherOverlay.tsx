@@ -6,7 +6,7 @@ import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded
 import { Box, Sheet, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
-import { getServiceShortcutModifierKeys } from "../../utils/platform";
+import { isMac } from "../../utils/platform";
 
 // Visual metadata for the Cmd+Tab–style service switcher overlay. Indexed
 // by the same `id` used in `SERVICES_BY_ID` (hooks/common/useGlobalServiceShortcut.ts)
@@ -21,10 +21,16 @@ const OVERLAY_SERVICES: Array<{ label: string; icon: typeof AllInboxRoundedIcon 
 
 type ServiceSwitcherOverlayProps = {
     /**
-     * Index of the highlighted service, or `null` to hide the overlay.
-     * Comes straight from `useGlobalServiceShortcut`'s returned state.
+     * Position (within `mruOrder`) of the highlighted service, or `null`
+     * to hide the overlay. Comes straight from `useGlobalServiceShortcut`.
      */
     previewIndex: number | null;
+    /**
+     * Service ids in most-recently-used order. The overlay renders tiles
+     * left-to-right in this order so the most-recent service is always
+     * leftmost (matching macOS Cmd+Tab).
+     */
+    mruOrder: number[];
 };
 
 /**
@@ -32,14 +38,20 @@ type ServiceSwitcherOverlayProps = {
  * fullscreen with `pointer-events: none`, so it never intercepts clicks;
  * visibility is driven entirely by `previewIndex`.
  */
-export const ServiceSwitcherOverlay = ({ previewIndex }: ServiceSwitcherOverlayProps) => {
+export const ServiceSwitcherOverlay = ({
+    previewIndex,
+    mruOrder,
+}: ServiceSwitcherOverlayProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
 
-    const shortcutHint = useMemo(
-        () => [...getServiceShortcutModifierKeys(), "← / →"].join(" + "),
-        []
-    );
+    // Hint matches the cycle gesture in `useGlobalServiceShortcut`: hold the
+    // platform "switcher" modifier (Cmd on mac, Alt elsewhere) and tap Ctrl
+    // to advance the highlight.
+    const shortcutHint = useMemo(() => {
+        const holdKey = isMac() ? "⌘" : "Alt";
+        return `Hold ${holdKey}  ·  Tap Ctrl to cycle  ·  Release ${holdKey} to switch`;
+    }, []);
 
     if (previewIndex === null) return null;
 
@@ -79,12 +91,14 @@ export const ServiceSwitcherOverlay = ({ previewIndex }: ServiceSwitcherOverlayP
                 }}
             >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
-                    {OVERLAY_SERVICES.map((service, idx) => {
+                    {mruOrder.map((serviceId, position) => {
+                        const service = OVERLAY_SERVICES[serviceId];
+                        if (!service) return null;
                         const Icon = service.icon;
-                        const isActive = idx === previewIndex;
+                        const isActive = position === previewIndex;
                         return (
                             <Box
-                                key={service.label}
+                                key={serviceId}
                                 sx={{
                                     width: 88,
                                     height: 96,
