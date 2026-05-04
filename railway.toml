@@ -1,5 +1,4 @@
 [build]
-builder = "NIXPACKS"
 buildCommand = "npm ci && npm run build"
 
 [deploy]
