@@ -23,6 +23,14 @@ import {
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { Sprint } from "../types";
 
+const STATUS_COLOR: Record<string, string> = {
+    Open: "#0044c2",
+    WIP: "#ff8c00",
+    Pending: "#b900ff",
+    Closed: "#1dc200",
+    Deleted: "#94a3b8",
+};
+
 type Props = {
     open: boolean;
     onClose: () => void;
@@ -203,7 +211,14 @@ const SprintRow = ({
                                 <Typography level="body-sm" sx={{ flex: 1 }}>
                                     {m.title}
                                 </Typography>
-                                <Chip size="sm" variant="soft">
+                                <Chip
+                                    size="sm"
+                                    variant="soft"
+                                    sx={{
+                                        color: STATUS_COLOR[m.status as string] ?? "#94a3b8",
+                                        backgroundColor: `${STATUS_COLOR[m.status as string] ?? "#94a3b8"}1A`,
+                                    }}
+                                >
                                     {m.status}
                                 </Chip>
                                 <Select
