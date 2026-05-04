@@ -158,6 +158,8 @@ export const MessageListRenderer = ({
             paddingBottom = paddingBottom + 2.5;
         } else if (numRepliesWithoutFirstMessage > 0) {
             paddingBottom = paddingBottom + 2.5;
+        } else if (chat.chatType === 3) {
+            paddingBottom = paddingBottom + 1;
         }
 
         if (index === messages.length - 1) {

@@ -549,8 +549,14 @@ export const MessageBubble = (props: MessageBubbleProps) => {
             sx={{
                 maxWidth: "90%",
                 minWidth:
-                    (isSimpleBubble ? (numRepliesWithoutFirstMessage > 0 ? 150 : 100) : 200) +
-                    (uniqueReactionEmojiCount < 10 ? uniqueReactionEmojiCount * 20 : 310),
+                    chat.chatType === 3
+                        ? 500
+                        : (isSimpleBubble
+                              ? numRepliesWithoutFirstMessage > 0
+                                  ? 150
+                                  : 100
+                              : 200) +
+                          (uniqueReactionEmojiCount < 10 ? uniqueReactionEmojiCount * 20 : 310),
                 whiteSpace: "normal",
                 wordBreak: "break-word",
             }}

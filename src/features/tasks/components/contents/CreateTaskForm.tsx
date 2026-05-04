@@ -324,17 +324,50 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         });
     };
 
+    // Track the empty-task id created during THIS mount of the form.
+    //
+    // `useTM.initialEmptyTaskId` is shared global state: after a successful
+    // submit, the form unmounts but the (now-consumed) id stays around.
+    // On the next mount, the watcher effect below would otherwise fire
+    // synchronously with that stale id and seed `taskContent` (and thus
+    // `BnTaskPreview`'s collaborative BlockNote doc, which is keyed by
+    // `task-body:${taskId}`) against the previous task's Yjs document —
+    // so the form re-opens pre-filled with the prior task's body, and any
+    // keystroke here fans back out to that earlier task. Reproduces in
+    // `TaskHomeLayout` because the "+ Create task" button is reachable
+    // before the new `createEmptyTask` POST returns.
+    const freshEmptyTaskIdRef = useRef<number | undefined>(undefined);
+
     useEffect(() => {
+        let cancelled = false;
+        // Drop any leftover id from a previously consumed creation flow
+        // before kicking off the bootstrap. Belt-and-suspenders with the
+        // ref guard below — if anything else races to set the id (e.g.
+        // a cancelled prior mount), the watcher still won't seed until
+        // it sees the id we created here.
+        useTM.setInitialEmptyTaskId(undefined);
         createEmptyTask({
             myself: myself,
             projectId: usePM.currentProject?.projectId || 0,
             accessToken: accessToken,
-            setInitialEmptyTaskId: useTM.setInitialEmptyTaskId,
+            setInitialEmptyTaskId: (id: number) => {
+                if (cancelled) return;
+                freshEmptyTaskIdRef.current = id;
+                useTM.setInitialEmptyTaskId(id);
+            },
         });
+        return () => {
+            cancelled = true;
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
-        if (useTM.initialEmptyTaskId) {
+        // Only seed `taskContent` once the global id matches the one we
+        // created in this mount; see the bootstrap effect above for why
+        // accepting any non-null id here would surface the previous
+        // task's body in the editor.
+        if (useTM.initialEmptyTaskId && useTM.initialEmptyTaskId === freshEmptyTaskIdRef.current) {
             setTaskContent({
                 id: useTM.initialEmptyTaskId,
                 project: usePM.currentProject,
@@ -399,6 +432,15 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                     creationKind: "task",
                     milestoneId: null,
                 });
+            }
+            // The empty-task id we just consumed via `uploadNewTask` is
+            // no longer a valid bootstrap target — it's now a real task
+            // with the user's content. Clear the global so the next form
+            // mount starts from a clean slate; the bootstrap effect's
+            // ref guard backstops this, but keeping the global truthful
+            // avoids confusing other readers.
+            if (useTM.setInitialEmptyTaskId) {
+                useTM.setInitialEmptyTaskId(undefined);
             }
             if (useTM.setIsNewTaskCreated) {
                 setTimeout(() => {
