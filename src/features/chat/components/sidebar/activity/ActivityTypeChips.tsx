@@ -103,7 +103,7 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
     const chatTypeLabel = isMDM
         ? "MDM"
         : isTaskComment
-          ? "Task"
+          ? "Task Comment"
           : chatTypeLookup[activity.chatType];
 
     // The "project + #taskId" pair only makes sense for PM messages and for

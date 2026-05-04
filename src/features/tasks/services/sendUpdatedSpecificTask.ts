@@ -115,6 +115,7 @@ export const sendUpdatedSpecificTask = async (
                             taskId: updatedTask.id,
                             systemUserId: updatedTask.project.systemUserId,
                             messageIdForPut: null,
+                            sendActivity: false, // Do not send activity for task status update.
                         });
                     }
                 }
