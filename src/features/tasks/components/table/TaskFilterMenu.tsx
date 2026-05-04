@@ -82,6 +82,15 @@ type TaskFilterMenuProps = {
     useSM?: SprintMilestoneManagementState;
     predefinedTagsFilters: FilterProps[];
     setCurrentDisplayingTasks: (tasks: TaskTableProps[]) => void;
+    // Optional: receives the set of child task ids that pass the
+    // active status / tags / priority / effort / milestone selection,
+    // so the consuming table can filter expanded child rows the same
+    // way as the top-level list. The "All → root-only" short-circuits
+    // used for the top-level set are intentionally skipped here —
+    // those exist to keep the top-level row count manageable when no
+    // specific filter is selected, which doesn't apply to children
+    // shown beneath an already-expanded parent.
+    setVisibleChildTaskIds?: (ids: Set<string>) => void;
     hideStatusFilter?: boolean;
 };
 
@@ -92,6 +101,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         useSM,
         predefinedTagsFilters,
         setCurrentDisplayingTasks,
+        setVisibleChildTaskIds,
         hideStatusFilter,
     } = props;
     const { mode } = useColorScheme();
@@ -490,6 +500,105 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         } else {
             setCurrentDisplayingTasks([]);
         }
+
+        // Sister set for the consuming table's expanded children.
+        //
+        // We re-run the same status/tags/priority/effortLevel/milestone
+        // predicates on the subtask universe, but we deliberately drop
+        // the "if All is selected for this dimension, also restrict to
+        // parentTaskId === null" branches above. Those exist purely to
+        // keep the *top-level* list lean when no specific filter is
+        // active; for children shown under an expanded parent the
+        // intent is the literal one in this file's comment — show only
+        // child tasks whose status/tags/priority/effort match what the
+        // user has selected. When everything is set to "All" the
+        // resulting set contains every subtask, which the consumer
+        // can then intersect with its own per-parent grouping.
+        if (setVisibleChildTaskIds) {
+            let childCandidates = useTM.allTasks.filter((t) => t.parentTaskId != null);
+
+            // Status
+            if (statuses.length === 1) {
+                if (statuses[0].label === "Expired") {
+                    childCandidates = childCandidates.filter(
+                        (t) => t.dueDate && new Date(t.dueDate) < new Date()
+                    );
+                } else if (statuses[0].label !== "All") {
+                    childCandidates = childCandidates.filter(
+                        (t) => t.status === statuses[0].label
+                    );
+                }
+            } else {
+                childCandidates = childCandidates.filter((t) =>
+                    statuses.some((s) => s.label === t.status)
+                );
+                if (statuses.some((s) => s.label === "Expired")) {
+                    childCandidates = childCandidates.filter(
+                        (t) => t.dueDate && new Date(t.dueDate) < new Date()
+                    );
+                }
+            }
+
+            // Tags
+            if (tags.length > 0 && !(tags.length === 1 && tags[0].label === "All")) {
+                childCandidates = childCandidates.filter((t) =>
+                    tags.some((tag) => t.concatTags?.includes(tag.label))
+                );
+            }
+
+            // Priority
+            if (!(priority.length === 1 && priority[0].label === "All")) {
+                childCandidates = childCandidates.filter((t) =>
+                    priority.some((p) => p.label === t.priority)
+                );
+            }
+
+            // Effort level
+            if (!(effortLevel.length === 1 && effortLevel[0].label === "All")) {
+                childCandidates = childCandidates.filter((t) =>
+                    effortLevel.some((e) => e.label === t.effortLevel)
+                );
+            }
+
+            // Milestone (multi-select)
+            if (!(milestoneSel.length === 1 && milestoneSel[0] === MILESTONE_ALL)) {
+                const allowNone = milestoneSel.includes(MILESTONE_NONE);
+                const ids = new Set<number>(
+                    milestoneSel.filter((k): k is number => typeof k === "number")
+                );
+                childCandidates = childCandidates.filter((task) => {
+                    if (task.milestoneId == null) return allowNone;
+                    return ids.has(task.milestoneId);
+                });
+            }
+
+            // Milestone-scope (sidebar) — mirror the top-level branch
+            // so children outside the scoped milestone are excluded.
+            if (useTM.tableMilestoneFilterId != null) {
+                const target = useTM.tableMilestoneFilterId;
+                const milestoneTask = useTM.allTasks.find(
+                    (t) => t.isMilestone === true && t.milestoneId === target
+                );
+                const backingTaskId = milestoneTask?.id ?? null;
+                childCandidates = childCandidates.filter((task) => {
+                    if (task.milestoneId === target) return true;
+                    if (
+                        backingTaskId != null &&
+                        task.parentTaskId != null &&
+                        String(task.parentTaskId) === String(backingTaskId)
+                    ) {
+                        return true;
+                    }
+                    return false;
+                });
+            }
+
+            const idSet = new Set<string>();
+            for (const t of childCandidates) {
+                if (t.id != null) idSet.add(String(t.id));
+            }
+            setVisibleChildTaskIds(idSet);
+        }
     };
 
     const resetFilters = () => {
@@ -629,6 +738,420 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                         flexShrink: 0,
                     }}
                 />
+
+                {/* Milestone Filter — multi-select drawn from the same
+                    visible/sorted set the sidebar shows in
+                    `MilestonesListItem`. Hidden while the sidebar's
+                    scope chip is active so users aren't confused by
+                    two competing milestone narrowing controls. */}
+                {useSM && useTM.tableMilestoneFilterId == null && (
+                    <>
+                        <Tooltip
+                            placement="top"
+                            slotProps={{
+                                popper: {
+                                    sx: {
+                                        [`& .${tooltipClasses.tooltip}`]: {
+                                            background: styles.menuBg,
+                                            color: styles.textColor,
+                                            border: `1px solid ${styles.menuBorder}`,
+                                            boxShadow: isDark
+                                                ? "0 4px 12px rgba(0,0,0,0.4)"
+                                                : "0 4px 12px rgba(0,0,0,0.1)",
+                                            fontSize: 11,
+                                            borderRadius: "8px",
+                                            px: 1.5,
+                                            py: 0.5,
+                                        },
+                                    },
+                                },
+                            }}
+                            title={(() => {
+                                if (
+                                    selectedMilestoneKeys.length === 1 &&
+                                    selectedMilestoneKeys[0] === MILESTONE_ALL
+                                ) {
+                                    return "All milestones";
+                                }
+                                return selectedMilestoneKeys
+                                    .map((k) => {
+                                        if (k === MILESTONE_NONE) return "No milestone";
+                                        const m = visibleMilestones.find(
+                                            (mm) => mm.milestoneId === k
+                                        );
+                                        return m?.title ?? `#${k}`;
+                                    })
+                                    .join(", ");
+                            })()}
+                        >
+                            <Button
+                                aria-controls={openMilestoneFilter ? "fade-menu" : undefined}
+                                aria-expanded={openMilestoneFilter ? "true" : undefined}
+                                aria-haspopup="true"
+                                variant="contained"
+                                startIcon={
+                                    <FlagRoundedIcon
+                                        sx={{
+                                            fontSize: "16px",
+                                            color:
+                                                selectedMilestoneKeys.length === 1 &&
+                                                selectedMilestoneKeys[0] === MILESTONE_ALL
+                                                    ? isDark
+                                                        ? MILESTONE_ACCENT_DARK
+                                                        : MILESTONE_ACCENT_LIGHT
+                                                    : "#fff",
+                                        }}
+                                    />
+                                }
+                                sx={{
+                                    color:
+                                        selectedMilestoneKeys.length === 1 &&
+                                        selectedMilestoneKeys[0] === MILESTONE_ALL
+                                            ? styles.textColor
+                                            : "#fff",
+                                    background:
+                                        selectedMilestoneKeys.length === 1 &&
+                                        selectedMilestoneKeys[0] === MILESTONE_ALL
+                                            ? isDark
+                                                ? "rgba(249,115,22,0.15)"
+                                                : "rgba(249,115,22,0.1)"
+                                            : isDark
+                                              ? `linear-gradient(135deg, ${alpha("#f97316", 0.5)} 0%, ${alpha("#f97316", 0.7)} 100%)`
+                                              : `linear-gradient(135deg, ${alpha("#f97316", 0.75)} 0%, ${alpha("#f97316", 0.95)} 100%)`,
+                                    border: `1px solid ${
+                                        isDark
+                                            ? MILESTONE_ACCENT_BG_DARK
+                                            : MILESTONE_ACCENT_BG_LIGHT
+                                    }`,
+                                    borderRadius: "10px",
+                                    fontSize: "12px",
+                                    fontWeight: 600,
+                                    height: "32px",
+                                    whiteSpace: "nowrap",
+                                    px: 1.5,
+                                    my: 0.5,
+                                    textTransform: "none",
+                                    boxShadow: isDark
+                                        ? "0 2px 8px rgba(249,115,22,0.25)"
+                                        : "0 2px 8px rgba(249,115,22,0.2)",
+                                    transition: "all 0.2s ease",
+                                    flexShrink: 0,
+                                    "&:hover": {
+                                        background:
+                                            selectedMilestoneKeys.length === 1 &&
+                                            selectedMilestoneKeys[0] === MILESTONE_ALL
+                                                ? isDark
+                                                    ? "rgba(249,115,22,0.25)"
+                                                    : "rgba(249,115,22,0.2)"
+                                                : isDark
+                                                  ? `linear-gradient(135deg, ${alpha("#f97316", 0.6)} 0%, ${alpha("#f97316", 0.8)} 100%)`
+                                                  : `linear-gradient(135deg, ${alpha("#f97316", 0.85)} 0%, ${alpha("#f97316", 1)} 100%)`,
+                                        transform: "translateY(-1px)",
+                                        boxShadow: isDark
+                                            ? "0 4px 12px rgba(249,115,22,0.35)"
+                                            : "0 4px 12px rgba(249,115,22,0.3)",
+                                    },
+                                }}
+                                onClick={handleClickMilestoneFilter}
+                            >
+                                Milestone: {milestoneFilterButtonLabel}
+                                {selectedMilestoneKeys.length > 1 && (
+                                    <Chip
+                                        label={`+${selectedMilestoneKeys.length - 1}`}
+                                        size="small"
+                                        sx={{
+                                            ml: 0.5,
+                                            height: "18px",
+                                            fontSize: "10px",
+                                            fontWeight: 700,
+                                            background: "rgba(255,255,255,0.2)",
+                                            color: "inherit",
+                                        }}
+                                    />
+                                )}
+                            </Button>
+                        </Tooltip>
+                        <Menu
+                            anchorEl={anchorElMilestoneFilter}
+                            open={openMilestoneFilter}
+                            slots={{ transition: Fade }}
+                            slotProps={{
+                                paper: {
+                                    className: `custom-scrollbar-${isDark ? "dark" : "light"}`,
+                                    sx: {
+                                        background: styles.menuBg,
+                                        border: `1px solid ${styles.menuBorder}`,
+                                        borderRadius: "12px",
+                                        boxShadow: isDark
+                                            ? "0 8px 32px rgba(0,0,0,0.5)"
+                                            : "0 8px 32px rgba(0,0,0,0.15)",
+                                        mt: 1,
+                                        minWidth: "220px",
+                                        maxHeight: "320px",
+                                    },
+                                },
+                            }}
+                            onClose={() => setAnchorElMilestoneFilter(null)}
+                        >
+                            {([MILESTONE_ALL, MILESTONE_NONE] as MilestoneFilterKey[]).map(
+                                (key) => {
+                                    const isSelected = selectedMilestoneKeys.some(
+                                        (k) => k === key
+                                    );
+                                    const label = key === MILESTONE_ALL ? "All" : "No milestone";
+                                    return (
+                                        <MenuItem
+                                            key={`milestone-key-${String(key)}`}
+                                            sx={{
+                                                borderRadius: "8px",
+                                                mx: 0.5,
+                                                my: 0.25,
+                                                transition: "all 0.2s ease",
+                                                "&:hover": {
+                                                    background: styles.buttonHoverBg,
+                                                },
+                                            }}
+                                            onClick={() => handleCloseMilestoneFilter(key)}
+                                        >
+                                            <Box
+                                                sx={{
+                                                    width: "100%",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: 1,
+                                                }}
+                                            >
+                                                <FlagRoundedIcon
+                                                    sx={{
+                                                        fontSize: 14,
+                                                        color: isDark
+                                                            ? MILESTONE_ACCENT_DARK
+                                                            : MILESTONE_ACCENT_LIGHT,
+                                                        opacity: key === MILESTONE_ALL ? 0.5 : 1,
+                                                    }}
+                                                />
+                                                <Typography
+                                                    sx={{
+                                                        fontSize: "13px",
+                                                        fontWeight: isSelected ? 700 : 500,
+                                                        color: isSelected
+                                                            ? isDark
+                                                                ? MILESTONE_ACCENT_DARK
+                                                                : MILESTONE_ACCENT_LIGHT
+                                                            : styles.textColor,
+                                                        flex: 1,
+                                                    }}
+                                                >
+                                                    {label}
+                                                </Typography>
+                                                {isSelected && (
+                                                    <Box
+                                                        sx={{
+                                                            width: 16,
+                                                            height: 16,
+                                                            borderRadius: "4px",
+                                                            background: isDark
+                                                                ? MILESTONE_ACCENT_DARK
+                                                                : MILESTONE_ACCENT_LIGHT,
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            justifyContent: "center",
+                                                            fontSize: "10px",
+                                                            color: "#fff",
+                                                            fontWeight: 700,
+                                                        }}
+                                                    >
+                                                        ✓
+                                                    </Box>
+                                                )}
+                                            </Box>
+                                        </MenuItem>
+                                    );
+                                }
+                            )}
+                            {visibleMilestones.length > 0 && (
+                                <Box
+                                    sx={{
+                                        height: "1px",
+                                        background: styles.containerBorder,
+                                        mx: 1,
+                                        my: 0.5,
+                                    }}
+                                />
+                            )}
+                            {visibleMilestones.map((m) => {
+                                const isSelected = selectedMilestoneKeys.some(
+                                    (k) => k === m.milestoneId
+                                );
+                                const sprintName =
+                                    m.sprintId == null
+                                        ? "No sprint"
+                                        : (projectSprints.find((s) => s.sprintId === m.sprintId)
+                                              ?.name ?? "Sprint");
+                                return (
+                                    <MenuItem
+                                        key={`milestone-${m.milestoneId}`}
+                                        sx={{
+                                            borderRadius: "8px",
+                                            mx: 0.5,
+                                            my: 0.25,
+                                            transition: "all 0.2s ease",
+                                            "&:hover": {
+                                                background: styles.buttonHoverBg,
+                                            },
+                                        }}
+                                        onClick={() => handleCloseMilestoneFilter(m.milestoneId)}
+                                    >
+                                        <Box
+                                            sx={{
+                                                width: "100%",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 1,
+                                                minWidth: 0,
+                                            }}
+                                        >
+                                            <FlagRoundedIcon
+                                                sx={{
+                                                    fontSize: 14,
+                                                    color: isDark
+                                                        ? MILESTONE_ACCENT_DARK
+                                                        : MILESTONE_ACCENT_LIGHT,
+                                                    flexShrink: 0,
+                                                }}
+                                            />
+                                            <Box
+                                                sx={{
+                                                    flex: 1,
+                                                    minWidth: 0,
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    lineHeight: 1.2,
+                                                }}
+                                            >
+                                                <Typography
+                                                    sx={{
+                                                        fontSize: "13px",
+                                                        fontWeight: isSelected ? 700 : 500,
+                                                        color: isSelected
+                                                            ? isDark
+                                                                ? MILESTONE_ACCENT_DARK
+                                                                : MILESTONE_ACCENT_LIGHT
+                                                            : styles.textColor,
+                                                        overflow: "hidden",
+                                                        textOverflow: "ellipsis",
+                                                        whiteSpace: "nowrap",
+                                                    }}
+                                                >
+                                                    {m.title}
+                                                </Typography>
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        gap: 0.75,
+                                                        minWidth: 0,
+                                                    }}
+                                                >
+                                                    <Typography
+                                                        sx={{
+                                                            fontSize: "10px",
+                                                            color: styles.mutedText,
+                                                            overflow: "hidden",
+                                                            textOverflow: "ellipsis",
+                                                            whiteSpace: "nowrap",
+                                                            minWidth: 0,
+                                                        }}
+                                                    >
+                                                        {sprintName}
+                                                    </Typography>
+                                                    {m.status
+                                                        ? (() => {
+                                                              const tone =
+                                                                  getMilestoneStatusChipColor(
+                                                                      m.status as string
+                                                                  );
+                                                              return (
+                                                                  <Chip
+                                                                      label={m.status}
+                                                                      size="small"
+                                                                      sx={{
+                                                                          height: 16,
+                                                                          fontSize: "9px",
+                                                                          fontWeight: 700,
+                                                                          backgroundColor:
+                                                                              tone.color,
+                                                                          color: tone.textColor,
+                                                                          flexShrink: 0,
+                                                                          "& .MuiChip-label": {
+                                                                              px: 0.75,
+                                                                              lineHeight: 1,
+                                                                          },
+                                                                      }}
+                                                                  />
+                                                              );
+                                                          })()
+                                                        : null}
+                                                </Box>
+                                            </Box>
+                                            {isSelected && (
+                                                <Box
+                                                    sx={{
+                                                        width: 16,
+                                                        height: 16,
+                                                        borderRadius: "4px",
+                                                        background: isDark
+                                                            ? MILESTONE_ACCENT_DARK
+                                                            : MILESTONE_ACCENT_LIGHT,
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        fontSize: "10px",
+                                                        color: "#fff",
+                                                        fontWeight: 700,
+                                                        flexShrink: 0,
+                                                    }}
+                                                >
+                                                    ✓
+                                                </Box>
+                                            )}
+                                        </Box>
+                                    </MenuItem>
+                                );
+                            })}
+                        </Menu>
+                    </>
+                )}
+
+                {/* Milestone scope chip — appears when the user clicked
+                    a milestone item in the sidebar. Clicking the X
+                    clears the milestone-scoped view. */}
+                {useTM.tableMilestoneFilterId != null && (
+                    <Chip
+                        label={(() => {
+                            const target = useTM.tableMilestoneFilterId;
+                            const m = useTM.allTasks.find(
+                                (t) => t.isMilestone === true && t.milestoneId === target
+                            );
+                            return `Milestone: ${m?.title?.slice(0, 10) ?? `#${target}`}${m?.title?.length && m?.title?.length > 10 ? "..." : ""}`;
+                        })()}
+                        sx={{
+                            fontSize: 12,
+                            fontWeight: 600,
+                            background: isDark ? "rgba(249,115,22,0.15)" : "rgba(249,115,22,0.1)",
+                            color: isDark ? "#fb923c" : "#c2410c",
+                            border: `1px solid ${
+                                isDark ? "rgba(249,115,22,0.35)" : "rgba(249,115,22,0.25)"
+                            }`,
+                            borderRadius: "10px",
+                            height: 32,
+                            "& .MuiChip-deleteIcon": {
+                                color: isDark ? "#fb923c" : "#c2410c",
+                            },
+                        }}
+                        onDelete={() => useTM.setTableMilestoneFilterId(null)}
+                    />
+                )}
 
                 {/* Status Filter */}
                 {!hideStatusFilter && (
@@ -1236,420 +1759,6 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                         );
                     })}
                 </Menu>
-
-                {/* Milestone Filter — multi-select drawn from the same
-                    visible/sorted set the sidebar shows in
-                    `MilestonesListItem`. Hidden while the sidebar's
-                    scope chip is active so users aren't confused by
-                    two competing milestone narrowing controls. */}
-                {useSM && useTM.tableMilestoneFilterId == null && (
-                    <>
-                        <Tooltip
-                            placement="top"
-                            slotProps={{
-                                popper: {
-                                    sx: {
-                                        [`& .${tooltipClasses.tooltip}`]: {
-                                            background: styles.menuBg,
-                                            color: styles.textColor,
-                                            border: `1px solid ${styles.menuBorder}`,
-                                            boxShadow: isDark
-                                                ? "0 4px 12px rgba(0,0,0,0.4)"
-                                                : "0 4px 12px rgba(0,0,0,0.1)",
-                                            fontSize: 11,
-                                            borderRadius: "8px",
-                                            px: 1.5,
-                                            py: 0.5,
-                                        },
-                                    },
-                                },
-                            }}
-                            title={(() => {
-                                if (
-                                    selectedMilestoneKeys.length === 1 &&
-                                    selectedMilestoneKeys[0] === MILESTONE_ALL
-                                ) {
-                                    return "All milestones";
-                                }
-                                return selectedMilestoneKeys
-                                    .map((k) => {
-                                        if (k === MILESTONE_NONE) return "No milestone";
-                                        const m = visibleMilestones.find(
-                                            (mm) => mm.milestoneId === k
-                                        );
-                                        return m?.title ?? `#${k}`;
-                                    })
-                                    .join(", ");
-                            })()}
-                        >
-                            <Button
-                                aria-controls={openMilestoneFilter ? "fade-menu" : undefined}
-                                aria-expanded={openMilestoneFilter ? "true" : undefined}
-                                aria-haspopup="true"
-                                variant="contained"
-                                startIcon={
-                                    <FlagRoundedIcon
-                                        sx={{
-                                            fontSize: "16px",
-                                            color:
-                                                selectedMilestoneKeys.length === 1 &&
-                                                selectedMilestoneKeys[0] === MILESTONE_ALL
-                                                    ? isDark
-                                                        ? MILESTONE_ACCENT_DARK
-                                                        : MILESTONE_ACCENT_LIGHT
-                                                    : "#fff",
-                                        }}
-                                    />
-                                }
-                                sx={{
-                                    color:
-                                        selectedMilestoneKeys.length === 1 &&
-                                        selectedMilestoneKeys[0] === MILESTONE_ALL
-                                            ? styles.textColor
-                                            : "#fff",
-                                    background:
-                                        selectedMilestoneKeys.length === 1 &&
-                                        selectedMilestoneKeys[0] === MILESTONE_ALL
-                                            ? isDark
-                                                ? "rgba(249,115,22,0.15)"
-                                                : "rgba(249,115,22,0.1)"
-                                            : isDark
-                                              ? `linear-gradient(135deg, ${alpha("#f97316", 0.5)} 0%, ${alpha("#f97316", 0.7)} 100%)`
-                                              : `linear-gradient(135deg, ${alpha("#f97316", 0.75)} 0%, ${alpha("#f97316", 0.95)} 100%)`,
-                                    border: `1px solid ${
-                                        isDark
-                                            ? MILESTONE_ACCENT_BG_DARK
-                                            : MILESTONE_ACCENT_BG_LIGHT
-                                    }`,
-                                    borderRadius: "10px",
-                                    fontSize: "12px",
-                                    fontWeight: 600,
-                                    height: "32px",
-                                    whiteSpace: "nowrap",
-                                    px: 1.5,
-                                    my: 0.5,
-                                    textTransform: "none",
-                                    boxShadow: isDark
-                                        ? "0 2px 8px rgba(249,115,22,0.25)"
-                                        : "0 2px 8px rgba(249,115,22,0.2)",
-                                    transition: "all 0.2s ease",
-                                    flexShrink: 0,
-                                    "&:hover": {
-                                        background:
-                                            selectedMilestoneKeys.length === 1 &&
-                                            selectedMilestoneKeys[0] === MILESTONE_ALL
-                                                ? isDark
-                                                    ? "rgba(249,115,22,0.25)"
-                                                    : "rgba(249,115,22,0.2)"
-                                                : isDark
-                                                  ? `linear-gradient(135deg, ${alpha("#f97316", 0.6)} 0%, ${alpha("#f97316", 0.8)} 100%)`
-                                                  : `linear-gradient(135deg, ${alpha("#f97316", 0.85)} 0%, ${alpha("#f97316", 1)} 100%)`,
-                                        transform: "translateY(-1px)",
-                                        boxShadow: isDark
-                                            ? "0 4px 12px rgba(249,115,22,0.35)"
-                                            : "0 4px 12px rgba(249,115,22,0.3)",
-                                    },
-                                }}
-                                onClick={handleClickMilestoneFilter}
-                            >
-                                Milestone: {milestoneFilterButtonLabel}
-                                {selectedMilestoneKeys.length > 1 && (
-                                    <Chip
-                                        label={`+${selectedMilestoneKeys.length - 1}`}
-                                        size="small"
-                                        sx={{
-                                            ml: 0.5,
-                                            height: "18px",
-                                            fontSize: "10px",
-                                            fontWeight: 700,
-                                            background: "rgba(255,255,255,0.2)",
-                                            color: "inherit",
-                                        }}
-                                    />
-                                )}
-                            </Button>
-                        </Tooltip>
-                        <Menu
-                            anchorEl={anchorElMilestoneFilter}
-                            open={openMilestoneFilter}
-                            slots={{ transition: Fade }}
-                            slotProps={{
-                                paper: {
-                                    className: `custom-scrollbar-${isDark ? "dark" : "light"}`,
-                                    sx: {
-                                        background: styles.menuBg,
-                                        border: `1px solid ${styles.menuBorder}`,
-                                        borderRadius: "12px",
-                                        boxShadow: isDark
-                                            ? "0 8px 32px rgba(0,0,0,0.5)"
-                                            : "0 8px 32px rgba(0,0,0,0.15)",
-                                        mt: 1,
-                                        minWidth: "220px",
-                                        maxHeight: "320px",
-                                    },
-                                },
-                            }}
-                            onClose={() => setAnchorElMilestoneFilter(null)}
-                        >
-                            {([MILESTONE_ALL, MILESTONE_NONE] as MilestoneFilterKey[]).map(
-                                (key) => {
-                                    const isSelected = selectedMilestoneKeys.some(
-                                        (k) => k === key
-                                    );
-                                    const label = key === MILESTONE_ALL ? "All" : "No milestone";
-                                    return (
-                                        <MenuItem
-                                            key={`milestone-key-${String(key)}`}
-                                            sx={{
-                                                borderRadius: "8px",
-                                                mx: 0.5,
-                                                my: 0.25,
-                                                transition: "all 0.2s ease",
-                                                "&:hover": {
-                                                    background: styles.buttonHoverBg,
-                                                },
-                                            }}
-                                            onClick={() => handleCloseMilestoneFilter(key)}
-                                        >
-                                            <Box
-                                                sx={{
-                                                    width: "100%",
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: 1,
-                                                }}
-                                            >
-                                                <FlagRoundedIcon
-                                                    sx={{
-                                                        fontSize: 14,
-                                                        color: isDark
-                                                            ? MILESTONE_ACCENT_DARK
-                                                            : MILESTONE_ACCENT_LIGHT,
-                                                        opacity: key === MILESTONE_ALL ? 0.5 : 1,
-                                                    }}
-                                                />
-                                                <Typography
-                                                    sx={{
-                                                        fontSize: "13px",
-                                                        fontWeight: isSelected ? 700 : 500,
-                                                        color: isSelected
-                                                            ? isDark
-                                                                ? MILESTONE_ACCENT_DARK
-                                                                : MILESTONE_ACCENT_LIGHT
-                                                            : styles.textColor,
-                                                        flex: 1,
-                                                    }}
-                                                >
-                                                    {label}
-                                                </Typography>
-                                                {isSelected && (
-                                                    <Box
-                                                        sx={{
-                                                            width: 16,
-                                                            height: 16,
-                                                            borderRadius: "4px",
-                                                            background: isDark
-                                                                ? MILESTONE_ACCENT_DARK
-                                                                : MILESTONE_ACCENT_LIGHT,
-                                                            display: "flex",
-                                                            alignItems: "center",
-                                                            justifyContent: "center",
-                                                            fontSize: "10px",
-                                                            color: "#fff",
-                                                            fontWeight: 700,
-                                                        }}
-                                                    >
-                                                        ✓
-                                                    </Box>
-                                                )}
-                                            </Box>
-                                        </MenuItem>
-                                    );
-                                }
-                            )}
-                            {visibleMilestones.length > 0 && (
-                                <Box
-                                    sx={{
-                                        height: "1px",
-                                        background: styles.containerBorder,
-                                        mx: 1,
-                                        my: 0.5,
-                                    }}
-                                />
-                            )}
-                            {visibleMilestones.map((m) => {
-                                const isSelected = selectedMilestoneKeys.some(
-                                    (k) => k === m.milestoneId
-                                );
-                                const sprintName =
-                                    m.sprintId == null
-                                        ? "No sprint"
-                                        : (projectSprints.find((s) => s.sprintId === m.sprintId)
-                                              ?.name ?? "Sprint");
-                                return (
-                                    <MenuItem
-                                        key={`milestone-${m.milestoneId}`}
-                                        sx={{
-                                            borderRadius: "8px",
-                                            mx: 0.5,
-                                            my: 0.25,
-                                            transition: "all 0.2s ease",
-                                            "&:hover": {
-                                                background: styles.buttonHoverBg,
-                                            },
-                                        }}
-                                        onClick={() => handleCloseMilestoneFilter(m.milestoneId)}
-                                    >
-                                        <Box
-                                            sx={{
-                                                width: "100%",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                gap: 1,
-                                                minWidth: 0,
-                                            }}
-                                        >
-                                            <FlagRoundedIcon
-                                                sx={{
-                                                    fontSize: 14,
-                                                    color: isDark
-                                                        ? MILESTONE_ACCENT_DARK
-                                                        : MILESTONE_ACCENT_LIGHT,
-                                                    flexShrink: 0,
-                                                }}
-                                            />
-                                            <Box
-                                                sx={{
-                                                    flex: 1,
-                                                    minWidth: 0,
-                                                    display: "flex",
-                                                    flexDirection: "column",
-                                                    lineHeight: 1.2,
-                                                }}
-                                            >
-                                                <Typography
-                                                    sx={{
-                                                        fontSize: "13px",
-                                                        fontWeight: isSelected ? 700 : 500,
-                                                        color: isSelected
-                                                            ? isDark
-                                                                ? MILESTONE_ACCENT_DARK
-                                                                : MILESTONE_ACCENT_LIGHT
-                                                            : styles.textColor,
-                                                        overflow: "hidden",
-                                                        textOverflow: "ellipsis",
-                                                        whiteSpace: "nowrap",
-                                                    }}
-                                                >
-                                                    {m.title}
-                                                </Typography>
-                                                <Box
-                                                    sx={{
-                                                        display: "flex",
-                                                        alignItems: "center",
-                                                        gap: 0.75,
-                                                        minWidth: 0,
-                                                    }}
-                                                >
-                                                    <Typography
-                                                        sx={{
-                                                            fontSize: "10px",
-                                                            color: styles.mutedText,
-                                                            overflow: "hidden",
-                                                            textOverflow: "ellipsis",
-                                                            whiteSpace: "nowrap",
-                                                            minWidth: 0,
-                                                        }}
-                                                    >
-                                                        {sprintName}
-                                                    </Typography>
-                                                    {m.status
-                                                        ? (() => {
-                                                              const tone =
-                                                                  getMilestoneStatusChipColor(
-                                                                      m.status as string
-                                                                  );
-                                                              return (
-                                                                  <Chip
-                                                                      label={m.status}
-                                                                      size="small"
-                                                                      sx={{
-                                                                          height: 16,
-                                                                          fontSize: "9px",
-                                                                          fontWeight: 700,
-                                                                          backgroundColor:
-                                                                              tone.color,
-                                                                          color: tone.textColor,
-                                                                          flexShrink: 0,
-                                                                          "& .MuiChip-label": {
-                                                                              px: 0.75,
-                                                                              lineHeight: 1,
-                                                                          },
-                                                                      }}
-                                                                  />
-                                                              );
-                                                          })()
-                                                        : null}
-                                                </Box>
-                                            </Box>
-                                            {isSelected && (
-                                                <Box
-                                                    sx={{
-                                                        width: 16,
-                                                        height: 16,
-                                                        borderRadius: "4px",
-                                                        background: isDark
-                                                            ? MILESTONE_ACCENT_DARK
-                                                            : MILESTONE_ACCENT_LIGHT,
-                                                        display: "flex",
-                                                        alignItems: "center",
-                                                        justifyContent: "center",
-                                                        fontSize: "10px",
-                                                        color: "#fff",
-                                                        fontWeight: 700,
-                                                        flexShrink: 0,
-                                                    }}
-                                                >
-                                                    ✓
-                                                </Box>
-                                            )}
-                                        </Box>
-                                    </MenuItem>
-                                );
-                            })}
-                        </Menu>
-                    </>
-                )}
-
-                {/* Milestone scope chip — appears when the user clicked
-                    a milestone item in the sidebar. Clicking the X
-                    clears the milestone-scoped view. */}
-                {useTM.tableMilestoneFilterId != null && (
-                    <Chip
-                        label={(() => {
-                            const target = useTM.tableMilestoneFilterId;
-                            const m = useTM.allTasks.find(
-                                (t) => t.isMilestone === true && t.milestoneId === target
-                            );
-                            return `Milestone: ${m?.title?.slice(0, 10) ?? `#${target}`}${m?.title?.length && m?.title?.length > 10 ? "..." : ""}`;
-                        })()}
-                        sx={{
-                            fontSize: 12,
-                            fontWeight: 600,
-                            background: isDark ? "rgba(249,115,22,0.15)" : "rgba(249,115,22,0.1)",
-                            color: isDark ? "#fb923c" : "#c2410c",
-                            border: `1px solid ${
-                                isDark ? "rgba(249,115,22,0.35)" : "rgba(249,115,22,0.25)"
-                            }`,
-                            borderRadius: "10px",
-                            height: 32,
-                            "& .MuiChip-deleteIcon": {
-                                color: isDark ? "#fb923c" : "#c2410c",
-                            },
-                        }}
-                        onDelete={() => useTM.setTableMilestoneFilterId(null)}
-                    />
-                )}
 
                 <Box sx={{ flex: 1 }} />
 

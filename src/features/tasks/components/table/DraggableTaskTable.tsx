@@ -277,6 +277,13 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
 
     const [currentDisplayingTasks, setCurrentDisplayingTasks] = useState<TaskTableProps[]>([]);
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+    // Set of child task ids that pass the active TaskFilterMenu
+    // selection (status / tags / priority / effort / milestone). The
+    // filter menu computes this in the same pass it builds
+    // `currentDisplayingTasks` and pushes it here. `null` = filter has
+    // not run yet; treat as permissive so the table is usable on
+    // first paint without flashing children in and out.
+    const [visibleChildTaskIds, setVisibleChildTaskIds] = useState<Set<string> | null>(null);
     const [sortConfig, setSortConfig] = useState<{ field: string; direction: "asc" | "desc" }>({
         field: "updatedAt",
         direction: "desc",
@@ -312,17 +319,32 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
     }, [useTM.tableMilestoneFilterId, useTM.allTasks]);
 
     const childrenByParent = useMemo(() => {
+        // Include only child tasks with statuses/tags/priorities/effort
+        // levels configured in TaskFilterMenu.
+        //
+        // The menu publishes the matching subtask ids via
+        // `visibleChildTaskIds`; we intersect with that set so an
+        // expanded parent only reveals children that actually pass the
+        // active filter (e.g. selecting status="Open" no longer
+        // surfaces a "Closed" subtask under its parent). When the set
+        // is `null` the filter pass hasn't run yet — fall through to a
+        // permissive build to avoid blanking out children on the very
+        // first render before TaskFilterMenu's `useEffect` fires.
         const map = new Map<string, TaskTableProps[]>();
         for (const task of useTM.allTasks) {
-            if (task.parentTaskId != null) {
-                const parentId = String(task.parentTaskId);
-                const arr = map.get(parentId) || [];
-                arr.push(task);
-                map.set(parentId, arr);
+            if (task.parentTaskId == null) continue;
+            if (visibleChildTaskIds === null) {
+                if (task.status === "Deleted") continue;
+            } else if (task.id == null || !visibleChildTaskIds.has(String(task.id))) {
+                continue;
             }
+            const parentId = String(task.parentTaskId);
+            const arr = map.get(parentId) || [];
+            arr.push(task);
+            map.set(parentId, arr);
         }
         return map;
-    }, [useTM.allTasks]);
+    }, [useTM.allTasks, visibleChildTaskIds]);
 
     const depthMap = useMemo(() => new Map<string, number>(), []);
 
@@ -727,6 +749,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     isTaskUpdated={useTM.isTaskUpdated}
                     predefinedTagsFilters={predefinedTagsFilters}
                     setCurrentDisplayingTasks={setCurrentDisplayingTasks}
+                    setVisibleChildTaskIds={setVisibleChildTaskIds}
                     useSM={useSM}
                     useTM={useTM}
                 />
