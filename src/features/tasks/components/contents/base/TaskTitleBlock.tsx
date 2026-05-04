@@ -273,8 +273,12 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 height: 6,
                                 borderRadius: "50%",
                                 background: isDark
-                                    ? "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)"
-                                    : "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
+                                    ? isMilestone
+                                        ? "linear-gradient(135deg, #ff8c00 0%, #ff6b00 100%)"
+                                        : "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)"
+                                    : isMilestone
+                                      ? "linear-gradient(135deg, #ff8c00 0%, #ff6b00 100%)"
+                                      : "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
                                 animation: "pulse 2s infinite",
                                 "@keyframes pulse": {
                                     "0%, 100%": { opacity: 1 },
@@ -287,7 +291,13 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             sx={{
                                 fontWeight: 700,
                                 fontSize: "0.7rem",
-                                color: isDark ? "#a78bfa" : "#7c3aed",
+                                color: isDark
+                                    ? isMilestone
+                                        ? "#ff8c00"
+                                        : "#a78bfa"
+                                    : isMilestone
+                                      ? "#ff6b00"
+                                      : "#7c3aed",
                                 textTransform: "uppercase",
                                 letterSpacing: "0.05em",
                             }}

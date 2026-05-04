@@ -633,7 +633,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                         size="sm"
                                         variant={creationKind === "milestone" ? "solid" : "soft"}
                                         color={
-                                            creationKind === "milestone" ? "primary" : "neutral"
+                                            creationKind === "milestone" ? "warning" : "neutral"
                                         }
                                         startDecorator={<FlagRoundedIcon sx={{ fontSize: 14 }} />}
                                         onClick={() => switchKind("milestone")}
