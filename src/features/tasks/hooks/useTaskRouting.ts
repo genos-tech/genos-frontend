@@ -12,6 +12,12 @@ type UseTaskRoutingProps = {
 type TaskRouteInfo = {
     projectId: number | undefined;
     taskId: number | undefined;
+    // Milestone preview deep link: `/Home/tasks/project/:projectId/milestone/:milestoneId`.
+    // Mutually exclusive with `taskId` in practice — the URL only ever
+    // carries one of the two — but we parse them independently so a
+    // malformed URL with both segments still surfaces something usable
+    // instead of silently picking one.
+    milestoneId: number | undefined;
     // Optional deep-link target inside the task's "Comments" tab. When
     // present the task panel highlights / scrolls to this comment id.
     commentId: number | undefined;
@@ -31,12 +37,15 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
     // Parse the current URL to extract task routing info
     const parseCurrentRoute = useCallback((): TaskRouteInfo => {
         const pathParts = location.pathname.split("/").filter(Boolean);
-        // Expected format:
+        // Expected formats:
+        //   /Home/tasks/project/:projectId
         //   /Home/tasks/project/:projectId/task/:taskId(/comment/:commentId)?
+        //   /Home/tasks/project/:projectId/milestone/:milestoneId
 
         const result: TaskRouteInfo = {
             projectId: undefined,
             taskId: undefined,
+            milestoneId: undefined,
             commentId: undefined,
         };
 
@@ -53,6 +62,13 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
         const taskIndex = pathParts.indexOf("task");
         if (taskIndex !== -1 && pathParts[taskIndex + 1]) {
             result.taskId = Number(pathParts[taskIndex + 1]);
+        }
+
+        // Look for milestone
+        const milestoneIndex = pathParts.indexOf("milestone");
+        if (milestoneIndex !== -1 && pathParts[milestoneIndex + 1]) {
+            const parsed = Number(pathParts[milestoneIndex + 1]);
+            if (!isNaN(parsed)) result.milestoneId = parsed;
         }
 
         // Optional task-comment deep link (PM "Comments" tab)
@@ -86,9 +102,17 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
         [navigate]
     );
 
+    // Navigate to a specific milestone
+    const navigateToMilestone = useCallback(
+        (projectId: number, milestoneId: number) => {
+            navigate(`/Home/tasks/project/${projectId}/milestone/${milestoneId}`);
+        },
+        [navigate]
+    );
+
     // Sync URL with task state on initial load or URL change
     useEffect(() => {
-        const { projectId, taskId } = parseCurrentRoute();
+        const { projectId, taskId, milestoneId } = parseCurrentRoute();
 
         if (projectId) {
             targetUrlProjectId.current = projectId;
@@ -122,12 +146,57 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
                 });
             }
         }
+
+        // If there's a milestoneId in the URL, open the milestone preview.
+        // Unlike the task branch we don't have to pre-load anything here —
+        // the milestone preview hydrates itself from `useSM` once
+        // `currentPreviewKind` flips to "milestone" (see TaskPreview's
+        // milestone branch). `setCurrentPreviewMilestoneId` flips the
+        // kind for us and clears any lingering task selection so the
+        // pane can't get stuck on a stale task.
+        if (milestoneId && projectId) {
+            const needsKindFlip = useTM.currentPreviewKind !== "milestone";
+            const needsIdSet = useTM.currentPreviewMilestoneId !== milestoneId;
+            if (needsKindFlip || needsIdSet) {
+                isNavigatingFromUrl.current = true;
+                useTM.setCurrentPreviewMilestoneId(milestoneId);
+                setTimeout(() => {
+                    isNavigatingFromUrl.current = false;
+                    useTM.setIsTaskPreviewVisible(true);
+                }, 100);
+            } else if (!useTM.isTaskPreviewVisible) {
+                useTM.setIsTaskPreviewVisible(true);
+            }
+        }
     }, [location.pathname, usePM.teamProjects.length]);
 
     // Update URL when task preview opens/closes
     useEffect(() => {
         // Skip if we're currently navigating from URL
         if (isNavigatingFromUrl.current) {
+            return;
+        }
+
+        // Milestone preview takes precedence — when the user opens a
+        // milestone row, `currentPreviewKind` flips to "milestone" and
+        // `currentPreviewTask` is intentionally cleared, so the task
+        // branch below would otherwise no-op and leave the URL stuck on
+        // the bare project path. Mirror the task branch but write the
+        // milestone segment instead.
+        if (
+            useTM.isTaskPreviewVisible &&
+            useTM.currentPreviewKind === "milestone" &&
+            useTM.currentPreviewMilestoneId !== -1 &&
+            usePM.currentProject
+        ) {
+            const projectId = usePM.currentProject.projectId;
+            const milestoneId = useTM.currentPreviewMilestoneId;
+            const newPath = `/Home/tasks/project/${projectId}/milestone/${milestoneId}`;
+            if (newPath !== location.pathname && newPath !== lastNavigatedPath.current) {
+                targetUrlProjectId.current = projectId;
+                lastNavigatedPath.current = newPath;
+                navigate(newPath, { replace: true });
+            }
             return;
         }
 
@@ -155,9 +224,11 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
                 navigate(newPath, { replace: true });
             }
         } else if (!useTM.isTaskPreviewVisible && usePM.currentProject) {
-            // Task preview closed, go back to project view
-            const { taskId } = parseCurrentRoute();
-            if (taskId) {
+            // Preview closed, scrub any task / milestone segment from
+            // the URL so the back-stack doesn't reopen the same entity
+            // the next time the user lands on this route.
+            const { taskId, milestoneId } = parseCurrentRoute();
+            if (taskId || milestoneId) {
                 targetUrlProjectId.current = usePM.currentProject.projectId;
                 const newPath = `/Home/tasks/project/${usePM.currentProject.projectId}`;
                 if (newPath !== lastNavigatedPath.current) {
@@ -170,6 +241,8 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
         useTM.isTaskPreviewVisible,
         useTM.currentPreviewTask?.id,
         useTM.currentPreviewTask?.project?.projectId,
+        useTM.currentPreviewKind,
+        useTM.currentPreviewMilestoneId,
     ]);
 
     // Update URL when project changes
@@ -220,5 +293,6 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
         navigateToTasks,
         navigateToProject,
         navigateToTask,
+        navigateToMilestone,
     };
 };
