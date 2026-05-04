@@ -29,7 +29,7 @@ import { BubbleUserName } from "./BubbleUserName";
 // Color schemes for sent/received bubbles - improved for better text contrast
 const BUBBLE_COLORS = {
     sent: {
-        dark: { bg: "#312e81", border: "#4338ca", text: "#e0e7ff" },
+        dark: { bg: "#1e1b4b", border: "#3730a3", text: "#e0e7ff" },
         light: { bg: "#eef2ff", border: "#c7d2fe", text: "#1e1b4b" },
     },
     received: {

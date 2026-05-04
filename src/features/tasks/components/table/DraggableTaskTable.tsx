@@ -138,6 +138,125 @@ export const defaultColumns: ColumnDef[] = [
 // For backwards compatibility
 export const columns = defaultColumns;
 
+// ---------------------------------------------------------------------------
+// Sort helpers
+// ---------------------------------------------------------------------------
+//
+// Categorical fields stored as strings (priority / effortLevel / status) are
+// what the user perceives as ordered, but `localeCompare` would sort them
+// alphabetically — e.g. Priority desc would surface "Normal" above "Low" and
+// bury "Critical" below "High" because of the letter ordering. The rank maps
+// below give each value an explicit numeric weight so the comparator can do
+// the obvious thing. Higher rank = more urgent for priority/effort. For
+// status the workflow order Open → WIP → Pending → Closed → Deleted is
+// modelled as ascending so "asc" naturally surfaces the most active rows
+// first; "desc" shows Deleted/Closed first.
+const PRIORITY_RANK: Record<string, number> = {
+    Critical: 5,
+    High: 4,
+    Normal: 3,
+    Low: 2,
+    Minimal: 1,
+};
+
+const EFFORT_RANK: Record<string, number> = {
+    Extensive: 5,
+    High: 4,
+    Moderate: 3,
+    Low: 2,
+    Minimal: 1,
+};
+
+const STATUS_RANK: Record<string, number> = {
+    Open: 1,
+    WIP: 2,
+    Pending: 3,
+    Closed: 4,
+    Deleted: 5,
+};
+
+// Parse a date string into an epoch ms number for numeric comparison.
+// `dueDate` is a free-form locale-ish string in the table model, so a plain
+// string sort would put "10/2/2025" before "9/30/2025"; using dayjs gives
+// the chronological ordering users expect.
+const parseTs = (s: string | null | undefined): number | null => {
+    if (!s) return null;
+    const d = dayjs(s);
+    return d.isValid() ? d.valueOf() : null;
+};
+
+const numericId = (s: string | number | null | undefined): number | null => {
+    if (s == null || s === "") return null;
+    const n = Number(s);
+    return Number.isFinite(n) ? n : null;
+};
+
+const lowerStr = (s: string | null | undefined): string | null => {
+    if (s == null || s === "") return null;
+    return s.toLowerCase();
+};
+
+// Resolve a row's value for a given sort field, normalizing it into the
+// shape the comparator expects:
+//   - numeric for id / daysLeft / priority / effortLevel / status / dates
+//   - lowercased string for textual columns
+//   - null when the row is missing the value (caller pushes nulls to the
+//     bottom regardless of direction)
+const fieldValue = (task: TaskTableProps, field: string): number | string | null => {
+    switch (field) {
+        case "id":
+            return numericId(task.id);
+        case "daysLeft":
+            return task.daysLeft ?? null;
+        case "title":
+            return lowerStr(task.title);
+        case "assigneeId":
+            // Sort by what the user actually sees in the cell, not the raw
+            // user-id UUID, so the column ordering matches their reading.
+            return (
+                lowerStr(task.assigneeName) ??
+                lowerStr(task.assigneeEmail) ??
+                lowerStr(task.assigneeId)
+            );
+        case "priority":
+            return PRIORITY_RANK[task.priority ?? ""] ?? null;
+        case "effortLevel":
+            return EFFORT_RANK[task.effortLevel ?? ""] ?? null;
+        case "status":
+            return STATUS_RANK[task.status ?? ""] ?? null;
+        case "tags":
+            return lowerStr(task.concatTags);
+        case "dueDate":
+        case "updatedAt":
+        case "createdDate":
+            return parseTs((task as any)[field]);
+        default: {
+            const raw = (task as any)[field];
+            if (raw == null || raw === "") return null;
+            return typeof raw === "number" ? raw : String(raw).toLowerCase();
+        }
+    }
+};
+
+// "Null tier" partition: rows missing the sort value always sink to the
+// bottom regardless of `asc`/`desc`, which matches what the user expects
+// when toggling direction (e.g. "Due Date desc" shouldn't fill the top
+// with rows that have no due date).
+const nullTier = (a: unknown, b: unknown): number => {
+    const aNull = a == null;
+    const bNull = b == null;
+    if (aNull && bNull) return 0;
+    if (aNull) return 1;
+    if (bNull) return -1;
+    return 0;
+};
+
+const cmpValues = (a: number | string | null, b: number | string | null): number => {
+    if (a == null || b == null) return 0; // null-tier already handled
+    if (typeof a === "number" && typeof b === "number") return a - b;
+    return String(a).localeCompare(String(b));
+};
+
 // Status options for dropdown
 export const statusOptions = [
     {
@@ -284,8 +403,13 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
     // not run yet; treat as permissive so the table is usable on
     // first paint without flashing children in and out.
     const [visibleChildTaskIds, setVisibleChildTaskIds] = useState<Set<string> | null>(null);
+    // Default to "Priority desc" so the comparator's multi-tier ordering
+    // (Priority desc → Status asc → DueDate asc) kicks in on first paint:
+    // Critical work surfaces above everything else, with Status and Due
+    // Date breaking ties. Users can still click any column header to swap
+    // the primary tier; the rest stay as tie-breakers.
     const [sortConfig, setSortConfig] = useState<{ field: string; direction: "asc" | "desc" }>({
-        field: "updatedAt",
+        field: "priority",
         direction: "desc",
     });
 
@@ -510,26 +634,114 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         updateTagOptions();
     }, [usePM.currentProject, useTM.allTasks]);
 
-    // Sort tasks
+    // Sort tasks.
+    //
+    // Layered comparator, in order:
+    //   1. Milestone vs. task — milestones are higher-level work items and
+    //      are always pinned above regular tasks regardless of which column
+    //      / direction the user picked. Among the pinned milestones we sort
+    //      by sprint asc → due date asc → id asc so the next-up milestone
+    //      surfaces first. Filtering hides milestones; sorting never does.
+    //   2. Primary tier — the column the user clicked, with field-aware
+    //      comparison (numeric for ids/daysLeft, semantic-rank for
+    //      priority/status/effort, real date parsing for date columns,
+    //      locale-aware for text columns). Nulls always sink to the
+    //      bottom regardless of `asc`/`desc`.
+    //   3. "Always-on" multi-tier tie-breakers — Priority desc (Critical
+    //      first) → Status asc (Open → WIP → Pending → Closed → Deleted) →
+    //      Due Date asc (expired first). Each tier is skipped if it's
+    //      already the primary so the user's column click stays the
+    //      dominant signal.
+    //   4. Final deterministic tie-break by id so equal rows don't
+    //      visually shuffle on re-render.
     const sortTasks = useCallback(
         (tasks: TaskTableProps[]) => {
-            return [...tasks].sort((a, b) => {
-                const aValue = a[sortConfig.field as keyof TaskTableProps];
-                const bValue = b[sortConfig.field as keyof TaskTableProps];
+            const dir = sortConfig.direction === "asc" ? 1 : -1;
+            const primary = sortConfig.field;
 
-                if (aValue === null || aValue === undefined) return 1;
-                if (bValue === null || bValue === undefined) return -1;
+            const idTieBreak = (a: TaskTableProps, b: TaskTableProps) =>
+                (numericId(a.id) ?? Number.MAX_SAFE_INTEGER) -
+                (numericId(b.id) ?? Number.MAX_SAFE_INTEGER);
 
-                let comparison = 0;
-                if (typeof aValue === "string" && typeof bValue === "string") {
-                    comparison = aValue.localeCompare(bValue);
-                } else if (typeof aValue === "number" && typeof bValue === "number") {
-                    comparison = aValue - bValue;
-                } else {
-                    comparison = String(aValue).localeCompare(String(bValue));
+            const compareMilestones = (a: TaskTableProps, b: TaskTableProps) => {
+                // Sort milestones primarily by `daysLeft` ascending so the
+                // ordering naturally reads as:
+                //   - Expired milestones (negative daysLeft) at the top,
+                //   - then due-soon, then later,
+                //   - with future-sprint milestones (large daysLeft) sinking
+                //     to the bottom of the milestone group (but still above
+                //     every regular task — that's enforced by the milestone
+                //     pin in the outer comparator).
+                // Milestones with no due date are unscheduled, so they sink
+                // below all dated milestones.
+                const aDays = a.daysLeft ?? null;
+                const bDays = b.daysLeft ?? null;
+                const daysTier = nullTier(aDays, bDays);
+                if (daysTier !== 0) return daysTier;
+                if (aDays != null && bDays != null && aDays !== bDays) {
+                    return aDays - bDays;
                 }
+                // `daysLeft` is a derived/cached value — fall back to the
+                // raw due date in case a row has one set without the other.
+                const aDue = parseTs(a.dueDate);
+                const bDue = parseTs(b.dueDate);
+                const dueTier = nullTier(aDue, bDue);
+                if (dueTier !== 0) return dueTier;
+                if (aDue != null && bDue != null && aDue !== bDue) return aDue - bDue;
+                // Group same-due milestones by their sprint so a planning
+                // window stays visually coherent, then id for determinism.
+                const aSprint = a.sprintId ?? null;
+                const bSprint = b.sprintId ?? null;
+                const sprintTier = nullTier(aSprint, bSprint);
+                if (sprintTier !== 0) return sprintTier;
+                if (aSprint != null && bSprint != null && aSprint !== bSprint) {
+                    return aSprint - bSprint;
+                }
+                return idTieBreak(a, b);
+            };
 
-                return sortConfig.direction === "asc" ? comparison : -comparison;
+            const tieBreakers = (a: TaskTableProps, b: TaskTableProps) => {
+                if (primary !== "priority") {
+                    const ap = PRIORITY_RANK[a.priority ?? ""] ?? null;
+                    const bp = PRIORITY_RANK[b.priority ?? ""] ?? null;
+                    const t = nullTier(ap, bp);
+                    if (t !== 0) return t;
+                    if (ap != null && bp != null && ap !== bp) return bp - ap; // desc
+                }
+                if (primary !== "status") {
+                    const as = STATUS_RANK[a.status ?? ""] ?? null;
+                    const bs = STATUS_RANK[b.status ?? ""] ?? null;
+                    const t = nullTier(as, bs);
+                    if (t !== 0) return t;
+                    if (as != null && bs != null && as !== bs) return as - bs; // asc
+                }
+                if (primary !== "dueDate") {
+                    const ad = parseTs(a.dueDate);
+                    const bd = parseTs(b.dueDate);
+                    const t = nullTier(ad, bd);
+                    if (t !== 0) return t;
+                    if (ad != null && bd != null && ad !== bd) return ad - bd; // asc (expired first)
+                }
+                return idTieBreak(a, b);
+            };
+
+            return [...tasks].sort((a, b) => {
+                // 1. Pin milestones to the top.
+                const aMile = a.isMilestone === true;
+                const bMile = b.isMilestone === true;
+                if (aMile !== bMile) return aMile ? -1 : 1;
+                if (aMile && bMile) return compareMilestones(a, b);
+
+                // 2. Primary column.
+                const av = fieldValue(a, primary);
+                const bv = fieldValue(b, primary);
+                const primaryNullTier = nullTier(av, bv);
+                if (primaryNullTier !== 0) return primaryNullTier;
+                const primaryCmp = cmpValues(av, bv) * dir;
+                if (primaryCmp !== 0) return primaryCmp;
+
+                // 3 + 4. Multi-tier tie-breakers, then id.
+                return tieBreakers(a, b);
             });
         },
         [sortConfig]
@@ -560,6 +772,24 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
             setCurrentDisplayingTasks(sortTasks(currentDisplayingTasks));
         }
     }, [sortConfig]);
+
+    // Sorted setter for the filter pipeline. `TaskFilterMenu` calls back
+    // into the table whenever filters or the upstream task list change,
+    // and previously dropped a raw unsorted array into
+    // `currentDisplayingTasks`. The `[sortConfig]` effect above only runs
+    // on header-clicks, so the freshly filtered rows would render in
+    // whatever order the filter happened to build them — bypassing the
+    // milestone-pin / priority / status / due-date comparator entirely
+    // on first paint and on every filter toggle. Routing the filter
+    // through this setter applies the active sort up-front; drag-end and
+    // inline row-update handlers keep using the raw `setCurrentDisplayingTasks`
+    // so manual reordering isn't immediately re-sorted.
+    const setCurrentDisplayingTasksSorted = useCallback(
+        (tasks: TaskTableProps[]) => {
+            setCurrentDisplayingTasks(sortTasks(tasks));
+        },
+        [sortTasks]
+    );
 
     // Handle row update
     const handleRowUpdate = async (updatedRow: TaskTableProps): Promise<TaskTableProps> => {
@@ -748,7 +978,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                 <TaskFilterMenu
                     isTaskUpdated={useTM.isTaskUpdated}
                     predefinedTagsFilters={predefinedTagsFilters}
-                    setCurrentDisplayingTasks={setCurrentDisplayingTasks}
+                    setCurrentDisplayingTasks={setCurrentDisplayingTasksSorted}
                     setVisibleChildTaskIds={setVisibleChildTaskIds}
                     useSM={useSM}
                     useTM={useTM}
