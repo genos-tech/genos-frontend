@@ -178,6 +178,13 @@ export const handleRegularMessage = async (
         reactions: newMessage.reactions,
         sender: newMessage.sender,
         numReplies: newMessage.numReplies,
+        // Forward `taskCommentCount` for PM bubbles so the under-bar
+        // chip can refresh without a full page reload. Without this,
+        // `addMessage` writes IDB without the field and the subsequent
+        // `makePMUpdatedChat` rebuild reads a stale count, which then
+        // overrides the in-memory live-bump from the `wsType: "task"`
+        // handler — making the chip flicker e.g. 6 → 7 → 6.
+        taskCommentCount: newMessage.taskCommentCount,
         tsSent: newMessage.tsSent,
         tsUpdated: newMessage.tsUpdated,
         taskId: newMessage.taskId,

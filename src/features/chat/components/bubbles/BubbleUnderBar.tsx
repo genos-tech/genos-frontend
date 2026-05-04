@@ -15,6 +15,11 @@ type BubbleUnderBarTypes = {
     dmPartnerUser: UserProps;
     message: MessageProps | ThreadMessageProps;
     numReplies: number;
+    // PM-only: task-comment count for the bubble's linked task. PM
+    // bubbles surface task comments instead of activity-style thread
+    // replies in the under-bar chip. See `MessageProps.taskCommentCount`
+    // and `pm_views.py` for where this is computed.
+    taskCommentCount?: number;
     showUnderBarOption: boolean;
     reactions: ReactionProps[];
     setReactions: (value: ReactionProps[]) => void;
@@ -33,6 +38,7 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
         dmPartnerUser,
         message,
         numReplies,
+        taskCommentCount,
         showUnderBarOption,
         reactions,
         setReactions,
@@ -45,16 +51,22 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
 
-    let numRepliesWithoutFirstMessage: number;
-    if (chatType !== 3) {
-        numRepliesWithoutFirstMessage = numReplies - 1;
-    } else {
-        numRepliesWithoutFirstMessage = numReplies;
-    }
+    // Pick the right counter for this bubble:
+    //   - PM (chatType === 3): task comments. The "Activities" tab
+    //     numbers are auto-generated system bubbles, so showing the
+    //     reply count there is misleading; comments are what humans
+    //     actually engage with.
+    //   - Other chats: thread replies, minus 1 because the parent
+    //     message itself is stored as the first thread message and
+    //     the chip should count only the actual replies under it.
+    const isPm = chatType === 3;
+    const chipCount = isPm ? (taskCommentCount ?? 0) : numReplies - 1;
+    const chipNoun = isPm ? "comment" : "reply";
+    const chipNounPlural = isPm ? "comments" : "replies";
 
-    // Only render if there are reactions or replies to show
+    // Only render if there are reactions or chip-worthy items to show
     const hasReactions = reactions && reactions.length > 0;
-    const hasReplies = isThread === false && numRepliesWithoutFirstMessage > 0;
+    const hasReplies = isThread === false && chipCount > 0;
 
     if (!hasReactions && !hasReplies) {
         return null;
@@ -136,9 +148,7 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
                                 letterSpacing: "0.01em",
                             }}
                         >
-                            {numRepliesWithoutFirstMessage === 1
-                                ? "1 reply"
-                                : `${numRepliesWithoutFirstMessage} replies`}
+                            {chipCount === 1 ? `1 ${chipNoun}` : `${chipCount} ${chipNounPlural}`}
                         </Typography>
                     </Box>
                 )}

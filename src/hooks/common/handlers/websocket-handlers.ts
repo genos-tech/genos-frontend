@@ -5,6 +5,7 @@ import { addUser } from "../../../features/admin/services/addUser";
 import { NotificationManager } from "../../../services/notifications/notificationManager";
 import { buildIntentFromMessage } from "../../../services/notifications/notificationRouter";
 import { UserProps } from "../../../types/admin";
+import { MessageProps } from "../../../types/chat";
 import { InboxItemProps } from "../../../types/common";
 import { ChatManagementState } from "../../chats/useChatManagement";
 import { handleActivityMessage } from "./activity-handlers";
@@ -75,6 +76,85 @@ export const setupWebSocketHandlers = (
             // console.log("task_message:", message);
             if (setIsTaskCommentUpdated) {
                 setIsTaskCommentUpdated({ isUpdate: true, scrollToBottom: false });
+            }
+
+            // Live-bump the PM bubble's `taskCommentCount` chip. Without
+            // this, the chip stays stale until the user refreshes the
+            // page (the backend only computes the count on history
+            // fetches). Only POST events grow the count — PUTs are
+            // edits (`isEdited: true`) and the backend has no DELETE
+            // handler for task comments, so this single update covers
+            // every count-changing path today.
+            //
+            // The same `wsType: "task"` event is broadcast back to the
+            // sender too (Flask-SocketIO `send` includes self by
+            // default), so the same handler updates both author and
+            // observers — no separate optimistic path needed.
+            //
+            // We derive the new total from `message.commentId`. The
+            // backend assigns `comment_id = current_count + 1` on POST
+            // (see `TaskCommentsView.post`), so `commentId` equals the
+            // post-insert total. Using it directly with `Math.max`
+            // makes the bump idempotent against socket replays and
+            // out-of-order delivery (e.g. if the parent-message
+            // broadcast already set the count to the new value).
+            const taskId = message.taskId;
+            const newTotal = Number(message.commentId);
+            const isNewComment =
+                message.isEdited !== true &&
+                message.isReactionUpdated !== true &&
+                Number.isFinite(newTotal) &&
+                newTotal > 0;
+            if (taskId != null && isNewComment) {
+                const bumpMessages = (msgs: MessageProps[]): MessageProps[] => {
+                    let mutated = false;
+                    const next = msgs.map((m) => {
+                        if (m.taskId !== taskId) return m;
+                        const nextCount = Math.max(m.taskCommentCount ?? 0, newTotal);
+                        if (nextCount === m.taskCommentCount) return m;
+                        mutated = true;
+                        return { ...m, taskCommentCount: nextCount };
+                    });
+                    return mutated ? next : msgs;
+                };
+
+                if (useCM.currentMainChat) {
+                    const next = bumpMessages(useCM.currentMainChat.messages);
+                    if (next !== useCM.currentMainChat.messages) {
+                        useCM.setCurrentMainChat({
+                            ...useCM.currentMainChat,
+                            messages: next,
+                            notMove: true,
+                        });
+                    }
+                }
+
+                if (useCM.currentSubChat) {
+                    const next = bumpMessages(useCM.currentSubChat.messages);
+                    if (next !== useCM.currentSubChat.messages) {
+                        useCM.setCurrentSubChat({
+                            ...useCM.currentSubChat,
+                            messages: next,
+                            notMove: true,
+                        });
+                    }
+                }
+
+                // Also keep the chat-list summary's latest message in
+                // sync — covers the case where the latest PM bubble in
+                // the chat list happens to reference this task.
+                useCM.setAllChats((prev) =>
+                    prev.map((chat) => {
+                        const latest = chat.latestMessage;
+                        if (!latest || latest.taskId !== taskId) return chat;
+                        const nextCount = Math.max(latest.taskCommentCount ?? 0, newTotal);
+                        if (nextCount === latest.taskCommentCount) return chat;
+                        return {
+                            ...chat,
+                            latestMessage: { ...latest, taskCommentCount: nextCount },
+                        };
+                    })
+                );
             }
         } else if (message.wsType === "activity") {
             // console.log("Got an activity message");

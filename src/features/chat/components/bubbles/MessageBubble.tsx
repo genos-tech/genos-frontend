@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Box, Sheet, Stack } from "@mui/joy";
+import { Box, Sheet, Stack, Tooltip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
@@ -109,6 +109,20 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         4: "mdm",
     };
 
+    const handleOpenTaskClick = () => {
+        if (message.taskId !== null) {
+            useCM.setIsMainChatVisible(true);
+            useCM.setIsThreadVisible(false);
+            useTM.setIsTaskPreviewVisible(true);
+            useTM.setIsCreatingTask({ ...useTM.isCreatingTask, flag: false });
+            useTM.setCurrentPreviewTaskId(message.taskId);
+
+            if (message.project && message.project.projectId) {
+                usePM.setCurrentProject(message.project);
+            }
+        }
+    };
+
     // Handle message click to update URL
     const handleMessageClick = () => {
         const typePath = CHAT_TYPE_PATH[chat.chatType];
@@ -118,6 +132,10 @@ export const MessageBubble = (props: MessageBubbleProps) => {
             const messageIdentifier =
                 chat.chatType === 3 && message.taskId ? message.taskId : message.messageId;
             navigate(`/Home/chat/${typePath}/${chat.chatId}/message/${messageIdentifier}`);
+        }
+
+        if (chat.chatType === 3) {
+            handleOpenTaskClick();
         }
     };
 
@@ -455,11 +473,15 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         }
     }, [selectedEmoji]);
 
+    // Same chip-count rules as `BubbleUnderBar` — kept in sync because
+    // this drives the bubble's `minWidth` calc (so an empty bubble
+    // doesn't reserve space for a chip that never renders, and a
+    // chip-bearing bubble has enough room for "X comments").
     let numRepliesWithoutFirstMessage: number;
-    if (chat.chatType !== 3) {
-        numRepliesWithoutFirstMessage = message.numReplies - 1;
+    if (chat.chatType === 3) {
+        numRepliesWithoutFirstMessage = message.taskCommentCount ?? 0;
     } else {
-        numRepliesWithoutFirstMessage = message.numReplies;
+        numRepliesWithoutFirstMessage = message.numReplies - 1;
     }
 
     // Bubble action buttons component - consolidated into a single "More" menu
@@ -551,188 +573,200 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             showEmojiPicker={showEmojiPicker}
                         />
                     )}
-                    <Sheet
-                        onClick={handleMessageClick}
-                        sx={{
-                            p: 1.25,
-                            borderRadius: "16px",
-                            position: "relative",
-                            overflow: "hidden",
-                            cursor: "pointer",
-                            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                            // Variant-specific border radius
-                            ...(isSent
-                                ? { borderTopRightRadius: "4px", borderTopLeftRadius: "16px" }
-                                : { borderTopRightRadius: "16px", borderTopLeftRadius: "4px" }),
-                            // Background styling - solid colors for better text contrast
-                            background: isFocused ? highlightColors.bg : colors.bg,
-                            // Text color for proper contrast
-                            color: isFocused ? highlightColors.text : colors.text,
-                            // Border styling
-                            border: "1px solid",
-                            borderColor: isFocused ? highlightColors.border : colors.border,
-                            // Shadow for depth
-                            boxShadow: isFocused
-                                ? isFocused === "focused"
-                                    ? isDark
-                                        ? `0 4px 20px rgba(34,197,94,0.2), inset 0 1px 0 rgba(255,255,255,0.05)`
-                                        : `0 4px 20px rgba(22,163,74,0.15)`
-                                    : isDark
-                                      ? `0 4px 20px rgba(99,102,241,0.2), inset 0 1px 0 rgba(255,255,255,0.05)`
-                                      : `0 4px 20px rgba(99,102,241,0.15)`
-                                : isDark
-                                  ? "0 2px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.03)"
-                                  : "0 2px 8px rgba(0,0,0,0.06)",
-                            // Hover effect
-                            "&:hover": {
-                                boxShadow: isDark
-                                    ? "0 4px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)"
-                                    : "0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6)",
-                            },
-                        }}
-                        onMouseEnter={() => setShowUnderBarOption(true)}
-                        onMouseLeave={() => setShowUnderBarOption(false)}
+                    <Tooltip
+                        title={chat.chatType === 3 ? "Click to open task" : undefined}
+                        placement="right"
+                        variant="soft"
                     >
-                        {/* Subtle highlight for sent messages */}
-                        {isSent && !isFocused && (
-                            <Box
-                                sx={{
-                                    position: "absolute",
-                                    top: 0,
-                                    left: 0,
-                                    right: 0,
-                                    height: "1px",
-                                    background: isDark
-                                        ? "rgba(255,255,255,0.08)"
-                                        : "rgba(255,255,255,0.5)",
-                                    pointerEvents: "none",
-                                }}
-                            />
-                        )}
-
-                        <Stack direction="column" sx={{ position: "relative", zIndex: 1 }}>
-                            {showUnderBarOption === true && isSimpleBubble === true && (
-                                <Stack
-                                    direction="row"
-                                    spacing={0}
-                                    alignItems="center"
-                                    sx={{ mb: 0.5 }}
-                                >
-                                    <BubbleUserName
-                                        chatType={chat.chatType}
-                                        dtSent={dtSent}
-                                        isSent={isSent}
-                                        isSimpleBubble={isSimpleBubble}
-                                        isThread={false}
-                                        sender={message.sender}
-                                        taskId={message.taskId}
-                                        taskStatus={message.taskStatus}
-                                        tsSent={message.tsSent}
-                                        tsUpdated={message.tsUpdated}
-                                        userName={message.sender.userName}
-                                    />
-                                    <BubbleActions />
-                                </Stack>
-                            )}
-
-                            {isSimpleBubble === false && (
-                                <Stack direction="row" spacing={1.5} alignItems="flex-start">
-                                    {!(
-                                        (chat.chatType === 3 || chat.chatType === 4) &&
-                                        message.sender.isSystemUser === true
-                                    ) && (
-                                        <Box sx={{ flexShrink: 0 }}>
-                                            <AvatarWithStatus
-                                                chat={chat}
-                                                useCM={useCM}
-                                                isForBubble={true}
-                                                isYou={isSent}
-                                                myself={myself}
-                                                setMyself={setMyself}
-                                                socket={socket}
-                                                useUISM={useUISM}
-                                                avatarUser={
-                                                    isSent
-                                                        ? useTEM.teamMemberProfiles[myself.userId]
-                                                        : useTEM.teamMemberProfiles[
-                                                              message.sender.userId
-                                                          ]
-                                                }
-                                            />
-                                        </Box>
-                                    )}
-                                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                                        <Stack direction="row" spacing={0} alignItems="center">
-                                            <BubbleUserName
-                                                chatType={chat.chatType}
-                                                dtSent={dtSent}
-                                                isSent={isSent}
-                                                isSimpleBubble={isSimpleBubble}
-                                                isThread={false}
-                                                sender={message.sender}
-                                                taskId={message.taskId}
-                                                taskStatus={message.taskStatus}
-                                                tsSent={message.tsSent}
-                                                tsUpdated={message.tsUpdated}
-                                                userName={message.sender.userName}
-                                            />
-                                            {showUnderBarOption === true && <BubbleActions />}
-                                        </Stack>
-                                    </Box>
-                                </Stack>
-                            )}
-
-                            {message.content && message.content.length > 0 && (
+                        <Sheet
+                            onClick={handleMessageClick}
+                            sx={{
+                                p: 1.25,
+                                borderRadius: "16px",
+                                position: "relative",
+                                overflow: "hidden",
+                                cursor: "pointer",
+                                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                // Variant-specific border radius
+                                ...(isSent
+                                    ? { borderTopRightRadius: "4px", borderTopLeftRadius: "16px" }
+                                    : {
+                                          borderTopRightRadius: "16px",
+                                          borderTopLeftRadius: "4px",
+                                      }),
+                                // Background styling - solid colors for better text contrast
+                                background: isFocused ? highlightColors.bg : colors.bg,
+                                // Text color for proper contrast
+                                color: isFocused ? highlightColors.text : colors.text,
+                                // Border styling
+                                border: "1px solid",
+                                borderColor: isFocused ? highlightColors.border : colors.border,
+                                // Shadow for depth
+                                boxShadow: isFocused
+                                    ? isFocused === "focused"
+                                        ? isDark
+                                            ? `0 4px 20px rgba(34,197,94,0.2), inset 0 1px 0 rgba(255,255,255,0.05)`
+                                            : `0 4px 20px rgba(22,163,74,0.15)`
+                                        : isDark
+                                          ? `0 4px 20px rgba(99,102,241,0.2), inset 0 1px 0 rgba(255,255,255,0.05)`
+                                          : `0 4px 20px rgba(99,102,241,0.15)`
+                                    : isDark
+                                      ? "0 2px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.03)"
+                                      : "0 2px 8px rgba(0,0,0,0.06)",
+                                // Hover effect
+                                "&:hover": {
+                                    boxShadow: isDark
+                                        ? "0 4px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)"
+                                        : "0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6)",
+                                },
+                            }}
+                            onMouseEnter={() => setShowUnderBarOption(true)}
+                            onMouseLeave={() => setShowUnderBarOption(false)}
+                        >
+                            {/* Subtle highlight for sent messages */}
+                            {isSent && !isFocused && (
                                 <Box
-                                    onClick={() => {
-                                        if (message.taskId !== null) {
-                                            useCM.setIsMainChatVisible(true);
-                                            useCM.setIsThreadVisible(false);
-                                            // useTM.setIsTaskPreviewVisible(true);
-                                            useTM.setIsCreatingTask({
-                                                ...useTM.isCreatingTask,
-                                                flag: false,
-                                            });
-                                            useTM.setCurrentPreviewTaskId(message.taskId);
-                                        }
-                                    }}
                                     sx={{
-                                        mt: isSimpleBubble ? 0 : 0.5,
-                                        cursor: message.taskId ? "pointer" : "default",
+                                        position: "absolute",
+                                        top: 0,
+                                        left: 0,
+                                        right: 0,
+                                        height: "1px",
+                                        background: isDark
+                                            ? "rgba(255,255,255,0.08)"
+                                            : "rgba(255,255,255,0.5)",
+                                        pointerEvents: "none",
                                     }}
-                                >
-                                    <BnChatPreview
-                                        key={`${chat.chatId}-${message.messageId}-${chat.chatType}-${message.tsUpdated}`}
-                                        useCM={useCM}
-                                        content={message.content}
-                                        isSent={isSent}
-                                        myself={myself}
-                                        setMyself={setMyself}
-                                        socket={socket}
-                                        useTEM={useTEM}
-                                        useUISM={useUISM}
-                                    />
-                                </Box>
+                                />
                             )}
-                        </Stack>
 
-                        <BubbleUnderBar
-                            chatName={chat.chatName}
-                            chatType={chat.chatType}
-                            dmPartnerUser={chat.dmPartnerUser}
-                            isThread={false}
-                            message={message}
-                            myself={myself}
-                            numReplies={message.numReplies}
-                            reactions={reactions}
-                            replayHandler={replayHandler}
-                            setReactions={setReactions}
-                            setShowEmojiPicker={setShowEmojiPicker}
-                            setUniqueReactionEmojiCount={setUniqueReactionEmojiCount}
-                            showUnderBarOption={showUnderBarOption}
-                            socket={socket}
-                        />
-                    </Sheet>
+                            <Stack direction="column" sx={{ position: "relative", zIndex: 1 }}>
+                                {showUnderBarOption === true && isSimpleBubble === true && (
+                                    <Stack
+                                        direction="row"
+                                        spacing={0}
+                                        alignItems="center"
+                                        sx={{ mb: 0.5 }}
+                                    >
+                                        <BubbleUserName
+                                            chatType={chat.chatType}
+                                            dtSent={dtSent}
+                                            isSent={isSent}
+                                            isSimpleBubble={isSimpleBubble}
+                                            isThread={false}
+                                            sender={message.sender}
+                                            taskId={message.taskId}
+                                            taskStatus={message.taskStatus}
+                                            tsSent={message.tsSent}
+                                            tsUpdated={message.tsUpdated}
+                                            userName={message.sender.userName}
+                                        />
+                                        <BubbleActions />
+                                    </Stack>
+                                )}
+
+                                {isSimpleBubble === false && (
+                                    <Stack direction="row" spacing={1.5} alignItems="flex-start">
+                                        {!(
+                                            (chat.chatType === 3 || chat.chatType === 4) &&
+                                            message.sender.isSystemUser === true
+                                        ) && (
+                                            <Box sx={{ flexShrink: 0 }}>
+                                                <AvatarWithStatus
+                                                    chat={chat}
+                                                    useCM={useCM}
+                                                    isForBubble={true}
+                                                    isYou={isSent}
+                                                    myself={myself}
+                                                    setMyself={setMyself}
+                                                    socket={socket}
+                                                    useUISM={useUISM}
+                                                    avatarUser={
+                                                        isSent
+                                                            ? useTEM.teamMemberProfiles[
+                                                                  myself.userId
+                                                              ]
+                                                            : useTEM.teamMemberProfiles[
+                                                                  message.sender.userId
+                                                              ]
+                                                    }
+                                                />
+                                            </Box>
+                                        )}
+                                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                                            <Stack direction="row" spacing={0} alignItems="center">
+                                                <BubbleUserName
+                                                    chatType={chat.chatType}
+                                                    dtSent={dtSent}
+                                                    isSent={isSent}
+                                                    isSimpleBubble={isSimpleBubble}
+                                                    isThread={false}
+                                                    sender={message.sender}
+                                                    taskId={message.taskId}
+                                                    taskStatus={message.taskStatus}
+                                                    tsSent={message.tsSent}
+                                                    tsUpdated={message.tsUpdated}
+                                                    userName={message.sender.userName}
+                                                />
+                                                {showUnderBarOption === true && <BubbleActions />}
+                                            </Stack>
+                                        </Box>
+                                    </Stack>
+                                )}
+
+                                {message.content && message.content.length > 0 && (
+                                    <Box
+                                        onClick={() => {
+                                            if (message.taskId !== null) {
+                                                useCM.setIsMainChatVisible(true);
+                                                useCM.setIsThreadVisible(false);
+                                                // useTM.setIsTaskPreviewVisible(true);
+                                                useTM.setIsCreatingTask({
+                                                    ...useTM.isCreatingTask,
+                                                    flag: false,
+                                                });
+                                                useTM.setCurrentPreviewTaskId(message.taskId);
+                                            }
+                                        }}
+                                        sx={{
+                                            mt: isSimpleBubble ? 0 : 0.5,
+                                            cursor: message.taskId ? "pointer" : "default",
+                                        }}
+                                    >
+                                        <BnChatPreview
+                                            key={`${chat.chatId}-${message.messageId}-${chat.chatType}-${message.tsUpdated}`}
+                                            useCM={useCM}
+                                            content={message.content}
+                                            isSent={isSent}
+                                            myself={myself}
+                                            setMyself={setMyself}
+                                            socket={socket}
+                                            useTEM={useTEM}
+                                            useUISM={useUISM}
+                                        />
+                                    </Box>
+                                )}
+                            </Stack>
+
+                            <BubbleUnderBar
+                                chatName={chat.chatName}
+                                chatType={chat.chatType}
+                                dmPartnerUser={chat.dmPartnerUser}
+                                isThread={false}
+                                message={message}
+                                myself={myself}
+                                numReplies={message.numReplies}
+                                taskCommentCount={message.taskCommentCount}
+                                reactions={reactions}
+                                replayHandler={replayHandler}
+                                setReactions={setReactions}
+                                setShowEmojiPicker={setShowEmojiPicker}
+                                setUniqueReactionEmojiCount={setUniqueReactionEmojiCount}
+                                showUnderBarOption={showUnderBarOption}
+                                socket={socket}
+                            />
+                        </Sheet>
+                    </Tooltip>
                 </Box>
             )}
         </Box>

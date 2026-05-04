@@ -126,6 +126,13 @@ export type MessageProps = {
     tsSent: string;
     tsUpdated: string;
     numReplies: number;
+    // Task comment count for the bubble's linked task. Backend
+    // populates this for PM (chatType === 3) bubbles only; the under-
+    // bar chip uses it instead of `numReplies` because PM bubbles
+    // surface task comments rather than auto-generated activity
+    // replies. Optional + treated as 0 when absent so optimistic
+    // message builders don't have to set it.
+    taskCommentCount?: number;
     attachment?: {
         fileName: string;
         type: string;
@@ -182,6 +189,10 @@ export type NewMessageProps = {
     tsSent: string;
     tsUpdated: string;
     numReplies: number;
+    // PM-only: post-event task comment count, computed server-side and
+    // mirrored on `wsType: "chat"` PM broadcasts so the bubble's chip
+    // can update without a refresh. Optional everywhere else.
+    taskCommentCount?: number;
     attachment?: {
         fileName: string;
         type: string;

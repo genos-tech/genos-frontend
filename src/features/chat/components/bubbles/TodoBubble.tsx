@@ -75,7 +75,9 @@ export const TodoBubble = (props: TodoBubbleProps) => {
             todoContent: body,
         });
         if (updatedTodo) {
-            setTodos((prev) => prev.map((t) => (t.todoId === updatedTodo.todoId ? updatedTodo : t)));
+            setTodos((prev) =>
+                prev.map((t) => (t.todoId === updatedTodo.todoId ? updatedTodo : t))
+            );
         }
         setBodyEdited(false);
         setStartIntervalUpdatingTodo(false);

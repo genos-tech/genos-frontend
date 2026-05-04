@@ -245,31 +245,41 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                 // so the optimistic row is replaced with the canonical
                 // server payload (correct commentId, ts, mentions…).
                 useTM.setIsTaskCommentUpdated({ isUpdate: true, scrollToBottom: true });
+
+                // IMPORTANT: emit the thread_message AFTER the task_comment
+                // ack. The backend processes socket events in concurrent
+                // threads, so emitting both back-to-back races the auto-
+                // bubble's `pm/message/` GET (which counts TaskComments for
+                // taskCommentCount) against this comment's INSERT commit.
+                // If the GET wins, the broadcast carries a stale count and
+                // the bubble's chip reverts to the pre-insert value after
+                // our optimistic live-bump. Serializing here guarantees
+                // the count read on the server is post-commit.
+                if (task.project && task.id) {
+                    const updatedTaskThreadMessage =
+                        taskThreadMessageForCommentAddedTemplate(myself);
+                    socket.emit("thread_message", {
+                        methodType: "POST",
+                        isInit: false,
+                        rootMessageTSSent: "",
+                        rootMessageSenderId: null,
+                        rootMessageReceiverId: null,
+                        threadId: null,
+                        threadMessage: updatedTaskThreadMessage,
+                        chatType: 3,
+                        dmPartnerUserId: null,
+                        senderId: task.project.systemUserId,
+                        senderName: task.project.projectName,
+                        destCGName: task.project.projectName,
+                        destCGId: task.project.projectId,
+                        taskId: task.id,
+                        systemUserId: task.project.systemUserId,
+                        messageIdForPut: null,
+                        sendActivity: false,
+                    });
+                }
             }
         );
-
-        if (task.project && task.id) {
-            const updatedTaskThreadMessage = taskThreadMessageForCommentAddedTemplate(myself);
-            socket.emit("thread_message", {
-                methodType: "POST",
-                isInit: false,
-                rootMessageTSSent: "",
-                rootMessageSenderId: null,
-                rootMessageReceiverId: null,
-                threadId: null,
-                threadMessage: updatedTaskThreadMessage,
-                chatType: 3,
-                dmPartnerUserId: null,
-                senderId: task.project.systemUserId,
-                senderName: task.project.projectName,
-                destCGName: task.project.projectName,
-                destCGId: task.project.projectId,
-                taskId: task.id,
-                systemUserId: task.project.systemUserId,
-                messageIdForPut: null,
-                sendActivity: false,
-            });
-        }
     };
 
     // Picker is rendered via portal into document.body with position:fixed so it

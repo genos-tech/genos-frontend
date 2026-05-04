@@ -343,7 +343,7 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
         },
         {
             id: "reply",
-            label: "Reply in thread",
+            label: isProjectChat ? "Add comment to task" : "Reply in thread",
             icon: <ReplyRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleReplyClick,
             color: { light: "#4f46e5", dark: "#818cf8" },
