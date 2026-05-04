@@ -4,6 +4,8 @@ import { Avatar, Box, IconButton, Snackbar, Stack, Typography } from "@mui/joy";
 
 import { NotificationIntent } from "./types";
 
+const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
+
 interface NotificationToastHostProps {
     /** Subscribe-fn from `useNotifications().subscribeToasts` (or the
      *  manager's `subscribeToasts`). */
@@ -74,7 +76,7 @@ export const NotificationToastHost = ({
                     sx={{ width: "100%" }}
                 >
                     {active.icon ? (
-                        <Avatar src={active.icon} size="md" />
+                        <Avatar src={`${media_url}/${active.icon}`} size="md" />
                     ) : (
                         <Avatar size="md">{active.title?.[0] ?? "?"}</Avatar>
                     )}

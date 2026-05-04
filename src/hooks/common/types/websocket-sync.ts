@@ -4,6 +4,7 @@ import { NotificationManager } from "../../../services/notifications/notificatio
 import { UserProps } from "../../../types/admin";
 import { ProjectProps } from "../../../types/tasks";
 import { ChatManagementState } from "../../chats/useChatManagement";
+import { TeamManagementState } from "../useTeamManagement";
 
 export interface WebSocketSyncProps {
     socket: Socket | null;
@@ -16,6 +17,7 @@ export interface WebSocketSyncProps {
     setIsTaskUpdatedBySomeone: (value: boolean) => void;
     setIsTaskCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void;
     useCM: ChatManagementState;
+    useTEM: TeamManagementState;
     notificationManager?: NotificationManager;
 }
 

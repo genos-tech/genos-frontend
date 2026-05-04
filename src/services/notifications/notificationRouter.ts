@@ -1,3 +1,4 @@
+import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UserProps } from "../../types/admin";
 import { ActivityMessageProps, NewMessageProps, NewThreadMessageProps } from "../../types/chat";
 import { InboxItemProps } from "../../types/common";
@@ -44,7 +45,11 @@ const labelForChatType = (chatType: number, chatName?: string): string => {
     }
 };
 
-const buildChatIntent = (msg: NewMessageProps, myself: UserProps): NotificationIntent | null => {
+const buildChatIntent = (
+    msg: NewMessageProps,
+    myself: UserProps,
+    useTEM: TeamManagementState
+): NotificationIntent | null => {
     if (msg.isEdited || msg.isDeleted || msg.isReactionUpdated) return null;
     if (!msg.sender || msg.sender.userId === myself.userId) return null;
 
@@ -61,12 +66,31 @@ const buildChatIntent = (msg: NewMessageProps, myself: UserProps): NotificationI
     const senderName = msg.sender.userName || "Someone";
     const chatLabel = labelForChatType(msg.chatType, msg.chatName);
 
+    console.log("send chat notification", {
+        id: `chat:${msg.chatType}:${msg.chatId}:${msg.messageId}`,
+        category: "chats",
+        title:
+            msg.chatType === 1
+                ? senderName
+                : msg.chatType === 3
+                  ? chatLabel
+                  : `${senderName} • ${chatLabel}`,
+        body: truncate(msg.contentText || ""),
+        icon: useTEM.teamMemberProfiles[msg.sender.userId]?.avatarImgPath || undefined,
+        senderId: msg.sender.userId,
+    });
+
     return {
         id: `chat:${msg.chatType}:${msg.chatId}:${msg.messageId}`,
         category: "chats",
-        title: msg.chatType === 1 ? senderName : `${senderName} • ${chatLabel}`,
+        title:
+            msg.chatType === 1
+                ? senderName
+                : msg.chatType === 3
+                  ? chatLabel
+                  : `${senderName} • ${chatLabel}`,
         body: truncate(msg.contentText || ""),
-        icon: msg.sender.avatarImgPath || undefined,
+        icon: useTEM.teamMemberProfiles[msg.sender.userId]?.avatarImgPath || undefined,
         senderId: msg.sender.userId,
         source: {
             chatType: msg.chatType,
@@ -81,7 +105,8 @@ const buildChatIntent = (msg: NewMessageProps, myself: UserProps): NotificationI
 
 const buildThreadIntent = (
     msg: NewThreadMessageProps,
-    myself: UserProps
+    myself: UserProps,
+    useTEM: TeamManagementState
 ): NotificationIntent | null => {
     if (msg.isEdited || msg.isDeleted || msg.isReactionUpdated) return null;
     if (!msg.sender || msg.sender.userId === myself.userId) return null;
@@ -96,12 +121,21 @@ const buildThreadIntent = (
     const senderName = msg.sender.userName || "Someone";
     const parentLabel = labelForChatType(msg.chatType, msg.chatName);
 
+    console.log("send thread notification", {
+        id: `thread:${msg.chatType}:${msg.chatId}:${msg.threadId}:${msg.messageId}`,
+        category: "thread_replies",
+        title: `${senderName} replied in ${parentLabel}`,
+        body: truncate(msg.contentText || ""),
+        icon: useTEM.teamMemberProfiles[msg.sender.userId].avatarImgPath || undefined,
+        senderId: msg.sender.userId,
+    });
+
     return {
         id: `thread:${msg.chatType}:${msg.chatId}:${msg.threadId}:${msg.messageId}`,
         category: "thread_replies",
         title: `${senderName} replied in ${parentLabel}`,
         body: truncate(msg.contentText || ""),
-        icon: msg.sender.avatarImgPath || undefined,
+        icon: useTEM.teamMemberProfiles[msg.sender.userId].avatarImgPath || undefined,
         senderId: msg.sender.userId,
         source: {
             chatType: msg.chatType,
@@ -115,7 +149,8 @@ const buildThreadIntent = (
 
 const buildActivityIntent = (
     activity: ActivityMessageProps,
-    myself: UserProps
+    myself: UserProps,
+    useTEM: TeamManagementState
 ): NotificationIntent | null => {
     // Reactions are intentionally out of scope for the "balanced" coverage
     // option the user picked.
@@ -135,11 +170,20 @@ const buildActivityIntent = (
     }
     if (!category) return null;
 
-    const senderName =
-        (activity as any).sender?.userName || (activity as any).senderName || "Someone";
+    const senderName = (activity as any).senderName || "Someone";
     const subjectLabel = activity.projectName
         ? `Project • ${activity.projectName}`
         : labelForChatType(activity.chatType, activity.chatName);
+
+    console.log("send activity notification", {
+        id: `activity:${category}:${activity.activityId}`,
+        category,
+        title:
+            category === "mentions"
+                ? `${senderName} mentioned you in ${subjectLabel}`
+                : `${senderName} commented on a task`,
+        body: truncate(activity.firstLineContent || ""),
+    });
 
     return {
         id: `activity:${category}:${activity.activityId}`,
@@ -149,7 +193,7 @@ const buildActivityIntent = (
                 ? `${senderName} mentioned you in ${subjectLabel}`
                 : `${senderName} commented on a task`,
         body: truncate(activity.firstLineContent || ""),
-        icon: (activity as any).sender?.avatarImgPath || undefined,
+        icon: useTEM.teamMemberProfiles[(activity as any).senderId].avatarImgPath || undefined,
         senderId: activity.senderId,
         source: {
             chatType: activity.chatType,
@@ -198,20 +242,23 @@ const buildInboxIntent = (
  */
 export const buildIntentFromMessage = (
     message: any,
-    myself: UserProps
+    myself: UserProps,
+    useTEM: TeamManagementState
 ): NotificationIntent | null => {
     if (!message || !message.wsType) return null;
     if (!myself || !myself.userId) return null;
 
+    console.log("message", message);
+
     if (message.wsType === "chat") {
         if (message.isThread === true) {
-            return buildThreadIntent(message as NewThreadMessageProps, myself);
+            return buildThreadIntent(message as NewThreadMessageProps, myself, useTEM);
         }
-        return buildChatIntent(message as NewMessageProps, myself);
+        return buildChatIntent(message as NewMessageProps, myself, useTEM);
     }
 
     if (message.wsType === "activity") {
-        return buildActivityIntent(message as ActivityMessageProps, myself);
+        return buildActivityIntent(message as ActivityMessageProps, myself, useTEM);
     }
 
     if (message.wsType === "inbox") {

@@ -8,6 +8,7 @@ import { UserProps } from "../../../types/admin";
 import { MessageProps } from "../../../types/chat";
 import { InboxItemProps } from "../../../types/common";
 import { ChatManagementState } from "../../chats/useChatManagement";
+import { TeamManagementState } from "../useTeamManagement";
 import { handleActivityMessage } from "./activity-handlers";
 import { handleRegularMessage, handleThreadMessage } from "./message-handlers";
 
@@ -21,6 +22,7 @@ export const setupWebSocketHandlers = (
     setIsTaskCommentUpdated: (value: { isUpdate: boolean; scrollToBottom: boolean }) => void,
     funcSetInboxItems: () => void,
     useCM: ChatManagementState,
+    useTEM: TeamManagementState,
     notificationManager?: NotificationManager
 ) => {
     socket.on("connect", () => {
@@ -47,7 +49,7 @@ export const setupWebSocketHandlers = (
         // try/catch.
         if (notificationManager) {
             try {
-                const intent = buildIntentFromMessage(message, myself);
+                const intent = buildIntentFromMessage(message, myself, useTEM);
                 if (intent) notificationManager.notify(intent);
             } catch (err) {
                 console.warn("[notifications] router error", err);

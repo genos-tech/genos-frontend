@@ -189,6 +189,7 @@ export const App = () => {
         setIsTaskCommentUpdated: useTM.setIsTaskCommentUpdated,
         setIsTaskUpdatedBySomeone: useTM.setIsTaskUpdatedBySomeone,
         socket: socketInstance,
+        useTEM: useTEM,
         notificationManager: useNotif.manager,
     });
 

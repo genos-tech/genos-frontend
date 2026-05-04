@@ -16,6 +16,7 @@ export const webSocketSync = (props: WebSocketSyncProps) => {
         setIsTaskUpdatedBySomeone,
         setIsTaskCommentUpdated,
         useCM,
+        useTEM,
         notificationManager,
     } = props;
 
@@ -35,6 +36,7 @@ export const webSocketSync = (props: WebSocketSyncProps) => {
             setIsTaskCommentUpdated,
             funcSetInboxItems,
             useCM,
+            useTEM,
             notificationManager
         );
 
