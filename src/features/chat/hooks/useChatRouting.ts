@@ -9,9 +9,9 @@ import { UserProps } from "../../../types/admin";
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../types/chat";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { loadMDMHistory } from "../services/loadMDMHistory";
-import { popSpecificMessages } from "../services/popSpecificMessages";
-import { loadSpecificThreadMessagesByTaskId } from "../services/loadSpecificThreadMessagesByTaskId";
 import { loadSpecificThreadMessages } from "../services/loadSpecificThreadMessages";
+import { loadSpecificThreadMessagesByTaskId } from "../services/loadSpecificThreadMessagesByTaskId";
+import { popSpecificMessages } from "../services/popSpecificMessages";
 
 // Chat type constants matching the existing codebase
 const CHAT_TYPE_MAP: Record<string, number> = {
@@ -33,11 +33,26 @@ const CHAT_TYPE_REVERSE_MAP: Record<number, string> = {
 };
 
 // Helper to build chat paths - defined outside component to avoid recreation
-const buildChatPath = (typePath: string, chatId?: number, threadId?: number, messageId?: number): string => {
+//
+// `messageId` and `commentId` are mutually exclusive — either one focuses
+// a thread message bubble (the existing flow) or one focuses a task
+// comment in the PM thread's "Comments" tab. If both are passed,
+// `commentId` wins (caller's choice was a deeper-link target).
+const buildChatPath = (
+    typePath: string,
+    chatId?: number,
+    threadId?: number,
+    messageId?: number,
+    commentId?: number
+): string => {
     let path = `/Home/chat/${typePath}`;
     if (chatId !== undefined) path += `/${chatId}`;
     if (threadId !== undefined) path += `/thread/${threadId}`;
-    if (messageId !== undefined) path += `/message/${messageId}`;
+    if (commentId !== undefined) {
+        path += `/comment/${commentId}`;
+    } else if (messageId !== undefined) {
+        path += `/message/${messageId}`;
+    }
     return path;
 };
 
@@ -52,6 +67,10 @@ type ParsedRoute = {
     chatId: number | undefined;
     threadId: number | undefined;
     messageId: number | undefined;
+    // PM thread "Comments" tab deep-link target (task comment id).
+    // Mutually exclusive with `messageId` at the URL level — the path
+    // contains either `…/message/:id` or `…/comment/:id`, never both.
+    commentId: number | undefined;
 };
 
 const EMPTY_ROUTE: ParsedRoute = {
@@ -59,6 +78,7 @@ const EMPTY_ROUTE: ParsedRoute = {
     chatId: undefined,
     threadId: undefined,
     messageId: undefined,
+    commentId: undefined,
 };
 
 export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) => {
@@ -77,7 +97,12 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
     // Memoized parsed route - only recalculates when pathname changes
     const parsedRoute = useMemo((): ParsedRoute => {
         const pathParts = pathname.split("/").filter(Boolean);
-        // Expected format: /Home/chat/:chatType/:chatId?/thread/:threadId?/message/:messageId?
+        // Expected formats:
+        //   /Home/chat/:chatType/:chatId?/thread/:threadId?/message/:messageId?
+        //   /Home/chat/:chatType/:chatId?/thread/:threadId?/comment/:commentId?
+        //
+        // The `comment/...` shape is the PM thread "Comments" tab deep
+        // link added alongside the existing `message/...` shape.
 
         const chatIndex = pathParts.indexOf("chat");
         if (chatIndex === -1) return EMPTY_ROUTE;
@@ -86,16 +111,23 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
         const chatIdStr = pathParts[chatIndex + 2];
         const threadIndex = pathParts.indexOf("thread");
         const messageIndex = pathParts.indexOf("message");
+        const commentIndex = pathParts.indexOf("comment");
 
         return {
             chatType,
             chatId: chatIdStr && !isNaN(Number(chatIdStr)) ? Number(chatIdStr) : undefined,
-            threadId: threadIndex !== -1 && pathParts[threadIndex + 1] 
-                ? Number(pathParts[threadIndex + 1]) 
-                : undefined,
-            messageId: messageIndex !== -1 && pathParts[messageIndex + 1] 
-                ? Number(pathParts[messageIndex + 1]) 
-                : undefined,
+            threadId:
+                threadIndex !== -1 && pathParts[threadIndex + 1]
+                    ? Number(pathParts[threadIndex + 1])
+                    : undefined,
+            messageId:
+                messageIndex !== -1 && pathParts[messageIndex + 1]
+                    ? Number(pathParts[messageIndex + 1])
+                    : undefined,
+            commentId:
+                commentIndex !== -1 && pathParts[commentIndex + 1]
+                    ? Number(pathParts[commentIndex + 1])
+                    : undefined,
         };
     }, [pathname]);
 
@@ -245,7 +277,10 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
         const effectivePaneType = paneType === 4 ? 1 : paneType;
 
         // Update chat pane type from URL
-        if (useCM.currentChatPaneType !== effectivePaneType && useCM.notMoveChatPaneType === false) {
+        if (
+            useCM.currentChatPaneType !== effectivePaneType &&
+            useCM.notMoveChatPaneType === false
+        ) {
             useCM.setCurrentChatPaneType(effectivePaneType);
             localStorage.setItem("currentChatPaneType", effectivePaneType.toString());
             useCM.setNotMoveChatPaneType(false); // set to false by default
@@ -287,7 +322,11 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
                     if (resolvedMessages.length === 0 && existingChat.chatType === 4) {
                         try {
                             const data = await loadMDMHistory(
-                                myself.teamId, myself.teamName, myself.userId, accessToken, chatId
+                                myself.teamId,
+                                myself.teamName,
+                                myself.userId,
+                                accessToken,
+                                chatId
                             );
                             const mdmChat = data?.chat_history?.[0];
                             if (mdmChat?.messages?.length > 0) {
@@ -322,10 +361,18 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
 
                     setTimeout(() => {
                         const isValidChat = useCM.currentMainChat?.chatId !== -1;
-                        const newMoveIndex = threadId === undefined
-                            ? (messageId && isValidChat ? `${chatId}-${messageId}` : undefined)
-                            : (isValidChat ? `${chatId}-${threadId}` : undefined);
-                        useCM.setCurrentMainChat({ ...newChat, moveToSpecificIndex: newMoveIndex });
+                        const newMoveIndex =
+                            threadId === undefined
+                                ? messageId && isValidChat
+                                    ? `${chatId}-${messageId}`
+                                    : undefined
+                                : isValidChat
+                                  ? `${chatId}-${threadId}`
+                                  : undefined;
+                        useCM.setCurrentMainChat({
+                            ...newChat,
+                            moveToSpecificIndex: newMoveIndex,
+                        });
                     }, 250);
 
                     useCM.setIsMainChatVisible(true);
@@ -339,18 +386,32 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
         }
 
         // Handle thread message from URL
-        const shouldLoadThread = threadId && (
-            useCM.currentThreadChat === undefined ||
-            useCM.currentThreadChat?.threadId !== threadId
-        );
+        const shouldLoadThread =
+            threadId &&
+            (useCM.currentThreadChat === undefined ||
+                useCM.currentThreadChat?.threadId !== threadId);
 
         if (shouldLoadThread) {
-            const loadThreadFn = paneType === 3
-                ? loadSpecificThreadMessagesByTaskId(myself, paneType, chatId, threadId, accessToken)
-                : loadSpecificThreadMessages(myself, paneType, chatId, threadId, accessToken);
+            const loadThreadFn =
+                paneType === 3
+                    ? loadSpecificThreadMessagesByTaskId(
+                          myself,
+                          paneType,
+                          chatId,
+                          threadId,
+                          accessToken
+                      )
+                    : loadSpecificThreadMessages(myself, paneType, chatId, threadId, accessToken);
 
             loadThreadFn.then((threadMessages: ThreadMessageProps[]) => {
-                processThreadMessages(threadMessages, chatId, threadId, paneType, messageId, paneType === 3);
+                processThreadMessages(
+                    threadMessages,
+                    chatId,
+                    threadId,
+                    paneType,
+                    messageId,
+                    paneType === 3
+                );
             });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -404,13 +465,19 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
         const typePath = CHAT_TYPE_REVERSE_MAP[currentMainChat.chatType];
         if (!typePath) return;
 
-        const threadId = currentThreadChat.chatType === 3 && currentThreadChat.taskId 
-            ? currentThreadChat.taskId 
-            : currentThreadChat.threadId;
+        const threadId =
+            currentThreadChat.chatType === 3 && currentThreadChat.taskId
+                ? currentThreadChat.taskId
+                : currentThreadChat.threadId;
 
-        // Try to get message ID from the current path first, then from moveToSpecificIndex
+        // Preserve the deep-link target already in the URL. `commentId`
+        // wins over `messageId` because the user explicitly navigated
+        // to a task comment (PM "Comments" tab), and we don't want a
+        // stale `moveToSpecificIndex` (the thread bubble's focus state)
+        // to overwrite the active comment focus.
+        const { commentId } = parsedRoute;
         let { messageId } = parsedRoute;
-        if (!messageId && currentThreadChat.moveToSpecificIndex) {
+        if (commentId === undefined && !messageId && currentThreadChat.moveToSpecificIndex) {
             const parts = currentThreadChat.moveToSpecificIndex.split("-");
             if (parts.length >= 3) {
                 const parsedMsgId = Number(parts[parts.length - 1]);
@@ -420,9 +487,13 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
             }
         }
 
-        const newPath = messageId
-            ? buildChatPath(typePath, currentMainChat.chatId, threadId, messageId)
-            : buildChatPath(typePath, currentMainChat.chatId, threadId);
+        const newPath = buildChatPath(
+            typePath,
+            currentMainChat.chatId,
+            threadId,
+            messageId,
+            commentId
+        );
 
         navigate(newPath, { replace: true });
         // eslint-disable-next-line react-hooks/exhaustive-deps

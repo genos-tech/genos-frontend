@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import AttachFileRoundedIcon from "@mui/icons-material/AttachFileRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
@@ -25,6 +25,7 @@ import {
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import Tab, { tabClasses } from "@mui/joy/Tab";
+import { useLocation } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../../context/AuthContext";
@@ -143,6 +144,41 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     const [uploadingFiles, setUploadingFiles] = useState<AttachmentFileProps[]>([]);
     const [isUploadingFilesUpdated, setIsUploadingFilesUpdated] = useState<boolean>(false);
     const [numOfUploadingFiles, setNumOfUploadingFiles] = useState<number>(0);
+
+    // Deep-link plumbing for the task-panel mount of `TaskCommentList`.
+    //
+    // Task panel URL shape is
+    //   `/Home/tasks/project/:projectId/task/:taskId/comment/:commentId`
+    // We only honour the URL's `commentId` when the path is in this
+    // exact shape AND its `:taskId` matches the currently displayed
+    // task — without that guard, navigating between tasks would briefly
+    // light up an unrelated comment in the new task.
+    const location = useLocation();
+    const projectId = taskContent?.project?.projectId;
+    const currentTaskId = taskContent?.id;
+    const focusedCommentId = useMemo<number | undefined>(() => {
+        const parts = location.pathname.split("/").filter(Boolean);
+        if (parts[0] !== "Home" || parts[1] !== "tasks") return undefined;
+        const taskIdx = parts.indexOf("task");
+        const commentIdx = parts.indexOf("comment");
+        if (taskIdx === -1 || commentIdx === -1) return undefined;
+        const urlTaskId = Number(parts[taskIdx + 1]);
+        if (!Number.isFinite(urlTaskId) || urlTaskId !== Number(currentTaskId)) return undefined;
+        const parsed = Number(parts[commentIdx + 1]);
+        return Number.isFinite(parsed) ? parsed : undefined;
+    }, [location.pathname, currentTaskId]);
+
+    // If this is called from chat thread panel, return the current path
+    const commentLinkBuilder = useCallback(
+        (commentId: number) => {
+            const currentPath = window.location.pathname;
+            if (currentPath.includes("/Home/chat/pm/")) {
+                return currentPath;
+            }
+            return `/Home/tasks/project/${projectId}/task/${currentTaskId}/comment/${commentId}`;
+        },
+        [projectId, currentTaskId]
+    );
 
     const updateDisplayingFiles = (file: File, attachmentId: number) => {
         if (attachmentId > 0) {
@@ -481,6 +517,12 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                             useTM={useTM}
                             currentProjectId={taskContent.project?.projectId}
                             currentProjectName={taskContent.project?.projectName}
+                            commentLinkBuilder={
+                                projectId !== undefined && currentTaskId !== undefined
+                                    ? commentLinkBuilder
+                                    : undefined
+                            }
+                            focusedCommentId={focusedCommentId}
                         />
                         <TaskCommentEditorBlock
                             useCM={useCM}

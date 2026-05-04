@@ -20,7 +20,11 @@ import {
     getLocalCurrentTimestamp,
 } from "../../../../../../utils/dateUtils";
 
-// Color scheme for task comment bubbles
+// Color scheme for task comment bubbles. The `focused` palette is
+// applied when the bubble matches the URL's `comment/:commentId`
+// segment (deep-link target) and mirrors the green focus tint used by
+// `ThreadMessageBubble.BUBBLE_COLORS.focused` so the visual language is
+// consistent across thread bubbles and task comments.
 const COMMENT_COLORS = {
     dark: {
         bg: "#1e1b4b",
@@ -33,6 +37,20 @@ const COMMENT_COLORS = {
         border: "#e5e7eb",
         text: "#111827",
         secondaryText: "rgba(17, 24, 39, 0.55)",
+    },
+    focused: {
+        dark: {
+            bg: "#14532d",
+            border: "#22c55e",
+            text: "#dcfce7",
+            secondaryText: "rgba(220, 252, 231, 0.7)",
+        },
+        light: {
+            bg: "#dcfce7",
+            border: "#22c55e",
+            text: "#14532d",
+            secondaryText: "rgba(20, 83, 45, 0.7)",
+        },
     },
 } as const;
 
@@ -48,6 +66,15 @@ type TaskCommentBubbleProps = {
     setEditTargetComment: (value: TaskCommentProps) => void;
     useCM: ChatManagementState;
     useUISM: UIStateManagementState;
+    /** When true, render the bubble with the green focus palette so the
+     * deep-link target stands out after navigation. Owned by
+     * `TaskCommentList`, which derives it from the URL's `commentId`. */
+    isFocused?: boolean;
+    /** Click handler that updates the URL with this comment's deep
+     * link. Optional so callers that don't wire routing (none today,
+     * but keeps the bubble reusable) get the original non-clickable
+     * behaviour. */
+    onCommentClick?: () => void;
 };
 
 export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
@@ -63,11 +90,15 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
         setEditTargetComment,
         useCM,
         useUISM,
+        isFocused = false,
+        onCommentClick,
     } = props;
 
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
-    const colors = isDark ? COMMENT_COLORS.dark : COMMENT_COLORS.light;
+    const baseColors = isDark ? COMMENT_COLORS.dark : COMMENT_COLORS.light;
+    const focusedColors = isDark ? COMMENT_COLORS.focused.dark : COMMENT_COLORS.focused.light;
+    const colors = isFocused ? focusedColors : baseColors;
 
     const isEdited = extractMMDDHHMMSSs(comment.tsSent) !== extractMMDDHHMMSSs(comment.tsUpdated);
 
@@ -204,6 +235,8 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                     key={`${comment.commentId}-${comment.tsUpdated}`}
                     onMouseEnter={() => setShowUnderBarOption(true)}
                     onMouseLeave={() => setShowUnderBarOption(false)}
+                    onClick={onCommentClick}
+                    sx={{ cursor: onCommentClick ? "pointer" : "default" }}
                 >
                     <Card
                         sx={{
@@ -284,6 +317,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
 
                         {/* Reactions display */}
                         <Box
+                            onClick={(e) => e.stopPropagation()}
                             sx={{
                                 position: "absolute",
                                 bottom: -12,
@@ -315,7 +349,12 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                         >
                             <IconButton
                                 size="sm"
-                                onClick={() => {
+                                onClick={(e) => {
+                                    // Don't let the edit button doubly
+                                    // trigger the bubble-level click
+                                    // handler (which would navigate to
+                                    // the deep-link URL).
+                                    e.stopPropagation();
                                     setIsInEdit(true);
                                     setEditTargetComment(comment);
                                 }}

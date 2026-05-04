@@ -12,6 +12,9 @@ type UseTaskRoutingProps = {
 type TaskRouteInfo = {
     projectId: number | undefined;
     taskId: number | undefined;
+    // Optional deep-link target inside the task's "Comments" tab. When
+    // present the task panel highlights / scrolls to this comment id.
+    commentId: number | undefined;
 };
 
 export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
@@ -28,11 +31,13 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
     // Parse the current URL to extract task routing info
     const parseCurrentRoute = useCallback((): TaskRouteInfo => {
         const pathParts = location.pathname.split("/").filter(Boolean);
-        // Expected format: /Home/tasks/project/:projectId/task/:taskId
+        // Expected format:
+        //   /Home/tasks/project/:projectId/task/:taskId(/comment/:commentId)?
 
         const result: TaskRouteInfo = {
             projectId: undefined,
             taskId: undefined,
+            commentId: undefined,
         };
 
         const tasksIndex = pathParts.indexOf("tasks");
@@ -48,6 +53,13 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
         const taskIndex = pathParts.indexOf("task");
         if (taskIndex !== -1 && pathParts[taskIndex + 1]) {
             result.taskId = Number(pathParts[taskIndex + 1]);
+        }
+
+        // Optional task-comment deep link (PM "Comments" tab)
+        const commentIndex = pathParts.indexOf("comment");
+        if (commentIndex !== -1 && pathParts[commentIndex + 1]) {
+            const parsed = Number(pathParts[commentIndex + 1]);
+            if (!isNaN(parsed)) result.commentId = parsed;
         }
 
         return result;
@@ -127,7 +139,16 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
             const projectId = useTM.currentPreviewTask.project.projectId;
             const taskId = useTM.currentPreviewTask.id;
 
-            const newPath = `/Home/tasks/project/${projectId}/task/${taskId}`;
+            // Preserve a `comment/:commentId` deep-link segment if it
+            // happens to belong to this same task. Without this, any
+            // re-render that retriggers this effect (e.g. preview
+            // toggling visible after comment click) would replace the
+            // path with the bare task URL and the focus would be lost.
+            const { commentId, taskId: urlTaskId } = parseCurrentRoute();
+            const preserveComment = commentId !== undefined && urlTaskId === taskId;
+            const newPath = preserveComment
+                ? `/Home/tasks/project/${projectId}/task/${taskId}/comment/${commentId}`
+                : `/Home/tasks/project/${projectId}/task/${taskId}`;
             if (newPath !== location.pathname && newPath !== lastNavigatedPath.current) {
                 targetUrlProjectId.current = projectId;
                 lastNavigatedPath.current = newPath;

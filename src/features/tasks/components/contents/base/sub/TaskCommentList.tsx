@@ -2,6 +2,7 @@ import React, { useRef } from "react";
 import CommentRoundedIcon from "@mui/icons-material/CommentRounded";
 import { Box, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { useNavigate } from "react-router-dom";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
@@ -11,7 +12,10 @@ import { UIStateManagementState } from "../../../../../../hooks/common/useUIStat
 import { TaskManagementState } from "../../../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../../../types/admin";
 import { TaskCommentProps } from "../../../../../../types/tasks";
-import { useScrollToBottomOnNewTaskComment } from "../../../../hooks/taskCommentHooks";
+import {
+    useScrollToBottomOnNewTaskComment,
+    useScrollToTaskCommentByCommentId,
+} from "../../../../hooks/taskCommentHooks";
 import { TaskCommentBubble } from "./TaskCommentBubble";
 
 type TaskCommentListProps = {
@@ -38,6 +42,17 @@ type TaskCommentListProps = {
      * The chat thread's "Comments" tab uses this so we get a single
      * native Virtuoso scroller (no double-scrolling outer wrapper). */
     fillContainer?: boolean;
+    /** Builds the deep-link URL to navigate to when a comment is
+     * clicked. Each parent supplies the URL shape that matches its
+     * mount: chat-thread (`/Home/chat/pm/...`) or task-panel
+     * (`/Home/tasks/project/...`). When omitted, comments are not
+     * clickable and the bubble keeps its original visual behaviour. */
+    commentLinkBuilder?: (commentId: number) => string;
+    /** Comment id parsed from the URL's `comment/:commentId` segment,
+     * scoped to this mount's URL shape by the parent. Bubble matching
+     * this id renders in the focused palette, and Virtuoso scrolls it
+     * into view. */
+    focusedCommentId?: number;
 };
 
 const countLines = (nodes: any[]): number => {
@@ -81,9 +96,12 @@ export const TaskCommentList = ({
     currentProjectName,
     maxHeight = 800,
     fillContainer = false,
+    commentLinkBuilder,
+    focusedCommentId,
 }: TaskCommentListProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const navigate = useNavigate();
 
     const totalCommentLines = taskComments.reduce(
         (sum, taskComment) => sum + (countLines(taskComment.commentBody) ?? 0),
@@ -96,6 +114,18 @@ export const TaskCommentList = ({
         taskComments,
         useTM.isTaskCommentUpdated.scrollToBottom
     );
+    useScrollToTaskCommentByCommentId(
+        virtuosoRef as React.RefObject<VirtuosoHandle>,
+        taskComments,
+        focusedCommentId
+    );
+
+    // Hoisted out of `itemContent` so both Virtuoso branches reuse
+    // the same wiring without duplicating the click closure.
+    const buildCommentClickHandler = (commentId: number) => {
+        if (!commentLinkBuilder) return undefined;
+        return () => navigate(commentLinkBuilder(commentId));
+    };
 
     if (taskComments.length === 0) {
         return (
@@ -174,6 +204,8 @@ export const TaskCommentList = ({
                                 useUISM={useUISM}
                                 currentProjectId={currentProjectId ?? undefined}
                                 currentProjectName={currentProjectName ?? undefined}
+                                isFocused={comment.commentId === focusedCommentId}
+                                onCommentClick={buildCommentClickHandler(comment.commentId)}
                             />
                         );
                     }}
@@ -208,6 +240,8 @@ export const TaskCommentList = ({
                             useUISM={useUISM}
                             currentProjectId={currentProjectId ?? undefined}
                             currentProjectName={currentProjectName ?? undefined}
+                            isFocused={comment.commentId === focusedCommentId}
+                            onCommentClick={buildCommentClickHandler(comment.commentId)}
                         />
                     );
                 }}

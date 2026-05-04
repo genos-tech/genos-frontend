@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Box, Sheet } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { useLocation } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -98,6 +99,36 @@ export const ThreadCommentsView = ({
         } as unknown as TaskProps;
     }, [useTM.currentPreviewTask, threadTaskId, useCM.currentMainChat]);
 
+    // Deep-link plumbing for the chat-thread mount of `TaskCommentList`.
+    //
+    // The chat thread URL shape is
+    //   `/Home/chat/pm/:chatId/thread/:threadId/comment/:commentId`
+    // For PMs the `:threadId` segment is the parent task id (see
+    // `ThreadMessageBubble.handleMessageClick`), which matches our
+    // `threadTaskId` here. We only honour the URL's `commentId` when the
+    // path is in this exact shape AND its `:threadId` segment matches
+    // our task — otherwise the same URL parsed by the task-panel mount
+    // would also end up highlighting in here (see notes in plan).
+    const location = useLocation();
+    const chatId = useCM.currentMainChat?.chatId;
+    const focusedCommentId = useMemo<number | undefined>(() => {
+        const parts = location.pathname.split("/").filter(Boolean);
+        if (parts[0] !== "Home" || parts[1] !== "chat" || parts[2] !== "pm") return undefined;
+        const threadIdx = parts.indexOf("thread");
+        const commentIdx = parts.indexOf("comment");
+        if (threadIdx === -1 || commentIdx === -1) return undefined;
+        const urlThreadId = Number(parts[threadIdx + 1]);
+        if (!Number.isFinite(urlThreadId) || urlThreadId !== threadTaskId) return undefined;
+        const parsed = Number(parts[commentIdx + 1]);
+        return Number.isFinite(parsed) ? parsed : undefined;
+    }, [location.pathname, threadTaskId]);
+
+    const commentLinkBuilder = useCallback(
+        (commentId: number) =>
+            `/Home/chat/pm/${chatId}/thread/${threadTaskId}/comment/${commentId}`,
+        [chatId, threadTaskId]
+    );
+
     if (!task) return null;
 
     return (
@@ -139,6 +170,8 @@ export const ThreadCommentsView = ({
                     currentProjectId={task.project?.projectId}
                     currentProjectName={task.project?.projectName}
                     fillContainer
+                    commentLinkBuilder={chatId !== undefined ? commentLinkBuilder : undefined}
+                    focusedCommentId={focusedCommentId}
                 />
             </Box>
             <Box
