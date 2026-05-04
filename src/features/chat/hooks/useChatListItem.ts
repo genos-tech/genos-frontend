@@ -1,16 +1,16 @@
 import { useState } from "react";
 
+import { ChatService } from "../../../db/services/chat.service";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps, MessageProps } from "../../../types/chat";
 import { toggleMessagesPane } from "../../../utils/sidebarUtils";
 import { addChat } from "../services/addChat";
+import { addMessage } from "../services/addMessage";
 import { loadMDMHistory } from "../services/loadMDMHistory";
 import { popSpecificMessages } from "../services/popSpecificMessages";
 import { updatePinnedChats } from "../services/updatePinnedChats";
-import { ChatService } from "../../../db/services/chat.service";
-import { addMessage } from "../services/addMessage";
 
 interface UseChatListItemProps {
     chat: AllChatProps;
@@ -63,7 +63,11 @@ export const useChatListItem = ({
     const loadMDMMessagesFromBackend = async (chatId: number): Promise<MessageProps[]> => {
         try {
             const data = await loadMDMHistory(
-                myself.teamId, myself.teamName, myself.userId, accessToken, chatId
+                myself.teamId,
+                myself.teamName,
+                myself.userId,
+                accessToken,
+                chatId
             );
             const mdmChat = data?.chat_history?.[0];
             if (mdmChat?.messages?.length > 0) {

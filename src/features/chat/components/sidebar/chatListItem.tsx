@@ -6,12 +6,12 @@ import { useColorScheme } from "@mui/joy/styles";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { useChatListItem } from "../../hooks/useChatListItem";
+import { ModalAddMembers } from "../modals/ModalAddMembers";
 import { ChatListItemProps } from "./ChatListItem.types";
 import { ChatListItemActions } from "./ChatListItemActions";
 import { ChatListItemAvatar } from "./ChatListItemAvatar";
 import { ChatListItemMessage } from "./ChatListItemMessage";
 import { ChatListItemTitle } from "./ChatListItemTitle";
-import { ModalAddMembers } from "../modals/ModalAddMembers";
 
 export const ChatListItem = memo((props: ChatListItemProps) => {
     const {
@@ -204,7 +204,7 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                     <ChatListItemMessage chat={chat} />
                 </Stack>
             </ListItemButton>
-            
+
             {/* Add Members Modal for DM/MDM chats */}
             {(chat.chatType === 1 || chat.chatType === 4) && (
                 <ModalAddMembers

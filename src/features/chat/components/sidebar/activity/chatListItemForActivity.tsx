@@ -17,9 +17,10 @@ import {
     ThreadMessageProps,
     ThreadProps,
 } from "../../../../../types/chat";
-import { ProjectProps } from "../../../../../types/tasks";
+import { ProjectProps, TaskProps } from "../../../../../types/tasks";
 import { getLocalCurrentTimestamp } from "../../../../../utils/dateUtils";
 import { toggleMessagesPane } from "../../../../../utils/sidebarUtils";
+import { loadSpecificTask } from "../../../../tasks/services/loadSpecificTask";
 import { useActivityStatus } from "../../../hooks/useActivityStatus";
 import { loadSpecificThreadMessages } from "../../../services/loadSpecificThreadMessages";
 import { popSpecificMessages } from "../../../services/popSpecificMessages";
@@ -181,6 +182,23 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         }
     };
 
+    // Load the thread task if exists
+    const loadTask = () => {
+        (async () => {
+            if (activity.projectId && activity.taskId) {
+                const loadedTask: TaskProps[] = await loadSpecificTask(
+                    myself,
+                    activity.projectId,
+                    activity.taskId,
+                    accessToken
+                );
+                if (loadedTask.length > 0) {
+                    useTM.setCurrentPreviewTask(loadedTask[0]);
+                }
+            }
+        })();
+    };
+
     // Handle task comment activity
     const handleTaskCommentActivity = async () => {
         const shouldUseMainChat =
@@ -200,8 +218,13 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                         projectName: activity.projectName || "",
                         projectTags: [],
                     });
-                    useCM.setIsThreadVisible(false);
-                    useTM.setIsTaskPreviewVisible(true);
+                    if (activity.projectId && activity.taskId) {
+                        loadTask();
+                        useTM.setIsTaskPreviewVisible(true);
+                        useCM.setIsThreadVisible(false);
+                    } else {
+                        useCM.setIsThreadVisible(true);
+                    }
                 }
                 useCM.setIsMainChatVisible(true);
                 if (useTM.isCreatingTask.flag === true || useTM.isTaskPreviewVisible) {
