@@ -183,6 +183,11 @@ type DraggableTaskRowProps = {
     toggleExpand: (id: string) => void;
     childrenByParent: Map<string, TaskTableProps[]>;
     depth: number;
+    // sprintId → sprint name lookup for the "Sprint" column. The column
+    // is conditionally surfaced by DraggableTaskTable when a milestone
+    // is in view; the row falls back to "Sprint #<id>" if a row carries
+    // a sprintId we haven't loaded yet.
+    sprintNamesById?: Map<number, string>;
 };
 
 export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
@@ -205,6 +210,7 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
         toggleExpand,
         childrenByParent,
         depth,
+        sprintNamesById,
     } = props;
 
     const isChild = depth > 0;
@@ -1190,6 +1196,53 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                         {task.dueDate ? dayjs(task.dueDate).format("YYYY-MM-DD") : "-"}
                     </Typography>
                 );
+
+            case "sprint": {
+                if (task.sprintId == null) {
+                    return (
+                        <Typography
+                            level="body-sm"
+                            sx={{
+                                color: mode === "dark" ? "#666" : "#aaa",
+                                fontStyle: "italic",
+                                fontSize: "0.8rem",
+                            }}
+                        >
+                            —
+                        </Typography>
+                    );
+                }
+                const name = sprintNamesById?.get(task.sprintId) ?? `Sprint #${task.sprintId}`;
+                const resolved = sprintNamesById?.has(task.sprintId) ?? false;
+                return (
+                    <Chip
+                        label={name}
+                        size="small"
+                        title={name}
+                        sx={{
+                            maxWidth: "100%",
+                            backgroundColor:
+                                mode === "dark" ? alpha("#a78bfa", 0.18) : alpha("#7c3aed", 0.1),
+                            color: mode === "dark" ? "#c4b5fd" : "#5b21b6",
+                            fontWeight: 600,
+                            fontSize: "0.72rem",
+                            borderRadius: "6px",
+                            border: `1px solid ${
+                                mode === "dark" ? alpha("#a78bfa", 0.32) : alpha("#7c3aed", 0.22)
+                            }`,
+                            // Italicize the fallback so the user can tell at a
+                            // glance that the sprint hasn't been loaded yet.
+                            fontStyle: resolved ? "normal" : "italic",
+                            "& .MuiChip-label": {
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                                px: 1,
+                            },
+                        }}
+                    />
+                );
+            }
 
             case "updatedAt":
                 return (

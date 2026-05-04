@@ -118,6 +118,19 @@ export const defaultColumns: ColumnDef[] = [
         resizable: true,
     },
     {
+        // Surfaced only when the current filtered list contains at least
+        // one milestone — see the `hasMilestoneInDisplay` gate in
+        // DraggableTaskTable. Read-only: editing a task's sprint goes
+        // through SprintMilestonePicker in the task preview pane.
+        field: "sprint",
+        headerName: "Sprint",
+        width: 130,
+        minWidth: 90,
+        maxWidth: 240,
+        align: "center",
+        resizable: true,
+    },
+    {
         field: "updatedAt",
         headerName: "Last Updated",
         width: 180,
@@ -226,6 +239,13 @@ const fieldValue = (task: TaskTableProps, field: string): number | string | null
             return STATUS_RANK[task.status ?? ""] ?? null;
         case "tags":
             return lowerStr(task.concatTags);
+        case "sprint":
+            // Sort by sprintId so tasks/milestones in the same sprint
+            // cluster together. Sprint names live in component state
+            // (`sprintNamesById`) and aren't reachable from this
+            // module-scope helper; sprintId is monotonically allocated
+            // so it correlates with sprint creation/sequence order.
+            return task.sprintId ?? null;
         case "dueDate":
         case "updatedAt":
         case "createdDate":
@@ -950,7 +970,41 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         useTM.setCurrentPreviewTaskId(taskId);
     };
 
-    const visibleColumns = defaultColumns.filter((col) => !col.hidden);
+    // Show the "Sprint" column only when the filtered list actually
+    // contains a milestone — for a pure task-only view the sprint linkage
+    // adds noise (most tasks don't carry a sprint of their own; they
+    // inherit one through their milestone).
+    const hasMilestoneInDisplay = useMemo(
+        () => currentDisplayingTasks.some((t) => t.isMilestone === true),
+        [currentDisplayingTasks]
+    );
+
+    // Resolve a sprintId → sprint name lookup scoped to the current
+    // project. Passed into each row so the "Sprint" cell can render the
+    // human-readable name without each row re-walking the whole sprint
+    // list. Falls back to "Sprint #<id>" inside the row when the sprint
+    // hasn't been loaded yet (e.g. mid-fetch on project switch).
+    const currentProjectId = usePM.currentProject?.projectId ?? null;
+    const sprintNamesById = useMemo(() => {
+        const map = new Map<number, string>();
+        if (currentProjectId == null) return map;
+        const sprints = useSM.projectSprints[currentProjectId] ?? [];
+        for (const s of sprints) {
+            if (s.isDeleted) continue;
+            map.set(s.sprintId, s.name);
+        }
+        return map;
+    }, [useSM.projectSprints, currentProjectId]);
+
+    const visibleColumns = useMemo(
+        () =>
+            defaultColumns.filter((col) => {
+                if (col.hidden) return false;
+                if (col.field === "sprint" && !hasMilestoneInDisplay) return false;
+                return true;
+            }),
+        [hasMilestoneInDisplay]
+    );
 
     // Create columns with dynamic widths for passing to rows
     const columnsWithWidths: ColumnDef[] = visibleColumns.map((col) => ({
@@ -1136,6 +1190,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                             myself={myself}
                                             setMyself={setMyself}
                                             socket={socket}
+                                            sprintNamesById={sprintNamesById}
                                             task={task}
                                             teamMembers={teamMembers}
                                             toggleExpand={toggleExpand}
