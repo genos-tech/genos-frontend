@@ -17,7 +17,6 @@ import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprin
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskProps } from "../../../../types/tasks";
-import { getFormattedTodayDateStr } from "../../../../utils/dateUtils";
 import { createEmptyTask } from "../../services/createEmptyTask";
 import {
     updateProjectOptions,
@@ -362,6 +361,54 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    // Default due date for a freshly-created task: inherit from the
+    // immediate parent so a child can't outlast its container. Mental
+    // model the user asked for: "the task must be done by the milestone's
+    // due date". Fall-through chain is intentional:
+    //   1. Parent task's `dueDate` — covers both "task under milestone"
+    //      (the parent here is the milestone's backing task, which the
+    //      backend keeps synced to the milestone's own due date) and
+    //      "sub-task under a regular task".
+    //   2. Milestone's `dueDate` — direct lookup for the rare case the
+    //      backing task isn't yet in `allTasks` (e.g. a fresh milestone
+    //      created moments earlier and selected from the picker before
+    //      the project tasks have re-fetched).
+    //   3. Empty string ("TBD") — top-level tasks with no parent /
+    //      milestone context, or where the parent itself has no due
+    //      date set, should leave the field unscheduled so the user
+    //      can pick something later instead of being silently anchored
+    //      to "today". `TaskCreateFooter` / `uploadNewTask` already
+    //      treat empty as null when sending to the backend.
+    // We slice to 10 chars so a backend value like
+    // "2026-05-10T00:00:00Z" still feeds the YYYY-MM-DD shape the date
+    // input (`TaskDueDateInput`) expects.
+    const computeInheritedDueDate = (): string => {
+        const toIsoDate = (raw: string | null | undefined): string | null => {
+            if (!raw) return null;
+            const trimmed = raw.length >= 10 ? raw.slice(0, 10) : raw;
+            return /^\d{4}-\d{2}-\d{2}$/.test(trimmed) ? trimmed : null;
+        };
+
+        const parentId = useTM.isCreatingTask.parentTaskId;
+        if (parentId != null) {
+            const parent = useTM.allTasks.find((t) => String(t.id) === String(parentId));
+            const inherited = toIsoDate(parent?.dueDate ?? null);
+            if (inherited) return inherited;
+        }
+
+        const milestoneIdForCreate = useTM.isCreatingTask.milestoneId;
+        const projectId = usePM.currentProject?.projectId;
+        if (milestoneIdForCreate != null && useSM && projectId != null) {
+            const milestone = (useSM.projectMilestones[projectId] ?? []).find(
+                (m) => m.milestoneId === milestoneIdForCreate
+            );
+            const inherited = toIsoDate(milestone?.dueDate ?? null);
+            if (inherited) return inherited;
+        }
+
+        return "";
+    };
+
     useEffect(() => {
         // Only seed `taskContent` once the global id matches the one we
         // created in this mount; see the bootstrap effect above for why
@@ -378,7 +425,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 chatType: chatType,
                 chatId: useCM.currentMainChat?.chatId || null,
                 threadId: useCM.currentThreadChat?.threadId || null,
-                dueDate: getFormattedTodayDateStr(),
+                dueDate: computeInheritedDueDate(),
                 status: {
                     code: 0,
                     status: "Open",

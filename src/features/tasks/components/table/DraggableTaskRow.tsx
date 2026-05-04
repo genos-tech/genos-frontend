@@ -1121,6 +1121,24 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                 ) : null;
 
             case "daysLeft":
+                // A task with no due date can't be "expired" — guard the
+                // chip on `dueDate` so a stale `daysLeft === -1` left
+                // behind by an earlier expired-state row (e.g. user just
+                // toggled the due date to TBD and the IDB write hasn't
+                // refreshed yet) doesn't mislabel an unscheduled task.
+                if (!task.dueDate) {
+                    return (
+                        <Typography
+                            level="body-sm"
+                            sx={{
+                                fontStyle: "italic",
+                                color: mode === "dark" ? "#888" : "#999",
+                            }}
+                        >
+                            —
+                        </Typography>
+                    );
+                }
                 return task.daysLeft === -1 ? (
                     <Chip
                         label="Expired"

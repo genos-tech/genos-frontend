@@ -552,6 +552,13 @@ export const getTaskColumns = (props: getTaskColumnsProps): GridColDef[] => {
             align: "center",
             headerAlign: "center",
             renderCell: (params: GridRenderCellParams) => {
+                // A task with no due date can't be "expired" — defend
+                // against a stale `daysLeft === -1` left behind on a row
+                // whose due date was just cleared so the cell never
+                // claims something the data doesn't support.
+                if (!params.row?.dueDate) {
+                    return null;
+                }
                 return params.value === -1 ? (
                     <Chip
                         label={"Expired"}

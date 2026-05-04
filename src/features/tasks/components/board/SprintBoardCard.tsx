@@ -106,7 +106,10 @@ export const SprintBoardCard = ({
     };
 
     const formatDaysLeft = (daysLeft: number | null) => {
-        if (daysLeft === null) return "No due date";
+        // Treat any falsy due date as "no schedule" so a row whose
+        // due date was just cleared doesn't briefly claim "Expired"
+        // off a stale negative `daysLeft` cached on the task model.
+        if (!task.dueDate || daysLeft === null) return "No due date";
         if (daysLeft < 0) return "Expired";
         if (daysLeft === 0) return "Due today";
         return `${daysLeft}d left`;

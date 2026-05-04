@@ -120,6 +120,15 @@ export const sendUpdatedSpecificTask = async (
                 }
 
                 if (updatedTask) {
+                    // When the user clears the due date (TBD), the
+                    // local `daysLeft` is whatever the previous due
+                    // date computed to (e.g. -1 for a row that was
+                    // already expired). Persisting that into IDB makes
+                    // the table flash "Expired" on next render until a
+                    // fresh fetch overwrites it. Treat empty/null due
+                    // date as "no days-left" so the cached row matches
+                    // what the backend will later return.
+                    const hasDueDate = !!updatedTask.dueDate;
                     addTask({
                         id: String(updatedTask.id),
                         title: updatedTask.title,
@@ -128,7 +137,7 @@ export const sendUpdatedSpecificTask = async (
                         createdDate: updatedTask.createdDate || null,
                         updatedAt: updatedTask.updatedAt || null,
                         dueDate: updatedTask.dueDate,
-                        daysLeft: updatedTask.daysLeft || null,
+                        daysLeft: hasDueDate ? updatedTask.daysLeft || null : null,
                         status: updatedTask.status.status,
                         assigneeId: updatedTask.assignee.userId,
                         assigneeEmail: updatedTask.assignee.userEmail,

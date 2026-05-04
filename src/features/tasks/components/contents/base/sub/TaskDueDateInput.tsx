@@ -49,6 +49,12 @@ export const TaskDueDateInput = (props: TaskDueDateInputProps) => {
                     setTaskContent({
                         ...taskContent,
                         dueDate: "",
+                        // Drop any cached days-left so downstream
+                        // consumers (table, sprint card, IDB row) don't
+                        // briefly render "Expired" for an unscheduled
+                        // task while the next backend round-trip is
+                        // still in flight.
+                        daysLeft: undefined,
                     });
                     if (setTaskUpdated) {
                         setTaskUpdated(true);
