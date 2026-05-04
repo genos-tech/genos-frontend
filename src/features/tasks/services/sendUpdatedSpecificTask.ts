@@ -46,10 +46,18 @@ export const sendUpdatedSpecificTask = async (
                 due_date: updatedTask.dueDate !== "" ? updatedTask.dueDate : null,
                 links: updatedTask.links,
                 tags: updatedTask.tags,
-                // Persist milestone / sprint linkage on tasks. Only
-                // include the keys when set so the backend's None-strip
-                // doesn't silently drop them.
-                ...(updatedTask.milestoneId != null ? { milestone: updatedTask.milestoneId } : {}),
+                // Always send `milestone` (even when null) so the
+                // backend can distinguish "key absent" (no change)
+                // from "explicit clear". The PUT handler's milestone
+                // bridge runs after `serializer.save()` and uses the
+                // key's presence to decide whether to update
+                // `parent_task_id` / `root_task_id` and cascade
+                // `milestone_id` to descendant sub-tasks.
+                //
+                // `sprint` keeps its conditional spread because the
+                // backend's None-strip still owns sprint clearing
+                // semantics (no bridge needed there).
+                milestone: updatedTask.milestoneId ?? null,
                 ...(updatedTask.sprintId != null ? { sprint: updatedTask.sprintId } : {}),
             });
 
