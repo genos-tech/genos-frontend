@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
@@ -221,6 +221,14 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
     // Hover state for better UX
     const [isHovered, setIsHovered] = useState(false);
 
+    // Row DOM ref so we can pull the selected row into view when the
+    // preview pane swings open from somewhere other than the row's
+    // own click (sidebar / deep-link / keyboard nav). `scrollIntoView`
+    // with `block: "nearest"` is a no-op when the row is already in
+    // the viewport, so we don't churn scroll position on the click
+    // path that's already centered.
+    const rowRef = useRef<HTMLDivElement | null>(null);
+
     // Check if this row is the currently selected/previewed task.
     // Milestone rows are selected when the milestone preview is open
     // for this task's milestoneId.
@@ -230,6 +238,23 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
           useTM.currentPreviewKind === "milestone" &&
           useTM.currentPreviewMilestoneId === task.milestoneId
         : useTM.isTaskPreviewVisible && useTM.currentPreviewTaskId === Number(task.id);
+
+    // When this row becomes the selected/previewed one, nudge it into
+    // view if the user can't already see it. Scoped to the false→true
+    // transition (depending on `isSelected` only) so re-renders that
+    // keep the same selection don't trigger gratuitous scrolls. The
+    // `requestAnimationFrame` defers to the next paint so layout
+    // changes that often pair with selection (parent auto-expand,
+    // virtualised re-mounts) settle before we measure offsets.
+    useEffect(() => {
+        if (!isSelected) return;
+        const node = rowRef.current;
+        if (!node) return;
+        const id = window.requestAnimationFrame(() => {
+            node.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        });
+        return () => window.cancelAnimationFrame(id);
+    }, [isSelected]);
 
     // Centralized click handler for opening either a task or a
     // milestone preview, keeping the bug-fix invariants from
@@ -1297,7 +1322,14 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
         <Draggable draggableId={String(task.id)} index={index} isDragDisabled={false}>
             {(provided, snapshot) => (
                 <div
-                    ref={provided.innerRef}
+                    // `react-beautiful-dnd`'s `innerRef` is a callback
+                    // ref — fan it out to ours so the dnd machinery
+                    // still gets the node while we keep a handle for
+                    // `scrollIntoView` above.
+                    ref={(el) => {
+                        provided.innerRef(el);
+                        rowRef.current = el;
+                    }}
                     {...provided.draggableProps}
                     style={{
                         ...getTableRowStyles(
