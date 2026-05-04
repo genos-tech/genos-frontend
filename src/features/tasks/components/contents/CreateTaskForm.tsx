@@ -25,6 +25,7 @@ import {
     updateTeamMembersOptions,
 } from "../../services/updateTaskAutoCompleteOptions";
 import { sendMilestoneCreatedMessage } from "../../sprint-milestone/services";
+import { getCreationKind } from "../../utils/taskKind";
 import { TaskCreateAttachmentBlock } from "./base/TaskCreateAttachmentBlock";
 import { TaskCreateBodyBlock } from "./base/TaskCreateBodyBlock";
 import { TaskCreateFooter } from "./base/TaskCreateFooter";
@@ -268,16 +269,10 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     const [reporter, setReporter] = useState<UserProps>(myself);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isCreatingMilestone, setIsCreatingMilestone] = useState(false);
-    // Milestones can't be nested under another milestone or under any
-    // task (no "milestone sub-task"). Force creationKind to "task"
-    // whenever the form is opened inside a milestone or beneath a
-    // parent task, and hide the toggle below.
-    const creationKind: "task" | "milestone" =
-        useTM.isCreatingTask.milestoneId != null || useTM.isCreatingTask.parentTaskId != null
-            ? "task"
-            : useTM.isCreatingTask.creationKind === "milestone"
-              ? "milestone"
-              : "task";
+    // The effective creation kind ("task" | "milestone" | "subtask")
+    // is derived from `useTM.isCreatingTask` plus the project's task
+    // table — see `getCreationKind` for the rules.
+    const creationKind = getCreationKind(useTM.isCreatingTask, useTM.allTasks);
 
     // Body template picker. Default to the milestone template when the user
     // is creating a milestone; otherwise use the standard task template.
@@ -425,6 +420,17 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             sprintId: (taskContent as any)?.sprintId ?? null,
             dueDate: taskContent.dueDate || null,
             priority: taskContent.priority?.priority || null,
+            // Mirror the priority pattern: backend stores both the
+            // human-readable label and the numeric code, and was
+            // silently dropping `effort_level` here because we never
+            // sent it. Treat empty `level`/`code` as null so an
+            // unselected dropdown doesn't write blanks to the row.
+            effortLevel: taskContent.effortLevel?.level || null,
+            effortLevelCode:
+                typeof taskContent.effortLevel?.code === "number" &&
+                taskContent.effortLevel.code >= 0
+                    ? taskContent.effortLevel.code
+                    : null,
             tags: taskContent.tags || [],
             reporterId: myself.userId,
             assigneeIds: assignee?.userId ? [assignee.userId] : [],
@@ -662,6 +668,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                             useTM={useTM}
                             useUISM={useUISM}
                             isMilestone={creationKind === "milestone"}
+                            isSubTask={creationKind === "subtask"}
                         />
                     </Box>
 
@@ -707,6 +714,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                 useUISM={useUISM}
                                 usePM={usePM}
                                 isMilestone={creationKind === "milestone"}
+                                isSubTask={creationKind === "subtask"}
                             />
                         </Box>
 

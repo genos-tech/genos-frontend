@@ -63,6 +63,7 @@ type TaskTitleBlockProps = {
     // When true, the create-mode badge reads "Milestone" instead of
     // "New Task". Only meaningful when `isPreviewMode` is false.
     isMilestone?: boolean;
+    isSubTask?: boolean;
 };
 
 export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
@@ -85,6 +86,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         useNM,
         usePM,
         isMilestone,
+        isSubTask,
     } = props;
 
     const { accessToken } = useAuth();
@@ -290,7 +292,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 letterSpacing: "0.05em",
                             }}
                         >
-                            {isMilestone ? "Milestone" : "New Task"}
+                            {isMilestone ? "Milestone" : isSubTask ? "Sub Task" : "New Task"}
                         </Typography>
                     </Box>
                 )}

@@ -59,6 +59,7 @@ import {
     updateTeamMembersOptions,
 } from "../../services/updateTaskAutoCompleteOptions";
 import { Milestone } from "../../sprint-milestone/types";
+import { getTaskKind } from "../../utils/taskKind";
 import { effortLevels, priorities } from "../../utils/taskMeta";
 import { TaskBodyBlock } from "./base/TaskBodyBlock";
 import { TaskCustomBarBlock } from "./base/TaskCustomBarBlock";
@@ -131,6 +132,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
 
     // Consolidated task edit state
     const taskEditState = useTaskEditState(useTM.currentPreviewTask);
+
+    const previewTaskKind = getTaskKind(useTM.currentPreviewTask, useTM.allTasks);
 
     // Set the current preview task when the component is mounted
     useEffect(() => {
@@ -551,6 +554,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                             useUISM={useUISM}
                             useNM={useNM}
                             usePM={usePM}
+                            isSubTask={previewTaskKind === "subtask"}
+                            isMilestone={previewTaskKind === "milestone"}
                         />
                     </Box>
 
@@ -597,6 +602,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                                 useSM={useSM}
                                 useUISM={useUISM}
                                 usePM={usePM}
+                                isSubTask={previewTaskKind === "subtask"}
+                                isMilestone={previewTaskKind === "milestone"}
                             />
                         </Box>
 

@@ -7,6 +7,7 @@ import { ProjectManagementState } from "../../../../hooks/common/useProjectManag
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { CreateTaskForm } from "../../../tasks/components/contents/CreateTaskForm";
@@ -21,6 +22,7 @@ interface CreateTaskPanelProps {
     setMyself: (me: UserProps) => void;
     useUISM: UIStateManagementState;
     useNM: NoteManagementState;
+    useSM: SprintMilestoneManagementState;
 }
 
 export const CreateTaskPanel = ({
@@ -33,6 +35,7 @@ export const CreateTaskPanel = ({
     setMyself,
     useUISM,
     useNM,
+    useSM,
 }: CreateTaskPanelProps) => {
     const { mode } = useColorScheme();
 
@@ -69,6 +72,7 @@ export const CreateTaskPanel = ({
                     useTM={useTM}
                     useUISM={useUISM}
                     useNM={useNM}
+                    useSM={useSM}
                 />
             </Box>
         </Panel>

@@ -209,7 +209,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                         useCM.currentSubChat.chatType === 4) && (
                         <Tooltip
                             size="sm"
-                            title="Create a new task"
+                            title="Create New Task"
                             variant="soft"
                             sx={{ borderRadius: "8px" }}
                         >

@@ -12,6 +12,8 @@ export type CreateMilestoneInput = {
     statusCode?: number | null;
     priority?: string | null;
     priorityCode?: number | null;
+    effortLevel?: string | null;
+    effortLevelCode?: number | null;
     dueDate?: string | null;
     tags?: unknown;
     reporterId?: number | string | null;
@@ -34,6 +36,8 @@ export const createMilestone = async (
                 status_code: input.statusCode ?? null,
                 priority: input.priority ?? null,
                 priority_code: input.priorityCode ?? null,
+                effort_level: input.effortLevel ?? null,
+                effort_level_code: input.effortLevelCode ?? null,
                 due_date: input.dueDate ?? null,
                 tags: input.tags ?? null,
                 reporter_id: input.reporterId ?? null,

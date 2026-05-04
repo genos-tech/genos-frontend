@@ -80,6 +80,11 @@ type TaskMainBlockProps = {
     // the sprint is implicit because a task always inherits the sprint
     // from its parent milestone.
     isMilestone?: boolean;
+    // When true, this block is rendering a sub-task (a child of a
+    // regular, non-milestone task). The Sprint/Milestone row is hidden
+    // entirely because a sub-task always inherits both from its parent
+    // chain — there's nothing meaningful for the user to pick here.
+    isSubTask?: boolean;
 };
 
 export const TaskMainBlock = (props: TaskMainBlockProps) => {
@@ -111,6 +116,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
         usePM,
         useSM,
         isMilestone,
+        isSubTask,
     } = props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
@@ -328,8 +334,11 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     - Milestones pick a Sprint (and inherit the sprint
                       end date as their due date).
                     - Tasks pick a Milestone (and the milestone is the
-                      source of truth for the sprint linkage). */}
-                {useSM && (
+                      source of truth for the sprint linkage).
+                    - Sub-tasks hide this row entirely: they always
+                      inherit sprint/milestone from the parent chain,
+                      so there's nothing for the user to pick. */}
+                {useSM && !isSubTask && (
                     <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
                         <FieldLabel isDark={isDark}>
                             {isMilestone ? "Sprint" : "Milestone"}

@@ -294,28 +294,37 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 useTM={useTM}
                                 useUISM={useUISM}
                                 useNM={useNM}
+                                useSM={useSM}
                             />
                         </>
                     )}
 
-                    {/* Task Preview Pane */}
-                    {useTM.isTaskPreviewVisible === true && useTM.currentPreviewTask && (
-                        <>
-                            <ResizeHandle key="task-preview-resize-handle" />
-                            <TaskPreviewPanel
-                                useCM={useCM}
-                                myself={myself}
-                                useNM={useNM}
-                                usePM={usePM}
-                                setMyself={setMyself}
-                                socket={socket}
-                                useTEM={useTEM}
-                                useTM={useTM}
-                                useSM={useSM}
-                                useUISM={useUISM}
-                            />
-                        </>
-                    )}
+                    {/* Task Preview Pane.
+                        Milestone previews intentionally leave
+                        `currentPreviewTask` undefined and route via
+                        `currentPreviewKind === "milestone"` +
+                        `currentPreviewMilestoneId` (see TaskPreview.tsx),
+                        so the gate has to accept either case. Without the
+                        milestone branch, freshly-created milestones don't
+                        render here. Mirrors TaskHomeLayout.tsx. */}
+                    {useTM.isTaskPreviewVisible === true &&
+                        (useTM.currentPreviewTask || useTM.currentPreviewKind === "milestone") && (
+                            <>
+                                <ResizeHandle key="task-preview-resize-handle" />
+                                <TaskPreviewPanel
+                                    useCM={useCM}
+                                    myself={myself}
+                                    useNM={useNM}
+                                    usePM={usePM}
+                                    setMyself={setMyself}
+                                    socket={socket}
+                                    useTEM={useTEM}
+                                    useTM={useTM}
+                                    useSM={useSM}
+                                    useUISM={useUISM}
+                                />
+                            </>
+                        )}
 
                     {/* Chat Note Pane */}
                     {useCM.isChatNoteVisibleInChat === true && (

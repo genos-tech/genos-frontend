@@ -224,7 +224,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                 {chat.chatType === 3 && (
                     <Tooltip
                         size="sm"
-                        title="Create a new task"
+                        title="Create New Task"
                         variant="soft"
                         sx={{ borderRadius: "8px" }}
                     >
