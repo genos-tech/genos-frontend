@@ -1,5 +1,5 @@
 [build]
-buildCommand = "rm -rf node_modules .vite && npm ci --no-audit --no-fund && npm run build"
+buildCommand = "npm install --no-audit --no-fund && npm run build"
 
 [deploy]
 startCommand = "npx serve -s dist -l $PORT"
