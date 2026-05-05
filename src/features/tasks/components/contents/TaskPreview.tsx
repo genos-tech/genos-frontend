@@ -58,6 +58,7 @@ import {
     updateTagOptions,
     updateTeamMembersOptions,
 } from "../../services/updateTaskAutoCompleteOptions";
+import { uploadTaskAttachments } from "../../services/uploadTaskAttachments";
 import { Milestone } from "../../sprint-milestone/types";
 import { getTaskKind } from "../../utils/taskKind";
 import { effortLevels, priorities } from "../../utils/taskMeta";
@@ -1141,6 +1142,63 @@ const MilestonePreviewInner = ({
     const persistFromTaskContent = async (next: TaskProps) => {
         if (!milestone) return;
         const projectId = milestone.projectId;
+
+        // Attachments staged in TaskTabBlock arrive here with negative
+        // client-side ids. The regular-task save path uploads these in
+        // `sendUpdatedSpecificTask`, but milestone metadata is patched
+        // through a different endpoint (PATCH /milestone/<id>/) that
+        // doesn't accept files — so without this pass, picking files in
+        // the Attachments tab silently went nowhere. We route uploads
+        // through the milestone's *backing* task id so the persisted row
+        // is reachable via the same `/task/attachment/` listing the
+        // backing task already uses.
+        const backingTaskId = milestone.taskId;
+        if (backingTaskId != null) {
+            const pending = next.attachments?.filter((a) => a.attachment_id < 0) ?? [];
+            if (pending.length > 0) {
+                try {
+                    const uploaded = await uploadTaskAttachments(
+                        backingTaskId,
+                        pending,
+                        accessToken
+                    );
+                    if (uploaded.length > 0) {
+                        const uploadedAttachments = uploaded.map((a: any) => ({
+                            attachment_id: a.attachment_id,
+                            file: a.attached_file,
+                            file_base64: a.file_base64,
+                            name: a.name,
+                            type: a.attached_type,
+                        }));
+                        // Drop the negative-id stubs and keep the
+                        // already-persisted rows alongside the freshly
+                        // uploaded ones, mirroring `useSendUpdatedTask`'s
+                        // post-upload reconciliation. Both stores need
+                        // the swap: `uploadedFiles` drives TaskTabBlock's
+                        // re-render of the chips, and `taskContentLike`
+                        // is what the next `persistFromTaskContent` call
+                        // will diff against — leaving the negatives there
+                        // would re-upload the same file on the next
+                        // metadata edit.
+                        const swap = (prev: TaskProps["attachments"]) => [
+                            ...prev.filter((a) => a.attachment_id >= 0),
+                            ...uploadedAttachments,
+                        ];
+                        setUploadedFiles((prev) => swap(prev));
+                        setTaskContentLike((prev) => ({
+                            ...prev,
+                            attachments: swap(prev.attachments ?? []),
+                        }));
+                    }
+                } catch (err) {
+                    // Don't block the metadata diff below on an upload
+                    // failure — the user's tag / sprint / status edits
+                    // are independent of the attachment payload.
+                    console.error("Milestone attachment upload failed:", err);
+                }
+            }
+        }
+
         const patch: Parameters<typeof useSM.updateExistingMilestone>[0] = {
             milestoneId: milestone.milestoneId,
         };
@@ -1926,7 +1984,19 @@ const MilestonePreviewInner = ({
                         setTaskBodyEdited={setBodyEdited}
                         setTaskBodySaved={setBodySaved}
                         socket={socket}
-                        taskId={milestone.milestoneId}
+                        // Body-attachment uploads (`POST /task/body/attachment/`)
+                        // resolve through `TaskBodyAttachmentFact.task` →
+                        // `TaskMaster.task_id`. Milestones don't have their
+                        // own row in TaskMaster, but each one is backed by
+                        // a real task row whose id is `milestone.taskId`.
+                        // Passing `milestoneId` here used to make the FK
+                        // lookup fail (silently-broken image / file
+                        // uploads in the milestone body editor); the
+                        // backing task id is what the server actually
+                        // accepts. We fall back to `milestoneId` only as a
+                        // belt-and-suspenders for partial server payloads
+                        // where `taskId` hasn't been backfilled yet.
+                        taskId={milestone.taskId ?? milestone.milestoneId}
                         useTEM={useTEM}
                         useUISM={useUISM}
                     />

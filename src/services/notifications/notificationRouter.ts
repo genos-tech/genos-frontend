@@ -248,8 +248,6 @@ export const buildIntentFromMessage = (
     if (!message || !message.wsType) return null;
     if (!myself || !myself.userId) return null;
 
-    console.log("message", message);
-
     if (message.wsType === "chat") {
         if (message.isThread === true) {
             return buildThreadIntent(message as NewThreadMessageProps, myself, useTEM);

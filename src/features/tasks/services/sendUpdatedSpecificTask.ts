@@ -6,8 +6,7 @@ import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
 import { taskMessageTemplate, taskThreadMessageTemplate } from "../utils/TaskMessageTemplate";
 import { addTask } from "./addTask";
-
-const base_url = import.meta.env.VITE_API_BASE_URL;
+import { uploadTaskAttachments } from "./uploadTaskAttachments";
 
 export const sendUpdatedSpecificTask = async (
     socket: Socket | null,
@@ -156,40 +155,19 @@ export const sendUpdatedSpecificTask = async (
                     });
                 }
 
-                let uploadAttachments: any[] = [];
-                for (const attachment of updatedTask.attachments) {
-                    if (attachment.attachment_id < 0) {
-                        const formData = new FormData();
-                        formData.append("task", String(updatedTask.id));
-                        formData.append("attachment_id", "-1");
-                        formData.append("attached_file", attachment.file);
-                        formData.append(
-                            "attached_type",
-                            attachment.file.type || "application/octet-stream"
-                        );
+                // `TaskProps.id` is typed as optional, but by this point
+                // we've already issued a `PUT /task/` against it and
+                // mirrored the row into IndexedDB, so a missing id here
+                // would mean we sent a malformed request upstream. Bail
+                // out instead of forwarding `undefined` to the upload
+                // helper (whose signature requires a real task id).
+                if (updatedTask.id == null) return [];
 
-                        const uploadAttachmentResponse = await fetch(
-                            `${base_url}/task/attachment/`,
-                            {
-                                method: "POST",
-                                headers: {
-                                    Authorization: `Bearer ${accessToken}`,
-                                },
-                                body: formData,
-                            }
-                        );
-
-                        const uploadAttachmentData = await uploadAttachmentResponse.json();
-
-                        if (!uploadAttachmentResponse.ok) {
-                            throw new Error(
-                                uploadAttachmentData.message || "Attachment Upload Failed"
-                            );
-                        } else if (uploadAttachmentData) {
-                            uploadAttachments = [...uploadAttachments, uploadAttachmentData];
-                        }
-                    }
-                }
+                const uploadAttachments = await uploadTaskAttachments(
+                    updatedTask.id,
+                    updatedTask.attachments,
+                    accessToken
+                );
 
                 return uploadAttachments;
             }
