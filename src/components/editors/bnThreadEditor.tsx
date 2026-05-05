@@ -145,7 +145,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
             throw new Error(uploadChatAttachmentData.message || "Attachment Upload Failed");
         }
 
-        return `${django_url}/${uploadChatAttachmentData.chatAttachmentUrl}`;
+        return `${django_url}${uploadChatAttachmentData.chatAttachmentUrl}`;
     }
 
     // We use the English, default dictionary

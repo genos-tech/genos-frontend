@@ -161,7 +161,7 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
             throw new Error(uploadNoteAttachmentData.message || "Attachment Upload Failed");
         }
 
-        return `${django_url}/${uploadNoteAttachmentData.noteAttachmentUrl}`;
+        return `${django_url}${uploadNoteAttachmentData.noteAttachmentUrl}`;
     }
 
     const locale = en;

@@ -164,7 +164,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
             );
         }
 
-        return `${django_url}/${uploadTaskBodyAttachmentData.taskBodyAttachmentUrl}`;
+        return `${django_url}${uploadTaskBodyAttachmentData.taskBodyAttachmentUrl}`;
     }
 
     const locale = en;

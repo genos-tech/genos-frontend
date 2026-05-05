@@ -127,7 +127,7 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
             throw new Error(uploadChatAttachmentData.message || "Attachment Upload Failed");
         }
 
-        return `${django_url}/${uploadChatAttachmentData.chatAttachmentUrl}`;
+        return `${django_url}${uploadChatAttachmentData.chatAttachmentUrl}`;
     }
 
     // List containing all default Slash Menu Items, as well as our custom one.

@@ -161,7 +161,7 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
             throw new Error(uploadNoteAttachmentData.message || "Attachment Upload Failed");
         }
 
-        return `${django_url}/${uploadNoteAttachmentData.noteAttachmentUrl}`;
+        return `${django_url}${uploadNoteAttachmentData.noteAttachmentUrl}`;
     }
 
     const locale = en;
@@ -398,9 +398,7 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
                             <SuggestionMenuController
                                 triggerCharacter={":"}
                                 minQueryLength={2}
-                                getItems={async (query) =>
-                                    getEmojiSuggestionItems(editor, query)
-                                }
+                                getItems={async (query) => getEmojiSuggestionItems(editor, query)}
                             />
 
                             {threadStore && <FloatingComposerController />}

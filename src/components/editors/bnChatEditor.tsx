@@ -145,7 +145,18 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
             throw new Error(uploadChatAttachmentData.message || "Attachment Upload Failed");
         }
 
-        return `${django_url}/${uploadChatAttachmentData.chatAttachmentUrl}`;
+        // The backend's `chatAttachmentUrl` is DRF's default `FileField`
+        // serialization, which already includes the `MEDIA_URL` prefix
+        // (so the value looks like `/media/chats/...`). Concatenating
+        // with an extra `/` between `django_url` and the value would
+        // produce `https://host//media/...` — Django's `re_path`
+        // (`^media/...`) doesn't match the doubled-slash variant, and
+        // Railway's edge proxy preserves the path as-is, so the GET
+        // 404s in production. Browsers / the local dev server happen to
+        // tolerate the double slash, which is why this only surfaced
+        // after we deployed. Same shape applies to every sibling editor
+        // (note / task / thread).
+        return `${django_url}${uploadChatAttachmentData.chatAttachmentUrl}`;
     }
 
     // We use the English, default dictionary
