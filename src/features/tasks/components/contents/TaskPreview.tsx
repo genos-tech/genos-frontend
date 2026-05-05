@@ -783,7 +783,13 @@ const milestoneToTaskProps = (
             textColor: effortMeta?.textColor ?? "",
         },
         tags: (m.tags as TagListProps[]) ?? [],
-        links: [],
+        // Milestones now persist their own `links` (mirrors
+        // `TaskMaster.links`). Reading from `m.links` ensures the
+        // URL/Link section in the milestone preview survives a
+        // milestone refresh — the previous hard-coded `[]` would
+        // wipe a freshly-added link the moment any field on the
+        // milestone bumped `tsUpdatedAt`.
+        links: (m.links as TaskProps["links"]) ?? [],
         attachments,
         parentTaskId: null,
         // The backing task is itself the root, so children created
@@ -1232,6 +1238,17 @@ const MilestonePreviewInner = ({
         }
         if (JSON.stringify(next.tags ?? []) !== JSON.stringify(milestone.tags ?? [])) {
             patch.tags = next.tags ?? [];
+        }
+        // Links diff: persist `DynamicURLManager` edits the same way
+        // tags do. Without this, adding a link in the milestone
+        // preview would update local state but the very next
+        // server-driven reset (e.g. another field's PATCH bumping
+        // `tsUpdatedAt`) would wipe it back to `[]`.
+        if (
+            JSON.stringify(next.links ?? []) !==
+            JSON.stringify(((milestone.links as TaskProps["links"]) ?? []) as unknown[])
+        ) {
+            patch.links = next.links ?? [];
         }
         const nextSprintId = (next as unknown as { sprintId?: number | null }).sprintId;
         if (nextSprintId !== undefined && nextSprintId !== milestone.sprintId) {

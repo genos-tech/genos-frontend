@@ -16,6 +16,9 @@ export type CreateMilestoneInput = {
     effortLevelCode?: number | null;
     dueDate?: string | null;
     tags?: unknown;
+    // Initial external links to seed the milestone with. Same shape as
+    // `UpdateMilestoneInput.links`; usually empty on creation.
+    links?: unknown;
     reporterId?: number | string | null;
     assigneeIds?: Array<number | string>;
 };
@@ -39,6 +42,7 @@ export const createMilestone = async (
                 effort_level: input.effortLevel ?? null,
                 effort_level_code: input.effortLevelCode ?? null,
                 due_date: input.dueDate ?? null,
+                links: input.links ?? null,
                 tags: input.tags ?? null,
                 reporter_id: input.reporterId ?? null,
                 assignee_ids: input.assigneeIds ?? [],
