@@ -152,13 +152,21 @@ const formatRelative = (iso: string): string => {
 
 // Best-effort label formatter for old/new value chips. Numbers that
 // look like user ids get resolved against `teamMemberProfiles`;
-// everything else is stringified.
+// relation-id fields (parent task / milestone / sprint) prefer the
+// human-readable title stashed in `metadata.oldLabel` / `newLabel`
+// by the backend signal, falling back to "#<id>" so a missing /
+// stale relation still renders something useful. Everything else
+// is stringified.
+const RELATION_ID_FIELDS = new Set(["parent_task_id", "milestone_id", "sprint_id"]);
+
 const formatValue = (
     value: unknown,
     fieldName: string | null,
-    teamMemberProfiles: Record<string, any>
+    teamMemberProfiles: Record<string, any>,
+    metadata: Record<string, unknown> | null | undefined,
+    side: "old" | "new"
 ): { label: string; isUser: boolean } => {
-    if (value == null || value === "") return { label: "—", isUser: false };
+    if (value == null || value === "") return { label: "None", isUser: false };
     const looksLikeUserId =
         fieldName === "assignee_id" ||
         fieldName === "reporter_id" ||
@@ -169,6 +177,15 @@ const formatValue = (
             return { label: profile.userName, isUser: true };
         }
     }
+    if (fieldName && RELATION_ID_FIELDS.has(fieldName)) {
+        const labelKey = side === "old" ? "oldLabel" : "newLabel";
+        const titleLabel = metadata?.[labelKey];
+        const idText = `#${value}`;
+        if (typeof titleLabel === "string" && titleLabel.trim() !== "") {
+            return { label: `${titleLabel} (${idText})`, isUser: false };
+        }
+        return { label: idText, isUser: false };
+    }
     if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
         return { label: String(value), isUser: false };
     }
@@ -178,6 +195,26 @@ const formatValue = (
         return { label: String(value), isUser: false };
     }
 };
+
+// Diff-style actions whose verb expects both an old and a new chip
+// ("changed X from A → B"). For these we always render *both* chips
+// even when one side is null/empty — `formatValue` substitutes
+// "None" — so the sentence never collapses into a misleading
+// "changed effort from Low" when the previous value was unset.
+// Other actions (created, attachment_added, comment_added, …) keep
+// the existing "show chip only when there's something to show" rule.
+const DIFF_ACTIONS = new Set([
+    "title_changed",
+    "status_changed",
+    "priority_changed",
+    "effort_changed",
+    "assignee_changed",
+    "reporter_changed",
+    "due_date_changed",
+    "parent_changed",
+    "milestone_changed",
+    "sprint_changed",
+]);
 
 // Per-action sentence skeleton. The actor / chips are rendered
 // outside; this returns the verb phrase only ("changed status from").
@@ -204,11 +241,11 @@ const verbFor = (action: string): string => {
         case "tags_changed":
             return "updated the tags";
         case "parent_changed":
-            return "changed parent task";
+            return "changed parent task from";
         case "milestone_changed":
-            return "changed milestone";
+            return "changed milestone from";
         case "sprint_changed":
-            return "changed sprint";
+            return "changed sprint from";
         case "closed":
             return "closed this";
         case "reopened":
@@ -343,10 +380,26 @@ export const TaskActivityFeed = ({
 
             {activities.map((row) => {
                 const actorName = row.actor?.userName ?? "Someone";
-                const oldFmt = formatValue(row.oldValue, row.fieldName, teamMemberProfiles);
-                const newFmt = formatValue(row.newValue, row.fieldName, teamMemberProfiles);
-                const showOldChip = row.oldValue != null && row.oldValue !== "";
-                const showNewChip = row.newValue != null && row.newValue !== "";
+                const oldFmt = formatValue(
+                    row.oldValue,
+                    row.fieldName,
+                    teamMemberProfiles,
+                    row.metadata,
+                    "old"
+                );
+                const newFmt = formatValue(
+                    row.newValue,
+                    row.fieldName,
+                    teamMemberProfiles,
+                    row.metadata,
+                    "new"
+                );
+                // Diff-style verbs ("changed X from … →") always need
+                // both sides so the sentence stays coherent even when
+                // the prior value was unset (e.g. priority None → High).
+                const isDiffAction = DIFF_ACTIONS.has(row.actionType);
+                const showOldChip = isDiffAction || (row.oldValue != null && row.oldValue !== "");
+                const showNewChip = isDiffAction || (row.newValue != null && row.newValue !== "");
 
                 // Prefer the team-member profile (richer presence /
                 // online status) over `row.actor`, which carries only
