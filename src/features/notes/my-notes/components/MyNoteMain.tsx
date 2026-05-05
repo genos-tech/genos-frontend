@@ -103,7 +103,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
 
     const handleCopyNoteLink = async () => {
         if (useNM.currentMyNote) {
-            const noteUrl = `${window.location.origin}/Home/notes/my/${useNM.currentMyNote.noteId}`;
+            const noteUrl = `${window.location.origin}/home/notes/my/${useNM.currentMyNote.noteId}`;
             try {
                 await navigator.clipboard.writeText(noteUrl);
             } catch (err) {

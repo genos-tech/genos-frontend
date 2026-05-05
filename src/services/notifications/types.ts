@@ -48,7 +48,7 @@ export interface ActiveSurface {
     threadId?: number;
     taskId?: number;
     /** Project the source belongs to. Required to build the
-     *  `/Home/tasks/project/:projectId/task/:taskId` deep URL when the user
+     *  `/home/tasks/project/:projectId/task/:taskId` deep URL when the user
      *  clicks a task-comment or PM-chat notification. */
     projectId?: number;
 }

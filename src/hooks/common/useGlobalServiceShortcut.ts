@@ -8,10 +8,10 @@ import { isMac } from "../../utils/platform";
 // `components/layout/sidebar.tsx` and the OVERLAY_SERVICES table in
 // `components/layout/ServiceSwitcherOverlay.tsx` — keep all three in sync.
 const SERVICES_BY_ID: Array<{ id: number; path: string }> = [
-    { id: 0, path: "/Home/inbox" },
-    { id: 1, path: "/Home/chat" },
-    { id: 2, path: "/Home/tasks" },
-    { id: 3, path: "/Home/notes" },
+    { id: 0, path: "/home/inbox" },
+    { id: 1, path: "/home/chat" },
+    { id: 2, path: "/home/tasks" },
+    { id: 3, path: "/home/notes" },
 ];
 
 // Letter shortcut map, derived from SERVICES_BY_ID to keep the two in sync.
@@ -23,7 +23,7 @@ const SERVICE_BY_KEY: Record<string, { id: number; path: string }> = {
 };
 
 // Derive the active service id from the current URL. Returns -1 when the
-// URL is not under any known service (e.g. the initial `/Home` redirect),
+// URL is not under any known service (e.g. the initial `/home` redirect),
 // which we treat as "unknown — leave the MRU list alone".
 const deriveServiceId = (pathname: string): number => {
     for (const service of SERVICES_BY_ID) {

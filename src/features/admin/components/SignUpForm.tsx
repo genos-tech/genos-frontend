@@ -93,7 +93,7 @@ const SignUpContent = () => {
         if (signUpRes) {
             navigate("/");
         } else {
-            navigate("/SignUp");
+            navigate("/signup");
         }
     };
 
@@ -353,7 +353,7 @@ const SignUpContent = () => {
                                 >
                                     Already have an account?{" "}
                                     <Link
-                                        href="SignIn"
+                                        href="signin"
                                         level="title-sm"
                                         sx={{
                                             color: styles.linkColor,

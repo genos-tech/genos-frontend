@@ -119,14 +119,14 @@ export const App = () => {
 
             // Inbox: no source -> just switch services.
             if (intent.category === "inbox" || !src) {
-                navigate("/Home/inbox");
+                navigate("/home/inbox");
                 return;
             }
 
             // Task / milestone: navigate to the task deep URL when we have
             // both ids; otherwise fall through to the chat branch.
             if (src.taskId !== undefined && src.projectId !== undefined) {
-                navigate(`/Home/tasks/project/${src.projectId}/task/${src.taskId}`);
+                navigate(`/home/tasks/project/${src.projectId}/task/${src.taskId}`);
                 return;
             }
 
@@ -148,7 +148,7 @@ export const App = () => {
             }
 
             // Defensive fallback: surface the chat service.
-            navigate("/Home/chat");
+            navigate("/home/chat");
         },
         [useCM, useTM, useUISM, usePM, navigate]
     );

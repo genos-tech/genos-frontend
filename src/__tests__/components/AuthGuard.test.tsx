@@ -1,13 +1,13 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { useAuth } from "../../context/AuthContext";
+import { AuthGuard } from "../../features/admin/authGuard";
 
 vi.mock("../../context/AuthContext", () => ({
     useAuth: vi.fn(),
 }));
-
-import { useAuth } from "../../context/AuthContext";
-import { AuthGuard } from "../../features/admin/authGuard";
 
 describe("AuthGuard", () => {
     beforeEach(() => {
@@ -19,7 +19,7 @@ describe("AuthGuard", () => {
         return render(
             <MemoryRouter initialEntries={[initialPath]}>
                 <Routes>
-                    <Route path="/SignIn" element={<div>Sign In Page</div>} />
+                    <Route path="/signin" element={<div>Sign In Page</div>} />
                     <Route element={<AuthGuard />}>
                         <Route path="/protected" element={<div>Protected Content</div>} />
                     </Route>
@@ -28,7 +28,7 @@ describe("AuthGuard", () => {
         );
     };
 
-    it("should redirect to /SignIn when not signed in", async () => {
+    it("should redirect to /signin when not signed in", async () => {
         (useAuth as ReturnType<typeof vi.fn>).mockReturnValue({
             accessToken: null,
         });
@@ -57,7 +57,7 @@ describe("AuthGuard", () => {
         const { container } = render(
             <MemoryRouter initialEntries={["/protected"]}>
                 <Routes>
-                    <Route path="/SignIn" element={<div>Sign In Page</div>} />
+                    <Route path="/signin" element={<div>Sign In Page</div>} />
                     <Route element={<AuthGuard />}>
                         <Route path="/protected" element={<div>Protected Content</div>} />
                     </Route>

@@ -1468,7 +1468,7 @@ const MilestonePreviewInner = ({
                                 }}
                                 onClick={async () => {
                                     if (milestone.projectId && milestone.milestoneId) {
-                                        const milestoneUrl = `${window.location.origin}/Home/tasks/project/${milestone.projectId}/milestone/${milestone.milestoneId}`;
+                                        const milestoneUrl = `${window.location.origin}/home/tasks/project/${milestone.projectId}/milestone/${milestone.milestoneId}`;
                                         try {
                                             await navigator.clipboard.writeText(milestoneUrl);
                                         } catch (err) {

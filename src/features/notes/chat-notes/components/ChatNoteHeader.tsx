@@ -354,7 +354,7 @@ export const ChatNoteHeader = ({
                                         };
                                         const chatTypePath = CHAT_TYPE_MAP[note.chatType];
                                         if (chatTypePath) {
-                                            const noteUrl = `${window.location.origin}/Home/notes/chat/${chatTypePath}/${note.chatId}/thread/${note.threadId}/note/${note.noteId}`;
+                                            const noteUrl = `${window.location.origin}/home/notes/chat/${chatTypePath}/${note.chatId}/thread/${note.threadId}/note/${note.noteId}`;
                                             try {
                                                 await navigator.clipboard.writeText(noteUrl);
                                             } catch (err) {
@@ -463,7 +463,7 @@ export const ChatNoteHeader = ({
                                         const chatTypePath = CHAT_TYPE_PATH_MAP[note.chatType];
                                         if (chatTypePath) {
                                             navigate(
-                                                `/Home/notes/chat/${chatTypePath}/${note.chatId}/thread/${note.threadId}/note/${note.noteId}`
+                                                `/home/notes/chat/${chatTypePath}/${note.chatId}/thread/${note.threadId}/note/${note.noteId}`
                                             );
                                         }
                                     }

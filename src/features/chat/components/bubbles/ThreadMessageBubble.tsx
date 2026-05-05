@@ -100,9 +100,10 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
         const typePath = CHAT_TYPE_PATH[thread.chatType];
         if (typePath) {
             // Update URL
-            const threadId = thread.chatType === 3 && thread.taskId ? thread.taskId : thread.threadId;
+            const threadId =
+                thread.chatType === 3 && thread.taskId ? thread.taskId : thread.threadId;
             navigate(
-                `/Home/chat/${typePath}/${thread.chatId}/thread/${threadId}/message/${message.messageId}`
+                `/home/chat/${typePath}/${thread.chatId}/thread/${threadId}/message/${message.messageId}`
             );
 
             // Update currentThreadChat's moveToSpecificIndex to focus on this message

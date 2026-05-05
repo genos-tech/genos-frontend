@@ -13,7 +13,7 @@ export const AuthGuard = () => {
 
     if (loading) return <div>Loading...</div>;
 
-    return localStorage.getItem("isSigningIn") === "yes" ? <Outlet /> : <Navigate to="/SignIn" />;
+    return localStorage.getItem("isSigningIn") === "yes" ? <Outlet /> : <Navigate to="/signin" />;
 };
 
 export const GuestGuard = () => {
@@ -26,5 +26,9 @@ export const GuestGuard = () => {
 
     if (loading) return <div>Loading...</div>;
 
-    return localStorage.getItem("isSigningIn") === "yes" ? <Navigate to="/JoinTeam" /> : <Outlet />;
+    return localStorage.getItem("isSigningIn") === "yes" ? (
+        <Navigate to="/jointeam" />
+    ) : (
+        <Outlet />
+    );
 };

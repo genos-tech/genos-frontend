@@ -104,7 +104,7 @@ const SignInContent = () => {
             localStorage.setItem("avatarImgPath", signInRes.profile_image_file_name || "");
 
             if (signInRes.user_id) {
-                navigate("/JoinTeam");
+                navigate("/jointeam");
             } else {
                 console.error("Failed to get userId from sign-in response:", signInRes);
             }
@@ -201,7 +201,7 @@ const SignInContent = () => {
                                 <Typography level="body-sm" sx={{ color: styles.subtitleColor }}>
                                     New member?{" "}
                                     <Link
-                                        href="SignUp"
+                                        href="signup"
                                         level="title-sm"
                                         sx={{
                                             color: styles.linkColor,

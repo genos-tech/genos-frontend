@@ -682,7 +682,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                     useCM
                                                 );
                                                 setOpenUserProfile(false);
-                                                navigate("/Home/chat");
+                                                navigate("/home/chat");
                                             }
                                         })();
                                     }}
