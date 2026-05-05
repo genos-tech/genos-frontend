@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 
+import PopTeamUsersWorker from "../../db/workers/popTeamUsersWorker.ts?worker";
 import { findTeam } from "../../features/admin/services/findTeam";
 import { popTeamMembers } from "../../features/chat/services/popTeamMembers";
 import { FindTeamResponse, Team, UserProps } from "../../types/admin";
-import PopTeamUsersWorker from "../../db/workers/popTeamUsersWorker.ts?worker";
 
 export interface TeamManagementState {
     currentTeamId: string;
@@ -11,7 +11,10 @@ export interface TeamManagementState {
     teamMembers: UserProps[];
     setTeamMembers: (members: UserProps[]) => void;
     teamMemberProfiles: Record<string, UserProps>;
-    setTeamMemberProfiles: (profiles: Record<string, UserProps>) => void;
+    // Widened to React's Dispatch so call-sites can use the functional updater
+    // form (`setTeamMemberProfiles((prev) => ({ ...prev, [id]: ... }))`)
+    // without a cast. Single-arg callers continue to work.
+    setTeamMemberProfiles: Dispatch<SetStateAction<Record<string, UserProps>>>;
     currentTeam: Team;
     setCurrentTeam: (team: Team) => void;
     funcSetTeamMembers: () => Promise<void>;

@@ -521,6 +521,11 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                     ? taskContent.effortLevel.code
                     : null,
             tags: taskContent.tags || [],
+            // Forward any links the user added in the create form so a
+            // milestone can be created with its URL/Link section
+            // already populated (matches how a regular task carries
+            // `links` straight through `addTask`).
+            links: taskContent.links || [],
             reporterId: myself.userId,
             assigneeIds: assignee?.userId ? [assignee.userId] : [],
         });

@@ -5,7 +5,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { BnChatPreview } from "../../../../../../components/editors/bnChatPreview";
-import { AvatarWithStatus } from "../../../../../../components/ui/avatars/avatarWithStatus";
+import { UserAvatar } from "../../../../../../components/ui/avatars/UserAvatar";
 import { EmojiPicker } from "../../../../../../components/ui/emoji/EmojiPicker";
 import { ReactionTaskCommentEmojiDisplay } from "../../../../../../components/ui/emoji/ReactionTaskCommentEmojiDisplay";
 import { ChatManagementState } from "../../../../../../hooks/chats/useChatManagement";
@@ -278,16 +278,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
 
                         {/* Header with avatar, name, and timestamp */}
                         <Stack alignItems="center" direction="row" spacing={1.5}>
-                            <AvatarWithStatus
-                                avatarUser={useTEM.teamMemberProfiles[comment.senderId]}
-                                useCM={useCM}
-                                isForBubble={true}
-                                isYou={myself.userId === comment.senderId}
-                                myself={myself}
-                                setMyself={setMyself}
-                                socket={socket}
-                                useUISM={useUISM}
-                            />
+                            <UserAvatar userId={comment.senderId} />
                             <Typography
                                 level="title-md"
                                 sx={{

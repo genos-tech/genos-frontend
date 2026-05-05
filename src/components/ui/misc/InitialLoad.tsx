@@ -229,7 +229,7 @@ export const InitialLoad = (props: InitialLoadProps) => {
                     </Typography>
                     <Button
                         variant="outlined"
-                        onClick={() => navigate("/SignIn")}
+                        onClick={() => navigate("/signin")}
                         sx={{
                             borderColor: "rgba(99, 102, 241, 0.5)",
                             color: "rgba(255,255,255,0.9)",

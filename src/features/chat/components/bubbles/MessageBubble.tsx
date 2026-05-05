@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
 import { BnChatPreview } from "../../../../components/editors/bnChatPreview";
-import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { EmojiPicker } from "../../../../components/ui/emoji/EmojiPicker";
 import { EmojiReaction } from "../../../../components/ui/emoji/EmojiReaction";
 import { useAuth } from "../../../../context/AuthContext";
@@ -131,7 +131,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
             // The indexMap for PM uses messageIdWithChatId = `${chatId}-${taskId}`
             const messageIdentifier =
                 chat.chatType === 3 && message.taskId ? message.taskId : message.messageId;
-            navigate(`/Home/chat/${typePath}/${chat.chatId}/message/${messageIdentifier}`);
+            navigate(`/home/chat/${typePath}/${chat.chatId}/message/${messageIdentifier}`);
         }
 
         if (chat.chatType === 3) {
@@ -262,7 +262,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                             ? message.taskId
                                             : message.messageId;
                                     navigate(
-                                        `/Home/chat/${typePath}/${chat.chatId}/thread/${threadIdentifier}`
+                                        `/home/chat/${typePath}/${chat.chatId}/thread/${threadIdentifier}`
                                     );
                                 }
                             }
@@ -678,23 +678,11 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                             message.sender.isSystemUser === true
                                         ) && (
                                             <Box sx={{ flexShrink: 0 }}>
-                                                <AvatarWithStatus
-                                                    chat={chat}
-                                                    useCM={useCM}
-                                                    isForBubble={true}
-                                                    isYou={isSent}
-                                                    myself={myself}
-                                                    setMyself={setMyself}
-                                                    socket={socket}
-                                                    useUISM={useUISM}
-                                                    avatarUser={
+                                                <UserAvatar
+                                                    userId={
                                                         isSent
-                                                            ? useTEM.teamMemberProfiles[
-                                                                  myself.userId
-                                                              ]
-                                                            : useTEM.teamMemberProfiles[
-                                                                  message.sender.userId
-                                                              ]
+                                                            ? myself.userId
+                                                            : message.sender.userId
                                                     }
                                                 />
                                             </Box>

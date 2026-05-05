@@ -231,7 +231,7 @@ export const ChatNoteHeader = ({
                 />
             )}
 
-            <Stack alignItems="center" direction="row" spacing={1}>
+            <Stack alignItems="center" direction="row" spacing={1} sx={{ pb: 0.5 }}>
                 {/* Chat Avatars with styled containers */}
                 {chat && chat.chatType === 1 && (
                     <Box sx={avatarContainerStyle}>
@@ -273,67 +273,6 @@ export const ChatNoteHeader = ({
                             useUISM={useUISM}
                         />
                     </Box>
-                )}
-
-                {/* Child Note Button */}
-                {isInChatPage && useNM.currentChatNote && (
-                    <Tooltip
-                        size="sm"
-                        title="Create Child Note"
-                        variant="soft"
-                        sx={{
-                            background: styles.menuBg,
-                            border: `1px solid ${styles.menuBorder}`,
-                            borderRadius: "8px",
-                            backdropFilter: "blur(8px)",
-                        }}
-                    >
-                        <IconButton
-                            size="sm"
-                            variant="plain"
-                            sx={primaryButtonStyle}
-                            onClick={onCreateChildNote}
-                        >
-                            <NoteAddRoundedIcon sx={{ fontSize: 18 }} />
-                            <Typography level="body-xs" sx={{ fontWeight: 600, color: "inherit" }}>
-                                Child Note
-                            </Typography>
-                        </IconButton>
-                    </Tooltip>
-                )}
-
-                {/* Open in Notes Button */}
-                {isInChatPage && (
-                    <Tooltip
-                        size="sm"
-                        title="Open in Notes"
-                        variant="soft"
-                        sx={{
-                            background: styles.menuBg,
-                            border: `1px solid ${styles.menuBorder}`,
-                            borderRadius: "8px",
-                            backdropFilter: "blur(8px)",
-                        }}
-                    >
-                        <IconButton
-                            size="sm"
-                            variant="plain"
-                            sx={actionButtonStyle}
-                            onClick={() => {
-                                const note = useNM.currentChatNote;
-                                if (note) {
-                                    const chatTypePath = CHAT_TYPE_PATH_MAP[note.chatType];
-                                    if (chatTypePath) {
-                                        navigate(
-                                            `/Home/notes/chat/${chatTypePath}/${note.chatId}/thread/${note.threadId}/note/${note.noteId}`
-                                        );
-                                    }
-                                }
-                            }}
-                        >
-                            <LaunchRoundedIcon sx={{ fontSize: 18, color: styles.accentColor }} />
-                        </IconButton>
-                    </Tooltip>
                 )}
 
                 {/* Open Related Chat Button */}
@@ -415,7 +354,7 @@ export const ChatNoteHeader = ({
                                         };
                                         const chatTypePath = CHAT_TYPE_MAP[note.chatType];
                                         if (chatTypePath) {
-                                            const noteUrl = `${window.location.origin}/Home/notes/chat/${chatTypePath}/${note.chatId}/thread/${note.threadId}/note/${note.noteId}`;
+                                            const noteUrl = `${window.location.origin}/home/notes/chat/${chatTypePath}/${note.chatId}/thread/${note.threadId}/note/${note.noteId}`;
                                             try {
                                                 await navigator.clipboard.writeText(noteUrl);
                                             } catch (err) {
@@ -514,6 +453,53 @@ export const ChatNoteHeader = ({
                                 Child Note
                             </Typography>
                         </MenuItem>
+
+                        {/* Open in Notes */}
+                        {isInChatPage && (
+                            <MenuItem
+                                onClick={() => {
+                                    const note = useNM.currentChatNote;
+                                    if (note) {
+                                        const chatTypePath = CHAT_TYPE_PATH_MAP[note.chatType];
+                                        if (chatTypePath) {
+                                            navigate(
+                                                `/home/notes/chat/${chatTypePath}/${note.chatId}/thread/${note.threadId}/note/${note.noteId}`
+                                            );
+                                        }
+                                    }
+                                }}
+                                sx={{
+                                    gap: 1.25,
+                                    py: 0.875,
+                                    "&:hover": {
+                                        background: styles.buttonHover,
+                                    },
+                                }}
+                            >
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        width: 28,
+                                        height: 28,
+                                        borderRadius: "7px",
+                                        background: styles.buttonBg,
+                                        border: `1px solid ${styles.buttonBorder}`,
+                                    }}
+                                >
+                                    <LaunchRoundedIcon
+                                        sx={{ fontSize: 16, color: styles.accentColor }}
+                                    />
+                                </Box>
+                                <Typography
+                                    level="body-sm"
+                                    sx={{ fontWeight: 500, color: styles.textColor }}
+                                >
+                                    Open in Notes
+                                </Typography>
+                            </MenuItem>
+                        )}
 
                         <Divider sx={{ my: 0.5, opacity: 0.3 }} />
 

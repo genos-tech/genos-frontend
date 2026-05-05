@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
 import { BnChatPreview } from "../../../../components/editors/bnChatPreview";
-import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { EmojiPicker } from "../../../../components/ui/emoji/EmojiPicker";
 import { EmojiReaction } from "../../../../components/ui/emoji/EmojiReaction";
 import { useAuth } from "../../../../context/AuthContext";
@@ -100,9 +100,10 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
         const typePath = CHAT_TYPE_PATH[thread.chatType];
         if (typePath) {
             // Update URL
-            const threadId = thread.chatType === 3 && thread.taskId ? thread.taskId : thread.threadId;
+            const threadId =
+                thread.chatType === 3 && thread.taskId ? thread.taskId : thread.threadId;
             navigate(
-                `/Home/chat/${typePath}/${thread.chatId}/thread/${threadId}/message/${message.messageId}`
+                `/home/chat/${typePath}/${thread.chatId}/thread/${threadId}/message/${message.messageId}`
             );
 
             // Update currentThreadChat's moveToSpecificIndex to focus on this message
@@ -449,21 +450,9 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                 <Stack direction="row" spacing={1.5} alignItems="flex-start">
                                     {message.sender.isSystemUser !== true && (
                                         <Box sx={{ flexShrink: 0 }}>
-                                            <AvatarWithStatus
-                                                useCM={useCM}
-                                                isForBubble={true}
-                                                isYou={isSent}
-                                                myself={myself}
-                                                setMyself={setMyself}
-                                                socket={socket}
-                                                thread={thread}
-                                                useUISM={useUISM}
-                                                avatarUser={
-                                                    isSent
-                                                        ? useTEM.teamMemberProfiles[myself.userId]
-                                                        : useTEM.teamMemberProfiles[
-                                                              message.sender.userId
-                                                          ]
+                                            <UserAvatar
+                                                userId={
+                                                    isSent ? myself.userId : message.sender.userId
                                                 }
                                             />
                                         </Box>

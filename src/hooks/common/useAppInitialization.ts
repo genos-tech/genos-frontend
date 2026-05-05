@@ -3,7 +3,6 @@ import { useEffect, useRef } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { initDB } from "../../db/config/schema";
 import { DatabaseUtils } from "../../db/utils/database";
-import PopTeamUsersWorker from "../../db/workers/popTeamUsersWorker.ts?worker";
 import { useMyself } from "./useAuth";
 import { useTeamManagement } from "./useTeamManagement";
 import { useUIStateManagement } from "./useUIStateManagement";
@@ -23,7 +22,12 @@ export const useAppInitialization = () => {
         initDB();
     }, []);
 
-    // Initialize current team and setup worker
+    // Initialize current team and (on team switch) wipe team-scoped state.
+    //
+    // The `popTeamUsersWorker` interval that hydrates `teamMemberProfiles`
+    // lives in `useTeamManagement` itself; running a second copy here
+    // doubled the per-minute reference flips on the same map and added
+    // no signal. Removed.
     useEffect(() => {
         useTEM.initCurrentTeam();
         if (myself.teamId !== useTEM.currentTeamId) {
@@ -46,39 +50,6 @@ export const useAppInitialization = () => {
                 useUISM.setIsLoading(true);
                 lastInitializedTeamIdRef.current = myself.teamId;
             }
-        }
-
-        if (myself.userId !== "") {
-            const popTeamUsersWorker = new PopTeamUsersWorker();
-
-            // Only for the initialization
-            popTeamUsersWorker.postMessage({ myself });
-            popTeamUsersWorker.onmessage = (event) => {
-                const data = event.data;
-                if (data.error) {
-                    console.error("Worker failed:", data.error);
-                } else {
-                    useTEM.setTeamMemberProfiles(data);
-                }
-            };
-
-            // Run every minute
-            const interval = setInterval(() => {
-                popTeamUsersWorker.postMessage({ myself });
-                popTeamUsersWorker.onmessage = (event) => {
-                    const data = event.data;
-                    if (data.error) {
-                        console.error("Worker failed:", data.error);
-                    } else {
-                        useTEM.setTeamMemberProfiles(data);
-                    }
-                };
-            }, 60_000);
-
-            return () => {
-                popTeamUsersWorker.terminate();
-                clearInterval(interval);
-            };
         }
     }, [myself]);
 

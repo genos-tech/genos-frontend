@@ -75,7 +75,7 @@ export const defaultColumns: ColumnDef[] = [
     {
         field: "assigneeId",
         headerName: "Assignee",
-        width: 250,
+        width: 150,
         minWidth: 150,
         maxWidth: 400,
         align: "left",

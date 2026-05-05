@@ -21,7 +21,7 @@ import dayjs from "dayjs";
 import { Draggable } from "react-beautiful-dnd";
 import { Socket } from "socket.io-client";
 
-import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { PulseDot } from "../../../../components/ui/misc/PulseDot";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -63,9 +63,16 @@ const DEPTH_BORDER_COLORS = ["transparent", "#38bdf8", "#2dd4bf", "#fbbf24"];
 
 // Style helpers
 // NOTE: Do NOT apply transform here - react-beautiful-dnd manages transforms for positioning
+//
+// Hover handling intentionally lives in CSS (via the row's `sx`) rather
+// than React state. Driving it through a `useState(isHovered)` used to
+// re-render the entire row on every mouse-enter / mouse-leave, which
+// in turn re-evaluated every cell's JSX (assignee `<UserAvatar>` being
+// the most expensive). Pure-CSS `:hover` is free for the React tree,
+// so we keep these helpers limited to *static* styles that depend only
+// on dragging/selection/depth/mode.
 const getTableRowStyles = (
     isDragging: boolean,
-    isHovered: boolean,
     isSelected: boolean,
     mode: "light" | "dark" | undefined,
     rowDepth: number
@@ -78,9 +85,6 @@ const getTableRowStyles = (
         }
         if (isSelected) {
             return mode === "dark" ? "rgba(99, 102, 241, 0.15)" : "rgba(99, 102, 241, 0.08)";
-        }
-        if (isHovered) {
-            return mode === "dark" ? DEPTH_HOVER_DARK[depthIdx] : DEPTH_HOVER_LIGHT[depthIdx];
         }
         return mode === "dark" ? DEPTH_COLORS_DARK[depthIdx] : DEPTH_COLORS_LIGHT[depthIdx];
     };
@@ -136,7 +140,6 @@ const getTableCellStyles = (
 
 const getDragHandleStyles = (
     isDragging: boolean,
-    isHovered: boolean,
     mode: "light" | "dark" | undefined
 ): React.CSSProperties => ({
     display: "flex",
@@ -146,7 +149,10 @@ const getDragHandleStyles = (
     minWidth: 28,
     height: 32,
     cursor: isDragging ? "grabbing" : "grab",
-    opacity: isDragging ? 1 : isHovered ? 0.8 : 0.3,
+    // Base opacity. The row's `:hover` rule (see the wrapper Box's `sx`)
+    // bumps this to 0.8 via `&:hover .task-row-drag-handle` so the handle
+    // fades in on hover *without* re-rendering the row.
+    opacity: isDragging ? 1 : 0.3,
     color: isDragging
         ? mode === "dark"
             ? "#90caf9"
@@ -217,9 +223,6 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
     const taskIdStr = String(task.id);
     const hasChildren = childrenByParent.has(taskIdStr);
     const isExpanded = expandedRows.has(taskIdStr);
-
-    // Hover state for better UX
-    const [isHovered, setIsHovered] = useState(false);
 
     // Row DOM ref so we can pull the selected row into view when the
     // preview pane swings open from somewhere other than the row's
@@ -731,24 +734,7 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                                             cursor: "pointer",
                                         }}
                                     >
-                                        <Avatar
-                                            size="sm"
-                                            src={`${media_url}/${option.avatarImgPath}`}
-                                            sx={{
-                                                width: 28,
-                                                height: 28,
-                                                border: isSelected
-                                                    ? `2px solid ${mode === "dark" ? "#90caf9" : "#1976d2"}`
-                                                    : `1.5px solid ${mode === "dark" ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.1)"}`,
-                                                boxShadow: isSelected
-                                                    ? mode === "dark"
-                                                        ? "0 0 8px rgba(144, 202, 249, 0.3)"
-                                                        : "0 0 8px rgba(25, 118, 210, 0.2)"
-                                                    : "none",
-                                            }}
-                                        >
-                                            {option.userName[0].toUpperCase()}
-                                        </Avatar>
+                                        <UserAvatar userId={option.userId} clickable={false} />
                                         <Box sx={{ flex: 1, minWidth: 0 }}>
                                             <Typography
                                                 level="body-sm"
@@ -860,17 +846,7 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                         onClick={() => handleStartEdit("assigneeId", task.assigneeId || "")}
                     >
                         <Box sx={{ position: "relative", display: "inline-flex" }}>
-                            {task.assigneeId && (
-                                <AvatarWithStatus
-                                    avatarUser={useTEM.teamMemberProfiles[task.assigneeId]}
-                                    useCM={useCM}
-                                    isYou={myself.userId === task.assigneeId ? true : false}
-                                    myself={myself}
-                                    setMyself={setMyself}
-                                    socket={socket}
-                                    useUISM={useUISM}
-                                />
-                            )}
+                            {task.assigneeId && <UserAvatar userId={task.assigneeId} />}
                             {task.assigneeId === null && (
                                 <Avatar size="sm" src={`${media_url}/${myself.avatarImgPath}`}>
                                     {myself.userName[0].toUpperCase()}
@@ -887,7 +863,7 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                                     fontWeight: 500,
                                 }}
                             >
-                                {task.assigneeName} | {task.assigneeEmail}
+                                {task.assigneeName}
                             </Typography>
                         </Box>
                     </Box>
@@ -1318,72 +1294,91 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
         }
     };
 
+    // Pre-compute the depth-keyed hover background so the `sx` rule
+    // below stays a plain object literal (no per-render conditionals
+    // inside CSS-in-JS). Hover is a no-op visually when the row is
+    // already dragging or selected, so we strip the rule in those
+    // states by leaving the `&:hover` selector with an empty body.
+    const depthIdx = Math.min(depth, 3);
+    const hoverBg = mode === "dark" ? DEPTH_HOVER_DARK[depthIdx] : DEPTH_HOVER_LIGHT[depthIdx];
+
     return (
         <Draggable draggableId={String(task.id)} index={index} isDragDisabled={false}>
-            {(provided, snapshot) => (
-                <div
-                    // `react-beautiful-dnd`'s `innerRef` is a callback
-                    // ref — fan it out to ours so the dnd machinery
-                    // still gets the node while we keep a handle for
-                    // `scrollIntoView` above.
-                    ref={(el) => {
-                        provided.innerRef(el);
-                        rowRef.current = el;
-                    }}
-                    {...provided.draggableProps}
-                    style={{
-                        ...getTableRowStyles(
-                            snapshot.isDragging,
-                            isHovered,
-                            isSelected,
-                            mode,
-                            depth
-                        ),
-                        ...provided.draggableProps.style,
-                    }}
-                    onMouseEnter={() => setIsHovered(true)}
-                    onMouseLeave={() => setIsHovered(false)}
-                    onDoubleClick={() => {
-                        // Milestone rows always go through the milestone
-                        // preview path; regular tasks fall through to
-                        // the table-level handler.
-                        if (isMilestoneRow) {
-                            openPreview();
-                        } else {
-                            onRowDoubleClick(Number(task.id));
-                        }
-                    }}
-                >
-                    {/* Drag Handle */}
-                    <div
-                        {...provided.dragHandleProps}
-                        style={getDragHandleStyles(snapshot.isDragging, isHovered, mode)}
-                        title="Drag to reorder"
+            {(provided, snapshot) => {
+                const showHoverBg = !snapshot.isDragging && !isSelected;
+                return (
+                    <Box
+                        // `react-beautiful-dnd`'s `innerRef` is a callback
+                        // ref — fan it out to ours so the dnd machinery
+                        // still gets the node while we keep a handle for
+                        // `scrollIntoView` above.
+                        ref={(el: HTMLDivElement | null) => {
+                            provided.innerRef(el);
+                            rowRef.current = el;
+                        }}
+                        {...provided.draggableProps}
+                        // Base layout/colors come from the helper.
+                        // `provided.draggableProps.style` carries dnd's
+                        // transform / transition during drag and must
+                        // win over our defaults — same merge order as
+                        // before.
+                        style={{
+                            ...getTableRowStyles(snapshot.isDragging, isSelected, mode, depth),
+                            ...provided.draggableProps.style,
+                        }}
+                        // Hover lives entirely in CSS so toggling the
+                        // cursor over a row no longer triggers a React
+                        // re-render of the row + every cell + the
+                        // assignee `<UserAvatar>` subtree.
+                        sx={{
+                            "&:hover": showHoverBg ? { backgroundColor: hoverBg } : {},
+                            "&:hover .task-row-drag-handle": {
+                                opacity: snapshot.isDragging ? 1 : 0.8,
+                            },
+                        }}
+                        onDoubleClick={() => {
+                            // Milestone rows always go through the milestone
+                            // preview path; regular tasks fall through to
+                            // the table-level handler.
+                            if (isMilestoneRow) {
+                                openPreview();
+                            } else {
+                                onRowDoubleClick(Number(task.id));
+                            }
+                        }}
                     >
-                        <DragIndicatorIcon sx={{ fontSize: 20 }} />
-                    </div>
+                        {/* Drag Handle */}
+                        <div
+                            {...provided.dragHandleProps}
+                            className="task-row-drag-handle"
+                            style={getDragHandleStyles(snapshot.isDragging, mode)}
+                            title="Drag to reorder"
+                        >
+                            <DragIndicatorIcon sx={{ fontSize: 20 }} />
+                        </div>
 
-                    {/* Table Cells */}
-                    {columns
-                        .filter((col) => !col.hidden)
-                        .map((column, idx) => (
-                            <div
-                                key={column.field}
-                                style={{
-                                    ...getTableCellStyles(column.width, column.align, mode),
-                                    borderRight:
-                                        idx === columns.filter((c) => !c.hidden).length - 1
-                                            ? "none"
-                                            : mode === "dark"
-                                              ? "1px solid rgba(255, 255, 255, 0.04)"
-                                              : "1px solid rgba(0, 0, 0, 0.04)",
-                                }}
-                            >
-                                {renderCellContent(column)}
-                            </div>
-                        ))}
-                </div>
-            )}
+                        {/* Table Cells */}
+                        {columns
+                            .filter((col) => !col.hidden)
+                            .map((column, idx) => (
+                                <div
+                                    key={column.field}
+                                    style={{
+                                        ...getTableCellStyles(column.width, column.align, mode),
+                                        borderRight:
+                                            idx === columns.filter((c) => !c.hidden).length - 1
+                                                ? "none"
+                                                : mode === "dark"
+                                                  ? "1px solid rgba(255, 255, 255, 0.04)"
+                                                  : "1px solid rgba(0, 0, 0, 0.04)",
+                                    }}
+                                >
+                                    {renderCellContent(column)}
+                                </div>
+                            ))}
+                    </Box>
+                );
+            }}
         </Draggable>
     );
 };

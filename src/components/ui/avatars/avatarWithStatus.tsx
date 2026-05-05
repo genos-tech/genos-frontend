@@ -1,16 +1,15 @@
-import { useEffect, useState } from "react";
-import { Avatar, Box, Stack, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
-import { UserProfile } from "../../../features/admin/components/modals/ModalUserProfile";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ThreadProps } from "../../../types/chat";
-import { PulseDot } from "../misc/PulseDot";
+import { UserAvatar } from "./UserAvatar";
 
-const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
-
+// Backwards-compat prop surface. The legacy `myself`, `setMyself`, `useCM`,
+// `useUISM`, and `socket` props are no longer read here — `<UserAvatar>`
+// pulls them from `<AvatarContextProvider>` — but they are kept in the
+// type so the ~15 unmigrated callsites compile unchanged.
 type AvatarWithStatusProps = {
     myself: UserProps;
     setMyself: (value: UserProps) => void;
@@ -25,119 +24,55 @@ type AvatarWithStatusProps = {
     showNameAndEmail?: boolean;
     useUISM: UIStateManagementState;
 };
+
+// Resolve a fallback initial for the rare callsites where the avatar
+// represents the chat itself (group / project chats with `chatType !== 1`)
+// instead of a single user. For DM bubbles or any per-user surface this
+// is undefined, so `<UserAvatar>` falls back to the user's name initial.
+const resolveFallbackInitial = (
+    isForBubble: boolean | undefined,
+    chat: AllChatProps | undefined,
+    thread: ThreadProps | undefined
+): string | undefined => {
+    if (isForBubble === true) return undefined;
+    if (chat) {
+        if (chat.chatType === 1) return undefined;
+        const ch = chat.chatName?.trim();
+        return ch ? ch.charAt(0).toUpperCase() : undefined;
+    }
+    if (thread) {
+        if (thread.chatType === 1) return undefined;
+        const th = thread.chatName?.trim();
+        return th ? th.charAt(0).toUpperCase() : undefined;
+    }
+    return undefined;
+};
+
+/**
+ * Thin compatibility shim around `<UserAvatar>`.
+ *
+ * Historical callers passed an entire `UserProps` blob (`avatarUser`)
+ * plus a fan-out of `myself` / `setMyself` / `socket` / `useCM` /
+ * `useUISM`. The single source of truth is now `AvatarContextProvider`
+ * — we only need a `userId` to look up the live profile. This shim
+ * adapts the legacy interface to that.
+ */
 export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
-    const {
-        myself,
-        setMyself,
-        avatarSize,
-        isYou,
-        avatarUser,
-        socket,
-        isForBubble,
-        chat,
-        thread,
-        useCM,
-        showNameAndEmail,
-        useUISM,
-    } = props;
-    const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
-    const _avatarSize = avatarSize || 32;
-    let isOnline: boolean;
-    isOnline = avatarUser
-        ? myself.userId === avatarUser.userId
-            ? myself?.isOfflineForced !== "true"
-                ? true
-                : false
-            : avatarUser.isOnline === true && avatarUser.isOfflineForced !== "true"
-              ? true
-              : false
-        : false;
+    const { myself, avatarSize, isYou, avatarUser, isForBubble, chat, thread, showNameAndEmail } =
+        props;
 
-    const setAvatarImg = (): string => {
-        if (isYou === true) {
-            isOnline = myself?.isOfflineForced !== "true" ? true : false;
-            return myself.avatarImgPath;
-        } else {
-            return avatarUser?.avatarImgPath || "";
-        }
-    };
+    // `isYou === true` callers always mean "the signed-in user". Falling
+    // back to `avatarUser?.userId` covers the team-member / chat-row case.
+    const targetUserId = isYou ? myself.userId : avatarUser?.userId;
 
-    let avatarImg: string = setAvatarImg();
-
-    useEffect(() => {
-        avatarImg = setAvatarImg();
-    }, [myself]);
+    const fallbackInitial = resolveFallbackInitial(isForBubble, chat, thread);
 
     return (
-        <div>
-            <Stack direction="row" spacing={1}>
-                <Box
-                    height={_avatarSize}
-                    position="relative"
-                    width={_avatarSize}
-                    onClick={() => setOpenUserProfile(true)}
-                >
-                    {chat && (
-                        <Avatar
-                            size="sm"
-                            src={`${media_url}/${avatarImg}`}
-                            sx={{ width: _avatarSize, height: _avatarSize }}
-                        >
-                            {chat.chatType === 1 || isForBubble === true
-                                ? avatarUser?.userName[0].toUpperCase()
-                                : chat?.chatName[0].toUpperCase()}
-                        </Avatar>
-                    )}
-                    {thread && (
-                        <Avatar
-                            size="sm"
-                            src={`${media_url}/${avatarImg}`}
-                            sx={{ width: _avatarSize, height: _avatarSize }}
-                        >
-                            {thread.chatType === 1 || isForBubble === true
-                                ? avatarUser?.userName[0].toUpperCase()
-                                : thread?.chatName[0].toUpperCase()}
-                        </Avatar>
-                    )}
-                    {chat === undefined && thread === undefined && (
-                        <Avatar
-                            size="sm"
-                            src={`${media_url}/${avatarImg}`}
-                            sx={{ width: _avatarSize, height: _avatarSize }}
-                        >
-                            {avatarUser?.userName[0].toUpperCase()}
-                        </Avatar>
-                    )}
-                    <Box bottom={0} height={17} position="absolute" right={0} width={12}>
-                        <PulseDot color={isOnline === true ? "#4caf50" : "#999"} />
-                    </Box>
-                </Box>
-                {showNameAndEmail === true && (
-                    <Typography
-                        fontWeight={"bold"}
-                        sx={{
-                            pt: "3px",
-                            pl: "5px",
-                            userSelect: "text",
-                        }}
-                        onClick={() => setOpenUserProfile(true)}
-                    >
-                        {avatarUser?.userName} - {avatarUser?.userEmail}
-                    </Typography>
-                )}
-            </Stack>
-
-            <UserProfile
-                useCM={useCM}
-                isYou={isYou}
-                myself={myself}
-                openUserProfile={openUserProfile}
-                setMyself={setMyself}
-                setOpenUserProfile={setOpenUserProfile}
-                socket={socket}
-                useUISM={useUISM}
-                user={avatarUser}
-            />
-        </div>
+        <UserAvatar
+            fallbackInitial={fallbackInitial}
+            showNameAndEmail={showNameAndEmail}
+            size={avatarSize}
+            userId={targetUserId}
+        />
     );
 };

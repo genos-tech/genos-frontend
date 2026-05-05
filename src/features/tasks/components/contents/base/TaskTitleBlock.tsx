@@ -94,10 +94,10 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
     const isDark = mode === "dark";
     const location = useLocation();
     // True when the user is currently inside the Tasks service (any URL
-    // under `/Home/tasks`). Mirrors the active-route detection used by the
+    // under `/home/tasks`). Mirrors the active-route detection used by the
     // sidebar so we don't depend on `openingService` for a check the URL
     // already encodes.
-    const isOnTasksRoute = location.pathname.includes("/Home/tasks");
+    const isOnTasksRoute = location.pathname.includes("/home/tasks");
     const [openDeleteTask, setOpenDeleteTask] = useState<boolean>(false);
     const titleInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -417,7 +417,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                     }}
                                     onClick={async () => {
                                         if (taskContent.project && taskContent.id) {
-                                            const taskUrl = `${window.location.origin}/Home/tasks/project/${taskContent.project.projectId}/task/${taskContent.id}`;
+                                            const taskUrl = `${window.location.origin}/home/tasks/project/${taskContent.project.projectId}/task/${taskContent.id}`;
                                             try {
                                                 await navigator.clipboard.writeText(taskUrl);
                                             } catch (err) {

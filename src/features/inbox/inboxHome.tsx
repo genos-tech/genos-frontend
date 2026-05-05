@@ -9,8 +9,6 @@ import { useInboxItems } from "./hooks/useInboxItems";
 import { useInboxScroll } from "./hooks/useInboxScroll";
 import { InboxHomeProps } from "./types/inboxTypes";
 
-import { Sidebar } from "../../components/layout/sidebar";
-
 // Wrapper component for Activities section with item routing
 const ActivitiesSection = (props: InboxHomeProps & { items: any[]; virtuosoRef: any }) => {
     const { itemId } = useParams<{ itemId?: string }>();
@@ -32,7 +30,9 @@ const ActivitiesSection = (props: InboxHomeProps & { items: any[]; virtuosoRef: 
             emptyTitle="No activities yet"
             emptySubtitle="New updates and notifications will appear here"
             isRequest={false}
-            selectedItemId={itemId && !Number.isNaN(parseInt(itemId, 10)) ? parseInt(itemId, 10) : undefined}
+            selectedItemId={
+                itemId && !Number.isNaN(parseInt(itemId, 10)) ? parseInt(itemId, 10) : undefined
+            }
         />
     );
 };
@@ -56,13 +56,15 @@ const RequestsSection = (props: InboxHomeProps & { items: any[]; virtuosoRef: an
             emptyTitle="No pending requests"
             emptySubtitle="Team and project requests will show up here"
             isRequest={true}
-            selectedItemId={itemId && !Number.isNaN(parseInt(itemId, 10)) ? parseInt(itemId, 10) : undefined}
+            selectedItemId={
+                itemId && !Number.isNaN(parseInt(itemId, 10)) ? parseInt(itemId, 10) : undefined
+            }
         />
     );
 };
 
 export const InboxHome = (props: InboxHomeProps) => {
-    const { useTEM, useIM, myself, socket, setMyself, useCM, useUISM } = props;
+    const { useIM } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
 
@@ -71,17 +73,7 @@ export const InboxHome = (props: InboxHomeProps) => {
     const requestVirtuosoRef = useInboxScroll(requestInboxItems);
 
     return (
-        <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
-            <Sidebar
-                useCM={useCM}
-                useIM={useIM}
-                myself={myself}
-                setMyself={setMyself}
-                socket={socket}
-                useTEM={useTEM}
-                useUISM={useUISM}
-            />
-
+        <Box sx={{ display: "flex", minHeight: "100dvh", flex: 1, minWidth: 0 }}>
             <Sheet
                 sx={{
                     width: "100%",
@@ -143,54 +135,6 @@ export const InboxHome = (props: InboxHomeProps) => {
                     }}
                 >
                     <Routes>
-                        {/* Activities routes */}
-                        <Route
-                            path="activities"
-                            element={
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        height: "100%",
-                                        animation: "fadeIn 0.3s ease",
-                                        "@keyframes fadeIn": {
-                                            from: { opacity: 0 },
-                                            to: { opacity: 1 },
-                                        },
-                                    }}
-                                >
-                                    <ActivitiesSection
-                                        {...props}
-                                        items={activityInboxItems}
-                                        virtuosoRef={activityVirtuosoRef}
-                                    />
-                                </Box>
-                            }
-                        />
-                        <Route
-                            path="activities/:itemId"
-                            element={
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        height: "100%",
-                                        animation: "fadeIn 0.3s ease",
-                                        "@keyframes fadeIn": {
-                                            from: { opacity: 0 },
-                                            to: { opacity: 1 },
-                                        },
-                                    }}
-                                >
-                                    <ActivitiesSection
-                                        {...props}
-                                        items={activityInboxItems}
-                                        virtuosoRef={activityVirtuosoRef}
-                                    />
-                                </Box>
-                            }
-                        />
-
                         {/* Requests routes */}
                         <Route
                             path="requests"
@@ -239,8 +183,56 @@ export const InboxHome = (props: InboxHomeProps) => {
                             }
                         />
 
-                        {/* Default redirect to activities */}
-                        <Route path="" element={<Navigate to="activities" replace />} />
+                        {/* Activities routes */}
+                        <Route
+                            path="activities"
+                            element={
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        height: "100%",
+                                        animation: "fadeIn 0.3s ease",
+                                        "@keyframes fadeIn": {
+                                            from: { opacity: 0 },
+                                            to: { opacity: 1 },
+                                        },
+                                    }}
+                                >
+                                    <ActivitiesSection
+                                        {...props}
+                                        items={activityInboxItems}
+                                        virtuosoRef={activityVirtuosoRef}
+                                    />
+                                </Box>
+                            }
+                        />
+                        <Route
+                            path="activities/:itemId"
+                            element={
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        height: "100%",
+                                        animation: "fadeIn 0.3s ease",
+                                        "@keyframes fadeIn": {
+                                            from: { opacity: 0 },
+                                            to: { opacity: 1 },
+                                        },
+                                    }}
+                                >
+                                    <ActivitiesSection
+                                        {...props}
+                                        items={activityInboxItems}
+                                        virtuosoRef={activityVirtuosoRef}
+                                    />
+                                </Box>
+                            }
+                        />
+
+                        {/* Default redirect to requests */}
+                        <Route path="" element={<Navigate to="requests" replace />} />
                     </Routes>
                 </Box>
 

@@ -45,7 +45,7 @@ const buildChatPath = (
     messageId?: number,
     commentId?: number
 ): string => {
-    let path = `/Home/chat/${typePath}`;
+    let path = `/home/chat/${typePath}`;
     if (chatId !== undefined) path += `/${chatId}`;
     if (threadId !== undefined) path += `/thread/${threadId}`;
     if (commentId !== undefined) {
@@ -98,8 +98,8 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
     const parsedRoute = useMemo((): ParsedRoute => {
         const pathParts = pathname.split("/").filter(Boolean);
         // Expected formats:
-        //   /Home/chat/:chatType/:chatId?/thread/:threadId?/message/:messageId?
-        //   /Home/chat/:chatType/:chatId?/thread/:threadId?/comment/:commentId?
+        //   /home/chat/:chatType/:chatId?/thread/:threadId?/message/:messageId?
+        //   /home/chat/:chatType/:chatId?/thread/:threadId?/comment/:commentId?
         //
         // The `comment/...` shape is the PM thread "Comments" tab deep
         // link added alongside the existing `message/...` shape.
@@ -175,7 +175,7 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
         (chatType: number, chatId: number, messageId: number) => {
             const typePath = CHAT_TYPE_REVERSE_MAP[chatType];
             if (typePath) {
-                navigate(`/Home/chat/${typePath}/${chatId}/message/${messageId}`);
+                navigate(`/home/chat/${typePath}/${chatId}/message/${messageId}`);
             }
         },
         [navigate]
@@ -264,7 +264,7 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
         if (!chatType) {
             const lastChatType = localStorage.getItem("lastChatType");
             const defaultType = lastChatType ? CHAT_TYPE_REVERSE_MAP[Number(lastChatType)] : "dm";
-            navigate(`/Home/chat/${defaultType || "dm"}`, { replace: true });
+            navigate(`/home/chat/${defaultType || "dm"}`, { replace: true });
             return;
         }
 

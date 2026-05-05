@@ -12,7 +12,7 @@ type UseTaskRoutingProps = {
 type TaskRouteInfo = {
     projectId: number | undefined;
     taskId: number | undefined;
-    // Milestone preview deep link: `/Home/tasks/project/:projectId/milestone/:milestoneId`.
+    // Milestone preview deep link: `/home/tasks/project/:projectId/milestone/:milestoneId`.
     // Mutually exclusive with `taskId` in practice — the URL only ever
     // carries one of the two — but we parse them independently so a
     // malformed URL with both segments still surfaces something usable
@@ -38,9 +38,9 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
     const parseCurrentRoute = useCallback((): TaskRouteInfo => {
         const pathParts = location.pathname.split("/").filter(Boolean);
         // Expected formats:
-        //   /Home/tasks/project/:projectId
-        //   /Home/tasks/project/:projectId/task/:taskId(/comment/:commentId)?
-        //   /Home/tasks/project/:projectId/milestone/:milestoneId
+        //   /home/tasks/project/:projectId
+        //   /home/tasks/project/:projectId/task/:taskId(/comment/:commentId)?
+        //   /home/tasks/project/:projectId/milestone/:milestoneId
 
         const result: TaskRouteInfo = {
             projectId: undefined,
@@ -83,13 +83,13 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
 
     // Navigate to tasks home
     const navigateToTasks = useCallback(() => {
-        navigate("/Home/tasks");
+        navigate("/home/tasks");
     }, [navigate]);
 
     // Navigate to a specific project
     const navigateToProject = useCallback(
         (projectId: number) => {
-            navigate(`/Home/tasks/project/${projectId}`);
+            navigate(`/home/tasks/project/${projectId}`);
         },
         [navigate]
     );
@@ -97,7 +97,7 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
     // Navigate to a specific task
     const navigateToTask = useCallback(
         (projectId: number, taskId: number) => {
-            navigate(`/Home/tasks/project/${projectId}/task/${taskId}`);
+            navigate(`/home/tasks/project/${projectId}/task/${taskId}`);
         },
         [navigate]
     );
@@ -105,7 +105,7 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
     // Navigate to a specific milestone
     const navigateToMilestone = useCallback(
         (projectId: number, milestoneId: number) => {
-            navigate(`/Home/tasks/project/${projectId}/milestone/${milestoneId}`);
+            navigate(`/home/tasks/project/${projectId}/milestone/${milestoneId}`);
         },
         [navigate]
     );
@@ -191,7 +191,7 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
         ) {
             const projectId = usePM.currentProject.projectId;
             const milestoneId = useTM.currentPreviewMilestoneId;
-            const newPath = `/Home/tasks/project/${projectId}/milestone/${milestoneId}`;
+            const newPath = `/home/tasks/project/${projectId}/milestone/${milestoneId}`;
             if (newPath !== location.pathname && newPath !== lastNavigatedPath.current) {
                 targetUrlProjectId.current = projectId;
                 lastNavigatedPath.current = newPath;
@@ -216,8 +216,8 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
             const { commentId, taskId: urlTaskId } = parseCurrentRoute();
             const preserveComment = commentId !== undefined && urlTaskId === taskId;
             const newPath = preserveComment
-                ? `/Home/tasks/project/${projectId}/task/${taskId}/comment/${commentId}`
-                : `/Home/tasks/project/${projectId}/task/${taskId}`;
+                ? `/home/tasks/project/${projectId}/task/${taskId}/comment/${commentId}`
+                : `/home/tasks/project/${projectId}/task/${taskId}`;
             if (newPath !== location.pathname && newPath !== lastNavigatedPath.current) {
                 targetUrlProjectId.current = projectId;
                 lastNavigatedPath.current = newPath;
@@ -230,7 +230,7 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
             const { taskId, milestoneId } = parseCurrentRoute();
             if (taskId || milestoneId) {
                 targetUrlProjectId.current = usePM.currentProject.projectId;
-                const newPath = `/Home/tasks/project/${usePM.currentProject.projectId}`;
+                const newPath = `/home/tasks/project/${usePM.currentProject.projectId}`;
                 if (newPath !== lastNavigatedPath.current) {
                     lastNavigatedPath.current = newPath;
                     navigate(newPath, { replace: true });
@@ -253,7 +253,7 @@ export const useTaskRouting = ({ usePM, useTM }: UseTaskRoutingProps) => {
         }
 
         if (usePM.currentProject && !useTM.isTaskPreviewVisible) {
-            const newPath = `/Home/tasks/project/${usePM.currentProject.projectId}`;
+            const newPath = `/home/tasks/project/${usePM.currentProject.projectId}`;
             const { projectId: urlProjId } = parseCurrentRoute();
 
             if (

@@ -3,7 +3,6 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { Socket } from "socket.io-client";
 
-import { Sidebar } from "../../components/layout/sidebar";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
@@ -34,19 +33,8 @@ type NoteHomeProps = {
     useSM: SprintMilestoneManagementState;
 };
 export const NoteHome = (props: NoteHomeProps) => {
-    const {
-        useTEM,
-        socket,
-        myself,
-        setMyself,
-        useUISM,
-        useIM,
-        useNM,
-        useCM,
-        usePM,
-        useTM,
-        useSM,
-    } = props;
+    const { useTEM, socket, myself, setMyself, useUISM, useNM, useCM, usePM, useTM, useSM } =
+        props;
 
     // URL-based routing for notes
     useNoteRouting({ useNM });
@@ -107,17 +95,7 @@ export const NoteHome = (props: NoteHomeProps) => {
     };
 
     return (
-        <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
-            <Sidebar
-                useCM={useCM}
-                useIM={useIM}
-                myself={myself}
-                setMyself={setMyself}
-                socket={socket}
-                useTEM={useTEM}
-                useUISM={useUISM}
-            />
-
+        <Box sx={{ display: "flex", minHeight: "100dvh", flex: 1, minWidth: 0 }}>
             <PanelGroup direction="horizontal">
                 <Panel id={"1"} maxSize={25} minSize={10} order={1}>
                     <Box

@@ -260,7 +260,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                                         borderRadius: "5px",
                                                     }}
                                                 >
-                                                    {`${id}`}
+                                                    {`#${id}`}
                                                 </Chip>
                                                 <Chip
                                                     key={`status-chip-${id}-${index}`} // pass the key directly

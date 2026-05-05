@@ -16,6 +16,10 @@ export type UpdateMilestoneInput = {
     effortLevelCode?: number | null;
     dueDate?: string | null;
     tags?: unknown;
+    // External links list (`{ id, url, title, isGitHub }[]`). Mirrors
+    // the `TaskProps.links` shape; persisted on `MilestoneMaster.links`
+    // and mirrored onto the backing task by `_sync_backing_task`.
+    links?: unknown;
     assigneeIds?: Array<number | string>;
     reporterId?: number | string | null;
 };
@@ -43,6 +47,7 @@ export const updateMilestone = async (
                 body.effort_level_code = input.effortLevelCode;
             if (input.dueDate !== undefined) body.due_date = input.dueDate;
             if (input.tags !== undefined) body.tags = input.tags;
+            if (input.links !== undefined) body.links = input.links;
             if (input.assigneeIds !== undefined) body.assignee_ids = input.assigneeIds;
             if ("reporterId" in input) body.reporter_id = input.reporterId;
             const res = await api.patch(`/milestone/${input.milestoneId}/`, body);

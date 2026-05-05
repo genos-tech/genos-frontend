@@ -146,7 +146,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
     const handleCopyNoteLink = useCallback(async () => {
         if (useNM.currentTaskNote) {
             const note = useNM.currentTaskNote;
-            const noteUrl = `${window.location.origin}/Home/notes/task/project/${note.projectId}/task/${note.taskId}/note/${note.noteId}`;
+            const noteUrl = `${window.location.origin}/home/notes/task/project/${note.projectId}/task/${note.taskId}/note/${note.noteId}`;
             try {
                 await navigator.clipboard.writeText(noteUrl);
             } catch (err) {
@@ -238,6 +238,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
 
                         <NoteHeaderActions
                             useCM={useCM}
+                            useNM={useNM}
                             currentTask={currentTask}
                             isInTaskPage={isInTaskPage}
                             myself={myself}

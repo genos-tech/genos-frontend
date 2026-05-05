@@ -69,6 +69,11 @@ export type Milestone = {
     effortLevelCode?: number | null;
     dueDate: string | null;
     tags: unknown | null;
+    // External links shown by the milestone preview's URL/Link section.
+    // Mirrors `TaskProps.links` shape: `{ id, url, title, isGitHub }[]`.
+    // Stored as `JSONField` server-side; expressed as `unknown` here to
+    // match the existing `tags` convention (the consumer narrows it).
+    links?: unknown | null;
     isDeleted: boolean;
     tsCreatedAt: string;
     tsUpdatedAt: string;

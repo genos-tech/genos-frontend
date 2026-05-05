@@ -201,9 +201,9 @@ const JoinTeamContent = () => {
 
                     await sleepMilliSeconds(100);
 
-                    navigate("/Home");
+                    navigate("/home");
                 } else {
-                    navigate("/Home");
+                    navigate("/home");
                 }
             }
         }
@@ -238,10 +238,10 @@ const JoinTeamContent = () => {
             if (createTeamRes) {
                 moveToTeam(createTeamRes.teamDetails.teamId, createTeamRes.teamDetails.teamName);
             } else {
-                navigate("/JoinTeam");
+                navigate("/jointeam");
             }
         } else {
-            navigate("/JoinTeam");
+            navigate("/jointeam");
         }
     };
 
@@ -854,7 +854,7 @@ const JoinTeamContent = () => {
                                 }
                                 localStorage.setItem("isSigningIn", "");
                                 setAccessToken(null);
-                                navigate("/SignIn");
+                                navigate("/signin");
                             }}
                         >
                             <ArrowBackRoundedIcon sx={{ fontSize: 16 }} />
