@@ -16,7 +16,6 @@ import { ResizeHandle } from "./components/shared/ResizeHandle";
 import { ChatSidebar } from "./components/sidebar/ChatSidebar";
 import { useChatRouting } from "./hooks/useChatRouting";
 
-import { Sidebar } from "../../components/layout/sidebar";
 import { useAuth } from "../../context/AuthContext";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
@@ -52,19 +51,8 @@ type ChatHomeProps = {
 };
 
 export const ChatHome = (props: ChatHomeProps) => {
-    const {
-        useTEM,
-        socket,
-        myself,
-        setMyself,
-        useUISM,
-        useIM,
-        useCM,
-        useNM,
-        usePM,
-        useTM,
-        useSM,
-    } = props;
+    const { useTEM, socket, myself, setMyself, useUISM, useCM, useNM, usePM, useTM, useSM } =
+        props;
 
     // Common
     const { mode } = useColorScheme();
@@ -144,17 +132,7 @@ export const ChatHome = (props: ChatHomeProps) => {
             currentThreadTaskId={currentThreadTaskId}
             setCurrentThreadTaskId={setCurrentThreadTaskId}
         >
-            <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
-                <Sidebar
-                    useCM={useCM}
-                    useIM={useIM}
-                    myself={myself}
-                    setMyself={setMyself}
-                    socket={socket}
-                    useTEM={useTEM}
-                    useUISM={useUISM}
-                />
-
+            <Box sx={{ display: "flex", minHeight: "100dvh", flex: 1, minWidth: 0 }}>
                 <PanelGroup autoSaveId="conditional" direction="horizontal">
                     {/* Chat Sidebar pane which is always visible */}
                     <Panel id={"1"} maxSize={30} minSize={10} order={1}>

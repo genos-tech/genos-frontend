@@ -9,8 +9,6 @@ import { useInboxItems } from "./hooks/useInboxItems";
 import { useInboxScroll } from "./hooks/useInboxScroll";
 import { InboxHomeProps } from "./types/inboxTypes";
 
-import { Sidebar } from "../../components/layout/sidebar";
-
 // Wrapper component for Activities section with item routing
 const ActivitiesSection = (props: InboxHomeProps & { items: any[]; virtuosoRef: any }) => {
     const { itemId } = useParams<{ itemId?: string }>();
@@ -66,7 +64,7 @@ const RequestsSection = (props: InboxHomeProps & { items: any[]; virtuosoRef: an
 };
 
 export const InboxHome = (props: InboxHomeProps) => {
-    const { useTEM, useIM, myself, socket, setMyself, useCM, useUISM } = props;
+    const { useIM } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
 
@@ -75,17 +73,7 @@ export const InboxHome = (props: InboxHomeProps) => {
     const requestVirtuosoRef = useInboxScroll(requestInboxItems);
 
     return (
-        <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
-            <Sidebar
-                useCM={useCM}
-                useIM={useIM}
-                myself={myself}
-                setMyself={setMyself}
-                socket={socket}
-                useTEM={useTEM}
-                useUISM={useUISM}
-            />
-
+        <Box sx={{ display: "flex", minHeight: "100dvh", flex: 1, minWidth: 0 }}>
             <Sheet
                 sx={{
                     width: "100%",
@@ -243,8 +231,8 @@ export const InboxHome = (props: InboxHomeProps) => {
                             }
                         />
 
-                        {/* Default redirect to activities */}
-                        <Route path="" element={<Navigate to="activities" replace />} />
+                        {/* Default redirect to requests */}
+                        <Route path="" element={<Navigate to="requests" replace />} />
                     </Routes>
                 </Box>
 

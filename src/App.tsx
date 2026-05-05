@@ -10,6 +10,7 @@ import { CssVarsProvider } from "@mui/joy/styles";
 import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 
 import { ServiceSwitcherOverlay } from "./components/layout/ServiceSwitcherOverlay";
+import { Sidebar } from "./components/layout/sidebar";
 import { InitialLoad } from "./components/ui/misc/InitialLoad";
 import { ChatHome } from "./features/chat/chatHome";
 import { InboxHome } from "./features/inbox/inboxHome";
@@ -286,78 +287,100 @@ export const App = () => {
                                 masterEnabled={useNotif.preferences.masterEnabled}
                                 requestPermission={useNotif.requestPermission}
                             />
-                            <Routes>
-                                <Route
-                                    path="inbox/*"
-                                    element={
-                                        <InboxHome
-                                            useCM={useCM}
-                                            useIM={useIM}
-                                            myself={myself}
-                                            setMyself={setMyself}
-                                            socket={socketInstance}
-                                            useTEM={useTEM}
-                                            useUISM={useUISM}
-                                        />
-                                    }
+                            {/* Sidebar lives here (outside <Routes>) so it
+                                is mounted once for the whole authenticated
+                                shell. Switching services only swaps the
+                                routed content next to it instead of
+                                remounting the sidebar each time. */}
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    minHeight: "100dvh",
+                                    width: "100vw",
+                                }}
+                            >
+                                <Sidebar
+                                    useCM={useCM}
+                                    useIM={useIM}
+                                    myself={myself}
+                                    setMyself={setMyself}
+                                    socket={socketInstance}
+                                    useTEM={useTEM}
+                                    useUISM={useUISM}
                                 />
-                                <Route
-                                    path="chat/*"
-                                    element={
-                                        <ChatHome
-                                            useCM={useCM}
-                                            useIM={useIM}
-                                            myself={myself}
-                                            useNM={useNM}
-                                            usePM={usePM}
-                                            setMyself={setMyself}
-                                            socket={socketInstance}
-                                            useTEM={useTEM}
-                                            useTM={useTM}
-                                            useSM={useSM}
-                                            useUISM={useUISM}
-                                        />
-                                    }
-                                />
-                                <Route
-                                    path="tasks/*"
-                                    element={
-                                        <TaskHome
-                                            useCM={useCM}
-                                            useIM={useIM}
-                                            myself={myself}
-                                            useNM={useNM}
-                                            usePM={usePM}
-                                            setMyself={setMyself}
-                                            socket={socketInstance}
-                                            useTEM={useTEM}
-                                            useTM={useTM}
-                                            useSM={useSM}
-                                            useUISM={useUISM}
-                                        />
-                                    }
-                                />
-                                <Route
-                                    path="notes/*"
-                                    element={
-                                        <NoteHome
-                                            useCM={useCM}
-                                            useIM={useIM}
-                                            myself={myself}
-                                            useNM={useNM}
-                                            usePM={usePM}
-                                            setMyself={setMyself}
-                                            socket={socketInstance}
-                                            useTEM={useTEM}
-                                            useTM={useTM}
-                                            useSM={useSM}
-                                            useUISM={useUISM}
-                                        />
-                                    }
-                                />
-                                {/* Default redirect to inbox */}
-                                <Route path="" element={<Navigate to="inbox" replace />} />
-                            </Routes>
+                                <Routes>
+                                    <Route
+                                        path="inbox/*"
+                                        element={
+                                            <InboxHome
+                                                useCM={useCM}
+                                                useIM={useIM}
+                                                myself={myself}
+                                                setMyself={setMyself}
+                                                socket={socketInstance}
+                                                useTEM={useTEM}
+                                                useUISM={useUISM}
+                                            />
+                                        }
+                                    />
+                                    <Route
+                                        path="chat/*"
+                                        element={
+                                            <ChatHome
+                                                useCM={useCM}
+                                                useIM={useIM}
+                                                myself={myself}
+                                                useNM={useNM}
+                                                usePM={usePM}
+                                                setMyself={setMyself}
+                                                socket={socketInstance}
+                                                useTEM={useTEM}
+                                                useTM={useTM}
+                                                useSM={useSM}
+                                                useUISM={useUISM}
+                                            />
+                                        }
+                                    />
+                                    <Route
+                                        path="tasks/*"
+                                        element={
+                                            <TaskHome
+                                                useCM={useCM}
+                                                useIM={useIM}
+                                                myself={myself}
+                                                useNM={useNM}
+                                                usePM={usePM}
+                                                setMyself={setMyself}
+                                                socket={socketInstance}
+                                                useTEM={useTEM}
+                                                useTM={useTM}
+                                                useSM={useSM}
+                                                useUISM={useUISM}
+                                            />
+                                        }
+                                    />
+                                    <Route
+                                        path="notes/*"
+                                        element={
+                                            <NoteHome
+                                                useCM={useCM}
+                                                useIM={useIM}
+                                                myself={myself}
+                                                useNM={useNM}
+                                                usePM={usePM}
+                                                setMyself={setMyself}
+                                                socket={socketInstance}
+                                                useTEM={useTEM}
+                                                useTM={useTM}
+                                                useSM={useSM}
+                                                useUISM={useUISM}
+                                            />
+                                        }
+                                    />
+                                    {/* Default redirect to inbox */}
+                                    <Route path="" element={<Navigate to="inbox" replace />} />
+                                </Routes>
+                            </Box>
                         </div>
                     )}
                 </NotificationsProvider>

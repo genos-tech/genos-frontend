@@ -4,7 +4,7 @@ import { Box, Chip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { useLocation, useNavigate } from "react-router-dom";
 
-type InboxTab = "activities" | "requests";
+type InboxTab = "requests" | "activities";
 
 type InboxTabHeaderProps = {
     requestCount?: number;
@@ -17,9 +17,9 @@ export const InboxTabHeader = ({ requestCount }: InboxTabHeaderProps) => {
     const location = useLocation();
 
     // Determine active tab from URL
-    const activeTab: InboxTab = location.pathname.includes("/requests")
-        ? "requests"
-        : "activities";
+    const activeTab: InboxTab = location.pathname.includes("/activities")
+        ? "activities"
+        : "requests";
 
     const tabs: {
         id: InboxTab;

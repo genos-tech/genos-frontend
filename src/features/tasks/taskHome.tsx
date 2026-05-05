@@ -6,22 +6,9 @@ import { TaskHomeModals } from "./components/modals/TaskHomeModals";
 import { useTaskRouting } from "./hooks/useTaskRouting";
 import { TaskHomeProps } from "./types/TaskHomeTypes";
 
-import { Sidebar } from "../../components/layout/sidebar";
-
 export const TaskHome = (props: TaskHomeProps) => {
-    const {
-        useTEM,
-        socket,
-        myself,
-        setMyself,
-        useUISM,
-        useIM,
-        useCM,
-        useNM,
-        usePM,
-        useTM,
-        useSM,
-    } = props;
+    const { useTEM, socket, myself, setMyself, useUISM, useCM, useNM, usePM, useTM, useSM } =
+        props;
 
     // URL-based routing for tasks
     useTaskRouting({ usePM, useTM });
@@ -63,17 +50,7 @@ export const TaskHome = (props: TaskHomeProps) => {
     };
 
     return (
-        <Box sx={{ display: "flex", minHeight: "100dvh", width: "100vw" }}>
-            <Sidebar
-                useCM={useCM}
-                useIM={useIM}
-                myself={myself}
-                setMyself={setMyself}
-                socket={socket}
-                useTEM={useTEM}
-                useUISM={useUISM}
-            />
-
+        <Box sx={{ display: "flex", minHeight: "100dvh", flex: 1, minWidth: 0 }}>
             <TaskHomeLayout
                 useCM={useCM}
                 myself={myself}
