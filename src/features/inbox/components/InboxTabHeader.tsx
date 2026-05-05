@@ -29,17 +29,17 @@ export const InboxTabHeader = ({ requestCount }: InboxTabHeaderProps) => {
         count?: number;
     }[] = [
         {
-            id: "activities",
-            label: "Activities",
-            path: "/home/inbox/activities",
-            icon: <NotificationsActiveRoundedIcon sx={{ fontSize: 16 }} />,
-        },
-        {
             id: "requests",
             label: "Requests",
             path: "/home/inbox/requests",
             icon: <PendingActionsRoundedIcon sx={{ fontSize: 16 }} />,
             count: requestCount,
+        },
+        {
+            id: "activities",
+            label: "Activities",
+            path: "/home/inbox/activities",
+            icon: <NotificationsActiveRoundedIcon sx={{ fontSize: 16 }} />,
         },
     ];
 
