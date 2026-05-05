@@ -143,6 +143,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
 
                                 <NoteHeaderActions
                                     useCM={useCM}
+                                    useNM={useNM}
                                     currentTask={undefined}
                                     isInTaskPage={false}
                                     myself={myself}

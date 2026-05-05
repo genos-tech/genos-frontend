@@ -20,11 +20,13 @@ import {
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
+import { useNavigate } from "react-router-dom";
 
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 import { TaskProps } from "../../../../types/tasks";
@@ -82,6 +84,7 @@ interface NoteHeaderActionsProps {
     myself: UserProps;
     setMyself: (me: UserProps) => void;
     useTEM: TeamManagementState;
+    useNM: NoteManagementState;
     socket: any;
     useCM: ChatManagementState;
     useUISM: UIStateManagementState;
@@ -110,10 +113,12 @@ export const NoteHeaderActions = ({
     onDeleteNote,
     onCloseNotes,
     onCopyNoteLink,
+    useNM,
 }: NoteHeaderActionsProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const styles = isDark ? HEADER_STYLES.dark : HEADER_STYLES.light;
+    const navigate = useNavigate();
 
     // Common action button style
     const actionButtonStyle = {
@@ -514,42 +519,52 @@ export const NoteHeaderActions = ({
                         </MenuItem>
                     )}
 
-                    {/* Move to Notes (for task notes in task page) */}
-                    {noteType === 2 && isInTaskPage && (
-                        <MenuItem
-                            onClick={onOpenTask}
-                            sx={{
-                                gap: 1.25,
-                                py: 0.875,
-                                "&:hover": {
-                                    background: styles.buttonHover,
-                                },
-                            }}
-                        >
-                            <Box
+                    {/* Open in Notes (for task notes in task page) */}
+                    {noteType === 2 &&
+                        isInTaskPage &&
+                        currentTask &&
+                        currentTask.id &&
+                        currentTask.project &&
+                        currentTask.project?.projectId && (
+                            <MenuItem
+                                onClick={() => {
+                                    const note = useNM.currentTaskNote;
+                                    navigate(
+                                        `/Home/notes/task/project/${currentTask.project?.projectId}/task/${currentTask.id}/note/${note?.noteId}`
+                                    );
+                                }}
                                 sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    width: 28,
-                                    height: 28,
-                                    borderRadius: "7px",
-                                    background: styles.buttonBg,
-                                    border: `1px solid ${styles.buttonBorder}`,
+                                    gap: 1.25,
+                                    py: 0.875,
+                                    "&:hover": {
+                                        background: styles.buttonHover,
+                                    },
                                 }}
                             >
-                                <OpenInNewRoundedIcon
-                                    sx={{ fontSize: 16, color: styles.accentColor }}
-                                />
-                            </Box>
-                            <Typography
-                                level="body-sm"
-                                sx={{ fontWeight: 500, color: styles.textColor }}
-                            >
-                                Move to Notes
-                            </Typography>
-                        </MenuItem>
-                    )}
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        width: 28,
+                                        height: 28,
+                                        borderRadius: "7px",
+                                        background: styles.buttonBg,
+                                        border: `1px solid ${styles.buttonBorder}`,
+                                    }}
+                                >
+                                    <OpenInNewRoundedIcon
+                                        sx={{ fontSize: 16, color: styles.accentColor }}
+                                    />
+                                </Box>
+                                <Typography
+                                    level="body-sm"
+                                    sx={{ fontWeight: 500, color: styles.textColor }}
+                                >
+                                    Open in Notes
+                                </Typography>
+                            </MenuItem>
+                        )}
 
                     {/* New Note (for my notes) */}
                     {noteType === 1 && (
