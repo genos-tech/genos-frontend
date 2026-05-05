@@ -322,9 +322,20 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
 
     useEffect(() => {
         if (isUploadingFilesUpdated === true) {
+            // Append only the *new* negative-id pending uploads. Replacing
+            // `taskContent.attachments` with the full `uploadingFiles` list
+            // works in the steady state (effect 335 keeps `uploadingFiles`
+            // in sync with the saved positive-id rows), but it loses prior
+            // attachments if the user adds a second file while the previous
+            // upload's POST is still in-flight — at that moment
+            // `uploadingFiles` has been cleared back to `[]` and only
+            // contains the new entry. By merging against the current
+            // `taskContent.attachments` we keep the in-flight saved/pending
+            // rows intact instead of clobbering them with the latest file.
+            const newPendingUploads = uploadingFiles.filter((f) => f.attachment_id < 0);
             setTaskContent({
                 ...taskContent,
-                attachments: uploadingFiles,
+                attachments: [...(taskContent.attachments ?? []), ...newPendingUploads],
             });
             setIsUploadingFilesUpdated(false);
             setTaskUpdated(true);
@@ -350,11 +361,28 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                 });
 
                 updateDisplayingFiles(file, attachmentFile.attachment_id);
-                backendFiles.push({ attachment_id: attachmentFile.attachment_id, file: file });
+                // Preserve `file_base64` / `name` / `type` here. Effect 323
+                // pushes `uploadingFiles` straight into `taskContent.attachments`,
+                // which then round-trips through `setCurrentPreviewTask` and
+                // `setUploadedFiles` (TaskPreview effect 192). If we drop
+                // `file_base64` at this hop, the next render of effect 335
+                // sees a positive-id attachment without a base64 and falls
+                // into the `else if (file)` branch — which silently skips
+                // `updateDisplayingFiles`, so previously-saved files vanish
+                // from the panel the moment a new one is added.
+                backendFiles.push({
+                    attachment_id: attachmentFile.attachment_id,
+                    file: file,
+                    file_base64: attachmentFile.file_base64,
+                    name: attachmentFile.name,
+                    type: attachmentFile.type,
+                });
             } else if (attachmentFile.file) {
                 backendFiles.push({
                     attachment_id: attachmentFile.attachment_id,
                     file: attachmentFile.file,
+                    name: attachmentFile.name,
+                    type: attachmentFile.type,
                 });
             }
         });
