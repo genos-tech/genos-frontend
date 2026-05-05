@@ -20,6 +20,10 @@ type TaskCreateFooterProps = {
     taskContent: TaskProps;
     taskTitle: string;
     useTM: TaskManagementState;
+    /** Lifted into `CreateTaskForm` so the attachment block can render
+     *  its overlay during the same upload window the button is locked. */
+    isCreatingTask?: boolean;
+    setIsCreatingTask?: (value: boolean) => void;
     setIsSubmitted: (value: boolean) => void;
     setTitleError: (value: string) => void;
     setTitleErrorOpen: (value: boolean) => void;
@@ -35,6 +39,8 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
         taskContent,
         taskTitle,
         useTM,
+        isCreatingTask = false,
+        setIsCreatingTask,
         setIsSubmitted,
         setTitleError,
         setTitleErrorOpen,
@@ -44,30 +50,44 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
 
-    const isDisabled = taskTitle === "" || taskContent.project?.projectId === null;
+    const isDisabled =
+        isCreatingTask || taskTitle === "" || taskContent.project?.projectId === null;
 
     const DoUploadNewTask = async () => {
-        await uploadNewTask({
-            socket: socket,
-            myself: myself,
-            taskContent: taskContent,
-            useCM: useCM,
-            accessToken: accessToken || "",
-            setTitleError: setTitleError,
-            setTitleErrorOpen: setTitleErrorOpen,
-            setCurrentPreviewTaskId: useTM.setCurrentPreviewTaskId,
-        });
+        // Guard against a double-click sending two creates in parallel
+        // (the button is also visually locked via `isDisabled`).
+        if (isCreatingTask) return;
 
-        if (taskContent.project && taskContent.project.projectId) {
-            localStorage.setItem("lastProjectId", String(taskContent.project.projectId));
-            usePM.setCurrentProject(taskContent.project);
-        } else {
-            console.error("Failed to set the current project");
+        setIsCreatingTask?.(true);
+        try {
+            await uploadNewTask({
+                socket: socket,
+                myself: myself,
+                taskContent: taskContent,
+                useCM: useCM,
+                accessToken: accessToken || "",
+                setTitleError: setTitleError,
+                setTitleErrorOpen: setTitleErrorOpen,
+                setCurrentPreviewTaskId: useTM.setCurrentPreviewTaskId,
+            });
+
+            if (taskContent.project && taskContent.project.projectId) {
+                localStorage.setItem("lastProjectId", String(taskContent.project.projectId));
+                usePM.setCurrentProject(taskContent.project);
+            } else {
+                console.error("Failed to set the current project");
+            }
+
+            useTM.setIsTaskPreviewVisible(true);
+
+            setIsSubmitted(true);
+        } finally {
+            // Always release the lock — `uploadNewTask` already reports
+            // failures through `setTitleError`, so leaving the form
+            // wedged on a transient backend hiccup would be worse than
+            // letting the user retry.
+            setIsCreatingTask?.(false);
         }
-
-        useTM.setIsTaskPreviewVisible(true);
-
-        setIsSubmitted(true);
     };
 
     const handleCancel = () => {
@@ -94,10 +114,10 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
     return (
         <Stack direction="row" sx={{ display: "flex", justifyContent: "flex-end", gap: 1.5 }}>
             <Button
+                disabled={isCreatingTask}
                 size="sm"
-                variant="plain"
                 startDecorator={<CloseRoundedIcon sx={{ fontSize: 16 }} />}
-                onClick={handleCancel}
+                variant="plain"
                 sx={{
                     fontWeight: 600,
                     fontSize: "13px",
@@ -118,15 +138,17 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
                         transform: "scale(0.98)",
                     },
                 }}
+                onClick={handleCancel}
             >
                 Cancel
             </Button>
             <Button
-                size="sm"
-                variant="solid"
                 disabled={isDisabled}
+                loading={isCreatingTask}
+                loadingPosition="start"
+                size="sm"
                 startDecorator={<AddTaskRoundedIcon sx={{ fontSize: 16 }} />}
-                onClick={DoUploadNewTask}
+                variant="solid"
                 sx={{
                     fontWeight: 600,
                     fontSize: "13px",
@@ -163,8 +185,9 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
                         color: isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)",
                     },
                 }}
+                onClick={DoUploadNewTask}
             >
-                Create Task
+                {isCreatingTask ? "Creating…" : "Create Task"}
             </Button>
         </Stack>
     );

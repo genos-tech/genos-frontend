@@ -39,6 +39,10 @@ import { UIStateManagementState } from "../../hooks/common/useUIStateManagement"
 import { UserProps } from "../../types/admin";
 import { ChatProps, MessageProps } from "../../types/chat";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
+import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
+import { FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
+import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
+import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 
@@ -104,31 +108,38 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
         },
     });
 
-    // Uploads a file to tmpfiles.org and returns the URL to the uploaded file.
-    async function uploadFile(file: File) {
-        const formData = new FormData();
-        formData.append("team_id", String(myself.teamId));
-        formData.append("chat_type", String(chat.chatType));
-        formData.append("chat_id", String(chat.chatId));
-        formData.append("message_id", String(message.messageId));
-        formData.append("thread_id", "0");
-        formData.append("uploader", myself.userId);
-        formData.append("chat_attachment_file", file);
-        const uploadChatAttachmentResponse = await fetch(`${base_url}/chat/attachment/`, {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-            body: formData,
-        });
-        const uploadChatAttachmentData = await uploadChatAttachmentResponse.json();
+    // See `bnChatEditor` for the rationale on `useUploadCounter`.
+    const { activeCount: editorUploadCount, wrap: trackUpload } = useUploadCounter();
 
-        if (!uploadChatAttachmentResponse.ok) {
-            throw new Error(uploadChatAttachmentData.message || "Attachment Upload Failed");
-        }
+    // Per-file size cap. See `bnChatEditor` for the rationale.
+    const { rejection, dismissRejection, guardUploadFile } = useFileSizeGuard();
 
-        return `${django_url}${uploadChatAttachmentData.chatAttachmentUrl}`;
-    }
+    const uploadFile = guardUploadFile(
+        trackUpload(async (file: File) => {
+            const formData = new FormData();
+            formData.append("team_id", String(myself.teamId));
+            formData.append("chat_type", String(chat.chatType));
+            formData.append("chat_id", String(chat.chatId));
+            formData.append("message_id", String(message.messageId));
+            formData.append("thread_id", "0");
+            formData.append("uploader", myself.userId);
+            formData.append("chat_attachment_file", file);
+            const uploadChatAttachmentResponse = await fetch(`${base_url}/chat/attachment/`, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: formData,
+            });
+            const uploadChatAttachmentData = await uploadChatAttachmentResponse.json();
+
+            if (!uploadChatAttachmentResponse.ok) {
+                throw new Error(uploadChatAttachmentData.message || "Attachment Upload Failed");
+            }
+
+            return `${django_url}${uploadChatAttachmentData.chatAttachmentUrl}`;
+        })
+    );
 
     // List containing all default Slash Menu Items, as well as our custom one.
     const getCustomSlashMenuItems = (
@@ -234,12 +245,14 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
 
     return (
         <Box>
+            <FileSizeRejectionSnackbar rejection={rejection} onDismiss={dismissRejection} />
             <EmojiPicker
                 setSelectedEmoji={setSelectedEmoji}
                 setShowEmojiPicker={setShowEmojiPicker}
                 showEmojiPicker={showEmojiPicker}
             />
             <Box ref={editorRef} className={bnBoxClassName} sx={{ position: "relative" }}>
+                <FileUploadStatusBadge count={editorUploadCount} />
                 <BlockNoteView
                     className="bn-box"
                     editor={editor}

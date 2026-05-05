@@ -23,6 +23,8 @@ import { Socket } from "socket.io-client";
 
 import { useOptionalAvatarContext } from "../../../../components/ui/avatars/AvatarContext";
 import { EmojiPicker } from "../../../../components/ui/emoji/EmojiPicker";
+import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/FileSizeRejectionSnackbar";
+import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
 import { useAuth } from "../../../../context/AuthContext";
 import { UserRepository } from "../../../../db/repositories/user";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -104,6 +106,10 @@ export const UserProfile = (props: UserProfileProps) => {
     // tick will catch up.
     const avatarCtx = useOptionalAvatarContext();
 
+    // Per-file size cap. Profile images are tiny by nature; the cap is
+    // mostly a safety net against accidentally selecting a 4K RAW.
+    const { rejection, dismissRejection, filterFiles } = useFileSizeGuard();
+
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
 
@@ -135,7 +141,15 @@ export const UserProfile = (props: UserProfileProps) => {
         const selectedFiles = event.target.files;
         if (!selectedFiles || selectedFiles.length !== 1) return;
 
-        const tmpUserProfileImage = selectedFiles[0]; // original File
+        // Reject oversize images before we do any wrapping / fetch work.
+        // Reset the input so the user can retry with a smaller file.
+        const accepted = filterFiles(selectedFiles);
+        if (accepted.length === 0) {
+            event.target.value = "";
+            return;
+        }
+
+        const tmpUserProfileImage = accepted[0]; // original File
 
         // NOTE: This is the static path and is referred from backend as well.
         //       So, need to check backend when you need to change it.
@@ -197,6 +211,7 @@ export const UserProfile = (props: UserProfileProps) => {
 
     return (
         <>
+            <FileSizeRejectionSnackbar rejection={rejection} onDismiss={dismissRejection} />
             <Modal
                 open={openUserProfile}
                 sx={{

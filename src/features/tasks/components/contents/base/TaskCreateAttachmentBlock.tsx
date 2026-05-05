@@ -14,6 +14,12 @@ import {
     useColorScheme,
 } from "@mui/joy";
 
+import { FileSizeRejectionSnackbar } from "../../../../../components/ui/feedback/FileSizeRejectionSnackbar";
+import {
+    FileUploadOverlay,
+    UploadingTileBadge,
+} from "../../../../../components/ui/feedback/FileUploadProgress";
+import { useFileSizeGuard } from "../../../../../components/ui/feedback/useFileSizeGuard";
 import {
     AttachmentFileProps,
     FileProps,
@@ -40,9 +46,13 @@ const resizeImageToFitBox = (imageSize: ImageSizeProps): ImageSizeProps => {
 type TaskCreateAttachmentBlockProps = {
     taskContent: TaskProps;
     setTaskContent: (value: TaskProps) => void;
+    /** True while the parent's create-task submission is uploading staged
+     *  attachments. Drives the full-area overlay + per-tile spinner so
+     *  the user sees the in-flight work instead of a frozen button. */
+    isUploading?: boolean;
 };
 export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps) => {
-    const { taskContent, setTaskContent } = props;
+    const { taskContent, setTaskContent, isUploading = false } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const [images, setImages] = useState<FileProps[]>([]);
@@ -51,6 +61,10 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
     const [isUploadingFilesUpdated, setIsUploadingFilesUpdated] = useState<boolean>(false);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [numOfUploadingFiles, setNumOfUploadingFiles] = useState<number>(0);
+    // Per-file size cap. Filtering happens before staging so oversize
+    // files never reach `taskContent.attachments` (and therefore never
+    // hit the per-attachment loop in `uploadNewTask`).
+    const { rejection, dismissRejection, filterFiles } = useFileSizeGuard();
 
     const updateDisplayingFiles = (file: File, attachmentId: number) => {
         // To display the dropped files in the task attachment block,
@@ -104,7 +118,12 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
         const selectedFiles = event.target.files;
 
         if (selectedFiles) {
-            Array.from(selectedFiles).map((file, index) => {
+            const accepted = filterFiles(selectedFiles);
+            if (accepted.length === 0) {
+                event.target.value = "";
+                return;
+            }
+            accepted.forEach((file, index) => {
                 const attachmentId: number = -numOfUploadingFiles - index - 1;
                 setUploadingFiles((prev) => [
                     ...prev,
@@ -114,7 +133,7 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
             });
 
             setIsUploadingFilesUpdated(true);
-            setNumOfUploadingFiles(numOfUploadingFiles + selectedFiles.length);
+            setNumOfUploadingFiles(numOfUploadingFiles + accepted.length);
         }
         event.target.value = "";
     };
@@ -122,8 +141,10 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
     const handleDroppedFiles = (event: React.DragEvent<HTMLDivElement>) => {
         event.preventDefault();
 
-        const droppedFiles = Array.from(event.dataTransfer.files);
-        droppedFiles.map((file, index) => {
+        const droppedFiles = filterFiles(event.dataTransfer.files);
+        if (droppedFiles.length === 0) return;
+
+        droppedFiles.forEach((file, index) => {
             const attachmentId: number = -numOfUploadingFiles - index - 1;
 
             // Append dropped files into the `uploadingFiles`
@@ -181,7 +202,8 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
     };
 
     return (
-        <Box>
+        <Box sx={{ position: "relative" }}>
+            <FileSizeRejectionSnackbar rejection={rejection} onDismiss={dismissRejection} />
             {/* Drag & Drop Area */}
             <Box
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
@@ -197,6 +219,7 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                     flexWrap: "wrap",
                     p: 2,
                     gap: 2,
+                    position: "relative",
                     transition: "all 0.2s ease",
                     "&:hover": {
                         borderColor: isDark ? "rgba(139,92,246,0.3)" : "rgba(124,58,237,0.2)",
@@ -204,8 +227,19 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                     },
                 }}
                 onDragOver={(e) => e.preventDefault()}
-                onDrop={handleDroppedFiles}
+                onDrop={isUploading ? undefined : handleDroppedFiles}
             >
+                <FileUploadOverlay
+                    label="Uploading attachments…"
+                    open={isUploading}
+                    detail={
+                        uploadingFiles.length > 0
+                            ? `${uploadingFiles.length} file${
+                                  uploadingFiles.length === 1 ? "" : "s"
+                              }`
+                            : undefined
+                    }
+                />
                 {/* Empty State */}
                 {uploadingFiles.length === 0 && (
                     <Box
@@ -277,6 +311,7 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                         }}
                     >
                         <IconButton
+                            disabled={isUploading}
                             size="sm"
                             variant="plain"
                             sx={{
@@ -291,9 +326,11 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                                 height: 20,
                                 minWidth: 20,
                                 minHeight: 20,
+                                zIndex: 6,
                                 "&:hover": {
                                     background: "rgba(239,68,68,0.3)",
                                 },
+                                "&.Mui-disabled": { opacity: 0.4 },
                             }}
                             onClick={() => handleDeleteTextFile(file)}
                         >
@@ -306,8 +343,11 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                             variant="outlined"
                         >
                             <div
-                                style={{ cursor: "pointer" }}
-                                onClick={() => downloadFile(file.url, file.name)}
+                                style={{ cursor: isUploading ? "default" : "pointer" }}
+                                onClick={() => {
+                                    if (isUploading) return;
+                                    downloadFile(file.url, file.name);
+                                }}
                             >
                                 <InsertDriveFileRoundedIcon
                                     sx={{
@@ -332,6 +372,7 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                         >
                             {file.name}
                         </Typography>
+                        <UploadingTileBadge open={isUploading} />
                     </Box>
                 ))}
 
@@ -349,6 +390,7 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                         }}
                     >
                         <IconButton
+                            disabled={isUploading}
                             size="sm"
                             variant="plain"
                             sx={{
@@ -362,9 +404,11 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                                 height: 24,
                                 minWidth: 24,
                                 minHeight: 24,
+                                zIndex: 6,
                                 "&:hover": {
                                     background: "rgba(239,68,68,0.7)",
                                 },
+                                "&.Mui-disabled": { opacity: 0.4 },
                             }}
                             onClick={() => handleDeleteImage(image)}
                         >
@@ -376,11 +420,15 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                             style={{
                                 width: `${image.width}px`,
                                 height: `${image.height}px`,
-                                cursor: "pointer",
+                                cursor: isUploading ? "default" : "pointer",
                                 display: "block",
                             }}
-                            onClick={() => setSelectedImage(image.url)}
+                            onClick={() => {
+                                if (isUploading) return;
+                                setSelectedImage(image.url);
+                            }}
                         />
+                        <UploadingTileBadge open={isUploading} />
                     </Box>
                 ))}
             </Box>
@@ -403,6 +451,7 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                     onChange={handleSelectedFiles}
                 />
                 <IconButton
+                    disabled={isUploading}
                     size="sm"
                     sx={{
                         borderRadius: "10px",
@@ -421,6 +470,7 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                                 ? "linear-gradient(135deg, rgba(139,92,246,0.18) 0%, rgba(99,102,241,0.15) 100%)"
                                 : "linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(79,70,229,0.12) 100%)",
                         },
+                        "&.Mui-disabled": { opacity: 0.5 },
                     }}
                     onClick={handleButtonClick}
                 >

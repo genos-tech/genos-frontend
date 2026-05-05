@@ -43,6 +43,10 @@ import { UserProps } from "../../types/admin";
 import { AllChatProps, ChatProps, MessageProps } from "../../types/chat";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
+import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
+import { FileUploadOverlay, FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
+import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
+import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
@@ -122,42 +126,57 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
         editor: typeof schema.BlockNoteEditor
     ): DefaultReactSuggestionItem[] => getDefaultReactSlashMenuItems(editor);
 
-    // Uploads a file to tmpfiles.org and returns the URL to the uploaded file.
-    async function uploadFile(file: File) {
-        const formData = new FormData();
-        formData.append("team_id", String(myself.teamId));
-        formData.append("chat_type", String(chat.chatType));
-        formData.append("chat_id", String(chat.chatId));
-        formData.append("message_id", String(chat.messages.length + 1));
-        formData.append("thread_id", "0");
-        formData.append("uploader", myself.userId);
-        formData.append("chat_attachment_file", file);
-        const uploadChatAttachmentResponse = await fetch(`${base_url}/chat/attachment/`, {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-            body: formData,
-        });
-        const uploadChatAttachmentData = await uploadChatAttachmentResponse.json();
+    // Counter wraps every `uploadFile` call so the small "Uploading n
+    // files…" pill at the top of the editor reflects in-flight work
+    // both for slash-menu / drag-into-editor inserts (BlockNote calls
+    // `uploadFile` directly) and the `pendingFiles` loop below. Large
+    // files routinely take several seconds and BlockNote's own in-block
+    // placeholder isn't always obvious, so the pill plugs that gap.
+    const { activeCount: editorUploadCount, wrap: trackUpload } = useUploadCounter();
 
-        if (!uploadChatAttachmentResponse.ok) {
-            throw new Error(uploadChatAttachmentData.message || "Attachment Upload Failed");
-        }
+    // Per-file size cap. `guardUploadFile` rejects oversize files
+    // before any fetch happens (so BlockNote's slash-menu / drag
+    // inserts and the `pendingFiles` loop both bail out cheaply) and
+    // surfaces a friendly toast via the snackbar rendered below.
+    const { rejection, dismissRejection, filterFiles, guardUploadFile } = useFileSizeGuard();
 
-        // The backend's `chatAttachmentUrl` is DRF's default `FileField`
-        // serialization, which already includes the `MEDIA_URL` prefix
-        // (so the value looks like `/media/chats/...`). Concatenating
-        // with an extra `/` between `django_url` and the value would
-        // produce `https://host//media/...` — Django's `re_path`
-        // (`^media/...`) doesn't match the doubled-slash variant, and
-        // Railway's edge proxy preserves the path as-is, so the GET
-        // 404s in production. Browsers / the local dev server happen to
-        // tolerate the double slash, which is why this only surfaced
-        // after we deployed. Same shape applies to every sibling editor
-        // (note / task / thread).
-        return `${django_url}${uploadChatAttachmentData.chatAttachmentUrl}`;
-    }
+    const uploadFile = guardUploadFile(
+        trackUpload(async (file: File) => {
+            const formData = new FormData();
+            formData.append("team_id", String(myself.teamId));
+            formData.append("chat_type", String(chat.chatType));
+            formData.append("chat_id", String(chat.chatId));
+            formData.append("message_id", String(chat.messages.length + 1));
+            formData.append("thread_id", "0");
+            formData.append("uploader", myself.userId);
+            formData.append("chat_attachment_file", file);
+            const uploadChatAttachmentResponse = await fetch(`${base_url}/chat/attachment/`, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: formData,
+            });
+            const uploadChatAttachmentData = await uploadChatAttachmentResponse.json();
+
+            if (!uploadChatAttachmentResponse.ok) {
+                throw new Error(uploadChatAttachmentData.message || "Attachment Upload Failed");
+            }
+
+            // The backend's `chatAttachmentUrl` is DRF's default `FileField`
+            // serialization, which already includes the `MEDIA_URL` prefix
+            // (so the value looks like `/media/chats/...`). Concatenating
+            // with an extra `/` between `django_url` and the value would
+            // produce `https://host//media/...` — Django's `re_path`
+            // (`^media/...`) doesn't match the doubled-slash variant, and
+            // Railway's edge proxy preserves the path as-is, so the GET
+            // 404s in production. Browsers / the local dev server happen to
+            // tolerate the double slash, which is why this only surfaced
+            // after we deployed. Same shape applies to every sibling editor
+            // (note / task / thread).
+            return `${django_url}${uploadChatAttachmentData.chatAttachmentUrl}`;
+        })
+    );
 
     // We use the English, default dictionary
     const locale = en;
@@ -192,28 +211,56 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
         }
     }, [selectedEmoji]);
 
+    // Tracks the chat-pane drop upload loop (separate from BlockNote's
+    // own `uploadFile` placeholder) so the editor surface can show a
+    // dim overlay with "Uploading 2 / 5 — large.pdf" text. Without this
+    // the user sees nothing for several seconds while large files
+    // POST in series, then the blocks suddenly appear.
+    const [pendingUpload, setPendingUpload] = useState<{
+        index: number;
+        total: number;
+        name: string;
+    } | null>(null);
+
     // Process files dropped on the chat pane (outside the editor)
     useEffect(() => {
         if (pendingFiles && pendingFiles.length > 0 && clearPendingFiles) {
-            const insertFiles = async () => {
-                for (const file of pendingFiles) {
-                    try {
-                        const url = await uploadFile(file);
-                        const isImage = file.type.startsWith("image/");
-                        editor.insertBlocks(
-                            [
-                                isImage
-                                    ? { type: "image", props: { url, name: file.name } }
-                                    : { type: "file", props: { url, name: file.name } },
-                            ],
-                            editor.document[editor.document.length - 1],
-                            "after"
-                        );
-                    } catch (err) {
-                        console.error("Failed to insert dropped file:", err);
-                    }
-                }
+            // Drop oversize files up-front so the dim overlay only counts
+            // files we'll actually try to upload.
+            const acceptedFiles = filterFiles(pendingFiles);
+            if (acceptedFiles.length === 0) {
                 clearPendingFiles();
+                return;
+            }
+            const insertFiles = async () => {
+                try {
+                    for (let i = 0; i < acceptedFiles.length; i += 1) {
+                        const file = acceptedFiles[i];
+                        setPendingUpload({
+                            index: i + 1,
+                            total: acceptedFiles.length,
+                            name: file.name,
+                        });
+                        try {
+                            const url = await uploadFile(file);
+                            const isImage = file.type.startsWith("image/");
+                            editor.insertBlocks(
+                                [
+                                    isImage
+                                        ? { type: "image", props: { url, name: file.name } }
+                                        : { type: "file", props: { url, name: file.name } },
+                                ],
+                                editor.document[editor.document.length - 1],
+                                "after"
+                            );
+                        } catch (err) {
+                            console.error("Failed to insert dropped file:", err);
+                        }
+                    }
+                } finally {
+                    setPendingUpload(null);
+                    clearPendingFiles();
+                }
             };
             insertFiles();
         }
@@ -382,12 +429,23 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
 
     return (
         <Box>
+            <FileSizeRejectionSnackbar rejection={rejection} onDismiss={dismissRejection} />
             <EmojiPicker
                 setSelectedEmoji={setSelectedEmoji}
                 setShowEmojiPicker={setShowEmojiPicker}
                 showEmojiPicker={showEmojiPicker}
             />
             <Box ref={editorRef} className={bnBoxClassName} sx={{ position: "relative" }}>
+                <FileUploadStatusBadge count={editorUploadCount} />
+                <FileUploadOverlay
+                    label="Uploading dropped files…"
+                    open={pendingUpload !== null}
+                    detail={
+                        pendingUpload
+                            ? `${pendingUpload.name} (${pendingUpload.index} / ${pendingUpload.total})`
+                            : undefined
+                    }
+                />
                 <BlockNoteView
                     className="bn-box"
                     editor={editor}
@@ -487,9 +545,9 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                         }
                     />
                     <SuggestionMenuController
-                        triggerCharacter={":"}
-                        minQueryLength={2}
                         getItems={async (query) => getEmojiSuggestionItems(editor, query)}
+                        minQueryLength={2}
+                        triggerCharacter={":"}
                     />
                 </BlockNoteView>
             </Box>

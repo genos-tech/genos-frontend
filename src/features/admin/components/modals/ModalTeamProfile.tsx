@@ -24,6 +24,8 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/FileSizeRejectionSnackbar";
+import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -116,12 +118,23 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
     const handleButtonClick = () => {
         inputRef.current?.click();
     };
+
+    // Per-file size cap. Profile images are tiny by nature; the cap is
+    // mostly a safety net against accidentally selecting a 4K RAW.
+    const { rejection, dismissRejection, filterFiles } = useFileSizeGuard();
+
     const handleSelectedFiles = async (event: React.ChangeEvent<HTMLInputElement>) => {
         if (myself.teamId) {
             const selectedFiles = event.target.files;
             if (!selectedFiles || selectedFiles.length !== 1) return;
 
-            const tmpProjectProfileImage = selectedFiles[0]; // original File
+            const accepted = filterFiles(selectedFiles);
+            if (accepted.length === 0) {
+                event.target.value = "";
+                return;
+            }
+
+            const tmpProjectProfileImage = accepted[0]; // original File
 
             // Create a new File instance with the existing file data but new name
             const imageFileName = "profile.jpg";
@@ -164,6 +177,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
 
     return (
         <>
+            <FileSizeRejectionSnackbar rejection={rejection} onDismiss={dismissRejection} />
             <Modal
                 open={openModalTeamProfile}
                 sx={{

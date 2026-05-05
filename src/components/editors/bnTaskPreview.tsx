@@ -56,6 +56,10 @@ import { UserProps } from "../../types/admin";
 import { getUserColor } from "../../utils/collabUtils";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
+import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
+import { FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
+import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
+import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 import { Alert } from "./sub/Alert";
@@ -143,29 +147,39 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         editor: typeof schema.BlockNoteEditor
     ): DefaultReactSuggestionItem[] => getDefaultReactSlashMenuItems(editor);
 
-    // Uploads a file to tmpfiles.org and returns the URL to the uploaded file.
-    async function uploadFile(file: File) {
-        const formData = new FormData();
-        formData.append("body_attachment_file", file);
-        formData.append("task_id", String(taskId));
-        formData.append("uploader", myself.userId);
-        const uploadTaskBodyAttachmentResponse = await fetch(`${base_url}/task/body/attachment/`, {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-            body: formData,
-        });
-        const uploadTaskBodyAttachmentData = await uploadTaskBodyAttachmentResponse.json();
+    // See `bnChatEditor` for the rationale on `useUploadCounter`.
+    const { activeCount: editorUploadCount, wrap: trackUpload } = useUploadCounter();
 
-        if (!uploadTaskBodyAttachmentResponse.ok) {
-            throw new Error(
-                uploadTaskBodyAttachmentData.message || "Task BodyAttachment Upload Failed"
+    // Per-file size cap. See `bnChatEditor` for the rationale.
+    const { rejection, dismissRejection, guardUploadFile } = useFileSizeGuard();
+
+    const uploadFile = guardUploadFile(
+        trackUpload(async (file: File) => {
+            const formData = new FormData();
+            formData.append("body_attachment_file", file);
+            formData.append("task_id", String(taskId));
+            formData.append("uploader", myself.userId);
+            const uploadTaskBodyAttachmentResponse = await fetch(
+                `${base_url}/task/body/attachment/`,
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                    },
+                    body: formData,
+                }
             );
-        }
+            const uploadTaskBodyAttachmentData = await uploadTaskBodyAttachmentResponse.json();
 
-        return `${django_url}${uploadTaskBodyAttachmentData.taskBodyAttachmentUrl}`;
-    }
+            if (!uploadTaskBodyAttachmentResponse.ok) {
+                throw new Error(
+                    uploadTaskBodyAttachmentData.message || "Task BodyAttachment Upload Failed"
+                );
+            }
+
+            return `${django_url}${uploadTaskBodyAttachmentData.taskBodyAttachmentUrl}`;
+        })
+    );
 
     const locale = en;
     const dictionary = useMemo(
@@ -282,171 +296,178 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
     };
 
     return (
-        <Box ref={editorRef} className={bnBoxClassName} sx={{ position: "relative" }}>
-            <BlockNoteView
-                className="bn-box"
-                editor={editor as any}
-                formattingToolbar={false}
-                sideMenu={true}
-                comments={false}
-                emojiPicker={false}
-                theme={mode === "dark" ? "dark" : "light"}
-                data-changing-font-demo
-                onChange={() => {
-                    const comments: any[] = editor.document;
-                    setNumEditorLines(countLines(comments));
-                    setBody(editor.document);
-                    if (setTaskBodyEdited) {
-                        setTaskBodyEdited(true);
-                        if (setTaskBodySaved) {
-                            setTaskBodySaved(false);
+        <>
+            <FileSizeRejectionSnackbar rejection={rejection} onDismiss={dismissRejection} />
+            <Box ref={editorRef} className={bnBoxClassName} sx={{ position: "relative" }}>
+                <FileUploadStatusBadge count={editorUploadCount} />
+                <BlockNoteView
+                    className="bn-box"
+                    comments={false}
+                    editor={editor as any}
+                    emojiPicker={false}
+                    formattingToolbar={false}
+                    sideMenu={true}
+                    theme={mode === "dark" ? "dark" : "light"}
+                    data-changing-font-demo
+                    onChange={() => {
+                        const comments: any[] = editor.document;
+                        setNumEditorLines(countLines(comments));
+                        setBody(editor.document);
+                        if (setTaskBodyEdited) {
+                            setTaskBodyEdited(true);
+                            if (setTaskBodySaved) {
+                                setTaskBodySaved(false);
+                            }
                         }
-                    }
-                }}
-                onClick={(e) => {
-                    const target = e.target as HTMLElement;
-                    if (target.tagName === "IMG") {
-                        handleImageClick((target as HTMLImageElement).src);
-                    }
-                }}
-                onKeyDown={(event) => {
-                    if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
-                        if (editor.document.length > 1) {
+                    }}
+                    onClick={(e) => {
+                        const target = e.target as HTMLElement;
+                        if (target.tagName === "IMG") {
+                            handleImageClick((target as HTMLImageElement).src);
                         }
-                    }
-                }}
-            >
-                <SideMenuController
-                    sideMenu={(props) => (
-                        <SideMenu {...props} dragHandleMenu={CustomDragHandleMenu} />
+                    }}
+                    onKeyDown={(event) => {
+                        if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
+                            if (editor.document.length > 1) {
+                            }
+                        }
+                    }}
+                >
+                    <SideMenuController
+                        sideMenu={(props) => (
+                            <SideMenu {...props} dragHandleMenu={CustomDragHandleMenu} />
+                        )}
+                    />
+                    <FormattingToolbarController
+                        formattingToolbar={() => (
+                            <FormattingToolbar>
+                                <BlockTypeSelect
+                                    key={"blockTypeSelect"}
+                                    items={[
+                                        // Gets the default Block Type Select items.
+                                        ...blockTypeSelectItems(editor.dictionary),
+                                        // Adds an item for the Alert block.
+                                        {
+                                            name: "Alert",
+                                            type: "alert",
+                                            icon: RiAlertFill,
+                                        } satisfies BlockTypeSelectItem,
+                                    ]}
+                                />
+
+                                <BasicTextStyleButton
+                                    key={"boldStyleButton"}
+                                    basicTextStyle={"bold"}
+                                />
+                                <BasicTextStyleButton
+                                    key={"italicStyleButton"}
+                                    basicTextStyle={"italic"}
+                                />
+                                <BasicTextStyleButton
+                                    key={"underlineStyleButton"}
+                                    basicTextStyle={"underline"}
+                                />
+                                <BasicTextStyleButton
+                                    key={"strikeStyleButton"}
+                                    basicTextStyle={"strike"}
+                                />
+                                <BasicTextStyleButton
+                                    key={"codeStyleButton"}
+                                    basicTextStyle={"code"}
+                                />
+                                <TextAlignButton
+                                    key={"textAlignLeftButton"}
+                                    textAlignment={"left"}
+                                />
+                                <TextAlignButton
+                                    key={"textAlignCenterButton"}
+                                    textAlignment={"center"}
+                                />
+                                <TextAlignButton
+                                    key={"textAlignRightButton"}
+                                    textAlignment={"right"}
+                                />
+                                <ColorStyleButton key={"colorStyleButton"} />
+                                <CreateLinkButton key={"createLinkButton"} />
+                                <FileCaptionButton key={"fileCaptionButton"} />
+                                <FileReplaceButton key={"fileReplaceButton"} />
+                                {threadStore && <AddCommentButton key={"addCommentButton"} />}
+                                <FileDeleteButton key={"fileDeleteButton"} />
+                                <FileDownloadButton key={"fileDownloadButton"} />
+                                <FilePreviewButton key={"filePreviewButton"} />
+                                <FileRenameButton key={"fileRenameButton"} />
+                                <TableCellMergeButton key={"tableCellMergeButton"} />
+                            </FormattingToolbar>
+                        )}
+                    />
+
+                    {/* Adds a mentions menu which opens with the "@" key */}
+                    <SuggestionMenuController
+                        triggerCharacter={"@"}
+                        getItems={async (query) =>
+                            // Gets the mentions menu items
+                            filterSuggestionItems(
+                                MentionMenuItems(
+                                    useTEM.teamMemberProfiles,
+                                    editor,
+                                    useTEM.teamMembers
+                                ),
+                                query
+                            )
+                        }
+                    />
+                    <SuggestionMenuController
+                        triggerCharacter={"/"}
+                        getItems={async (query) =>
+                            filterSuggestionItems(
+                                getCustomSlashMenuItems(
+                                    editor as unknown as typeof schema.BlockNoteEditor
+                                ),
+                                query
+                            )
+                        }
+                    />
+                    <SuggestionMenuController
+                        getItems={async (query) => getEmojiSuggestionItems(editor, query)}
+                        minQueryLength={2}
+                        triggerCharacter={":"}
+                    />
+
+                    {threadStore && <FloatingComposerController />}
+                    {threadStore && (
+                        <ThreadsSidebarErrorBoundary>
+                            <FloatingThreadController />
+                        </ThreadsSidebarErrorBoundary>
                     )}
-                />
-                <FormattingToolbarController
-                    formattingToolbar={() => (
-                        <FormattingToolbar>
-                            <BlockTypeSelect
-                                key={"blockTypeSelect"}
-                                items={[
-                                    // Gets the default Block Type Select items.
-                                    ...blockTypeSelectItems(editor.dictionary),
-                                    // Adds an item for the Alert block.
-                                    {
-                                        name: "Alert",
-                                        type: "alert",
-                                        icon: RiAlertFill,
-                                    } satisfies BlockTypeSelectItem,
-                                ]}
-                            />
+                </BlockNoteView>
 
-                            <BasicTextStyleButton
-                                key={"boldStyleButton"}
-                                basicTextStyle={"bold"}
-                            />
-                            <BasicTextStyleButton
-                                key={"italicStyleButton"}
-                                basicTextStyle={"italic"}
-                            />
-                            <BasicTextStyleButton
-                                key={"underlineStyleButton"}
-                                basicTextStyle={"underline"}
-                            />
-                            <BasicTextStyleButton
-                                key={"strikeStyleButton"}
-                                basicTextStyle={"strike"}
-                            />
-                            <BasicTextStyleButton
-                                key={"codeStyleButton"}
-                                basicTextStyle={"code"}
-                            />
-                            <TextAlignButton key={"textAlignLeftButton"} textAlignment={"left"} />
-                            <TextAlignButton
-                                key={"textAlignCenterButton"}
-                                textAlignment={"center"}
-                            />
-                            <TextAlignButton
-                                key={"textAlignRightButton"}
-                                textAlignment={"right"}
-                            />
-                            <ColorStyleButton key={"colorStyleButton"} />
-                            <CreateLinkButton key={"createLinkButton"} />
-                            <FileCaptionButton key={"fileCaptionButton"} />
-                            <FileReplaceButton key={"fileReplaceButton"} />
-                            {threadStore && <AddCommentButton key={"addCommentButton"} />}
-                            <FileDeleteButton key={"fileDeleteButton"} />
-                            <FileDownloadButton key={"fileDownloadButton"} />
-                            <FilePreviewButton key={"filePreviewButton"} />
-                            <FileRenameButton key={"fileRenameButton"} />
-                            <TableCellMergeButton key={"tableCellMergeButton"} />
-                        </FormattingToolbar>
-                    )}
-                />
-
-                {/* Adds a mentions menu which opens with the "@" key */}
-                <SuggestionMenuController
-                    triggerCharacter={"@"}
-                    getItems={async (query) =>
-                        // Gets the mentions menu items
-                        filterSuggestionItems(
-                            MentionMenuItems(
-                                useTEM.teamMemberProfiles,
-                                editor,
-                                useTEM.teamMembers
-                            ),
-                            query
-                        )
-                    }
-                />
-                <SuggestionMenuController
-                    triggerCharacter={"/"}
-                    getItems={async (query) =>
-                        filterSuggestionItems(
-                            getCustomSlashMenuItems(
-                                editor as unknown as typeof schema.BlockNoteEditor
-                            ),
-                            query
-                        )
-                    }
-                />
-                <SuggestionMenuController
-                    triggerCharacter={":"}
-                    minQueryLength={2}
-                    getItems={async (query) => getEmojiSuggestionItems(editor, query)}
-                />
-
-                {threadStore && <FloatingComposerController />}
-                {threadStore && (
-                    <ThreadsSidebarErrorBoundary>
-                        <FloatingThreadController />
-                    </ThreadsSidebarErrorBoundary>
-                )}
-            </BlockNoteView>
-
-            <Modal open={opened} sx={{ zIndex: 10010 }} onClose={() => setOpened(false)}>
-                <ModalDialog>
-                    {selectedImage ? (
-                        <Box>
-                            <img alt="preview" src={selectedImage} />
-                            <Tooltip
-                                component="div"
-                                placement="top"
-                                size="sm"
-                                sx={{ zIndex: 10010 }}
-                                title="Download"
-                                variant="outlined"
-                            >
-                                <IconButton
-                                    color="neutral"
-                                    sx={{ position: "absolute", top: "10px", right: "10px" }}
-                                    variant="solid"
-                                    onClick={() => handleDownload(selectedImage)}
+                <Modal open={opened} sx={{ zIndex: 10010 }} onClose={() => setOpened(false)}>
+                    <ModalDialog>
+                        {selectedImage ? (
+                            <Box>
+                                <img alt="preview" src={selectedImage} />
+                                <Tooltip
+                                    component="div"
+                                    placement="top"
+                                    size="sm"
+                                    sx={{ zIndex: 10010 }}
+                                    title="Download"
+                                    variant="outlined"
                                 >
-                                    <DownloadIcon />
-                                </IconButton>
-                            </Tooltip>
-                        </Box>
-                    ) : null}
-                </ModalDialog>
-            </Modal>
-        </Box>
+                                    <IconButton
+                                        color="neutral"
+                                        sx={{ position: "absolute", top: "10px", right: "10px" }}
+                                        variant="solid"
+                                        onClick={() => handleDownload(selectedImage)}
+                                    >
+                                        <DownloadIcon />
+                                    </IconButton>
+                                </Tooltip>
+                            </Box>
+                        ) : null}
+                    </ModalDialog>
+                </Modal>
+            </Box>
+        </>
     );
 };

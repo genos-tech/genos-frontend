@@ -28,6 +28,9 @@ import Tab, { tabClasses } from "@mui/joy/Tab";
 import { useLocation } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
+import { FileSizeRejectionSnackbar } from "../../../../../components/ui/feedback/FileSizeRejectionSnackbar";
+import { UploadingTileBadge } from "../../../../../components/ui/feedback/FileUploadProgress";
+import { useFileSizeGuard } from "../../../../../components/ui/feedback/useFileSizeGuard";
 import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
@@ -144,6 +147,10 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     const [uploadingFiles, setUploadingFiles] = useState<AttachmentFileProps[]>([]);
     const [isUploadingFilesUpdated, setIsUploadingFilesUpdated] = useState<boolean>(false);
     const [numOfUploadingFiles, setNumOfUploadingFiles] = useState<number>(0);
+    // Per-file size cap. `filterFiles` accepts only files within the
+    // limit and stashes the rest for the snackbar; the corresponding
+    // `<FileSizeRejectionSnackbar />` is rendered below.
+    const { rejection, dismissRejection, filterFiles } = useFileSizeGuard();
 
     // Deep-link plumbing for the task-panel mount of `TaskCommentList`.
     //
@@ -236,7 +243,15 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     const handleSelectedFiles = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFiles = event.target.files;
         if (selectedFiles) {
-            Array.from(selectedFiles).map((file, index) => {
+            // Drop oversize files before they take up an attachment slot
+            // (negative id) — they'd otherwise sit in the panel forever
+            // since the backend would 413 the actual upload.
+            const accepted = filterFiles(selectedFiles);
+            if (accepted.length === 0) {
+                event.target.value = "";
+                return;
+            }
+            accepted.forEach((file, index) => {
                 const attachmentId: number = -numOfUploadingFiles - index - 1;
                 setUploadingFiles((prev) => [
                     ...prev,
@@ -246,7 +261,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
             });
 
             setIsUploadingFilesUpdated(true);
-            setNumOfUploadingFiles(numOfUploadingFiles + selectedFiles.length);
+            setNumOfUploadingFiles(numOfUploadingFiles + accepted.length);
         }
         event.target.value = "";
     };
@@ -254,11 +269,15 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     const handleDroppedFiles = (event: React.DragEvent<HTMLDivElement>) => {
         event.preventDefault();
 
-        const droppedFiles = Array.from(
+        // Dedupe by name first (matches existing behaviour), then drop
+        // anything over the per-file size cap.
+        const dedupedFiles = Array.from(
             new Map(Array.from(event.dataTransfer.files).map((f) => [f.name, f])).values()
         );
+        const droppedFiles = filterFiles(dedupedFiles);
+        if (droppedFiles.length === 0) return;
 
-        droppedFiles.map((file, index) => {
+        droppedFiles.forEach((file, index) => {
             const attachmentId: number = -numOfUploadingFiles - index - 1;
             setUploadingFiles((prev) => [...prev, { attachment_id: attachmentId, file: file }]);
             updateDisplayingFiles(file, attachmentId);
@@ -444,6 +463,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
 
     return (
         <Box sx={{ flexGrow: 1, overflowX: "hidden" }}>
+            <FileSizeRejectionSnackbar rejection={rejection} onDismiss={dismissRejection} />
             <Tabs
                 aria-label="Task Tabs"
                 value={tabIndex}
@@ -531,29 +551,28 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                     }}
                 >
                     {/* Comments Tab */}
-                    <TabPanel value={0} sx={{ p: 0 }}>
+                    <TabPanel sx={{ p: 0 }} value={0}>
                         <TaskCommentList
-                            socket={socket}
-                            myself={myself}
-                            setMyself={setMyself}
-                            taskComments={taskComments}
-                            setIsInEdit={setIsInEdit}
-                            setEditTargetComment={setEditTargetComment}
-                            useTEM={useTEM}
-                            useUISM={useUISM}
-                            useCM={useCM}
-                            useTM={useTM}
                             currentProjectId={taskContent.project?.projectId}
                             currentProjectName={taskContent.project?.projectName}
+                            focusedCommentId={focusedCommentId}
+                            myself={myself}
+                            setEditTargetComment={setEditTargetComment}
+                            setIsInEdit={setIsInEdit}
+                            setMyself={setMyself}
+                            socket={socket}
+                            taskComments={taskComments}
+                            useCM={useCM}
+                            useTEM={useTEM}
+                            useTM={useTM}
+                            useUISM={useUISM}
                             commentLinkBuilder={
                                 projectId !== undefined && currentTaskId !== undefined
                                     ? commentLinkBuilder
                                     : undefined
                             }
-                            focusedCommentId={focusedCommentId}
                         />
                         <TaskCommentEditorBlock
-                            useCM={useCM}
                             editTargetComment={editTargetComment}
                             isInEdit={isInEdit}
                             myself={myself}
@@ -565,14 +584,15 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                             task={tmpCurrentTaskContent}
                             taskCommentLines={taskCommentLines}
                             taskComments={taskComments}
+                            useCM={useCM}
                             useTEM={useTEM}
-                            useUISM={useUISM}
                             useTM={useTM}
+                            useUISM={useUISM}
                         />
                     </TabPanel>
 
                     {/* Notes Tab */}
-                    <TabPanel value={1} sx={{ p: 0 }}>
+                    <TabPanel sx={{ p: 0 }} value={1}>
                         <Stack
                             className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                             direction="column"
@@ -699,7 +719,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                     </TabPanel>
 
                     {/* Attachments Tab */}
-                    <TabPanel value={2} sx={{ p: 0 }}>
+                    <TabPanel sx={{ p: 0 }} value={2}>
                         <Box
                             className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                             sx={{
@@ -789,147 +809,185 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                             )}
 
                             {/* Text Files */}
-                            {textFiles.map((file, index) => (
-                                <Box
-                                    key={`textfile-${file.name}-${file.attachmentId}-${index}`}
-                                    sx={{
-                                        position: "relative",
-                                        textAlign: "center",
-                                        p: 1.5,
-                                        borderRadius: "10px",
-                                        background: isDark
-                                            ? "rgba(255,255,255,0.04)"
-                                            : "rgba(0,0,0,0.03)",
-                                        border: "1px solid",
-                                        borderColor: isDark
-                                            ? "rgba(255,255,255,0.06)"
-                                            : "rgba(0,0,0,0.05)",
-                                        transition: "all 0.2s ease",
-                                        "&:hover": {
+                            {textFiles.map((file, index) => {
+                                // Negative client-side ids mark attachments that
+                                // haven't been persisted yet — i.e. the
+                                // upload-in-flight state. Once
+                                // `useSendUpdatedTask` swaps them for the
+                                // server-issued positive ids the spinner
+                                // disappears automatically.
+                                const isUploading = file.attachmentId < 0;
+                                return (
+                                    <Box
+                                        key={`textfile-${file.name}-${file.attachmentId}-${index}`}
+                                        sx={{
+                                            position: "relative",
+                                            textAlign: "center",
+                                            p: 1.5,
+                                            borderRadius: "10px",
                                             background: isDark
+                                                ? "rgba(255,255,255,0.04)"
+                                                : "rgba(0,0,0,0.03)",
+                                            border: "1px solid",
+                                            borderColor: isDark
                                                 ? "rgba(255,255,255,0.06)"
                                                 : "rgba(0,0,0,0.05)",
-                                        },
-                                    }}
-                                >
-                                    <IconButton
-                                        size="sm"
-                                        variant="plain"
-                                        sx={{
-                                            position: "absolute",
-                                            top: -8,
-                                            right: -8,
-                                            background: isDark
-                                                ? "rgba(239,68,68,0.2)"
-                                                : "rgba(239,68,68,0.15)",
-                                            borderRadius: "50%",
-                                            width: 20,
-                                            height: 20,
-                                            minWidth: 20,
-                                            minHeight: 20,
+                                            transition: "all 0.2s ease",
                                             "&:hover": {
-                                                background: "rgba(239,68,68,0.3)",
+                                                background: isDark
+                                                    ? "rgba(255,255,255,0.06)"
+                                                    : "rgba(0,0,0,0.05)",
                                             },
                                         }}
-                                        onClick={() => handleDeleteTextFile(taskContent.id, file)}
                                     >
-                                        <CloseRoundedIcon
-                                            sx={{ fontSize: 12, color: "#ef4444" }}
-                                        />
-                                    </IconButton>
-                                    <Tooltip
-                                        placement="top"
-                                        size="sm"
-                                        title={`Download "${file.name}"`}
-                                        variant="outlined"
-                                    >
-                                        <div
-                                            style={{ cursor: "pointer" }}
-                                            onClick={() => downloadFile(file.url, file.name)}
+                                        <IconButton
+                                            disabled={isUploading}
+                                            size="sm"
+                                            variant="plain"
+                                            sx={{
+                                                position: "absolute",
+                                                top: -8,
+                                                right: -8,
+                                                background: isDark
+                                                    ? "rgba(239,68,68,0.2)"
+                                                    : "rgba(239,68,68,0.15)",
+                                                borderRadius: "50%",
+                                                width: 20,
+                                                height: 20,
+                                                minWidth: 20,
+                                                minHeight: 20,
+                                                zIndex: 6,
+                                                "&:hover": {
+                                                    background: "rgba(239,68,68,0.3)",
+                                                },
+                                                "&.Mui-disabled": {
+                                                    opacity: 0.4,
+                                                },
+                                            }}
+                                            onClick={() =>
+                                                handleDeleteTextFile(taskContent.id, file)
+                                            }
                                         >
-                                            <InsertDriveFileRoundedIcon
-                                                sx={{
-                                                    fontSize: 32,
-                                                    color: isDark
-                                                        ? "rgba(255,255,255,0.5)"
-                                                        : "rgba(0,0,0,0.4)",
-                                                }}
+                                            <CloseRoundedIcon
+                                                sx={{ fontSize: 12, color: "#ef4444" }}
                                             />
-                                        </div>
-                                    </Tooltip>
-                                    <Typography
-                                        level="body-xs"
-                                        sx={{
-                                            maxWidth: "80px",
-                                            textOverflow: "ellipsis",
-                                            overflow: "hidden",
-                                            whiteSpace: "nowrap",
-                                            mt: 0.5,
-                                            color: isDark
-                                                ? "rgba(255,255,255,0.6)"
-                                                : "rgba(0,0,0,0.55)",
-                                        }}
-                                    >
-                                        {file.name}
-                                    </Typography>
-                                </Box>
-                            ))}
+                                        </IconButton>
+                                        <Tooltip
+                                            placement="top"
+                                            size="sm"
+                                            title={`Download "${file.name}"`}
+                                            variant="outlined"
+                                        >
+                                            <div
+                                                style={{
+                                                    cursor: isUploading ? "default" : "pointer",
+                                                }}
+                                                onClick={() => {
+                                                    if (isUploading) return;
+                                                    downloadFile(file.url, file.name);
+                                                }}
+                                            >
+                                                <InsertDriveFileRoundedIcon
+                                                    sx={{
+                                                        fontSize: 32,
+                                                        color: isDark
+                                                            ? "rgba(255,255,255,0.5)"
+                                                            : "rgba(0,0,0,0.4)",
+                                                    }}
+                                                />
+                                            </div>
+                                        </Tooltip>
+                                        <Typography
+                                            level="body-xs"
+                                            sx={{
+                                                maxWidth: "80px",
+                                                textOverflow: "ellipsis",
+                                                overflow: "hidden",
+                                                whiteSpace: "nowrap",
+                                                mt: 0.5,
+                                                color: isDark
+                                                    ? "rgba(255,255,255,0.6)"
+                                                    : "rgba(0,0,0,0.55)",
+                                            }}
+                                        >
+                                            {file.name}
+                                        </Typography>
+                                        <UploadingTileBadge open={isUploading} />
+                                    </Box>
+                                );
+                            })}
 
                             {/* Images */}
-                            {images.map((image, index) => (
-                                <Box
-                                    key={`image-${image.name}-${image.attachmentId}-${index}`}
-                                    sx={{
-                                        position: "relative",
-                                        display: "inline-block",
-                                        borderRadius: "10px",
-                                        overflow: "hidden",
-                                        border: "1px solid",
-                                        borderColor: isDark
-                                            ? "rgba(255,255,255,0.08)"
-                                            : "rgba(0,0,0,0.06)",
-                                    }}
-                                >
-                                    <IconButton
-                                        size="sm"
-                                        variant="plain"
+                            {images.map((image, index) => {
+                                const isUploading = image.attachmentId < 0;
+                                return (
+                                    <Box
+                                        key={`image-${image.name}-${image.attachmentId}-${index}`}
                                         sx={{
-                                            position: "absolute",
-                                            top: 4,
-                                            right: 4,
-                                            background: "rgba(0,0,0,0.5)",
-                                            backdropFilter: "blur(4px)",
-                                            borderRadius: "50%",
-                                            width: 24,
-                                            height: 24,
-                                            minWidth: 24,
-                                            minHeight: 24,
-                                            "&:hover": {
-                                                background: "rgba(239,68,68,0.7)",
-                                            },
+                                            position: "relative",
+                                            display: "inline-block",
+                                            borderRadius: "10px",
+                                            overflow: "hidden",
+                                            border: "1px solid",
+                                            borderColor: isDark
+                                                ? "rgba(255,255,255,0.08)"
+                                                : "rgba(0,0,0,0.06)",
                                         }}
-                                        onClick={() => handleDeleteImage(taskContent.id, image)}
                                     >
-                                        <CloseRoundedIcon sx={{ fontSize: 14, color: "white" }} />
-                                    </IconButton>
-                                    <img
-                                        alt={image.name}
-                                        src={image.url}
-                                        style={{
-                                            width: `${image.width}px`,
-                                            height: `${image.height}px`,
-                                            cursor: "pointer",
-                                            display: "block",
-                                        }}
-                                        onClick={(e) => {
-                                            const target = e.target as HTMLElement;
-                                            if (target.tagName === "IMG") {
-                                                handleImageClick((target as HTMLImageElement).src);
+                                        <IconButton
+                                            disabled={isUploading}
+                                            size="sm"
+                                            variant="plain"
+                                            sx={{
+                                                position: "absolute",
+                                                top: 4,
+                                                right: 4,
+                                                background: "rgba(0,0,0,0.5)",
+                                                backdropFilter: "blur(4px)",
+                                                borderRadius: "50%",
+                                                width: 24,
+                                                height: 24,
+                                                minWidth: 24,
+                                                minHeight: 24,
+                                                zIndex: 6,
+                                                "&:hover": {
+                                                    background: "rgba(239,68,68,0.7)",
+                                                },
+                                                "&.Mui-disabled": {
+                                                    opacity: 0.4,
+                                                },
+                                            }}
+                                            onClick={() =>
+                                                handleDeleteImage(taskContent.id, image)
                                             }
-                                        }}
-                                    />
-                                </Box>
-                            ))}
+                                        >
+                                            <CloseRoundedIcon
+                                                sx={{ fontSize: 14, color: "white" }}
+                                            />
+                                        </IconButton>
+                                        <img
+                                            alt={image.name}
+                                            src={image.url}
+                                            style={{
+                                                width: `${image.width}px`,
+                                                height: `${image.height}px`,
+                                                cursor: isUploading ? "default" : "pointer",
+                                                display: "block",
+                                            }}
+                                            onClick={(e) => {
+                                                if (isUploading) return;
+                                                const target = e.target as HTMLElement;
+                                                if (target.tagName === "IMG") {
+                                                    handleImageClick(
+                                                        (target as HTMLImageElement).src
+                                                    );
+                                                }
+                                            }}
+                                        />
+                                        <UploadingTileBadge open={isUploading} />
+                                    </Box>
+                                );
+                            })}
                         </Box>
 
                         {/* Select Files Button */}
@@ -1050,15 +1108,15 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                         `taskActivities` / `isLoadingTaskActivities`)
                         so switching into this tab does not refetch and
                         flash the feed every time. */}
-                    <TabPanel value={3} sx={{ p: 0 }}>
+                    <TabPanel sx={{ p: 0 }} value={3}>
                         <TaskActivityFeed
                             activities={taskActivities}
                             isLoading={isLoadingTaskActivities}
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}
-                            useTEM={useTEM}
                             useCM={useCM}
+                            useTEM={useTEM}
                             useUISM={useUISM}
                         />
                     </TabPanel>

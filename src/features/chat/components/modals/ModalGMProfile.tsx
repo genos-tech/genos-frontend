@@ -24,6 +24,8 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/FileSizeRejectionSnackbar";
+import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -125,11 +127,22 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
     const handleButtonClick = () => {
         inputRef.current?.click();
     };
+
+    // Per-file size cap. Profile images are tiny by nature; the cap is
+    // mostly a safety net against accidentally selecting a 4K RAW.
+    const { rejection, dismissRejection, filterFiles } = useFileSizeGuard();
+
     const handleSelectedFiles = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFiles = event.target.files;
         if (!selectedFiles || selectedFiles.length !== 1) return;
 
-        const tmpGMProfileImage = selectedFiles[0];
+        const accepted = filterFiles(selectedFiles);
+        if (accepted.length === 0) {
+            event.target.value = "";
+            return;
+        }
+
+        const tmpGMProfileImage = accepted[0];
         const imageFileName = "profile.jpg";
         const userProfileImage = new File([tmpGMProfileImage], imageFileName, {
             type: tmpGMProfileImage.type,
@@ -176,496 +189,505 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
     }, [openModalGMProfile]);
 
     return (
-        <Modal
-            open={openModalGMProfile}
-            sx={{
-                zIndex: 10001,
-                backdropFilter: "blur(8px)",
-                backgroundColor: "transparent",
-            }}
-            onClose={() => setOpenModalGMProfile(false)}
-        >
-            <ModalDialog
+        <>
+            <FileSizeRejectionSnackbar rejection={rejection} onDismiss={dismissRejection} />
+            <Modal
+                open={openModalGMProfile}
                 sx={{
-                    background: styles.bg,
-                    border: `1px solid ${styles.border}`,
-                    boxShadow: styles.shadow,
-                    borderRadius: "20px",
-                    overflow: "hidden",
-                    transition: "all 0.3s ease",
+                    zIndex: 10001,
+                    backdropFilter: "blur(8px)",
+                    backgroundColor: "transparent",
                 }}
+                onClose={() => setOpenModalGMProfile(false)}
             >
-                <Box sx={{ flex: 1, width: "1000px" }}>
-                    {/* Header */}
-                    <Box
-                        sx={{
-                            position: "sticky",
-                            top: { sm: -100, md: -110 },
-                            zIndex: 9995,
-                        }}
-                    >
+                <ModalDialog
+                    sx={{
+                        background: styles.bg,
+                        border: `1px solid ${styles.border}`,
+                        boxShadow: styles.shadow,
+                        borderRadius: "20px",
+                        overflow: "hidden",
+                        transition: "all 0.3s ease",
+                    }}
+                >
+                    <Box sx={{ flex: 1, width: "1000px" }}>
+                        {/* Header */}
                         <Box
                             sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                px: 3,
+                                position: "sticky",
+                                top: { sm: -100, md: -110 },
+                                zIndex: 9995,
                             }}
                         >
-                            <Typography
-                                component="h1"
-                                level="h2"
+                            <Box
                                 sx={{
-                                    mt: 1,
-                                    mb: 1,
-                                    background: styles.headerGradient,
-                                    backgroundClip: "text",
-                                    WebkitBackgroundClip: "text",
-                                    WebkitTextFillColor: "transparent",
-                                    fontWeight: 700,
-                                    letterSpacing: "-0.02em",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                    px: 3,
                                 }}
                             >
-                                Group Message Profile - {gmChat.chatName}
-                            </Typography>
-                        </Box>
-                    </Box>
-
-                    <Stack
-                        spacing={4}
-                        sx={{
-                            display: "flex",
-                            mx: "auto",
-                            px: { xs: 2, md: 6 },
-                            py: { xs: 2, md: 3 },
-                        }}
-                    >
-                        <Card
-                            sx={{
-                                background: styles.cardBg,
-                                border: `1px solid ${styles.border}`,
-                                borderRadius: "16px",
-                                boxShadow: isDark
-                                    ? "0 4px 20px rgba(0,0,0,0.3)"
-                                    : "0 4px 20px rgba(20,184,166,0.08)",
-                                transition: "all 0.3s ease",
-                                "&:hover": {
-                                    boxShadow: isDark
-                                        ? "0 8px 30px rgba(0,0,0,0.4)"
-                                        : "0 8px 30px rgba(20,184,166,0.12)",
-                                },
-                            }}
-                        >
-                            <Stack
-                                direction="row"
-                                sx={{ display: { xs: "none", md: "flex" }, my: 1 }}
-                            >
-                                {/* Avatar Section */}
-                                <Box
+                                <Typography
+                                    component="h1"
+                                    level="h2"
                                     sx={{
-                                        pl: "20px",
-                                        pr: "40px",
-                                        position: "relative",
-                                        display: "inline-block",
+                                        mt: 1,
+                                        mb: 1,
+                                        background: styles.headerGradient,
+                                        backgroundClip: "text",
+                                        WebkitBackgroundClip: "text",
+                                        WebkitTextFillColor: "transparent",
+                                        fontWeight: 700,
+                                        letterSpacing: "-0.02em",
                                     }}
                                 >
-                                    <Avatar
-                                        src={`${media_url}/${gmChat.profileImagePath}`}
-                                        sx={{
-                                            width: 180,
-                                            height: 180,
-                                            fontSize: "50px",
-                                            boxShadow: styles.avatarGlow,
-                                            border: `3px solid ${styles.border}`,
-                                            transition: "all 0.3s ease",
-                                            "&:hover": {
-                                                transform: "scale(1.02)",
-                                                boxShadow: isDark
-                                                    ? "0 0 50px rgba(20,184,166,0.5), 0 0 100px rgba(6,182,212,0.3)"
-                                                    : "0 0 50px rgba(20,184,166,0.3), 0 0 100px rgba(6,182,212,0.15)",
-                                            },
-                                        }}
-                                    >
-                                        <GroupsRoundedIcon sx={{ fontSize: 100 }} />
-                                    </Avatar>
+                                    Group Message Profile - {gmChat.chatName}
+                                </Typography>
+                            </Box>
+                        </Box>
 
-                                    {/* Edit Button */}
+                        <Stack
+                            spacing={4}
+                            sx={{
+                                display: "flex",
+                                mx: "auto",
+                                px: { xs: 2, md: 6 },
+                                py: { xs: 2, md: 3 },
+                            }}
+                        >
+                            <Card
+                                sx={{
+                                    background: styles.cardBg,
+                                    border: `1px solid ${styles.border}`,
+                                    borderRadius: "16px",
+                                    boxShadow: isDark
+                                        ? "0 4px 20px rgba(0,0,0,0.3)"
+                                        : "0 4px 20px rgba(20,184,166,0.08)",
+                                    transition: "all 0.3s ease",
+                                    "&:hover": {
+                                        boxShadow: isDark
+                                            ? "0 8px 30px rgba(0,0,0,0.4)"
+                                            : "0 8px 30px rgba(20,184,166,0.12)",
+                                    },
+                                }}
+                            >
+                                <Stack
+                                    direction="row"
+                                    sx={{ display: { xs: "none", md: "flex" }, my: 1 }}
+                                >
+                                    {/* Avatar Section */}
                                     <Box
                                         sx={{
-                                            position: "absolute",
-                                            top: 150,
-                                            right: 30,
+                                            pl: "20px",
+                                            pr: "40px",
+                                            position: "relative",
+                                            display: "inline-block",
                                         }}
                                     >
-                                        <input
-                                            ref={inputRef}
-                                            accept=".jpg,.jpeg,.png,image/jpeg,image/png"
-                                            multiple={false}
-                                            style={{ display: "none" }}
-                                            type="file"
-                                            onChange={handleSelectedFiles}
-                                        />
-                                        <Tooltip
-                                            size="sm"
-                                            sx={{ zIndex: 9000 }}
-                                            title="Edit Profile Image"
-                                            variant="outlined"
+                                        <Avatar
+                                            src={`${media_url}/${gmChat.profileImagePath}`}
+                                            sx={{
+                                                width: 180,
+                                                height: 180,
+                                                fontSize: "50px",
+                                                boxShadow: styles.avatarGlow,
+                                                border: `3px solid ${styles.border}`,
+                                                transition: "all 0.3s ease",
+                                                "&:hover": {
+                                                    transform: "scale(1.02)",
+                                                    boxShadow: isDark
+                                                        ? "0 0 50px rgba(20,184,166,0.5), 0 0 100px rgba(6,182,212,0.3)"
+                                                        : "0 0 50px rgba(20,184,166,0.3), 0 0 100px rgba(6,182,212,0.15)",
+                                                },
+                                            }}
                                         >
-                                            <IconButton
-                                                variant="soft"
-                                                sx={{
-                                                    background: isDark
-                                                        ? "linear-gradient(135deg, rgba(20,184,166,0.3) 0%, rgba(6,182,212,0.3) 100%)"
-                                                        : "linear-gradient(135deg, rgba(20,184,166,0.15) 0%, rgba(6,182,212,0.15) 100%)",
-                                                    border: `1px solid ${styles.border}`,
-                                                    transition: "all 0.2s ease",
-                                                    "&:hover": {
-                                                        background: isDark
-                                                            ? "linear-gradient(135deg, rgba(20,184,166,0.5) 0%, rgba(6,182,212,0.5) 100%)"
-                                                            : "linear-gradient(135deg, rgba(20,184,166,0.25) 0%, rgba(6,182,212,0.25) 100%)",
-                                                        transform: "scale(1.1)",
-                                                    },
-                                                }}
-                                                onClick={handleButtonClick}
-                                            >
-                                                <EditIcon
-                                                    sx={{
-                                                        fontSize: "30px",
-                                                        color: styles.accentColor,
-                                                    }}
-                                                />
-                                            </IconButton>
-                                        </Tooltip>
-                                    </Box>
-                                </Box>
+                                            <GroupsRoundedIcon sx={{ fontSize: 100 }} />
+                                        </Avatar>
 
-                                {/* Details Section */}
-                                <Stack spacing={2} sx={{ flexGrow: 1 }}>
-                                    <Stack direction="column" spacing={1.5}>
-                                        {/* Owner */}
-                                        <Stack direction="row" alignItems="flex-end" spacing={2}>
-                                            <FormControl>
-                                                <FormLabel
+                                        {/* Edit Button */}
+                                        <Box
+                                            sx={{
+                                                position: "absolute",
+                                                top: 150,
+                                                right: 30,
+                                            }}
+                                        >
+                                            <input
+                                                ref={inputRef}
+                                                accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                                                multiple={false}
+                                                style={{ display: "none" }}
+                                                type="file"
+                                                onChange={handleSelectedFiles}
+                                            />
+                                            <Tooltip
+                                                size="sm"
+                                                sx={{ zIndex: 9000 }}
+                                                title="Edit Profile Image"
+                                                variant="outlined"
+                                            >
+                                                <IconButton
+                                                    variant="soft"
                                                     sx={{
-                                                        color: styles.labelColor,
-                                                        fontSize: "0.75rem",
-                                                        fontWeight: 600,
-                                                        textTransform: "uppercase",
-                                                        letterSpacing: "0.05em",
-                                                        mb: 0.5,
-                                                    }}
-                                                >
-                                                    Owner
-                                                </FormLabel>
-                                                <Button
-                                                    color="neutral"
-                                                    variant="plain"
-                                                    sx={{
-                                                        justifyContent: "flex-start",
-                                                        px: 1.5,
-                                                        py: 0.5,
-                                                        borderRadius: "8px",
+                                                        background: isDark
+                                                            ? "linear-gradient(135deg, rgba(20,184,166,0.3) 0%, rgba(6,182,212,0.3) 100%)"
+                                                            : "linear-gradient(135deg, rgba(20,184,166,0.15) 0%, rgba(6,182,212,0.15) 100%)",
+                                                        border: `1px solid ${styles.border}`,
                                                         transition: "all 0.2s ease",
                                                         "&:hover": {
-                                                            background: styles.hoverBg,
+                                                            background: isDark
+                                                                ? "linear-gradient(135deg, rgba(20,184,166,0.5) 0%, rgba(6,182,212,0.5) 100%)"
+                                                                : "linear-gradient(135deg, rgba(20,184,166,0.25) 0%, rgba(6,182,212,0.25) 100%)",
+                                                            transform: "scale(1.1)",
                                                         },
                                                     }}
-                                                    onClick={() => {
-                                                        if (gmProfile?.ownerUserId) {
-                                                            setAvatarUserId(gmProfile.ownerUserId);
-                                                            setOpenUserProfile(true);
-                                                        }
-                                                    }}
+                                                    onClick={handleButtonClick}
                                                 >
-                                                    <Typography
-                                                        fontWeight="bold"
+                                                    <EditIcon
                                                         sx={{
-                                                            userSelect: "text",
-                                                            fontSize: "20px",
-                                                            color: styles.valueColor,
+                                                            fontSize: "30px",
+                                                            color: styles.accentColor,
+                                                        }}
+                                                    />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </Box>
+                                    </Box>
+
+                                    {/* Details Section */}
+                                    <Stack spacing={2} sx={{ flexGrow: 1 }}>
+                                        <Stack direction="column" spacing={1.5}>
+                                            {/* Owner */}
+                                            <Stack
+                                                direction="row"
+                                                alignItems="flex-end"
+                                                spacing={2}
+                                            >
+                                                <FormControl>
+                                                    <FormLabel
+                                                        sx={{
+                                                            color: styles.labelColor,
+                                                            fontSize: "0.75rem",
+                                                            fontWeight: 600,
+                                                            textTransform: "uppercase",
+                                                            letterSpacing: "0.05em",
+                                                            mb: 0.5,
                                                         }}
                                                     >
-                                                        {gmProfile
+                                                        Owner
+                                                    </FormLabel>
+                                                    <Button
+                                                        color="neutral"
+                                                        variant="plain"
+                                                        sx={{
+                                                            justifyContent: "flex-start",
+                                                            px: 1.5,
+                                                            py: 0.5,
+                                                            borderRadius: "8px",
+                                                            transition: "all 0.2s ease",
+                                                            "&:hover": {
+                                                                background: styles.hoverBg,
+                                                            },
+                                                        }}
+                                                        onClick={() => {
+                                                            if (gmProfile?.ownerUserId) {
+                                                                setAvatarUserId(
+                                                                    gmProfile.ownerUserId
+                                                                );
+                                                                setOpenUserProfile(true);
+                                                            }
+                                                        }}
+                                                    >
+                                                        <Typography
+                                                            fontWeight="bold"
+                                                            sx={{
+                                                                userSelect: "text",
+                                                                fontSize: "20px",
+                                                                color: styles.valueColor,
+                                                            }}
+                                                        >
+                                                            {gmProfile
+                                                                ? useTEM.teamMemberProfiles[
+                                                                      gmProfile?.ownerUserId
+                                                                  ]?.userName
+                                                                : "N/A"}
+                                                        </Typography>
+                                                    </Button>
+                                                </FormControl>
+
+                                                <Typography
+                                                    component="a"
+                                                    href={`mailto:${
+                                                        gmProfile
                                                             ? useTEM.teamMemberProfiles[
                                                                   gmProfile?.ownerUserId
-                                                              ]?.userName
-                                                            : "N/A"}
-                                                    </Typography>
-                                                </Button>
-                                            </FormControl>
-
-                                            <Typography
-                                                component="a"
-                                                href={`mailto:${
-                                                    gmProfile
+                                                              ]?.userEmail
+                                                            : "N/A"
+                                                    }`}
+                                                    startDecorator={
+                                                        <EmailRoundedIcon
+                                                            fontSize="small"
+                                                            sx={{ color: styles.accentColor }}
+                                                        />
+                                                    }
+                                                    sx={{
+                                                        textDecoration: "none",
+                                                        color: styles.valueColor,
+                                                        cursor: "pointer",
+                                                        pb: "8px",
+                                                        transition: "all 0.2s ease",
+                                                        "&:hover": {
+                                                            color: styles.accentColor,
+                                                        },
+                                                    }}
+                                                >
+                                                    {gmProfile
                                                         ? useTEM.teamMemberProfiles[
                                                               gmProfile?.ownerUserId
                                                           ]?.userEmail
-                                                        : "N/A"
-                                                }`}
-                                                startDecorator={
-                                                    <EmailRoundedIcon
-                                                        fontSize="small"
-                                                        sx={{ color: styles.accentColor }}
-                                                    />
-                                                }
-                                                sx={{
-                                                    textDecoration: "none",
-                                                    color: styles.valueColor,
-                                                    cursor: "pointer",
-                                                    pb: "8px",
-                                                    transition: "all 0.2s ease",
-                                                    "&:hover": {
-                                                        color: styles.accentColor,
-                                                    },
-                                                }}
-                                            >
-                                                {gmProfile
-                                                    ? useTEM.teamMemberProfiles[
-                                                          gmProfile?.ownerUserId
-                                                      ]?.userEmail
-                                                    : "N/A"}
-                                            </Typography>
-                                        </Stack>
+                                                        : "N/A"}
+                                                </Typography>
+                                            </Stack>
 
-                                        {/* Members with Search */}
-                                        <FormControl>
-                                            <Stack
-                                                direction="row"
-                                                alignItems="center"
-                                                justifyContent="space-between"
-                                                sx={{ mb: 1 }}
-                                            >
-                                                <FormLabel
+                                            {/* Members with Search */}
+                                            <FormControl>
+                                                <Stack
+                                                    direction="row"
+                                                    alignItems="center"
+                                                    justifyContent="space-between"
+                                                    sx={{ mb: 1 }}
+                                                >
+                                                    <FormLabel
+                                                        sx={{
+                                                            color: styles.labelColor,
+                                                            fontSize: "0.75rem",
+                                                            fontWeight: 600,
+                                                            textTransform: "uppercase",
+                                                            letterSpacing: "0.05em",
+                                                            mb: 0,
+                                                        }}
+                                                    >
+                                                        Members ({filteredMembers.length}/
+                                                        {gmProfile?.gmMembers?.length || 0})
+                                                    </FormLabel>
+                                                    <Input
+                                                        placeholder="Search members..."
+                                                        value={memberSearchQuery}
+                                                        onChange={(e) =>
+                                                            setMemberSearchQuery(e.target.value)
+                                                        }
+                                                        startDecorator={
+                                                            <SearchIcon
+                                                                sx={{
+                                                                    color: styles.accentColor,
+                                                                    fontSize: "18px",
+                                                                }}
+                                                            />
+                                                        }
+                                                        endDecorator={
+                                                            memberSearchQuery && (
+                                                                <IconButton
+                                                                    size="sm"
+                                                                    variant="plain"
+                                                                    onClick={() =>
+                                                                        setMemberSearchQuery("")
+                                                                    }
+                                                                    sx={{
+                                                                        minWidth: "24px",
+                                                                        minHeight: "24px",
+                                                                        borderRadius: "50%",
+                                                                    }}
+                                                                >
+                                                                    <CloseIcon
+                                                                        sx={{ fontSize: "16px" }}
+                                                                    />
+                                                                </IconButton>
+                                                            )
+                                                        }
+                                                        sx={{
+                                                            width: "220px",
+                                                            "--Input-focusedThickness": "1px",
+                                                            "--Input-radius": "8px",
+                                                            background: styles.inputBg,
+                                                            border: `1px solid ${styles.border}`,
+                                                            fontSize: "14px",
+                                                            transition: "all 0.2s ease",
+                                                            "&:hover": {
+                                                                borderColor: styles.accentColor,
+                                                            },
+                                                            "&:focus-within": {
+                                                                borderColor: styles.accentColor,
+                                                                boxShadow: isDark
+                                                                    ? "0 0 0 2px rgba(20,184,166,0.2)"
+                                                                    : "0 0 0 2px rgba(20,184,166,0.1)",
+                                                            },
+                                                        }}
+                                                    />
+                                                </Stack>
+                                                <Box
+                                                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                                                     sx={{
-                                                        color: styles.labelColor,
-                                                        fontSize: "0.75rem",
-                                                        fontWeight: 600,
-                                                        textTransform: "uppercase",
-                                                        letterSpacing: "0.05em",
-                                                        mb: 0,
+                                                        maxHeight: "300px",
+                                                        overflow: "auto",
+                                                        background: isDark
+                                                            ? "rgba(0,0,0,0.2)"
+                                                            : "rgba(20,184,166,0.03)",
+                                                        borderRadius: "12px",
+                                                        border: `1px solid ${styles.border}`,
+                                                        p: 1,
                                                     }}
                                                 >
-                                                    Members ({filteredMembers.length}/
-                                                    {gmProfile?.gmMembers?.length || 0})
-                                                </FormLabel>
-                                                <Input
-                                                    placeholder="Search members..."
-                                                    value={memberSearchQuery}
-                                                    onChange={(e) =>
-                                                        setMemberSearchQuery(e.target.value)
-                                                    }
-                                                    startDecorator={
-                                                        <SearchIcon
-                                                            sx={{
-                                                                color: styles.accentColor,
-                                                                fontSize: "18px",
-                                                            }}
-                                                        />
-                                                    }
-                                                    endDecorator={
-                                                        memberSearchQuery && (
-                                                            <IconButton
-                                                                size="sm"
-                                                                variant="plain"
-                                                                onClick={() =>
-                                                                    setMemberSearchQuery("")
-                                                                }
+                                                    {filteredMembers.length > 0 ? (
+                                                        filteredMembers.map((member) => (
+                                                            <ListItemButton
+                                                                key={`gm-member-${member.userId}`}
                                                                 sx={{
-                                                                    minWidth: "24px",
-                                                                    minHeight: "24px",
-                                                                    borderRadius: "50%",
+                                                                    ml: 1,
+                                                                    my: 0.3,
+                                                                    borderRadius: "8px",
+                                                                    transition: "all 0.2s ease",
+                                                                    "&:hover": {
+                                                                        background: styles.hoverBg,
+                                                                    },
+                                                                }}
+                                                                onClick={() => {
+                                                                    setAvatarUserId(member.userId);
+                                                                    setOpenUserProfile(true);
                                                                 }}
                                                             >
-                                                                <CloseIcon
-                                                                    sx={{ fontSize: "16px" }}
+                                                                <AvatarWithStatus
+                                                                    avatarUser={member}
+                                                                    useCM={useCM}
+                                                                    isYou={false}
+                                                                    myself={myself}
+                                                                    setMyself={setMyself}
+                                                                    showNameAndEmail={true}
+                                                                    socket={socket}
+                                                                    useUISM={useUISM}
                                                                 />
-                                                            </IconButton>
-                                                        )
-                                                    }
-                                                    sx={{
-                                                        width: "220px",
-                                                        "--Input-focusedThickness": "1px",
-                                                        "--Input-radius": "8px",
-                                                        background: styles.inputBg,
-                                                        border: `1px solid ${styles.border}`,
-                                                        fontSize: "14px",
-                                                        transition: "all 0.2s ease",
-                                                        "&:hover": {
-                                                            borderColor: styles.accentColor,
-                                                        },
-                                                        "&:focus-within": {
-                                                            borderColor: styles.accentColor,
-                                                            boxShadow: isDark
-                                                                ? "0 0 0 2px rgba(20,184,166,0.2)"
-                                                                : "0 0 0 2px rgba(20,184,166,0.1)",
-                                                        },
-                                                    }}
-                                                />
-                                            </Stack>
-                                            <Box
-                                                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                                                sx={{
-                                                    maxHeight: "300px",
-                                                    overflow: "auto",
-                                                    background: isDark
-                                                        ? "rgba(0,0,0,0.2)"
-                                                        : "rgba(20,184,166,0.03)",
-                                                    borderRadius: "12px",
-                                                    border: `1px solid ${styles.border}`,
-                                                    p: 1,
-                                                }}
-                                            >
-                                                {filteredMembers.length > 0 ? (
-                                                    filteredMembers.map((member) => (
-                                                        <ListItemButton
-                                                            key={`gm-member-${member.userId}`}
+                                                            </ListItemButton>
+                                                        ))
+                                                    ) : (
+                                                        <Box
                                                             sx={{
-                                                                ml: 1,
-                                                                my: 0.3,
-                                                                borderRadius: "8px",
-                                                                transition: "all 0.2s ease",
-                                                                "&:hover": {
-                                                                    background: styles.hoverBg,
-                                                                },
-                                                            }}
-                                                            onClick={() => {
-                                                                setAvatarUserId(member.userId);
-                                                                setOpenUserProfile(true);
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                justifyContent: "center",
+                                                                py: 3,
+                                                                color: styles.labelColor,
                                                             }}
                                                         >
-                                                            <AvatarWithStatus
-                                                                avatarUser={member}
-                                                                useCM={useCM}
-                                                                isYou={false}
-                                                                myself={myself}
-                                                                setMyself={setMyself}
-                                                                showNameAndEmail={true}
-                                                                socket={socket}
-                                                                useUISM={useUISM}
-                                                            />
-                                                        </ListItemButton>
-                                                    ))
-                                                ) : (
+                                                            <Typography level="body-sm">
+                                                                No members found matching "
+                                                                {memberSearchQuery}"
+                                                            </Typography>
+                                                        </Box>
+                                                    )}
+                                                </Box>
+                                            </FormControl>
+
+                                            {/* Is Private & Created Date */}
+                                            <Stack direction="row" spacing={4} sx={{ mt: 1 }}>
+                                                <FormControl>
+                                                    <FormLabel
+                                                        sx={{
+                                                            color: styles.labelColor,
+                                                            fontSize: "0.75rem",
+                                                            fontWeight: 600,
+                                                            textTransform: "uppercase",
+                                                            letterSpacing: "0.05em",
+                                                            mb: 0.5,
+                                                        }}
+                                                    >
+                                                        Is Private
+                                                    </FormLabel>
                                                     <Box
                                                         sx={{
-                                                            display: "flex",
-                                                            alignItems: "center",
-                                                            justifyContent: "center",
-                                                            py: 3,
-                                                            color: styles.labelColor,
+                                                            display: "inline-flex",
+                                                            px: 2,
+                                                            py: 0.5,
+                                                            borderRadius: "20px",
+                                                            background: gmProfile?.isPrivate
+                                                                ? isDark
+                                                                    ? "linear-gradient(135deg, rgba(239,68,68,0.2) 0%, rgba(220,38,38,0.2) 100%)"
+                                                                    : "linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(220,38,38,0.15) 100%)"
+                                                                : isDark
+                                                                  ? "linear-gradient(135deg, rgba(34,197,94,0.2) 0%, rgba(22,163,74,0.2) 100%)"
+                                                                  : "linear-gradient(135deg, rgba(34,197,94,0.15) 0%, rgba(22,163,74,0.15) 100%)",
+                                                            border: `1px solid ${
+                                                                gmProfile?.isPrivate
+                                                                    ? "rgba(239,68,68,0.3)"
+                                                                    : "rgba(34,197,94,0.3)"
+                                                            }`,
                                                         }}
                                                     >
-                                                        <Typography level="body-sm">
-                                                            No members found matching "
-                                                            {memberSearchQuery}"
+                                                        <Typography
+                                                            fontWeight={600}
+                                                            sx={{
+                                                                userSelect: "text",
+                                                                color: gmProfile?.isPrivate
+                                                                    ? isDark
+                                                                        ? "#f87171"
+                                                                        : "#dc2626"
+                                                                    : isDark
+                                                                      ? "#4ade80"
+                                                                      : "#16a34a",
+                                                            }}
+                                                        >
+                                                            {gmProfile?.isPrivate ? "Yes" : "No"}
                                                         </Typography>
                                                     </Box>
-                                                )}
-                                            </Box>
-                                        </FormControl>
+                                                </FormControl>
 
-                                        {/* Is Private & Created Date */}
-                                        <Stack direction="row" spacing={4} sx={{ mt: 1 }}>
-                                            <FormControl>
-                                                <FormLabel
-                                                    sx={{
-                                                        color: styles.labelColor,
-                                                        fontSize: "0.75rem",
-                                                        fontWeight: 600,
-                                                        textTransform: "uppercase",
-                                                        letterSpacing: "0.05em",
-                                                        mb: 0.5,
-                                                    }}
-                                                >
-                                                    Is Private
-                                                </FormLabel>
-                                                <Box
-                                                    sx={{
-                                                        display: "inline-flex",
-                                                        px: 2,
-                                                        py: 0.5,
-                                                        borderRadius: "20px",
-                                                        background: gmProfile?.isPrivate
-                                                            ? isDark
-                                                                ? "linear-gradient(135deg, rgba(239,68,68,0.2) 0%, rgba(220,38,38,0.2) 100%)"
-                                                                : "linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(220,38,38,0.15) 100%)"
-                                                            : isDark
-                                                              ? "linear-gradient(135deg, rgba(34,197,94,0.2) 0%, rgba(22,163,74,0.2) 100%)"
-                                                              : "linear-gradient(135deg, rgba(34,197,94,0.15) 0%, rgba(22,163,74,0.15) 100%)",
-                                                        border: `1px solid ${
-                                                            gmProfile?.isPrivate
-                                                                ? "rgba(239,68,68,0.3)"
-                                                                : "rgba(34,197,94,0.3)"
-                                                        }`,
-                                                    }}
-                                                >
-                                                    <Typography
-                                                        fontWeight={600}
+                                                <FormControl>
+                                                    <FormLabel
                                                         sx={{
-                                                            userSelect: "text",
-                                                            color: gmProfile?.isPrivate
-                                                                ? isDark
-                                                                    ? "#f87171"
-                                                                    : "#dc2626"
-                                                                : isDark
-                                                                  ? "#4ade80"
-                                                                  : "#16a34a",
+                                                            color: styles.labelColor,
+                                                            fontSize: "0.75rem",
+                                                            fontWeight: 600,
+                                                            textTransform: "uppercase",
+                                                            letterSpacing: "0.05em",
+                                                            mb: 0.5,
                                                         }}
                                                     >
-                                                        {gmProfile?.isPrivate ? "Yes" : "No"}
-                                                    </Typography>
-                                                </Box>
-                                            </FormControl>
-
-                                            <FormControl>
-                                                <FormLabel
-                                                    sx={{
-                                                        color: styles.labelColor,
-                                                        fontSize: "0.75rem",
-                                                        fontWeight: 600,
-                                                        textTransform: "uppercase",
-                                                        letterSpacing: "0.05em",
-                                                        mb: 0.5,
-                                                    }}
-                                                >
-                                                    Created Date
-                                                </FormLabel>
-                                                <Box
-                                                    sx={{
-                                                        display: "inline-flex",
-                                                        px: 2,
-                                                        py: 0.5,
-                                                        borderRadius: "8px",
-                                                        background: isDark
-                                                            ? "rgba(20,184,166,0.1)"
-                                                            : "rgba(20,184,166,0.05)",
-                                                        border: `1px solid ${styles.border}`,
-                                                    }}
-                                                >
-                                                    <Typography
-                                                        fontWeight={600}
+                                                        Created Date
+                                                    </FormLabel>
+                                                    <Box
                                                         sx={{
-                                                            userSelect: "text",
-                                                            color: styles.valueColor,
+                                                            display: "inline-flex",
+                                                            px: 2,
+                                                            py: 0.5,
+                                                            borderRadius: "8px",
+                                                            background: isDark
+                                                                ? "rgba(20,184,166,0.1)"
+                                                                : "rgba(20,184,166,0.05)",
+                                                            border: `1px solid ${styles.border}`,
                                                         }}
                                                     >
-                                                        {gmProfile?.tsCreatedAt
-                                                            ? extractYYYYMMDD(
-                                                                  gmProfile.tsCreatedAt
-                                                              )
-                                                            : "N/A"}
-                                                    </Typography>
-                                                </Box>
-                                            </FormControl>
+                                                        <Typography
+                                                            fontWeight={600}
+                                                            sx={{
+                                                                userSelect: "text",
+                                                                color: styles.valueColor,
+                                                            }}
+                                                        >
+                                                            {gmProfile?.tsCreatedAt
+                                                                ? extractYYYYMMDD(
+                                                                      gmProfile.tsCreatedAt
+                                                                  )
+                                                                : "N/A"}
+                                                        </Typography>
+                                                    </Box>
+                                                </FormControl>
+                                            </Stack>
                                         </Stack>
                                     </Stack>
                                 </Stack>
-                            </Stack>
-                        </Card>
-                    </Stack>
-                </Box>
-            </ModalDialog>
-        </Modal>
+                            </Card>
+                        </Stack>
+                    </Box>
+                </ModalDialog>
+            </Modal>
+        </>
     );
 };

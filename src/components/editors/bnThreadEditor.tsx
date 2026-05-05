@@ -42,6 +42,10 @@ import { UserProps } from "../../types/admin";
 import { ChatProps, ThreadMessageProps, ThreadProps } from "../../types/chat";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
+import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
+import { FileUploadOverlay, FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
+import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
+import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 import { EditorSendButton } from "./sub/EditorSendButton";
@@ -122,31 +126,42 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
         editor: typeof schema.BlockNoteEditor
     ): DefaultReactSuggestionItem[] => getDefaultReactSlashMenuItems(editor);
 
-    // Uploads a file to tmpfiles.org and returns the URL to the uploaded file.
-    async function uploadFile(file: File) {
-        const formData = new FormData();
-        formData.append("team_id", String(myself.teamId));
-        formData.append("chat_type", String(thread.chatType));
-        formData.append("chat_id", String(thread.chatId));
-        formData.append("message_id", String(thread.messages.length + 1));
-        formData.append("thread_id", String(thread.threadId));
-        formData.append("uploader", myself.userId);
-        formData.append("chat_attachment_file", file);
-        const uploadChatAttachmentResponse = await fetch(`${base_url}/chat/attachment/`, {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-            body: formData,
-        });
-        const uploadChatAttachmentData = await uploadChatAttachmentResponse.json();
+    // See `bnChatEditor` for the rationale on `useUploadCounter`. Same
+    // pattern: every uploadFile call ticks the counter so the in-editor
+    // badge reflects in-flight work, and the `pendingFiles` loop below
+    // also surfaces a blocking overlay with current/total progress.
+    const { activeCount: editorUploadCount, wrap: trackUpload } = useUploadCounter();
 
-        if (!uploadChatAttachmentResponse.ok) {
-            throw new Error(uploadChatAttachmentData.message || "Attachment Upload Failed");
-        }
+    // Per-file size cap. See `bnChatEditor` for the rationale —
+    // identical behaviour for thread-pane uploads.
+    const { rejection, dismissRejection, filterFiles, guardUploadFile } = useFileSizeGuard();
 
-        return `${django_url}${uploadChatAttachmentData.chatAttachmentUrl}`;
-    }
+    const uploadFile = guardUploadFile(
+        trackUpload(async (file: File) => {
+            const formData = new FormData();
+            formData.append("team_id", String(myself.teamId));
+            formData.append("chat_type", String(thread.chatType));
+            formData.append("chat_id", String(thread.chatId));
+            formData.append("message_id", String(thread.messages.length + 1));
+            formData.append("thread_id", String(thread.threadId));
+            formData.append("uploader", myself.userId);
+            formData.append("chat_attachment_file", file);
+            const uploadChatAttachmentResponse = await fetch(`${base_url}/chat/attachment/`, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: formData,
+            });
+            const uploadChatAttachmentData = await uploadChatAttachmentResponse.json();
+
+            if (!uploadChatAttachmentResponse.ok) {
+                throw new Error(uploadChatAttachmentData.message || "Attachment Upload Failed");
+            }
+
+            return `${django_url}${uploadChatAttachmentData.chatAttachmentUrl}`;
+        })
+    );
 
     // We use the English, default dictionary
     const locale = en;
@@ -182,28 +197,53 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
         }
     }, [selectedEmoji]);
 
+    // Per-file progress for the thread-pane drop loop, mirroring the
+    // chat editor.
+    const [pendingUpload, setPendingUpload] = useState<{
+        index: number;
+        total: number;
+        name: string;
+    } | null>(null);
+
     // Process files dropped on the thread pane (outside the editor)
     useEffect(() => {
         if (pendingFiles && pendingFiles.length > 0 && clearPendingFiles) {
-            const insertFiles = async () => {
-                for (const file of pendingFiles) {
-                    try {
-                        const url = await uploadFile(file);
-                        const isImage = file.type.startsWith("image/");
-                        editor.insertBlocks(
-                            [
-                                isImage
-                                    ? { type: "image", props: { url, name: file.name } }
-                                    : { type: "file", props: { url, name: file.name } },
-                            ],
-                            editor.document[editor.document.length - 1],
-                            "after"
-                        );
-                    } catch (err) {
-                        console.error("Failed to insert dropped file:", err);
-                    }
-                }
+            // Drop oversize files up-front so the dim overlay only counts
+            // files we'll actually try to upload.
+            const acceptedFiles = filterFiles(pendingFiles);
+            if (acceptedFiles.length === 0) {
                 clearPendingFiles();
+                return;
+            }
+            const insertFiles = async () => {
+                try {
+                    for (let i = 0; i < acceptedFiles.length; i += 1) {
+                        const file = acceptedFiles[i];
+                        setPendingUpload({
+                            index: i + 1,
+                            total: acceptedFiles.length,
+                            name: file.name,
+                        });
+                        try {
+                            const url = await uploadFile(file);
+                            const isImage = file.type.startsWith("image/");
+                            editor.insertBlocks(
+                                [
+                                    isImage
+                                        ? { type: "image", props: { url, name: file.name } }
+                                        : { type: "file", props: { url, name: file.name } },
+                                ],
+                                editor.document[editor.document.length - 1],
+                                "after"
+                            );
+                        } catch (err) {
+                            console.error("Failed to insert dropped file:", err);
+                        }
+                    }
+                } finally {
+                    setPendingUpload(null);
+                    clearPendingFiles();
+                }
             };
             insertFiles();
         }
@@ -334,12 +374,23 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
 
     return (
         <Box>
+            <FileSizeRejectionSnackbar rejection={rejection} onDismiss={dismissRejection} />
             <EmojiPicker
                 setSelectedEmoji={setSelectedEmoji}
                 setShowEmojiPicker={setShowEmojiPicker}
                 showEmojiPicker={showEmojiPicker}
             />
             <Box ref={editorRef} className={bnBoxClassName} sx={{ position: "relative" }}>
+                <FileUploadStatusBadge count={editorUploadCount} />
+                <FileUploadOverlay
+                    label="Uploading dropped files…"
+                    open={pendingUpload !== null}
+                    detail={
+                        pendingUpload
+                            ? `${pendingUpload.name} (${pendingUpload.index} / ${pendingUpload.total})`
+                            : undefined
+                    }
+                />
                 <BlockNoteView
                     className="bn-box"
                     editor={editor}

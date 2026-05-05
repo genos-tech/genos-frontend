@@ -268,6 +268,10 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     const [reporter, setReporter] = useState<UserProps>(myself);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isCreatingMilestone, setIsCreatingMilestone] = useState(false);
+    // Mirrors `TaskCreateFooter`'s in-flight `uploadNewTask` state so
+    // `TaskCreateAttachmentBlock` can render its overlay/per-tile spinner
+    // while the staged files are being POSTed to /task/attachment/.
+    const [isCreatingTask, setIsCreatingTask] = useState(false);
     // The effective creation kind ("task" | "milestone" | "subtask")
     // is derived from `useTM.isCreatingTask` plus the project's task
     // table — see `getCreationKind` for the rules.
@@ -708,14 +712,14 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                     pb: 0.5,
                                 }}
                             >
-                                <Stack direction="row" spacing={1} alignItems="center">
+                                <Stack alignItems="center" direction="row" spacing={1}>
                                     <Typography level="body-xs" sx={{ color: "neutral.500" }}>
                                         Create:
                                     </Typography>
                                     <Button
+                                        color={creationKind === "task" ? "primary" : "neutral"}
                                         size="sm"
                                         variant={creationKind === "task" ? "solid" : "soft"}
-                                        color={creationKind === "task" ? "primary" : "neutral"}
                                         startDecorator={
                                             <AssignmentRoundedIcon sx={{ fontSize: 14 }} />
                                         }
@@ -725,11 +729,11 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                     </Button>
                                     <Button
                                         size="sm"
+                                        startDecorator={<FlagRoundedIcon sx={{ fontSize: 14 }} />}
                                         variant={creationKind === "milestone" ? "solid" : "soft"}
                                         color={
                                             creationKind === "milestone" ? "warning" : "neutral"
                                         }
-                                        startDecorator={<FlagRoundedIcon sx={{ fontSize: 14 }} />}
                                         onClick={() => switchKind("milestone")}
                                     >
                                         Milestone
@@ -748,21 +752,21 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         }}
                     >
                         <TaskTitleBlock
-                            useCM={useCM}
+                            isMilestone={creationKind === "milestone"}
                             isPreviewMode={false}
+                            isSubTask={creationKind === "subtask"}
                             myself={myself}
-                            usePM={usePM}
                             setTaskTitle={setTaskTitle}
                             setTitleErrorOpen={setTitleErrorOpen}
                             taskContent={taskContent}
                             taskTitle={taskTitle}
-                            useNM={useNM}
                             titleError={titleError}
                             titleErrorOpen={titleErrorOpen}
+                            useCM={useCM}
+                            useNM={useNM}
+                            usePM={usePM}
                             useTM={useTM}
                             useUISM={useUISM}
-                            isMilestone={creationKind === "milestone"}
-                            isSubTask={creationKind === "subtask"}
                         />
                     </Box>
 
@@ -784,31 +788,31 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         >
                             <TaskMainBlock
                                 assignee={assignee}
-                                useCM={useCM}
+                                isMilestone={creationKind === "milestone"}
                                 isOpenProjectList={isOpenProjectList}
                                 isOpenTagList={isOpenTagList}
                                 isOpenTeamMembersList={isOpenTeamMembersList}
                                 isPreviewMode={false}
+                                isSubTask={creationKind === "subtask"}
                                 myself={myself}
                                 projectTags={projectTags}
-                                setProjectTags={setProjectTags}
                                 reporter={reporter}
                                 setAssignee={setAssignee}
                                 setIsOpenProjectList={setIsOpenProjectList}
                                 setIsOpenTagList={setIsOpenTagList}
                                 setIsOpenTeamMembersList={setIsOpenTeamMembersList}
                                 setMyself={setMyself}
+                                setProjectTags={setProjectTags}
                                 setReporter={setReporter}
                                 setTaskContent={setTaskContent}
                                 socket={socket}
                                 taskContent={taskContent}
+                                useCM={useCM}
+                                usePM={usePM}
+                                useSM={useSM}
                                 useTEM={useTEM}
                                 useTM={useTM}
-                                useSM={useSM}
                                 useUISM={useUISM}
-                                usePM={usePM}
-                                isMilestone={creationKind === "milestone"}
-                                isSubTask={creationKind === "subtask"}
                             />
                         </Box>
 
@@ -816,19 +820,16 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
 
                         {/* Body Section */}
                         <Stack
-                            direction="row"
                             alignItems="center"
+                            direction="row"
                             justifyContent="space-between"
                             sx={{ mb: 1, gap: 1 }}
                         >
                             <SectionHeader isDark={isDark}>Description</SectionHeader>
                             <Select
                                 size="sm"
-                                value={templateId}
-                                onChange={(_e, value) => {
-                                    if (value) applyTemplate(value as TaskTemplateId);
-                                }}
                                 startDecorator={<DescriptionRoundedIcon sx={{ fontSize: 16 }} />}
+                                value={templateId}
                                 renderValue={(opt) => {
                                     const tpl = opt
                                         ? TASK_TEMPLATES[opt.value as TaskTemplateId]
@@ -849,6 +850,9 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                     background: isDark
                                         ? "rgba(255,255,255,0.04)"
                                         : "rgba(0,0,0,0.025)",
+                                }}
+                                onChange={(_e, value) => {
+                                    if (value) applyTemplate(value as TaskTemplateId);
                                 }}
                             >
                                 {TASK_TEMPLATE_OPTIONS.map((tpl) => (
@@ -888,12 +892,12 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         >
                             <TaskCreateBodyBlock
                                 body={body}
-                                useCM={useCM}
                                 myself={myself}
                                 setBody={setBody}
                                 setMyself={setMyself}
                                 socket={socket}
                                 taskId={taskContent.id}
+                                useCM={useCM}
                                 useTEM={useTEM}
                                 useUISM={useUISM}
                                 onEditorReady={handleEditorReady}
@@ -905,6 +909,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         {/* Attachments Section */}
                         <SectionHeader isDark={isDark}>Attachments</SectionHeader>
                         <TaskCreateAttachmentBlock
+                            isUploading={isCreatingTask}
                             setTaskContent={setTaskContent}
                             taskContent={taskContent}
                         />
@@ -922,9 +927,9 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         {creationKind === "milestone" ? (
                             <Stack direction="row" sx={{ justifyContent: "flex-end", gap: 1.5 }}>
                                 <Button
+                                    color="neutral"
                                     size="sm"
                                     variant="plain"
-                                    color="neutral"
                                     onClick={() => {
                                         useTM.setIsCreatingTask({
                                             flag: false,
@@ -938,11 +943,11 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                     Cancel
                                 </Button>
                                 <Button
-                                    size="sm"
                                     color="primary"
-                                    startDecorator={<FlagRoundedIcon sx={{ fontSize: 14 }} />}
                                     disabled={!taskTitle.trim() || !taskContent.project?.projectId}
                                     loading={isCreatingMilestone}
+                                    size="sm"
+                                    startDecorator={<FlagRoundedIcon sx={{ fontSize: 14 }} />}
                                     onClick={handleCreateMilestone}
                                 >
                                     Create Milestone
@@ -951,16 +956,18 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         ) : (
                             <TaskCreateFooter
                                 accessToken={accessToken}
-                                useCM={useCM}
-                                useTM={useTM}
+                                isCreatingTask={isCreatingTask}
                                 myself={myself}
-                                usePM={usePM}
+                                setIsCreatingTask={setIsCreatingTask}
                                 setIsSubmitted={setIsSubmitted}
                                 setTitleError={setTitleError}
                                 setTitleErrorOpen={setTitleErrorOpen}
                                 socket={socket}
                                 taskContent={taskContent}
                                 taskTitle={taskTitle}
+                                useCM={useCM}
+                                usePM={usePM}
+                                useTM={useTM}
                             />
                         )}
                     </Box>
