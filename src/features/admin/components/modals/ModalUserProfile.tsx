@@ -21,8 +21,10 @@ import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
+import { useOptionalAvatarContext } from "../../../../components/ui/avatars/AvatarContext";
 import { EmojiPicker } from "../../../../components/ui/emoji/EmojiPicker";
 import { useAuth } from "../../../../context/AuthContext";
+import { UserRepository } from "../../../../db/repositories/user";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
@@ -94,6 +96,14 @@ export const UserProfile = (props: UserProfileProps) => {
     const isDark = mode === "dark";
     const styles = isDark ? MODAL_STYLES.dark : MODAL_STYLES.light;
 
+    // Optional: this modal is also rendered from a few callsites that
+    // pre-date the AvatarContextProvider (older sidebar paths, mention
+    // popovers). When present we use the context to propagate avatar
+    // updates to every other "you" avatar instantly; when absent we
+    // simply skip the propagation and the next 60 s `popTeamUsersWorker`
+    // tick will catch up.
+    const avatarCtx = useOptionalAvatarContext();
+
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
 
@@ -152,11 +162,36 @@ export const UserProfile = (props: UserProfileProps) => {
         if (!uploadProfileImageResponse.ok) {
             throw new Error("Failed to upload user profile image.");
         } else {
-            localStorage.setItem("avatarImgPath", uploadProfileImageData.profile_image_file_name);
-            setMyself({
-                ...myself,
-                avatarImgPath: uploadProfileImageData.profile_image_file_name,
+            const newPath = uploadProfileImageData.profile_image_file_name as string;
+            localStorage.setItem("avatarImgPath", newPath);
+            const updatedMyself: UserProps = { ...myself, avatarImgPath: newPath };
+            setMyself(updatedMyself);
+
+            // Keep the team-members map in sync so every avatar of "you"
+            // (chat bubbles, task rows, comments, etc.) reflects the
+            // upload immediately instead of waiting up to 60 s for the
+            // next `popTeamUsersWorker` tick.
+            avatarCtx?.setTeamMemberProfiles((prev) => {
+                const existing = prev[myself.userId];
+                return {
+                    ...prev,
+                    [myself.userId]: {
+                        ...(existing ?? updatedMyself),
+                        avatarImgPath: newPath,
+                    },
+                };
             });
+
+            // Write through to IndexedDB so the next reload starts
+            // consistent — without this the local cache still serves the
+            // pre-upload path until the next worker pop overwrites it.
+            try {
+                const userRepo = new UserRepository();
+                const cached = avatarCtx?.teamMemberProfiles[myself.userId] ?? updatedMyself;
+                await userRepo.saveUser({ ...cached, avatarImgPath: newPath });
+            } catch (err) {
+                console.error("Failed to persist avatar update to IndexedDB:", err);
+            }
         }
     };
 

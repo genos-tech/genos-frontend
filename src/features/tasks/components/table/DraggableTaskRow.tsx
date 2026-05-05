@@ -21,7 +21,7 @@ import dayjs from "dayjs";
 import { Draggable } from "react-beautiful-dnd";
 import { Socket } from "socket.io-client";
 
-import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { PulseDot } from "../../../../components/ui/misc/PulseDot";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -67,11 +67,10 @@ const DEPTH_BORDER_COLORS = ["transparent", "#38bdf8", "#2dd4bf", "#fbbf24"];
 // Hover handling intentionally lives in CSS (via the row's `sx`) rather
 // than React state. Driving it through a `useState(isHovered)` used to
 // re-render the entire row on every mouse-enter / mouse-leave, which
-// in turn re-evaluated every cell's JSX (assignee `<AvatarWithStatus>`
-// and the `<UserProfile>` modal nested inside it being the most
-// expensive). Pure-CSS `:hover` is free for the React tree, so we keep
-// these helpers limited to *static* styles that depend only on
-// dragging/selection/depth/mode.
+// in turn re-evaluated every cell's JSX (assignee `<UserAvatar>` being
+// the most expensive). Pure-CSS `:hover` is free for the React tree,
+// so we keep these helpers limited to *static* styles that depend only
+// on dragging/selection/depth/mode.
 const getTableRowStyles = (
     isDragging: boolean,
     isSelected: boolean,
@@ -735,15 +734,7 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                                             cursor: "pointer",
                                         }}
                                     >
-                                        <AvatarWithStatus
-                                            avatarUser={useTEM.teamMemberProfiles[option.userId]}
-                                            useCM={useCM}
-                                            isYou={myself.userId === option.userId ? true : false}
-                                            myself={myself}
-                                            setMyself={setMyself}
-                                            socket={socket}
-                                            useUISM={useUISM}
-                                        />
+                                        <UserAvatar userId={option.userId} clickable={false} />
                                         <Box sx={{ flex: 1, minWidth: 0 }}>
                                             <Typography
                                                 level="body-sm"
@@ -855,17 +846,7 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                         onClick={() => handleStartEdit("assigneeId", task.assigneeId || "")}
                     >
                         <Box sx={{ position: "relative", display: "inline-flex" }}>
-                            {task.assigneeId && (
-                                <AvatarWithStatus
-                                    avatarUser={useTEM.teamMemberProfiles[task.assigneeId]}
-                                    useCM={useCM}
-                                    isYou={myself.userId === task.assigneeId ? true : false}
-                                    myself={myself}
-                                    setMyself={setMyself}
-                                    socket={socket}
-                                    useUISM={useUISM}
-                                />
-                            )}
+                            {task.assigneeId && <UserAvatar userId={task.assigneeId} />}
                             {task.assigneeId === null && (
                                 <Avatar size="sm" src={`${media_url}/${myself.avatarImgPath}`}>
                                     {myself.userName[0].toUpperCase()}
@@ -1348,7 +1329,7 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                         // Hover lives entirely in CSS so toggling the
                         // cursor over a row no longer triggers a React
                         // re-render of the row + every cell + the
-                        // assignee `<AvatarWithStatus>` subtree.
+                        // assignee `<UserAvatar>` subtree.
                         sx={{
                             "&:hover": showHoverBg ? { backgroundColor: hoverBg } : {},
                             "&:hover .task-row-drag-handle": {

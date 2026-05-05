@@ -5,7 +5,6 @@ import { useChatManagement } from "../chats/useChatManagement";
 import { useInboxManagement } from "../inbox/useInboxManagement";
 import { useNoteManagement } from "../notes/useNoteManagement";
 import { useTaskManagement } from "../tasks/useTaskManagement";
-import { useTeamManagement } from "./useTeamManagement";
 
 interface UseServiceInitializationProps {
     myself: any;
@@ -46,7 +45,12 @@ export const useServiceInitialization = ({
     const useTM = useTaskManagement(myself, accessToken);
     const useCM = useChatManagement(myself, accessToken);
     const useIM = useInboxManagement();
-    const useTEM = useTeamManagement(myself, accessToken);
+    // Note: a third `useTeamManagement(myself, accessToken)` used to live
+    // here and was destructured-but-unused in `App.tsx`. Its worker
+    // effects still ran (a third 60 s interval against the same data),
+    // churning `teamMemberProfiles` references for no consumer. Removed.
+    // The "real" `useTEM` is created in `useAppInitialization` and
+    // threaded through `App.tsx` to every feature route that needs it.
 
     // Reset states when team changes.
     // We MUST clear all team-scoped React state here (in addition to wiping IndexedDB
@@ -139,8 +143,11 @@ export const useServiceInitialization = ({
             useCM.funcSetFlaggedMessages();
             useCM.funcSetActivityMessages();
 
-            // Load all team users
-            useTEM.funcSetTeamMembers();
+            // Note: team-member hydration is now driven by the
+            // `popTeamUsersWorker` effect inside `useTeamManagement`
+            // itself, which runs on every `myself` change and on a 60 s
+            // interval. Calling `funcSetTeamMembers()` here would only
+            // populate the (now-removed) orphan instance's local state.
 
             // Load task metadata
             useTM.getTaskMeta();
@@ -157,6 +164,5 @@ export const useServiceInitialization = ({
         useTM,
         useCM,
         useIM,
-        useTEM,
     };
 };
