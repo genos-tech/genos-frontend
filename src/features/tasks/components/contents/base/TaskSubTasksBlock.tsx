@@ -187,7 +187,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                             });
 
                             // Close task-home when creating a sub task.
-                            useTM.setIsTaskHomeVisible(false);
+                            useTM.setIsTaskTableVisible(false);
                         } else {
                             console.error("Task ID nod defined error.");
                         }

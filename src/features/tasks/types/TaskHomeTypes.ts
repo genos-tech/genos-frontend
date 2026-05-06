@@ -26,7 +26,7 @@ export interface TaskHomeProps {
 }
 
 export interface TaskHomeState {
-    isTaskHomeVisible: boolean;
+    isTaskTableVisible: boolean;
     isDashboardVisible: boolean;
     filterBy: number;
     selectedTagForFiltering?: string;
@@ -45,7 +45,7 @@ export interface TaskHomeState {
 }
 
 export interface TaskHomeActions {
-    setIsTaskHomeVisible: (visible: boolean) => void;
+    setIsTaskTableVisible: (visible: boolean) => void;
     setIsDashboardVisible: (visible: boolean) => void;
     setOpenJoinProject: (value: {
         flag: boolean;
@@ -85,7 +85,7 @@ export interface TaskHomeHeaderProps {
 
 export interface TaskHomeLayoutProps {
     // Layout state
-    isTaskHomeVisible: boolean;
+    isTaskTableVisible: boolean;
     isDashboardVisible: boolean;
     filterBy: number;
     selectedTagForFiltering?: string;
@@ -116,7 +116,7 @@ export interface TaskHomeLayoutProps {
     socket: Socket | null;
 
     // Setters
-    setIsTaskHomeVisible: (visible: boolean) => void;
+    setIsTaskTableVisible: (visible: boolean) => void;
     setIsDashboardVisible: (visible: boolean) => void;
 }
 

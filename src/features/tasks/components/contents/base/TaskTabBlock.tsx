@@ -633,7 +633,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                             }}
                                             onClick={() => {
                                                 if (useNM.setIsTaskNoteVisible) {
-                                                    useTM.setIsTaskHomeVisible(false);
+                                                    useTM.setIsTaskTableVisible(false);
                                                     useNM.setIsTaskNoteVisible(true);
                                                     useNM.setCurrentTaskNote(taskNote);
                                                 }
@@ -697,7 +697,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                 useNM.setIsTaskNoteVisible &&
                                                 taskContent.project
                                             ) {
-                                                useTM.setIsTaskHomeVisible(false);
+                                                useTM.setIsTaskTableVisible(false);
                                                 useNM.setIsTaskNoteVisible(true);
                                                 useNM.handleCreateNewTaskNote(
                                                     null,

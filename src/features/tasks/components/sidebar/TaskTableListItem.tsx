@@ -13,7 +13,7 @@ export const TaskTableListItem = (props: TaskTableListItemProps) => {
     const { useTM } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
-    const isSelected = useTM.isTaskHomeVisible === true;
+    const isSelected = useTM.isTaskTableVisible === true;
 
     return (
         <ListItem>
@@ -22,7 +22,7 @@ export const TaskTableListItem = (props: TaskTableListItemProps) => {
                 onClick={() => {
                     useTM.setIsDashboardVisible(false);
                     useTM.setIsSprintBoardVisible(false);
-                    useTM.setIsTaskHomeVisible(true);
+                    useTM.setIsTaskTableVisible(true);
                 }}
                 sx={{
                     borderRadius: "10px",

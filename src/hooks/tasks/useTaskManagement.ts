@@ -20,8 +20,8 @@ export interface TaskManagementState {
     // Task preview state
     isTaskPreviewVisible: boolean;
     setIsTaskPreviewVisible: (visible: boolean) => void;
-    isTaskHomeVisible: boolean;
-    setIsTaskHomeVisible: (visible: boolean) => void;
+    isTaskTableVisible: boolean;
+    setIsTaskTableVisible: (visible: boolean) => void;
     isDashboardVisible: boolean;
     setIsDashboardVisible: (visible: boolean) => void;
     isSprintBoardVisible: boolean;
@@ -146,23 +146,23 @@ export const useTaskManagement = (
 ): TaskManagementState => {
     // Task visible states
     const [isTaskPreviewVisible, setIsTaskPreviewVisible] = useState(false);
-    const [isTaskHomeVisible, _setIsTaskHomeVisible] = useState(true);
+    const [isTaskTableVisible, _setIsTaskTableVisible] = useState(true);
     const [isDashboardVisible, _setIsDashboardVisible] = useState(false);
     const [isSprintBoardVisible, _setIsSprintBoardVisible] = useState(false);
 
     // Wrapper functions to ensure mutual exclusivity of main view panels
     // Only one of TaskHome (Table), Dashboard, or SprintBoard can be visible at a time
-    const setIsTaskHomeVisible = (visible: boolean) => {
+    const setIsTaskTableVisible = (visible: boolean) => {
         if (visible) {
             _setIsDashboardVisible(false);
             _setIsSprintBoardVisible(false);
         }
-        _setIsTaskHomeVisible(visible);
+        _setIsTaskTableVisible(visible);
     };
 
     const setIsDashboardVisible = (visible: boolean) => {
         if (visible) {
-            _setIsTaskHomeVisible(false);
+            _setIsTaskTableVisible(false);
             _setIsSprintBoardVisible(false);
         }
         _setIsDashboardVisible(visible);
@@ -170,7 +170,7 @@ export const useTaskManagement = (
 
     const setIsSprintBoardVisible = (visible: boolean) => {
         if (visible) {
-            _setIsTaskHomeVisible(false);
+            _setIsTaskTableVisible(false);
             _setIsDashboardVisible(false);
         }
         _setIsSprintBoardVisible(visible);
@@ -398,7 +398,7 @@ export const useTaskManagement = (
         });
 
         if (isTaskPreviewVisible === true) {
-            setIsTaskHomeVisible(false);
+            setIsTaskTableVisible(false);
         }
     };
 
@@ -495,8 +495,8 @@ export const useTaskManagement = (
         // Task preview state
         isTaskPreviewVisible,
         setIsTaskPreviewVisible,
-        isTaskHomeVisible,
-        setIsTaskHomeVisible,
+        isTaskTableVisible,
+        setIsTaskTableVisible,
         isDashboardVisible,
         setIsDashboardVisible,
         isSprintBoardVisible,

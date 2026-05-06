@@ -21,7 +21,7 @@ export const SprintBoardListItem = (props: SprintBoardListItemProps) => {
                 selected={isSelected}
                 onClick={() => {
                     useTM.setIsDashboardVisible(false);
-                    useTM.setIsTaskHomeVisible(false);
+                    useTM.setIsTaskTableVisible(false);
                     useTM.setIsSprintBoardVisible(true);
                 }}
                 sx={{

@@ -146,7 +146,7 @@ export const useProjectTaskManagement = ({
         useTM.setCurrentPreviewTask(undefined);
         useTM.setCurrentPreviewTaskId(-1);
         useTM.setIsTaskPreviewVisible(false);
-        useTM.setIsTaskHomeVisible(true);
+        useTM.setIsTaskTableVisible(true);
         useTM.setCurrentTaskChain([]);
         useTM.setTaskMetaTree([]);
         useTM.setIsCreatingTask({

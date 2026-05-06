@@ -21,7 +21,7 @@ import { NewProjectListItem } from "./projects_subs/NewProjectListItem";
 
 type ProjectsListItemProps = {
     usePM: ProjectManagementState;
-    setIsTaskHomeVisible: (value: boolean) => void;
+    setIsTaskTableVisible: (value: boolean) => void;
     setOpenJoinProject: (value: {
         flag: boolean;
         projectId: number;
@@ -45,7 +45,7 @@ type ProjectsListItemProps = {
 export const ProjectsListItem = (props: ProjectsListItemProps) => {
     const {
         usePM,
-        setIsTaskHomeVisible,
+        setIsTaskTableVisible,
         setOpenJoinProject,
         useTM,
         useSM,
@@ -154,7 +154,7 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                 onClick={() => {
                                                     setOpen(!open);
                                                     useTM.setIsDashboardVisible(false);
-                                                    setIsTaskHomeVisible(true);
+                                                    setIsTaskTableVisible(true);
                                                     useTM.setIsSprintBoardVisible(false);
 
                                                     // Only if the clicked project id is not the same as the current one,

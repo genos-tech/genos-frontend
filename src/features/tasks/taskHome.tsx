@@ -46,7 +46,7 @@ export const TaskHome = (props: TaskHomeProps) => {
     };
 
     const handleCloseTaskHome = () => {
-        useTM.setIsTaskHomeVisible(false);
+        useTM.setIsTaskTableVisible(false);
     };
 
     return (

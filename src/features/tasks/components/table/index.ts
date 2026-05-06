@@ -1,6 +1,3 @@
-// Original DataGrid-based table (kept for backwards compatibility)
-export { ProjectTaskTable } from "./TaskTable";
-
 // New react-beautiful-dnd based draggable table
 export { DraggableTaskTable } from "./DraggableTaskTable";
 export { DraggableTaskRow } from "./DraggableTaskRow";

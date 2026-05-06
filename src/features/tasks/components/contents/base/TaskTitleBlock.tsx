@@ -593,7 +593,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                                         (taskContent as any).milestoneId ?? null,
                                                 });
                                             }
-                                            useTM.setIsTaskHomeVisible(false);
+                                            useTM.setIsTaskTableVisible(false);
                                         } else {
                                             console.error("Task ID not defined error.");
                                         }
@@ -646,7 +646,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                     }}
                                     onClick={() => {
                                         if (useNM.setIsTaskNoteVisible && taskContent.project) {
-                                            useTM.setIsTaskHomeVisible(false);
+                                            useTM.setIsTaskTableVisible(false);
                                             useNM.setIsTaskNoteVisible(true);
                                             if (useNM.taskNoteMeta.length > 0) {
                                                 useNM.setCurrentTaskNote(
@@ -886,9 +886,9 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                         useTM.isCreatingTask.flag === false &&
                                         useNM.isTaskNoteVisible === false
                                     ) {
-                                        if (useTM.isTaskHomeVisible === false) {
+                                        if (useTM.isTaskTableVisible === false) {
                                             if (useTM.isSprintBoardVisible === false) {
-                                                useTM.setIsTaskHomeVisible(true);
+                                                useTM.setIsTaskTableVisible(true);
                                             } else {
                                                 useTM.setIsSprintBoardVisible(true);
                                             }
@@ -905,10 +905,10 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 });
 
                                 if (useTM.isTaskPreviewVisible === false) {
-                                    if (useTM.isTaskHomeVisible === false) {
+                                    if (useTM.isTaskTableVisible === false) {
                                         if (useTM.isSprintBoardVisible === false) {
                                             if (useTM.isDashboardVisible === false) {
-                                                useTM.setIsTaskHomeVisible(true);
+                                                useTM.setIsTaskTableVisible(true);
                                             } else {
                                                 useTM.setIsDashboardVisible(true);
                                             }

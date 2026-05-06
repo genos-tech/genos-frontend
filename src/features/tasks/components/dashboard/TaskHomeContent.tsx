@@ -436,12 +436,12 @@ export const TaskHomeContent = ({
     };
     const handleGoToTable = () => {
         useTM.setIsDashboardVisible(false);
-        useTM.setIsTaskHomeVisible(true);
+        useTM.setIsTaskTableVisible(true);
         useTM.setIsSprintBoardVisible(false);
     };
     const handleGoToBoard = () => {
         useTM.setIsDashboardVisible(false);
-        useTM.setIsTaskHomeVisible(false);
+        useTM.setIsTaskTableVisible(false);
         useTM.setIsSprintBoardVisible(true);
     };
     const handleCreateTask = () => {

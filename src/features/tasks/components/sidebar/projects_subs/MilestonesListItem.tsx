@@ -90,7 +90,7 @@ export const MilestonesListItem = ({
             creationKind: "milestone",
             milestoneId: null,
         });
-        useTM.setIsTaskHomeVisible(false);
+        useTM.setIsTaskTableVisible(false);
     };
 
     if (milestones.length === 0) {

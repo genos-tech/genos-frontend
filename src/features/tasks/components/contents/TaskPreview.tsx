@@ -1605,7 +1605,7 @@ const MilestonePreviewInner = ({
                                         creationKind: "task",
                                         milestoneId: milestone.milestoneId,
                                     });
-                                    useTM.setIsTaskHomeVisible(false);
+                                    useTM.setIsTaskTableVisible(false);
                                 }}
                             >
                                 <Box
@@ -1658,7 +1658,7 @@ const MilestonePreviewInner = ({
                                         milestone.projectId &&
                                         milestone.taskId != null
                                     ) {
-                                        useTM.setIsTaskHomeVisible(false);
+                                        useTM.setIsTaskTableVisible(false);
                                         useNM.setIsTaskNoteVisible(true);
                                         if (useNM.taskNoteMeta.length > 0) {
                                             useNM.setCurrentTaskNote(
@@ -1890,11 +1890,11 @@ const MilestonePreviewInner = ({
                                 useTM.setCurrentPreviewMilestoneId(-1);
                                 useTM.setTableMilestoneFilterId(null);
                                 if (
-                                    useTM.isTaskHomeVisible === false &&
+                                    useTM.isTaskTableVisible === false &&
                                     useTM.isSprintBoardVisible === false &&
                                     useTM.isDashboardVisible === false
                                 ) {
-                                    useTM.setIsTaskHomeVisible(true);
+                                    useTM.setIsTaskTableVisible(true);
                                 }
 
                                 // When the milestone preview was opened from a

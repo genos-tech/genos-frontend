@@ -499,7 +499,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                     useTM.setIsNewTaskCreated(true);
                     // Open task table if the current location is task.
                     if (location.pathname.includes("/home/tasks")) {
-                        useTM.setIsTaskHomeVisible(true);
+                        useTM.setIsTaskTableVisible(true);
                     }
                 }, 500);
             }
@@ -613,11 +613,11 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             // panel; if no other main panel is visible, restore the task
             // home so the user always lands somewhere sensible.
             if (
-                !useTM.isTaskHomeVisible &&
+                !useTM.isTaskTableVisible &&
                 !useTM.isDashboardVisible &&
                 !useTM.isSprintBoardVisible
             ) {
-                useTM.setIsTaskHomeVisible(true);
+                useTM.setIsTaskTableVisible(true);
             }
         }
     };

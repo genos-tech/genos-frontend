@@ -26,7 +26,7 @@ type TaskNoteMainProps = {
     useUISM: UIStateManagementState;
     useCM: ChatManagementState;
     isInTaskPage: boolean;
-    setIsTaskHomeVisible?: (value: boolean) => void;
+    setIsTaskTableVisible?: (value: boolean) => void;
     useNM: NoteManagementState;
     useTM: TaskManagementState;
 };
@@ -40,7 +40,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         useUISM,
         useCM,
         isInTaskPage,
-        setIsTaskHomeVisible,
+        setIsTaskTableVisible,
         useNM,
         useTM,
     } = props;
@@ -128,12 +128,12 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         if (
             useTM.isCreatingTask.flag === false &&
             useTM.isTaskPreviewVisible === false &&
-            setIsTaskHomeVisible
+            setIsTaskTableVisible
         ) {
-            setIsTaskHomeVisible(true);
+            setIsTaskTableVisible(true);
             useTM.setIsSprintBoardVisible(false);
         }
-    }, [useNM, useTM, setIsTaskHomeVisible]);
+    }, [useNM, useTM, setIsTaskTableVisible]);
 
     const handleTitleChange = useCallback((title: string) => {
         setCurrentTaskNoteTitle(title);

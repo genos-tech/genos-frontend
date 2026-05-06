@@ -117,7 +117,7 @@ export const TaskHomeLayout = ({
                     useUISM={useUISM}
                 />
             )}
-            {useTM.isTaskHomeVisible && (
+            {(useTM.isTaskTableVisible || useTM.isSprintBoardVisible) && (
                 <>
                     <TaskHomeHeader
                         myself={myself}
@@ -132,46 +132,37 @@ export const TaskHomeLayout = ({
                         onCreateTag={onCreateTag}
                         onDeleteProject={onDeleteProject}
                     />
-                    <DraggableTaskTable
-                        myself={myself}
-                        setMyself={setMyself}
-                        setTeamMembers={useTEM.setTeamMembers}
-                        socket={socket}
-                        teamMembers={useTEM.teamMembers}
-                        useCM={useCM}
-                        usePM={usePM}
-                        useSM={useSM}
-                        useTEM={useTEM}
-                        useTM={useTM}
-                        useUISM={useUISM}
-                    />
-                </>
-            )}
-            {useTM.isSprintBoardVisible && (
-                <>
-                    <TaskHomeHeader
-                        myself={myself}
-                        setMyself={setMyself}
-                        useCM={useCM}
-                        usePM={usePM}
-                        useTEM={useTEM}
-                        useTM={useTM}
-                        useUISM={useUISM}
-                        onCloseTaskHome={onCloseTaskHome}
-                        onCreateProject={onCreateProject}
-                        onCreateTag={onCreateTag}
-                        onDeleteProject={onDeleteProject}
-                    />
-                    <SprintBoard
-                        myself={myself}
-                        setTeamMembers={useTEM.setTeamMembers}
-                        socket={socket}
-                        teamMemberProfiles={useTEM.teamMemberProfiles}
-                        teamMembers={useTEM.teamMembers}
-                        usePM={usePM}
-                        useSM={useSM}
-                        useTM={useTM}
-                    />
+                    {useTM.isTaskTableVisible && (
+                        <>
+                            <DraggableTaskTable
+                                myself={myself}
+                                setMyself={setMyself}
+                                setTeamMembers={useTEM.setTeamMembers}
+                                socket={socket}
+                                teamMembers={useTEM.teamMembers}
+                                useCM={useCM}
+                                usePM={usePM}
+                                useSM={useSM}
+                                useTEM={useTEM}
+                                useTM={useTM}
+                                useUISM={useUISM}
+                            />
+                        </>
+                    )}
+                    {useTM.isSprintBoardVisible && (
+                        <>
+                            <SprintBoard
+                                myself={myself}
+                                setTeamMembers={useTEM.setTeamMembers}
+                                socket={socket}
+                                teamMemberProfiles={useTEM.teamMemberProfiles}
+                                teamMembers={useTEM.teamMembers}
+                                usePM={usePM}
+                                useSM={useSM}
+                                useTM={useTM}
+                            />
+                        </>
+                    )}
                 </>
             )}
         </Box>
@@ -453,7 +444,7 @@ export const TaskHomeLayout = ({
 
             {usePM.currentProject && usePM.currentProject.projectId ? (
                 <>
-                    {(useTM.isTaskHomeVisible ||
+                    {(useTM.isTaskTableVisible ||
                         useTM.isSprintBoardVisible ||
                         useTM.isDashboardVisible) && (
                         <>
