@@ -435,7 +435,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                             >
                                                 {profileUser?.userEmail}
                                             </Typography>
-                                            <Typography
+                                            {/* <Typography
                                                 sx={{
                                                     userSelect: "text",
                                                     color: styles.valueColor,
@@ -451,7 +451,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                 }
                                             >
                                                 +81 999-888-777
-                                            </Typography>
+                                            </Typography> */}
                                         </Stack>
 
                                         {/* Team Name */}
