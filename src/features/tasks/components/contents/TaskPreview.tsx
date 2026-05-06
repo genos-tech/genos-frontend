@@ -972,12 +972,34 @@ const MilestonePreviewInner = ({
         setTabIndex(commentCount > 0 ? 0 : noteCount > 0 ? 1 : uploadedFileCount > 0 ? 2 : 0);
     };
 
-    // Reset local state when the milestone-id changes or fresh data
-    // arrives. Attachments come from the backing task.
+    // Reset the title / body drafts ONLY when the milestone identity
+    // itself changes (i.e. the user switched to a different milestone).
+    // Re-running on every `tsUpdatedAt` bump or `backingTask` arrival
+    // would clobber an in-progress local edit — e.g. typing into the
+    // title input right after mount, while the initial
+    // `refreshMilestone` / `loadSpecificTask` calls are still in
+    // flight, would otherwise revert the user's keystrokes the moment
+    // those async loads resolve. Title is persisted on blur via
+    // `saveTitle`; body is auto-saved on a 3s loop and additionally
+    // gated by `bodyEdited` so a refresh-driven reset can't wipe an
+    // unsaved body either.
     useEffect(() => {
         if (!milestone) return;
         setTitleDraft(milestone.title);
-        setBodyDraft((milestone.description as PartialBlock[]) ?? []);
+        if (!bodyEdited) {
+            setBodyDraft((milestone.description as PartialBlock[]) ?? []);
+        }
+    }, [milestone?.milestoneId]);
+
+    // Sync the derived UI state (assignee / reporter / task-shaped
+    // mirror used by the shared sub-blocks, plus attachments + tab
+    // index) whenever the milestone refreshes, the team roster
+    // updates, or the backing task finishes loading. These slots are
+    // not driven by a free-text input, so re-running here is safe and
+    // is in fact required so external changes propagate into the
+    // preview.
+    useEffect(() => {
+        if (!milestone) return;
         const firstAssignee =
             milestoneAssigneesToUserProps(milestone, useTEM.teamMembers)[0] ?? myself;
         setAssignee(firstAssignee);
