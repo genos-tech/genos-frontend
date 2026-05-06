@@ -1403,18 +1403,6 @@ const MilestonePreviewInner = ({
         setTaskUpdated(false);
     }, [taskUpdated]);
 
-    if (!milestone) {
-        // Close task preview when the milestone is not found after 3 seconds.
-        setTimeout(() => {
-            useTM.setIsTaskPreviewVisible(false);
-        }, 3000);
-        return (
-            <Box sx={{ p: 3 }}>
-                <Typography level="body-sm">Loading milestone…</Typography>
-            </Box>
-        );
-    }
-
     useEffect(() => {
         setTabIndex(
             taskComments.length > 0
@@ -1426,6 +1414,35 @@ const MilestonePreviewInner = ({
                     : 0
         );
     }, [taskComments.length, taskNotes.length, uploadedFiles.length]);
+
+    // Auto-close the preview after 3s when the milestone can't be
+    // resolved (e.g. landed on a stale URL after a hard refresh while
+    // the store is still hydrating). Lives in a `useEffect` rather than
+    // inline in the `if (!milestone)` render branch so:
+    //   - We don't schedule a fresh timeout on every render of the
+    //     loading state (the inline `setTimeout` would queue dozens of
+    //     redundant `setIsTaskPreviewVisible(false)` calls).
+    //   - And, critically, we keep the hook-call order stable across
+    //     renders. The previous layout had a `useEffect` *after* the
+    //     `if (!milestone)` early return, so on the first render
+    //     (milestone still loading → null) React saw fewer hooks than
+    //     on the next render (milestone resolved → all hooks run),
+    //     tripping "change in the order of Hooks" after a hard refresh.
+    useEffect(() => {
+        if (milestone) return;
+        const id = setTimeout(() => {
+            useTM.setIsTaskPreviewVisible(false);
+        }, 3000);
+        return () => clearTimeout(id);
+    }, [milestone]);
+
+    if (!milestone) {
+        return (
+            <Box sx={{ p: 3 }}>
+                <Typography level="body-sm">Loading milestone…</Typography>
+            </Box>
+        );
+    }
 
     return (
         <Sheet
