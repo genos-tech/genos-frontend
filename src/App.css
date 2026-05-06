@@ -549,8 +549,8 @@ input[type="checkbox"] {
 }
 
 .bn-task-body-box-light .bn-editor img {
-    max-width: 1000px;
-    max-height: 1000px;
+    max-width: 600px;
+    max-height: 600px;
     width: auto;
     height: auto;
     object-fit: contain;
@@ -570,8 +570,8 @@ input[type="checkbox"] {
 }
 
 .bn-task-body-box-dark .bn-editor img {
-    max-width: 1000px;
-    max-height: 1000px;
+    max-width: 600px;
+    max-height: 600px;
     width: auto;
     height: auto;
     object-fit: contain;
@@ -606,8 +606,8 @@ input[type="checkbox"] {
 }
 
 .bn-note-body-box-light .bn-editor img {
-    max-width: 1000px;
-    max-height: 1000px;
+    max-width: 600px;
+    max-height: 600px;
     width: auto;
     height: auto;
     object-fit: contain;
@@ -627,8 +627,8 @@ input[type="checkbox"] {
 }
 
 .bn-note-body-box-dark .bn-editor img {
-    max-width: 1000px;
-    max-height: 1000px;
+    max-width: 600px;
+    max-height: 600px;
     width: auto;
     height: auto;
     object-fit: contain;

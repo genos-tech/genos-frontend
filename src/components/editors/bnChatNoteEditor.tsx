@@ -158,6 +158,18 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
             formData.append("note_attachment_file", file);
             formData.append("note_id", String(currentChatNote.noteId));
             formData.append("uploader", myself.userId);
+            // ChatNoteAttachmentFact carries the chat-routing tuple
+            // (chat_type / chat_id / is_thread / thread_id) as NOT
+            // NULL columns so the file can be linked back to the
+            // exact chat surface it was dropped onto. The task-note
+            // counterpart skips these (its model only requires
+            // `note` + `uploader`), which is why this editor used to
+            // 400 while `bnTaskNoteEditor` worked with the same
+            // payload shape.
+            formData.append("chat_type", String(currentChatNote.chatType));
+            formData.append("chat_id", String(currentChatNote.chatId));
+            formData.append("is_thread", String(currentChatNote.isThread));
+            formData.append("thread_id", String(currentChatNote.threadId));
             const uploadNoteAttachmentResponse = await fetch(`${base_url}/note/chat/attachment/`, {
                 method: "POST",
                 headers: {

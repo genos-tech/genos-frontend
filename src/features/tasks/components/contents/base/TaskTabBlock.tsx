@@ -552,43 +552,70 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                 >
                     {/* Comments Tab */}
                     <TabPanel sx={{ p: 0 }} value={0}>
-                        <TaskCommentList
-                            currentProjectId={taskContent.project?.projectId}
-                            currentProjectName={taskContent.project?.projectName}
-                            focusedCommentId={focusedCommentId}
-                            myself={myself}
-                            setEditTargetComment={setEditTargetComment}
-                            setIsInEdit={setIsInEdit}
-                            setMyself={setMyself}
-                            socket={socket}
-                            taskComments={taskComments}
-                            useCM={useCM}
-                            useTEM={useTEM}
-                            useTM={useTM}
-                            useUISM={useUISM}
-                            commentLinkBuilder={
-                                projectId !== undefined && currentTaskId !== undefined
-                                    ? commentLinkBuilder
-                                    : undefined
-                            }
-                        />
-                        <TaskCommentEditorBlock
-                            editTargetComment={editTargetComment}
-                            isInEdit={isInEdit}
-                            myself={myself}
-                            setIsInEdit={setIsInEdit}
-                            setMyself={setMyself}
-                            setTaskCommentLines={setTaskCommentLines}
-                            setTaskComments={setTaskComments}
-                            socket={socket}
-                            task={tmpCurrentTaskContent}
-                            taskCommentLines={taskCommentLines}
-                            taskComments={taskComments}
-                            useCM={useCM}
-                            useTEM={useTEM}
-                            useTM={useTM}
-                            useUISM={useUISM}
-                        />
+                        {/* Drop-zone wrapper.
+                            The comment editors (`bnTaskCommentEditor` /
+                            `bnUpdateTaskCommentEditor`) strip
+                            image/file/audio/video from their schemas and
+                            don't supply an `uploadFile`, so BlockNote
+                            registers no drop handler of its own. Without
+                            a handler here, anything the user drags onto
+                            the comment editor escapes to the browser's
+                            default behaviour (navigating to the file
+                            URL in a new tab).
+                            We forward drops through the same
+                            `handleDroppedFiles` path the Attachments
+                            tab uses, so dropped files are persisted as
+                            task attachments — which is the closest
+                            equivalent now that the comment payload
+                            itself can't carry binary blocks. */}
+                        <Box
+                            sx={{ position: "relative" }}
+                            onDragOver={(e) => {
+                                e.preventDefault();
+                                if (e.dataTransfer?.types?.includes("Files")) {
+                                    e.dataTransfer.dropEffect = "copy";
+                                }
+                            }}
+                            onDrop={handleDroppedFiles}
+                        >
+                            <TaskCommentList
+                                currentProjectId={taskContent.project?.projectId}
+                                currentProjectName={taskContent.project?.projectName}
+                                focusedCommentId={focusedCommentId}
+                                myself={myself}
+                                setEditTargetComment={setEditTargetComment}
+                                setIsInEdit={setIsInEdit}
+                                setMyself={setMyself}
+                                socket={socket}
+                                taskComments={taskComments}
+                                useCM={useCM}
+                                useTEM={useTEM}
+                                useTM={useTM}
+                                useUISM={useUISM}
+                                commentLinkBuilder={
+                                    projectId !== undefined && currentTaskId !== undefined
+                                        ? commentLinkBuilder
+                                        : undefined
+                                }
+                            />
+                            <TaskCommentEditorBlock
+                                editTargetComment={editTargetComment}
+                                isInEdit={isInEdit}
+                                myself={myself}
+                                setIsInEdit={setIsInEdit}
+                                setMyself={setMyself}
+                                setTaskCommentLines={setTaskCommentLines}
+                                setTaskComments={setTaskComments}
+                                socket={socket}
+                                task={tmpCurrentTaskContent}
+                                taskCommentLines={taskCommentLines}
+                                taskComments={taskComments}
+                                useCM={useCM}
+                                useTEM={useTEM}
+                                useTM={useTM}
+                                useUISM={useUISM}
+                            />
+                        </Box>
                     </TabPanel>
 
                     {/* Notes Tab */}
