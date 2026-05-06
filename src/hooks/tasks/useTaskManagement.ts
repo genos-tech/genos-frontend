@@ -22,8 +22,8 @@ export interface TaskManagementState {
     setIsTaskPreviewVisible: (visible: boolean) => void;
     isTaskTableVisible: boolean;
     setIsTaskTableVisible: (visible: boolean) => void;
-    isDashboardVisible: boolean;
-    setIsDashboardVisible: (visible: boolean) => void;
+    isTaskDashboardVisible: boolean;
+    setIsTaskDashboardVisible: (visible: boolean) => void;
     isSprintBoardVisible: boolean;
     setIsSprintBoardVisible: (visible: boolean) => void;
 
@@ -147,31 +147,31 @@ export const useTaskManagement = (
     // Task visible states
     const [isTaskPreviewVisible, setIsTaskPreviewVisible] = useState(false);
     const [isTaskTableVisible, _setIsTaskTableVisible] = useState(true);
-    const [isDashboardVisible, _setIsDashboardVisible] = useState(false);
+    const [isTaskDashboardVisible, _setIsTaskDashboardVisible] = useState(false);
     const [isSprintBoardVisible, _setIsSprintBoardVisible] = useState(false);
 
     // Wrapper functions to ensure mutual exclusivity of main view panels
     // Only one of TaskHome (Table), Dashboard, or SprintBoard can be visible at a time
     const setIsTaskTableVisible = (visible: boolean) => {
         if (visible) {
-            _setIsDashboardVisible(false);
+            _setIsTaskDashboardVisible(false);
             _setIsSprintBoardVisible(false);
         }
         _setIsTaskTableVisible(visible);
     };
 
-    const setIsDashboardVisible = (visible: boolean) => {
+    const setIsTaskDashboardVisible = (visible: boolean) => {
         if (visible) {
             _setIsTaskTableVisible(false);
             _setIsSprintBoardVisible(false);
         }
-        _setIsDashboardVisible(visible);
+        _setIsTaskDashboardVisible(visible);
     };
 
     const setIsSprintBoardVisible = (visible: boolean) => {
         if (visible) {
             _setIsTaskTableVisible(false);
-            _setIsDashboardVisible(false);
+            _setIsTaskDashboardVisible(false);
         }
         _setIsSprintBoardVisible(visible);
     };
@@ -497,8 +497,8 @@ export const useTaskManagement = (
         setIsTaskPreviewVisible,
         isTaskTableVisible,
         setIsTaskTableVisible,
-        isDashboardVisible,
-        setIsDashboardVisible,
+        isTaskDashboardVisible,
+        setIsTaskDashboardVisible,
         isSprintBoardVisible,
         setIsSprintBoardVisible,
 

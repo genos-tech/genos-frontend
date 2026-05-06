@@ -209,9 +209,9 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                     {/* Home Item */}
                     <ListItem>
                         <ListItemButton
-                            selected={useTM.isDashboardVisible}
+                            selected={useTM.isTaskDashboardVisible}
                             onClick={() => {
-                                useTM.setIsDashboardVisible(true);
+                                useTM.setIsTaskDashboardVisible(true);
                                 useTM.setIsTaskTableVisible(false);
                                 useTM.setIsSprintBoardVisible(false);
                             }}
@@ -333,7 +333,6 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
 
                     <ProjectsListItem
                         usePM={usePM}
-                        setIsTaskTableVisible={useTM.setIsTaskTableVisible}
                         setOpenJoinProject={setOpenJoinProject}
                         useTM={useTM}
                         useSM={useSM}

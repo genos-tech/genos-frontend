@@ -614,7 +614,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             // home so the user always lands somewhere sensible.
             if (
                 !useTM.isTaskTableVisible &&
-                !useTM.isDashboardVisible &&
+                !useTM.isTaskDashboardVisible &&
                 !useTM.isSprintBoardVisible
             ) {
                 useTM.setIsTaskTableVisible(true);

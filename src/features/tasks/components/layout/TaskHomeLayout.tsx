@@ -104,7 +104,7 @@ export const TaskHomeLayout = ({
                 borderRight: mode === "dark" ? "1px black inset" : "1px lightgrey inset",
             }}
         >
-            {useTM.isDashboardVisible && (
+            {useTM.isTaskDashboardVisible && (
                 <TaskDashboard
                     myself={myself}
                     setMyself={setMyself}
@@ -446,7 +446,7 @@ export const TaskHomeLayout = ({
                 <>
                     {(useTM.isTaskTableVisible ||
                         useTM.isSprintBoardVisible ||
-                        useTM.isDashboardVisible) && (
+                        useTM.isTaskDashboardVisible) && (
                         <>
                             {renderResizeHandle()}
                             <Panel id={"2"} maxSize={80} minSize={30} order={2}>

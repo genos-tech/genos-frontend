@@ -907,10 +907,10 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 if (useTM.isTaskPreviewVisible === false) {
                                     if (useTM.isTaskTableVisible === false) {
                                         if (useTM.isSprintBoardVisible === false) {
-                                            if (useTM.isDashboardVisible === false) {
+                                            if (useTM.isTaskDashboardVisible === false) {
                                                 useTM.setIsTaskTableVisible(true);
                                             } else {
-                                                useTM.setIsDashboardVisible(true);
+                                                useTM.setIsTaskDashboardVisible(true);
                                             }
                                         } else {
                                             useTM.setIsSprintBoardVisible(true);

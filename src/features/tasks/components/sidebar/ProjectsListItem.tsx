@@ -21,7 +21,6 @@ import { NewProjectListItem } from "./projects_subs/NewProjectListItem";
 
 type ProjectsListItemProps = {
     usePM: ProjectManagementState;
-    setIsTaskTableVisible: (value: boolean) => void;
     setOpenJoinProject: (value: {
         flag: boolean;
         projectId: number;
@@ -45,7 +44,6 @@ type ProjectsListItemProps = {
 export const ProjectsListItem = (props: ProjectsListItemProps) => {
     const {
         usePM,
-        setIsTaskTableVisible,
         setOpenJoinProject,
         useTM,
         useSM,
@@ -153,10 +151,6 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                 selected={isSelected}
                                                 onClick={() => {
                                                     setOpen(!open);
-                                                    useTM.setIsDashboardVisible(false);
-                                                    setIsTaskTableVisible(true);
-                                                    useTM.setIsSprintBoardVisible(false);
-
                                                     // Only if the clicked project id is not the same as the current one,
                                                     // reset the project (and load tasks in the downstream step.)
                                                     if (

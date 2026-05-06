@@ -1892,7 +1892,7 @@ const MilestonePreviewInner = ({
                                 if (
                                     useTM.isTaskTableVisible === false &&
                                     useTM.isSprintBoardVisible === false &&
-                                    useTM.isDashboardVisible === false
+                                    useTM.isTaskDashboardVisible === false
                                 ) {
                                     useTM.setIsTaskTableVisible(true);
                                 }

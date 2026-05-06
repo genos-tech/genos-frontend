@@ -435,12 +435,12 @@ export const TaskHomeContent = ({
         useTM.setCurrentPreviewTaskId(taskId);
     };
     const handleGoToTable = () => {
-        useTM.setIsDashboardVisible(false);
+        useTM.setIsTaskDashboardVisible(false);
         useTM.setIsTaskTableVisible(true);
         useTM.setIsSprintBoardVisible(false);
     };
     const handleGoToBoard = () => {
-        useTM.setIsDashboardVisible(false);
+        useTM.setIsTaskDashboardVisible(false);
         useTM.setIsTaskTableVisible(false);
         useTM.setIsSprintBoardVisible(true);
     };

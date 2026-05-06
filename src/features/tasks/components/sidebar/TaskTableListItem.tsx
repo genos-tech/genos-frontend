@@ -20,7 +20,7 @@ export const TaskTableListItem = (props: TaskTableListItemProps) => {
             <ListItemButton
                 selected={isSelected}
                 onClick={() => {
-                    useTM.setIsDashboardVisible(false);
+                    useTM.setIsTaskDashboardVisible(false);
                     useTM.setIsSprintBoardVisible(false);
                     useTM.setIsTaskTableVisible(true);
                 }}
