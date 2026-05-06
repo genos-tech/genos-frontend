@@ -495,7 +495,12 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             }
             if (useTM.setIsNewTaskCreated) {
                 setTimeout(() => {
+                    useTM.setIsTaskPreviewVisible(true);
                     useTM.setIsNewTaskCreated(true);
+                    // Open task table if the current location is task.
+                    if (location.pathname.includes("/home/tasks")) {
+                        useTM.setIsTaskHomeVisible(true);
+                    }
                 }, 500);
             }
         }
