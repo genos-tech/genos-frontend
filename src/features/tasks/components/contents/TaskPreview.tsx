@@ -141,6 +141,14 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         taskEditState.setTmpCurrentTaskContent(useTM.currentPreviewTask || ({} as TaskProps));
     }, []);
 
+    const setTabIndexBasedOnContent = (
+        commentCount: number,
+        noteCount: number,
+        uploadedFileCount: number
+    ) => {
+        setTabIndex(commentCount > 0 ? 0 : noteCount > 0 ? 1 : uploadedFileCount > 0 ? 2 : 0);
+    };
+
     // Use the custom hook to get the sendUpdatedTask function
     const sendUpdatedTask = useSendUpdatedTask({
         socket,
@@ -233,6 +241,11 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setAssignee(taskEditState.tmpCurrentTaskContent.assignee);
                 setReporter(taskEditState.tmpCurrentTaskContent.reporter);
             })();
+            setTabIndexBasedOnContent(
+                taskComments.length,
+                taskNotes.length,
+                taskEditState.uploadedFiles.length
+            );
         }
     }, [taskEditState.uploadedFiles]);
 
@@ -254,6 +267,33 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             setDeletedAttachmentId(-1);
         }
     }, [isAttachmentDeleted, deletedAttachmentId]);
+
+    // Get Task Notes
+    const [taskNotes, setTaskNotes] = useState<TaskNoteProps[]>([]);
+    useEffect(() => {
+        (async () => {
+            if (useTM.currentPreviewTask?.project) {
+                const loadedTaskNotes: TaskNoteProps[] = await loadTaskNotes(
+                    myself,
+                    Number(useTM.currentPreviewTask.project.projectId),
+                    Number(useTM.currentPreviewTask.id),
+                    accessToken
+                );
+                if (loadedTaskNotes.length > 0) {
+                    setTaskNotes(loadedTaskNotes);
+                    setTabIndexBasedOnContent(
+                        taskComments.length,
+                        loadedTaskNotes.length,
+                        taskEditState.uploadedFiles.length
+                    );
+                } else {
+                    setTaskNotes([]);
+                }
+            } else {
+                setTaskNotes([]);
+            }
+        })();
+    }, [taskEditState.currentTaskId, useNM.taskNoteMeta]);
 
     // Task comments are hoisted into `useTM` (shared with the chat
     // thread's new "Comments" tab so both views read the same list).
@@ -277,33 +317,16 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             );
             if (loadedTaskComments.length > 0) {
                 setTaskComments(loadedTaskComments);
+                setTabIndexBasedOnContent(
+                    loadedTaskComments.length,
+                    taskNotes.length,
+                    taskEditState.uploadedFiles.length
+                );
             } else {
                 setTaskComments([]);
             }
         })();
     }, [useTM.isTaskCommentUpdated, taskEditState.currentTaskId]);
-
-    // Get Task Notes
-    const [taskNotes, setTaskNotes] = useState<TaskNoteProps[]>([]);
-    useEffect(() => {
-        (async () => {
-            if (useTM.currentPreviewTask?.project) {
-                const loadedTaskNotes: TaskNoteProps[] = await loadTaskNotes(
-                    myself,
-                    Number(useTM.currentPreviewTask.project.projectId),
-                    Number(useTM.currentPreviewTask.id),
-                    accessToken
-                );
-                if (loadedTaskNotes.length > 0) {
-                    setTaskNotes(loadedTaskNotes);
-                } else {
-                    setTaskNotes([]);
-                }
-            } else {
-                setTaskNotes([]);
-            }
-        })();
-    }, [taskEditState.currentTaskId, useNM.taskNoteMeta]);
 
     // Get Task Activities. The fetch lives here (rather than inside
     // `TaskActivityFeed`) so the data survives Activity tab unmounts.
@@ -941,6 +964,14 @@ const MilestonePreviewInner = ({
     const [reporter, setReporter] = useState<UserProps>(myself);
     const [uploadedFiles, setUploadedFiles] = useState<TaskProps["attachments"]>([]);
 
+    const setTabIndexBasedOnContent = (
+        commentCount: number,
+        noteCount: number,
+        uploadedFileCount: number
+    ) => {
+        setTabIndex(commentCount > 0 ? 0 : noteCount > 0 ? 1 : uploadedFileCount > 0 ? 2 : 0);
+    };
+
     // Reset local state when the milestone-id changes or fresh data
     // arrives. Attachments come from the backing task.
     useEffect(() => {
@@ -967,6 +998,11 @@ const MilestonePreviewInner = ({
             )
         );
         setUploadedFiles(backingTask?.attachments ?? []);
+        setTabIndexBasedOnContent(
+            taskComments.length,
+            taskNotes.length,
+            (backingTask?.attachments ?? []).length
+        );
     }, [
         milestone?.milestoneId,
         milestone?.tsUpdatedAt,
@@ -1000,6 +1036,7 @@ const MilestonePreviewInner = ({
         (async () => {
             const loaded = await loadTaskComments(myself, taskId, accessToken);
             setTaskComments(loaded?.length ? loaded : []);
+            setTabIndexBasedOnContent(loaded?.length ?? 0, taskNotes.length, uploadedFiles.length);
         })();
     }, [milestone?.taskId, useTM.isTaskCommentUpdated]);
 
@@ -1013,6 +1050,11 @@ const MilestonePreviewInner = ({
         (async () => {
             const loaded = await loadTaskNotes(myself, projectId, taskId, accessToken);
             setTaskNotes(loaded?.length ? loaded : []);
+            setTabIndexBasedOnContent(
+                taskComments.length,
+                loaded?.length ?? 0,
+                uploadedFiles.length
+            );
         })();
     }, [milestone?.taskId, milestone?.projectId, useNM.taskNoteMeta]);
 
@@ -1350,6 +1392,18 @@ const MilestonePreviewInner = ({
             </Box>
         );
     }
+
+    useEffect(() => {
+        setTabIndex(
+            taskComments.length > 0
+                ? 0
+                : taskNotes.length > 0
+                  ? 1
+                  : uploadedFiles.length > 0
+                    ? 2
+                    : 0
+        );
+    }, [taskComments.length, taskNotes.length, uploadedFiles.length]);
 
     return (
         <Sheet
