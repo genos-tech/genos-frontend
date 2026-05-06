@@ -373,6 +373,8 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                     setOpen={setOpenAddMembers}
                     useCM={useCM}
                     useTEM={useTEM}
+                    useUISM={useUISM}
+                    setMyself={setMyself}
                 />
             )}
         </Stack>
