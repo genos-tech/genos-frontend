@@ -309,7 +309,7 @@ export const UserProfile = (props: UserProfileProps) => {
                             >
                                 <Stack
                                     direction={{ xs: "column", md: "row" }}
-                                    spacing={3}
+                                    spacing={6}
                                     alignItems={{ xs: "center", md: "flex-start" }}
                                 >
                                     <Box

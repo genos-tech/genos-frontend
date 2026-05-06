@@ -47,6 +47,7 @@ import { FileUploadOverlay, FileUploadStatusBadge } from "../ui/feedback/FileUpl
 import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
 import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
+import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 import { EditorSendButton } from "./sub/EditorSendButton";
 
@@ -394,6 +395,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                 <BlockNoteView
                     className="bn-box"
                     editor={editor}
+                    emojiPicker={false}
                     formattingToolbar={false}
                     sideMenu={false} // false for Chat/comment, true for Task content
                     theme={mode === "dark" ? "dark" : "light"}
@@ -486,6 +488,11 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                         getItems={async (query) =>
                             filterSuggestionItems(getCustomSlashMenuItems(editor), query)
                         }
+                    />
+                    <SuggestionMenuController
+                        getItems={async (query) => getEmojiSuggestionItems(editor, query)}
+                        minQueryLength={2}
+                        triggerCharacter={":"}
                     />
                 </BlockNoteView>
             </Box>

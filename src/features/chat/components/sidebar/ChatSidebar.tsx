@@ -420,6 +420,17 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                     }}
                                 >
                                     <MenuItem
+                                        onClick={() => setOpenCreateGM(true)}
+                                        sx={{
+                                            borderRadius: "8px",
+                                            gap: 1.5,
+                                            fontSize: "0.85rem",
+                                        }}
+                                    >
+                                        <GroupsIcon sx={{ fontSize: 18, color: "#4ade80" }} />
+                                        New Group Message
+                                    </MenuItem>
+                                    <MenuItem
                                         onClick={() => setOpenCreateMDM(true)}
                                         sx={{
                                             borderRadius: "8px",
@@ -431,17 +442,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                             sx={{ fontSize: 18, color: "#10b981" }}
                                         />
                                         New DM with friends
-                                    </MenuItem>
-                                    <MenuItem
-                                        onClick={() => setOpenCreateGM(true)}
-                                        sx={{
-                                            borderRadius: "8px",
-                                            gap: 1.5,
-                                            fontSize: "0.85rem",
-                                        }}
-                                    >
-                                        <GroupsIcon sx={{ fontSize: 18, color: "#4ade80" }} />
-                                        New Group Message
                                     </MenuItem>
                                 </Menu>
                             </Dropdown>
@@ -597,6 +597,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
             <ModalCreateGM
                 useCM={useCM}
                 useTEM={useTEM}
+                useUISM={useUISM}
+                setMyself={setMyself}
                 myself={myself}
                 open={openCreateGM}
                 setOpen={setOpenCreateGM}
@@ -604,8 +606,10 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
             />
             <ModalCreateMDM
                 useCM={useCM}
+                useUISM={useUISM}
                 useTEM={useTEM}
                 myself={myself}
+                setMyself={setMyself}
                 open={openCreateMDM}
                 setOpen={setOpenCreateMDM}
                 socket={socket}

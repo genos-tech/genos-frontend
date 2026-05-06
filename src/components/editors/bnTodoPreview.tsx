@@ -28,6 +28,7 @@ import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
+import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 
 type BnTodoPreviewProps = {
@@ -113,6 +114,7 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
                 className="bn-box"
                 editable={true}
                 editor={editor}
+                emojiPicker={false}
                 filePanel={false}
                 formattingToolbar={false}
                 linkToolbar={false}
@@ -171,6 +173,11 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
                             query
                         )
                     }
+                />
+                <SuggestionMenuController
+                    getItems={async (query) => getEmojiSuggestionItems(editor, query)}
+                    minQueryLength={2}
+                    triggerCharacter={":"}
                 />
             </BlockNoteView>
         </Box>

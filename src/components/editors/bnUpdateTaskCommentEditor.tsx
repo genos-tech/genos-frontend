@@ -38,6 +38,7 @@ import { TaskCommentProps } from "../../types/tasks";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
+import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 
 type BnUpdateTaskCommentEditorProps = {
@@ -293,6 +294,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                 <BlockNoteView
                     className="bn-box"
                     editor={editor}
+                    emojiPicker={false}
                     formattingToolbar={false}
                     sideMenu={false} // false for Chat/comment, true for Task content
                     theme={mode === "dark" ? "dark" : "light"}
@@ -420,6 +422,11 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                         getItems={async (query) =>
                             filterSuggestionItems(getCustomSlashMenuItems(editor), query)
                         }
+                    />
+                    <SuggestionMenuController
+                        getItems={async (query) => getEmojiSuggestionItems(editor, query)}
+                        minQueryLength={2}
+                        triggerCharacter={":"}
                     />
                 </BlockNoteView>
             </Box>

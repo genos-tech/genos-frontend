@@ -20,9 +20,11 @@ import {
 } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
+import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { createChatGroup } from "../../services/createChatGroup";
 
@@ -38,6 +40,8 @@ type Props = {
     setOpen: (value: boolean) => void;
     useCM: ChatManagementState;
     useTEM: TeamManagementState;
+    useUISM: UIStateManagementState;
+    setMyself: (value: UserProps) => void;
 };
 
 export const ModalCreateGM: React.FC<Props> = ({
@@ -47,10 +51,12 @@ export const ModalCreateGM: React.FC<Props> = ({
     setOpen,
     useCM,
     useTEM,
+    useUISM,
+    setMyself,
 }) => {
     const { accessToken } = useAuth();
 
-    const [isPrivate, setIsPrivate] = useState(true);
+    const [isPrivate, setIsPrivate] = useState(false);
     const [CreateCGErrorMessage, setCreateCGErrorMessage] = useState<string | null>(null);
     const [chatName, setGroupName] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
@@ -81,9 +87,7 @@ export const ModalCreateGM: React.FC<Props> = ({
     const handleToggleMember = (member: UserProps) => {
         setSelectedMembers((prev) => {
             const isSelected = prev.some((m) => m.userId === member.userId);
-            return isSelected
-                ? prev.filter((m) => m.userId !== member.userId)
-                : [...prev, member];
+            return isSelected ? prev.filter((m) => m.userId !== member.userId) : [...prev, member];
         });
     };
 
@@ -352,17 +356,16 @@ export const ModalCreateGM: React.FC<Props> = ({
                                         variant="soft"
                                         sx={{ pointerEvents: "none" }}
                                     />
-                                    <Avatar
-                                        size="sm"
-                                        src={member.avatarImgPath}
-                                        sx={{
-                                            border: isSelected
-                                                ? "2px solid rgba(59, 130, 246, 0.5)"
-                                                : "2px solid transparent",
-                                        }}
-                                    >
-                                        {member.userName?.[0]?.toUpperCase()}
-                                    </Avatar>
+                                    <AvatarWithStatus
+                                        avatarUser={member}
+                                        useCM={useCM}
+                                        isYou={false}
+                                        myself={myself}
+                                        setMyself={setMyself}
+                                        showNameAndEmail={true}
+                                        socket={socket}
+                                        useUISM={useUISM}
+                                    />
                                     <Box sx={{ flex: 1, minWidth: 0 }}>
                                         <Typography
                                             level="body-sm"

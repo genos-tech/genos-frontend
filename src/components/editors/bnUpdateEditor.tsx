@@ -44,6 +44,7 @@ import { FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
 import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
 import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
+import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
@@ -256,6 +257,7 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
                 <BlockNoteView
                     className="bn-box"
                     editor={editor}
+                    emojiPicker={false}
                     formattingToolbar={false}
                     sideMenu={false} // false for Chat/comment, true for Task content
                     theme={mode === "dark" ? "dark" : "light"}
@@ -381,6 +383,11 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
                         getItems={async (query) =>
                             filterSuggestionItems(getCustomSlashMenuItems(editor), query)
                         }
+                    />
+                    <SuggestionMenuController
+                        getItems={async (query) => getEmojiSuggestionItems(editor, query)}
+                        minQueryLength={2}
+                        triggerCharacter={":"}
                     />
                 </BlockNoteView>
             </Box>
