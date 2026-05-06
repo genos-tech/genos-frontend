@@ -1172,7 +1172,7 @@ export const TaskHomeContent = ({
                                     sx={{ fontSize: 18, color: "#6366f1" }}
                                 />
                                 <Typography
-                                    level="title-md"
+                                    level="title-lg"
                                     sx={{ fontWeight: 700, color: textPrimary }}
                                 >
                                     Sprint Insights
@@ -1434,7 +1434,7 @@ export const TaskHomeContent = ({
                             >
                                 <TrendingUpRoundedIcon sx={{ fontSize: 18, color: "#3b82f6" }} />
                                 <Typography
-                                    level="title-md"
+                                    level="title-lg"
                                     sx={{ fontWeight: 700, color: textPrimary }}
                                 >
                                     Overall Insights

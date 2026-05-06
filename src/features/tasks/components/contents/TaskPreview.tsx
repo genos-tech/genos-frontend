@@ -1340,6 +1340,10 @@ const MilestonePreviewInner = ({
     }, [taskUpdated]);
 
     if (!milestone) {
+        // Close task preview when the milestone is not found after 3 seconds.
+        setTimeout(() => {
+            useTM.setIsTaskPreviewVisible(false);
+        }, 3000);
         return (
             <Box sx={{ p: 3 }}>
                 <Typography level="body-sm">Loading milestone…</Typography>
@@ -1854,7 +1858,12 @@ const MilestonePreviewInner = ({
                                         borderRadius: "8px",
                                     }}
                                 >
-                                    <DeleteRoundedIcon sx={{ fontSize: 18 }} />
+                                    <DeleteRoundedIcon
+                                        sx={{
+                                            fontSize: 18,
+                                            color: isDark ? "#f87171" : "#dc2626",
+                                        }}
+                                    />
                                 </Box>
                                 <Typography
                                     level="body-sm"

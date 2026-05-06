@@ -829,7 +829,12 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                                 borderRadius: "8px",
                                             }}
                                         >
-                                            <DeleteRoundedIcon sx={{ fontSize: 18 }} />
+                                            <DeleteRoundedIcon
+                                                sx={{
+                                                    fontSize: 18,
+                                                    color: isDark ? "#f87171" : "#dc2626",
+                                                }}
+                                            />
                                         </Box>
                                         <Typography
                                             level="body-sm"
