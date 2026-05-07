@@ -14,14 +14,6 @@ const SERVICES_BY_ID: Array<{ id: number; path: string }> = [
     { id: 3, path: "/home/notes" },
 ];
 
-// Letter shortcut map, derived from SERVICES_BY_ID to keep the two in sync.
-const SERVICE_BY_KEY: Record<string, { id: number; path: string }> = {
-    i: SERVICES_BY_ID[0],
-    c: SERVICES_BY_ID[1],
-    t: SERVICES_BY_ID[2],
-    n: SERVICES_BY_ID[3],
-};
-
 // Derive the active service id from the current URL. Returns -1 when the
 // URL is not under any known service (e.g. the initial `/home` redirect),
 // which we treat as "unknown — leave the MRU list alone".
@@ -61,6 +53,21 @@ export type GlobalServiceShortcutState = {
     mruOrder: number[];
 };
 
+export type GlobalServiceShortcutOptions = {
+    /**
+     * Fired on `Ctrl+Cmd+T` (mac) / `Ctrl+Alt+T` (other). The callback owns
+     * both the navigation to `/home/tasks` and the side effect of opening
+     * the create-task panel — the hook just intercepts the keypress.
+     */
+    onOpenTasksAndCreate?: () => void;
+    /**
+     * Fired on `Ctrl+Cmd+N` (mac) / `Ctrl+Alt+N` (other). The callback owns
+     * both the navigation to `/home/notes` and the side effect of creating
+     * a new top-level My Note.
+     */
+    onOpenNotesAndCreate?: () => void;
+};
+
 /**
  * Registers a global keyboard listener that switches the active service.
  * The active service is read directly from the URL via `useLocation`, and
@@ -78,13 +85,18 @@ export type GlobalServiceShortcutState = {
  *     macOS Cmd+Tab.
  *   - `Escape` or `window.blur` cancels without navigating.
  *
- * Letter shortcuts (instant switch, no overlay):
+ * Letter shortcuts (action shortcuts, no overlay):
  *   - `Ctrl+Cmd+<letter>` on Mac, `Ctrl+Alt+<letter>` elsewhere.
- *   - `I` -> Inbox, `C` -> Chats, `T` -> Tasks, `N` -> Notes.
+ *   - `T` -> open Tasks AND start a new task (via `onOpenTasksAndCreate`).
+ *   - `N` -> open Notes AND create a new My Note (via `onOpenNotesAndCreate`).
  *   - If a letter shortcut fires while a cycle preview is in progress, the
  *     preview is canceled and the letter target wins.
+ *   - Each letter is wired through a callback so this hook stays free of
+ *     route / state dependencies on Tasks and Notes.
  */
-export const useGlobalServiceShortcut = (): GlobalServiceShortcutState => {
+export const useGlobalServiceShortcut = (
+    options?: GlobalServiceShortcutOptions
+): GlobalServiceShortcutState => {
     const navigate = useNavigate();
     const location = useLocation();
     const currentServiceId = useMemo(
@@ -103,6 +115,10 @@ export const useGlobalServiceShortcut = (): GlobalServiceShortcutState => {
     // risk missing a keyup event mid-gesture).
     const previewIndexRef = useRef<number | null>(previewIndex);
     const mruOrderRef = useRef<number[]>(mruOrder);
+    // Callbacks come from App.tsx as inline arrow functions, so their
+    // identity changes every render. Stash them in a ref so the
+    // listener always sees the latest closure without re-attaching.
+    const optionsRef = useRef<GlobalServiceShortcutOptions | undefined>(options);
 
     useEffect(() => {
         previewIndexRef.current = previewIndex;
@@ -111,6 +127,10 @@ export const useGlobalServiceShortcut = (): GlobalServiceShortcutState => {
     useEffect(() => {
         mruOrderRef.current = mruOrder;
     }, [mruOrder]);
+
+    useEffect(() => {
+        optionsRef.current = options;
+    }, [options]);
 
     // Promote the active service to the front of the MRU list whenever the
     // URL crosses into a different service — whether triggered by the
@@ -145,18 +165,24 @@ export const useGlobalServiceShortcut = (): GlobalServiceShortcutState => {
                 return;
             }
 
-            // Letter shortcuts: instant switch. Allow Shift either way so
-            // an in-progress backward-cycle (Shift held) still surrenders
-            // to a letter press.
+            // Letter shortcuts: action shortcuts (no instant nav).
+            // Allow Shift either way so an in-progress backward-cycle
+            // (Shift held) still surrenders to a letter press.
             const lettersModifiersOk = mac
                 ? e.ctrlKey && e.metaKey && !e.altKey
                 : e.ctrlKey && e.altKey && !e.metaKey;
             if (lettersModifiersOk) {
-                const letterTarget = SERVICE_BY_KEY[e.key.toLowerCase()];
-                if (letterTarget) {
+                const key = e.key.toLowerCase();
+                if (key === "t" && optionsRef.current?.onOpenTasksAndCreate) {
                     e.preventDefault();
                     if (previewIndexRef.current !== null) setPreviewIndex(null);
-                    navigate(letterTarget.path);
+                    optionsRef.current.onOpenTasksAndCreate();
+                    return;
+                }
+                if (key === "n" && optionsRef.current?.onOpenNotesAndCreate) {
+                    e.preventDefault();
+                    if (previewIndexRef.current !== null) setPreviewIndex(null);
+                    optionsRef.current.onOpenNotesAndCreate();
                     return;
                 }
             }

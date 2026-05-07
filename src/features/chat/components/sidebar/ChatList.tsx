@@ -14,7 +14,9 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ActivityMessageProps, AllChatProps, FlaggedMessageProps } from "../../../../types/chat";
+import { isMac } from "../../../../utils/platform";
 import { useScrollToBottomOnNewActivity } from "../../hooks/messageBubbleHooks";
+import { useChatRouting } from "../../hooks/useChatRouting";
 import { ChatListItemForActivity } from "./activity/chatListItemForActivity";
 import { ChatListItem } from "./chatListItem";
 import { ChatListItemForFlagMessages } from "./chatListItemForFlagMessages";
@@ -113,6 +115,7 @@ type ChatListProps = {
     useTEM: TeamManagementState;
     useTM: TaskManagementState;
     usePM: ProjectManagementState;
+    chatRouting: ReturnType<typeof useChatRouting>;
 };
 
 // Custom hook for managing filtered chats
@@ -493,6 +496,7 @@ export const ChatList = (props: ChatListProps) => {
         useCM,
         useTM,
         usePM,
+        chatRouting,
     } = props;
 
     const { mode } = useColorScheme();
@@ -559,6 +563,187 @@ export const ChatList = (props: ChatListProps) => {
     useEffect(() => {
         setTmpFlaggedMessages(useCM.flaggedMessages);
     }, [useCM.flaggedMessages]);
+
+    // Cmd/Alt+Shift+ArrowUp/Down moves the selection within the list.
+    //
+    // For DM/GM/PM the URL is the source of truth, so we just hand the
+    // next chat to `chatRouting.navigateToChat(...)` — the existing URL
+    // sync effect in `useChatRouting` handles loading + focusing the
+    // chat. For Activity / Flagged the click handlers in
+    // `chatListItemForActivity.tsx` / `chatListItemForFlagMessages.tsx`
+    // are intricate (thread / task-comment / project-mapping branches
+    // and per-item hooks like `useActivityStatus`); reproducing them
+    // here would mean lifting a non-trivial amount of logic out of those
+    // components. Instead we let the rendered item own its click and
+    // dispatch a programmatic click via a `data-chat-list-key` attribute
+    // — the rendered onClick remains the single source of truth, and we
+    // only need to make sure the next item is mounted (Virtuoso
+    // virtualizes off-screen rows) before clicking.
+    //
+    // The bail-out on editable targets is required so the platform
+    // Cmd+Shift+Arrow text-selection shortcut keeps working in the
+    // composer / search box / inline-edit fields.
+    const targetChatsRef = useRef(targetChats);
+    const tmpActivityMessagesRef = useRef(tmpActivityMessages);
+    const tmpFlaggedMessagesRef = useRef(tmpFlaggedMessages);
+    const selectedActivityIdRef = useRef(selectedActivityId);
+    const selectedFlaggedMessageIdRef = useRef(selectedFlaggedMessageId);
+
+    useEffect(() => {
+        targetChatsRef.current = targetChats;
+    }, [targetChats]);
+    useEffect(() => {
+        tmpActivityMessagesRef.current = tmpActivityMessages;
+    }, [tmpActivityMessages]);
+    useEffect(() => {
+        tmpFlaggedMessagesRef.current = tmpFlaggedMessages;
+    }, [tmpFlaggedMessages]);
+    useEffect(() => {
+        selectedActivityIdRef.current = selectedActivityId;
+    }, [selectedActivityId]);
+    useEffect(() => {
+        selectedFlaggedMessageIdRef.current = selectedFlaggedMessageId;
+    }, [selectedFlaggedMessageId]);
+
+    useEffect(() => {
+        const mac = isMac();
+
+        const clickByKey = (
+            virtuosoRef: React.RefObject<VirtuosoHandle | null>,
+            nextIdx: number,
+            dataKey: string
+        ) => {
+            virtuosoRef.current?.scrollToIndex({
+                index: nextIdx,
+                behavior: "smooth",
+                align: "center",
+            });
+            // Wait for Virtuoso to mount the row before synthesising the
+            // click. One rAF is usually enough, but Virtuoso may need a
+            // second tick on a long jump — so we retry once on miss.
+            requestAnimationFrame(() => {
+                const click = () => {
+                    const el = document.querySelector<HTMLElement>(
+                        `[data-chat-list-key="${dataKey}"]`
+                    );
+                    if (el) {
+                        el.click();
+                        return true;
+                    }
+                    return false;
+                };
+                if (!click()) {
+                    requestAnimationFrame(() => {
+                        click();
+                    });
+                }
+            });
+        };
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            const holdHeld = mac ? e.metaKey : e.altKey;
+            const wrongModifierHeld = mac ? e.altKey : e.metaKey;
+            if (!holdHeld || !e.shiftKey || wrongModifierHeld || e.ctrlKey) return;
+            if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+
+            const target = e.target as HTMLElement | null;
+            if (
+                target &&
+                (target.matches?.("input, textarea, [contenteditable=true]") ||
+                    target.closest?.("[contenteditable=true]"))
+            ) {
+                return;
+            }
+
+            const delta = e.key === "ArrowDown" ? 1 : -1;
+
+            // DM / GM / PM
+            if (targetChatType < CHAT_TYPES.ACTIVITY) {
+                const list = targetChatsRef.current;
+                if (list.length === 0) return;
+                e.preventDefault();
+
+                const currentChat = useCM.currentMainChat;
+                const currentIdx =
+                    currentChat && currentChat.chatId !== -1
+                        ? list.findIndex(
+                              (c) =>
+                                  c.chatId === currentChat.chatId &&
+                                  c.chatType === currentChat.chatType
+                          )
+                        : -1;
+
+                let nextIdx: number;
+                if (currentIdx === -1) {
+                    nextIdx = delta === 1 ? 0 : list.length - 1;
+                } else {
+                    nextIdx = Math.max(0, Math.min(list.length - 1, currentIdx + delta));
+                    if (nextIdx === currentIdx) return;
+                }
+
+                const next = list[nextIdx];
+                chatRouting.navigateToChat(next.chatType, next.chatId);
+                chatTypeLookup[targetChatType]?.current?.scrollToIndex({
+                    index: nextIdx,
+                    behavior: "smooth",
+                    align: "center",
+                });
+                return;
+            }
+
+            // Activity
+            if (targetChatType === CHAT_TYPES.ACTIVITY) {
+                const list = tmpActivityMessagesRef.current;
+                if (list.length === 0) return;
+                e.preventDefault();
+
+                const currentId = selectedActivityIdRef.current;
+                const currentIdx = currentId
+                    ? list.findIndex((a) => a.activityId === currentId)
+                    : -1;
+
+                let nextIdx: number;
+                if (currentIdx === -1) {
+                    nextIdx = delta === 1 ? 0 : list.length - 1;
+                } else {
+                    nextIdx = Math.max(0, Math.min(list.length - 1, currentIdx + delta));
+                    if (nextIdx === currentIdx) return;
+                }
+
+                const next = list[nextIdx];
+                clickByKey(virtuosoActivityRef, nextIdx, `activity-${next.activityId}`);
+                return;
+            }
+
+            // Flagged
+            if (targetChatType === CHAT_TYPES.FLAGGED) {
+                const list = tmpFlaggedMessagesRef.current;
+                if (list.length === 0) return;
+                e.preventDefault();
+
+                const currentId = selectedFlaggedMessageIdRef.current;
+                const currentIdx = currentId
+                    ? list.findIndex((f) => f.flaggedMessageId === currentId)
+                    : -1;
+
+                let nextIdx: number;
+                if (currentIdx === -1) {
+                    nextIdx = delta === 1 ? 0 : list.length - 1;
+                } else {
+                    nextIdx = Math.max(0, Math.min(list.length - 1, currentIdx + delta));
+                    if (nextIdx === currentIdx) return;
+                }
+
+                const next = list[nextIdx];
+                clickByKey(virtuosoFlaggedRef, nextIdx, `flagged-${next.flaggedMessageId}`);
+                return;
+            }
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [targetChatType, useCM.currentMainChat?.chatId, useCM.currentMainChat?.chatType]);
 
     const renderChatList = () => {
         if (targetChatType < CHAT_TYPES.ACTIVITY) {

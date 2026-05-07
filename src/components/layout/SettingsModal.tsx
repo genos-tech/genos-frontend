@@ -21,7 +21,7 @@ import {
 
 import { ThemePreference, useThemePreference } from "../../hooks/common/useThemePreference";
 import { NotificationSettingsPanel } from "../../services/notifications/NotificationSettingsPanel";
-import { getServiceShortcutModifierKeys } from "../../utils/platform";
+import { getServiceShortcutModifierKeys, isMac } from "../../utils/platform";
 
 type Props = {
     open: boolean;
@@ -110,19 +110,56 @@ const AppearanceSection = () => {
     );
 };
 
+type ShortcutGroup = {
+    title: string;
+    description: string;
+    rows: Array<{ label: string; combo: string[] }>;
+};
+
 const KeyboardShortcutsSection = () => {
     // Modifier display reflects what `useGlobalServiceShortcut` actually
     // listens to: Ctrl+Cmd on Mac, Ctrl+Alt elsewhere.
     const modifierKeys = useMemo(getServiceShortcutModifierKeys, []);
+    const cmdLabel = isMac() ? "⌘" : "Alt";
 
-    const rows: Array<{ label: string; combo: string[] }> = [
-        { label: "Open Inbox", combo: [...modifierKeys, "I"] },
-        { label: "Open Chats", combo: [...modifierKeys, "C"] },
-        { label: "Open Tasks", combo: [...modifierKeys, "T"] },
-        { label: "Open Notes", combo: [...modifierKeys, "N"] },
+    const groups: ShortcutGroup[] = [
         {
-            label: "Cycle through services",
-            combo: ["Hold ⌘", "Tap Ctrl to cycle", "Release ⌘ to switch"],
+            title: "Global",
+            description:
+                "Available anywhere. The letter shortcuts now compose navigation with a creation action; the cycle gesture works like the macOS Cmd+Tab switcher.",
+            rows: [
+                {
+                    label: "Open Tasks and start a new task",
+                    combo: [...modifierKeys, "T"],
+                },
+                {
+                    label: "Open Notes and create a new My Note",
+                    combo: [...modifierKeys, "N"],
+                },
+                {
+                    label: "Cycle through services",
+                    combo: ["Hold ⌘", "Tap Ctrl to cycle", "Release ⌘ to switch"],
+                },
+            ],
+        },
+        {
+            title: "Chat",
+            description:
+                "Active while a chat surface is mounted. Editable text fields keep platform text-selection shortcuts.",
+            rows: [
+                {
+                    label: "Switch chat tab",
+                    combo: [cmdLabel, "Shift", "← / →"],
+                },
+                {
+                    label: "Move selection in chat list",
+                    combo: [cmdLabel, "Shift", "↑ / ↓"],
+                },
+                {
+                    label: "Open thread of a message",
+                    combo: [cmdLabel, "Click message"],
+                },
+            ],
         },
     ];
 
@@ -132,43 +169,51 @@ const KeyboardShortcutsSection = () => {
                 <KeyboardRoundedIcon />
                 <Typography level="title-md">Keyboard shortcuts</Typography>
             </Stack>
-            <Typography level="body-xs" sx={{ mb: 1.5 }}>
-                Switch services without leaving the keyboard. Letter shortcuts jump directly;
-                arrows cycle through services in order and wrap around the ends.
-            </Typography>
 
-            <Stack spacing={0.75}>
-                {rows.map((row, idx) => (
-                    <Box key={row.label}>
-                        <Stack
-                            direction="row"
-                            spacing={2}
-                            alignItems="center"
-                            justifyContent="space-between"
-                        >
-                            <Typography level="body-sm">{row.label}</Typography>
-                            <Stack direction="row" spacing={0.5} alignItems="center">
-                                {row.combo.map((key, i) => (
+            <Stack spacing={2}>
+                {groups.map((group, gIdx) => (
+                    <Box key={group.title}>
+                        <Typography level="title-sm" sx={{ mt: gIdx === 0 ? 0.5 : 0 }}>
+                            {group.title}
+                        </Typography>
+                        <Typography level="body-xs" sx={{ mb: 1 }}>
+                            {group.description}
+                        </Typography>
+                        <Stack spacing={0.75}>
+                            {group.rows.map((row, idx) => (
+                                <Box key={row.label}>
                                     <Stack
-                                        key={`${key}-${i}`}
                                         direction="row"
-                                        spacing={0.5}
+                                        spacing={2}
                                         alignItems="center"
+                                        justifyContent="space-between"
                                     >
-                                        <Kbd>{key}</Kbd>
-                                        {i < row.combo.length - 1 && (
-                                            <Typography
-                                                level="body-xs"
-                                                sx={{ color: "text.tertiary" }}
-                                            >
-                                                +
-                                            </Typography>
-                                        )}
+                                        <Typography level="body-sm">{row.label}</Typography>
+                                        <Stack direction="row" spacing={0.5} alignItems="center">
+                                            {row.combo.map((key, i) => (
+                                                <Stack
+                                                    key={`${key}-${i}`}
+                                                    direction="row"
+                                                    spacing={0.5}
+                                                    alignItems="center"
+                                                >
+                                                    <Kbd>{key}</Kbd>
+                                                    {i < row.combo.length - 1 && (
+                                                        <Typography
+                                                            level="body-xs"
+                                                            sx={{ color: "text.tertiary" }}
+                                                        >
+                                                            +
+                                                        </Typography>
+                                                    )}
+                                                </Stack>
+                                            ))}
+                                        </Stack>
                                     </Stack>
-                                ))}
-                            </Stack>
+                                    {idx < group.rows.length - 1 && <Divider sx={{ mt: 0.75 }} />}
+                                </Box>
+                            ))}
                         </Stack>
-                        {idx < rows.length - 1 && <Divider sx={{ mt: 0.75 }} />}
                     </Box>
                 ))}
             </Stack>

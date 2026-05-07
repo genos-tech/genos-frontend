@@ -705,6 +705,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                 }}
             >
                 <ListItemButton
+                    data-chat-list-key={`flagged-${flaggedMessage.flaggedMessageId}`}
                     onClick={onClickHandler}
                     sx={{
                         flexDirection: "column",
