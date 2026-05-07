@@ -24,7 +24,7 @@ export const createEmptyTask = async (props: createEmptyTaskProps) => {
                 project: projectId,
                 assignee: myself.userId,
                 reporter: myself.userId,
-                title: "empty task for creating new one",
+                title: "<new task>",
                 priority: null,
                 effort_level: null,
                 status: "Open",
