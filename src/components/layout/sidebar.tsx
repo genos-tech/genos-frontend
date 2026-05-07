@@ -30,6 +30,7 @@ import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { InboxManagementState } from "../../hooks/inbox/useInboxManagement";
 import { UserProps } from "../../types/admin";
+import { isMac } from "../../utils/platform";
 import { ColorSchemeToggle } from "./colorSchemeToggle";
 import { SettingsModal } from "./SettingsModal";
 
@@ -250,112 +251,120 @@ export const Sidebar = (props: SidebarProps) => {
 
                         return (
                             <ListItem key={item.id}>
-                                <ListItemButton
-                                    onClick={() => handleNavClick(item.path)}
-                                    sx={{
-                                        flexDirection: "column",
-                                        alignItems: "center",
-                                        py: 1,
-                                        px: 1.25,
-                                        borderRadius: "12px",
-                                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                        background: isActive
-                                            ? isDark
-                                                ? `linear-gradient(135deg, ${color}20 0%, ${color}10 100%)`
-                                                : `linear-gradient(135deg, ${color}15 0%, ${color}08 100%)`
-                                            : "transparent",
-                                        border: "1px solid",
-                                        borderColor: isActive
-                                            ? isDark
-                                                ? `${color}35`
-                                                : `${color}25`
-                                            : "transparent",
-                                        "&:hover": {
+                                <Tooltip
+                                    title={isMac() ? "Hold ⌘ + tap Ctrl" : "Hold Ctrl + tap Alt"}
+                                    placement="right"
+                                    size="sm"
+                                    variant="soft"
+                                    sx={{ zIndex: 10020 }}
+                                >
+                                    <ListItemButton
+                                        onClick={() => handleNavClick(item.path)}
+                                        sx={{
+                                            flexDirection: "column",
+                                            alignItems: "center",
+                                            py: 1,
+                                            px: 1.25,
+                                            borderRadius: "12px",
+                                            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                                             background: isActive
                                                 ? isDark
-                                                    ? `linear-gradient(135deg, ${color}25 0%, ${color}15 100%)`
-                                                    : `linear-gradient(135deg, ${color}20 0%, ${color}12 100%)`
-                                                : isDark
-                                                  ? "rgba(255,255,255,0.04)"
-                                                  : "rgba(0,0,0,0.03)",
-                                            transform: "translateY(-1px)",
-                                        },
-                                        "&:active": {
-                                            transform: "translateY(0)",
-                                        },
-                                    }}
-                                >
-                                    <Badge
-                                        badgeContent={badgeCount > 0 ? badgeCount : 0}
-                                        invisible={badgeCount === 0}
-                                        size="sm"
-                                        sx={{
-                                            "& .MuiBadge-badge": {
-                                                background: isDark
-                                                    ? `linear-gradient(135deg, ${color} 0%, ${color}cc 100%)`
-                                                    : `linear-gradient(135deg, ${color} 0%, ${color}cc 100%)`,
-                                                color: "#fff",
-                                                fontWeight: 700,
-                                                fontSize: "0.6rem",
-                                                minWidth: 20,
-                                                height: 20,
-                                                pt: 0.25,
-                                                boxShadow: `0 2px 6px ${color}40`,
-                                                border: "2px solid",
-                                                borderColor: isDark
-                                                    ? "rgba(18,18,22,1)"
-                                                    : "rgba(252,252,255,1)",
-                                            },
-                                        }}
-                                    >
-                                        <Box
-                                            sx={{
-                                                width: 32,
-                                                height: 32,
-                                                borderRadius: "10px",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
+                                                    ? `linear-gradient(135deg, ${color}20 0%, ${color}10 100%)`
+                                                    : `linear-gradient(135deg, ${color}15 0%, ${color}08 100%)`
+                                                : "transparent",
+                                            border: "1px solid",
+                                            borderColor: isActive
+                                                ? isDark
+                                                    ? `${color}35`
+                                                    : `${color}25`
+                                                : "transparent",
+                                            "&:hover": {
                                                 background: isActive
                                                     ? isDark
                                                         ? `linear-gradient(135deg, ${color}25 0%, ${color}15 100%)`
-                                                        : `linear-gradient(135deg, ${color}18 0%, ${color}10 100%)`
+                                                        : `linear-gradient(135deg, ${color}20 0%, ${color}12 100%)`
                                                     : isDark
                                                       ? "rgba(255,255,255,0.04)"
                                                       : "rgba(0,0,0,0.03)",
+                                                transform: "translateY(-1px)",
+                                            },
+                                            "&:active": {
+                                                transform: "translateY(0)",
+                                            },
+                                        }}
+                                    >
+                                        <Badge
+                                            badgeContent={badgeCount > 0 ? badgeCount : 0}
+                                            invisible={badgeCount === 0}
+                                            size="sm"
+                                            sx={{
+                                                "& .MuiBadge-badge": {
+                                                    background: isDark
+                                                        ? `linear-gradient(135deg, ${color} 0%, ${color}cc 100%)`
+                                                        : `linear-gradient(135deg, ${color} 0%, ${color}cc 100%)`,
+                                                    color: "#fff",
+                                                    fontWeight: 700,
+                                                    fontSize: "0.6rem",
+                                                    minWidth: 20,
+                                                    height: 20,
+                                                    pt: 0.25,
+                                                    boxShadow: `0 2px 6px ${color}40`,
+                                                    border: "2px solid",
+                                                    borderColor: isDark
+                                                        ? "rgba(18,18,22,1)"
+                                                        : "rgba(252,252,255,1)",
+                                                },
+                                            }}
+                                        >
+                                            <Box
+                                                sx={{
+                                                    width: 32,
+                                                    height: 32,
+                                                    borderRadius: "10px",
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                    background: isActive
+                                                        ? isDark
+                                                            ? `linear-gradient(135deg, ${color}25 0%, ${color}15 100%)`
+                                                            : `linear-gradient(135deg, ${color}18 0%, ${color}10 100%)`
+                                                        : isDark
+                                                          ? "rgba(255,255,255,0.04)"
+                                                          : "rgba(0,0,0,0.03)",
+                                                    transition: "all 0.2s ease",
+                                                }}
+                                            >
+                                                <Icon
+                                                    sx={{
+                                                        fontSize: 20,
+                                                        color: isActive
+                                                            ? color
+                                                            : isDark
+                                                              ? "rgba(255,255,255,0.45)"
+                                                              : "rgba(0,0,0,0.4)",
+                                                        transition: "color 0.2s ease",
+                                                    }}
+                                                />
+                                            </Box>
+                                        </Badge>
+                                        <Typography
+                                            level="body-xs"
+                                            sx={{
+                                                mt: 0.5,
+                                                fontSize: "0.65rem",
+                                                fontWeight: isActive ? 600 : 500,
+                                                color: isActive
+                                                    ? color
+                                                    : isDark
+                                                      ? "rgba(255,255,255,0.55)"
+                                                      : "rgba(0,0,0,0.5)",
                                                 transition: "all 0.2s ease",
                                             }}
                                         >
-                                            <Icon
-                                                sx={{
-                                                    fontSize: 20,
-                                                    color: isActive
-                                                        ? color
-                                                        : isDark
-                                                          ? "rgba(255,255,255,0.45)"
-                                                          : "rgba(0,0,0,0.4)",
-                                                    transition: "color 0.2s ease",
-                                                }}
-                                            />
-                                        </Box>
-                                    </Badge>
-                                    <Typography
-                                        level="body-xs"
-                                        sx={{
-                                            mt: 0.5,
-                                            fontSize: "0.65rem",
-                                            fontWeight: isActive ? 600 : 500,
-                                            color: isActive
-                                                ? color
-                                                : isDark
-                                                  ? "rgba(255,255,255,0.55)"
-                                                  : "rgba(0,0,0,0.5)",
-                                            transition: "all 0.2s ease",
-                                        }}
-                                    >
-                                        {item.label}
-                                    </Typography>
-                                </ListItemButton>
+                                            {item.label}
+                                        </Typography>
+                                    </ListItemButton>
+                                </Tooltip>
                             </ListItem>
                         );
                     })}
