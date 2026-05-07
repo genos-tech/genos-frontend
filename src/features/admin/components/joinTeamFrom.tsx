@@ -340,7 +340,7 @@ const JoinTeamContent = () => {
                         display: "flex",
                         flexDirection: "column",
                         gap: 3,
-                        width: 480,
+                        width: { xs: "100%", md: 480 },
                         maxWidth: "100%",
                         mx: "auto",
                     }}

@@ -166,7 +166,7 @@ const SignInContent = () => {
                         display: "flex",
                         flexDirection: "column",
                         gap: 2,
-                        width: 420,
+                        width: { xs: "100%", md: 420 },
                         maxWidth: "100%",
                         mx: "auto",
                     }}
