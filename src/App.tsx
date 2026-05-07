@@ -106,11 +106,21 @@ export const App = () => {
     useThreadTaskHandling({ useCM, useTM });
 
     // Global keyboard shortcut for switching services. Modifier is Ctrl+Cmd
-    // on Mac, Ctrl+Alt on Windows/Linux; combine with a letter (I/C/T/N) to
-    // jump directly, or with ArrowLeft/ArrowRight to cycle through services
-    // via the Cmd+Tab–style overlay (commits on modifier release).
+    // on Mac, Ctrl+Alt on Windows/Linux. Letter shortcuts now compose the
+    // navigation with a creation side effect: T opens Tasks and starts a
+    // new task; N opens Notes and creates a new top-level My Note. The
+    // Cmd+Tab–style cycle gesture (hold Cmd, tap Ctrl) is unchanged.
     const { previewIndex: serviceSwitcherPreviewIndex, mruOrder: serviceSwitcherMruOrder } =
-        useGlobalServiceShortcut();
+        useGlobalServiceShortcut({
+            onOpenTasksAndCreate: () => {
+                navigate("/home/tasks");
+                useTM.handleCreateTask();
+            },
+            onOpenNotesAndCreate: () => {
+                navigate("/home/notes");
+                void useNM.handleCreateNewMyNote(null);
+            },
+        });
 
     // Click-to-open: jump to the chat / thread / task / inbox that the
     // notification refers to. Lives here because this is the layer that has

@@ -354,6 +354,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                 }}
             >
                 <ListItemButton
+                    data-chat-list-key={`activity-${activity.activityId}`}
                     onClick={onClickHandler}
                     sx={{
                         flexDirection: "column",

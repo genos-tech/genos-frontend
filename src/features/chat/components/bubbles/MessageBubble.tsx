@@ -19,6 +19,7 @@ import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../
 import { ReactionProps } from "../../../../types/common";
 import { TaskCommentProps, TaskProps } from "../../../../types/tasks";
 import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
+import { isMac } from "../../../../utils/platform";
 import { loadSpecificTaskByThreadId } from "../../../tasks/services/loadSpecificTaskByThreadId";
 import { loadSpecificThreadMessages } from "../../services/loadSpecificThreadMessages";
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
@@ -127,8 +128,19 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         }
     };
 
-    // Handle message click to update URL
-    const handleMessageClick = () => {
+    // Handle message click to update URL.
+    //
+    // Cmd-click (mac) / Alt-click (other) is a power-user shortcut that
+    // opens the message's thread without navigating to the message URL —
+    // it short-circuits to `replayHandler`, which is the same code path
+    // the bubble's "reply" button uses (loads thread messages, opens the
+    // thread pane, navigates to the `/thread/...` URL).
+    const handleMessageClick = (e: React.MouseEvent) => {
+        if (e.metaKey || e.altKey) {
+            replayHandler(e);
+            return;
+        }
+
         const typePath = CHAT_TYPE_PATH[chat.chatType];
         if (typePath) {
             // For PM (chatType 3), use taskId instead of messageId to match the indexMap key format
@@ -589,7 +601,13 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                         />
                     )}
                     <Tooltip
-                        title={chat.chatType === 3 ? "Click to open task" : undefined}
+                        title={
+                            <>
+                                {chat.chatType === 3 ? "Click to open task" : null}
+                                {chat.chatType === 3 ? <br /> : null}
+                                {`${isMac() ? "\u2318" : "Alt"}+Click to open thread`}
+                            </>
+                        }
                         placement="right"
                         variant="soft"
                     >

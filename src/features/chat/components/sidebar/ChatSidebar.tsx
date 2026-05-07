@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import GroupsIcon from "@mui/icons-material/Groups";
@@ -31,6 +31,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
+import { isMac } from "../../../../utils/platform";
 import { useChatRouting } from "../../hooks/useChatRouting";
 import { ModalCreateGM } from "../modals/ModalCreateGM";
 import { ModalCreateMDM } from "../modals/ModalCreateMDM";
@@ -51,7 +52,9 @@ const CHAT_PANE_TYPES = {
 
 // Navigation item configuration
 // Note: MDM (Multi-user DM) is now integrated into DM section, not shown as separate nav item
-const NAV_ITEMS = [
+// Exported so the chat list keyboard-shortcut handler in `ChatList.tsx`
+// shares the same tab order — keep them in sync.
+export const NAV_ITEMS = [
     {
         type: CHAT_PANE_TYPES.DM,
         icon: PersonRoundedIcon,
@@ -163,6 +166,46 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
         localStorage.setItem("currentChatPaneType", type.toString());
         localStorage.setItem("lastChatType", type.toString());
     };
+
+    // Cmd/Alt + Shift + ArrowLeft/Right cycles between NAV_ITEMS tabs.
+    // The matching ArrowUp/Down (next/prev chat list item) lives in
+    // `ChatList.tsx` because that component owns the per-tab list state.
+    // We deliberately bail out when the event target is an editable
+    // element so the platform Cmd+Shift+Arrow text-selection shortcut
+    // keeps working in the composer / search box.
+    useEffect(() => {
+        const mac = isMac();
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            const holdHeld = mac ? e.metaKey : e.altKey;
+            const wrongModifierHeld = mac ? e.altKey : e.metaKey;
+            if (!holdHeld || !e.shiftKey || wrongModifierHeld || e.ctrlKey) return;
+            if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+
+            const target = e.target as HTMLElement | null;
+            if (
+                target &&
+                (target.matches?.("input, textarea, [contenteditable=true]") ||
+                    target.closest?.("[contenteditable=true]"))
+            ) {
+                return;
+            }
+
+            const currentIdx = NAV_ITEMS.findIndex(
+                (item) => item.type === useCM.currentChatPaneType
+            );
+            if (currentIdx === -1) return;
+
+            e.preventDefault();
+            const delta = e.key === "ArrowRight" ? 1 : -1;
+            const nextIdx = (currentIdx + delta + NAV_ITEMS.length) % NAV_ITEMS.length;
+            handleNavClick(NAV_ITEMS[nextIdx].type);
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [useCM.currentChatPaneType]);
 
     return (
         <Box sx={{ display: "flex", height: "100dvh" }}>
@@ -497,6 +540,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             actions={{ setIsToDoVisible }}
                             data={{ myself, setMyself }}
                             state={{ showOnlyUnreadItems, incompleteTodoCount, isToDoVisible }}
+                            chatRouting={chatRouting}
                         />
                     )}
 
@@ -514,6 +558,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             actions={{ setIsToDoVisible }}
                             data={{ myself, setMyself }}
                             state={{ showOnlyUnreadItems, incompleteTodoCount, isToDoVisible }}
+                            chatRouting={chatRouting}
                         />
                     )}
 
@@ -531,6 +576,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             actions={{ setIsToDoVisible }}
                             data={{ myself, setMyself }}
                             state={{ showOnlyUnreadItems, incompleteTodoCount, isToDoVisible }}
+                            chatRouting={chatRouting}
                         />
                     )}
 
@@ -548,6 +594,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             actions={{ setIsToDoVisible }}
                             data={{ myself, setMyself }}
                             state={{ showOnlyUnreadItems, incompleteTodoCount, isToDoVisible }}
+                            chatRouting={chatRouting}
                         />
                     )}
 
@@ -565,6 +612,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             actions={{ setIsToDoVisible }}
                             data={{ myself, setMyself }}
                             state={{ showOnlyUnreadItems, incompleteTodoCount, isToDoVisible }}
+                            chatRouting={chatRouting}
                         />
                     )}
                 </Box>
