@@ -137,6 +137,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.log("[AUTH] Starting token refresh retry cycle");
 
         const attemptRefresh = async () => {
+            // Return if the user is on the signin or signup page.
+            if (window.location.pathname === "/signin" || window.location.pathname === "/signup") {
+                return;
+            }
+
             const outcome = await refreshAccessToken();
 
             if (outcome === "ok") {
