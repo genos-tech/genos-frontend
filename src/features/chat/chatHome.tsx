@@ -91,7 +91,7 @@ export const ChatHome = (props: ChatHomeProps) => {
     const handleAppendTodo = async (
         todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps
     ) => {
-        const todayTodo: ToDoFactProps | undefined = todos.find(
+        let todayTodo: ToDoFactProps | undefined = todos.find(
             (todo) => todo.dtCreatedOn === getLocalCurrentDate()
         );
         if (!todayTodo) {
@@ -104,6 +104,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                 }
             );
             if (todoContent) {
+                todayTodo = todoContent;
                 setTodos((prev) => [todoContent, ...prev]);
                 setIsExistingTodaysTodo(true);
             }
@@ -231,7 +232,7 @@ export const ChatHome = (props: ChatHomeProps) => {
             <Box sx={{ display: "flex", minHeight: "100dvh", flex: 1, minWidth: 0 }}>
                 <Snackbar
                     anchorOrigin={{ vertical: "top", horizontal: "right" }}
-                    autoHideDuration={3000}
+                    autoHideDuration={1500}
                     color="success"
                     open={todoAddedFromMessageOpen}
                     variant="soft"
