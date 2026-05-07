@@ -3,6 +3,7 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
+import TipsAndUpdatesRoundedIcon from "@mui/icons-material/TipsAndUpdatesRounded";
 import { Box, Button, Chip, Stack, Tooltip, Typography, useColorScheme } from "@mui/joy";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
@@ -82,7 +83,10 @@ export const ToDoPane = (props: ToDoPaneProps) => {
     return (
         <Box
             sx={{
-                height: "100dvh",
+                // Subtract the parent chat header height (MainChatPaneHeader / SubChatPaneHeader
+                // both have minHeight: 64px) so the pane fits inside its actual allocated space
+                // and the Pro Tip footer below sits at the real bottom of the visible area.
+                height: "calc(100dvh - 64px)",
                 display: "flex",
                 flexDirection: "column",
                 background: isDark
@@ -390,6 +394,64 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                         </Stack>
                     );
                 })()}
+            </Box>
+
+            {/* Pro Tip at the very bottom of the ToDoPane */}
+            <Box
+                sx={{
+                    mt: "auto",
+                    px: 2.5,
+                    py: 2,
+                    borderTop: "1px solid",
+                    borderColor: isDark ? "rgba(99,102,241,0.15)" : "rgba(99,102,241,0.1)",
+                    background: isDark
+                        ? "linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(147,51,234,0.08) 100%)"
+                        : "linear-gradient(135deg, rgba(59,130,246,0.06) 0%, rgba(147,51,234,0.06) 100%)",
+                }}
+            >
+                <Stack alignItems="center" direction="row" spacing={2}>
+                    <Box
+                        sx={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: "10px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexShrink: 0,
+                            backgroundColor: isDark
+                                ? "rgba(99,102,241,0.15)"
+                                : "rgba(99,102,241,0.1)",
+                        }}
+                    >
+                        <TipsAndUpdatesRoundedIcon
+                            sx={{
+                                fontSize: 22,
+                                color: isDark ? "#a5b4fc" : "#6366f1",
+                            }}
+                        />
+                    </Box>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography
+                            level="title-sm"
+                            sx={{
+                                fontWeight: 600,
+                                color: isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.8)",
+                                mb: 0.25,
+                            }}
+                        >
+                            Pro Tip
+                        </Typography>
+                        <Typography
+                            level="body-sm"
+                            sx={{
+                                color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.55)",
+                            }}
+                        >
+                            Double click on a message to add it to your todo
+                        </Typography>
+                    </Box>
+                </Stack>
             </Box>
         </Box>
     );
