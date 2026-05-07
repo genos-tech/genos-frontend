@@ -351,15 +351,6 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
             visible: true,
         },
         {
-            id: "copyLink",
-            label: "Copy message link",
-            icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
-            onClick: handleCopyLinkClick,
-            color: { light: "#059669", dark: "#34d399" },
-            hoverBg: { light: "rgba(5,150,105,0.12)", dark: "rgba(52,211,153,0.18)" },
-            visible: true,
-        },
-        {
             id: "flag",
             label: isFlagged ? "Remove flag" : "Flag for later",
             icon: <FlagRoundedIcon sx={{ fontSize: 18 }} />,
@@ -372,6 +363,15 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
                 : { light: "rgba(245,158,11,0.12)", dark: "rgba(251,191,36,0.18)" },
             visible: true,
             active: isFlagged,
+        },
+        {
+            id: "copyLink",
+            label: "Copy message link",
+            icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
+            onClick: handleCopyLinkClick,
+            color: { light: "#059669", dark: "#34d399" },
+            hoverBg: { light: "rgba(5,150,105,0.12)", dark: "rgba(52,211,153,0.18)" },
+            visible: true,
         },
         {
             id: "edit",

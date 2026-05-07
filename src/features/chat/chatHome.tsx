@@ -167,6 +167,16 @@ export const ChatHome = (props: ChatHomeProps) => {
         setTodoAddedFromMessageOpen(true);
     };
 
+    // Task preview closed as default, but once it's opened, it should stay open.
+    const [ignoreOnce, setIgnoreOnce] = useState<boolean>(true);
+    const [initialTaskPreviewVisible, setInitialTaskPreviewVisible] = useState<boolean>(false);
+    useEffect(() => {
+        if (!ignoreOnce && useTM.isTaskPreviewVisible === true) {
+            setInitialTaskPreviewVisible(true);
+        }
+        setIgnoreOnce(false);
+    }, [useTM.isTaskPreviewVisible, useTM.currentPreviewTaskId]);
+
     // Add a new todo from a message
     useEffect(() => {
         if (todoFromMessageBubble) {
@@ -405,7 +415,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                         so the gate has to accept either case. Without the
                         milestone branch, freshly-created milestones don't
                         render here. Mirrors TaskHomeLayout.tsx. */}
-                    {useTM.isTaskPreviewVisible === true &&
+                    {initialTaskPreviewVisible &&
+                        useTM.isTaskPreviewVisible === true &&
                         (useTM.currentPreviewTask || useTM.currentPreviewKind === "milestone") && (
                             <>
                                 <ResizeHandle key="task-preview-resize-handle" />

@@ -202,9 +202,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                 {unreadActivityCount > 0 && (
                     <Tooltip
                         size="sm"
-                        title={`Mark ${unreadActivityCount} unread ${
-                            unreadActivityCount === 1 ? "activity" : "activities"
-                        } in this chat as read`}
+                        title={`Mark all in this chat as read`}
                         variant="soft"
                         sx={{ borderRadius: "8px" }}
                     >
@@ -213,7 +211,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                             variant="plain"
                             sx={actionButtonStyle}
                             onClick={() => markAllAsRead(chat.chatType, chat.chatId)}
-                            aria-label="Mark all activity in this chat as read"
+                            aria-label="Mark all in this chat as read"
                         >
                             <DoneAllRoundedIcon sx={{ fontSize: 18, color: styles.accentColor }} />
                         </IconButton>
