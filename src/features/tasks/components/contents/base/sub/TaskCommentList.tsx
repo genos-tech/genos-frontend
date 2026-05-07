@@ -11,6 +11,7 @@ import { TeamManagementState } from "../../../../../../hooks/common/useTeamManag
 import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../../../types/admin";
+import { MessageProps, ThreadMessageProps } from "../../../../../../types/chat";
 import { TaskCommentProps } from "../../../../../../types/tasks";
 import {
     useScrollToBottomOnNewTaskComment,
@@ -53,6 +54,9 @@ type TaskCommentListProps = {
      * this id renders in the focused palette, and Virtuoso scrolls it
      * into view. */
     focusedCommentId?: number;
+    setTodoFromMessageBubble?: (
+        todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps
+    ) => void;
 };
 
 const countLines = (nodes: any[]): number => {
@@ -98,6 +102,7 @@ export const TaskCommentList = ({
     fillContainer = false,
     commentLinkBuilder,
     focusedCommentId,
+    setTodoFromMessageBubble,
 }: TaskCommentListProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -206,6 +211,7 @@ export const TaskCommentList = ({
                                 currentProjectName={currentProjectName ?? undefined}
                                 isFocused={comment.commentId === focusedCommentId}
                                 onCommentClick={buildCommentClickHandler(comment.commentId)}
+                                setTodoFromMessageBubble={setTodoFromMessageBubble}
                             />
                         );
                     }}
@@ -242,6 +248,7 @@ export const TaskCommentList = ({
                             currentProjectName={currentProjectName ?? undefined}
                             isFocused={comment.commentId === focusedCommentId}
                             onCommentClick={buildCommentClickHandler(comment.commentId)}
+                            setTodoFromMessageBubble={setTodoFromMessageBubble}
                         />
                     );
                 }}

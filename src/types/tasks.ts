@@ -47,6 +47,7 @@ export type TaskEffortLevelProps = {
 };
 
 export type TaskCommentProps = {
+    projectId: number | null;
     taskId: number;
     senderId: string;
     senderName: string;

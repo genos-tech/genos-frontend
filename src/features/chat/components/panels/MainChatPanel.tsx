@@ -1,4 +1,4 @@
-import { Box, useColorScheme } from "@mui/joy";
+import { Box } from "@mui/joy";
 import { Panel } from "react-resizable-panels";
 
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -7,15 +7,20 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
-import { ToDoFactProps } from "../../../../types/chat";
+import { MessageProps, ThreadMessageProps, ToDoFactProps } from "../../../../types/chat";
+import { TaskCommentProps } from "../../../../types/tasks";
+import { ResizeHandle } from "../../../notes/common/components/ResizeHandle";
 import { MessagesPane } from "../../MainChatPane";
 import { SelectChatPanel } from "./SelectChatPanel";
-import { ResizeHandle } from "../../../notes/common/components/ResizeHandle";
 
 interface MainChatPanelProps {
     useCM: ChatManagementState;
     useTM: TaskManagementState;
     usePM: ProjectManagementState;
+    todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps | null;
+    setTodoFromMessageBubble: (
+        todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps
+    ) => void;
     useTEM: TeamManagementState;
     myself: UserProps;
     currentMainChatId: number;
@@ -50,13 +55,13 @@ export const MainChatPanel = ({
     setIsToDoVisible,
     todos,
     setTodos,
+    todoFromMessageBubble,
+    setTodoFromMessageBubble,
     setIsExistingTodaysTodo,
     socket,
     setMyself,
     useUISM,
 }: MainChatPanelProps) => {
-    const { mode } = useColorScheme();
-
     return (
         <Panel id={"4"} maxSize={80} minSize={30} order={4} onResize={setMainChatPanelSize}>
             {useCM.currentMainChat && useCM.currentMainChat.chatId !== -1 && (
@@ -79,10 +84,19 @@ export const MainChatPanel = ({
                     useUISM={useUISM}
                     useTM={useTM}
                     usePM={usePM}
+                    setTodoFromMessageBubble={setTodoFromMessageBubble}
                 />
             )}
             {!(useCM.currentMainChat && useCM.currentMainChat.chatId !== -1) && (
-                <Box sx={{ height: "100%", display: "flex", justifyContent: "center", alignItems: "center", width: "100%" }}>
+                <Box
+                    sx={{
+                        height: "100%",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        width: "100%",
+                    }}
+                >
                     <ResizeHandle key="select-chat-resize-handle" />
                     <SelectChatPanel setMainChatPanelSize={setMainChatPanelSize} />
                 </Box>

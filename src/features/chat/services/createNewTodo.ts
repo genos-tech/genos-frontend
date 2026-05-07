@@ -1,8 +1,12 @@
+import { useState } from "react";
+import { PartialBlock } from "@blocknote/core";
 import axios from "axios";
 
 import { authApi } from "../../../services/api";
 import { UserProps } from "../../../types/admin";
+import { MessageProps, ThreadMessageProps, ToDoFactProps } from "../../../types/chat";
 import { getLocalCurrentDate } from "../../../utils/dateUtils";
+import { updateTodo } from "./updateTodo";
 
 export const createNewTodo = async (
     accessToken: string | null,
@@ -44,6 +48,106 @@ export const createNewTodo = async (
             }
         } else {
             console.error("Unexpected error:", error);
+        }
+    }
+};
+
+const createNewTodoItem = (
+    chatType: number,
+    chatId: number,
+    threadId: number | null,
+    messageId: number,
+    messageText: string,
+    isThread: boolean
+) => {
+    const currentDomain = window.location.origin;
+    let href = "";
+    let fromText = "";
+    if (chatType === 1) {
+        href = `${currentDomain}/home/chat/dm/${chatId}/message/${messageId}`;
+        fromText = "[Todo from DM] ";
+        if (isThread && threadId) {
+            href = `${currentDomain}/home/chat/dm/${chatId}/thread/${threadId}/message/${messageId}`;
+            fromText = "[Todo from DM Thread] ";
+        }
+    } else if (chatType === 2) {
+        href = `${currentDomain}/home/chat/gm/${chatId}/message/${messageId}`;
+        fromText = "[Todo from GM] ";
+        if (isThread && threadId) {
+            href = `${currentDomain}/home/chat/gm/${chatId}/thread/${threadId}/message/${messageId}`;
+            fromText = "[Todo from GM Thread] ";
+        }
+    } else if (chatType === 3 && threadId) {
+        // Only comment
+        href = `${currentDomain}/home/chat/pm/${chatId}/thread/${threadId}/comment/${messageId}`;
+        fromText = "[Todo from Task Comment] ";
+    } else if (chatType === 4) {
+        href = `${currentDomain}/home/chat/mdm/${chatId}/message/${messageId}`;
+        fromText = "[Todo from DM] ";
+        if (isThread && threadId) {
+            href = `${currentDomain}/home/chat/mdm/${chatId}/thread/${threadId}/message/${messageId}`;
+            fromText = "[Todo from DM Thread] ";
+        }
+    }
+
+    if (href === "") {
+        return null;
+    }
+
+    return {
+        type: "checkListItem",
+        props: {
+            checked: false,
+            textColor: "default",
+            textAlignment: "left",
+            backgroundColor: "default",
+        },
+        content: [
+            { text: fromText, type: "text", styles: { bold: true, textColor: "blue" } },
+            {
+                href: href,
+                type: "link",
+                content: [{ text: `${messageText}`, type: "text", styles: {} }],
+            },
+        ],
+        children: [],
+    };
+};
+
+// Append todo content to an existing todo
+export const appendTodoContent = async (
+    accessToken: string | null,
+    myself: UserProps,
+    todos: ToDoFactProps[],
+    setTodos: (todos: ToDoFactProps[]) => void,
+    todayTodo: ToDoFactProps,
+    chatType: number,
+    chatId: number,
+    threadId: number | null,
+    messageId: number,
+    isThread: boolean,
+    messageText: string
+) => {
+    const newTodoContent = createNewTodoItem(
+        chatType,
+        chatId,
+        threadId,
+        messageId,
+        messageText,
+        isThread
+    );
+    if (newTodoContent) {
+        const updatedTodo = await updateTodo(accessToken, myself, {
+            ...todayTodo,
+            todoContent: [
+                ...todayTodo.todoContent.slice(0, -1),
+                newTodoContent,
+                ...todayTodo.todoContent.slice(-1),
+            ],
+        });
+        if (updatedTodo) {
+            // Replace new todo at the first position
+            setTodos([updatedTodo, ...todos.filter((todo) => todo.todoId !== updatedTodo.todoId)]);
         }
     }
 };

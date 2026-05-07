@@ -7,7 +7,8 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
-import { ToDoFactProps } from "../../../../types/chat";
+import { MessageProps, ThreadMessageProps, ToDoFactProps } from "../../../../types/chat";
+import { TaskCommentProps } from "../../../../types/tasks";
 import { MessagesSubPane } from "../../SubChatPane";
 
 interface SubChatPanelProps {
@@ -29,6 +30,10 @@ interface SubChatPanelProps {
     socket: any;
     setMyself: (me: UserProps) => void;
     useUISM: UIStateManagementState;
+    todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps | null;
+    setTodoFromMessageBubble: (
+        todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps
+    ) => void;
 }
 
 export const SubChatPanel = ({
@@ -50,6 +55,8 @@ export const SubChatPanel = ({
     socket,
     setMyself,
     useUISM,
+    todoFromMessageBubble,
+    setTodoFromMessageBubble,
 }: SubChatPanelProps) => {
     const { mode } = useColorScheme();
 
@@ -82,6 +89,7 @@ export const SubChatPanel = ({
                     useUISM={useUISM}
                     useTM={useTM}
                     usePM={usePM}
+                    setTodoFromMessageBubble={setTodoFromMessageBubble}
                 />
             </Box>
         </Panel>

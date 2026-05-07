@@ -42,6 +42,7 @@ import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprin
 import { useTaskEditState } from "../../../../hooks/tasks/useTaskEditState";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
+import { MessageProps, ThreadMessageProps } from "../../../../types/chat";
 import { TaskNoteProps } from "../../../../types/notes";
 import {
     TagListProps,
@@ -107,11 +108,25 @@ type TaskPreviewProps = {
     useTEM: TeamManagementState;
     useCM: ChatManagementState;
     useNM: NoteManagementState;
+    setTodoFromMessageBubble?: (
+        todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps
+    ) => void;
 };
 
 export const TaskPreview = (props: TaskPreviewProps) => {
-    const { socket, myself, setMyself, usePM, useNM, useTM, useSM, useUISM, useTEM, useCM } =
-        props;
+    const {
+        socket,
+        myself,
+        setMyself,
+        usePM,
+        useNM,
+        useTM,
+        useSM,
+        useUISM,
+        useTEM,
+        useCM,
+        setTodoFromMessageBubble,
+    } = props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -723,6 +738,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                             useUISM={useUISM}
                             uploadedFiles={taskEditState.uploadedFiles}
                             useNM={useNM}
+                            setTodoFromMessageBubble={setTodoFromMessageBubble}
                         />
                     </Box>
                 </Sheet>

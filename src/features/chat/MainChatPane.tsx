@@ -22,7 +22,14 @@ import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
-import { ChatProps, ThreadProps, ToDoFactProps } from "../../types/chat";
+import {
+    ChatProps,
+    MessageProps,
+    ThreadMessageProps,
+    ThreadProps,
+    ToDoFactProps,
+} from "../../types/chat";
+import { TaskCommentProps } from "../../types/tasks";
 import { ToDoPane } from "./ToDoPane";
 
 type MessagesPaneProps = {
@@ -44,6 +51,9 @@ type MessagesPaneProps = {
     incompleteTodoCount: number;
     useUISM: UIStateManagementState;
     useTM: TaskManagementState;
+    setTodoFromMessageBubble: (
+        todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps
+    ) => void;
 };
 
 export const MessagesPane = (props: MessagesPaneProps) => {
@@ -66,6 +76,7 @@ export const MessagesPane = (props: MessagesPaneProps) => {
         todos,
         useCM,
         useTM,
+        setTodoFromMessageBubble,
     } = props;
 
     const { mode } = useColorScheme();
@@ -234,34 +245,35 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                     scrollManagement.virtuosoRef as React.RefObject<VirtuosoHandle>
                                 }
                                 useTM={useTM}
+                                setTodoFromMessageBubble={setTodoFromMessageBubble}
                             />
 
                             {useCM.currentMainChat?.chatType !== 3 && (
-                                    <ChatEditorSection
-                                        chat={useCM.currentMainChat as ChatProps | ThreadProps}
-                                        useCM={useCM}
-                                        editTargetMessage={messageManagement.editTargetMessage}
-                                        isInEdit={messageManagement.isInEdit}
-                                        isThread={false}
-                                        myself={myself}
-                                        numEditorLines={messageManagement.numEditorLines}
-                                        setCurrentThreadChat={undefined}
-                                        setIsInEdit={messageManagement.setIsInEdit}
-                                        setMyself={setMyself}
-                                        setNumEditorLines={messageManagement.setNumEditorLines}
-                                        socket={socket}
-                                        useTEM={useTEM}
-                                        thread={undefined}
-                                        useUISM={useUISM}
-                                        pendingFiles={pendingFiles}
-                                        clearPendingFiles={clearPendingFiles}
-                                        setCurrentChat={
-                                            useCM.setCurrentMainChat as (
-                                                chat: ChatProps | ThreadProps
-                                            ) => void
-                                        }
-                                    />
-                                )}
+                                <ChatEditorSection
+                                    chat={useCM.currentMainChat as ChatProps | ThreadProps}
+                                    useCM={useCM}
+                                    editTargetMessage={messageManagement.editTargetMessage}
+                                    isInEdit={messageManagement.isInEdit}
+                                    isThread={false}
+                                    myself={myself}
+                                    numEditorLines={messageManagement.numEditorLines}
+                                    setCurrentThreadChat={undefined}
+                                    setIsInEdit={messageManagement.setIsInEdit}
+                                    setMyself={setMyself}
+                                    setNumEditorLines={messageManagement.setNumEditorLines}
+                                    socket={socket}
+                                    useTEM={useTEM}
+                                    thread={undefined}
+                                    useUISM={useUISM}
+                                    pendingFiles={pendingFiles}
+                                    clearPendingFiles={clearPendingFiles}
+                                    setCurrentChat={
+                                        useCM.setCurrentMainChat as (
+                                            chat: ChatProps | ThreadProps
+                                        ) => void
+                                    }
+                                />
+                            )}
                         </>
                     )}
                 </Box>

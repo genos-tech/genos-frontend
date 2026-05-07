@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Box, Sheet } from "@mui/joy";
+import { Box, Sheet, Snackbar } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { Socket } from "socket.io-client";
@@ -15,6 +15,9 @@ import { ThreadPanel } from "./components/panels/ThreadPanel";
 import { ResizeHandle } from "./components/shared/ResizeHandle";
 import { ChatSidebar } from "./components/sidebar/ChatSidebar";
 import { useChatRouting } from "./hooks/useChatRouting";
+import { appendTodoContent, createNewTodo } from "./services/createNewTodo";
+import { getFirstLine } from "./utils/common";
+import { defaultTodoContent } from "./utils/defaults";
 
 import { useAuth } from "../../context/AuthContext";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
@@ -29,6 +32,9 @@ import { usePanelSizes } from "../../hooks/usePanelSizes";
 import { useTodos } from "../../hooks/useTodos";
 import { useWindowSize } from "../../hooks/useWindowSize";
 import { UserProps } from "../../types/admin";
+import { MessageProps, ThreadMessageProps, ToDoFactProps } from "../../types/chat";
+import { TaskCommentProps } from "../../types/tasks";
+import { getLocalCurrentDate } from "../../utils/dateUtils";
 import { ModalCreateProject } from "../tasks/components/modals/ModalCreateProject";
 import { ModalCreateTag } from "../tasks/components/modals/ModalCreateTag";
 
@@ -76,6 +82,96 @@ export const ChatHome = (props: ChatHomeProps) => {
 
     // URL-based routing
     const chatRouting = useChatRouting({ useCM, useTM, myself });
+
+    const [todoFromMessageBubble, setTodoFromMessageBubble] = useState<
+        MessageProps | ThreadMessageProps | TaskCommentProps | null
+    >(null);
+    const [todoAddedFromMessageOpen, setTodoAddedFromMessageOpen] = useState<boolean>(false);
+
+    const handleAppendTodo = async (
+        todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps
+    ) => {
+        const todayTodo: ToDoFactProps | undefined = todos.find(
+            (todo) => todo.dtCreatedOn === getLocalCurrentDate()
+        );
+        if (!todayTodo) {
+            const todoContent: ToDoFactProps = await createNewTodo(
+                accessToken,
+                myself,
+                defaultTodoContent,
+                (error) => {
+                    console.error(error);
+                }
+            );
+            if (todoContent) {
+                setTodos((prev) => [todoContent, ...prev]);
+                setIsExistingTodaysTodo(true);
+            }
+        }
+
+        if (!todayTodo) {
+            return;
+        }
+
+        if ("messageIdWithChatIdAndThreadId" in todoFromMessageBubble) {
+            appendTodoContent(
+                accessToken,
+                myself,
+                todos,
+                setTodos,
+                todayTodo,
+                todoFromMessageBubble.chatType,
+                todoFromMessageBubble.chatId,
+                todoFromMessageBubble.threadId,
+                todoFromMessageBubble.messageId,
+                true,
+                getFirstLine(todoFromMessageBubble.content[0])
+            );
+        } else if ("messageIdWithChatId" in todoFromMessageBubble) {
+            // MessageProps
+            appendTodoContent(
+                accessToken,
+                myself,
+                todos,
+                setTodos,
+                todayTodo,
+                todoFromMessageBubble.chatType,
+                todoFromMessageBubble.chatId,
+                null,
+                todoFromMessageBubble.messageId,
+                false,
+                getFirstLine(todoFromMessageBubble.content[0])
+            );
+        } else if ("commentId" in todoFromMessageBubble) {
+            // TaskCommentProps
+            if (!todoFromMessageBubble.projectId) {
+                return;
+            }
+            appendTodoContent(
+                accessToken,
+                myself,
+                todos,
+                setTodos,
+                todayTodo,
+                3,
+                todoFromMessageBubble.projectId, // for chatId
+                todoFromMessageBubble.taskId, // for threadId
+                todoFromMessageBubble.commentId, // for messageId
+                true,
+                getFirstLine(todoFromMessageBubble.commentBody[0])
+            );
+        }
+
+        setTodoFromMessageBubble(null);
+        setTodoAddedFromMessageOpen(true);
+    };
+
+    // Add a new todo from a message
+    useEffect(() => {
+        if (todoFromMessageBubble) {
+            handleAppendTodo(todoFromMessageBubble);
+        }
+    }, [todoFromMessageBubble]);
 
     useEffect(() => {
         localStorage.setItem("isToDoVisible", isToDoVisible.toString());
@@ -133,6 +229,24 @@ export const ChatHome = (props: ChatHomeProps) => {
             setCurrentThreadTaskId={setCurrentThreadTaskId}
         >
             <Box sx={{ display: "flex", minHeight: "100dvh", flex: 1, minWidth: 0 }}>
+                <Snackbar
+                    anchorOrigin={{ vertical: "top", horizontal: "right" }}
+                    autoHideDuration={3000}
+                    color="success"
+                    open={todoAddedFromMessageOpen}
+                    variant="soft"
+                    onClose={(event, reason) => {
+                        if (reason === "clickaway") {
+                            return;
+                        }
+                        if (setTodoAddedFromMessageOpen) {
+                            setTodoAddedFromMessageOpen(false);
+                        }
+                    }}
+                >
+                    Todo added from the message.
+                </Snackbar>
+
                 <PanelGroup autoSaveId="conditional" direction="horizontal">
                     {/* Chat Sidebar pane which is always visible */}
                     <Panel id={"1"} maxSize={30} minSize={10} order={1}>
@@ -203,6 +317,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                 useTM={useTM}
                                                 todos={todos}
                                                 useUISM={useUISM}
+                                                todoFromMessageBubble={todoFromMessageBubble}
+                                                setTodoFromMessageBubble={setTodoFromMessageBubble}
                                             />
                                             <ResizeHandle
                                                 key="sub-chat-resize-handle"
@@ -232,6 +348,8 @@ export const ChatHome = (props: ChatHomeProps) => {
                                         useTM={useTM}
                                         todos={todos}
                                         useUISM={useUISM}
+                                        todoFromMessageBubble={todoFromMessageBubble}
+                                        setTodoFromMessageBubble={setTodoFromMessageBubble}
                                     />
                                 </PanelGroup>
                             </Panel>
@@ -254,6 +372,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 useTEM={useTEM}
                                 useTM={useTM}
                                 useUISM={useUISM}
+                                setTodoFromMessageBubble={setTodoFromMessageBubble}
                             />
                         </>
                     )}
@@ -300,6 +419,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                     useTM={useTM}
                                     useSM={useSM}
                                     useUISM={useUISM}
+                                    setTodoFromMessageBubble={setTodoFromMessageBubble}
                                 />
                             </>
                         )}
