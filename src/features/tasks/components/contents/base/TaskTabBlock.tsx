@@ -38,6 +38,7 @@ import { UIStateManagementState } from "../../../../../hooks/common/useUIStateMa
 import { NoteManagementState } from "../../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../../types/admin";
+import { MessageProps, ThreadMessageProps } from "../../../../../types/chat";
 import { TaskNoteProps } from "../../../../../types/notes";
 import {
     AttachmentFileProps,
@@ -103,6 +104,9 @@ type TaskTabBlockProps = {
     useUISM: UIStateManagementState;
     useCM: ChatManagementState;
     useNM: NoteManagementState;
+    setTodoFromMessageBubble?: (
+        todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps
+    ) => void;
 };
 
 export const TaskTabBlock = (props: TaskTabBlockProps) => {
@@ -140,6 +144,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         useTM,
         useTEM,
         useNM,
+        setTodoFromMessageBubble,
     } = props;
 
     const [images, setImages] = useState<FileProps[]>([]);
@@ -165,7 +170,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     const currentTaskId = taskContent?.id;
     const focusedCommentId = useMemo<number | undefined>(() => {
         const parts = location.pathname.split("/").filter(Boolean);
-        if (parts[0] !== "Home" || parts[1] !== "tasks") return undefined;
+        if (parts[0] !== "home" || parts[1] !== "tasks") return undefined;
         const taskIdx = parts.indexOf("task");
         const commentIdx = parts.indexOf("comment");
         if (taskIdx === -1 || commentIdx === -1) return undefined;

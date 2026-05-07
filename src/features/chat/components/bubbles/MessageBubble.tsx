@@ -17,7 +17,7 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
 import { ReactionProps } from "../../../../types/common";
-import { TaskProps } from "../../../../types/tasks";
+import { TaskCommentProps, TaskProps } from "../../../../types/tasks";
 import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
 import { loadSpecificTaskByThreadId } from "../../../tasks/services/loadSpecificTaskByThreadId";
 import { loadSpecificThreadMessages } from "../../services/loadSpecificThreadMessages";
@@ -63,6 +63,9 @@ type MessageBubbleProps = {
     setEditTargetMessage: (value: MessageProps) => void;
     useCM: ChatManagementState;
     useTM: TaskManagementState;
+    setTodoFromMessageBubble: (
+        todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps
+    ) => void;
 };
 
 export const MessageBubble = (props: MessageBubbleProps) => {
@@ -83,6 +86,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         variant,
         useCM,
         useTM,
+        setTodoFromMessageBubble,
     } = props;
 
     const { mode } = useColorScheme();
@@ -137,6 +141,11 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         if (chat.chatType === 3) {
             handleOpenTaskClick();
         }
+    };
+
+    // Handle message double click to add message to to-do
+    const handleAddMessageToToDo = () => {
+        setTodoFromMessageBubble(message);
     };
 
     // Load the thread task if exists
@@ -586,6 +595,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                     >
                         <Sheet
                             onClick={handleMessageClick}
+                            onDoubleClick={handleAddMessageToToDo}
                             sx={{
                                 p: 1.25,
                                 borderRadius: "16px",

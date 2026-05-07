@@ -215,6 +215,8 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                     setOpen={setOpenAddMembers}
                     useCM={useCM}
                     useTEM={useTEM}
+                    useUISM={useUISM}
+                    setMyself={setMyself}
                 />
             )}
         </ListItem>

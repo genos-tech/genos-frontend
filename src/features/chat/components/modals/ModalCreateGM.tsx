@@ -362,7 +362,7 @@ export const ModalCreateGM: React.FC<Props> = ({
                                         isYou={false}
                                         myself={myself}
                                         setMyself={setMyself}
-                                        showNameAndEmail={true}
+                                        showNameAndEmail={false}
                                         socket={socket}
                                         useUISM={useUISM}
                                     />

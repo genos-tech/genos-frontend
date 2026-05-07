@@ -10,6 +10,8 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
+import { MessageProps, ThreadMessageProps } from "../../../../types/chat";
+import { TaskCommentProps } from "../../../../types/tasks";
 import { TaskPreview } from "../../../tasks/components/contents/TaskPreview";
 
 interface TaskPreviewPanelProps {
@@ -27,6 +29,9 @@ interface TaskPreviewPanelProps {
     // a milestone backing row — e.g. via the ThreadChatPaneHeader's
     // "Open Task" button on a milestone-tied thread.
     useSM: SprintMilestoneManagementState;
+    setTodoFromMessageBubble?: (
+        todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps
+    ) => void;
 }
 
 export const TaskPreviewPanel = ({
@@ -40,6 +45,7 @@ export const TaskPreviewPanel = ({
     setMyself,
     useUISM,
     useSM,
+    setTodoFromMessageBubble,
 }: TaskPreviewPanelProps) => {
     const { mode } = useColorScheme();
 
@@ -76,6 +82,7 @@ export const TaskPreviewPanel = ({
                     useUISM={useUISM}
                     useNM={useNM}
                     usePM={usePM}
+                    setTodoFromMessageBubble={setTodoFromMessageBubble}
                 />
             </Box>
         </Panel>

@@ -216,6 +216,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         const commentBodySnapshot = editor.document;
 
         const optimistic = {
+            projectId: task.project?.projectId || null,
             taskId: task.id,
             senderId: myself.userId,
             senderName: myself.userName,

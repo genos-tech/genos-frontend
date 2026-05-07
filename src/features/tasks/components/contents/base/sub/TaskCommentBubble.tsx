@@ -12,6 +12,7 @@ import { ChatManagementState } from "../../../../../../hooks/chats/useChatManage
 import { TeamManagementState } from "../../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../../../types/admin";
+import { MessageProps, ThreadMessageProps } from "../../../../../../types/chat";
 import { ReactionProps } from "../../../../../../types/common";
 import { TaskCommentProps } from "../../../../../../types/tasks";
 import {
@@ -75,6 +76,9 @@ type TaskCommentBubbleProps = {
      * but keeps the bubble reusable) get the original non-clickable
      * behaviour. */
     onCommentClick?: () => void;
+    setTodoFromMessageBubble?: (
+        todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps
+    ) => void;
 };
 
 export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
@@ -92,6 +96,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
         useUISM,
         isFocused = false,
         onCommentClick,
+        setTodoFromMessageBubble,
     } = props;
 
     const { mode } = useColorScheme();
@@ -236,6 +241,14 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                     onMouseEnter={() => setShowUnderBarOption(true)}
                     onMouseLeave={() => setShowUnderBarOption(false)}
                     onClick={onCommentClick}
+                    onDoubleClick={() => {
+                        if (setTodoFromMessageBubble) {
+                            setTodoFromMessageBubble({
+                                ...comment,
+                                projectId: currentProjectId ?? null,
+                            });
+                        }
+                    }}
                     sx={{ cursor: onCommentClick ? "pointer" : "default" }}
                 >
                     <Card

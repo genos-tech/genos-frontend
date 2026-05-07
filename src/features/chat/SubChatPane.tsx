@@ -19,14 +19,30 @@ import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
-import { ChatProps, ThreadProps, ToDoFactProps } from "../../types/chat";
+import {
+    ChatProps,
+    MessageProps,
+    ThreadMessageProps,
+    ThreadProps,
+    ToDoFactProps,
+} from "../../types/chat";
+import { TaskCommentProps } from "../../types/tasks";
 import { ToDoPane } from "./ToDoPane";
 
 const EMPTY_CHAT: ChatProps = {
     chatId: -1,
     chatName: "",
     chatType: 0,
-    dmPartnerUser: { teamId: "", teamName: "", userId: "", userName: "", userEmail: "", avatarImgPath: "", tsLastSeen: "", tsJoined: "" },
+    dmPartnerUser: {
+        teamId: "",
+        teamName: "",
+        userId: "",
+        userName: "",
+        userEmail: "",
+        avatarImgPath: "",
+        tsLastSeen: "",
+        tsJoined: "",
+    },
     lastReadMessageId: 0,
     messages: [],
     latestMessage: undefined as any,
@@ -55,6 +71,9 @@ type MessagesPaneProps = {
     useUISM: UIStateManagementState;
     useCM: ChatManagementState;
     useTM: TaskManagementState;
+    setTodoFromMessageBubble: (
+        todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps
+    ) => void;
 };
 
 export const MessagesSubPane = (props: MessagesPaneProps) => {
@@ -77,6 +96,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
         useTEM,
         todos,
         useTM,
+        setTodoFromMessageBubble,
     } = props;
 
     // File drag-and-drop state
@@ -85,10 +105,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
     const handleDrop = useCallback(createFileDropHandler(setPendingFiles), []);
 
     // Use a stable placeholder when currentSubChat is null so hooks are always called
-    const chatForHooks = useMemo(
-        () => useCM.currentSubChat ?? EMPTY_CHAT,
-        [useCM.currentSubChat]
-    );
+    const chatForHooks = useMemo(() => useCM.currentSubChat ?? EMPTY_CHAT, [useCM.currentSubChat]);
 
     // Use shared hooks (must be called unconditionally)
     const messageManagement = useMessageManagement({ chat: chatForHooks });
@@ -230,6 +247,7 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                                     scrollManagement.virtuosoRef as React.RefObject<VirtuosoHandle>
                                 }
                                 useTM={useTM}
+                                setTodoFromMessageBubble={setTodoFromMessageBubble}
                             />
                             <ChatEditorSection
                                 chat={useCM.currentSubChat as ChatProps | ThreadProps}

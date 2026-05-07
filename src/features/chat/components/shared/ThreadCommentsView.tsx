@@ -10,6 +10,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
+import { MessageProps, ThreadMessageProps } from "../../../../types/chat";
 import { TaskCommentProps, TaskProps } from "../../../../types/tasks";
 import { TaskCommentEditorBlock } from "../../../tasks/components/contents/base/sub/TaskCommentEditorBlock";
 import { TaskCommentList } from "../../../tasks/components/contents/base/sub/TaskCommentList";
@@ -27,6 +28,9 @@ type ThreadCommentsViewProps = {
      * already loads it onto `useTM.currentPreviewTask`; we fall back
      * to the active main-chat metadata when that hasn't hydrated. */
     threadTaskId: number;
+    setTodoFromMessageBubble: (
+        todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps
+    ) => void;
 };
 
 /**
@@ -51,6 +55,7 @@ export const ThreadCommentsView = ({
     useCM,
     useUISM,
     threadTaskId,
+    setTodoFromMessageBubble,
 }: ThreadCommentsViewProps) => {
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
@@ -113,7 +118,7 @@ export const ThreadCommentsView = ({
     const chatId = useCM.currentMainChat?.chatId;
     const focusedCommentId = useMemo<number | undefined>(() => {
         const parts = location.pathname.split("/").filter(Boolean);
-        if (parts[0] !== "Home" || parts[1] !== "chat" || parts[2] !== "pm") return undefined;
+        if (parts[0] !== "home" || parts[1] !== "chat" || parts[2] !== "pm") return undefined;
         const threadIdx = parts.indexOf("thread");
         const commentIdx = parts.indexOf("comment");
         if (threadIdx === -1 || commentIdx === -1) return undefined;
@@ -172,6 +177,7 @@ export const ThreadCommentsView = ({
                     fillContainer
                     commentLinkBuilder={chatId !== undefined ? commentLinkBuilder : undefined}
                     focusedCommentId={focusedCommentId}
+                    setTodoFromMessageBubble={setTodoFromMessageBubble}
                 />
             </Box>
             <Box

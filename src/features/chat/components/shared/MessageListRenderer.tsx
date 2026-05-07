@@ -9,6 +9,7 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
+import { TaskCommentProps } from "../../../../types/tasks";
 import { extractMMDD, extractYYYYMMDD, getTimeDiffSeconds } from "../../../../utils/dateUtils";
 import { useScrollToBottomOnChatChange } from "../../hooks/messageBubbleHooks";
 import { handleAtTop } from "../../services/handleBubblePositionAction";
@@ -45,6 +46,9 @@ interface MessageListRendererProps {
      * the calculated height — the parent's `flex: 1, minHeight: 0`
      * already does that work. */
     fillContainer?: boolean;
+    setTodoFromMessageBubble: (
+        todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps
+    ) => void;
 }
 
 export const MessageListRenderer = ({
@@ -72,6 +76,7 @@ export const MessageListRenderer = ({
     useCM,
     useTM,
     fillContainer = false,
+    setTodoFromMessageBubble,
 }: MessageListRendererProps) => {
     useScrollToBottomOnChatChange(
         virtuosoRef,
@@ -270,6 +275,7 @@ export const MessageListRenderer = ({
                                         thread={chat as ThreadProps}
                                         useUISM={useUISM}
                                         variant={isYou ? "sent" : "received"}
+                                        setTodoFromMessageBubble={setTodoFromMessageBubble}
                                     />
                                 ) : (
                                     <MessageBubble
@@ -289,6 +295,7 @@ export const MessageListRenderer = ({
                                         useUISM={useUISM}
                                         variant={isYou ? "sent" : "received"}
                                         useTM={useTM}
+                                        setTodoFromMessageBubble={setTodoFromMessageBubble}
                                     />
                                 )}
                             </Stack>

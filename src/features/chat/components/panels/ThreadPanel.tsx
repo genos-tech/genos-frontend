@@ -9,6 +9,8 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
+import { MessageProps, ThreadMessageProps } from "../../../../types/chat";
+import { TaskCommentProps } from "../../../../types/tasks";
 import { ThreadPane } from "../../ThreadChatPane";
 
 interface ThreadPanelProps {
@@ -23,6 +25,9 @@ interface ThreadPanelProps {
     setMyself: (me: UserProps) => void;
     useUISM: UIStateManagementState;
     usePM: ProjectManagementState;
+    setTodoFromMessageBubble: (
+        todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps
+    ) => void;
 }
 
 export const ThreadPanel = ({
@@ -37,6 +42,7 @@ export const ThreadPanel = ({
     socket,
     setMyself,
     useUISM,
+    setTodoFromMessageBubble,
 }: ThreadPanelProps) => {
     const { mode } = useColorScheme();
 
@@ -63,6 +69,7 @@ export const ThreadPanel = ({
                         useTM={useTM}
                         useUISM={useUISM}
                         useNM={useNM}
+                        setTodoFromMessageBubble={setTodoFromMessageBubble}
                     />
                 )}
             </Box>

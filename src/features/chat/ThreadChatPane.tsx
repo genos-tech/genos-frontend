@@ -23,7 +23,8 @@ import { UIStateManagementState } from "../../hooks/common/useUIStateManagement"
 import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
-import { ChatProps, ThreadProps } from "../../types/chat";
+import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../types/chat";
+import { TaskCommentProps } from "../../types/tasks";
 
 type MessagesPaneProps = {
     useTEM: TeamManagementState;
@@ -37,6 +38,9 @@ type MessagesPaneProps = {
     useTM: TaskManagementState;
     useCM: ChatManagementState;
     useNM: NoteManagementState;
+    setTodoFromMessageBubble: (
+        todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps
+    ) => void;
 };
 
 export const ThreadPane = (props: MessagesPaneProps) => {
@@ -52,6 +56,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         useTM,
         useCM,
         useNM,
+        setTodoFromMessageBubble,
     } = props;
 
     const { setCurrentThreadTaskId } = useChatContext();
@@ -186,6 +191,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                         useCM={useCM}
                         useUISM={useUISM}
                         threadTaskId={threadTaskId}
+                        setTodoFromMessageBubble={setTodoFromMessageBubble}
                     />
                 ) : isPmThread ? (
                     // Activities (or PM thread without task): read-only
@@ -222,6 +228,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                         visibleRange={scrollManagement.visibleRange}
                         useTM={useTM}
                         fillContainer
+                        setTodoFromMessageBubble={setTodoFromMessageBubble}
                     />
                 ) : (
                     // Non-PM thread (DM / group chat reply). Keeps the
@@ -255,6 +262,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                             }
                             visibleRange={scrollManagement.visibleRange}
                             useTM={useTM}
+                            setTodoFromMessageBubble={setTodoFromMessageBubble}
                         />
 
                         <ChatEditorSection

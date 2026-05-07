@@ -202,6 +202,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
             setTaskComments([
                 ...taskComments,
                 {
+                    projectId: projectId || null,
                     taskId: taskId,
                     senderId: myself.userId,
                     senderName: myself.userName,

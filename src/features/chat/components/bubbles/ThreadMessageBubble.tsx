@@ -13,8 +13,9 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
-import { ThreadMessageProps, ThreadProps } from "../../../../types/chat";
+import { MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
 import { ReactionProps } from "../../../../types/common";
+import { TaskCommentProps } from "../../../../types/tasks";
 import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
 import { BubbleThreadMoreMenu } from "./BubbleThreadMoreMenu";
@@ -54,6 +55,9 @@ type threadMessageBubbleProps = {
     currentMessageIndex: number;
     setTargetMessageIndex: (value: number) => void;
     useCM: ChatManagementState;
+    setTodoFromMessageBubble: (
+        todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps
+    ) => void;
 };
 
 export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
@@ -74,6 +78,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
         currentMessageIndex,
         setTargetMessageIndex,
         useCM,
+        setTodoFromMessageBubble,
     } = props;
 
     const { mode } = useColorScheme();
@@ -368,6 +373,9 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                     )}
                     <Sheet
                         onClick={handleMessageClick}
+                        onDoubleClick={() => {
+                            setTodoFromMessageBubble(message);
+                        }}
                         sx={{
                             p: 1.25,
                             borderRadius: "16px",

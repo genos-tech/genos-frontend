@@ -18,9 +18,11 @@ import {
 } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
+import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 import { addMembersToChat } from "../../services/addMembersToChat";
@@ -39,6 +41,8 @@ type Props = {
     setOpen: (value: boolean) => void;
     useCM: ChatManagementState;
     useTEM: TeamManagementState;
+    useUISM: UIStateManagementState;
+    setMyself: (value: UserProps) => void;
 };
 
 export const ModalAddMembers: React.FC<Props> = ({
@@ -49,6 +53,8 @@ export const ModalAddMembers: React.FC<Props> = ({
     setOpen,
     useCM,
     useTEM,
+    useUISM,
+    setMyself,
 }) => {
     const { accessToken } = useAuth();
     const [searchQuery, setSearchQuery] = useState("");
@@ -221,9 +227,16 @@ export const ModalAddMembers: React.FC<Props> = ({
                             border: "1px solid rgba(59, 130, 246, 0.2)",
                         }}
                     >
-                        <Avatar size="sm" src={chat.dmPartnerUser.avatarImgPath}>
-                            {chat.dmPartnerUser.userName?.[0]?.toUpperCase()}
-                        </Avatar>
+                        <AvatarWithStatus
+                            avatarUser={useTEM.teamMemberProfiles[chat.dmPartnerUser.userId]}
+                            useCM={useCM}
+                            isYou={myself.userId === chat.dmPartnerUser.userId}
+                            myself={myself}
+                            setMyself={setMyself}
+                            showNameAndEmail={false}
+                            socket={socket}
+                            useUISM={useUISM}
+                        />
                         <Box>
                             <Typography level="body-sm" sx={{ color: "rgba(255, 255, 255, 0.9)" }}>
                                 Current conversation with:
@@ -244,7 +257,10 @@ export const ModalAddMembers: React.FC<Props> = ({
                             border: "1px solid rgba(59, 130, 246, 0.2)",
                         }}
                     >
-                        <Typography level="body-sm" sx={{ color: "rgba(255, 255, 255, 0.9)", mb: 0.5 }}>
+                        <Typography
+                            level="body-sm"
+                            sx={{ color: "rgba(255, 255, 255, 0.9)", mb: 0.5 }}
+                        >
                             Current members:
                         </Typography>
                         <Typography level="body-xs" sx={{ color: "rgba(255, 255, 255, 0.6)" }}>
@@ -372,17 +388,16 @@ export const ModalAddMembers: React.FC<Props> = ({
                                         variant="soft"
                                         sx={{ pointerEvents: "none" }}
                                     />
-                                    <Avatar
-                                        size="sm"
-                                        src={member.avatarImgPath}
-                                        sx={{
-                                            border: isSelected
-                                                ? "2px solid rgba(59, 130, 246, 0.5)"
-                                                : "2px solid transparent",
-                                        }}
-                                    >
-                                        {member.userName?.[0]?.toUpperCase()}
-                                    </Avatar>
+                                    <AvatarWithStatus
+                                        avatarUser={useTEM.teamMemberProfiles[member.userId]}
+                                        useCM={useCM}
+                                        isYou={myself.userId === member.userId}
+                                        myself={myself}
+                                        setMyself={setMyself}
+                                        showNameAndEmail={false}
+                                        socket={socket}
+                                        useUISM={useUISM}
+                                    />
                                     <Box sx={{ flex: 1, minWidth: 0 }}>
                                         <Typography
                                             level="body-sm"

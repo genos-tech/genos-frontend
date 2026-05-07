@@ -205,7 +205,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                     sx={{
                         width: "100%",
                         minHeight: "40px",
-                        maxHeight: "200px",
+                        maxHeight: "300px",
                         overflowY: "scroll",
                     }}
                 >
