@@ -78,8 +78,6 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
                 console.error("Failed to set the current project");
             }
 
-            useTM.setIsTaskPreviewVisible(true);
-
             setIsSubmitted(true);
         } finally {
             // Always release the lock — `uploadNewTask` already reports
@@ -185,7 +183,14 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
                         color: isDark ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.3)",
                     },
                 }}
-                onClick={DoUploadNewTask}
+                onClick={() => {
+                    // Open task table if the current location is task.
+                    if (location.pathname.includes("/home/tasks")) {
+                        useTM.setIsTaskTableVisible(true);
+                    }
+                    useTM.setIsTaskPreviewVisible(true);
+                    DoUploadNewTask();
+                }}
             >
                 {isCreatingTask ? "Creating…" : "Create Task"}
             </Button>
