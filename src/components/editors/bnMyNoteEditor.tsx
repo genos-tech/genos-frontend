@@ -448,7 +448,15 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                     <ModalDialog>
                         {selectedImage ? (
                             <Box>
-                                <img alt="preview" src={selectedImage} />
+                                <img
+                                    alt="preview"
+                                    src={selectedImage}
+                                    style={{
+                                        maxWidth: "80vw",
+                                        maxHeight: "80vh",
+                                        display: "block",
+                                    }}
+                                />
                                 <Tooltip
                                     component="div"
                                     placement="top"
