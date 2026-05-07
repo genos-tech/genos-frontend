@@ -26,6 +26,7 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { SearchTeamTasksResponse } from "../../../../types/tasks";
+import { isMac } from "../../../../utils/platform";
 import { loadTeamTaskList } from "../../services/loadTaskSearchList";
 import { TaskSidebarSearchBox } from "../sidebar/SearchBox";
 
@@ -244,7 +245,27 @@ export const TaskHomeHeader = ({
                 {/* Create Task Button */}
                 <Tooltip
                     size="sm"
-                    title="Create New Task"
+                    title={
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                            }}
+                        >
+                            <Typography
+                                level="body-xs"
+                                sx={{
+                                    fontFamily: "monospace",
+                                    opacity: 0.7,
+                                    color: "inherit",
+                                    whiteSpace: "nowrap",
+                                }}
+                            >
+                                {isMac() ? "⌘ + Ctrl + T" : "Alt + Ctrl + T"}
+                            </Typography>
+                        </Box>
+                    }
                     variant="soft"
                     sx={{
                         background: styles.menuBg,

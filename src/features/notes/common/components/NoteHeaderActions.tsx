@@ -30,6 +30,7 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 import { TaskProps } from "../../../../types/tasks";
+import { isMac } from "../../../../utils/platform";
 
 // Theme-aware styling
 const HEADER_STYLES = {
@@ -179,7 +180,27 @@ export const NoteHeaderActions = ({
             {noteType === 1 && (
                 <Tooltip
                     size="sm"
-                    title="Create a New Note"
+                    title={
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                            }}
+                        >
+                            <Typography
+                                level="body-xs"
+                                sx={{
+                                    fontFamily: "monospace",
+                                    opacity: 0.7,
+                                    color: "inherit",
+                                    whiteSpace: "nowrap",
+                                }}
+                            >
+                                {isMac() ? "⌘ + Ctrl + N" : "Alt + Ctrl + N"}
+                            </Typography>
+                        </Box>
+                    }
                     variant="soft"
                     sx={{
                         background: styles.menuBg,
