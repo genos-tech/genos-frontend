@@ -12,6 +12,7 @@ import MenuItem from "@mui/material/MenuItem";
 import { tooltipClasses } from "@mui/material/Tooltip";
 import { alpha } from "@mui/system";
 
+import { TaskFilterMenuStyles } from "../../../../components/ui/styles/commonStyle";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { TaskTableProps } from "../../../../types/tasks";
@@ -40,37 +41,6 @@ const MILESTONE_ACCENT_DARK = "#fb923c";
 const MILESTONE_ACCENT_LIGHT = "#c2410c";
 const MILESTONE_ACCENT_BG_DARK = "rgba(249,115,22,0.35)";
 const MILESTONE_ACCENT_BG_LIGHT = "rgba(249,115,22,0.6)";
-
-// Modern theme-aware styling
-const FILTER_STYLES = {
-    dark: {
-        containerBg: "linear-gradient(135deg, rgba(30,32,44,0.8) 0%, rgba(20,22,34,0.9) 100%)",
-        containerBorder: "rgba(99,102,241,0.2)",
-        buttonBg: "rgba(40,42,54,0.8)",
-        buttonHoverBg: "rgba(99,102,241,0.2)",
-        menuBg: "linear-gradient(180deg, rgba(30,32,44,0.98) 0%, rgba(20,22,34,0.99) 100%)",
-        menuBorder: "rgba(99,102,241,0.15)",
-        textColor: "#f1f5f9",
-        mutedText: "rgba(148,163,184,0.9)",
-        resetBg: "linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(220,38,38,0.15) 100%)",
-        resetHover: "linear-gradient(135deg, rgba(239,68,68,0.3) 0%, rgba(220,38,38,0.3) 100%)",
-        resetBorder: "rgba(239,68,68,0.3)",
-    },
-    light: {
-        containerBg:
-            "linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.95) 100%)",
-        containerBorder: "rgba(99,102,241,0.15)",
-        buttonBg: "rgba(255,255,255,0.9)",
-        buttonHoverBg: "rgba(99,102,241,0.1)",
-        menuBg: "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.99) 100%)",
-        menuBorder: "rgba(99,102,241,0.12)",
-        textColor: "#1e293b",
-        mutedText: "rgba(71,85,105,0.9)",
-        resetBg: "linear-gradient(135deg, rgba(239,68,68,0.08) 0%, rgba(220,38,38,0.08) 100%)",
-        resetHover: "linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(220,38,38,0.15) 100%)",
-        resetBorder: "rgba(239,68,68,0.25)",
-    },
-};
 
 type TaskFilterMenuProps = {
     isTaskUpdated?: boolean;
@@ -106,7 +76,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
-    const styles = isDark ? FILTER_STYLES.dark : FILTER_STYLES.light;
+    const styles = isDark ? TaskFilterMenuStyles.dark : TaskFilterMenuStyles.light;
 
     // Status filter — when status filter is hidden (e.g. sprint board), default to "All"
     const [selectedStatus, setSelectedStatus] = React.useState<FilterProps[]>(

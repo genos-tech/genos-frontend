@@ -37,6 +37,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -483,7 +484,12 @@ export const TaskHomeContent = ({
         >
             {segments.map((seg, i) =>
                 seg.value > 0 ? (
-                    <Tooltip key={i} size="sm" title={`${Math.round((seg.value / total) * 100)}%`} variant="outlined">
+                    <Tooltip
+                        key={i}
+                        size="sm"
+                        title={`${Math.round((seg.value / total) * 100)}%`}
+                        variant="outlined"
+                    >
                         <Box
                             sx={{
                                 width: `${(seg.value / total) * 100}%`,
@@ -598,6 +604,13 @@ export const TaskHomeContent = ({
             ? Math.min(100, Math.round((sprintStats.closed / sprintStats.scope) * 100))
             : 0;
 
+    const pmChat = useCM.allChats.find(
+        (chat) =>
+            chat.chatType === 3 &&
+            usePM.currentProject &&
+            chat.chatId === usePM.currentProject.projectId
+    );
+
     return (
         <>
             {usePM.currentProject?.projectId && (
@@ -691,8 +704,8 @@ export const TaskHomeContent = ({
                                     <Stack alignItems="center" direction="row" spacing={1.5}>
                                         <Box
                                             sx={{
-                                                width: 40,
-                                                height: 40,
+                                                width: 50,
+                                                height: 50,
                                                 borderRadius: "10px",
                                                 display: "flex",
                                                 alignItems: "center",
@@ -702,12 +715,26 @@ export const TaskHomeContent = ({
                                                     : "rgba(251,146,60,0.12)",
                                             }}
                                         >
-                                            <WorkRoundedIcon
-                                                sx={{
-                                                    fontSize: 22,
-                                                    color: isDark ? "#fb923c" : "#ea580c",
-                                                }}
-                                            />
+                                            {pmChat && (
+                                                <ProjectAvatar
+                                                    avatarSize={46}
+                                                    useCM={useCM}
+                                                    myself={myself}
+                                                    pmChat={pmChat}
+                                                    setMyself={setMyself}
+                                                    socket={socket}
+                                                    useTEM={useTEM}
+                                                    useUISM={useUISM}
+                                                />
+                                            )}
+                                            {!pmChat && (
+                                                <WorkRoundedIcon
+                                                    sx={{
+                                                        fontSize: 22,
+                                                        color: isDark ? "#fb923c" : "#ea580c",
+                                                    }}
+                                                />
+                                            )}
                                         </Box>
                                         <Box>
                                             <Typography

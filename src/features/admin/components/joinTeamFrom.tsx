@@ -25,6 +25,7 @@ import { CssVarsProvider, useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 import { io, Socket } from "socket.io-client";
 
+import { JoinTeamFormStyles } from "../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../context/AuthContext";
 import { wsJoinTeamHook } from "../../../hooks/common/useWebSocket";
 import {
@@ -41,68 +42,6 @@ import { findTeam } from "../services/findTeam";
 import { joinTeam } from "../services/joinTeam";
 import { loadMyTeams } from "../services/loadMyTeams";
 import { AdminHeader } from "./Header";
-
-// Theme-aware styling - Blue/Cyan theme for team management
-const FORM_STYLES = {
-    dark: {
-        cardBg: "linear-gradient(145deg, rgba(30,32,44,0.95) 0%, rgba(20,22,34,0.98) 100%)",
-        cardBorder: "rgba(56,189,248,0.2)",
-        cardShadow: "0 8px 32px rgba(0,0,0,0.4), 0 0 60px rgba(56,189,248,0.1)",
-        inputBg: "rgba(0,0,0,0.3)",
-        inputBorder: "rgba(56,189,248,0.2)",
-        inputFocusBorder: "#38bdf8",
-        inputFocusShadow: "0 0 0 3px rgba(56,189,248,0.2)",
-        labelColor: "rgba(148,163,184,0.9)",
-        titleGradient: "linear-gradient(90deg, #38bdf8 0%, #22d3ee 50%, #06b6d4 100%)",
-        sectionTitleColor: "#38bdf8",
-        buttonBg: "linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)",
-        buttonHover: "linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%)",
-        buttonShadow: "0 4px 16px rgba(56,189,248,0.4)",
-        secondaryButtonBg: "rgba(56,189,248,0.1)",
-        secondaryButtonBorder: "rgba(56,189,248,0.3)",
-        secondaryButtonHover: "rgba(56,189,248,0.2)",
-        linkColor: "#38bdf8",
-        linkHover: "#22d3ee",
-        accentColor: "#38bdf8",
-        textColor: "#f1f5f9",
-        subtitleColor: "#94a3b8",
-        listItemBg: "rgba(56,189,248,0.05)",
-        listItemBorder: "rgba(56,189,248,0.1)",
-        listItemHover: "rgba(56,189,248,0.15)",
-        successBg: "rgba(34,197,94,0.1)",
-        successBorder: "rgba(34,197,94,0.3)",
-        successText: "#4ade80",
-    },
-    light: {
-        cardBg: "linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.99) 100%)",
-        cardBorder: "rgba(14,165,233,0.15)",
-        cardShadow: "0 8px 32px rgba(56,189,248,0.1), 0 0 60px rgba(56,189,248,0.05)",
-        inputBg: "rgba(255,255,255,0.9)",
-        inputBorder: "rgba(14,165,233,0.2)",
-        inputFocusBorder: "#0284c7",
-        inputFocusShadow: "0 0 0 3px rgba(56,189,248,0.1)",
-        labelColor: "rgba(71,85,105,0.9)",
-        titleGradient: "linear-gradient(90deg, #0284c7 0%, #0891b2 50%, #0e7490 100%)",
-        sectionTitleColor: "#0284c7",
-        buttonBg: "linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)",
-        buttonHover: "linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%)",
-        buttonShadow: "0 4px 16px rgba(56,189,248,0.3)",
-        secondaryButtonBg: "rgba(14,165,233,0.05)",
-        secondaryButtonBorder: "rgba(14,165,233,0.2)",
-        secondaryButtonHover: "rgba(14,165,233,0.1)",
-        linkColor: "#0284c7",
-        linkHover: "#0891b2",
-        accentColor: "#0284c7",
-        textColor: "#1e293b",
-        subtitleColor: "#64748b",
-        listItemBg: "rgba(14,165,233,0.03)",
-        listItemBorder: "rgba(14,165,233,0.08)",
-        listItemHover: "rgba(14,165,233,0.08)",
-        successBg: "rgba(34,197,94,0.05)",
-        successBorder: "rgba(34,197,94,0.2)",
-        successText: "#16a34a",
-    },
-};
 
 interface FindTeamFormElements extends HTMLFormControlsCollection {
     teamId: HTMLInputElement;
@@ -130,7 +69,7 @@ const JoinTeamContent = () => {
     const [joinedTeams, setJoinedTeams] = useState<Team[]>([]);
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
-    const styles = isDark ? FORM_STYLES.dark : FORM_STYLES.light;
+    const styles = isDark ? JoinTeamFormStyles.dark : JoinTeamFormStyles.light;
 
     const ws_url = import.meta.env.VITE_WS_BASE_URL;
     const [socketInstance, setSocketInstance] = useState<Socket | null>(null);

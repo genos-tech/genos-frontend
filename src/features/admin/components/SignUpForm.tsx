@@ -19,51 +19,10 @@ import {
 import { CssVarsProvider, useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 
+import { SignUpFormStyles } from "../../../components/ui/styles/commonStyle";
 import { SignUpResponse } from "../../../types/admin";
 import { signUp } from "../services/signup";
 import { AdminHeader } from "./Header";
-
-// Theme-aware styling - Green/Emerald theme for sign up
-const FORM_STYLES = {
-    dark: {
-        cardBg: "linear-gradient(145deg, rgba(30,32,44,0.95) 0%, rgba(20,22,34,0.98) 100%)",
-        cardBorder: "rgba(34,197,94,0.2)",
-        cardShadow: "0 8px 32px rgba(0,0,0,0.4), 0 0 60px rgba(34,197,94,0.1)",
-        inputBg: "rgba(0,0,0,0.3)",
-        inputBorder: "rgba(34,197,94,0.2)",
-        inputFocusBorder: "#4ade80",
-        inputFocusShadow: "0 0 0 3px rgba(34,197,94,0.2)",
-        labelColor: "rgba(148,163,184,0.9)",
-        titleGradient: "linear-gradient(90deg, #4ade80 0%, #22c55e 50%, #16a34a 100%)",
-        buttonBg: "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)",
-        buttonHover: "linear-gradient(135deg, #4ade80 0%, #22c55e 100%)",
-        buttonShadow: "0 4px 16px rgba(34,197,94,0.4)",
-        linkColor: "#4ade80",
-        linkHover: "#22c55e",
-        accentColor: "#4ade80",
-        textColor: "#f1f5f9",
-        subtitleColor: "#94a3b8",
-    },
-    light: {
-        cardBg: "linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.99) 100%)",
-        cardBorder: "rgba(22,163,74,0.15)",
-        cardShadow: "0 8px 32px rgba(34,197,94,0.1), 0 0 60px rgba(34,197,94,0.05)",
-        inputBg: "rgba(255,255,255,0.9)",
-        inputBorder: "rgba(22,163,74,0.2)",
-        inputFocusBorder: "#16a34a",
-        inputFocusShadow: "0 0 0 3px rgba(34,197,94,0.1)",
-        labelColor: "rgba(71,85,105,0.9)",
-        titleGradient: "linear-gradient(90deg, #16a34a 0%, #15803d 50%, #166534 100%)",
-        buttonBg: "linear-gradient(135deg, #22c55e 0%, #15803d 100%)",
-        buttonHover: "linear-gradient(135deg, #4ade80 0%, #22c55e 100%)",
-        buttonShadow: "0 4px 16px rgba(34,197,94,0.3)",
-        linkColor: "#16a34a",
-        linkHover: "#15803d",
-        accentColor: "#16a34a",
-        textColor: "#1e293b",
-        subtitleColor: "#64748b",
-    },
-};
 
 interface FormElements extends HTMLFormControlsCollection {
     userName: HTMLInputElement;
@@ -80,7 +39,7 @@ const SignUpContent = () => {
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
-    const styles = isDark ? FORM_STYLES.dark : FORM_STYLES.light;
+    const styles = isDark ? SignUpFormStyles.dark : SignUpFormStyles.light;
 
     const _signup = async (username: string, email: string, password: string) => {
         const signUpRes: SignUpResponse = await signUp(

@@ -25,6 +25,7 @@ import { useOptionalAvatarContext } from "../../../../components/ui/avatars/Avat
 import { EmojiPicker } from "../../../../components/ui/emoji/EmojiPicker";
 import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/FileSizeRejectionSnackbar";
 import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
+import { ProfileModalStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { UserRepository } from "../../../../db/repositories/user";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -39,34 +40,6 @@ import { UserProfileStatus } from "./sub/UserProfileStatus";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
-
-// Modern theme-aware styling
-const MODAL_STYLES = {
-    dark: {
-        bg: "linear-gradient(145deg, rgba(30,32,44,0.98) 0%, rgba(20,22,34,0.99) 100%)",
-        cardBg: "linear-gradient(135deg, rgba(40,42,54,0.9) 0%, rgba(30,32,44,0.95) 100%)",
-        border: "rgba(244,114,182,0.2)",
-        shadow: "0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(244,114,182,0.1)",
-        headerGradient: "linear-gradient(90deg, #f472b6 0%, #fb923c 50%, #fbbf24 100%)",
-        labelColor: "rgba(148,163,184,0.9)",
-        valueColor: "#f1f5f9",
-        hoverBg: "rgba(244,114,182,0.15)",
-        avatarGlow: "0 0 40px rgba(244,114,182,0.4), 0 0 80px rgba(251,146,60,0.2)",
-        accentColor: "#f472b6",
-    },
-    light: {
-        bg: "linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.99) 100%)",
-        cardBg: "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(241,245,249,0.9) 100%)",
-        border: "rgba(219,39,119,0.15)",
-        shadow: "0 8px 32px rgba(219,39,119,0.1), 0 0 0 1px rgba(219,39,119,0.08)",
-        headerGradient: "linear-gradient(90deg, #db2777 0%, #ea580c 50%, #d97706 100%)",
-        labelColor: "rgba(71,85,105,0.9)",
-        valueColor: "#1e293b",
-        hoverBg: "rgba(219,39,119,0.08)",
-        avatarGlow: "0 0 40px rgba(219,39,119,0.2), 0 0 80px rgba(234,88,12,0.1)",
-        accentColor: "#db2777",
-    },
-};
 
 type UserProfileProps = {
     socket: Socket | null;
@@ -96,7 +69,7 @@ export const UserProfile = (props: UserProfileProps) => {
     const navigate = useNavigate();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
-    const styles = isDark ? MODAL_STYLES.dark : MODAL_STYLES.light;
+    const styles = isDark ? ProfileModalStyles.dark : ProfileModalStyles.light;
 
     // Optional: this modal is also rendered from a few callsites that
     // pre-date the AvatarContextProvider (older sidebar paths, mention
@@ -297,13 +270,13 @@ export const UserProfile = (props: UserProfileProps) => {
                                     borderRadius: "16px",
                                     boxShadow: isDark
                                         ? "0 4px 20px rgba(0,0,0,0.3)"
-                                        : "0 4px 20px rgba(219,39,119,0.08)",
+                                        : "0 4px 20px rgba(99,102,241,0.08)",
                                     transition: "all 0.3s ease",
                                     p: { xs: 2, md: 3 },
                                     "&:hover": {
                                         boxShadow: isDark
                                             ? "0 8px 30px rgba(0,0,0,0.4)"
-                                            : "0 8px 30px rgba(219,39,119,0.12)",
+                                            : "0 8px 30px rgba(99,102,241,0.12)",
                                     },
                                 }}
                             >
@@ -332,8 +305,8 @@ export const UserProfile = (props: UserProfileProps) => {
                                                 "&:hover": {
                                                     transform: "scale(1.02)",
                                                     boxShadow: isDark
-                                                        ? "0 0 50px rgba(244,114,182,0.5), 0 0 100px rgba(251,146,60,0.3)"
-                                                        : "0 0 50px rgba(219,39,119,0.3), 0 0 100px rgba(234,88,12,0.15)",
+                                                        ? "0 0 50px rgba(99,102,241,0.5), 0 0 100px rgba(139,92,246,0.3)"
+                                                        : "0 0 50px rgba(99,102,241,0.3), 0 0 100px rgba(139,92,246,0.15)",
                                                 },
                                             }}
                                             onClick={() => setOpenUserProfile(true)}
@@ -368,14 +341,14 @@ export const UserProfile = (props: UserProfileProps) => {
                                                         size="sm"
                                                         sx={{
                                                             background: isDark
-                                                                ? "linear-gradient(135deg, rgba(244,114,182,0.3) 0%, rgba(251,146,60,0.3) 100%)"
-                                                                : "linear-gradient(135deg, rgba(219,39,119,0.15) 0%, rgba(234,88,12,0.15) 100%)",
+                                                                ? "linear-gradient(135deg, rgba(99,102,241,0.3) 0%, rgba(139,92,246,0.3) 100%)"
+                                                                : "linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.15) 100%)",
                                                             border: `1px solid ${styles.border}`,
                                                             transition: "all 0.2s ease",
                                                             "&:hover": {
                                                                 background: isDark
-                                                                    ? "linear-gradient(135deg, rgba(244,114,182,0.5) 0%, rgba(251,146,60,0.5) 100%)"
-                                                                    : "linear-gradient(135deg, rgba(219,39,119,0.25) 0%, rgba(234,88,12,0.25) 100%)",
+                                                                    ? "linear-gradient(135deg, rgba(99,102,241,0.5) 0%, rgba(139,92,246,0.5) 100%)"
+                                                                    : "linear-gradient(135deg, rgba(99,102,241,0.25) 0%, rgba(139,92,246,0.25) 100%)",
                                                                 transform: "scale(1.1)",
                                                             },
                                                         }}
@@ -385,8 +358,8 @@ export const UserProfile = (props: UserProfileProps) => {
                                                             sx={{
                                                                 fontSize: "20px",
                                                                 color: isDark
-                                                                    ? "#f472b6"
-                                                                    : "#db2777",
+                                                                    ? "#8b5cf6"
+                                                                    : "#6366f1",
                                                             }}
                                                         />
                                                     </IconButton>
@@ -418,7 +391,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                     <EmailRoundedIcon
                                                         fontSize="small"
                                                         sx={{
-                                                            color: isDark ? "#f472b6" : "#db2777",
+                                                            color: isDark ? "#8b5cf6" : "#6366f1",
                                                         }}
                                                     />
                                                 }
@@ -429,7 +402,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                     transition: "all 0.2s ease",
                                                     fontSize: "14px",
                                                     "&:hover": {
-                                                        color: isDark ? "#fb923c" : "#ea580c",
+                                                        color: isDark ? "#8b5cf6" : "#6366f1",
                                                     },
                                                 }}
                                             >
@@ -474,8 +447,8 @@ export const UserProfile = (props: UserProfileProps) => {
                                                     py: 0.75,
                                                     borderRadius: "8px",
                                                     background: isDark
-                                                        ? "rgba(244,114,182,0.1)"
-                                                        : "rgba(219,39,119,0.05)",
+                                                        ? "rgba(99,102,241,0.1)"
+                                                        : "rgba(99,102,241,0.05)",
                                                     border: `1px solid ${styles.border}`,
                                                     display: "inline-flex",
                                                     width: "fit-content",
@@ -515,8 +488,8 @@ export const UserProfile = (props: UserProfileProps) => {
                                                         py: 0.5,
                                                         borderRadius: "6px",
                                                         background: isDark
-                                                            ? "rgba(0,0,0,0.3)"
-                                                            : "rgba(0,0,0,0.05)",
+                                                            ? "rgba(99,102,241,0.3)"
+                                                            : "rgba(99,102,241,0.05)",
                                                         border: `1px solid ${styles.border}`,
                                                         overflow: "hidden",
                                                     }}
@@ -556,8 +529,8 @@ export const UserProfile = (props: UserProfileProps) => {
                                                         py: 0.5,
                                                         borderRadius: "6px",
                                                         background: isDark
-                                                            ? "rgba(0,0,0,0.3)"
-                                                            : "rgba(0,0,0,0.05)",
+                                                            ? "rgba(99,102,241,0.3)"
+                                                            : "rgba(99,102,241,0.05)",
                                                         border: `1px solid ${styles.border}`,
                                                         overflow: "hidden",
                                                     }}
@@ -640,8 +613,8 @@ export const UserProfile = (props: UserProfileProps) => {
                                                         py: 0.5,
                                                         borderRadius: "6px",
                                                         background: isDark
-                                                            ? "rgba(244,114,182,0.1)"
-                                                            : "rgba(219,39,119,0.05)",
+                                                            ? "rgba(99,102,241,0.1)"
+                                                            : "rgba(99,102,241,0.05)",
                                                         border: `1px solid ${styles.border}`,
                                                         width: "fit-content",
                                                     }}
@@ -690,7 +663,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                     startDecorator={
                                         <QuestionAnswerRoundedIcon
                                             sx={{
-                                                color: isDark ? "#f472b6" : "#db2777",
+                                                color: isDark ? "#8b5cf6" : "#6366f1",
                                                 fontSize: "18px",
                                             }}
                                         />
@@ -701,19 +674,19 @@ export const UserProfile = (props: UserProfileProps) => {
                                         py: 0.75,
                                         borderRadius: "10px",
                                         background: isDark
-                                            ? "linear-gradient(135deg, rgba(244,114,182,0.2) 0%, rgba(251,146,60,0.2) 100%)"
-                                            : "linear-gradient(135deg, rgba(219,39,119,0.1) 0%, rgba(234,88,12,0.1) 100%)",
+                                            ? "linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.2) 100%)"
+                                            : "linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.1) 100%)",
                                         border: `1px solid ${styles.border}`,
                                         color: styles.valueColor,
                                         transition: "all 0.2s ease",
                                         "&:hover": {
                                             background: isDark
-                                                ? "linear-gradient(135deg, rgba(244,114,182,0.4) 0%, rgba(251,146,60,0.4) 100%)"
-                                                : "linear-gradient(135deg, rgba(219,39,119,0.2) 0%, rgba(234,88,12,0.2) 100%)",
+                                                ? "linear-gradient(135deg, rgba(99,102,241,0.4) 0%, rgba(139,92,246,0.4) 100%)"
+                                                : "linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.2) 100%)",
                                             transform: "translateY(-2px)",
                                             boxShadow: isDark
-                                                ? "0 4px 12px rgba(244,114,182,0.3)"
-                                                : "0 4px 12px rgba(219,39,119,0.2)",
+                                                ? "0 4px 12px rgba(99,102,241,0.3)"
+                                                : "0 4px 12px rgba(99,102,241,0.2)",
                                         },
                                     }}
                                     onClick={() => {

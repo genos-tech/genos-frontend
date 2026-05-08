@@ -26,6 +26,7 @@ import { Socket } from "socket.io-client";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/FileSizeRejectionSnackbar";
 import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
+import { ProfileModalStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -38,36 +39,6 @@ import { loadGMProfile } from "../../services/loadGMProfile";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
-
-// Modern theme-aware styling - Teal/Cyan theme for GM
-const MODAL_STYLES = {
-    dark: {
-        bg: "linear-gradient(145deg, rgba(30,32,44,0.98) 0%, rgba(20,22,34,0.99) 100%)",
-        cardBg: "linear-gradient(135deg, rgba(40,42,54,0.9) 0%, rgba(30,32,44,0.95) 100%)",
-        border: "rgba(20,184,166,0.2)",
-        shadow: "0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(20,184,166,0.1)",
-        headerGradient: "linear-gradient(90deg, #2dd4bf 0%, #14b8a6 50%, #0d9488 100%)",
-        labelColor: "rgba(148,163,184,0.9)",
-        valueColor: "#f1f5f9",
-        hoverBg: "rgba(20,184,166,0.15)",
-        avatarGlow: "0 0 40px rgba(20,184,166,0.4), 0 0 80px rgba(6,182,212,0.2)",
-        accentColor: "#2dd4bf",
-        inputBg: "rgba(0,0,0,0.3)",
-    },
-    light: {
-        bg: "linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.99) 100%)",
-        cardBg: "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(241,245,249,0.9) 100%)",
-        border: "rgba(13,148,136,0.15)",
-        shadow: "0 8px 32px rgba(20,184,166,0.1), 0 0 0 1px rgba(20,184,166,0.08)",
-        headerGradient: "linear-gradient(90deg, #0d9488 0%, #0f766e 50%, #115e59 100%)",
-        labelColor: "rgba(71,85,105,0.9)",
-        valueColor: "#1e293b",
-        hoverBg: "rgba(20,184,166,0.08)",
-        avatarGlow: "0 0 40px rgba(20,184,166,0.2), 0 0 80px rgba(6,182,212,0.1)",
-        accentColor: "#0d9488",
-        inputBg: "rgba(255,255,255,0.8)",
-    },
-};
 
 type ModalGMProfileProps = {
     useTEM: TeamManagementState;
@@ -101,7 +72,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
-    const styles = isDark ? MODAL_STYLES.dark : MODAL_STYLES.light;
+    const styles = isDark ? ProfileModalStyles.dark : ProfileModalStyles.light;
 
     const [gmProfile, setGmProfile] = useState<GMProfileProps | null>(null);
 

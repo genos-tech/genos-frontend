@@ -26,6 +26,7 @@ import { Socket } from "socket.io-client";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/FileSizeRejectionSnackbar";
 import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
+import { ProfileModalStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -35,32 +36,6 @@ import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
-
-// Modern theme-aware styling
-const MODAL_STYLES = {
-    dark: {
-        bg: "linear-gradient(145deg, rgba(30,32,44,0.98) 0%, rgba(20,22,34,0.99) 100%)",
-        cardBg: "linear-gradient(135deg, rgba(40,42,54,0.9) 0%, rgba(30,32,44,0.95) 100%)",
-        border: "rgba(34,197,94,0.2)",
-        shadow: "0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(34,197,94,0.1)",
-        headerGradient: "linear-gradient(90deg, #4ade80 0%, #22d3ee 50%, #38bdf8 100%)",
-        labelColor: "rgba(148,163,184,0.9)",
-        valueColor: "#f1f5f9",
-        hoverBg: "rgba(34,197,94,0.15)",
-        avatarGlow: "0 0 40px rgba(34,197,94,0.4), 0 0 80px rgba(34,211,238,0.2)",
-    },
-    light: {
-        bg: "linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,0.99) 100%)",
-        cardBg: "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(241,245,249,0.9) 100%)",
-        border: "rgba(34,197,94,0.2)",
-        shadow: "0 8px 32px rgba(34,197,94,0.1), 0 0 0 1px rgba(34,197,94,0.1)",
-        headerGradient: "linear-gradient(90deg, #16a34a 0%, #0891b2 50%, #0284c7 100%)",
-        labelColor: "rgba(71,85,105,0.9)",
-        valueColor: "#1e293b",
-        hoverBg: "rgba(34,197,94,0.08)",
-        avatarGlow: "0 0 40px rgba(34,197,94,0.2), 0 0 80px rgba(34,211,238,0.1)",
-    },
-};
 
 type ModalTeamProfileProps = {
     socket: Socket | null;
@@ -95,7 +70,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
-    const styles = isDark ? MODAL_STYLES.dark : MODAL_STYLES.light;
+    const styles = isDark ? ProfileModalStyles.dark : ProfileModalStyles.light;
 
     // Member search state
     const [memberSearchQuery, setMemberSearchQuery] = useState("");
@@ -248,12 +223,12 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                     borderRadius: "16px",
                                     boxShadow: isDark
                                         ? "0 4px 20px rgba(0,0,0,0.3)"
-                                        : "0 4px 20px rgba(34,197,94,0.08)",
+                                        : "0 4px 20px rgba(99,102,241,0.08)",
                                     transition: "all 0.3s ease",
                                     "&:hover": {
                                         boxShadow: isDark
                                             ? "0 8px 30px rgba(0,0,0,0.4)"
-                                            : "0 8px 30px rgba(34,197,94,0.12)",
+                                            : "0 8px 30px rgba(99,102,241,0.12)",
                                     },
                                 }}
                             >
@@ -281,8 +256,8 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                 "&:hover": {
                                                     transform: "scale(1.02)",
                                                     boxShadow: isDark
-                                                        ? "0 0 50px rgba(34,197,94,0.5), 0 0 100px rgba(34,211,238,0.3)"
-                                                        : "0 0 50px rgba(34,197,94,0.3), 0 0 100px rgba(34,211,238,0.15)",
+                                                        ? "0 0 50px rgba(99,102,241,0.5), 0 0 100px rgba(139,92,246,0.3)"
+                                                        : "0 0 50px rgba(99,102,241,0.3), 0 0 100px rgba(139,92,246,0.15)",
                                                 },
                                             }}
                                         >
@@ -315,14 +290,14 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                         variant="soft"
                                                         sx={{
                                                             background: isDark
-                                                                ? "linear-gradient(135deg, rgba(34,197,94,0.3) 0%, rgba(34,211,238,0.3) 100%)"
-                                                                : "linear-gradient(135deg, rgba(34,197,94,0.15) 0%, rgba(34,211,238,0.15) 100%)",
+                                                                ? "linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(139,92,246,0.12) 100%)"
+                                                                : "linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(139,92,246,0.08) 100%)",
                                                             border: `1px solid ${styles.border}`,
                                                             transition: "all 0.2s ease",
                                                             "&:hover": {
                                                                 background: isDark
-                                                                    ? "linear-gradient(135deg, rgba(34,197,94,0.5) 0%, rgba(34,211,238,0.5) 100%)"
-                                                                    : "linear-gradient(135deg, rgba(34,197,94,0.25) 0%, rgba(34,211,238,0.25) 100%)",
+                                                                    ? "linear-gradient(135deg, rgba(139,92,246,0.5) 0%, rgba(139,92,246,0.5) 100%)"
+                                                                    : "linear-gradient(135deg, rgba(139,92,246,0.25) 0%, rgba(139,92,246,0.25) 100%)",
                                                                 transform: "scale(1.1)",
                                                             },
                                                         }}
@@ -366,8 +341,8 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                             py: 1,
                                                             borderRadius: "8px",
                                                             background: isDark
-                                                                ? "rgba(34,197,94,0.1)"
-                                                                : "rgba(34,197,94,0.05)",
+                                                                ? "rgba(99,102,241,0.1)"
+                                                                : "rgba(99,102,241,0.05)",
                                                             border: `1px solid ${styles.border}`,
                                                         }}
                                                     >
@@ -405,8 +380,8 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                         py: 0.5,
                                                         borderRadius: "8px",
                                                         background: isDark
-                                                            ? "rgba(0,0,0,0.3)"
-                                                            : "rgba(0,0,0,0.05)",
+                                                            ? "rgba(99,102,241,0.3)"
+                                                            : "rgba(99,102,241,0.05)",
                                                         border: `1px solid ${styles.border}`,
                                                         fontFamily: "monospace",
                                                     }}
@@ -492,8 +467,8 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                             fontSize="small"
                                                             sx={{
                                                                 color: isDark
-                                                                    ? "#4ade80"
-                                                                    : "#16a34a",
+                                                                    ? "#8b5cf6"
+                                                                    : "#6366f1",
                                                             }}
                                                         />
                                                     }
@@ -549,8 +524,8 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                                 <SearchIcon
                                                                     sx={{
                                                                         color: isDark
-                                                                            ? "#4ade80"
-                                                                            : "#16a34a",
+                                                                            ? "#8b5cf6"
+                                                                            : "#6366f1",
                                                                         fontSize: "18px",
                                                                     }}
                                                                 />
@@ -591,16 +566,16 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                                 transition: "all 0.2s ease",
                                                                 "&:hover": {
                                                                     borderColor: isDark
-                                                                        ? "#4ade80"
-                                                                        : "#16a34a",
+                                                                        ? "#8b5cf6"
+                                                                        : "#6366f1",
                                                                 },
                                                                 "&:focus-within": {
                                                                     borderColor: isDark
-                                                                        ? "#4ade80"
-                                                                        : "#16a34a",
+                                                                        ? "#8b5cf6"
+                                                                        : "#6366f1",
                                                                     boxShadow: isDark
-                                                                        ? "0 0 0 2px rgba(34,197,94,0.2)"
-                                                                        : "0 0 0 2px rgba(34,197,94,0.1)",
+                                                                        ? "0 0 0 2px rgba(99,102,241,0.2)"
+                                                                        : "0 0 0 2px rgba(99,102,241,0.1)",
                                                                 },
                                                             }}
                                                         />
@@ -612,7 +587,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                             overflow: "auto",
                                                             background: isDark
                                                                 ? "rgba(0,0,0,0.2)"
-                                                                : "rgba(34,197,94,0.03)",
+                                                                : "rgba(99,102,241,0.03)",
                                                             borderRadius: "12px",
                                                             border: `1px solid ${styles.border}`,
                                                             p: 1,
@@ -692,8 +667,8 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                         py: 0.5,
                                                         borderRadius: "8px",
                                                         background: isDark
-                                                            ? "rgba(34,197,94,0.1)"
-                                                            : "rgba(34,197,94,0.05)",
+                                                            ? "rgba(99,102,241,0.1)"
+                                                            : "rgba(99,102,241,0.05)",
                                                         border: `1px solid ${styles.border}`,
                                                     }}
                                                 >

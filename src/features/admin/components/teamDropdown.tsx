@@ -19,6 +19,7 @@ import {
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { TeamDropdownStyles } from "../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../context/AuthContext";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
@@ -32,44 +33,6 @@ import { loadMyTeams } from "../services/loadMyTeams";
 import { ModalTeamProfile } from "./modals/ModalTeamProfile";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
-
-// Theme-aware styling
-const DROPDOWN_STYLES = {
-    dark: {
-        avatarBorder: "rgba(99,102,241,0.4)",
-        avatarShadow: "0 2px 12px rgba(99,102,241,0.3)",
-        avatarHoverShadow: "0 4px 20px rgba(99,102,241,0.5)",
-        menuBg: "linear-gradient(145deg, rgba(30,32,44,0.98) 0%, rgba(20,22,34,0.99) 100%)",
-        menuBorder: "rgba(99,102,241,0.2)",
-        menuShadow: "0 8px 32px rgba(0,0,0,0.5), 0 0 60px rgba(99,102,241,0.1)",
-        menuItemHover: "rgba(99,102,241,0.15)",
-        menuItemActive:
-            "linear-gradient(135deg, rgba(99,102,241,0.3) 0%, rgba(139,92,246,0.2) 100%)",
-        iconColor: "#818cf8",
-        textColor: "#f1f5f9",
-        subtitleColor: "#94a3b8",
-        accentGradient: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
-        successColor: "#4ade80",
-        dividerColor: "rgba(99,102,241,0.15)",
-    },
-    light: {
-        avatarBorder: "rgba(99,102,241,0.3)",
-        avatarShadow: "0 2px 12px rgba(99,102,241,0.15)",
-        avatarHoverShadow: "0 4px 20px rgba(99,102,241,0.3)",
-        menuBg: "linear-gradient(145deg, rgba(255,255,255,0.99) 0%, rgba(248,250,252,1) 100%)",
-        menuBorder: "rgba(99,102,241,0.15)",
-        menuShadow: "0 8px 32px rgba(99,102,241,0.12), 0 0 60px rgba(99,102,241,0.05)",
-        menuItemHover: "rgba(99,102,241,0.08)",
-        menuItemActive:
-            "linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.1) 100%)",
-        iconColor: "#6366f1",
-        textColor: "#1e293b",
-        subtitleColor: "#64748b",
-        accentGradient: "linear-gradient(135deg, #6366f1 0%, #7c3aed 100%)",
-        successColor: "#16a34a",
-        dividerColor: "rgba(99,102,241,0.1)",
-    },
-};
 
 type TeamDropdownProps = {
     useTEM: TeamManagementState;
@@ -101,7 +64,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
     const [openModalTeamProfile, setOpenModalTeamProfile] = useState<boolean>(false);
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
-    const styles = isDark ? DROPDOWN_STYLES.dark : DROPDOWN_STYLES.light;
+    const styles = isDark ? TeamDropdownStyles.dark : TeamDropdownStyles.light;
 
     const _joinTeam = async (teamId: string) => {
         const joinTeamRes = await joinTeam(accessToken, teamId, myself.userId);
