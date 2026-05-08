@@ -11,7 +11,7 @@ import { SignInForm } from "./features/admin/components/SignInForm";
 import { SignUpForm } from "./features/admin/components/SignUpForm";
 
 import { App } from "./App";
-import GenosLandingPage from "./LandingPage";
+import GenosLandingPage from "./lp/LandingPage";
 
 // Layout for everything that needs access to AuthContext (the sign-in /
 // sign-up flows, the authenticated workspace, join-team, the 404 page).

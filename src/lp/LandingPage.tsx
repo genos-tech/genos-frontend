@@ -5,10 +5,12 @@ import {
     Bot,
     Check,
     ChevronRight,
+    ClipboardList,
     Database,
     FileText,
     Globe2,
     Layers3,
+    Mail,
     MessageSquareText,
     Moon,
     Search,
@@ -19,11 +21,15 @@ import {
     Workflow,
 } from "lucide-react";
 
-import { GitHubIcon } from "./assets/GithubIcon";
+import { GitHubIcon } from "../assets/GithubIcon";
+import GenosAIHubSection from "./GenosAIHubSection";
 
 const APP_URL = "https://genos.up.railway.app";
 const LINKEDIN_URL = "https://www.linkedin.com/in/kentaro-kamiya-jp/";
 const GITHUB_URL = "https://github.com/kentarokamiyajp";
+const CONTACT_EMAIL = "genos.support@gmail.com";
+const GOOGLE_FORM_URL =
+    "https://docs.google.com/forms/d/e/1FAIpQLSeOlcGhTldzM8mhLkKU3h9hw0eKetSPnV9FQ8z4NhJ6Qi3ziw/viewform?usp=publish-editor";
 
 type Lang = "ja" | "en";
 
@@ -33,13 +39,15 @@ const copy = {
             features: "機能",
             value: "価値",
             ai: "AI活用",
+            contact: "お問い合わせ",
             faq: "FAQ",
             demo: "デモを試す",
         },
         hero: {
             badge: "MVP公開中 / Initial users募集中",
-            title: "話す、進める、残す。チームの仕事をひとつの流れに。",
-            lead: "Genosは、チームの会話・タスク・ノートをつなげて残し、検索とAIで活かすワークスペースです。",
+            title: "話す、進める、残す。",
+            titleSub: "チームの仕事をひとつの流れに。",
+            lead: "Genosは、チャット、タスク管理、ドキュメントを同じ場所で扱えるワークスペースです。Slack、Jira、Notionを行き来する手間を減らし、チームの情報を検索とAIで活用しやすくします。",
             primary: "デモを試す",
             secondary: "機能を見る",
             footnote: "ログインなしで体験できます。アカウント登録するとデータを継続保存できます。",
@@ -189,13 +197,15 @@ const copy = {
             features: "Features",
             value: "Value",
             ai: "AI",
+            contact: "Contact",
             faq: "FAQ",
             demo: "Try the demo",
         },
         hero: {
             badge: "MVP is live / Looking for initial users",
-            title: "Discuss, move forward, and capture knowledge. Bring your team’s work into one flow.",
-            lead: "Genos is a workspace where chat, task management, and documentation live together. It reduces the need to jump between Slack, Jira, and Notion, making your team’s information easier to search, understand, and use with AI.",
+            title: "Discuss. Act. Capture.",
+            titleSub: "Teamwork in one flow.",
+            lead: "Genos brings chat, tasks, and docs into one workspace — reducing the need to jump between Slack, Jira, and Notion while making team knowledge easier to search and use with AI.",
             primary: "Try the demo",
             secondary: "Explore features",
             footnote:
@@ -394,52 +404,158 @@ function LanguageToggle({ lang, setLang }: { lang: Lang; setLang: (lang: Lang) =
     );
 }
 
-function MockWorkspace({ lang }: { lang: Lang }) {
-    const labels =
+function createMailtoHref(lang: "ja" | "en") {
+    const subject =
+        lang === "ja" ? "Genosに関する問い合わせ / フィードバック" : "Genos inquiry / feedback";
+
+    const body =
+        lang === "ja"
+            ? [
+                  "Genosチームへ",
+                  "",
+                  "Genosについて問い合わせ・フィードバックがあります。",
+                  "",
+                  "【利用目的】",
+                  "例: チームで試したい / 個人で使ってみたい / バグを報告したい / 機能について相談したい",
+                  "",
+                  "【内容】",
+                  "",
+                  "",
+                  "【現在使っているツール】",
+                  "例: Slack, Asana, Notion, Google Docs など",
+                  "",
+                  "【返信先】",
+                  "",
+                  "",
+                  "よろしくお願いいたします。",
+              ].join("\r\n")
+            : [
+                  "Hi Genos team,",
+                  "",
+                  "I have a question or feedback about Genos.",
+                  "",
+                  "Purpose:",
+                  "e.g. I want to try it with my team / I want to use it individually / I found a bug / I have a feature request",
+                  "",
+                  "Message:",
+                  "",
+                  "",
+                  "Tools I currently use:",
+                  "e.g. Slack, Asana, Notion, Google Docs",
+                  "",
+                  "Reply email:",
+                  "",
+                  "",
+                  "Thank you.",
+              ].join("\r\n");
+
+    return `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
+        subject
+    )}&body=${encodeURIComponent(body)}`;
+}
+
+function ContactSection({ lang }: { lang: "ja" | "en" }) {
+    const t =
         lang === "ja"
             ? {
-                  channel: "# product-launch",
-                  thread: "AI検索の精度改善について",
-                  task: "User feedbackを整理",
-                  note: "Launch notes / MVP feedback",
-                  ask: "このタスクの背景を要約して",
-                  ai: "関連する会話、タスク、ノートから要点を抽出しました。",
+                  eyebrow: "Contact / Feedback",
+                  title: "Genosを試して、気になった点を教えてください。",
+                  body: "MVP公開中のため、実際に使ってみた感想、改善してほしい点、チームで使う上で必要な機能などを募集しています。短いコメントだけでも大歓迎です。",
+                  emailTitle: "メールで問い合わせる",
+                  emailBody:
+                      "導入相談、バグ報告、チーム利用の相談などはこちらからご連絡ください。",
+                  formTitle: "フォームでフィードバックする",
+                  formBody:
+                      "数分で回答できるフィードバックフォームです。使いづらかった点や欲しい機能を教えてください。",
+                  emailCta: "メールを送る",
+                  formCta: "フォームを開く",
               }
             : {
-                  channel: "# product-launch",
-                  thread: "Improving AI search quality",
-                  task: "Organize user feedback",
-                  note: "Launch notes / MVP feedback",
-                  ask: "Summarize the context for this task",
-                  ai: "I found the key points across related chats, tasks, and notes.",
+                  eyebrow: "Contact / Feedback",
+                  title: "Try Genos and tell us what you think.",
+                  body: "Genos is currently available as an MVP. We are looking for feedback on what feels useful, confusing, missing, or important for team use. Even a short comment helps.",
+                  emailTitle: "Contact by email",
+                  emailBody:
+                      "For product questions, bug reports, team usage, or partnership discussions, reach out by email.",
+                  formTitle: "Send feedback via form",
+                  formBody:
+                      "A short feedback form for sharing your experience, pain points, and feature requests.",
+                  emailCta: "Send email",
+                  formCta: "Open form",
               };
 
     return (
-        <div className="relative mx-auto w-full max-w-xl">
-            <div className="absolute -inset-6 rounded-[2.5rem] bg-gradient-to-br from-violet-500/25 via-fuchsia-400/20 to-indigo-400/20 blur-3xl" />
-            <motion.div
-                initial={{ opacity: 0, y: 18 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.15 }}
-                className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-white/85 p-3 shadow-2xl shadow-violet-900/10 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/85 dark:shadow-black/40"
-            >
-                <div className="flex items-center justify-between border-b border-slate-200/70 px-3 py-2 dark:border-white/10">
-                    <div className="flex items-center gap-2">
-                        <span className="h-3 w-3 rounded-full bg-red-400" />
-                        <span className="h-3 w-3 rounded-full bg-amber-400" />
-                        <span className="h-3 w-3 rounded-full bg-emerald-400" />
+        <section id="contact" className="px-4 py-16 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-7xl">
+                <div className="rounded-[2.5rem] border border-violet-100 bg-white p-8 shadow-2xl shadow-violet-900/10 dark:border-white/10 dark:bg-white/5 lg:p-12">
+                    <div className="mx-auto max-w-3xl text-center">
+                        <p className="text-sm font-black uppercase tracking-[0.22em] text-violet-600 dark:text-violet-300">
+                            {t.eyebrow}
+                        </p>
+
+                        <h2 className="mt-4 text-3xl font-black tracking-tight text-slate-950 dark:text-white sm:text-5xl">
+                            {t.title}
+                        </h2>
+
+                        <p className="mt-5 text-lg leading-8 text-slate-600 dark:text-slate-300">
+                            {t.body}
+                        </p>
                     </div>
-                    <div className="rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700 dark:bg-violet-500/15 dark:text-violet-200">
-                        Genos Workspace
+
+                    <div className="mt-10 grid gap-5 md:grid-cols-2">
+                        <div className="rounded-[2rem] border border-violet-100 bg-violet-50/60 p-6 dark:border-white/10 dark:bg-white/5">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-violet-700 shadow-sm dark:bg-slate-950 dark:text-violet-200">
+                                <Mail className="h-6 w-6" />
+                            </div>
+
+                            <h3 className="mt-5 text-xl font-black text-slate-950 dark:text-white">
+                                {t.emailTitle}
+                            </h3>
+
+                            <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                                {t.emailBody}
+                            </p>
+
+                            <a
+                                href={createMailtoHref(lang)}
+                                className="mt-6 inline-flex items-center gap-2 rounded-full bg-violet-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-violet-600/25 transition hover:-translate-y-0.5 hover:bg-violet-700"
+                            >
+                                {t.emailCta}
+                                <ArrowRight className="h-4 w-4" />
+                            </a>
+
+                            <p className="mt-4 text-sm font-semibold text-slate-500 dark:text-slate-400">
+                                {CONTACT_EMAIL}
+                            </p>
+                        </div>
+
+                        <div className="rounded-[2rem] border border-violet-100 bg-white p-6 shadow-lg shadow-violet-900/5 dark:border-white/10 dark:bg-white/5">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-100 text-violet-700 shadow-sm dark:bg-violet-500/15 dark:text-violet-200">
+                                <ClipboardList className="h-6 w-6" />
+                            </div>
+
+                            <h3 className="mt-5 text-xl font-black text-slate-950 dark:text-white">
+                                {t.formTitle}
+                            </h3>
+
+                            <p className="mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300">
+                                {t.formBody}
+                            </p>
+
+                            <a
+                                href={GOOGLE_FORM_URL}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="mt-6 inline-flex items-center gap-2 rounded-full border border-violet-200 bg-white px-5 py-3 text-sm font-black text-violet-700 shadow-sm transition hover:-translate-y-0.5 hover:border-violet-300 hover:bg-violet-50 dark:border-white/10 dark:bg-white/10 dark:text-violet-100 dark:hover:bg-white/15"
+                            >
+                                {t.formCta}
+                                <ArrowRight className="h-4 w-4" />
+                            </a>
+                        </div>
                     </div>
                 </div>
-                <img
-                    src="/lp-top.png"
-                    alt="Genos product screenshot"
-                    className="w-full rounded-2xl object-cover"
-                />
-            </motion.div>
-        </div>
+            </div>
+        </section>
     );
 }
 
@@ -482,7 +598,7 @@ function ScreenshotFrame({
 }
 
 export default function GenosLandingPage() {
-    const [lang, setLang] = useState<Lang>("ja");
+    const [lang, setLang] = useState<Lang>("en");
     const [dark, setDark] = useState(false);
     const t = copy[lang];
 
@@ -494,9 +610,14 @@ export default function GenosLandingPage() {
                 <header className="sticky top-0 z-50 border-b border-violet-100/70 bg-white/75 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/70">
                     <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
                         <a href="#top" className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-500 text-white shadow-lg shadow-violet-600/25">
-                                <Sparkles className="h-5 w-5" />
+                            <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-lg shadow-violet-900/10 dark:border-white/10 dark:bg-white">
+                                <img
+                                    src="/genos_tech.png"
+                                    alt="Genos"
+                                    className="h-11 w-11 object-contain"
+                                />
                             </div>
+
                             <div>
                                 <div className="text-lg font-black tracking-tight">Genos</div>
                                 <div className="text-xs font-medium text-slate-500 dark:text-slate-400">
@@ -523,6 +644,12 @@ export default function GenosLandingPage() {
                                 href="#ai"
                             >
                                 {t.nav.ai}
+                            </a>
+                            <a
+                                className="transition hover:text-violet-700 dark:hover:text-white"
+                                href="#contact"
+                            >
+                                {t.nav.contact}
                             </a>
                             <a
                                 className="transition hover:text-violet-700 dark:hover:text-white"
@@ -573,9 +700,15 @@ export default function GenosLandingPage() {
                                 initial={{ opacity: 0, y: 16 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.65, delay: 0.05 }}
-                                className="max-w-4xl text-4xl font-black tracking-tight text-slate-950 dark:text-white sm:text-6xl lg:text-7xl"
+                                className="max-w-4xl font-black tracking-[-0.06em] text-slate-950 dark:text-white text-5xl sm:text-6xl lg:text-[64px]"
                             >
-                                {t.hero.title}
+                                <span className="block">{t.hero.title}</span>
+
+                                {"titleSub" in t.hero && t.hero.titleSub && (
+                                    <span className="mt-3 block tracking-[-0.04em] text-violet-700 dark:text-violet-200 text-2xl sm:text-3xl lg:text-4xl">
+                                        {t.hero.titleSub}
+                                    </span>
+                                )}
                             </motion.h1>
 
                             <motion.p
@@ -687,7 +820,7 @@ export default function GenosLandingPage() {
                             <p className="text-sm font-black uppercase tracking-[0.22em] text-violet-600 dark:text-violet-300">
                                 {t.solution.eyebrow}
                             </p>
-                            <h2 className="mt-4 text-3xl font-black tracking-tight sm:text-5xl">
+                            <h2 className="mt-4 text-3xl font-black tracking-tight sm:text-5xl lg:text-[44px]">
                                 {t.solution.title}
                             </h2>
                             <p className="mt-5 text-lg leading-8 text-slate-600 dark:text-slate-300">
@@ -742,7 +875,7 @@ export default function GenosLandingPage() {
                             <p className="text-sm font-black uppercase tracking-[0.22em] text-violet-600 dark:text-violet-300">
                                 {t.context.eyebrow}
                             </p>
-                            <h2 className="mt-4 text-3xl font-black tracking-tight sm:text-5xl">
+                            <h2 className="mt-4 text-3xl font-black tracking-tight sm:text-5xl lg:text-[44px]">
                                 {t.context.title}
                             </h2>
                             <p className="mt-5 text-lg leading-8 text-slate-600 dark:text-slate-300">
@@ -840,6 +973,8 @@ export default function GenosLandingPage() {
                         </div>
                     </div>
                 </section>
+
+                <GenosAIHubSection lang={lang} />
 
                 <section className="px-4 py-16 sm:px-6 lg:px-8">
                     <div className="mx-auto max-w-7xl">
@@ -999,6 +1134,8 @@ export default function GenosLandingPage() {
                         </div>
                     </div>
                 </section>
+
+                <ContactSection lang={lang} />
 
                 <section id="faq" className="px-4 py-16 sm:px-6 lg:px-8">
                     <div className="mx-auto max-w-4xl">
