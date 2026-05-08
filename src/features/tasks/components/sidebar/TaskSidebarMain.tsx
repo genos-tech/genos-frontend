@@ -223,17 +223,17 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                 transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                                 "&:hover": {
                                     backgroundColor: isDark
-                                        ? "rgba(255,255,255,0.06)"
-                                        : "rgba(0,0,0,0.04)",
+                                        ? "rgba(146, 92, 246,0.06)"
+                                        : "rgba(146, 92, 246,0.04)",
                                 },
                                 "&.Mui-selected": {
                                     backgroundColor: isDark
-                                        ? "rgba(59,130,246,0.15)"
-                                        : "rgba(59,130,246,0.1)",
+                                        ? "rgba(146, 92, 246, 0.15)"
+                                        : "rgba(146, 92, 246,0.1)",
                                     "&:hover": {
                                         backgroundColor: isDark
-                                            ? "rgba(59,130,246,0.2)"
-                                            : "rgba(59,130,246,0.15)",
+                                            ? "rgba(146, 92, 246,0.2)"
+                                            : "rgba(146, 92, 246,0.15)",
                                     },
                                 },
                             }}
@@ -247,8 +247,8 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                     alignItems: "center",
                                     justifyContent: "center",
                                     backgroundColor: isDark
-                                        ? "rgba(255,255,255,0.08)"
-                                        : "rgba(0,0,0,0.05)",
+                                        ? "rgba(146, 92, 246,0.08)"
+                                        : "rgba(146, 92, 246,0.05)",
                                     transition: "all 0.2s ease",
                                 }}
                             >

@@ -584,7 +584,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
 
                     {/* Favorites Section */}
                     <NoteTypeSection
-                        icon={<StarRoundedIcon sx={{ fontSize: 18, color: "#f59e0b" }} />}
+                        icon={<StarRoundedIcon sx={{ fontSize: 18 }} />}
                         useNM={useNM}
                         noteType={5} // Use 5 for favorites (distinct from 0-4)
                         title="Favorites"
@@ -594,7 +594,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
 
                     {/* Recents Section */}
                     <NoteTypeSection
-                        icon={<HistoryRoundedIcon sx={{ fontSize: 18, color: "#60a5fa" }} />}
+                        icon={<HistoryRoundedIcon sx={{ fontSize: 18 }} />}
                         useNM={useNM}
                         noteType={6} // Use 6 for recents (distinct from 0-5)
                         title="Recents"
