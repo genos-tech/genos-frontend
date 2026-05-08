@@ -102,9 +102,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Force a sign-out: clear the localStorage flags AuthGuard reads,
     // null out the in-memory access token, and navigate to /signin
-    // via a full-page redirect. We use `window.location` instead of
-    // `useNavigate` because AuthProvider is mounted *outside* the
-    // <Router> in main.tsx, so router hooks aren't available here.
+    // via a full-page redirect. We use `window.location.assign`
+    // instead of `useNavigate` so a forced sign-out wipes the entire
+    // app state (React state, cached query data, websocket
+    // connections, etc.) on the way out — starting from a clean
+    // slate is much safer here than a soft navigation.
+    //
+    // Note: AuthProvider is intentionally NOT mounted on the public
+    // /home marketing page (see main.tsx), so this code path can
+    // never fire there — but the path-based early return inside
+    // attemptRefresh is kept as defense-in-depth for /signin and
+    // /signup, which DO live inside AuthProvider.
     const forceSignOut = () => {
         if (hasRedirectedRef.current) return;
         hasRedirectedRef.current = true;
@@ -138,7 +146,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         const attemptRefresh = async () => {
             // Return if the user is on the signin or signup page.
-            if (window.location.pathname === "/signin" || window.location.pathname === "/signup") {
+            if (
+                window.location.pathname === "/signin" ||
+                window.location.pathname === "/signup" ||
+                window.location.pathname === "/home"
+            ) {
                 return;
             }
 

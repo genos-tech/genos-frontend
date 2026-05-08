@@ -1,134 +1,139 @@
-:root {
-    /* Typography */
-    --font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-    --line-height: 1.5;
-    --font-weight: 400;
+@import "tailwindcss";
 
-    /* Colors - Dark theme (default) */
-    --color-text: rgba(255, 255, 255, 0.87);
-    --color-background: #242424;
-    --color-link: #646cff;
-    --color-link-hover: #535bf2;
-    --color-button-bg: #1a1a1a;
-    --color-button-border: transparent;
-    --color-button-border-hover: #646cff;
+/* Class-based dark mode: match `.dark` on the element itself or any ancestor.
+   Used by `<div className={cn(dark && "dark")}>` wrappers (e.g. LandingPage). */
+@custom-variant dark (&:where(.dark, .dark *));
 
-    /* Layout */
-    --min-width: 320px;
-    --min-height: 100vh;
-
-    /* Responsive breakpoints */
-    --breakpoint-mobile: 480px;
-    --breakpoint-tablet: 768px;
-    --breakpoint-desktop: 1024px;
-
-    /* Transitions */
-    --transition-duration: 0.25s;
-    --transition-duration-fast: 0.15s;
-    --transition-duration-slow: 0.4s;
-
-    /* Font rendering */
-    font-family: var(--font-family);
-    line-height: var(--line-height);
-    font-weight: var(--font-weight);
-    color-scheme: light dark;
-    color: var(--color-text);
-    background-color: var(--color-background);
-    font-synthesis: none;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-
-/* Links */
-a {
-    font-weight: 500;
-    color: var(--color-link);
-    text-decoration: inherit;
-}
-
-a:hover {
-    color: var(--color-link-hover);
-}
-
-/* Body */
-body {
-    margin: 0;
-    min-width: var(--min-width);
-    min-height: var(--min-height);
-}
-
-html, :root {
-    max-width: none !important;
-    width: 100%;
-}
-
-/* Typography */
-h1 {
-    font-size: 3.2em;
-    line-height: 1.1;
-}
-
-/* Buttons */
-button {
-    border-radius: 8px;
-    border: 1px solid var(--color-button-border);
-    padding: 0.6em 1.2em;
-    font-size: 1em;
-    font-weight: 500;
-    font-family: inherit;
-    background-color: var(--color-button-bg);
-    cursor: pointer;
-    transition: border-color var(--transition-duration);
-}
-
-button:hover {
-    border-color: var(--color-button-border-hover);
-}
-
-button:focus,
-button:focus-visible {
-    outline: 4px auto -webkit-focus-ring-color;
-}
-
-/* Light theme overrides */
-@media (prefers-color-scheme: light) {
+/* Project-wide globals. Wrapped in `@layer base` so Tailwind utilities
+   (which sit in the `utilities` layer) win over these element selectors. */
+@layer base {
     :root {
-        --color-text: #213547;
-        --color-background: #ffffff;
-        --color-link-hover: #747bff;
-        --color-button-bg: #f9f9f9;
+        /* Typography */
+        --font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+        --line-height: 1.5;
+        --font-weight: 400;
+
+        /* Colors - Dark theme (default) */
+        --color-text: rgba(255, 255, 255, 0.87);
+        --color-background: #242424;
+        --color-link: #646cff;
+        --color-link-hover: #535bf2;
+        --color-button-bg: #1a1a1a;
+        --color-button-border: transparent;
+        --color-button-border-hover: #646cff;
+
+        /* Layout */
+        --min-width: 320px;
+        --min-height: 100vh;
+
+        /* Responsive breakpoints */
+        --breakpoint-mobile: 480px;
+        --breakpoint-tablet: 768px;
+        --breakpoint-desktop: 1024px;
+
+        /* Transitions */
+        --transition-duration: 0.25s;
+        --transition-duration-fast: 0.15s;
+        --transition-duration-slow: 0.4s;
+
+        /* Font rendering */
+        font-family: var(--font-family);
+        line-height: var(--line-height);
+        font-weight: var(--font-weight);
+        color-scheme: light dark;
+        color: var(--color-text);
+        background-color: var(--color-background);
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }
-}
 
-/* ==========================================================================
-   Responsive Design
-   ========================================================================== */
+    a {
+        font-weight: 500;
+        color: var(--color-link);
+        text-decoration: inherit;
+    }
 
-/* Mobile-first responsive design */
-@media (max-width: 480px) {
+    a:hover {
+        color: var(--color-link-hover);
+    }
+
+    body {
+        margin: 0;
+        min-width: var(--min-width);
+        min-height: var(--min-height);
+    }
+
+    html,
     :root {
-        --min-width: 280px;
+        max-width: none !important;
+        width: 100%;
     }
 
     h1 {
-        font-size: 2.5em;
+        font-size: 3.2em;
+        line-height: 1.1;
     }
 
     button {
-        padding: 0.5em 1em;
-        font-size: 0.9em;
+        border-radius: 8px;
+        border: 1px solid var(--color-button-border);
+        padding: 0.6em 1.2em;
+        font-size: 1em;
+        font-weight: 500;
+        font-family: inherit;
+        background-color: var(--color-button-bg);
+        cursor: pointer;
+        transition: border-color var(--transition-duration);
     }
-}
 
-@media (min-width: 768px) {
-    h1 {
-        font-size: 3.5em;
+    button:hover {
+        border-color: var(--color-button-border-hover);
     }
-}
 
-@media (min-width: 1024px) {
-    h1 {
-        font-size: 4em;
+    button:focus,
+    button:focus-visible {
+        outline: 4px auto -webkit-focus-ring-color;
+    }
+
+    @media (prefers-color-scheme: light) {
+        :root {
+            --color-text: #213547;
+            --color-background: #ffffff;
+            --color-link-hover: #747bff;
+            --color-button-bg: #f9f9f9;
+        }
+    }
+
+    /* ==========================================================================
+       Responsive Design
+       ========================================================================== */
+
+    @media (max-width: 480px) {
+        :root {
+            --min-width: 280px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+        }
+
+        button {
+            padding: 0.5em 1em;
+            font-size: 0.9em;
+        }
+    }
+
+    @media (min-width: 768px) {
+        h1 {
+            font-size: 3.5em;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        h1 {
+            font-size: 4em;
+        }
     }
 }

@@ -147,7 +147,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
             // The indexMap for PM uses messageIdWithChatId = `${chatId}-${taskId}`
             const messageIdentifier =
                 chat.chatType === 3 && message.taskId ? message.taskId : message.messageId;
-            navigate(`/home/chat/${typePath}/${chat.chatId}/message/${messageIdentifier}`);
+            navigate(`/workspace/chat/${typePath}/${chat.chatId}/message/${messageIdentifier}`);
         }
 
         if (chat.chatType === 3) {
@@ -283,7 +283,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                             ? message.taskId
                                             : message.messageId;
                                     navigate(
-                                        `/home/chat/${typePath}/${chat.chatId}/thread/${threadIdentifier}`
+                                        `/workspace/chat/${typePath}/${chat.chatId}/thread/${threadIdentifier}`
                                     );
                                 }
                             }

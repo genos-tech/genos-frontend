@@ -140,9 +140,9 @@ const JoinTeamContent = () => {
 
                     await sleepMilliSeconds(100);
 
-                    navigate("/home");
+                    navigate("/workspace");
                 } else {
-                    navigate("/home");
+                    navigate("/workspace");
                 }
             }
         }

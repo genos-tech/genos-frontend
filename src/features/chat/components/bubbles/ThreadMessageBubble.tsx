@@ -108,7 +108,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
             const threadId =
                 thread.chatType === 3 && thread.taskId ? thread.taskId : thread.threadId;
             navigate(
-                `/home/chat/${typePath}/${thread.chatId}/thread/${threadId}/message/${message.messageId}`
+                `/workspace/chat/${typePath}/${thread.chatId}/thread/${threadId}/message/${message.messageId}`
             );
 
             // Update currentThreadChat's moveToSpecificIndex to focus on this message

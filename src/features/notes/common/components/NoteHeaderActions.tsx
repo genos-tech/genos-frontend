@@ -385,7 +385,7 @@ export const NoteHeaderActions = ({
                         onClick: () => {
                             const note = useNM.currentTaskNote;
                             navigate(
-                                `/home/notes/task/project/${currentTask?.project?.projectId}/task/${currentTask?.id}/note/${note?.noteId}`
+                                `/workspace/notes/task/project/${currentTask?.project?.projectId}/task/${currentTask?.id}/note/${note?.noteId}`
                             );
                         },
                     },

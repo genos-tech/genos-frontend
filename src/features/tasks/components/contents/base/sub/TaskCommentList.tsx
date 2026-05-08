@@ -45,8 +45,8 @@ type TaskCommentListProps = {
     fillContainer?: boolean;
     /** Builds the deep-link URL to navigate to when a comment is
      * clicked. Each parent supplies the URL shape that matches its
-     * mount: chat-thread (`/home/chat/pm/...`) or task-panel
-     * (`/home/tasks/project/...`). When omitted, comments are not
+     * mount: chat-thread (`/workspace/chat/pm/...`) or task-panel
+     * (`/workspace/tasks/project/...`). When omitted, comments are not
      * clickable and the bubble keeps its original visual behaviour. */
     commentLinkBuilder?: (commentId: number) => string;
     /** Comment id parsed from the URL's `comment/:commentId` segment,

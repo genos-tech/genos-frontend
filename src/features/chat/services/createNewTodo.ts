@@ -64,28 +64,28 @@ const createNewTodoItem = (
     let href = "";
     let fromText = "";
     if (chatType === 1) {
-        href = `${currentDomain}/home/chat/dm/${chatId}/message/${messageId}`;
+        href = `${currentDomain}/workspace/chat/dm/${chatId}/message/${messageId}`;
         fromText = "[Todo from DM] ";
         if (isThread && threadId) {
-            href = `${currentDomain}/home/chat/dm/${chatId}/thread/${threadId}/message/${messageId}`;
+            href = `${currentDomain}/workspace/chat/dm/${chatId}/thread/${threadId}/message/${messageId}`;
             fromText = "[Todo from DM Thread] ";
         }
     } else if (chatType === 2) {
-        href = `${currentDomain}/home/chat/gm/${chatId}/message/${messageId}`;
+        href = `${currentDomain}/workspace/chat/gm/${chatId}/message/${messageId}`;
         fromText = "[Todo from GM] ";
         if (isThread && threadId) {
-            href = `${currentDomain}/home/chat/gm/${chatId}/thread/${threadId}/message/${messageId}`;
+            href = `${currentDomain}/workspace/chat/gm/${chatId}/thread/${threadId}/message/${messageId}`;
             fromText = "[Todo from GM Thread] ";
         }
     } else if (chatType === 3 && threadId) {
         // Only comment
-        href = `${currentDomain}/home/chat/pm/${chatId}/thread/${threadId}/comment/${messageId}`;
+        href = `${currentDomain}/workspace/chat/pm/${chatId}/thread/${threadId}/comment/${messageId}`;
         fromText = "[Todo from Task Comment] ";
     } else if (chatType === 4) {
-        href = `${currentDomain}/home/chat/mdm/${chatId}/message/${messageId}`;
+        href = `${currentDomain}/workspace/chat/mdm/${chatId}/message/${messageId}`;
         fromText = "[Todo from DM] ";
         if (isThread && threadId) {
-            href = `${currentDomain}/home/chat/mdm/${chatId}/thread/${threadId}/message/${messageId}`;
+            href = `${currentDomain}/workspace/chat/mdm/${chatId}/thread/${threadId}/message/${messageId}`;
             fromText = "[Todo from DM Thread] ";
         }
     }

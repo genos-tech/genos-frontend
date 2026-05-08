@@ -113,11 +113,11 @@ export const App = () => {
     const { previewIndex: serviceSwitcherPreviewIndex, mruOrder: serviceSwitcherMruOrder } =
         useGlobalServiceShortcut({
             onOpenTasksAndCreate: () => {
-                navigate("/home/tasks");
+                navigate("/workspace/tasks");
                 useTM.handleCreateTask();
             },
             onOpenNotesAndCreate: () => {
-                navigate("/home/notes");
+                navigate("/workspace/notes");
                 void useNM.handleCreateNewMyNote(null);
             },
         });
@@ -131,14 +131,14 @@ export const App = () => {
 
             // Inbox: no source -> just switch services.
             if (intent.category === "inbox" || !src) {
-                navigate("/home/inbox");
+                navigate("/workspace/inbox");
                 return;
             }
 
             // Task / milestone: navigate to the task deep URL when we have
             // both ids; otherwise fall through to the chat branch.
             if (src.taskId !== undefined && src.projectId !== undefined) {
-                navigate(`/home/tasks/project/${src.projectId}/task/${src.taskId}`);
+                navigate(`/workspace/tasks/project/${src.projectId}/task/${src.taskId}`);
                 return;
             }
 
@@ -160,7 +160,7 @@ export const App = () => {
             }
 
             // Defensive fallback: surface the chat service.
-            navigate("/home/chat");
+            navigate("/workspace/chat");
         },
         [useCM, useTM, useUISM, usePM, navigate]
     );
