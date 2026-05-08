@@ -11,6 +11,7 @@ import { SignInForm } from "./features/admin/components/SignInForm";
 import { SignUpForm } from "./features/admin/components/SignUpForm";
 
 import { App } from "./App";
+import GenosLandingPage from "./LandingPage";
 
 createRoot(document.getElementById("root")!).render(
     <AuthProvider>
@@ -21,6 +22,7 @@ createRoot(document.getElementById("root")!).render(
                     <Route element={<SignInForm />} path="/" />
                     <Route element={<SignUpForm />} path="/signup" />
                     <Route element={<SignInForm />} path="/signin" />
+                    <Route element={<GenosLandingPage />} path="/home" />
                 </Route>
 
                 <Route element={<PageNotFound />} path="*" />

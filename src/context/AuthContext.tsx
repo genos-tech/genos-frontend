@@ -138,7 +138,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         const attemptRefresh = async () => {
             // Return if the user is on the signin or signup page.
-            if (window.location.pathname === "/signin" || window.location.pathname === "/signup") {
+            if (
+                window.location.pathname === "/signin" ||
+                window.location.pathname === "/signup" ||
+                window.location.pathname === "/home"
+            ) {
                 return;
             }
 
