@@ -1,7 +1,7 @@
 import "./index.css";
 
 import { createRoot } from "react-dom/client";
-import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
+import { Outlet, Route, BrowserRouter as Router, Routes } from "react-router-dom";
 
 import { AuthProvider } from "./context/AuthContext";
 import { PageNotFound } from "./components/layout/pageNotFound";
@@ -13,26 +13,44 @@ import { SignUpForm } from "./features/admin/components/SignUpForm";
 import { App } from "./App";
 import GenosLandingPage from "./LandingPage";
 
-createRoot(document.getElementById("root")!).render(
+// Layout for everything that needs access to AuthContext (the sign-in /
+// sign-up flows, the authenticated workspace, join-team, the 404 page).
+// Public marketing pages such as /home are intentionally rendered OUTSIDE
+// this layout so AuthProvider never mounts on them — that means no token
+// refresh, no forced sign-out redirect, and no useAuth dependency.
+const AuthLayout = () => (
     <AuthProvider>
-        <Router>
-            <Routes>
-                {/* Guest-only Routes (redirect to /workspace if already logged in) */}
+        <Outlet />
+    </AuthProvider>
+);
+
+createRoot(document.getElementById("root")!).render(
+    <Router>
+        <Routes>
+            {/* Public company / marketing page. Fully isolated from the auth
+                stack: no AuthProvider, no guards, no redirects. */}
+            <Route element={<GenosLandingPage />} path="/home" />
+
+            {/* All routes that need authentication context. */}
+            <Route element={<AuthLayout />}>
+                {/* Guest-only routes (redirect to /jointeam if already logged in) */}
                 <Route element={<GuestGuard />}>
                     <Route element={<SignInForm />} path="/" />
                     <Route element={<SignUpForm />} path="/signup" />
                     <Route element={<SignInForm />} path="/signin" />
-                    <Route element={<GenosLandingPage />} path="/home" />
                 </Route>
 
-                <Route element={<PageNotFound />} path="*" />
-
-                {/* Protected Routes */}
+                {/* Protected routes */}
                 <Route element={<AuthGuard />}>
                     <Route element={<App />} path="/workspace/*" />
                     <Route element={<JoinTeam />} path="/jointeam" />
                 </Route>
-            </Routes>
-        </Router>
-    </AuthProvider>
+
+                {/* Catch-all 404. Lives inside the auth layout because
+                    PageNotFound uses useNavigate, but it doesn't read auth
+                    state itself. */}
+                <Route element={<PageNotFound />} path="*" />
+            </Route>
+        </Routes>
+    </Router>
 );
