@@ -8,14 +8,14 @@ import { isMac } from "../../utils/platform";
 // `components/layout/sidebar.tsx` and the OVERLAY_SERVICES table in
 // `components/layout/ServiceSwitcherOverlay.tsx` — keep all three in sync.
 const SERVICES_BY_ID: Array<{ id: number; path: string }> = [
-    { id: 0, path: "/home/inbox" },
-    { id: 1, path: "/home/chat" },
-    { id: 2, path: "/home/tasks" },
-    { id: 3, path: "/home/notes" },
+    { id: 0, path: "/workspace/inbox" },
+    { id: 1, path: "/workspace/chat" },
+    { id: 2, path: "/workspace/tasks" },
+    { id: 3, path: "/workspace/notes" },
 ];
 
 // Derive the active service id from the current URL. Returns -1 when the
-// URL is not under any known service (e.g. the initial `/home` redirect),
+// URL is not under any known service (e.g. the initial `/workspace` redirect),
 // which we treat as "unknown — leave the MRU list alone".
 const deriveServiceId = (pathname: string): number => {
     for (const service of SERVICES_BY_ID) {
@@ -56,13 +56,13 @@ export type GlobalServiceShortcutState = {
 export type GlobalServiceShortcutOptions = {
     /**
      * Fired on `Ctrl+Cmd+T` (mac) / `Ctrl+Alt+T` (other). The callback owns
-     * both the navigation to `/home/tasks` and the side effect of opening
+     * both the navigation to `/workspace/tasks` and the side effect of opening
      * the create-task panel — the hook just intercepts the keypress.
      */
     onOpenTasksAndCreate?: () => void;
     /**
      * Fired on `Ctrl+Cmd+N` (mac) / `Ctrl+Alt+N` (other). The callback owns
-     * both the navigation to `/home/notes` and the side effect of creating
+     * both the navigation to `/workspace/notes` and the side effect of creating
      * a new top-level My Note.
      */
     onOpenNotesAndCreate?: () => void;

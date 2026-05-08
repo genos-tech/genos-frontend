@@ -112,7 +112,7 @@ export const useProjectTaskManagement = ({
             // Mirrors the active-route detection used by the sidebar so we
             // don't depend on `openingService` for a check the URL already
             // encodes.
-            if (!location.pathname.includes("/home/chat")) {
+            if (!location.pathname.includes("/workspace/chat")) {
                 useTM.setIsTaskPreviewVisible(true);
             }
         }

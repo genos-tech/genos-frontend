@@ -160,7 +160,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     // Deep-link plumbing for the task-panel mount of `TaskCommentList`.
     //
     // Task panel URL shape is
-    //   `/home/tasks/project/:projectId/task/:taskId/comment/:commentId`
+    //   `/workspace/tasks/project/:projectId/task/:taskId/comment/:commentId`
     // We only honour the URL's `commentId` when the path is in this
     // exact shape AND its `:taskId` matches the currently displayed
     // task — without that guard, navigating between tasks would briefly
@@ -184,10 +184,10 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     const commentLinkBuilder = useCallback(
         (commentId: number) => {
             const currentPath = window.location.pathname;
-            if (currentPath.includes("/home/chat/pm/")) {
+            if (currentPath.includes("/workspace/chat/pm/")) {
                 return currentPath;
             }
-            return `/home/tasks/project/${projectId}/task/${currentTaskId}/comment/${commentId}`;
+            return `/workspace/tasks/project/${projectId}/task/${currentTaskId}/comment/${commentId}`;
         },
         [projectId, currentTaskId]
     );

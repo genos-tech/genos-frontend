@@ -16,7 +16,7 @@ createRoot(document.getElementById("root")!).render(
     <AuthProvider>
         <Router>
             <Routes>
-                {/* Guest-only Routes (redirect to /home if already logged in) */}
+                {/* Guest-only Routes (redirect to /workspace if already logged in) */}
                 <Route element={<GuestGuard />}>
                     <Route element={<SignInForm />} path="/" />
                     <Route element={<SignUpForm />} path="/signup" />
@@ -27,7 +27,7 @@ createRoot(document.getElementById("root")!).render(
 
                 {/* Protected Routes */}
                 <Route element={<AuthGuard />}>
-                    <Route element={<App />} path="/home/*" />
+                    <Route element={<App />} path="/workspace/*" />
                     <Route element={<JoinTeam />} path="/jointeam" />
                 </Route>
             </Routes>
