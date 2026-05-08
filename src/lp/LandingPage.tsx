@@ -50,7 +50,8 @@ const copy = {
             lead: "Genosは、チャット、タスク管理、ドキュメントを同じ場所で扱えるワークスペースです。Slack、Jira、Notionを行き来する手間を減らし、チームの情報を検索とAIで活用しやすくします。",
             primary: "デモを試す",
             secondary: "機能を見る",
-            footnote: "ログインなしで体験できます。アカウント登録するとデータを継続保存できます。",
+            footnote:
+                "ログインなしで体験できます。アカウント登録するとデータを継続保存できます。Webブラウザのみで利用可能です。",
         },
         socialProof: [
             "Chat / Task / Noteを横断せずに扱う",
@@ -87,8 +88,8 @@ const copy = {
                 imageAlt: "Chat linked with tasks and notes in Genos",
                 bullets: [
                     "チャンネル / DM / スレッド",
-                    "メンション・ファイル添付",
                     "タスクやノートとの紐付け",
+                    "メンション・ファイル添付",
                 ],
             },
             {
@@ -97,7 +98,11 @@ const copy = {
                 subtitle: "進行状況と責任をクリアに",
                 image: "/lp-task.png",
                 imageAlt: "Task linked with chats and notes in Genos",
-                bullets: ["Kanban / List", "期限・担当者・優先度", "ステータス管理とコメント"],
+                bullets: [
+                    "スプリントとマイルストーン管理",
+                    "チャットとノートとのリンク",
+                    "ステータス管理とコメント",
+                ],
             },
             {
                 icon: "note",
@@ -105,11 +110,7 @@ const copy = {
                 subtitle: "背景と決定事項を残す",
                 image: "/lp-note.png",
                 imageAlt: "Note linked with chats and tasks in Genos",
-                bullets: [
-                    "Markdown / リッチテキスト",
-                    "Wiki / ページ階層",
-                    "チャット・タスクとのリンク",
-                ],
+                bullets: ["共同編集機能", "チャット・タスクとのリンク", "メンションとコメント"],
             },
         ],
         context: {
@@ -209,7 +210,7 @@ const copy = {
             primary: "Try the demo",
             secondary: "Explore features",
             footnote:
-                "You can try it without logging in. Create an account to keep your data permanently.",
+                "You can try it without logging in. Create an account to keep your data permanently. Only available in a web browser.",
         },
         socialProof: [
             "Chat / Task / Note without switching tools",
@@ -249,8 +250,8 @@ const copy = {
                 imageAlt: "Chat linked with tasks and notes in Genos",
                 bullets: [
                     "Channels / DM / threads",
-                    "Mentions and file attachments",
                     "Link to tasks and notes",
+                    "Mentions and file attachments",
                 ],
             },
             {
@@ -260,8 +261,8 @@ const copy = {
                 image: "/lp-task.png",
                 imageAlt: "Task linked with chats and notes in Genos",
                 bullets: [
-                    "Kanban / List",
-                    "Due dates, assignees, priorities",
+                    "Sprint and milestone management",
+                    "Links to chats and nates",
                     "Status tracking and comments",
                 ],
             },
@@ -272,9 +273,9 @@ const copy = {
                 image: "/lp-note.png",
                 imageAlt: "Note linked with chats and tasks in Genos",
                 bullets: [
-                    "Markdown / rich text",
-                    "Wiki / page hierarchy",
+                    "Collaborative editing",
                     "Links to chats and tasks",
+                    "Mentions and comments",
                 ],
             },
         ],
