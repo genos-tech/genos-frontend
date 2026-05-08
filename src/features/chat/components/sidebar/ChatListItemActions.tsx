@@ -1,11 +1,11 @@
 import React from "react";
 import ChecklistIcon from "@mui/icons-material/Checklist";
 import CircleIcon from "@mui/icons-material/Circle";
-import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import PersonAddRoundedIcon from "@mui/icons-material/PersonAddRounded";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
+import SplitscreenIcon from "@mui/icons-material/Splitscreen";
 import {
     Badge,
     Dropdown,
@@ -143,7 +143,7 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                         },
                     }}
                 >
-                    <MoreVertRoundedIcon sx={{ fontSize: 18 }} />
+                    <MoreHorizRoundedIcon sx={{ fontSize: 18 }} />
                 </MenuButton>
                 <Menu
                     size="sm"
@@ -178,9 +178,9 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                             }}
                         >
                             <PersonAddRoundedIcon
-                                sx={{ fontSize: 18, color: isDark ? "#60a5fa" : "#3b82f6" }}
+                                sx={{ fontSize: 18, color: isDark ? "#a78bfa" : "#7c3aed" }}
                             />
-                            Add Members
+                            Add members
                         </MenuItem>
                     )}
 
@@ -198,10 +198,10 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                             py: 1,
                         }}
                     >
-                        <OpenInNewIcon
-                            sx={{ fontSize: 18, color: isDark ? "#60a5fa" : "#3b82f6" }}
+                        <SplitscreenIcon
+                            sx={{ fontSize: 18, color: isDark ? "#a78bfa" : "#7c3aed" }}
                         />
-                        Split View
+                        Open in split view
                     </MenuItem>
                 </Menu>
             </Dropdown>

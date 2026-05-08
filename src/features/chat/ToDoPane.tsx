@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import AddIcon from "@mui/icons-material/Add";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import TipsAndUpdatesRoundedIcon from "@mui/icons-material/TipsAndUpdatesRounded";
-import { Box, Button, Chip, Stack, Tooltip, Typography, useColorScheme } from "@mui/joy";
+import { Box, Chip, IconButton, Stack, Typography, useColorScheme } from "@mui/joy";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
@@ -12,6 +12,7 @@ import { TodoBubble } from "./components/bubbles/TodoBubble";
 import { createNewTodo } from "./services/createNewTodo";
 import { defaultTodoContent } from "./utils/defaults";
 
+import { ActionButtonStyles } from "../../components/ui/styles/commonStyle";
 import { useAuth } from "../../context/AuthContext";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
@@ -49,6 +50,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const styles = isDark ? ActionButtonStyles.dark : ActionButtonStyles.light;
     const [tmpAllTodos, setTmpAllTodos] = useState<ToDoFactProps[]>(todos);
     const [tmpIncompleteTodos, setTmpIncompleteTodos] = useState<ToDoFactProps[]>(
         todos.filter((todo) => !todo.isCompleted)
@@ -153,55 +155,35 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                     </Stack>
 
                     {/* Add Button */}
-                    <Tooltip
-                        title={
-                            isExistingTodaysTodo
-                                ? "Today's todo already exists"
-                                : "Add today's todo"
-                        }
-                        variant="outlined"
+                    <IconButton
+                        disabled={isExistingTodaysTodo}
+                        size="sm"
+                        sx={{
+                            background: styles.createButtonBg,
+                            color: "#fff",
+                            borderRadius: "10px",
+                            px: 1.5,
+                            py: 0.75,
+                            fontSize: "13px",
+                            fontWeight: 600,
+                            gap: 0.5,
+                            boxShadow: isDark
+                                ? "0 2px 8px rgba(99,102,241,0.4)"
+                                : "0 2px 8px rgba(79,70,229,0.3)",
+                            transition: "all 0.2s ease",
+                            "&:hover": {
+                                background: styles.createButtonHover,
+                                transform: "translateY(-1px)",
+                                boxShadow: isDark
+                                    ? "0 4px 12px rgba(99,102,241,0.5)"
+                                    : "0 4px 12px rgba(79,70,229,0.4)",
+                            },
+                        }}
+                        onClick={handleCreateNewTodo}
                     >
-                        <span>
-                            <Button
-                                disabled={isExistingTodaysTodo}
-                                size="sm"
-                                variant="solid"
-                                onClick={handleCreateNewTodo}
-                                sx={{
-                                    borderRadius: "8px",
-                                    fontWeight: 600,
-                                    fontSize: "0.8rem",
-                                    px: 1.5,
-                                    py: 0.75,
-                                    background: isDark
-                                        ? "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)"
-                                        : "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
-                                    boxShadow: isDark
-                                        ? "0 2px 8px rgba(99,102,241,0.3)"
-                                        : "0 2px 8px rgba(99,102,241,0.25)",
-                                    transition: "all 0.2s ease",
-                                    "&:hover:not(:disabled)": {
-                                        transform: "translateY(-1px)",
-                                        boxShadow: isDark
-                                            ? "0 4px 12px rgba(99,102,241,0.4)"
-                                            : "0 4px 12px rgba(99,102,241,0.35)",
-                                    },
-                                    "&:disabled": {
-                                        background: isDark
-                                            ? "rgba(255,255,255,0.08)"
-                                            : "rgba(0,0,0,0.06)",
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.3)"
-                                            : "rgba(0,0,0,0.3)",
-                                        boxShadow: "none",
-                                    },
-                                }}
-                                startDecorator={<AddRoundedIcon sx={{ fontSize: 18 }} />}
-                            >
-                                New Todo
-                            </Button>
-                        </span>
-                    </Tooltip>
+                        <AddIcon sx={{ fontSize: "18px" }} />
+                        New Todo
+                    </IconButton>
                 </Stack>
 
                 {/* Filter Row */}

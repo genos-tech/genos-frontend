@@ -61,7 +61,7 @@ export interface TaskHomeActions {
     }) => void;
 }
 
-export interface TaskHomeHeaderProps {
+export interface TaskHeaderProps {
     myself: UserProps;
     setMyself: (me: UserProps) => void;
     allChats: AllChatProps[];

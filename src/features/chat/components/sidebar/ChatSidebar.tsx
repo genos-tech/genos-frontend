@@ -3,7 +3,7 @@ import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import GroupsIcon from "@mui/icons-material/Groups";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
-import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
+import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
@@ -60,35 +60,35 @@ export const NAV_ITEMS = [
         icon: PersonRoundedIcon,
         label: "Direct Messages",
         shortLabel: "DMs",
-        colorScheme: { dark: "#60a5fa", light: "#3b82f6" },
+        colorScheme: { dark: "#a78bfa", light: "#7c3aed" },
     },
     {
         type: CHAT_PANE_TYPES.GM,
         icon: GroupsRoundedIcon,
         label: "Group Messages",
         shortLabel: "Groups",
-        colorScheme: { dark: "#60a5fa", light: "#3b82f6" },
+        colorScheme: { dark: "#a78bfa", light: "#7c3aed" },
     },
     {
         type: CHAT_PANE_TYPES.PM,
         icon: AccountTreeRoundedIcon,
         label: "Project Updates",
         shortLabel: "Projects",
-        colorScheme: { dark: "#60a5fa", light: "#3b82f6" },
+        colorScheme: { dark: "#a78bfa", light: "#7c3aed" },
     },
     {
         type: CHAT_PANE_TYPES.FLAGGED,
         icon: FlagRoundedIcon,
         label: "Flagged Messages",
         shortLabel: "Flagged",
-        colorScheme: { dark: "#60a5fa", light: "#3b82f6" },
+        colorScheme: { dark: "#a78bfa", light: "#7c3aed" },
     },
     {
         type: CHAT_PANE_TYPES.ACTIVITY,
         icon: NotificationsActiveRoundedIcon,
         label: "Recent Activities (last 30 days)",
         shortLabel: "Activity",
-        colorScheme: { dark: "#60a5fa", light: "#3b82f6" },
+        colorScheme: { dark: "#a78bfa", light: "#7c3aed" },
     },
 ];
 
@@ -450,7 +450,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                         },
                                     }}
                                 >
-                                    <MoreVertRoundedIcon sx={{ fontSize: 18 }} />
+                                    <MoreHorizRoundedIcon sx={{ fontSize: 18 }} />
                                 </MenuButton>
                                 <Menu
                                     size="sm"
@@ -470,7 +470,12 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                             fontSize: "0.85rem",
                                         }}
                                     >
-                                        <GroupsIcon sx={{ fontSize: 18, color: "#4ade80" }} />
+                                        <GroupsIcon
+                                            sx={{
+                                                fontSize: 18,
+                                                color: isDark ? "#a78bfa" : "#7c3aed",
+                                            }}
+                                        />
                                         New Group Message
                                     </MenuItem>
                                     <MenuItem
@@ -482,7 +487,10 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                         }}
                                     >
                                         <PeopleRoundedIcon
-                                            sx={{ fontSize: 18, color: "#10b981" }}
+                                            sx={{
+                                                fontSize: 18,
+                                                color: isDark ? "#a78bfa" : "#7c3aed",
+                                            }}
                                         />
                                         New DM with friends
                                     </MenuItem>

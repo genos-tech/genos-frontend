@@ -18,7 +18,7 @@ import { SprintBoard } from "../board";
 import { CreateTaskForm } from "../contents/CreateTaskForm";
 import { TaskPreview } from "../contents/TaskPreview";
 import { TaskDashboard } from "../dashboard/TaskDashboard";
-import { TaskHomeHeader } from "../header/TaskHomeHeader";
+import { TaskHeader } from "../header/TaskHeader";
 import { TaskSidebar } from "../sidebar/TaskSidebarMain";
 import { DraggableTaskTable } from "../table/DraggableTaskTable";
 
@@ -119,7 +119,7 @@ export const TaskHomeLayout = ({
             )}
             {(useTM.isTaskTableVisible || useTM.isSprintBoardVisible) && (
                 <>
-                    <TaskHomeHeader
+                    <TaskHeader
                         myself={myself}
                         setMyself={setMyself}
                         useCM={useCM}

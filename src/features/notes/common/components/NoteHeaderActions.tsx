@@ -23,6 +23,7 @@ import { alpha } from "@mui/system";
 import { useNavigate } from "react-router-dom";
 
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
+import { NoteHeaderActionsStyles } from "../../../../components/ui/styles/commonStyle";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -31,51 +32,6 @@ import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 import { TaskProps } from "../../../../types/tasks";
 import { isMac } from "../../../../utils/platform";
-
-// Theme-aware styling
-const HEADER_STYLES = {
-    dark: {
-        containerBg: "linear-gradient(135deg, rgba(30,32,44,0.9) 0%, rgba(20,22,34,0.95) 100%)",
-        containerBorder: "rgba(99,102,241,0.2)",
-        buttonBg: "linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(139,92,246,0.12) 100%)",
-        buttonHover:
-            "linear-gradient(135deg, rgba(99,102,241,0.22) 0%, rgba(139,92,246,0.22) 100%)",
-        buttonBorder: "rgba(99,102,241,0.3)",
-        primaryButtonBg: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
-        primaryButtonHover: "linear-gradient(135deg, #818cf8 0%, #a78bfa 100%)",
-        dangerBg: "linear-gradient(135deg, rgba(239,68,68,0.12) 0%, rgba(220,38,38,0.12) 100%)",
-        dangerHover: "linear-gradient(135deg, rgba(239,68,68,0.22) 0%, rgba(220,38,38,0.22) 100%)",
-        dangerBorder: "rgba(239,68,68,0.3)",
-        menuBg: "linear-gradient(180deg, rgba(30,32,44,0.98) 0%, rgba(20,22,34,0.99) 100%)",
-        menuBorder: "rgba(99,102,241,0.15)",
-        textColor: "#e2e8f0",
-        accentColor: "#818cf8",
-        glowColor: "rgba(99,102,241,0.3)",
-        chipBg: "rgba(99,102,241,0.15)",
-        chipBorder: "rgba(99,102,241,0.3)",
-    },
-    light: {
-        containerBg:
-            "linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(238,242,255,0.5) 100%)",
-        containerBorder: "rgba(79,70,229,0.15)",
-        buttonBg: "linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(139,92,246,0.08) 100%)",
-        buttonHover:
-            "linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.15) 100%)",
-        buttonBorder: "rgba(79,70,229,0.2)",
-        primaryButtonBg: "linear-gradient(135deg, #6366f1 0%, #7c3aed 100%)",
-        primaryButtonHover: "linear-gradient(135deg, #818cf8 0%, #8b5cf6 100%)",
-        dangerBg: "linear-gradient(135deg, rgba(239,68,68,0.08) 0%, rgba(220,38,38,0.08) 100%)",
-        dangerHover: "linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(220,38,38,0.15) 100%)",
-        dangerBorder: "rgba(239,68,68,0.2)",
-        menuBg: "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(238,242,255,0.95) 100%)",
-        menuBorder: "rgba(79,70,229,0.1)",
-        textColor: "#1e293b",
-        accentColor: "#6366f1",
-        glowColor: "rgba(99,102,241,0.2)",
-        chipBg: "rgba(99,102,241,0.1)",
-        chipBorder: "rgba(79,70,229,0.2)",
-    },
-};
 
 interface NoteHeaderActionsProps {
     noteType: number;
@@ -118,7 +74,7 @@ export const NoteHeaderActions = ({
 }: NoteHeaderActionsProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
-    const styles = isDark ? HEADER_STYLES.dark : HEADER_STYLES.light;
+    const styles = isDark ? NoteHeaderActionsStyles.dark : NoteHeaderActionsStyles.light;
     const navigate = useNavigate();
 
     // Common action button style

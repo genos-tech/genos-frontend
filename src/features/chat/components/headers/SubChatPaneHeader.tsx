@@ -18,7 +18,7 @@ import { useMarkAllChatActivityRead } from "../../hooks/useMarkAllChatActivityRe
 import { HeaderUserName } from "./HeaderUserName";
 
 // Theme-aware styling - Indigo/Blue theme for chat
-const HEADER_STYLES = {
+const ChatPaneHeaderStyles = {
     dark: {
         containerBg: "linear-gradient(135deg, rgba(30,32,44,0.95) 0%, rgba(20,22,34,0.98) 100%)",
         containerBorder: "rgba(99,102,241,0.15)",
@@ -81,7 +81,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
 
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
-    const styles = isDark ? HEADER_STYLES.dark : HEADER_STYLES.light;
+    const styles = isDark ? ChatPaneHeaderStyles.dark : ChatPaneHeaderStyles.light;
 
     const isYou: boolean = myself.userId === useCM.currentSubChat?.dmPartnerUser.userId;
 
@@ -207,7 +207,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                         useCM.currentSubChat.chatType === 4) && (
                         <Tooltip
                             size="sm"
-                            title="Create New Task"
+                            title="Create a new task"
                             variant="soft"
                             sx={{ borderRadius: "8px" }}
                         >

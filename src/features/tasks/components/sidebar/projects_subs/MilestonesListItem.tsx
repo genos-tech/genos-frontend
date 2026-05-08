@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
-import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
+import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import {
     Avatar,
     AvatarGroup,
@@ -226,7 +226,7 @@ export const MilestonesListItem = ({
                                         },
                                     }}
                                 >
-                                    <MoreVertRoundedIcon sx={{ fontSize: 16 }} />
+                                    <MoreHorizRoundedIcon sx={{ fontSize: 16 }} />
                                 </MenuButton>
                                 <Menu placement="bottom-end">
                                     <MenuItem

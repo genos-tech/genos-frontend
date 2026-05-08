@@ -10,6 +10,7 @@ import { Badge, IconButton, Stack, Tooltip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { ChatPaneHeaderStyles } from "../../../../components/ui/styles/commonStyle";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -20,41 +21,6 @@ import { AllChatProps, ChatProps } from "../../../../types/chat";
 import { useMarkAllChatActivityRead } from "../../hooks/useMarkAllChatActivityRead";
 import { ModalAddMembers } from "../modals/ModalAddMembers";
 import { HeaderUserName } from "./HeaderUserName";
-
-// Theme-aware styling - Indigo/Blue theme for chat
-const HEADER_STYLES = {
-    dark: {
-        containerBg: "linear-gradient(135deg, rgba(30,32,44,0.95) 0%, rgba(20,22,34,0.98) 100%)",
-        containerBorder: "rgba(99,102,241,0.15)",
-        buttonBg: "linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(139,92,246,0.12) 100%)",
-        buttonHover:
-            "linear-gradient(135deg, rgba(99,102,241,0.22) 0%, rgba(139,92,246,0.22) 100%)",
-        buttonBorder: "rgba(99,102,241,0.3)",
-        primaryButtonBg: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
-        primaryButtonHover: "linear-gradient(135deg, #818cf8 0%, #a78bfa 100%)",
-        dangerBg: "linear-gradient(135deg, rgba(239,68,68,0.12) 0%, rgba(220,38,38,0.12) 100%)",
-        dangerHover: "linear-gradient(135deg, rgba(239,68,68,0.22) 0%, rgba(220,38,38,0.22) 100%)",
-        dangerBorder: "rgba(239,68,68,0.3)",
-        accentColor: "#818cf8",
-        glowColor: "rgba(99,102,241,0.25)",
-    },
-    light: {
-        containerBg:
-            "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(238,242,255,0.5) 100%)",
-        containerBorder: "rgba(79,70,229,0.12)",
-        buttonBg: "linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(139,92,246,0.08) 100%)",
-        buttonHover:
-            "linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.15) 100%)",
-        buttonBorder: "rgba(79,70,229,0.2)",
-        primaryButtonBg: "linear-gradient(135deg, #6366f1 0%, #7c3aed 100%)",
-        primaryButtonHover: "linear-gradient(135deg, #818cf8 0%, #8b5cf6 100%)",
-        dangerBg: "linear-gradient(135deg, rgba(239,68,68,0.08) 0%, rgba(220,38,38,0.08) 100%)",
-        dangerHover: "linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(220,38,38,0.15) 100%)",
-        dangerBorder: "rgba(239,68,68,0.2)",
-        accentColor: "#6366f1",
-        glowColor: "rgba(99,102,241,0.15)",
-    },
-};
 
 type MainChatPaneHeaderProps = {
     chat: ChatProps;
@@ -87,7 +53,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
 
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
-    const styles = isDark ? HEADER_STYLES.dark : HEADER_STYLES.light;
+    const styles = isDark ? ChatPaneHeaderStyles.dark : ChatPaneHeaderStyles.light;
 
     const isYou: boolean = myself.userId === chat.dmPartnerUser.userId;
 
@@ -222,7 +188,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                 {chat.chatType === 3 && (
                     <Tooltip
                         size="sm"
-                        title="Create New Task"
+                        title="Create a new task"
                         variant="soft"
                         sx={{ borderRadius: "8px" }}
                     >

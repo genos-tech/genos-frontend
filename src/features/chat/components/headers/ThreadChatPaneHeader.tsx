@@ -8,6 +8,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 
 import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
+import { ThreadChatPaneHeaderStyles } from "../../../../components/ui/styles/commonStyle";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
@@ -15,49 +16,6 @@ import { MuteToggleButton } from "../../../../services/notifications/MuteToggleB
 import { UserProps } from "../../../../types/admin";
 import { ThreadProps } from "../../../../types/chat";
 import { useChatContext } from "../../context/ChatContext";
-
-// Theme-aware styling - Purple/Violet theme for threads
-const HEADER_STYLES = {
-    dark: {
-        containerBg: "linear-gradient(135deg, rgba(30,32,44,0.95) 0%, rgba(20,22,34,0.98) 100%)",
-        containerBorder: "rgba(139,92,246,0.15)",
-        buttonBg: "linear-gradient(135deg, rgba(139,92,246,0.12) 0%, rgba(168,85,247,0.12) 100%)",
-        buttonHover:
-            "linear-gradient(135deg, rgba(139,92,246,0.22) 0%, rgba(168,85,247,0.22) 100%)",
-        buttonBorder: "rgba(139,92,246,0.3)",
-        primaryButtonBg: "linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)",
-        primaryButtonHover: "linear-gradient(135deg, #a78bfa 0%, #c084fc 100%)",
-        dangerBg: "linear-gradient(135deg, rgba(239,68,68,0.12) 0%, rgba(220,38,38,0.12) 100%)",
-        dangerHover: "linear-gradient(135deg, rgba(239,68,68,0.22) 0%, rgba(220,38,38,0.22) 100%)",
-        dangerBorder: "rgba(239,68,68,0.3)",
-        chipBg: "linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(168,85,247,0.15) 100%)",
-        chipBorder: "rgba(139,92,246,0.3)",
-        threadBadgeBg: "linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)",
-        accentColor: "#a78bfa",
-        textColor: "#f1f5f9",
-        glowColor: "rgba(139,92,246,0.25)",
-    },
-    light: {
-        containerBg:
-            "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(245,243,255,0.5) 100%)",
-        containerBorder: "rgba(124,58,237,0.12)",
-        buttonBg: "linear-gradient(135deg, rgba(139,92,246,0.08) 0%, rgba(168,85,247,0.08) 100%)",
-        buttonHover:
-            "linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(168,85,247,0.15) 100%)",
-        buttonBorder: "rgba(124,58,237,0.2)",
-        primaryButtonBg: "linear-gradient(135deg, #7c3aed 0%, #9333ea 100%)",
-        primaryButtonHover: "linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%)",
-        dangerBg: "linear-gradient(135deg, rgba(239,68,68,0.08) 0%, rgba(220,38,38,0.08) 100%)",
-        dangerHover: "linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(220,38,38,0.15) 100%)",
-        dangerBorder: "rgba(239,68,68,0.2)",
-        chipBg: "linear-gradient(135deg, rgba(139,92,246,0.1) 0%, rgba(168,85,247,0.1) 100%)",
-        chipBorder: "rgba(124,58,237,0.2)",
-        threadBadgeBg: "linear-gradient(135deg, #7c3aed 0%, #9333ea 100%)",
-        accentColor: "#7c3aed",
-        textColor: "#1e293b",
-        glowColor: "rgba(124,58,237,0.15)",
-    },
-};
 
 type ThreadChatPaneHeaderProps = {
     myself: UserProps;
@@ -70,7 +28,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
     const { myself, useCM, useNM, useTM } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
-    const styles = isDark ? HEADER_STYLES.dark : HEADER_STYLES.light;
+    const styles = isDark ? ThreadChatPaneHeaderStyles.dark : ThreadChatPaneHeaderStyles.light;
     const { currentThreadTaskId } = useChatContext();
 
     const isYou: boolean =
@@ -395,7 +353,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     return (
                         <Tooltip
                             size="sm"
-                            title="Create a New Task linked to this thread"
+                            title="New task linked to this thread"
                             variant="soft"
                             sx={{ borderRadius: "8px" }}
                         >
@@ -460,7 +418,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                 {useCM.currentThreadChat?.chatType !== 3 && (
                     <Tooltip
                         size="sm"
-                        title="Open Note"
+                        title="Open Note linked to this thread"
                         variant="soft"
                         sx={{ borderRadius: "8px" }}
                     >

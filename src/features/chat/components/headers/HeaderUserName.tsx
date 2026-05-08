@@ -8,41 +8,12 @@ import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
 import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { PulseDot } from "../../../../components/ui/misc/PulseDot";
+import { HeaderUserNameStyles } from "../../../../components/ui/styles/commonStyle";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps } from "../../../../types/chat";
-
-// Theme-aware styling
-const HEADER_STYLES = {
-    dark: {
-        avatarBg: "rgba(99,102,241,0.1)",
-        avatarBorder: "rgba(99,102,241,0.2)",
-        chipBg: "linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(139,92,246,0.12) 100%)",
-        chipBorder: "rgba(99,102,241,0.25)",
-        onlineColor: "#22c55e",
-        offlineColor: "#6b7280",
-        lockBg: "rgba(251,191,36,0.15)",
-        lockBorder: "rgba(251,191,36,0.3)",
-        lockColor: "#fbbf24",
-        textColor: "#f1f5f9",
-        subtitleColor: "#94a3b8",
-    },
-    light: {
-        avatarBg: "rgba(99,102,241,0.06)",
-        avatarBorder: "rgba(79,70,229,0.12)",
-        chipBg: "linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(139,92,246,0.08) 100%)",
-        chipBorder: "rgba(79,70,229,0.2)",
-        onlineColor: "#16a34a",
-        offlineColor: "#9ca3af",
-        lockBg: "rgba(245,158,11,0.1)",
-        lockBorder: "rgba(217,119,6,0.25)",
-        lockColor: "#d97706",
-        textColor: "#1e293b",
-        subtitleColor: "#64748b",
-    },
-};
 
 type HeaderUserNameProps = {
     useTEM: TeamManagementState;
@@ -59,7 +30,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
     const { useTEM, socket, myself, setMyself, useUISM, chat, isYou, useCM } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
-    const styles = isDark ? HEADER_STYLES.dark : HEADER_STYLES.light;
+    const styles = isDark ? HeaderUserNameStyles.dark : HeaderUserNameStyles.light;
 
     const mdmMembers =
         chat?.chatType === 4

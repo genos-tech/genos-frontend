@@ -4,33 +4,12 @@ import { useColorScheme } from "@mui/joy/styles";
 
 import genosLogo from "../../../assets/genos_tech.png";
 import { ColorSchemeToggle } from "../../../components/layout/colorSchemeToggle";
-
-// Theme-aware styling
-const HEADER_STYLES = {
-    dark: {
-        logoBg: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)",
-        logoShadow: "0 4px 20px rgba(99,102,241,0.4)",
-        titleGradient: "linear-gradient(90deg, #818cf8 0%, #a78bfa 50%, #c084fc 100%)",
-        subtitleColor: "#94a3b8",
-        containerBg: "rgba(15,17,25,0.6)",
-        containerBorder: "rgba(99,102,241,0.15)",
-        starColor: "#fbbf24",
-    },
-    light: {
-        logoBg: "linear-gradient(135deg, #6366f1 0%, #7c3aed 50%, #9333ea 100%)",
-        logoShadow: "0 4px 20px rgba(99,102,241,0.3)",
-        titleGradient: "linear-gradient(90deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%)",
-        subtitleColor: "#64748b",
-        containerBg: "rgba(255,255,255,0.7)",
-        containerBorder: "rgba(99,102,241,0.1)",
-        starColor: "#f59e0b",
-    },
-};
+import { HeaderStyles } from "../../../components/ui/styles/commonStyle";
 
 export const AdminHeader = () => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
-    const styles = isDark ? HEADER_STYLES.dark : HEADER_STYLES.light;
+    const styles = isDark ? HeaderStyles.dark : HeaderStyles.light;
 
     return (
         <Box
