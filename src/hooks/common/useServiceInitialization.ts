@@ -22,10 +22,10 @@ interface UseServiceInitializationProps {
 type ActiveService = "inbox" | "chat" | "tasks" | "notes" | null;
 
 const deriveActiveService = (pathname: string): ActiveService => {
-    if (pathname.includes("/home/inbox")) return "inbox";
-    if (pathname.includes("/home/chat")) return "chat";
-    if (pathname.includes("/home/tasks")) return "tasks";
-    if (pathname.includes("/home/notes")) return "notes";
+    if (pathname.includes("/workspace/inbox")) return "inbox";
+    if (pathname.includes("/workspace/chat")) return "chat";
+    if (pathname.includes("/workspace/tasks")) return "tasks";
+    if (pathname.includes("/workspace/notes")) return "notes";
     return null;
 };
 

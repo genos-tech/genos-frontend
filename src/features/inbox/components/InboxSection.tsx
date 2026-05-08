@@ -37,7 +37,7 @@ export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionExtendedProps
         const { mode } = useColorScheme();
         const isDark = mode === "dark";
         const navigate = useNavigate();
-        const basePath = isRequest ? "/home/inbox/requests" : "/home/inbox/activities";
+        const basePath = isRequest ? "/workspace/inbox/requests" : "/workspace/inbox/activities";
 
         // Scroll to selected item when it changes
         useEffect(() => {

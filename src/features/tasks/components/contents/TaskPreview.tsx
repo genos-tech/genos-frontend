@@ -1599,7 +1599,7 @@ const MilestonePreviewInner = ({
                                 icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
                                 onClick: async () => {
                                     if (milestone.projectId && milestone.milestoneId) {
-                                        const milestoneUrl = `${window.location.origin}/home/tasks/project/${milestone.projectId}/milestone/${milestone.milestoneId}`;
+                                        const milestoneUrl = `${window.location.origin}/workspace/tasks/project/${milestone.projectId}/milestone/${milestone.milestoneId}`;
                                         try {
                                             await navigator.clipboard.writeText(milestoneUrl);
                                         } catch (err) {

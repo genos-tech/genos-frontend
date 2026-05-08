@@ -107,7 +107,7 @@ export const ThreadCommentsView = ({
     // Deep-link plumbing for the chat-thread mount of `TaskCommentList`.
     //
     // The chat thread URL shape is
-    //   `/home/chat/pm/:chatId/thread/:threadId/comment/:commentId`
+    //   `/workspace/chat/pm/:chatId/thread/:threadId/comment/:commentId`
     // For PMs the `:threadId` segment is the parent task id (see
     // `ThreadMessageBubble.handleMessageClick`), which matches our
     // `threadTaskId` here. We only honour the URL's `commentId` when the
@@ -130,7 +130,7 @@ export const ThreadCommentsView = ({
 
     const commentLinkBuilder = useCallback(
         (commentId: number) =>
-            `/home/chat/pm/${chatId}/thread/${threadTaskId}/comment/${commentId}`,
+            `/workspace/chat/pm/${chatId}/thread/${threadTaskId}/comment/${commentId}`,
         [chatId, threadTaskId]
     );
 

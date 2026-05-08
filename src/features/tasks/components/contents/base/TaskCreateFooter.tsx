@@ -185,7 +185,7 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
                 }}
                 onClick={() => {
                     // Open task table if the current location is task.
-                    if (location.pathname.includes("/home/tasks")) {
+                    if (location.pathname.includes("/workspace/tasks")) {
                         useTM.setIsTaskTableVisible(true);
                     }
                     useTM.setIsTaskPreviewVisible(true);

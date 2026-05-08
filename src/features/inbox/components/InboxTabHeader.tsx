@@ -31,14 +31,14 @@ export const InboxTabHeader = ({ requestCount }: InboxTabHeaderProps) => {
         {
             id: "requests",
             label: "Requests",
-            path: "/home/inbox/requests",
+            path: "/workspace/inbox/requests",
             icon: <PendingActionsRoundedIcon sx={{ fontSize: 16 }} />,
             count: requestCount,
         },
         {
             id: "activities",
             label: "Activities",
-            path: "/home/inbox/activities",
+            path: "/workspace/inbox/activities",
             icon: <NotificationsActiveRoundedIcon sx={{ fontSize: 16 }} />,
         },
     ];

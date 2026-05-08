@@ -260,7 +260,7 @@ export const useChatManagement = (
         }
 
         // Switching to the chat service is implicit: every code path below
-        // calls `navigate("/home/chat/...")`, and the URL is now the source
+        // calls `navigate("/workspace/chat/...")`, and the URL is now the source
         // of truth for the active service (see useGlobalServiceShortcut).
         setIsMainChatVisible(false);
         setIsChatNoteVisibleInChat(openTaskNoteInChat);
@@ -274,9 +274,9 @@ export const useChatManagement = (
             console.error(`Chat not found: chatType=${chatType}, chatId=${chatId}`);
             // Still navigate to the chat page - the routing hook will handle loading
             if (threadId > 0) {
-                navigate(`/home/chat/${chatTypePath}/${chatId}/thread/${threadId}`);
+                navigate(`/workspace/chat/${chatTypePath}/${chatId}/thread/${threadId}`);
             } else {
-                navigate(`/home/chat/${chatTypePath}/${chatId}`);
+                navigate(`/workspace/chat/${chatTypePath}/${chatId}`);
             }
             return;
         }
@@ -300,19 +300,19 @@ export const useChatManagement = (
                 setIsMainChatVisible(true);
                 setIsThreadVisible(true);
                 // Navigate to thread URL
-                navigate(`/home/chat/${chatTypePath}/${chatId}/thread/${threadId}`);
+                navigate(`/workspace/chat/${chatTypePath}/${chatId}/thread/${threadId}`);
             } else {
                 setIsMainChatVisible(true);
                 // Navigate to chat URL
-                navigate(`/home/chat/${chatTypePath}/${chatId}`);
+                navigate(`/workspace/chat/${chatTypePath}/${chatId}`);
             }
         } catch (error) {
             console.error(error);
             // Still navigate on error to show the chat page
             if (threadId > 0) {
-                navigate(`/home/chat/${chatTypePath}/${chatId}/thread/${threadId}`);
+                navigate(`/workspace/chat/${chatTypePath}/${chatId}/thread/${threadId}`);
             } else {
-                navigate(`/home/chat/${chatTypePath}/${chatId}`);
+                navigate(`/workspace/chat/${chatTypePath}/${chatId}`);
             }
         }
     };

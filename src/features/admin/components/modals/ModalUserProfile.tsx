@@ -705,7 +705,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                     useCM
                                                 );
                                                 setOpenUserProfile(false);
-                                                navigate("/home/chat");
+                                                navigate("/workspace/chat");
                                             }
                                         })();
                                     }}

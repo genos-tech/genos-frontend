@@ -45,7 +45,7 @@ const buildChatPath = (
     messageId?: number,
     commentId?: number
 ): string => {
-    let path = `/home/chat/${typePath}`;
+    let path = `/workspace/chat/${typePath}`;
     if (chatId !== undefined) path += `/${chatId}`;
     if (threadId !== undefined) path += `/thread/${threadId}`;
     if (commentId !== undefined) {
@@ -98,8 +98,8 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
     const parsedRoute = useMemo((): ParsedRoute => {
         const pathParts = pathname.split("/").filter(Boolean);
         // Expected formats:
-        //   /home/chat/:chatType/:chatId?/thread/:threadId?/message/:messageId?
-        //   /home/chat/:chatType/:chatId?/thread/:threadId?/comment/:commentId?
+        //   /workspace/chat/:chatType/:chatId?/thread/:threadId?/message/:messageId?
+        //   /workspace/chat/:chatType/:chatId?/thread/:threadId?/comment/:commentId?
         //
         // The `comment/...` shape is the PM thread "Comments" tab deep
         // link added alongside the existing `message/...` shape.
@@ -175,7 +175,7 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
         (chatType: number, chatId: number, messageId: number) => {
             const typePath = CHAT_TYPE_REVERSE_MAP[chatType];
             if (typePath) {
-                navigate(`/home/chat/${typePath}/${chatId}/message/${messageId}`);
+                navigate(`/workspace/chat/${typePath}/${chatId}/message/${messageId}`);
             }
         },
         [navigate]
@@ -264,7 +264,7 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
         if (!chatType) {
             const lastChatType = localStorage.getItem("lastChatType");
             const defaultType = lastChatType ? CHAT_TYPE_REVERSE_MAP[Number(lastChatType)] : "dm";
-            navigate(`/home/chat/${defaultType || "dm"}`, { replace: true });
+            navigate(`/workspace/chat/${defaultType || "dm"}`, { replace: true });
             return;
         }
 
