@@ -224,7 +224,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
                 }
                 renderOption={(props, option) => {
                     const gmChat: AllChatProps | undefined = useCM.allChats.find(
-                        (chat) => chat.chatId === option.id
+                        (chat) => chat.chatId === option.id && chat.chatType === 2
                     );
                     return (
                         <AutocompleteOption
