@@ -35,7 +35,7 @@ export default function GenosAIHubImageSection({ lang = "ja" }: { lang?: Lang })
                             {t.eyebrow}
                         </p>
 
-                        <h2 className="mt-4 text-3xl font-black tracking-tight text-slate-950 dark:text-white sm:text-5xl lg:text-[46px]">
+                        <h2 className="mt-4 text-2xl font-black tracking-tight text-slate-950 dark:text-white sm:text-5xl lg:text-[46px]">
                             {t.title}
                         </h2>
 

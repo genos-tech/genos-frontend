@@ -493,7 +493,7 @@ function ContactSection({ lang }: { lang: "ja" | "en" }) {
                             {t.eyebrow}
                         </p>
 
-                        <h2 className="mt-4 text-3xl font-black tracking-tight text-slate-950 dark:text-white sm:text-5xl">
+                        <h2 className="mt-4 text-2xl font-black tracking-tight text-slate-950 dark:text-white sm:text-5xl">
                             {t.title}
                         </h2>
 
@@ -700,7 +700,7 @@ export default function GenosLandingPage() {
                                 initial={{ opacity: 0, y: 16 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.65, delay: 0.05 }}
-                                className="max-w-4xl font-black tracking-[-0.06em] text-slate-950 dark:text-white text-5xl sm:text-6xl lg:text-[64px]"
+                                className="max-w-4xl font-black tracking-[-0.06em] text-slate-950 dark:text-white text-4xl sm:text-6xl lg:text-[64px]"
                             >
                                 <span className="block">{t.hero.title}</span>
 
@@ -777,7 +777,7 @@ export default function GenosLandingPage() {
                                 <p className="text-sm font-black uppercase tracking-[0.22em] text-violet-600 dark:text-violet-300">
                                     {t.problem.eyebrow}
                                 </p>
-                                <h2 className="mt-4 text-3xl font-black tracking-tight sm:text-4xl">
+                                <h2 className="mt-4 text-2xl font-black tracking-tight sm:text-4xl">
                                     {t.problem.title}
                                 </h2>
                                 <p className="mt-5 text-base leading-8 text-slate-600 dark:text-slate-300">
@@ -820,7 +820,7 @@ export default function GenosLandingPage() {
                             <p className="text-sm font-black uppercase tracking-[0.22em] text-violet-600 dark:text-violet-300">
                                 {t.solution.eyebrow}
                             </p>
-                            <h2 className="mt-4 text-3xl font-black tracking-tight sm:text-5xl lg:text-[44px]">
+                            <h2 className="mt-4 text-2xl font-black tracking-tight sm:text-5xl lg:text-[44px]">
                                 {t.solution.title}
                             </h2>
                             <p className="mt-5 text-lg leading-8 text-slate-600 dark:text-slate-300">
@@ -875,7 +875,7 @@ export default function GenosLandingPage() {
                             <p className="text-sm font-black uppercase tracking-[0.22em] text-violet-600 dark:text-violet-300">
                                 {t.context.eyebrow}
                             </p>
-                            <h2 className="mt-4 text-3xl font-black tracking-tight sm:text-5xl lg:text-[44px]">
+                            <h2 className="mt-4 text-2xl font-black tracking-tight sm:text-5xl lg:text-[44px]">
                                 {t.context.title}
                             </h2>
                             <p className="mt-5 text-lg leading-8 text-slate-600 dark:text-slate-300">
@@ -982,7 +982,7 @@ export default function GenosLandingPage() {
                             <p className="text-sm font-black uppercase tracking-[0.22em] text-violet-600 dark:text-violet-300">
                                 {t.audience.eyebrow}
                             </p>
-                            <h2 className="mt-4 text-3xl font-black tracking-tight sm:text-5xl">
+                            <h2 className="mt-4 text-2xl font-black tracking-tight sm:text-5xl">
                                 {t.audience.title}
                             </h2>
                         </div>
@@ -1022,7 +1022,7 @@ export default function GenosLandingPage() {
                                 <p className="text-sm font-black uppercase tracking-[0.22em] text-violet-100">
                                     {t.ai.eyebrow}
                                 </p>
-                                <h2 className="mt-4 text-3xl font-black tracking-tight sm:text-5xl">
+                                <h2 className="mt-4 text-2xl font-black tracking-tight sm:text-5xl">
                                     {t.ai.title}
                                 </h2>
                                 <p className="mt-5 text-lg leading-8 text-violet-50/90">
@@ -1061,7 +1061,7 @@ export default function GenosLandingPage() {
                             <p className="text-sm font-black uppercase tracking-[0.22em] text-violet-600 dark:text-violet-300">
                                 {t.comparison.eyebrow}
                             </p>
-                            <h2 className="mt-4 text-3xl font-black tracking-tight sm:text-5xl">
+                            <h2 className="mt-4 text-2xl font-black tracking-tight sm:text-5xl">
                                 {t.comparison.title}
                             </h2>
                         </div>
@@ -1104,7 +1104,7 @@ export default function GenosLandingPage() {
                     <div className="mx-auto max-w-7xl rounded-[2.5rem] border border-violet-100 bg-white p-8 shadow-2xl shadow-violet-900/10 dark:border-white/10 dark:bg-white/5 lg:p-12">
                         <div className="grid items-center gap-8 lg:grid-cols-[1fr_auto]">
                             <div>
-                                <h2 className="text-3xl font-black tracking-tight sm:text-5xl">
+                                <h2 className="text-2xl font-black tracking-tight sm:text-5xl">
                                     {t.cta.title}
                                 </h2>
                                 <p className="mt-5 max-w-3xl text-lg leading-8 text-slate-600 dark:text-slate-300">
@@ -1143,7 +1143,7 @@ export default function GenosLandingPage() {
                             <p className="text-sm font-black uppercase tracking-[0.22em] text-violet-600 dark:text-violet-300">
                                 {t.faq.eyebrow}
                             </p>
-                            <h2 className="mt-4 text-3xl font-black tracking-tight sm:text-5xl">
+                            <h2 className="mt-4 text-2xl font-black tracking-tight sm:text-5xl">
                                 {t.faq.title}
                             </h2>
                         </div>
@@ -1170,8 +1170,12 @@ export default function GenosLandingPage() {
                     <div className="mx-auto flex max-w-7xl flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <div className="flex items-center gap-3">
-                                <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-fuchsia-500 text-white">
-                                    <Sparkles className="h-4 w-4" />
+                                <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-lg shadow-violet-900/10 dark:border-white/10 dark:bg-white">
+                                    <img
+                                        src="/genos_tech.png"
+                                        alt="Genos"
+                                        className="h-11 w-11 object-contain"
+                                    />
                                 </div>
                                 <div className="font-black">{t.footer.product}</div>
                             </div>
