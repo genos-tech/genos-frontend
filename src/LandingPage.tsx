@@ -23,6 +23,7 @@ import { GitHubIcon } from "./assets/GithubIcon";
 
 const APP_URL = "https://genos.up.railway.app";
 const LINKEDIN_URL = "https://www.linkedin.com/in/kentaro-kamiya-jp/";
+const GITHUB_URL = "https://github.com/kentarokamiyajp";
 
 type Lang = "ja" | "en";
 
@@ -37,8 +38,8 @@ const copy = {
         },
         hero: {
             badge: "MVP公開中 / Initial users募集中",
-            title: "会話、タスク、ドキュメントをひとつの文脈で扱うワークスペース。",
-            lead: "Genosは、チームの会話・タスク・ナレッジを分断させず、同じ場所で進められる新しいワークスペースです。蓄積されたデータを検索とAIで活かし、次のアクションまで自然につなげます。",
+            title: "話す、進める、残す。チームの仕事をひとつの流れに。",
+            lead: "Genosは、チームの会話・タスク・ノートをつなげて残し、検索とAIで活かすワークスペースです。",
             primary: "デモを試す",
             secondary: "機能を見る",
             footnote: "ログインなしで体験できます。アカウント登録するとデータを継続保存できます。",
@@ -50,7 +51,7 @@ const copy = {
         ],
         problem: {
             eyebrow: "The problem",
-            title: "Slackで話し、Asanaで管理し、Notionにまとめる。その間に文脈が失われていく。",
+            title: "Slackで話し、Jiraで管理し、Notionにまとめる。その間に情報のつながりは失われる。",
             body: "多くのチームでは、同じテーマに関する会話、担当者、期限、決定事項、背景情報が別々のツールに散らばっています。結果として、探す・転記する・思い出す時間が増え、本来進めるべき仕事に集中しづらくなります。",
             cards: [
                 { title: "会話が流れる", body: "重要な決定や背景がチャットの奥に埋もれやすい。" },
@@ -66,7 +67,7 @@ const copy = {
         },
         solution: {
             eyebrow: "Genos workspace",
-            title: "必要なものを、同じ文脈の中に置く。",
+            title: "必要なものを、同じ文脈の中に。",
             body: "Genosでは、チャンネルでの会話、カンバンやリストでのタスク管理、Wiki形式のノートが互いにリンクします。チームのやり取りがそのままナレッジになり、ナレッジが次のタスクにつながります。",
         },
         features: [
@@ -74,6 +75,8 @@ const copy = {
                 icon: "chat",
                 title: "Chat",
                 subtitle: "会話から次のアクションへ",
+                image: "/lp-chat.png",
+                imageAlt: "Chat linked with tasks and notes in Genos",
                 bullets: [
                     "チャンネル / DM / スレッド",
                     "メンション・ファイル添付",
@@ -84,12 +87,16 @@ const copy = {
                 icon: "task",
                 title: "Task",
                 subtitle: "進行状況と責任をクリアに",
+                image: "/lp-task.png",
+                imageAlt: "Task linked with chats and notes in Genos",
                 bullets: ["Kanban / List", "期限・担当者・優先度", "ステータス管理とコメント"],
             },
             {
                 icon: "note",
                 title: "Note",
                 subtitle: "背景と決定事項を残す",
+                image: "/lp-note.png",
+                imageAlt: "Note linked with chats and tasks in Genos",
                 bullets: [
                     "Markdown / リッチテキスト",
                     "Wiki / ページ階層",
@@ -103,7 +110,7 @@ const copy = {
             body: "Genosの核は、単に3つの機能を並べることではありません。会話、タスク、ノートが同じデータ基盤にあることで、過去の経緯・現在の状態・次にやることをつなげて扱えます。",
             points: [
                 "過去の会話・タスク・ノートを横断検索",
-                "AIエージェントがプロジェクトの文脈を参照",
+                "AIエージェントがプロジェクトの経緯を参照",
                 "意思決定やタスクのヒストリーを自然に蓄積",
                 "新しいメンバーや外部協力者への共有がスムーズ",
             ],
@@ -128,18 +135,18 @@ const copy = {
         },
         ai: {
             eyebrow: "AI-ready by design",
-            title: "AIは、分断されたデータよりも、つながった文脈で強くなる。",
+            title: "AIは、分断されたデータよりも、情報のつながりで強くなる。",
             body: "GenosはOpenAI APIを利用したAIエージェント機能を備えています。今後は、チームに蓄積された会話・タスク・ノートを活用し、調査、要約、次アクション提案、ナレッジ検索をより深く支援していきます。",
             items: ["横断検索", "文脈理解", "要約", "次アクション提案"],
         },
         comparison: {
             eyebrow: "Why Genos",
-            title: "ツールを増やすのではなく、文脈をつなげる。",
+            title: "ツールを増やすのではなく、情報をつなげる。",
             rows: [
-                ["会話", "Slackで進む", "Genos内でタスク・ノートと接続"],
-                ["タスク", "Asanaなどで別管理", "会話や背景と同じ場所で管理"],
+                ["会話", "Slack/Teamsで進む", "Genos内でタスク・ノートと接続"],
+                ["タスク", "Jira/Asanaなどで別管理", "会話や背景と同じ場所で管理"],
                 ["ドキュメント", "Notionなどに後から整理", "進行中の会話・タスクから自然に残す"],
-                ["AI活用", "ツールごとに文脈が分かれる", "統合されたデータを参照しやすい"],
+                ["AI活用", "ツールごとに情報が分断される", "統合されたデータを参照しやすい"],
             ],
             headers: ["テーマ", "一般的な分断", "Genos"],
         },
@@ -166,7 +173,7 @@ const copy = {
                     a: "主な想定はチーム利用ですが、個人のタスク管理・ノート・調査にも使えます。",
                 },
                 {
-                    q: "Slack、Asana、Notionとは何が違いますか？",
+                    q: "Slack、Jira、Notionとは何が違いますか？",
                     a: "Genosは会話、タスク、ノートを同じ文脈で扱うことを重視しています。ツールを行き来せず、チームのデータを検索やAIで活かしやすい形に蓄積できます。",
                 },
             ],
@@ -187,8 +194,8 @@ const copy = {
         },
         hero: {
             badge: "MVP is live / Looking for initial users",
-            title: "A workspace where chat, tasks, and documentation share the same context.",
-            lead: "Genos helps teams move conversations, tasks, and knowledge forward in one connected workspace. Your team data becomes searchable, structured, and ready for AI-powered support.",
+            title: "Discuss, move forward, and capture knowledge. Bring your team’s work into one flow.",
+            lead: "Genos is a workspace where chat, task management, and documentation live together. It reduces the need to jump between Slack, Jira, and Notion, making your team’s information easier to search, understand, and use with AI.",
             primary: "Try the demo",
             secondary: "Explore features",
             footnote:
@@ -228,6 +235,8 @@ const copy = {
                 icon: "chat",
                 title: "Chat",
                 subtitle: "Turn conversations into action",
+                image: "/lp-chat.png",
+                imageAlt: "Chat linked with tasks and notes in Genos",
                 bullets: [
                     "Channels / DM / threads",
                     "Mentions and file attachments",
@@ -238,6 +247,8 @@ const copy = {
                 icon: "task",
                 title: "Task",
                 subtitle: "Make ownership and progress clear",
+                image: "/lp-task.png",
+                imageAlt: "Task linked with chats and notes in Genos",
                 bullets: [
                     "Kanban / List",
                     "Due dates, assignees, priorities",
@@ -248,6 +259,8 @@ const copy = {
                 icon: "note",
                 title: "Note",
                 subtitle: "Capture decisions and background",
+                image: "/lp-note.png",
+                imageAlt: "Note linked with chats and tasks in Genos",
                 bullets: [
                     "Markdown / rich text",
                     "Wiki / page hierarchy",
@@ -294,10 +307,10 @@ const copy = {
             eyebrow: "Why Genos",
             title: "Do not add more tools. Connect the context.",
             rows: [
-                ["Chat", "Lives in Slack", "Connected with tasks and notes in Genos"],
+                ["Chat", "Lives in Slack/Teams", "Connected with tasks and notes in Genos"],
                 [
                     "Tasks",
-                    "Managed separately in tools like Asana",
+                    "Managed separately in tools like Jira/Asana",
                     "Managed next to the conversation and background",
                 ],
                 [
@@ -336,7 +349,7 @@ const copy = {
                     a: "Genos is primarily designed for teams, but it can also be used for personal task management, notes, and research.",
                 },
                 {
-                    q: "How is it different from Slack, Asana, and Notion?",
+                    q: "How is it different from Slack, Jira, and Notion?",
                     a: "Genos focuses on keeping conversations, tasks, and notes in the same context. That makes team data easier to search and easier for AI agents to use.",
                 },
             ],
@@ -402,7 +415,7 @@ function MockWorkspace({ lang }: { lang: Lang }) {
               };
 
     return (
-        <div className="relative mx-auto w-full max-w-2xl">
+        <div className="relative mx-auto w-full max-w-xl">
             <div className="absolute -inset-6 rounded-[2.5rem] bg-gradient-to-br from-violet-500/25 via-fuchsia-400/20 to-indigo-400/20 blur-3xl" />
             <motion.div
                 initial={{ opacity: 0, y: 18 }}
@@ -420,83 +433,50 @@ function MockWorkspace({ lang }: { lang: Lang }) {
                         Genos Workspace
                     </div>
                 </div>
-
-                <div className="grid gap-3 p-3 md:grid-cols-[0.85fr_1.15fr]">
-                    <div className="space-y-3">
-                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-white/5">
-                            <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-white">
-                                <MessageSquareText className="h-4 w-4 text-violet-600" />
-                                {labels.channel}
-                            </div>
-                            <div className="space-y-2">
-                                <div className="rounded-xl bg-white p-3 text-xs text-slate-600 shadow-sm dark:bg-slate-900 dark:text-slate-300">
-                                    {labels.thread}
-                                </div>
-                                <div className="rounded-xl bg-violet-600 p-3 text-xs text-white shadow-sm">
-                                    {labels.ask}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="rounded-2xl border border-slate-200 bg-white p-3 dark:border-white/10 dark:bg-white/5">
-                            <div className="mb-3 flex items-center justify-between">
-                                <div className="flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-white">
-                                    <Target className="h-4 w-4 text-fuchsia-600" />
-                                    Task
-                                </div>
-                                <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-200">
-                                    In progress
-                                </span>
-                            </div>
-                            <div className="rounded-xl bg-slate-50 p-3 text-xs text-slate-700 dark:bg-slate-900 dark:text-slate-300">
-                                {labels.task}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="space-y-3">
-                        <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-white/10 dark:bg-white/5">
-                            <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-800 dark:text-white">
-                                <FileText className="h-4 w-4 text-indigo-600" />
-                                {labels.note}
-                            </div>
-                            <div className="space-y-2">
-                                <div className="h-2 w-3/4 rounded-full bg-slate-200 dark:bg-white/15" />
-                                <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-white/15" />
-                                <div className="h-2 w-2/3 rounded-full bg-slate-200 dark:bg-white/15" />
-                            </div>
-                            <div className="mt-4 grid grid-cols-2 gap-2">
-                                <div className="rounded-xl bg-violet-50 p-3 text-xs font-semibold text-violet-700 dark:bg-violet-500/15 dark:text-violet-200">
-                                    @chat linked
-                                </div>
-                                <div className="rounded-xl bg-fuchsia-50 p-3 text-xs font-semibold text-fuchsia-700 dark:bg-fuchsia-500/15 dark:text-fuchsia-200">
-                                    task linked
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 to-fuchsia-50 p-4 dark:border-violet-400/20 dark:from-violet-500/15 dark:to-fuchsia-500/10">
-                            <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-violet-800 dark:text-violet-100">
-                                <Bot className="h-4 w-4" />
-                                AI Agent
-                            </div>
-                            <p className="text-xs leading-6 text-slate-700 dark:text-slate-200">
-                                {labels.ai}
-                            </p>
-                            <div className="mt-4 flex flex-wrap gap-2">
-                                {["Chat", "Task", "Note"].map((item) => (
-                                    <span
-                                        key={item}
-                                        className="rounded-full bg-white/80 px-2.5 py-1 text-[10px] font-bold text-violet-700 shadow-sm dark:bg-white/10 dark:text-violet-100"
-                                    >
-                                        {item}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <img
+                    src="/lp-top.png"
+                    alt="Genos product screenshot"
+                    className="w-full rounded-2xl object-cover"
+                />
             </motion.div>
+        </div>
+    );
+}
+
+function ScreenshotFrame({
+    src,
+    alt,
+    label,
+    className = "",
+    imageClassName = "",
+}: {
+    src: string;
+    alt: string;
+    label?: string;
+    className?: string;
+    imageClassName?: string;
+}) {
+    return (
+        <div
+            className={`relative overflow-hidden rounded-[1.75rem] border border-violet-100 bg-white p-2 shadow-xl shadow-violet-900/5 dark:border-white/10 dark:bg-white/5 ${className}`}
+        >
+            {label && (
+                <div className="mb-2 flex items-center justify-between px-2 py-1">
+                    <span className="text-xs font-black text-slate-500 dark:text-slate-400">
+                        {label}
+                    </span>
+                    <span className="rounded-full bg-violet-50 px-2.5 py-1 text-[10px] font-black text-violet-700 dark:bg-violet-500/15 dark:text-violet-200">
+                        Genos
+                    </span>
+                </div>
+            )}
+
+            <img
+                src={src}
+                alt={alt}
+                loading="lazy"
+                className={`w-full rounded-[1.35rem] object-contain ${imageClassName}`}
+            />
         </div>
     );
 }
@@ -648,7 +628,12 @@ export default function GenosLandingPage() {
                             </div>
                         </div>
 
-                        <MockWorkspace lang={lang} />
+                        <ScreenshotFrame
+                            src="/lp-top.png"
+                            alt="Genos main workspace screenshot"
+                            label="Genos Workspace"
+                            className="mx-auto max-w-2xl p-3"
+                        />
                     </div>
                 </section>
 
@@ -738,6 +723,13 @@ export default function GenosLandingPage() {
                                             </li>
                                         ))}
                                     </ul>
+                                    <ScreenshotFrame
+                                        src={feature.image}
+                                        alt={feature.imageAlt}
+                                        label={feature.title}
+                                        className="mt-6"
+                                        imageClassName="max-h-56"
+                                    />
                                 </motion.div>
                             ))}
                         </div>
@@ -837,6 +829,13 @@ export default function GenosLandingPage() {
                                         </span>
                                     </div>
                                 </div>
+                                {/* TODO: Add screenshot of unified search */}
+                                {/* <ScreenshotFrame
+                                    src="/landing_page_1.png"
+                                    alt="Genos unified search screenshot"
+                                    label="Unified Search"
+                                    className="relative p-3"
+                                /> */}
                             </div>
                         </div>
                     </div>
@@ -1046,7 +1045,7 @@ export default function GenosLandingPage() {
                         <div className="flex flex-wrap items-center gap-4 text-sm font-semibold text-slate-500 dark:text-slate-400">
                             <span>© {year} Genos</span>
                             <a
-                                href={LINKEDIN_URL}
+                                href={GITHUB_URL}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="inline-flex items-center gap-2 transition hover:text-violet-700 dark:hover:text-white"
