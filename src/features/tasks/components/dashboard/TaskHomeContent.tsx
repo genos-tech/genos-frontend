@@ -483,7 +483,7 @@ export const TaskHomeContent = ({
         >
             {segments.map((seg, i) =>
                 seg.value > 0 ? (
-                    <Tooltip key={i} size="sm" title={`${Math.round((seg.value / total) * 100)}%`}>
+                    <Tooltip key={i} size="sm" title={`${Math.round((seg.value / total) * 100)}%`} variant="outlined">
                         <Box
                             sx={{
                                 width: `${(seg.value / total) * 100}%`,
@@ -881,7 +881,7 @@ export const TaskHomeContent = ({
                                                 }
                                             )}
                                         </Select>
-                                        <Tooltip title="Sprint settings">
+                                        <Tooltip title="Sprint settings" variant="outlined">
                                             <IconButton
                                                 disabled={!usePM.currentProject?.projectId}
                                                 size="sm"
@@ -891,7 +891,7 @@ export const TaskHomeContent = ({
                                                 <SettingsRoundedIcon />
                                             </IconButton>
                                         </Tooltip>
-                                        <Tooltip title="Manage sprints">
+                                        <Tooltip title="Manage sprints" variant="outlined">
                                             <IconButton
                                                 disabled={!usePM.currentProject?.projectId}
                                                 size="sm"
@@ -904,6 +904,7 @@ export const TaskHomeContent = ({
                                         <Tooltip
                                             size="sm"
                                             title="Closed in sprint / Created in sprint"
+                                            variant="outlined"
                                         >
                                             <Chip
                                                 size="lg"
@@ -1281,6 +1282,7 @@ export const TaskHomeContent = ({
                                                                         <Tooltip
                                                                             size="sm"
                                                                             title="Milestone"
+                                                                            variant="outlined"
                                                                         >
                                                                             <FlagRoundedIcon
                                                                                 sx={{

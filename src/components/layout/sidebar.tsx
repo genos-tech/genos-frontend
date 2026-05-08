@@ -255,7 +255,7 @@ export const Sidebar = (props: SidebarProps) => {
                                     title={isMac() ? "Hold ⌘ + tap Ctrl" : "Hold Ctrl + tap Alt"}
                                     placement="right"
                                     size="sm"
-                                    variant="soft"
+                                    variant="outlined"
                                     sx={{ zIndex: 10020 }}
                                 >
                                     <ListItemButton
@@ -385,7 +385,7 @@ export const Sidebar = (props: SidebarProps) => {
                             placement="right"
                             size="sm"
                             title="Settings"
-                            variant="soft"
+                            variant="outlined"
                             sx={{ zIndex: 10020 }}
                         >
                             <ListItemButton
@@ -442,7 +442,7 @@ export const Sidebar = (props: SidebarProps) => {
                             placement="right"
                             size="sm"
                             title="Sign out"
-                            variant="soft"
+                            variant="outlined"
                             sx={{ zIndex: 10020 }}
                         >
                             <ListItemButton
@@ -512,7 +512,7 @@ export const Sidebar = (props: SidebarProps) => {
                     placement="right"
                     size="sm"
                     title="Open My Profile"
-                    variant="soft"
+                    variant="outlined"
                     sx={{ zIndex: 10020 }}
                 >
                     <Box

@@ -166,45 +166,6 @@ export const ThreadChatPaneHeaderStyles = {
     },
 };
 
-export const ChatNoteHeaderStyles = {
-    dark: {
-        buttonBg: "linear-gradient(135deg, rgba(251,191,36,0.12) 0%, rgba(245,158,11,0.12) 100%)",
-        buttonHover:
-            "linear-gradient(135deg, rgba(251,191,36,0.22) 0%, rgba(245,158,11,0.22) 100%)",
-        buttonBorder: "rgba(251,191,36,0.3)",
-        primaryButtonBg: "linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)",
-        primaryButtonHover: "linear-gradient(135deg, #fcd34d 0%, #fbbf24 100%)",
-        dangerBg: "linear-gradient(135deg, rgba(239,68,68,0.12) 0%, rgba(220,38,38,0.12) 100%)",
-        dangerHover: "linear-gradient(135deg, rgba(239,68,68,0.22) 0%, rgba(220,38,38,0.22) 100%)",
-        dangerBorder: "rgba(239,68,68,0.3)",
-        menuBg: "linear-gradient(180deg, rgba(30,32,44,0.98) 0%, rgba(20,22,34,0.99) 100%)",
-        menuBorder: "rgba(251,191,36,0.15)",
-        textColor: "#fef3c7",
-        accentColor: "#fbbf24",
-        glowColor: "rgba(251,191,36,0.3)",
-        avatarBg: "rgba(251,191,36,0.1)",
-        avatarBorder: "rgba(251,191,36,0.2)",
-    },
-    light: {
-        buttonBg: "linear-gradient(135deg, rgba(251,191,36,0.1) 0%, rgba(245,158,11,0.1) 100%)",
-        buttonHover:
-            "linear-gradient(135deg, rgba(251,191,36,0.18) 0%, rgba(245,158,11,0.18) 100%)",
-        buttonBorder: "rgba(217,119,6,0.25)",
-        primaryButtonBg: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
-        primaryButtonHover: "linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)",
-        dangerBg: "linear-gradient(135deg, rgba(239,68,68,0.08) 0%, rgba(220,38,38,0.08) 100%)",
-        dangerHover: "linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(220,38,38,0.15) 100%)",
-        dangerBorder: "rgba(239,68,68,0.2)",
-        menuBg: "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(254,243,199,0.95) 100%)",
-        menuBorder: "rgba(217,119,6,0.12)",
-        textColor: "#78350f",
-        accentColor: "#d97706",
-        glowColor: "rgba(217,119,6,0.2)",
-        avatarBg: "rgba(245,158,11,0.08)",
-        avatarBorder: "rgba(217,119,6,0.15)",
-    },
-};
-
 export const NoteHeaderActionsStyles = {
     dark: {
         containerBg: "linear-gradient(135deg, rgba(30,32,44,0.9) 0%, rgba(20,22,34,0.95) 100%)",
@@ -225,6 +186,8 @@ export const NoteHeaderActionsStyles = {
         glowColor: "rgba(99,102,241,0.3)",
         chipBg: "rgba(99,102,241,0.15)",
         chipBorder: "rgba(99,102,241,0.3)",
+        avatarBg: "rgba(99,102,241,0.1)",
+        avatarBorder: "rgba(99,102,241,0.2)",
     },
     light: {
         containerBg:
@@ -246,6 +209,8 @@ export const NoteHeaderActionsStyles = {
         glowColor: "rgba(99,102,241,0.2)",
         chipBg: "rgba(99,102,241,0.1)",
         chipBorder: "rgba(79,70,229,0.2)",
+        avatarBg: "rgba(99,102,241,0.08)",
+        avatarBorder: "rgba(79,70,229,0.12)",
     },
 };
 

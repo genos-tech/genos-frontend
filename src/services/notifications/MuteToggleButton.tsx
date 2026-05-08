@@ -50,7 +50,7 @@ export const MuteToggleButton = ({
             title={muted ? "Unmute notifications" : "Mute notifications"}
             placement="bottom"
             size="sm"
-            variant="soft"
+            variant="outlined"
             sx={{ zIndex: 10020 }}
         >
             <IconButton

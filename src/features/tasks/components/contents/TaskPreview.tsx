@@ -2,12 +2,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import AddIcon from "@mui/icons-material/Add";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
-import CancelRoundedIcon from "@mui/icons-material/CancelRounded";
+import CancelIcon from "@mui/icons-material/Cancel";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
-import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
@@ -16,12 +15,8 @@ import {
     Button,
     Chip,
     Divider,
-    Dropdown,
     IconButton,
     Input,
-    Menu,
-    MenuButton,
-    MenuItem,
     Sheet,
     Stack,
     Tooltip,
@@ -31,6 +26,8 @@ import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 import { Socket } from "socket.io-client";
 
+import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
+import { TaskHeaderStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
@@ -511,16 +508,16 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         return (
             <MilestonePreviewInner
                 milestoneId={milestoneId}
-                socket={socket}
                 myself={myself}
                 setMyself={setMyself}
+                socket={socket}
+                useCM={useCM}
+                useNM={useNM}
                 usePM={usePM}
                 useSM={useSM}
-                useTM={useTM}
                 useTEM={useTEM}
-                useCM={useCM}
+                useTM={useTM}
                 useUISM={useUISM}
-                useNM={useNM}
             />
         );
     }
@@ -562,8 +559,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                             right: 0,
                             height: "3px",
                             background: isDark
-                                ? "linear-gradient(90deg, #4ade80 0%, #22c55e 50%, #16a34a 100%)"
-                                : "linear-gradient(90deg, #22c55e 0%, #16a34a 50%, #15803d 100%)",
+                                ? "linear-gradient(90deg, #4f46e5 0%, #7c3aed 50%, #a855f7 100%)"
+                                : "linear-gradient(90deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)",
                             borderRadius: "16px 16px 0 0",
                             opacity: 0.8,
                         }}
@@ -579,8 +576,9 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         }}
                     >
                         <TaskTitleBlock
-                            useCM={useCM}
+                            isMilestone={previewTaskKind === "milestone"}
                             isPreviewMode={true}
+                            isSubTask={previewTaskKind === "subtask"}
                             myself={myself}
                             setTaskClosed={setTaskClosed}
                             setTaskContent={taskEditState.setTmpCurrentTaskContent}
@@ -589,12 +587,11 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                             setTaskUpdated={taskEditState.setTaskUpdated}
                             taskContent={taskEditState.tmpCurrentTaskContent}
                             taskTitle={taskEditState.taskTitle}
-                            useTM={useTM}
-                            useUISM={useUISM}
+                            useCM={useCM}
                             useNM={useNM}
                             usePM={usePM}
-                            isSubTask={previewTaskKind === "subtask"}
-                            isMilestone={previewTaskKind === "milestone"}
+                            useTM={useTM}
+                            useUISM={useUISM}
                         />
                     </Box>
 
@@ -616,33 +613,33 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         >
                             <TaskMainBlock
                                 assignee={assignee}
-                                useCM={useCM}
+                                isMilestone={previewTaskKind === "milestone"}
                                 isOpenProjectList={isOpenProjectList}
                                 isOpenTagList={isOpenTagList}
                                 isOpenTeamMembersList={isOpenTeamMembersList}
                                 isPreviewMode={true}
+                                isSubTask={previewTaskKind === "subtask"}
                                 myself={myself}
                                 projectTags={projectTags}
-                                setProjectTags={setProjectTags}
                                 reporter={reporter}
                                 setAssignee={setAssignee}
                                 setIsOpenProjectList={setIsOpenProjectList}
                                 setIsOpenTagList={setIsOpenTagList}
                                 setIsOpenTeamMembersList={setIsOpenTeamMembersList}
                                 setMyself={setMyself}
+                                setProjectTags={setProjectTags}
                                 setReporter={setReporter}
                                 setTaskContent={taskEditState.setTmpCurrentTaskContent}
                                 setTaskStatusUpdated={taskEditState.setTaskStatusUpdated}
                                 setTaskUpdated={taskEditState.setTaskUpdated}
                                 socket={socket}
                                 taskContent={taskEditState.tmpCurrentTaskContent}
+                                useCM={useCM}
+                                usePM={usePM}
+                                useSM={useSM}
                                 useTEM={useTEM}
                                 useTM={useTM}
-                                useSM={useSM}
                                 useUISM={useUISM}
-                                usePM={usePM}
-                                isSubTask={previewTaskKind === "subtask"}
-                                isMilestone={previewTaskKind === "milestone"}
                             />
                         </Box>
 
@@ -671,7 +668,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                             <TaskBodyBlock
                                 key={`TaskBodyBlock-${taskEditState.tmpCurrentTaskContent.id}`}
                                 body={taskEditState.body}
-                                useCM={useCM}
                                 myself={myself}
                                 setBody={taskEditState.setBody}
                                 setMyself={setMyself}
@@ -679,6 +675,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                                 setTaskBodySaved={taskEditState.setTaskBodySaved}
                                 socket={socket}
                                 taskId={taskEditState.tmpCurrentTaskContent.id}
+                                useCM={useCM}
                                 useTEM={useTEM}
                                 useUISM={useUISM}
                             />
@@ -688,14 +685,14 @@ export const TaskPreview = (props: TaskPreviewProps) => {
 
                         {/* Subtasks Section */}
                         <TaskSubTasksBlock
-                            SectionHeader={SectionHeader}
-                            useCM={useCM}
-                            useTM={useTM}
                             currentTaskContent={taskEditState.tmpCurrentTaskContent}
                             myself={myself}
+                            SectionHeader={SectionHeader}
                             setMyself={setMyself}
                             socket={socket}
+                            useCM={useCM}
                             useTEM={useTEM}
+                            useTM={useTM}
                             useUISM={useUISM}
                         />
                     </Box>
@@ -709,7 +706,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                         }}
                     >
                         <TaskTabBlock
-                            useCM={useCM}
                             editTargetComment={editTargetComment}
                             isInEdit={isInEdit}
                             isLoadingTaskActivities={isLoadingTaskActivities}
@@ -724,6 +720,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                             setTaskComments={setTaskComments}
                             setTaskContent={taskEditState.setTmpCurrentTaskContent}
                             setTaskUpdated={taskEditState.setTaskUpdated}
+                            setTodoFromMessageBubble={setTodoFromMessageBubble}
                             setUploadedFiles={taskEditState.setUploadedFiles}
                             socket={socket}
                             tabIndex={tabIndex}
@@ -732,13 +729,13 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                             taskComments={taskComments}
                             taskContent={taskEditState.tmpCurrentTaskContent}
                             taskNotes={taskNotes}
+                            tmpCurrentTaskContent={taskEditState.tmpCurrentTaskContent}
+                            uploadedFiles={taskEditState.uploadedFiles}
+                            useCM={useCM}
+                            useNM={useNM}
                             useTEM={useTEM}
                             useTM={useTM}
-                            tmpCurrentTaskContent={taskEditState.tmpCurrentTaskContent}
                             useUISM={useUISM}
-                            uploadedFiles={taskEditState.uploadedFiles}
-                            useNM={useNM}
-                            setTodoFromMessageBubble={setTodoFromMessageBubble}
                         />
                     </Box>
                 </Sheet>
@@ -911,6 +908,7 @@ const MilestonePreviewInner = ({
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const styles = isDark ? TaskHeaderStyles.dark : TaskHeaderStyles.light;
 
     const milestone: Milestone | null = useMemo(() => {
         const projectId = usePM.currentProject?.projectId;
@@ -1484,7 +1482,7 @@ const MilestonePreviewInner = ({
                     left: 0,
                     right: 0,
                     height: 3,
-                    background: "linear-gradient(90deg, #f97316 0%, #fb923c 50%, #fdba74 100%)",
+                    background: "linear-gradient(90deg, #4f46e5 0%, #7c3aed 50%, #a855f7 100%)",
                     borderRadius: "16px 16px 0 0",
                 }}
             />
@@ -1498,7 +1496,7 @@ const MilestonePreviewInner = ({
                     borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
                 }}
             >
-                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
+                <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 1.5 }}>
                     <FlagRoundedIcon sx={{ color: "#f97316", fontSize: 18 }} />
                     <Typography level="body-xs" sx={{ color: "neutral.500" }}>
                         Milestone
@@ -1510,9 +1508,8 @@ const MilestonePreviewInner = ({
                     {(milestone.status === "Open" || milestone.status === "Pending") && (
                         <Button
                             size="sm"
-                            variant="soft"
                             startDecorator={<PlayArrowRoundedIcon sx={{ fontSize: 16 }} />}
-                            onClick={() => handleMilestoneStatusChange("WIP")}
+                            variant="soft"
                             sx={{
                                 fontWeight: 600,
                                 fontSize: "12px",
@@ -1534,6 +1531,7 @@ const MilestonePreviewInner = ({
                                     boxShadow: "0 2px 6px rgba(255, 140, 0, 0.2)",
                                 },
                             }}
+                            onClick={() => handleMilestoneStatusChange("WIP")}
                         >
                             Start Milestone
                         </Button>
@@ -1541,9 +1539,8 @@ const MilestonePreviewInner = ({
                     {milestone.status === "WIP" && (
                         <Button
                             size="sm"
-                            variant="soft"
                             startDecorator={<TaskAltRoundedIcon sx={{ fontSize: 16 }} />}
-                            onClick={() => handleMilestoneStatusChange("Closed")}
+                            variant="soft"
                             sx={{
                                 fontWeight: 600,
                                 fontSize: "12px",
@@ -1565,6 +1562,7 @@ const MilestonePreviewInner = ({
                                     boxShadow: "0 2px 6px rgba(76, 175, 80, 0.2)",
                                 },
                             }}
+                            onClick={() => handleMilestoneStatusChange("Closed")}
                         >
                             Complete Milestone
                         </Button>
@@ -1593,68 +1591,13 @@ const MilestonePreviewInner = ({
                         {milestone.status}
                     </Chip>
                     <Box sx={{ flex: 1 }} />
-                    <Dropdown>
-                        <MenuButton
-                            slots={{ root: IconButton }}
-                            slotProps={{
-                                root: {
-                                    variant: "plain",
-                                    size: "sm",
-                                    sx: {
-                                        borderRadius: "10px",
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.7)"
-                                            : "rgba(0,0,0,0.6)",
-                                        "&:hover": {
-                                            background: isDark
-                                                ? "rgba(255,255,255,0.06)"
-                                                : "rgba(0,0,0,0.04)",
-                                        },
-                                    },
-                                },
-                            }}
-                        >
-                            <MoreHorizRoundedIcon />
-                        </MenuButton>
-                        <Menu
-                            placement="bottom-end"
-                            size="sm"
-                            sx={{
-                                minWidth: 220,
-                                py: 0.75,
-                                borderRadius: "14px",
-                                background: isDark
-                                    ? "linear-gradient(145deg, rgba(32,32,42,0.98) 0%, rgba(24,24,34,0.98) 100%)"
-                                    : "linear-gradient(145deg, rgba(255,255,255,0.99) 0%, rgba(250,251,253,0.99) 100%)",
-                                backdropFilter: "blur(24px) saturate(180%)",
-                                boxShadow: isDark
-                                    ? "0 12px 48px rgba(0,0,0,0.65), 0 4px 12px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)"
-                                    : "0 12px 48px rgba(0,0,0,0.14), 0 4px 12px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,1)",
-                                border: "1px solid",
-                                borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)",
-                            }}
-                        >
-                            {/* Copy Milestone Link */}
-                            <MenuItem
-                                sx={{
-                                    mx: 0.75,
-                                    my: 0.25,
-                                    borderRadius: "10px",
-                                    gap: 1.5,
-                                    minHeight: 40,
-                                    transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
-                                    color: isDark
-                                        ? "rgba(255,255,255,0.9)"
-                                        : "rgba(15,23,42,0.85)",
-                                    "&:hover": {
-                                        background: isDark
-                                            ? "rgba(52,211,153,0.18)"
-                                            : "rgba(5,150,105,0.12)",
-                                        color: isDark ? "#34d399" : "#059669",
-                                        transform: "translateX(3px)",
-                                    },
-                                }}
-                                onClick={async () => {
+                    {(() => {
+                        const items: MoreMenuItem[] = [
+                            {
+                                id: "copyMilestoneLink",
+                                label: "Copy milestone link",
+                                icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
+                                onClick: async () => {
                                     if (milestone.projectId && milestone.milestoneId) {
                                         const milestoneUrl = `${window.location.origin}/home/tasks/project/${milestone.projectId}/milestone/${milestone.milestoneId}`;
                                         try {
@@ -1663,53 +1606,13 @@ const MilestonePreviewInner = ({
                                             console.error("Failed to copy link:", err);
                                         }
                                     }
-                                }}
-                            >
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        width: 30,
-                                        height: 30,
-                                        borderRadius: "8px",
-                                    }}
-                                >
-                                    <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />
-                                </Box>
-                                <Typography
-                                    level="body-sm"
-                                    sx={{
-                                        fontWeight: 500,
-                                        fontSize: "0.875rem",
-                                        color: "inherit",
-                                    }}
-                                >
-                                    Copy milestone link
-                                </Typography>
-                            </MenuItem>
-
-                            {/* New Task (as a child of this milestone) */}
-                            <MenuItem
-                                sx={{
-                                    mx: 0.75,
-                                    my: 0.25,
-                                    borderRadius: "10px",
-                                    gap: 1.5,
-                                    minHeight: 40,
-                                    transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
-                                    color: isDark
-                                        ? "rgba(255,255,255,0.9)"
-                                        : "rgba(15,23,42,0.85)",
-                                    "&:hover": {
-                                        background: isDark
-                                            ? "rgba(129,140,248,0.18)"
-                                            : "rgba(79,70,229,0.12)",
-                                        color: isDark ? "#818cf8" : "#4f46e5",
-                                        transform: "translateX(3px)",
-                                    },
-                                }}
-                                onClick={() => {
+                                },
+                            },
+                            {
+                                id: "newTask",
+                                label: "New Task",
+                                icon: <AssignmentRoundedIcon sx={{ fontSize: 18 }} />,
+                                onClick: () => {
                                     if (milestone.taskId == null) return;
                                     useTM.setIsCreatingTask({
                                         flag: true,
@@ -1719,53 +1622,13 @@ const MilestonePreviewInner = ({
                                         milestoneId: milestone.milestoneId,
                                     });
                                     useTM.setIsTaskTableVisible(false);
-                                }}
-                            >
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        width: 30,
-                                        height: 30,
-                                        borderRadius: "8px",
-                                    }}
-                                >
-                                    <AssignmentRoundedIcon sx={{ fontSize: 18 }} />
-                                </Box>
-                                <Typography
-                                    level="body-sm"
-                                    sx={{
-                                        fontWeight: 500,
-                                        fontSize: "0.875rem",
-                                        color: "inherit",
-                                    }}
-                                >
-                                    New Task
-                                </Typography>
-                            </MenuItem>
-
-                            {/* Open Note */}
-                            <MenuItem
-                                sx={{
-                                    mx: 0.75,
-                                    my: 0.25,
-                                    borderRadius: "10px",
-                                    gap: 1.5,
-                                    minHeight: 40,
-                                    transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
-                                    color: isDark
-                                        ? "rgba(255,255,255,0.9)"
-                                        : "rgba(15,23,42,0.85)",
-                                    "&:hover": {
-                                        background: isDark
-                                            ? "rgba(251,191,36,0.18)"
-                                            : "rgba(245,158,11,0.12)",
-                                        color: isDark ? "#fbbf24" : "#f59e0b",
-                                        transform: "translateX(3px)",
-                                    },
-                                }}
-                                onClick={() => {
+                                },
+                            },
+                            {
+                                id: "openNote",
+                                label: "Open Note",
+                                icon: <NoteAltRoundedIcon sx={{ fontSize: 18 }} />,
+                                onClick: () => {
                                     if (
                                         useNM.setIsTaskNoteVisible &&
                                         milestone.projectId &&
@@ -1786,157 +1649,30 @@ const MilestonePreviewInner = ({
                                             );
                                         }
                                     }
-                                }}
-                            >
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        width: 30,
-                                        height: 30,
-                                        borderRadius: "8px",
-                                    }}
-                                >
-                                    <NoteAltRoundedIcon sx={{ fontSize: 18 }} />
-                                </Box>
-                                <Typography
-                                    level="body-sm"
-                                    sx={{
-                                        fontWeight: 500,
-                                        fontSize: "0.875rem",
-                                        color: "inherit",
-                                    }}
-                                >
-                                    Open Note
-                                </Typography>
-                            </MenuItem>
-
-                            {/* New Tag */}
-                            <MenuItem
-                                sx={{
-                                    mx: 0.75,
-                                    my: 0.25,
-                                    borderRadius: "10px",
-                                    gap: 1.5,
-                                    minHeight: 40,
-                                    transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
-                                    color: isDark
-                                        ? "rgba(255,255,255,0.9)"
-                                        : "rgba(15,23,42,0.85)",
-                                    "&:hover": {
-                                        background: isDark
-                                            ? "rgba(192,132,252,0.18)"
-                                            : "rgba(147,51,234,0.12)",
-                                        color: isDark ? "#c084fc" : "#9333ea",
-                                        transform: "translateX(3px)",
-                                    },
-                                }}
-                                onClick={() => {
+                                },
+                            },
+                            {
+                                id: "newTag",
+                                label: "New Tag",
+                                icon: <LocalOfferRoundedIcon sx={{ fontSize: 18 }} />,
+                                onClick: () => {
                                     useTM.setOpenCreateTag(true);
-                                }}
-                            >
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        width: 30,
-                                        height: 30,
-                                        borderRadius: "8px",
-                                    }}
-                                >
-                                    <LocalOfferRoundedIcon sx={{ fontSize: 18 }} />
-                                </Box>
-                                <Typography
-                                    level="body-sm"
-                                    sx={{
-                                        fontWeight: 500,
-                                        fontSize: "0.875rem",
-                                        color: "inherit",
-                                    }}
-                                >
-                                    New Tag
-                                </Typography>
-                            </MenuItem>
-
-                            {/* New Project */}
-                            <MenuItem
-                                sx={{
-                                    mx: 0.75,
-                                    my: 0.25,
-                                    borderRadius: "10px",
-                                    gap: 1.5,
-                                    minHeight: 40,
-                                    transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
-                                    color: isDark
-                                        ? "rgba(255,255,255,0.9)"
-                                        : "rgba(15,23,42,0.85)",
-                                    "&:hover": {
-                                        background: isDark
-                                            ? "rgba(45,212,191,0.18)"
-                                            : "rgba(13,148,136,0.12)",
-                                        color: isDark ? "#2dd4bf" : "#0d9488",
-                                        transform: "translateX(3px)",
-                                    },
-                                }}
-                                onClick={() => {
+                                },
+                            },
+                            {
+                                id: "newProject",
+                                label: "New Project",
+                                icon: <AddIcon sx={{ fontSize: 18 }} />,
+                                onClick: () => {
                                     usePM.setOpenCreateProject(true);
-                                }}
-                            >
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        width: 30,
-                                        height: 30,
-                                        borderRadius: "8px",
-                                    }}
-                                >
-                                    <AddIcon sx={{ fontSize: 18 }} />
-                                </Box>
-                                <Typography
-                                    level="body-sm"
-                                    sx={{
-                                        fontWeight: 500,
-                                        fontSize: "0.875rem",
-                                        color: "inherit",
-                                    }}
-                                >
-                                    New Project
-                                </Typography>
-                            </MenuItem>
-
-                            {/* Delete */}
-                            <Box
-                                sx={{
-                                    height: "1px",
-                                    mx: 1.5,
-                                    my: 0.5,
-                                    background: isDark
-                                        ? "rgba(255,255,255,0.08)"
-                                        : "rgba(0,0,0,0.06)",
-                                }}
-                            />
-                            <MenuItem
-                                sx={{
-                                    mx: 0.75,
-                                    my: 0.25,
-                                    borderRadius: "10px",
-                                    gap: 1.5,
-                                    minHeight: 40,
-                                    transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
-                                    color: isDark ? "#f87171" : "#dc2626",
-                                    "&:hover": {
-                                        background: isDark
-                                            ? "rgba(248,113,113,0.18)"
-                                            : "rgba(220,38,38,0.12)",
-                                        color: isDark ? "#fca5a5" : "#ef4444",
-                                        transform: "translateX(3px)",
-                                    },
-                                }}
-                                onClick={async () => {
+                                },
+                            },
+                            {
+                                id: "deleteMilestone",
+                                label: "Delete Milestone",
+                                icon: <DeleteRoundedIcon sx={{ fontSize: 18 }} />,
+                                danger: true,
+                                onClick: async () => {
                                     if (!confirm("Delete this milestone?")) return;
                                     await useSM.removeMilestone(
                                         milestone.milestoneId,
@@ -1955,51 +1691,48 @@ const MilestonePreviewInner = ({
                                     if (useNM.setIsTaskVisibleInNote) {
                                         useNM.setIsTaskVisibleInNote(false);
                                     }
+                                },
+                            },
+                        ];
+                        return (
+                            <MoreMenu
+                                iconFontSize={20}
+                                items={items}
+                                triggerSize={36}
+                                menuMinWidth={220}
+                                placement="bottom-end"
+                                triggerSx={{
+                                    background: styles.buttonBg,
+                                    border: `1px solid ${styles.buttonBorder}`,
+                                    borderRadius: "10px",
                                 }}
-                            >
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        width: 30,
-                                        height: 30,
-                                        borderRadius: "8px",
-                                    }}
-                                >
-                                    <DeleteRoundedIcon
-                                        sx={{
-                                            fontSize: 18,
-                                            color: isDark ? "#f87171" : "#dc2626",
-                                        }}
-                                    />
-                                </Box>
-                                <Typography
-                                    level="body-sm"
-                                    sx={{
-                                        fontWeight: 500,
-                                        fontSize: "0.875rem",
-                                        color: "inherit",
-                                    }}
-                                >
-                                    Delete Milestone
-                                </Typography>
-                            </MenuItem>
-                        </Menu>
-                    </Dropdown>
+                            />
+                        );
+                    })()}
 
-                    <Tooltip size="sm" title="Close" variant="outlined">
+                    <Tooltip
+                        size="sm"
+                        title="Close"
+                        variant="outlined"
+                        sx={{
+                            background: styles.menuBg,
+                            border: `1px solid ${styles.menuBorder}`,
+                            borderRadius: "8px",
+                        }}
+                    >
                         <IconButton
                             size="sm"
                             variant="plain"
                             sx={{
-                                borderRadius: "8px",
-                                color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.5)",
+                                background: styles.dangerBg,
+                                border: `1px solid ${styles.dangerBorder}`,
+                                borderRadius: "10px",
+                                width: "36px",
+                                height: "36px",
+                                transition: "all 0.2s ease",
                                 "&:hover": {
-                                    background: isDark
-                                        ? "rgba(239,68,68,0.15)"
-                                        : "rgba(239,68,68,0.1)",
-                                    color: "#ef4444",
+                                    background: styles.dangerHover,
+                                    transform: "translateY(-1px)",
                                 },
                             }}
                             onClick={() => {
@@ -2029,20 +1762,25 @@ const MilestonePreviewInner = ({
                                 }
                             }}
                         >
-                            <CancelRoundedIcon sx={{ fontSize: 18 }} />
+                            <CancelIcon
+                                sx={{
+                                    fontSize: "20px",
+                                    color: isDark ? "#f87171" : "#dc2626",
+                                }}
+                            />
                         </IconButton>
                     </Tooltip>
                 </Stack>
 
                 <Input
                     size="lg"
+                    sx={{ fontSize: 18, fontWeight: 600 }}
                     value={titleDraft}
-                    onChange={(e) => setTitleDraft(e.target.value)}
                     onBlur={saveTitle}
+                    onChange={(e) => setTitleDraft(e.target.value)}
                     onKeyDown={(e) => {
                         if (e.key === "Enter") (e.target as HTMLInputElement).blur();
                     }}
-                    sx={{ fontSize: 18, fontWeight: 600 }}
                 />
             </Box>
 
@@ -2060,34 +1798,34 @@ const MilestonePreviewInner = ({
                 >
                     <TaskMainBlock
                         assignee={assignee}
-                        reporter={reporter}
-                        useCM={useCM}
+                        isMilestone={true}
                         isOpenProjectList={isOpenProjectList}
                         isOpenTagList={isOpenTagList}
                         isOpenTeamMembersList={isOpenTeamMembersList}
                         isPreviewMode={true}
                         myself={myself}
                         projectTags={projectTags}
-                        setProjectTags={setProjectTags}
+                        reporter={reporter}
                         setAssignee={setAssignee}
                         setIsOpenProjectList={setIsOpenProjectList}
                         setIsOpenTagList={setIsOpenTagList}
                         setIsOpenTeamMembersList={setIsOpenTeamMembersList}
                         setMyself={setMyself}
+                        setProjectTags={setProjectTags}
                         setReporter={setReporter}
+                        setTaskUpdated={setTaskUpdated}
+                        socket={socket}
+                        taskContent={taskContentLike}
+                        useCM={useCM}
+                        usePM={usePM}
+                        useSM={useSM}
+                        useTEM={useTEM}
+                        useTM={useTM}
+                        useUISM={useUISM}
                         setTaskContent={(next) => {
                             setTaskContentLike(next);
                             setTaskUpdated(true);
                         }}
-                        setTaskUpdated={setTaskUpdated}
-                        socket={socket}
-                        taskContent={taskContentLike}
-                        useTEM={useTEM}
-                        useTM={useTM}
-                        useSM={useSM}
-                        useUISM={useUISM}
-                        usePM={usePM}
-                        isMilestone={true}
                     />
                 </Box>
 
@@ -2110,14 +1848,12 @@ const MilestonePreviewInner = ({
                     <TaskBodyBlock
                         key={`MilestoneBody-${milestone.milestoneId}`}
                         body={bodyDraft}
-                        useCM={useCM}
                         myself={myself}
-                        setBody={(next) => {
-                            setBodyDraft(next);
-                        }}
                         setMyself={setMyself}
                         setTaskBodyEdited={setBodyEdited}
                         setTaskBodySaved={setBodySaved}
+                        taskId={milestone.taskId ?? milestone.milestoneId}
+                        useCM={useCM}
                         socket={socket}
                         // Body-attachment uploads (`POST /task/body/attachment/`)
                         // resolve through `TaskBodyAttachmentFact.task` →
@@ -2131,9 +1867,11 @@ const MilestonePreviewInner = ({
                         // accepts. We fall back to `milestoneId` only as a
                         // belt-and-suspenders for partial server payloads
                         // where `taskId` hasn't been backfilled yet.
-                        taskId={milestone.taskId ?? milestone.milestoneId}
                         useTEM={useTEM}
                         useUISM={useUISM}
+                        setBody={(next) => {
+                            setBodyDraft(next);
+                        }}
                     />
                 </Box>
 
@@ -2147,19 +1885,19 @@ const MilestonePreviewInner = ({
                     Task" button are persisted with that as their
                     parent_task_id. */}
                 <TaskSubTasksBlock
-                    SectionHeader={SectionHeader}
-                    useCM={useCM}
-                    useTM={useTM}
+                    buttonLabel="Task"
                     currentTaskContent={taskContentLike}
+                    emptyText="No tasks yet. Create a task and assign it to this milestone."
+                    forceLoad={true}
                     myself={myself}
+                    SectionHeader={SectionHeader}
                     setMyself={setMyself}
                     socket={socket}
-                    useTEM={useTEM}
-                    useUISM={useUISM}
-                    forceLoad={true}
                     title="Tasks in this milestone"
-                    buttonLabel="Task"
-                    emptyText="No tasks yet. Create a task and assign it to this milestone."
+                    useCM={useCM}
+                    useTEM={useTEM}
+                    useTM={useTM}
+                    useUISM={useUISM}
                 />
             </Box>
 
@@ -2176,7 +1914,6 @@ const MilestonePreviewInner = ({
                     }}
                 >
                     <TaskTabBlock
-                        useCM={useCM}
                         editTargetComment={editTargetComment}
                         isInEdit={isInEdit}
                         isLoadingTaskActivities={isLoadingTaskActivities}
@@ -2199,12 +1936,13 @@ const MilestonePreviewInner = ({
                         taskComments={taskComments}
                         taskContent={taskContentLike}
                         taskNotes={taskNotes}
+                        tmpCurrentTaskContent={taskContentLike}
+                        uploadedFiles={uploadedFiles}
+                        useCM={useCM}
+                        useNM={useNM}
                         useTEM={useTEM}
                         useTM={useTM}
-                        tmpCurrentTaskContent={taskContentLike}
                         useUISM={useUISM}
-                        uploadedFiles={uploadedFiles}
-                        useNM={useNM}
                     />
                 </Box>
             )}

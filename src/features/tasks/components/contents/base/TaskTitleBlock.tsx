@@ -1,11 +1,10 @@
 import { useRef, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
-import CancelRoundedIcon from "@mui/icons-material/CancelRounded";
+import CancelIcon from "@mui/icons-material/Cancel";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
-import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
@@ -14,13 +13,9 @@ import {
     Box,
     Button,
     Chip,
-    Dropdown,
     FormControl,
     IconButton,
     Input,
-    Menu,
-    MenuButton,
-    MenuItem,
     Snackbar,
     Stack,
     Tooltip,
@@ -30,6 +25,8 @@ import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 import { useLocation } from "react-router-dom";
 
+import { MoreMenu, MoreMenuItem } from "../../../../../components/ui/MoreMenu";
+import { TaskHeaderStyles } from "../../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
@@ -92,6 +89,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const styles = isDark ? TaskHeaderStyles.dark : TaskHeaderStyles.light;
     const location = useLocation();
     // True when the user is currently inside the Tasks service (any URL
     // under `/home/tasks`). Mirrors the active-route detection used by the
@@ -147,9 +145,8 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 taskContent.status.status === "Pending") && (
                                 <Button
                                     size="sm"
-                                    variant="soft"
                                     startDecorator={<PlayArrowRoundedIcon sx={{ fontSize: 16 }} />}
-                                    onClick={() => handleStatusChange("WIP", "#ff8c00")}
+                                    variant="soft"
                                     sx={{
                                         fontWeight: 600,
                                         fontSize: "12px",
@@ -172,6 +169,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                             boxShadow: "0 2px 6px rgba(255, 140, 0, 0.2)",
                                         },
                                     }}
+                                    onClick={() => handleStatusChange("WIP", "#ff8c00")}
                                 >
                                     Start Task
                                 </Button>
@@ -180,9 +178,8 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                         {isPreviewMode && taskContent.status.status === "WIP" && (
                             <Button
                                 size="sm"
-                                variant="soft"
                                 startDecorator={<TaskAltRoundedIcon sx={{ fontSize: 16 }} />}
-                                onClick={() => handleStatusChange("Closed", "#1dc200")}
+                                variant="soft"
                                 sx={{
                                     fontWeight: 600,
                                     fontSize: "12px",
@@ -205,6 +202,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                         boxShadow: "0 2px 6px rgba(76, 175, 80, 0.2)",
                                     },
                                 }}
+                                onClick={() => handleStatusChange("Closed", "#1dc200")}
                             >
                                 Complete Task
                             </Button>
@@ -350,72 +348,14 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                         </Tooltip>
                     )}
 
-                    {isOnTasksRoute && (
-                        <Dropdown>
-                            <MenuButton
-                                size="sm"
-                                slots={{ root: IconButton }}
-                                slotProps={{
-                                    root: {
-                                        sx: {
-                                            borderRadius: "8px",
-                                            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                            color: isDark
-                                                ? "rgba(255,255,255,0.55)"
-                                                : "rgba(0,0,0,0.45)",
-                                            "&:hover": {
-                                                background: isDark
-                                                    ? "rgba(99,102,241,0.2)"
-                                                    : "rgba(99,102,241,0.1)",
-                                                color: isDark ? "#a5b4fc" : "#6366f1",
-                                                transform: "scale(1.05)",
-                                            },
-                                        },
-                                    },
-                                }}
-                            >
-                                <MoreHorizRoundedIcon sx={{ fontSize: 18 }} />
-                            </MenuButton>
-                            <Menu
-                                size="sm"
-                                sx={{
-                                    minWidth: 200,
-                                    py: 0.75,
-                                    borderRadius: "14px",
-                                    background: isDark
-                                        ? "linear-gradient(145deg, rgba(32,32,42,0.98) 0%, rgba(24,24,34,0.98) 100%)"
-                                        : "linear-gradient(145deg, rgba(255,255,255,0.99) 0%, rgba(250,251,253,0.99) 100%)",
-                                    backdropFilter: "blur(24px) saturate(180%)",
-                                    boxShadow: isDark
-                                        ? "0 12px 48px rgba(0,0,0,0.65), 0 4px 12px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)"
-                                        : "0 12px 48px rgba(0,0,0,0.14), 0 4px 12px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,1)",
-                                    border: "1px solid",
-                                    borderColor: isDark
-                                        ? "rgba(255,255,255,0.1)"
-                                        : "rgba(0,0,0,0.08)",
-                                }}
-                            >
-                                {/* Copy Task Link */}
-                                <MenuItem
-                                    sx={{
-                                        mx: 0.75,
-                                        my: 0.25,
-                                        borderRadius: "10px",
-                                        gap: 1.5,
-                                        minHeight: 40,
-                                        transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.9)"
-                                            : "rgba(15,23,42,0.85)",
-                                        "&:hover": {
-                                            background: isDark
-                                                ? "rgba(52,211,153,0.18)"
-                                                : "rgba(5,150,105,0.12)",
-                                            color: isDark ? "#34d399" : "#059669",
-                                            transform: "translateX(3px)",
-                                        },
-                                    }}
-                                    onClick={async () => {
+                    {isOnTasksRoute &&
+                        (() => {
+                            const items: MoreMenuItem[] = [
+                                {
+                                    id: "copyTaskLink",
+                                    label: "Copy task link",
+                                    icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
+                                    onClick: async () => {
                                         if (taskContent.project && taskContent.id) {
                                             const taskUrl = `${window.location.origin}/home/tasks/project/${taskContent.project.projectId}/task/${taskContent.id}`;
                                             try {
@@ -424,161 +364,41 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                                 console.error("Failed to copy link:", err);
                                             }
                                         }
-                                    }}
-                                >
-                                    <Box
-                                        sx={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            width: 30,
-                                            height: 30,
-                                            borderRadius: "8px",
-                                        }}
-                                    >
-                                        <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />
-                                    </Box>
-                                    <Typography
-                                        level="body-sm"
-                                        sx={{
-                                            fontWeight: 500,
-                                            fontSize: "0.875rem",
-                                            color: "inherit",
-                                        }}
-                                    >
-                                        Copy task link
-                                    </Typography>
-                                </MenuItem>
-
-                                {/* Open Thread - only show if task was created from a thread */}
-                                {taskContent.threadId !== null &&
-                                taskContent.chatType !== null &&
-                                taskContent.chatId !== null ? (
-                                    <MenuItem
-                                        sx={{
-                                            mx: 0.75,
-                                            my: 0.25,
-                                            borderRadius: "10px",
-                                            gap: 1.5,
-                                            minHeight: 40,
-                                            transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
-                                            color: isDark
-                                                ? "rgba(255,255,255,0.9)"
-                                                : "rgba(15,23,42,0.85)",
-                                            "&:hover": {
-                                                background: isDark
-                                                    ? "rgba(96,165,250,0.18)"
-                                                    : "rgba(59,130,246,0.12)",
-                                                color: isDark ? "#60a5fa" : "#2563eb",
-                                                transform: "translateX(3px)",
-                                            },
-                                        }}
-                                        onClick={() => {
-                                            useCM.moveToSpecificChat(
-                                                taskContent.chatType!,
-                                                taskContent.chatId!,
-                                                taskContent.threadId!,
-                                                false,
-                                                true,
-                                                useTM.setCurrentPreviewTaskId,
-                                                usePM.setCurrentProject
-                                            );
-                                        }}
-                                    >
-                                        <Box
-                                            sx={{
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                                width: 30,
-                                                height: 30,
-                                                borderRadius: "8px",
-                                            }}
-                                        >
-                                            <QuestionAnswerRoundedIcon sx={{ fontSize: 18 }} />
-                                        </Box>
-                                        <Typography
-                                            level="body-sm"
-                                            sx={{
-                                                fontWeight: 500,
-                                                fontSize: "0.875rem",
-                                                color: "inherit",
-                                            }}
-                                        >
-                                            Open Thread
-                                        </Typography>
-                                    </MenuItem>
-                                ) : null}
-
-                                {/* New Task */}
-                                <MenuItem
-                                    sx={{
-                                        mx: 0.75,
-                                        my: 0.25,
-                                        borderRadius: "10px",
-                                        gap: 1.5,
-                                        minHeight: 40,
-                                        transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.9)"
-                                            : "rgba(15,23,42,0.85)",
-                                        "&:hover": {
-                                            background: isDark
-                                                ? "rgba(129,140,248,0.18)"
-                                                : "rgba(79,70,229,0.12)",
-                                            color: isDark ? "#818cf8" : "#4f46e5",
-                                            transform: "translateX(3px)",
-                                        },
-                                    }}
-                                    onClick={() => {
+                                    },
+                                },
+                                {
+                                    id: "openThread",
+                                    label: "Open Thread",
+                                    icon: <QuestionAnswerRoundedIcon sx={{ fontSize: 18 }} />,
+                                    visible:
+                                        taskContent.threadId !== null &&
+                                        taskContent.chatType !== null &&
+                                        taskContent.chatId !== null,
+                                    onClick: () => {
+                                        useCM.moveToSpecificChat(
+                                            taskContent.chatType!,
+                                            taskContent.chatId!,
+                                            taskContent.threadId!,
+                                            false,
+                                            true,
+                                            useTM.setCurrentPreviewTaskId,
+                                            usePM.setCurrentProject
+                                        );
+                                    },
+                                },
+                                {
+                                    id: "newTask",
+                                    label: "New Task",
+                                    icon: <AssignmentRoundedIcon sx={{ fontSize: 18 }} />,
+                                    onClick: () => {
                                         useTM.handleCreateTask();
-                                    }}
-                                >
-                                    <Box
-                                        sx={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            width: 30,
-                                            height: 30,
-                                            borderRadius: "8px",
-                                        }}
-                                    >
-                                        <AssignmentRoundedIcon sx={{ fontSize: 18 }} />
-                                    </Box>
-                                    <Typography
-                                        level="body-sm"
-                                        sx={{
-                                            fontWeight: 500,
-                                            fontSize: "0.875rem",
-                                            color: "inherit",
-                                        }}
-                                    >
-                                        New Task
-                                    </Typography>
-                                </MenuItem>
-
-                                {/* New Sub Task */}
-                                <MenuItem
-                                    sx={{
-                                        mx: 0.75,
-                                        my: 0.25,
-                                        borderRadius: "10px",
-                                        gap: 1.5,
-                                        minHeight: 40,
-                                        transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.9)"
-                                            : "rgba(15,23,42,0.85)",
-                                        "&:hover": {
-                                            background: isDark
-                                                ? "rgba(34,211,238,0.18)"
-                                                : "rgba(8,145,178,0.12)",
-                                            color: isDark ? "#22d3ee" : "#0891b2",
-                                            transform: "translateX(3px)",
-                                        },
-                                    }}
-                                    onClick={() => {
+                                    },
+                                },
+                                {
+                                    id: "newSubTask",
+                                    label: "New Sub Task",
+                                    icon: <AssignmentRoundedIcon sx={{ fontSize: 18 }} />,
+                                    onClick: () => {
                                         if (
                                             taskContent.id !== undefined &&
                                             taskContent.rootTaskId != null
@@ -597,54 +417,13 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                         } else {
                                             console.error("Task ID not defined error.");
                                         }
-                                    }}
-                                >
-                                    <Box
-                                        sx={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            width: 30,
-                                            height: 30,
-                                            borderRadius: "8px",
-                                        }}
-                                    >
-                                        <AssignmentRoundedIcon sx={{ fontSize: 18 }} />
-                                    </Box>
-                                    <Typography
-                                        level="body-sm"
-                                        sx={{
-                                            fontWeight: 500,
-                                            fontSize: "0.875rem",
-                                            color: "inherit",
-                                        }}
-                                    >
-                                        New Sub Task
-                                    </Typography>
-                                </MenuItem>
-
-                                {/* Open Note */}
-                                <MenuItem
-                                    key="open-note"
-                                    sx={{
-                                        mx: 0.75,
-                                        my: 0.25,
-                                        borderRadius: "10px",
-                                        gap: 1.5,
-                                        minHeight: 40,
-                                        transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.9)"
-                                            : "rgba(15,23,42,0.85)",
-                                        "&:hover": {
-                                            background: isDark
-                                                ? "rgba(251,191,36,0.18)"
-                                                : "rgba(245,158,11,0.12)",
-                                            color: isDark ? "#fbbf24" : "#f59e0b",
-                                            transform: "translateX(3px)",
-                                        },
-                                    }}
-                                    onClick={() => {
+                                    },
+                                },
+                                {
+                                    id: "openNote",
+                                    label: "Open Note",
+                                    icon: <NoteAltRoundedIcon sx={{ fontSize: 18 }} />,
+                                    onClick: () => {
                                         if (useNM.setIsTaskNoteVisible && taskContent.project) {
                                             useTM.setIsTaskTableVisible(false);
                                             useNM.setIsTaskNoteVisible(true);
@@ -663,207 +442,73 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                                 }
                                             }
                                         }
-                                    }}
-                                >
-                                    <Box
-                                        sx={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            width: 30,
-                                            height: 30,
-                                            borderRadius: "8px",
-                                        }}
-                                    >
-                                        <NoteAltRoundedIcon sx={{ fontSize: 18 }} />
-                                    </Box>
-                                    <Typography
-                                        level="body-sm"
-                                        sx={{
-                                            fontWeight: 500,
-                                            fontSize: "0.875rem",
-                                            color: "inherit",
-                                        }}
-                                    >
-                                        Open Note
-                                    </Typography>
-                                </MenuItem>
-
-                                {/* New Tag */}
-                                <MenuItem
-                                    sx={{
-                                        mx: 0.75,
-                                        my: 0.25,
-                                        borderRadius: "10px",
-                                        gap: 1.5,
-                                        minHeight: 40,
-                                        transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.9)"
-                                            : "rgba(15,23,42,0.85)",
-                                        "&:hover": {
-                                            background: isDark
-                                                ? "rgba(192,132,252,0.18)"
-                                                : "rgba(147,51,234,0.12)",
-                                            color: isDark ? "#c084fc" : "#9333ea",
-                                            transform: "translateX(3px)",
-                                        },
-                                    }}
-                                    onClick={() => {
+                                    },
+                                },
+                                {
+                                    id: "newTag",
+                                    label: "New Tag",
+                                    icon: <LocalOfferRoundedIcon sx={{ fontSize: 18 }} />,
+                                    onClick: () => {
                                         useTM.setOpenCreateTag(true);
-                                    }}
-                                >
-                                    <Box
-                                        sx={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            width: 30,
-                                            height: 30,
-                                            borderRadius: "8px",
-                                        }}
-                                    >
-                                        <LocalOfferRoundedIcon sx={{ fontSize: 18 }} />
-                                    </Box>
-                                    <Typography
-                                        level="body-sm"
-                                        sx={{
-                                            fontWeight: 500,
-                                            fontSize: "0.875rem",
-                                            color: "inherit",
-                                        }}
-                                    >
-                                        New Tag
-                                    </Typography>
-                                </MenuItem>
-
-                                {/* New Project */}
-                                <MenuItem
-                                    sx={{
-                                        mx: 0.75,
-                                        my: 0.25,
-                                        borderRadius: "10px",
-                                        gap: 1.5,
-                                        minHeight: 40,
-                                        transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.9)"
-                                            : "rgba(15,23,42,0.85)",
-                                        "&:hover": {
-                                            background: isDark
-                                                ? "rgba(45,212,191,0.18)"
-                                                : "rgba(13,148,136,0.12)",
-                                            color: isDark ? "#2dd4bf" : "#0d9488",
-                                            transform: "translateX(3px)",
-                                        },
-                                    }}
-                                    onClick={() => {
+                                    },
+                                },
+                                {
+                                    id: "newProject",
+                                    label: "New Project",
+                                    icon: <AddIcon sx={{ fontSize: 18 }} />,
+                                    onClick: () => {
                                         usePM.setOpenCreateProject(true);
+                                    },
+                                },
+                                {
+                                    id: "deleteTask",
+                                    label: "Delete Task",
+                                    icon: <DeleteRoundedIcon sx={{ fontSize: 18 }} />,
+                                    visible: taskContent.status.status !== "Closed",
+                                    danger: true,
+                                    onClick: () => {
+                                        setOpenDeleteTask(true);
+                                    },
+                                },
+                            ];
+                            return (
+                                <MoreMenu
+                                    iconFontSize={20}
+                                    items={items}
+                                    placement="bottom-end"
+                                    triggerSize={36}
+                                    triggerSx={{
+                                        background: styles.buttonBg,
+                                        border: `1px solid ${styles.buttonBorder}`,
+                                        borderRadius: "10px",
                                     }}
-                                >
-                                    <Box
-                                        sx={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                            width: 30,
-                                            height: 30,
-                                            borderRadius: "8px",
-                                        }}
-                                    >
-                                        <AddIcon sx={{ fontSize: 18 }} />
-                                    </Box>
-                                    <Typography
-                                        level="body-sm"
-                                        sx={{
-                                            fontWeight: 500,
-                                            fontSize: "0.875rem",
-                                            color: "inherit",
-                                        }}
-                                    >
-                                        New Project
-                                    </Typography>
-                                </MenuItem>
+                                />
+                            );
+                        })()}
 
-                                {taskContent.status.status !== "Closed" && (
-                                    <Box
-                                        sx={{
-                                            height: "1px",
-                                            mx: 1.5,
-                                            my: 0.5,
-                                            background: isDark
-                                                ? "rgba(255,255,255,0.08)"
-                                                : "rgba(0,0,0,0.06)",
-                                        }}
-                                    />
-                                )}
-                                {taskContent.status.status !== "Closed" && (
-                                    <MenuItem
-                                        sx={{
-                                            mx: 0.75,
-                                            my: 0.25,
-                                            borderRadius: "10px",
-                                            gap: 1.5,
-                                            minHeight: 40,
-                                            transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
-                                            color: isDark ? "#f87171" : "#dc2626",
-                                            "&:hover": {
-                                                background: isDark
-                                                    ? "rgba(248,113,113,0.18)"
-                                                    : "rgba(220,38,38,0.12)",
-                                                color: isDark ? "#fca5a5" : "#ef4444",
-                                                transform: "translateX(3px)",
-                                            },
-                                        }}
-                                        onClick={() => {
-                                            setOpenDeleteTask(true);
-                                        }}
-                                    >
-                                        <Box
-                                            sx={{
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                                width: 30,
-                                                height: 30,
-                                                borderRadius: "8px",
-                                            }}
-                                        >
-                                            <DeleteRoundedIcon
-                                                sx={{
-                                                    fontSize: 18,
-                                                    color: isDark ? "#f87171" : "#dc2626",
-                                                }}
-                                            />
-                                        </Box>
-                                        <Typography
-                                            level="body-sm"
-                                            sx={{
-                                                fontWeight: 500,
-                                                fontSize: "0.875rem",
-                                                color: "inherit",
-                                            }}
-                                        >
-                                            Delete Task
-                                        </Typography>
-                                    </MenuItem>
-                                )}
-                            </Menu>
-                        </Dropdown>
-                    )}
-
-                    <Tooltip size="sm" title="Close" variant="outlined">
+                    <Tooltip
+                        size="sm"
+                        title="Close"
+                        variant="outlined"
+                        sx={{
+                            background: styles.menuBg,
+                            border: `1px solid ${styles.menuBorder}`,
+                            borderRadius: "8px",
+                        }}
+                    >
                         <IconButton
                             size="sm"
                             variant="plain"
                             sx={{
-                                borderRadius: "8px",
-                                color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.5)",
+                                background: styles.dangerBg,
+                                border: `1px solid ${styles.dangerBorder}`,
+                                borderRadius: "10px",
+                                width: "36px",
+                                height: "36px",
+                                transition: "all 0.2s ease",
                                 "&:hover": {
-                                    background: isDark
-                                        ? "rgba(239,68,68,0.15)"
-                                        : "rgba(239,68,68,0.1)",
-                                    color: "#ef4444",
+                                    background: styles.dangerHover,
+                                    transform: "translateY(-1px)",
                                 },
                             }}
                             onClick={() => {
@@ -940,7 +585,12 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 }
                             }}
                         >
-                            <CancelRoundedIcon sx={{ fontSize: 18 }} />
+                            <CancelIcon
+                                sx={{
+                                    fontSize: "20px",
+                                    color: isDark ? "#f87171" : "#dc2626",
+                                }}
+                            />
                         </IconButton>
                     </Tooltip>
                 </Box>

@@ -156,6 +156,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                             }
                             placement="bottom"
                             arrow
+                            variant="outlined"
                         >
                             <Typography
                                 level="title-md"

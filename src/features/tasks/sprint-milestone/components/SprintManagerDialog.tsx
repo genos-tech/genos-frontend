@@ -135,13 +135,13 @@ const SprintRow = ({
                     </Chip>
                 )}
                 {!editing && (
-                    <Tooltip title="Edit" size="sm">
+                    <Tooltip title="Edit" size="sm" variant="outlined">
                         <IconButton size="sm" variant="plain" onClick={() => setEditing(true)}>
                             <EditIcon sx={{ fontSize: 16 }} />
                         </IconButton>
                     </Tooltip>
                 )}
-                <Tooltip title="Delete" size="sm">
+                <Tooltip title="Delete" size="sm" variant="outlined">
                     <IconButton size="sm" variant="plain" color="danger" onClick={remove}>
                         <DeleteOutlineIcon sx={{ fontSize: 16 }} />
                     </IconButton>

@@ -178,7 +178,7 @@ export const ChatNoteTabList = ({ tabItems, onCloseTab }: ChatNoteTabListProps) 
                             placement="bottom"
                             size="sm"
                             title={tab.title}
-                            variant="soft"
+                            variant="outlined"
                             sx={{
                                 maxWidth: 280,
                                 "& .MuiTooltip-arrow": {
@@ -214,17 +214,17 @@ export const ChatNoteTabList = ({ tabItems, onCloseTab }: ChatNoteTabListProps) 
                                     },
                                     "&.Mui-selected": {
                                         background: isDark
-                                            ? "linear-gradient(135deg, rgba(251,191,36,0.12) 0%, rgba(245,158,11,0.08) 100%)"
-                                            : "linear-gradient(135deg, rgba(251,191,36,0.1) 0%, rgba(245,158,11,0.06) 100%)",
+                                            ? "linear-gradient(135deg, rgba(129,140,248,0.16) 0%, rgba(99,102,241,0.10) 100%)"
+                                            : "linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(79,70,229,0.06) 100%)",
                                         border: isDark
-                                            ? "1px solid rgba(251,191,36,0.2)"
-                                            : "1px solid rgba(251,191,36,0.15)",
-                                        color: isDark ? "#fcd34d" : "#d97706",
+                                            ? "1px solid rgba(129,140,248,0.28)"
+                                            : "1px solid rgba(99,102,241,0.20)",
+                                        color: isDark ? "#a5b4fc" : "#4f46e5",
                                         boxShadow: isDark
                                             ? "0 2px 8px rgba(0,0,0,0.3)"
-                                            : "0 2px 8px rgba(251,191,36,0.15)",
+                                            : "0 2px 8px rgba(99,102,241,0.18)",
                                         "& .tab-icon": {
-                                            color: isDark ? "#fcd34d" : "#f59e0b",
+                                            color: isDark ? "#a5b4fc" : "#6366f1",
                                         },
                                         "& .close-btn": {
                                             opacity: 1,

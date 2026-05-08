@@ -145,6 +145,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         }
                         placement="bottom"
                         arrow
+                        variant="outlined"
                     >
                         <Typography
                             level="title-md"
@@ -229,7 +230,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                             <Tooltip
                                 size="sm"
                                 title="Open Task"
-                                variant="soft"
+                                variant="outlined"
                                 sx={{ borderRadius: "8px" }}
                             >
                                 <Box
@@ -354,7 +355,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         <Tooltip
                             size="sm"
                             title="New task linked to this thread"
-                            variant="soft"
+                            variant="outlined"
                             sx={{ borderRadius: "8px" }}
                         >
                             <Box
@@ -419,7 +420,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     <Tooltip
                         size="sm"
                         title="Open Note linked to this thread"
-                        variant="soft"
+                        variant="outlined"
                         sx={{ borderRadius: "8px" }}
                     >
                         <IconButton
@@ -476,7 +477,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                 )}
 
                 {/* Close Button */}
-                <Tooltip size="sm" title="Close" variant="soft" sx={{ borderRadius: "8px" }}>
+                <Tooltip size="sm" title="Close" variant="outlined" sx={{ borderRadius: "8px" }}>
                     <IconButton
                         size="sm"
                         variant="plain"

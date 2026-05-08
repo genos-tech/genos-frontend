@@ -346,6 +346,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                             size="sm"
                             title="Edit"
                             placement="top"
+                            variant="outlined"
                             sx={{
                                 borderRadius: "8px",
                                 fontSize: "0.75rem",

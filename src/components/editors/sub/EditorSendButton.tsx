@@ -69,7 +69,7 @@ export const EditorSendButton = ({ disabled, onSend }: EditorSendButtonProps) =>
                     </Box>
                 </Box>
             }
-            variant="soft"
+            variant="outlined"
         >
             <Box
                 sx={{

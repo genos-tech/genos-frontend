@@ -4,20 +4,11 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import DeleteIcon from "@mui/icons-material/Delete";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
-import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
-import {
-    Box,
-    Dropdown,
-    IconButton,
-    Menu,
-    MenuButton,
-    MenuItem,
-    Tooltip,
-    Typography,
-} from "@mui/joy";
+import { Box, IconButton, Tooltip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
+import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { TaskHeaderStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -146,11 +137,11 @@ export const TaskHeader = ({
                         >
                             <ProjectAvatar
                                 avatarSize={36}
-                                useCM={useCM}
                                 myself={myself}
                                 pmChat={pmChat}
                                 setMyself={setMyself}
                                 socket={null}
+                                useCM={useCM}
                                 useTEM={useTEM}
                                 useUISM={useUISM}
                             />
@@ -173,7 +164,7 @@ export const TaskHeader = ({
                         {usePM.currentProject?.projectName}
                     </Typography>
                     {usePM.currentProject?.isPrivate === true && (
-                        <Tooltip title="Private Project" size="sm" variant="soft">
+                        <Tooltip size="sm" title="Private Project" variant="outlined">
                             <LockOutlineIcon
                                 sx={{
                                     fontSize: "18px",
@@ -203,6 +194,12 @@ export const TaskHeader = ({
                 {/* Create Task Button */}
                 <Tooltip
                     size="sm"
+                    variant="outlined"
+                    sx={{
+                        background: styles.menuBg,
+                        border: `1px solid ${styles.menuBorder}`,
+                        borderRadius: "8px",
+                    }}
                     title={
                         <Box
                             sx={{
@@ -224,12 +221,6 @@ export const TaskHeader = ({
                             </Typography>
                         </Box>
                     }
-                    variant="soft"
-                    sx={{
-                        background: styles.menuBg,
-                        border: `1px solid ${styles.menuBorder}`,
-                        borderRadius: "8px",
-                    }}
                 >
                     <IconButton
                         size="sm"
@@ -262,133 +253,49 @@ export const TaskHeader = ({
                 </Tooltip>
 
                 {/* More Options Dropdown */}
-                <Dropdown>
-                    <MenuButton
-                        slots={{ root: IconButton }}
-                        slotProps={{
-                            root: {
-                                sx: {
-                                    background: styles.buttonBg,
-                                    border: `1px solid ${styles.buttonBorder}`,
-                                    borderRadius: "10px",
-                                    width: "36px",
-                                    height: "36px",
-                                    transition: "all 0.2s ease",
-                                    "&:hover": {
-                                        background: styles.buttonHover,
-                                        transform: "translateY(-1px)",
-                                    },
-                                },
-                            },
-                        }}
-                    >
-                        <MoreHorizRoundedIcon sx={{ color: styles.textColor }} />
-                    </MenuButton>
-                    <Menu
-                        size="sm"
-                        sx={{
-                            background: styles.menuBg,
-                            border: `1px solid ${styles.menuBorder}`,
-                            borderRadius: "12px",
-                            boxShadow: isDark
-                                ? "0 8px 32px rgba(0,0,0,0.5)"
-                                : "0 8px 32px rgba(0,0,0,0.15)",
-                            p: 0.5,
-                        }}
-                    >
-                        <MenuItem
-                            onClick={onCreateTag}
-                            sx={{
-                                borderRadius: "8px",
-                                gap: 1,
-                                transition: "all 0.2s ease",
-                                "&:hover": {
-                                    background: styles.buttonHover,
-                                },
-                            }}
-                        >
-                            <LocalOfferIcon
-                                sx={{
-                                    fontSize: "18px",
-                                    color: isDark ? "#fbbf24" : "#d97706",
-                                }}
-                            />
-                            <Typography
-                                level="body-sm"
-                                sx={{ color: styles.textColor, fontWeight: 500 }}
-                            >
-                                New Tag
-                            </Typography>
-                        </MenuItem>
-                        <MenuItem
-                            onClick={onCreateProject}
-                            sx={{
-                                borderRadius: "8px",
-                                gap: 1,
-                                transition: "all 0.2s ease",
-                                "&:hover": {
-                                    background: styles.buttonHover,
-                                },
-                            }}
-                        >
-                            <AddIcon
-                                sx={{
-                                    fontSize: "18px",
-                                    color: isDark ? "#4ade80" : "#16a34a",
-                                }}
-                            />
-                            <Typography
-                                level="body-sm"
-                                sx={{ color: styles.textColor, fontWeight: 500 }}
-                            >
-                                New Project
-                            </Typography>
-                        </MenuItem>
-                        <Box
-                            sx={{
-                                height: "1px",
-                                background: styles.containerBorder,
-                                my: 0.5,
-                                mx: 1,
+                {(() => {
+                    const items: MoreMenuItem[] = [
+                        {
+                            id: "newTag",
+                            label: "New Tag",
+                            icon: <LocalOfferIcon sx={{ fontSize: 18 }} />,
+                            onClick: onCreateTag,
+                        },
+                        {
+                            id: "newProject",
+                            label: "New Project",
+                            icon: <AddIcon sx={{ fontSize: 18 }} />,
+                            onClick: onCreateProject,
+                        },
+                        {
+                            id: "deleteProject",
+                            label: "Delete Project",
+                            icon: <DeleteIcon sx={{ fontSize: 18 }} />,
+                            danger: true,
+                            onClick: onDeleteProject,
+                        },
+                    ];
+                    return (
+                        <MoreMenu
+                            iconFontSize={20}
+                            items={items}
+                            placement="bottom-end"
+                            triggerSize={36}
+                            triggerSx={{
+                                background: styles.buttonBg,
+                                border: `1px solid ${styles.buttonBorder}`,
+                                borderRadius: "10px",
                             }}
                         />
-                        <MenuItem
-                            onClick={onDeleteProject}
-                            sx={{
-                                borderRadius: "8px",
-                                gap: 1,
-                                background: styles.dangerBg,
-                                transition: "all 0.2s ease",
-                                "&:hover": {
-                                    background: styles.dangerHover,
-                                },
-                            }}
-                        >
-                            <DeleteIcon
-                                sx={{
-                                    fontSize: "18px",
-                                    color: isDark ? "#f87171" : "#dc2626",
-                                }}
-                            />
-                            <Typography
-                                level="body-sm"
-                                sx={{
-                                    color: isDark ? "#f87171" : "#dc2626",
-                                    fontWeight: 600,
-                                }}
-                            >
-                                Delete Project
-                            </Typography>
-                        </MenuItem>
-                    </Menu>
-                </Dropdown>
+                    );
+                })()}
 
                 {/* Close Button */}
                 {(useTM.isTaskPreviewVisible === true || useTM.isCreatingTask.flag === true) && (
                     <Tooltip
                         size="sm"
                         title="Close Panel"
-                        variant="soft"
+                        variant="outlined"
                         sx={{
                             background: styles.menuBg,
                             border: `1px solid ${styles.menuBorder}`,

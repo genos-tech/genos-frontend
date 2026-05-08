@@ -169,7 +169,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                     <Tooltip
                         size="sm"
                         title={`Mark all in this chat as read`}
-                        variant="soft"
+                        variant="outlined"
                         sx={{ borderRadius: "8px" }}
                     >
                         <IconButton
@@ -189,7 +189,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                     <Tooltip
                         size="sm"
                         title="Create a new task"
-                        variant="soft"
+                        variant="outlined"
                         sx={{ borderRadius: "8px" }}
                     >
                         <IconButton
@@ -221,7 +221,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                             <Tooltip
                                 size="sm"
                                 title="Back to Chat"
-                                variant="soft"
+                                variant="outlined"
                                 sx={{ borderRadius: "8px" }}
                             >
                                 <IconButton
@@ -239,7 +239,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                             <Tooltip
                                 size="sm"
                                 title="To-Do"
-                                variant="soft"
+                                variant="outlined"
                                 sx={{ borderRadius: "8px" }}
                             >
                                 <Badge
@@ -277,7 +277,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                     <Tooltip
                         size="sm"
                         title="Swap chats"
-                        variant="soft"
+                        variant="outlined"
                         sx={{ borderRadius: "8px" }}
                     >
                         <IconButton
@@ -298,7 +298,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                     <Tooltip
                         size="sm"
                         title="Add members"
-                        variant="soft"
+                        variant="outlined"
                         sx={{ borderRadius: "8px" }}
                     >
                         <IconButton
@@ -315,7 +315,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                 )}
 
                 {/* Close Button */}
-                <Tooltip size="sm" title="Close" variant="soft" sx={{ borderRadius: "8px" }}>
+                <Tooltip size="sm" title="Close" variant="outlined" sx={{ borderRadius: "8px" }}>
                     <IconButton
                         size="sm"
                         variant="plain"

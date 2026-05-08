@@ -186,7 +186,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                     <Tooltip
                         size="sm"
                         title={`Mark all in this chat as read`}
-                        variant="soft"
+                        variant="outlined"
                         sx={{ borderRadius: "8px" }}
                     >
                         <IconButton
@@ -208,7 +208,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                         <Tooltip
                             size="sm"
                             title="Create a new task"
-                            variant="soft"
+                            variant="outlined"
                             sx={{ borderRadius: "8px" }}
                         >
                             <IconButton
@@ -234,7 +234,12 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                     )}
 
                 {/* Swap Chat Button */}
-                <Tooltip size="sm" title="Swap chats" variant="soft" sx={{ borderRadius: "8px" }}>
+                <Tooltip
+                    size="sm"
+                    title="Swap chats"
+                    variant="outlined"
+                    sx={{ borderRadius: "8px" }}
+                >
                     <IconButton
                         size="sm"
                         variant="plain"
@@ -252,7 +257,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                             <Tooltip
                                 size="sm"
                                 title="Back to DM"
-                                variant="soft"
+                                variant="outlined"
                                 sx={{ borderRadius: "8px" }}
                             >
                                 <IconButton
@@ -270,7 +275,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                             <Tooltip
                                 size="sm"
                                 title="To-Do"
-                                variant="soft"
+                                variant="outlined"
                                 sx={{ borderRadius: "8px" }}
                             >
                                 <Badge
@@ -304,7 +309,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                 )}
 
                 {/* Close Button */}
-                <Tooltip size="sm" title="Close" variant="soft" sx={{ borderRadius: "8px" }}>
+                <Tooltip size="sm" title="Close" variant="outlined" sx={{ borderRadius: "8px" }}>
                     <IconButton
                         size="sm"
                         variant="plain"

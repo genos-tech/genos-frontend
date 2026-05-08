@@ -609,7 +609,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             </>
                         }
                         placement="right"
-                        variant="soft"
+                        variant="outlined"
                     >
                         <Sheet
                             onClick={handleMessageClick}

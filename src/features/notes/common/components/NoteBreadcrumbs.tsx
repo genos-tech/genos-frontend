@@ -188,7 +188,7 @@ export const NoteBreadcrumbs = ({
                                 placement="bottom"
                                 size="sm"
                                 title={node.title}
-                                variant="soft"
+                                variant="outlined"
                                 sx={{
                                     maxWidth: 280,
                                     "& .MuiTooltip-arrow": {

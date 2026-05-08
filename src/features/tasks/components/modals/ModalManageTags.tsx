@@ -321,7 +321,7 @@ export const ModalManageTags: React.FC<Props> = ({
                                     >
                                         {editName || "preview"}
                                     </Chip>
-                                    <Tooltip title="Save" size="sm">
+                                    <Tooltip title="Save" size="sm" variant="outlined">
                                         <IconButton
                                             size="sm"
                                             variant="plain"
@@ -335,7 +335,7 @@ export const ModalManageTags: React.FC<Props> = ({
                                             <CheckRoundedIcon sx={{ fontSize: 18 }} />
                                         </IconButton>
                                     </Tooltip>
-                                    <Tooltip title="Cancel" size="sm">
+                                    <Tooltip title="Cancel" size="sm" variant="outlined">
                                         <IconButton
                                             size="sm"
                                             variant="plain"
@@ -407,7 +407,7 @@ export const ModalManageTags: React.FC<Props> = ({
                                         </Stack>
                                     ) : (
                                         <>
-                                            <Tooltip title="Edit" size="sm">
+                                            <Tooltip title="Edit" size="sm" variant="outlined">
                                                 <IconButton
                                                     size="sm"
                                                     variant="plain"
@@ -422,7 +422,7 @@ export const ModalManageTags: React.FC<Props> = ({
                                                     <EditRoundedIcon sx={{ fontSize: 16 }} />
                                                 </IconButton>
                                             </Tooltip>
-                                            <Tooltip title="Delete" size="sm">
+                                            <Tooltip title="Delete" size="sm" variant="outlined">
                                                 <IconButton
                                                     size="sm"
                                                     variant="plain"

@@ -1,28 +1,17 @@
 import AddIcon from "@mui/icons-material/Add";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import CancelIcon from "@mui/icons-material/Cancel";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
-import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import NoteAddRoundedIcon from "@mui/icons-material/NoteAddRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
-import {
-    Box,
-    Divider,
-    Dropdown,
-    IconButton,
-    Menu,
-    MenuButton,
-    MenuItem,
-    Stack,
-    Tooltip,
-    Typography,
-} from "@mui/joy";
+import { Box, IconButton, Stack, Tooltip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 import { useNavigate } from "react-router-dom";
 
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
+import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { NoteHeaderActionsStyles } from "../../../../components/ui/styles/commonStyle";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -119,14 +108,12 @@ export const NoteHeaderActions = ({
         background: styles.dangerBg,
         border: `1px solid ${styles.dangerBorder}`,
         borderRadius: "10px",
-        color: "#ef4444",
-        minWidth: 36,
-        height: 36,
-        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+        width: "36px",
+        height: "36px",
+        transition: "all 0.2s ease",
         "&:hover": {
             background: styles.dangerHover,
             transform: "translateY(-1px)",
-            boxShadow: "0 4px 12px rgba(239,68,68,0.2)",
         },
     };
 
@@ -136,6 +123,13 @@ export const NoteHeaderActions = ({
             {noteType === 1 && (
                 <Tooltip
                     size="sm"
+                    variant="outlined"
+                    sx={{
+                        background: styles.menuBg,
+                        border: `1px solid ${styles.menuBorder}`,
+                        borderRadius: "8px",
+                        backdropFilter: "blur(8px)",
+                    }}
                     title={
                         <Box
                             sx={{
@@ -157,18 +151,11 @@ export const NoteHeaderActions = ({
                             </Typography>
                         </Box>
                     }
-                    variant="soft"
-                    sx={{
-                        background: styles.menuBg,
-                        border: `1px solid ${styles.menuBorder}`,
-                        borderRadius: "8px",
-                        backdropFilter: "blur(8px)",
-                    }}
                 >
                     <IconButton
                         size="sm"
-                        variant="plain"
                         sx={primaryButtonStyle}
+                        variant="plain"
                         onClick={onCreateNewNote}
                     >
                         <NoteAddRoundedIcon sx={{ fontSize: 18 }} />
@@ -198,11 +185,11 @@ export const NoteHeaderActions = ({
                         }}
                     >
                         <ProjectAvatar
-                            useCM={useCM}
                             myself={myself}
                             pmChat={pmChat}
                             setMyself={setMyself}
                             socket={socket}
+                            useCM={useCM}
                             useTEM={useTEM}
                             useUISM={useUISM}
                         />
@@ -232,11 +219,11 @@ export const NoteHeaderActions = ({
                         return (
                             <Tooltip
                                 size="sm"
+                                sx={{ borderRadius: "8px" }}
+                                variant="outlined"
                                 title={`Open Task #${currentTask.id}${
                                     currentTask.title ? ` — ${currentTask.title}` : ""
                                 }`}
-                                variant="soft"
-                                sx={{ borderRadius: "8px" }}
                             >
                                 <Box
                                     component="button"
@@ -244,7 +231,6 @@ export const NoteHeaderActions = ({
                                     aria-label={`Open Task #${currentTask.id}${
                                         currentTask.title ? `: ${currentTask.title}` : ""
                                     }`}
-                                    onClick={onOpenTask}
                                     sx={{
                                         display: "flex",
                                         alignItems: "center",
@@ -268,6 +254,7 @@ export const NoteHeaderActions = ({
                                             outlineOffset: 2,
                                         },
                                     }}
+                                    onClick={onOpenTask}
                                 >
                                     {/* ID section */}
                                     <AssignmentRoundedIcon
@@ -366,290 +353,80 @@ export const NoteHeaderActions = ({
             )}
 
             {/* More Actions Dropdown */}
-            <Dropdown>
-                <MenuButton
-                    slots={{ root: IconButton }}
-                    slotProps={{
-                        root: {
-                            size: "sm",
-                            variant: "plain",
-                            sx: actionButtonStyle,
+            {(() => {
+                const items: MoreMenuItem[] = [
+                    {
+                        id: "copyNoteLink",
+                        label: "Copy note link",
+                        icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
+                        visible: !!onCopyNoteLink,
+                        onClick: () => {
+                            if (onCopyNoteLink) onCopyNoteLink();
                         },
-                    }}
-                >
-                    <MoreHorizRoundedIcon sx={{ fontSize: 20, color: styles.accentColor }} />
-                </MenuButton>
-                <Menu
-                    size="sm"
-                    sx={{
-                        background: styles.menuBg,
-                        backdropFilter: "blur(12px)",
-                        border: `1px solid ${styles.menuBorder}`,
-                        borderRadius: "12px",
-                        boxShadow: isDark
-                            ? `0 12px 40px rgba(0,0,0,0.5), 0 0 20px ${styles.glowColor}`
-                            : `0 12px 40px rgba(0,0,0,0.12), 0 0 15px ${styles.glowColor}`,
-                        p: 0.75,
-                        minWidth: 200,
-                        "& .MuiMenuItem-root": {
-                            borderRadius: "8px",
-                            transition: "all 0.15s ease-out",
+                    },
+                    {
+                        id: "openTask",
+                        label: "Open Task",
+                        icon: <AssignmentRoundedIcon sx={{ fontSize: 18 }} />,
+                        visible: noteType === 2 && !!currentTask && !!currentTask.id,
+                        onClick: onOpenTask,
+                    },
+                    {
+                        id: "openInNotes",
+                        label: "Open in Notes",
+                        icon: <OpenInNewRoundedIcon sx={{ fontSize: 18 }} />,
+                        visible:
+                            noteType === 2 &&
+                            isInTaskPage &&
+                            !!currentTask &&
+                            !!currentTask.id &&
+                            !!currentTask.project &&
+                            !!currentTask.project?.projectId,
+                        onClick: () => {
+                            const note = useNM.currentTaskNote;
+                            navigate(
+                                `/home/notes/task/project/${currentTask?.project?.projectId}/task/${currentTask?.id}/note/${note?.noteId}`
+                            );
                         },
-                    }}
-                >
-                    {/* Copy Note Link */}
-                    {onCopyNoteLink && (
-                        <MenuItem
-                            onClick={onCopyNoteLink}
-                            sx={{
-                                gap: 1.25,
-                                py: 0.875,
-                                "&:hover": {
-                                    background: isDark
-                                        ? "rgba(52,211,153,0.18)"
-                                        : "rgba(5,150,105,0.12)",
-                                    "& .copy-icon-box": {
-                                        background: isDark
-                                            ? "rgba(52,211,153,0.25)"
-                                            : "rgba(5,150,105,0.18)",
-                                        borderColor: isDark
-                                            ? "rgba(52,211,153,0.4)"
-                                            : "rgba(5,150,105,0.3)",
-                                    },
-                                    "& .copy-text": {
-                                        color: isDark ? "#34d399" : "#059669",
-                                    },
-                                },
-                            }}
-                        >
-                            <Box
-                                className="copy-icon-box"
-                                sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    width: 28,
-                                    height: 28,
-                                    borderRadius: "7px",
-                                    background: isDark
-                                        ? "rgba(52,211,153,0.12)"
-                                        : "rgba(5,150,105,0.08)",
-                                    border: `1px solid ${isDark ? "rgba(52,211,153,0.25)" : "rgba(5,150,105,0.2)"}`,
-                                    transition: "all 0.15s ease",
-                                }}
-                            >
-                                <ContentCopyRoundedIcon
-                                    sx={{
-                                        fontSize: 16,
-                                        color: isDark ? "#34d399" : "#059669",
-                                    }}
-                                />
-                            </Box>
-                            <Typography
-                                className="copy-text"
-                                level="body-sm"
-                                sx={{
-                                    fontWeight: 500,
-                                    color: styles.textColor,
-                                    transition: "color 0.15s ease",
-                                }}
-                            >
-                                Copy note link
-                            </Typography>
-                        </MenuItem>
-                    )}
-
-                    {/* Open Task (for task notes) */}
-                    {noteType === 2 && currentTask && currentTask.id && (
-                        <MenuItem
-                            onClick={onOpenTask}
-                            sx={{
-                                gap: 1.25,
-                                py: 0.875,
-                                "&:hover": {
-                                    background: styles.buttonHover,
-                                },
-                            }}
-                        >
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    width: 28,
-                                    height: 28,
-                                    borderRadius: "7px",
-                                    background: styles.buttonBg,
-                                    border: `1px solid ${styles.buttonBorder}`,
-                                }}
-                            >
-                                <AssignmentRoundedIcon
-                                    sx={{ fontSize: 16, color: styles.accentColor }}
-                                />
-                            </Box>
-                            <Typography
-                                level="body-sm"
-                                sx={{ fontWeight: 500, color: styles.textColor }}
-                            >
-                                Open Task
-                            </Typography>
-                        </MenuItem>
-                    )}
-
-                    {/* Open in Notes (for task notes in task page) */}
-                    {noteType === 2 &&
-                        isInTaskPage &&
-                        currentTask &&
-                        currentTask.id &&
-                        currentTask.project &&
-                        currentTask.project?.projectId && (
-                            <MenuItem
-                                onClick={() => {
-                                    const note = useNM.currentTaskNote;
-                                    navigate(
-                                        `/home/notes/task/project/${currentTask.project?.projectId}/task/${currentTask.id}/note/${note?.noteId}`
-                                    );
-                                }}
-                                sx={{
-                                    gap: 1.25,
-                                    py: 0.875,
-                                    "&:hover": {
-                                        background: styles.buttonHover,
-                                    },
-                                }}
-                            >
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        width: 28,
-                                        height: 28,
-                                        borderRadius: "7px",
-                                        background: styles.buttonBg,
-                                        border: `1px solid ${styles.buttonBorder}`,
-                                    }}
-                                >
-                                    <OpenInNewRoundedIcon
-                                        sx={{ fontSize: 16, color: styles.accentColor }}
-                                    />
-                                </Box>
-                                <Typography
-                                    level="body-sm"
-                                    sx={{ fontWeight: 500, color: styles.textColor }}
-                                >
-                                    Open in Notes
-                                </Typography>
-                            </MenuItem>
-                        )}
-
-                    {/* New Note (for my notes) */}
-                    {noteType === 1 && (
-                        <MenuItem
-                            onClick={onCreateNewNote}
-                            sx={{
-                                gap: 1.25,
-                                py: 0.875,
-                                "&:hover": {
-                                    background: styles.buttonHover,
-                                },
-                            }}
-                        >
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    width: 28,
-                                    height: 28,
-                                    borderRadius: "7px",
-                                    background: styles.primaryButtonBg,
-                                }}
-                            >
-                                <NoteAddRoundedIcon sx={{ fontSize: 16, color: "#fff" }} />
-                            </Box>
-                            <Typography
-                                level="body-sm"
-                                sx={{ fontWeight: 500, color: styles.textColor }}
-                            >
-                                New Note
-                            </Typography>
-                        </MenuItem>
-                    )}
-
-                    {/* Child Note */}
-                    <MenuItem
-                        onClick={onCreateChildNote}
-                        sx={{
-                            gap: 1.25,
-                            py: 0.875,
-                            "&:hover": {
-                                background: styles.buttonHover,
-                            },
-                        }}
-                    >
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                width: 28,
-                                height: 28,
-                                borderRadius: "7px",
-                                background: styles.buttonBg,
-                                border: `1px solid ${styles.buttonBorder}`,
-                            }}
-                        >
-                            <AddIcon sx={{ fontSize: 16, color: styles.accentColor }} />
-                        </Box>
-                        <Typography
-                            level="body-sm"
-                            sx={{ fontWeight: 500, color: styles.textColor }}
-                        >
-                            Child Note
-                        </Typography>
-                    </MenuItem>
-
-                    <Divider sx={{ my: 0.5, opacity: 0.3 }} />
-
-                    {/* Delete Note */}
-                    <MenuItem
-                        onClick={onDeleteNote}
-                        sx={{
-                            gap: 1.25,
-                            py: 0.875,
-                            "&:hover": {
-                                background: styles.dangerHover,
-                            },
-                        }}
-                    >
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                width: 28,
-                                height: 28,
-                                borderRadius: "7px",
-                                background: styles.dangerBg,
-                                border: `1px solid ${styles.dangerBorder}`,
-                            }}
-                        >
-                            <DeleteOutlineRoundedIcon sx={{ fontSize: 16, color: "#ef4444" }} />
-                        </Box>
-                        <Typography level="body-sm" sx={{ fontWeight: 500, color: "#ef4444" }}>
-                            Delete Note
-                        </Typography>
-                    </MenuItem>
-                </Menu>
-            </Dropdown>
+                    },
+                    {
+                        id: "newNote",
+                        label: "New Note",
+                        icon: <NoteAddRoundedIcon sx={{ fontSize: 18 }} />,
+                        visible: noteType === 1,
+                        onClick: onCreateNewNote,
+                    },
+                    {
+                        id: "childNote",
+                        label: "Child Note",
+                        icon: <AddIcon sx={{ fontSize: 18 }} />,
+                        onClick: onCreateChildNote,
+                    },
+                    {
+                        id: "deleteNote",
+                        label: "Delete Note",
+                        icon: <DeleteOutlineRoundedIcon sx={{ fontSize: 18 }} />,
+                        danger: true,
+                        onClick: onDeleteNote,
+                    },
+                ];
+                return (
+                    <MoreMenu
+                        iconFontSize={20}
+                        items={items}
+                        placement="bottom-end"
+                        triggerSize={36}
+                        triggerSx={actionButtonStyle}
+                    />
+                );
+            })()}
 
             {/* Close Button (only in task page) */}
             {isInTaskPage && (
                 <Tooltip
                     size="sm"
-                    title="Close Notes"
-                    variant="soft"
+                    title="Close"
+                    variant="outlined"
                     sx={{
                         background: styles.menuBg,
                         border: `1px solid ${styles.menuBorder}`,
@@ -659,11 +436,16 @@ export const NoteHeaderActions = ({
                 >
                     <IconButton
                         size="sm"
-                        variant="plain"
                         sx={dangerButtonStyle}
+                        variant="plain"
                         onClick={onCloseNotes}
                     >
-                        <CloseRoundedIcon sx={{ fontSize: 18 }} />
+                        <CancelIcon
+                            sx={{
+                                fontSize: "20px",
+                                color: isDark ? "#f87171" : "#dc2626",
+                            }}
+                        />
                     </IconButton>
                 </Tooltip>
             )}
