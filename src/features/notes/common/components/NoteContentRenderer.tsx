@@ -358,9 +358,24 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
         return renderPlaceholder("Shared Notes", "Coming soon - collaborate with your team");
     }
 
-    // Fallback: if tabs exist but current note is still loading
+    // Fallback: tabs exist but the current note for the active type is
+    // still loading (rare cache miss after a tab switch). Render a
+    // transparent box that matches the page background so the pane
+    // never appears as a black flash. The actual note will appear in
+    // the very next render once `useNoteManagement`'s active-tab sync
+    // effect resolves.
     if (useNM.tabItems.length > 0) {
-        return null; // Let the component load
+        return (
+            <Box
+                sx={{
+                    width: "100%",
+                    height: "100%",
+                    background: isDark
+                        ? "radial-gradient(ellipse at center, rgba(251,191,36,0.03) 0%, transparent 70%)"
+                        : "radial-gradient(ellipse at center, rgba(251,191,36,0.04) 0%, transparent 70%)",
+                }}
+            />
+        );
     }
 
     return null;

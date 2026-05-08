@@ -90,44 +90,29 @@ export const useServiceInitialization = ({
 
     // Handle service-specific initialization. Fires only when the URL
     // crosses into a different service (see `deriveActiveService`).
+    //
+    // Tab strip is now managed by `useNoteTabs` and persisted per team.
+    // We no longer swap `tabItems`/`tmpTabItems` based on the active
+    // service — the notes-home tab strip is independent of chat/task
+    // page activity (see `useChatPanelNote` for the isolated chat-page
+    // panel state).
     useEffect(() => {
         if (activeService === "inbox") {
-            // Init all notes
             useNM.setCurrentMyNote(null);
             useNM.setCurrentTaskNote(null);
             useNM.setCurrentChatNote(null);
         } else if (activeService === "chat") {
-            // Initialize the task visibility.
             useTM.setIsTaskPreviewVisible(false);
-
-            // Keep the tabItems when an user changes the page from Notes to other pages.
-            useNM.setTmpTabItems(useNM.tabItems);
-            const chatNoteItems = useNM.tabItems.filter((item) => item.noteType === 3);
-            useNM.setTabItems(chatNoteItems);
-
-            if (chatNoteItems.length === 0) {
-                useCM.setIsChatNoteVisibleInChat(false);
-            }
-            // Init all notes
             useNM.setCurrentMyNote(null);
             useNM.setCurrentTaskNote(null);
         } else if (activeService === "tasks") {
-            // Keep the tabItems when an user changes the page from Notes to other pages.
-            useNM.setTmpTabItems(useNM.tabItems);
-            useNM.setTabItems(useNM.tabItems.filter((item) => item.noteType === 2));
-
-            // Initialize the chat note visibility.
             useNM.setIsTaskNoteVisible(false);
-
-            // Init all notes
             useNM.setCurrentMyNote(null);
             useNM.setCurrentTaskNote(null);
             useNM.setCurrentChatNote(null);
         } else if (activeService === "notes") {
-            // Keep the tabItems when an user changes the page from Notes to other pages.
-            useNM.setTabItems(useNM.tmpTabItems);
-            useNM.setTmpTabItems([]);
-
+            // Notes-home tabs are rehydrated by `tabsApi.rehydrate()` on
+            // team change; nothing to do here.
             if (socketInstance) {
                 useNM.popInitialNote();
             }

@@ -15,9 +15,15 @@ export interface TabRef {
     noteId: number;
 }
 
+// `tmpTabs` is legacy: the old per-service swap (chat/task/notes)
+// shoved tabs in here when the user navigated away. The new
+// architecture (see `useNoteTabs`) never touches the strip on service
+// change, so writes drop this field entirely. We still tolerate it on
+// read so that existing localStorage records load cleanly without
+// resetting the user's tabs.
 export interface PersistedNoteTabs {
     tabs: TabRef[];
-    tmpTabs: TabRef[];
+    tmpTabs?: TabRef[];
     selectedTabIndex: number;
 }
 
@@ -80,11 +86,13 @@ export const loadPersistedTabs = (teamId: string): PersistedNoteTabs | null => {
         const parsed = JSON.parse(raw);
         if (!parsed || typeof parsed !== "object") return null;
         const tabs = Array.isArray(parsed.tabs) ? parsed.tabs.filter(isValidRef) : [];
-        const tmpTabs = Array.isArray(parsed.tmpTabs) ? parsed.tmpTabs.filter(isValidRef) : [];
         const rawIdx = parsed.selectedTabIndex;
         const selectedTabIndex =
             typeof rawIdx === "number" && Number.isFinite(rawIdx) && rawIdx >= 0 ? rawIdx : 0;
-        return { selectedTabIndex, tabs, tmpTabs };
+        // Drop `tmpTabs` if present in the persisted record — it was
+        // only ever a transient holding pen and the new architecture
+        // doesn't need it.
+        return { selectedTabIndex, tabs };
     } catch {
         // Corrupted JSON — discard so the next save overwrites cleanly.
         return null;

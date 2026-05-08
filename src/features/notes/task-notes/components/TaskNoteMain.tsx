@@ -7,6 +7,7 @@ import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { upsertNoteCache } from "../../../../hooks/notes/useNoteData";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
@@ -90,19 +91,18 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         setNoteBodySaved(false);
     }, [useNM.selectedTabIndex]);
 
-    // Event handlers
+    // The notes-home tab strip mixes all kinds (my/task/chat). Look up
+    // the tab by index in `tabsApi.tabs` so we close the right one,
+    // regardless of whether it's a task tab. Falls back to a noteId
+    // search if the index drifted (e.g. another tab was closed in the
+    // same render cycle).
     const handleCloseTab = useCallback(
         async (tabIndex: number, closingNoteId: number) => {
-            const indexOfNextNote = tabIndex === 0 ? 1 : tabIndex - 1;
-            const nextTabIndex = Math.max(tabIndex - 1, 0);
-            useNM.setTabItems(useNM.tabItems.filter((t) => t.noteId !== closingNoteId));
-            await useNM.loadNote(
-                useNM.tabItems[indexOfNextNote].noteType,
-                useNM.tabItems[indexOfNextNote].noteId,
-                nextTabIndex
-            );
+            const all = useNM.tabsApi.tabs;
+            const target = all[tabIndex] ?? all.find((t) => t.noteId === closingNoteId) ?? null;
+            if (target) useNM.tabsApi.closeTab(target.id);
         },
-        [useNM]
+        [useNM.tabsApi]
     );
 
     const handleCreateChildNote = useCallback(() => {
@@ -162,17 +162,12 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
             useNM.currentTaskNote &&
             currentTaskNoteTitle !== useNM.currentTaskNote.title
         ) {
-            // Update the note title on the tab
-            useNM.setTabItems(
-                useNM.tabItems.map((item) =>
-                    item.noteType === useNM.currentTaskNote?.noteType &&
-                    item.noteId === useNM.currentTaskNote?.noteId
-                        ? { ...item, title: currentTaskNoteTitle }
-                        : item
-                )
+            useNM.tabsApi.updateTabTitle(
+                useNM.currentTaskNote.noteId,
+                "task",
+                currentTaskNoteTitle
             );
 
-            // Update the note title in the sidebar
             useNM.setTaskNoteMeta(
                 useNM.taskNoteMeta.map((item) =>
                     item.noteType === useNM.currentTaskNote?.noteType &&
@@ -182,10 +177,12 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                 )
             );
 
-            useNM.setCurrentTaskNote({
+            const nextTaskNote = {
                 ...useNM.currentTaskNote,
                 title: currentTaskNoteTitle,
-            });
+            };
+            upsertNoteCache(nextTaskNote);
+            useNM.setCurrentTaskNote(nextTaskNote);
         }
     }, [noteBodySaved, useNM, currentTaskNoteTitle]);
 

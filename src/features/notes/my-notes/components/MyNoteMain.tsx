@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Stack, TabPanel, Tabs } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
@@ -8,7 +8,6 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { useNoteEditor } from "../../../../hooks/notes/useNoteEditor";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
-import { useNoteTabs } from "../../../../hooks/notes/useNoteTabs";
 import { UserProps } from "../../../../types/admin";
 import { MyNoteProps } from "../../../../types/notes";
 import { EmptyState } from "../../common/components/EmptyState";
@@ -50,17 +49,12 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
         myself,
         accessToken,
         onNoteUpdate: (updatedNote: MyNoteProps) => {
-            // Update tab items
-            useNM.setTabItems(
-                useNM.tabItems.map((item) =>
-                    item.noteType === useNM.currentMyNote?.noteType &&
-                    item.noteId === useNM.currentMyNote?.noteId
-                        ? updatedNote
-                        : item
-                )
-            );
+            // Push the latest title into the new tabs API so the strip
+            // re-renders without going through the legacy
+            // `setTabItems`/`setCurrent*Note` round-trip (which is what
+            // caused the "snap-back" bug).
+            useNM.tabsApi.updateTabTitle(updatedNote.noteId, "my", updatedNote.title);
 
-            // Update note metadata
             useNM.setMyNoteMeta(
                 useNM.myNoteMeta.map((item) =>
                     item.noteType === updatedNote.noteType && item.noteId === updatedNote.noteId
@@ -77,7 +71,29 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
         },
     });
 
-    const { handleCloseTab, handleTabChange } = useNoteTabs({ useNM });
+    // The notes-home tab strip mixes all kinds (my/task/chat) into a
+    // single bar, so the close handler must derive the kind from the
+    // tab being clicked rather than assuming "my". The strip passes
+    // both the index and the noteId; we look up the tab by index in
+    // `tabsApi.tabs` and use its own id, falling back to a noteId-based
+    // search if the index drifted (e.g. another tab was closed in the
+    // same render cycle).
+    const handleCloseTab = useCallback(
+        (tabIndex: number, closingNoteId: number) => {
+            const all = useNM.tabsApi.tabs;
+            const target = all[tabIndex] ?? all.find((t) => t.noteId === closingNoteId) ?? null;
+            if (target) useNM.tabsApi.closeTab(target.id);
+        },
+        [useNM.tabsApi]
+    );
+
+    const handleTabChange = useCallback(
+        (newValue: number) => {
+            const next = useNM.tabsApi.tabs[newValue];
+            if (next) useNM.tabsApi.switchTab(next.id);
+        },
+        [useNM.tabsApi]
+    );
 
     // Reset note body saved status when the selected tab index changes
     useEffect(() => {

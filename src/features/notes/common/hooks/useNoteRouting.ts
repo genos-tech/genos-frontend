@@ -55,6 +55,12 @@ export const useNoteRouting = ({ useNM }: UseNoteRoutingProps) => {
     const isNavigatingFromUrl = useRef(false);
     // Ref to track the last URL we navigated to
     const lastNavigatedPath = useRef("");
+    // Once `useNoteTabs.rehydrate()` finishes the first time, the tab
+    // strip is the source of truth and the URL-load effect must not
+    // re-open the same tab on the next pathname tick. This ref flips
+    // to `true` after we've handled the first URL parse so that
+    // subsequent same-pathname re-renders never double-open a tab.
+    const hasHandledInitialUrl = useRef(false);
 
     // Parse the current URL to extract note routing info
     const parseCurrentRoute = useCallback((): NoteRouteInfo => {
@@ -168,12 +174,18 @@ export const useNoteRouting = ({ useNM }: UseNoteRoutingProps) => {
         [navigate]
     );
 
-    // Sync URL with note state on initial load or URL change
+    // Sync URL with note state on initial load or URL change.
+    // After the first run we let `tabsApi.rehydrate()` (which restores
+    // the previously-open tabs from localStorage) be the source of
+    // truth — we only re-open a tab from the URL if the active tab
+    // doesn't already match. This avoids the double-open race where
+    // both `rehydrate()` and this effect fire on first mount.
     useEffect(() => {
         const routeInfo = parseCurrentRoute();
 
         // If no note type in URL, don't do anything (user can browse)
         if (!routeInfo.noteType) {
+            hasHandledInitialUrl.current = true;
             return;
         }
 
@@ -187,7 +199,7 @@ export const useNoteRouting = ({ useNM }: UseNoteRoutingProps) => {
 
         // Load specific note if noteId is in URL
         if (routeInfo.noteId) {
-            // Determine internal note type (1 = my, 2 = task, 3 = chat for loadNote)
+            // Determine internal note type (1 = my, 2 = task, 3 = chat)
             let internalNoteType: number;
             if (routeInfo.noteType === "my") {
                 internalNoteType = 1;
@@ -196,26 +208,35 @@ export const useNoteRouting = ({ useNM }: UseNoteRoutingProps) => {
             } else if (routeInfo.noteType === "chat") {
                 internalNoteType = 3;
             } else {
+                hasHandledInitialUrl.current = true;
                 return;
             }
 
-            // Check if we need to load the note
-            const currentNote =
-                internalNoteType === 1
-                    ? useNM.currentMyNote
-                    : internalNoteType === 2
-                      ? useNM.currentTaskNote
-                      : useNM.currentChatNote;
+            // If the active tab already matches the URL, the rehydrate
+            // (or a previous open) has us covered — just mark handled
+            // and bail. This is the guard the plan calls for.
+            const active = useNM.tabsApi.activeTab;
+            const alreadyOpen =
+                active &&
+                active.noteId === routeInfo.noteId &&
+                ((internalNoteType === 1 && active.kind === "my") ||
+                    (internalNoteType === 2 && active.kind === "task") ||
+                    (internalNoteType === 3 && active.kind === "chat"));
 
-            if (!currentNote || currentNote.noteId !== routeInfo.noteId) {
-                isNavigatingFromUrl.current = true;
-
-                useNM.loadNote(internalNoteType, routeInfo.noteId, -1).finally(() => {
-                    setTimeout(() => {
-                        isNavigatingFromUrl.current = false;
-                    }, 100);
-                });
+            if (alreadyOpen) {
+                hasHandledInitialUrl.current = true;
+                return;
             }
+
+            isNavigatingFromUrl.current = true;
+            useNM.loadNote(internalNoteType, routeInfo.noteId, -1).finally(() => {
+                setTimeout(() => {
+                    isNavigatingFromUrl.current = false;
+                    hasHandledInitialUrl.current = true;
+                }, 100);
+            });
+        } else {
+            hasHandledInitialUrl.current = true;
         }
     }, [location.pathname]);
 

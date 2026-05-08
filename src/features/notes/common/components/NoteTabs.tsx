@@ -187,11 +187,8 @@ export const NoteTabs = ({
             sx={{ width: "100%" }}
             value={useNM.selectedTabIndex}
             onChange={(_, val) => {
-                useNM.loadNote(
-                    useNM.tabItems[Number(val)].noteType,
-                    useNM.tabItems[Number(val)].noteId,
-                    Number(val)
-                );
+                const next = useNM.tabsApi.tabs[Number(val)];
+                if (next) useNM.tabsApi.switchTab(next.id);
             }}
         >
             <Box sx={{ position: "relative", display: "flex", alignItems: "center" }}>
@@ -331,35 +328,33 @@ export const NoteTabs = ({
                                             {tab.title}
                                         </Typography>
 
-                                        {useNM.tabItems.length > 1 && (
-                                            <IconButton
-                                                className="close-btn"
-                                                color="neutral"
-                                                component="span"
-                                                size="sm"
-                                                variant="plain"
-                                                sx={{
-                                                    "--IconButton-size": "20px",
-                                                    minWidth: 20,
-                                                    minHeight: 20,
-                                                    ml: 0.5,
-                                                    opacity: 0,
-                                                    transition: "all 0.15s ease-in-out",
-                                                    borderRadius: "6px",
-                                                    "&:hover": {
-                                                        background: isDark
-                                                            ? "rgba(255,255,255,0.1)"
-                                                            : "rgba(0,0,0,0.08)",
-                                                    },
-                                                }}
-                                                onClick={(e: React.MouseEvent) => {
-                                                    e.stopPropagation();
-                                                    onCloseTab(index, Number(tab.noteId));
-                                                }}
-                                            >
-                                                <CloseRoundedIcon sx={{ fontSize: 14 }} />
-                                            </IconButton>
-                                        )}
+                                        <IconButton
+                                            className="close-btn"
+                                            color="neutral"
+                                            component="span"
+                                            size="sm"
+                                            variant="plain"
+                                            sx={{
+                                                "--IconButton-size": "20px",
+                                                minWidth: 20,
+                                                minHeight: 20,
+                                                ml: 0.5,
+                                                opacity: 0,
+                                                transition: "all 0.15s ease-in-out",
+                                                borderRadius: "6px",
+                                                "&:hover": {
+                                                    background: isDark
+                                                        ? "rgba(255,255,255,0.1)"
+                                                        : "rgba(0,0,0,0.08)",
+                                                },
+                                            }}
+                                            onClick={(e: React.MouseEvent) => {
+                                                e.stopPropagation();
+                                                onCloseTab(index, Number(tab.noteId));
+                                            }}
+                                        >
+                                            <CloseRoundedIcon sx={{ fontSize: 14 }} />
+                                        </IconButton>
                                     </Box>
                                 </Tab>
                             </Tooltip>

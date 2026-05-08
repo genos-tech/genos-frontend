@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Stack, TabPanel, Tabs } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
@@ -8,7 +8,7 @@ import { ProjectManagementState } from "../../../../hooks/common/useProjectManag
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { useChatNoteEditor } from "../../../../hooks/notes/useChatNoteEditor";
-import { useChatNoteTabs } from "../../../../hooks/notes/useChatNoteTabs";
+import { upsertNoteCache } from "../../../../hooks/notes/useNoteData";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
@@ -63,33 +63,45 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
     const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
     const [openSearchBox, setOpenSearchBox] = useState(false);
 
+    // The chat-page panel uses isolated state (`chatPanelApi`) so the
+    // notes-home tab strip is never touched by chat-page activity. The
+    // notes-home rendering continues to read from `useNM.currentChatNote`
+    // (which is now driven by `tabsApi.activeTab` via an effect in
+    // `useNoteManagement`).
+    const activeChatNote = isInChatPage ? useNM.chatPanelApi.note : useNM.currentChatNote;
+
     // Custom hooks for note management
     const chatNoteEditor = useChatNoteEditor({
-        currentChatNote: useNM.currentChatNote,
+        currentChatNote: activeChatNote,
         myself,
         accessToken,
         onNoteUpdate: (updatedNote: ChatNoteProps) => {
-            // Keep the shared current chat note in sync so that the latest title/body
-            // survives across unmount/remount when switching between the chat and note
-            // services (e.g. clicking the Notes tab in the sidebar).
-            if (
+            // Cache write-through so the per-tab data hook sees the
+            // freshest body on next mount. We deliberately no longer
+            // call the legacy `setCurrentChatNote` from this path — that
+            // (combined with the legacy tab effects) was the root cause
+            // of the "snap-back" bug.
+            upsertNoteCache(updatedNote);
+            if (isInChatPage) {
+                // Update the isolated chat-panel state.
+                useNM.chatPanelApi.setNote(updatedNote);
+            } else if (
                 useNM.currentChatNote?.noteType === updatedNote.noteType &&
                 useNM.currentChatNote?.noteId === updatedNote.noteId
             ) {
+                // Notes-home: keep the legacy mirror in sync until full
+                // migration removes it.
                 useNM.setCurrentChatNote(updatedNote);
             }
 
-            // Update tab items
-            useNM.setTabItems(
-                useNM.tabItems.map((item) =>
-                    item.noteType === useNM.currentChatNote?.noteType &&
-                    item.noteId === useNM.currentChatNote?.noteId
-                        ? updatedNote
-                        : item
-                )
-            );
+            // Sync tab strip title via the new sync API (no tabItems
+            // re-write, no selectedTabIndex reshuffle). Skip when in
+            // chat-page mode — the panel doesn't use the notes-home tab
+            // strip.
+            if (!isInChatPage) {
+                useNM.tabsApi.updateTabTitle(updatedNote.noteId, "chat", updatedNote.title);
+            }
 
-            // Update note metadata
             useNM.setChatNoteMeta(
                 useNM.chatNoteMeta.map((item) =>
                     item.noteType === updatedNote.noteType && item.noteId === updatedNote.noteId
@@ -110,30 +122,62 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
         },
     });
 
-    const { handleCloseTab, handleTabChange } = useChatNoteTabs({ useNM });
+    // The notes-home tab strip mixes all kinds (my/task/chat); resolve
+    // the tab by index first, then fall back to noteId, so the close
+    // button works on any tab regardless of which Main is hosting the
+    // strip right now.
+    const handleCloseTab = useCallback(
+        async (tabIndex: number, closingNoteId: number) => {
+            const all = useNM.tabsApi.tabs;
+            const target = all[tabIndex] ?? all.find((t) => t.noteId === closingNoteId) ?? null;
+            if (target) useNM.tabsApi.closeTab(target.id);
+        },
+        [useNM.tabsApi]
+    );
+
+    const handleTabChange = useCallback(
+        (newValue: number) => {
+            const next = useNM.tabsApi.tabs[newValue];
+            if (next) useNM.tabsApi.switchTab(next.id);
+        },
+        [useNM.tabsApi]
+    );
 
     // Reset note body saved status when the selected tab index changes
     useEffect(() => {
         chatNoteEditor.setNoteBodySaved(false);
     }, [useNM.selectedTabIndex]);
 
+    // In chat-page mode, mirror the chat panel's note into the legacy
+    // `useNM.currentChatNote` so child components (`ChatNoteHeader`,
+    // search) that still read it work without modification. Notes-home
+    // mode is driven by `tabsApi.activeTab` via the effect in
+    // `useNoteManagement`.
+    useEffect(() => {
+        if (!isInChatPage) return;
+        const next = useNM.chatPanelApi.note;
+        if (next) {
+            useNM.setCurrentChatNote(next);
+        }
+    }, [isInChatPage, useNM.chatPanelApi.note]);
+
     // Find the current chat
     const chat = useCM.allChats.find(
-        (chat) =>
-            chat.chatType === useNM.currentChatNote?.chatType &&
-            useNM.currentChatNote &&
-            chat.chatId === useNM.currentChatNote.chatId
+        (c) =>
+            c.chatType === activeChatNote?.chatType &&
+            activeChatNote &&
+            c.chatId === activeChatNote.chatId
     );
 
     // Event handlers
     const handleCreateChildNote = () => {
-        if (useNM.currentChatNote) {
+        if (activeChatNote) {
             useNM.handleCreateNewChatNote(
-                useNM.currentChatNote.noteId,
-                useNM.currentChatNote.chatType,
-                useNM.currentChatNote.chatId,
-                useNM.currentChatNote.isThread,
-                useNM.currentChatNote.threadId
+                activeChatNote.noteId,
+                activeChatNote.chatType,
+                activeChatNote.chatId,
+                activeChatNote.isThread,
+                activeChatNote.threadId
             );
         } else {
             console.error("Can't parent note ID to create a child note.");
@@ -144,8 +188,8 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
         setOpenDeleteNote(true);
     };
 
-    // If tabs exist but currentChatNote is not loaded yet, return null
-    if (useNM.currentChatNote === null) {
+    // If the active note is not loaded yet, return null
+    if (activeChatNote === null) {
         return null;
     }
 
@@ -195,25 +239,30 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
 
                             <Tabs
                                 sx={{ width: "100%" }}
-                                value={useNM.selectedTabIndex}
-                                onChange={(_, val) => handleTabChange(Number(val))}
+                                value={isInChatPage ? 0 : useNM.selectedTabIndex}
+                                onChange={(_, val) => {
+                                    if (!isInChatPage) handleTabChange(Number(val));
+                                }}
                             >
-                                <ChatNoteTabList
-                                    tabItems={useNM.tabItems}
-                                    onCloseTab={handleCloseTab}
-                                />
+                                {/* The chat-page panel renders a single note,
+                                 * so we hide the multi-tab strip there. The
+                                 * notes-home rendering keeps the strip and
+                                 * drives it off the new tabsApi. */}
+                                {!isInChatPage && (
+                                    <ChatNoteTabList
+                                        tabItems={useNM.tabItems}
+                                        onCloseTab={handleCloseTab}
+                                    />
+                                )}
 
-                                {/* Render exactly one editor (not one per tab). The tab
-                                 * strip lives in <ChatNoteTabList> above; the body
-                                 * content is a singleton because `useNM.currentChatNote`
-                                 * is too. Keying by `noteType-noteId` remounts the
-                                 * BlockNote editor + Hocuspocus provider only when the
-                                 * user actually switches notes — which is what kills
-                                 * the old N-editor remount storm that caused the lag. */}
-                                {useNM.currentChatNote && chatNoteEditor.body && (
+                                {/* Render exactly one editor. Keying by
+                                 * `noteType-noteId` remounts BlockNote +
+                                 * Hocuspocus only when the user actually
+                                 * switches notes. */}
+                                {activeChatNote && chatNoteEditor.body && (
                                     <TabPanel
-                                        key={`tab-note-body-${useNM.currentChatNote.noteType}-${useNM.currentChatNote.noteId}`}
-                                        value={useNM.selectedTabIndex}
+                                        key={`tab-note-body-${activeChatNote.noteType}-${activeChatNote.noteId}`}
+                                        value={isInChatPage ? 0 : useNM.selectedTabIndex}
                                         sx={{
                                             paddingX: "5px",
                                             paddingTop: "0px",
@@ -223,7 +272,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                         <ChatNoteEditor
                                             body={chatNoteEditor.body}
                                             useCM={useCM}
-                                            currentChatNote={useNM.currentChatNote}
+                                            currentChatNote={activeChatNote}
                                             myself={myself}
                                             setMyself={setMyself}
                                             socket={socket}

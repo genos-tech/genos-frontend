@@ -301,35 +301,33 @@ export const NoteTabList = ({ useNM, onCloseTab }: NoteTabListProps) => {
                                         {tab.title}
                                     </Typography>
 
-                                    {useNM.tabItems.length > 1 && (
-                                        <IconButton
-                                            className="close-btn"
-                                            color="neutral"
-                                            component="span"
-                                            size="sm"
-                                            variant="plain"
-                                            sx={{
-                                                "--IconButton-size": "20px",
-                                                minWidth: 20,
-                                                minHeight: 20,
-                                                ml: 0.5,
-                                                opacity: 0,
-                                                transition: "all 0.15s ease-in-out",
-                                                borderRadius: "6px",
-                                                "&:hover": {
-                                                    background: isDark
-                                                        ? "rgba(255,255,255,0.1)"
-                                                        : "rgba(0,0,0,0.08)",
-                                                },
-                                            }}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                onCloseTab(index, Number(tab.noteId));
-                                            }}
-                                        >
-                                            <CloseRoundedIcon sx={{ fontSize: 14 }} />
-                                        </IconButton>
-                                    )}
+                                    <IconButton
+                                        className="close-btn"
+                                        color="neutral"
+                                        component="span"
+                                        size="sm"
+                                        variant="plain"
+                                        sx={{
+                                            "--IconButton-size": "20px",
+                                            minWidth: 20,
+                                            minHeight: 20,
+                                            ml: 0.5,
+                                            opacity: 0,
+                                            transition: "all 0.15s ease-in-out",
+                                            borderRadius: "6px",
+                                            "&:hover": {
+                                                background: isDark
+                                                    ? "rgba(255,255,255,0.1)"
+                                                    : "rgba(0,0,0,0.08)",
+                                            },
+                                        }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onCloseTab(index, Number(tab.noteId));
+                                        }}
+                                    >
+                                        <CloseRoundedIcon sx={{ fontSize: 14 }} />
+                                    </IconButton>
                                 </Box>
                             </Tab>
                         </Tooltip>

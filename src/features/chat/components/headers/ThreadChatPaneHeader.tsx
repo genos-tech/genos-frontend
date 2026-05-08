@@ -430,14 +430,6 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                             onClick={() => {
                                 const chatType = useCM.currentThreadChat?.chatType;
                                 const chatId = useCM.currentThreadChat?.chatId;
-                                useNM.setTabItems(
-                                    useNM.tabItems.filter(
-                                        (item: any) =>
-                                            item.noteType === 3 &&
-                                            item.chatType === chatType &&
-                                            item.chatId === chatId
-                                    )
-                                );
                                 const matchedChat = useCM.allChats.find(
                                     (c) => c.chatId === chatId && c.chatType === chatType
                                 );
@@ -457,7 +449,10 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                             ? names.join(", ")
                                             : `${names.slice(0, MAX_DISPLAY).join(", ")} +${names.length - MAX_DISPLAY}`;
                                 }
-                                useNM.handleCreateNewChatNoteIfNotExist(
+                                // Use the isolated chat panel API so opening a
+                                // chat note from this header never touches the
+                                // notes-home tab strip.
+                                useNM.chatPanelApi.openOrCreate(
                                     chatType as number,
                                     chatId as number,
                                     true,

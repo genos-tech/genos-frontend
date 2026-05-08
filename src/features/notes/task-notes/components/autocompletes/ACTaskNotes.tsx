@@ -22,7 +22,16 @@ export const ACTaskNotes = (props: ACTaskNotesProps) => {
     const loading = openSearchBox && options.length === 0;
 
     const onChangeHandler = async (value: TaskNoteProps) => {
-        useNM.setCurrentTaskNote(value);
+        useNM.tabsApi.openTab({
+            kind: "task",
+            noteType: 2,
+            noteId: value.noteId,
+            projectId: value.projectId,
+            taskId: value.taskId,
+            id: `task-${value.noteId}`,
+            title: value.title,
+            teamId: myself.teamId,
+        });
     };
 
     useEffect(() => {

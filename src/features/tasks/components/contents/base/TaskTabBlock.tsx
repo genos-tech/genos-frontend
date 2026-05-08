@@ -667,7 +667,16 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                 if (useNM.setIsTaskNoteVisible) {
                                                     useTM.setIsTaskTableVisible(false);
                                                     useNM.setIsTaskNoteVisible(true);
-                                                    useNM.setCurrentTaskNote(taskNote);
+                                                    useNM.tabsApi.openTab({
+                                                        kind: "task",
+                                                        noteType: 2,
+                                                        noteId: taskNote.noteId,
+                                                        projectId: taskNote.projectId,
+                                                        taskId: taskNote.taskId,
+                                                        id: `task-${taskNote.noteId}`,
+                                                        title: taskNote.title,
+                                                        teamId: myself.teamId,
+                                                    });
                                                 }
                                             }}
                                         >

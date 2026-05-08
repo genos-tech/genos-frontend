@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { NoteService } from "../../db/services/note.service";
 import { createEmptyChatNote } from "../../features/notes/chat-notes/services/createEmptyChatNote";
@@ -36,15 +36,19 @@ import {
 import { buildChatNoteTree, buildMyNoteTree, buildTaskNoteTree } from "../../utils/note";
 import { initCurrentChatNoteChain, updataChatNoteChain } from "./chatNote";
 import { initCurrentMyNoteChain, updataMyNoteChain } from "./myNote";
-import { loadPersistedTabs, savePersistedTabs, TabRef, toRefs } from "./noteTabsPersistence";
-import {
-    updateTabFromChatNoteUpdate,
-    updateTabFromMyNoteUpdate,
-    updateTabFromTaskNoteUpdate,
-} from "./tab";
 import { updataTaskNoteChain } from "./taskNote";
+import { ChatPanelNoteApi, useChatPanelNote } from "./useChatPanelNote";
+import { getCachedNote, upsertNoteCache } from "./useNoteData";
+import { NoteTabsApi, noteToTab, useNoteTabs } from "./useNoteTabs";
 
 export interface NoteManagementState {
+    // New tab strip API (synchronous; replaces the legacy
+    // tabItems/selectedTabIndex/loadNote dance).
+    tabsApi: NoteTabsApi;
+    // Isolated chat-page note panel state (used by ChatNotePanel and
+    // ThreadChatPaneHeader; never touches notes-home tabs).
+    chatPanelApi: ChatPanelNoteApi;
+
     // Note type and tabs
     currentNoteType: number;
     setCurrentNoteType: (type: number) => void;
@@ -162,14 +166,25 @@ export const useNoteManagement = (
     const [tmpTabItems, setTmpTabItems] = useState<any[]>([]);
     const [selectedTabIndex, setSelectedTabIndex] = useState(0);
 
-    // Tracks whether the rehydrate effect below has run for the current
-    // teamId. The persist effect uses this to avoid clobbering a saved
-    // record with React's empty initial state on first render.
-    const hasHydratedRef = useRef(false);
+    // New tab API — synchronous tab operations + persistence-driven
+    // rehydrate. This is the source of truth going forward; the legacy
+    // `tabItems`/`selectedTabIndex` above are kept temporarily for
+    // unmigrated consumers and will be removed in a follow-up cleanup.
+    const tabsApi = useNoteTabs({ myself, accessToken });
 
     // Chat notes
     const [currentChatNote, setCurrentChatNote] = useState<ChatNoteProps | null>(null);
     const [chatNoteMeta, setChatNoteMeta] = useState<ChatNoteMetaProps[]>([]);
+
+    // Isolated chat-panel state. Decoupled from the notes-home tab strip
+    // so opening/saving a chat note from a thread chat header never
+    // touches `tabsApi.tabs` (root cause of the "snap-back" / "click does
+    // nothing" bugs in the legacy architecture).
+    const chatPanelApi = useChatPanelNote({
+        myself,
+        accessToken,
+        onMetaRefreshed: (meta) => setChatNoteMeta(meta),
+    });
     const [currentChatNoteChain, setCurrentChatNoteChain] = useState<
         ChatNoteMetaTreeNode[] | undefined
     >(undefined);
@@ -252,6 +267,8 @@ export const useNoteManagement = (
                 setNewlyCreatedChatNotes([...newlyCreatedChatNotes, chatNote]);
                 setCurrentChatNote(chatNote);
                 addNote(3, chatNote);
+                upsertNoteCache(chatNote);
+                tabsApi.openTab(noteToTab(chatNote, myself.teamId));
                 recordNoteOpen(chatNote.noteId, 3);
 
                 const freshMeta: ChatNoteMetaProps[] = await loadChatNoteMeta(myself, accessToken);
@@ -287,6 +304,8 @@ export const useNoteManagement = (
                 const newNote = chatNotes[0];
                 setCurrentChatNote(newNote);
                 addNote(3, newNote);
+                upsertNoteCache(newNote);
+                tabsApi.openTab(noteToTab(newNote, myself.teamId));
                 recordNoteOpen(newNote.noteId, 3);
 
                 const freshMeta: ChatNoteMetaProps[] = await loadChatNoteMeta(myself, accessToken);
@@ -323,14 +342,6 @@ export const useNoteManagement = (
         chatNoteMeta: chatNoteMeta,
         currentChatNoteChain: currentChatNoteChain,
         setCurrentChatNoteChain: setCurrentChatNoteChain,
-    });
-
-    updateTabFromChatNoteUpdate({
-        myself: myself,
-        currentChatNote: currentChatNote,
-        setSelectedTabIndex: setSelectedTabIndex,
-        tabItems: tabItems,
-        setTabItems: setTabItems,
     });
 
     updataChatNoteChain({
@@ -371,6 +382,8 @@ export const useNoteManagement = (
                 setNewlyCreatedTaskNotes([...newlyCreatedTaskNotes, newNote]);
                 setCurrentTaskNote(taskNote);
                 addNote(2, taskNote);
+                upsertNoteCache(taskNote);
+                tabsApi.openTab(noteToTab(taskNote, myself.teamId));
                 recordNoteOpen(taskNote.noteId, 2);
 
                 setTaskNoteMeta((prev) => [
@@ -402,14 +415,6 @@ export const useNoteManagement = (
         setTaskNoteMetaTree(buildTaskNoteTree(taskNoteMeta));
     }, [taskNoteMeta]);
 
-    updateTabFromTaskNoteUpdate({
-        myself: myself,
-        currentTaskNote: currentTaskNote,
-        setSelectedTabIndex: setSelectedTabIndex,
-        tabItems: tabItems,
-        setTabItems: setTabItems,
-    });
-
     updataTaskNoteChain({
         currentTaskNote: currentTaskNote,
         taskNoteMetaTree: taskNoteMetaTree,
@@ -436,6 +441,8 @@ export const useNoteManagement = (
                 setNewlyCreatedMyNotes([...newlyCreatedMyNotes, newNote]);
                 setCurrentMyNote(newNote);
                 addNote(1, newNote);
+                upsertNoteCache(myNote);
+                tabsApi.openTab(noteToTab(myNote, myself.teamId));
                 recordNoteOpen(myNote.noteId, 1);
 
                 setMyNoteMeta((prev) => [
@@ -617,14 +624,6 @@ export const useNoteManagement = (
         setCurrentMyNoteChain: setCurrentMyNoteChain,
     });
 
-    updateTabFromMyNoteUpdate({
-        myself: myself,
-        currentMyNote: currentMyNote,
-        setSelectedTabIndex: setSelectedTabIndex,
-        tabItems: tabItems,
-        setTabItems: setTabItems,
-    });
-
     updataMyNoteChain({
         currentMyNote: currentMyNote,
         myNoteMetaTree: myNoteMetaTree,
@@ -672,216 +671,80 @@ export const useNoteManagement = (
         setCurrentMyNote(null);
     };
 
-    // Note loading function
-    const loadNote = async (noteType: number, noteId: number, nextTabIndex: number) => {
+    // Note loading entry point. Now synchronous in spirit: it opens (or
+    // focuses) the tab immediately via `tabsApi.openTab`, and the
+    // active-tab effect below fetches the body and populates
+    // `currentXxxNote` for legacy consumers. The optional fetch here is
+    // only needed when we don't yet know enough about the note to build a
+    // tab (no project/task/chat ids), e.g. when called from URL routing.
+    const loadNote = async (noteType: number, noteId: number, _nextTabIndex: number) => {
         if (!accessToken) return;
-
-        let targetTabIndex: number = -1;
-        if (nextTabIndex !== -1) {
-            targetTabIndex = nextTabIndex;
-        } else {
-            targetTabIndex = tabItems.findIndex(
-                (note) => note.noteType === noteType && note.noteId === noteId
-            );
-        }
-
         try {
             if (noteType === 1) {
-                const note = await noteService.getPersonalNote(noteId);
-                if (note) {
-                    // Convert Note type to MyNoteProps by adding missing fields
-                    const myNote: MyNoteProps = {
-                        noteType: 1,
-                        teamId: note.teamId,
-                        ownerId: note.ownerId,
-                        roleId: note.roleId,
-                        noteId: note.noteId,
-                        parentNoteId: note.parentNoteId,
-                        title: note.title,
-                        body: note.body,
-                        tsCreated: note.tsCreated,
-                        tsUpdated: note.tsUpdated,
-                    };
-                    setCurrentMyNote(myNote);
-                    recordNoteOpen(noteId, 1);
-                } else {
-                    const note: MyNoteProps = await loadSpecificNote(
-                        myself,
-                        1,
-                        noteId,
-                        accessToken
-                    );
-                    if (!note.error && note.noteType === 1) {
-                        addNote(1, note);
-                        setCurrentMyNote(note);
-                        if (targetTabIndex !== -1) {
-                            setSelectedTabIndex(targetTabIndex);
-                        }
-                        recordNoteOpen(noteId, 1);
-                    }
+                const cached = await noteService.getPersonalNote(noteId);
+                if (cached) {
+                    const myNote: MyNoteProps = { ...cached, noteType: 1 };
+                    upsertNoteCache(myNote);
+                    tabsApi.openTab(noteToTab(myNote, myself.teamId));
+                    return;
                 }
-                setCurrentNoteType(1);
-            } else if (noteType === 2) {
-                const note = await noteService.getTaskNote(noteId);
-                if (note) {
-                    // Convert Note type to TaskNoteProps by adding missing fields
-                    const taskNote: TaskNoteProps = {
-                        noteType: 2,
-                        teamId: note.teamId,
-                        ownerId: note.ownerId,
-                        roleId: note.roleId,
-                        noteId: note.noteId,
-                        parentNoteId: note.parentNoteId,
-                        projectId: note.projectId,
-                        taskId: note.taskId,
-                        title: note.title,
-                        body: note.body,
-                        tsCreated: note.tsCreated,
-                        tsUpdated: note.tsUpdated,
-                    };
-                    setCurrentTaskNote(taskNote);
-                    if (targetTabIndex !== -1) {
-                        setSelectedTabIndex(targetTabIndex);
-                    }
-                    recordNoteOpen(noteId, 2);
-                } else {
-                    const note: TaskNoteProps = await loadSpecificNote(
-                        myself,
-                        2,
-                        noteId,
-                        accessToken
-                    );
-                    if (!note.error && note.noteType === 2) {
-                        addNote(2, note);
-                        setCurrentTaskNote(note);
-                        if (targetTabIndex !== -1) {
-                            setSelectedTabIndex(targetTabIndex);
-                        }
-                        recordNoteOpen(noteId, 2);
-                    }
+                const fetched: MyNoteProps = await loadSpecificNote(
+                    myself,
+                    1,
+                    noteId,
+                    accessToken
+                );
+                if (fetched && !fetched.error && fetched.noteType === 1) {
+                    addNote(1, fetched);
+                    upsertNoteCache(fetched);
+                    tabsApi.openTab(noteToTab(fetched, myself.teamId));
                 }
-                setCurrentNoteType(2);
-            } else if (noteType === 3) {
-                const note = await noteService.getChatNote(noteId);
-                if (note) {
-                    // Convert Note type to ChatNoteProps by adding missing fields
-                    const chatNote: ChatNoteProps = {
-                        noteType: 3,
-                        teamId: note.teamId,
-                        ownerId: note.ownerId,
-                        roleId: note.roleId,
-                        noteId: note.noteId,
-                        parentNoteId: note.parentNoteId,
-                        chatType: note.chatType,
-                        chatId: note.chatId,
-                        isThread: note.isThread,
-                        threadId: note.threadId,
-                        title: note.title,
-                        body: note.body,
-                        tsCreated: note.tsCreated,
-                        tsUpdated: note.tsUpdated,
-                    };
-                    setCurrentChatNote(chatNote);
-                    if (targetTabIndex !== -1) {
-                        setSelectedTabIndex(targetTabIndex);
-                    }
-                    recordNoteOpen(noteId, 3);
-                } else {
-                    const note: ChatNoteProps = await loadSpecificNote(
-                        myself,
-                        3,
-                        noteId,
-                        accessToken
-                    );
-                    if (note && !note.error && note.noteType === 3) {
-                        addNote(3, note);
-                        setCurrentChatNote(note);
-                        if (targetTabIndex !== -1) {
-                            setSelectedTabIndex(targetTabIndex);
-                        }
-                        recordNoteOpen(noteId, 3);
-                    }
+                return;
+            }
+            if (noteType === 2) {
+                const cached = await noteService.getTaskNote(noteId);
+                if (cached) {
+                    const taskNote: TaskNoteProps = { ...cached, noteType: 2 };
+                    upsertNoteCache(taskNote);
+                    tabsApi.openTab(noteToTab(taskNote, myself.teamId));
+                    return;
                 }
-                setCurrentNoteType(3);
+                const fetched: TaskNoteProps = await loadSpecificNote(
+                    myself,
+                    2,
+                    noteId,
+                    accessToken
+                );
+                if (fetched && !fetched.error && fetched.noteType === 2) {
+                    addNote(2, fetched);
+                    upsertNoteCache(fetched);
+                    tabsApi.openTab(noteToTab(fetched, myself.teamId));
+                }
+                return;
+            }
+            const cached = await noteService.getChatNote(noteId);
+            if (cached) {
+                const chatNote: ChatNoteProps = { ...cached, noteType: 3 };
+                upsertNoteCache(chatNote);
+                tabsApi.openTab(noteToTab(chatNote, myself.teamId));
+                return;
+            }
+            const fetched: ChatNoteProps = await loadSpecificNote(myself, 3, noteId, accessToken);
+            if (fetched && !fetched.error && fetched.noteType === 3) {
+                addNote(3, fetched);
+                upsertNoteCache(fetched);
+                tabsApi.openTab(noteToTab(fetched, myself.teamId));
             }
         } catch (error) {
             console.error("Error loading note:", error);
         }
     };
 
-    // Resolve a single persisted ref to a full note object, preferring IDB
-    // and falling back to the backend. Returns null when the note is gone
-    // (deleted server-side, or never reachable for this user) so the
-    // caller can drop it from the restored strip.
-    type ResolvedNote = MyNoteProps | TaskNoteProps | ChatNoteProps;
-    const resolveTabRef = async (ref: TabRef): Promise<ResolvedNote | null> => {
-        try {
-            if (ref.noteType === 1) {
-                const cached = await noteService.getPersonalNote(ref.noteId);
-                if (cached) return { ...cached, noteType: 1 };
-                if (!accessToken) return null;
-                const fetched = await loadSpecificNote(myself, 1, ref.noteId, accessToken);
-                return fetched && !fetched.error ? { ...fetched, noteType: 1 } : null;
-            }
-            if (ref.noteType === 2) {
-                const cached = await noteService.getTaskNote(ref.noteId);
-                if (cached) return { ...cached, noteType: 2 };
-                if (!accessToken) return null;
-                const fetched = await loadSpecificNote(myself, 2, ref.noteId, accessToken);
-                return fetched && !fetched.error ? { ...fetched, noteType: 2 } : null;
-            }
-            const cached = await noteService.getChatNote(ref.noteId);
-            if (cached) return { ...cached, noteType: 3 };
-            if (!accessToken) return null;
-            const fetched = await loadSpecificNote(myself, 3, ref.noteId, accessToken);
-            return fetched && !fetched.error ? { ...fetched, noteType: 3 } : null;
-        } catch {
-            return null;
-        }
-    };
-
+    // No-op kept for backwards compatibility with `useServiceInitialization`.
+    // Tab persistence and rehydration are now driven by `useNoteTabs`.
     const popInitialNote = async () => {
-        // Preferred path: rehydrate already populated tabItems for this team.
-        // Replay the active tab so the editor opens to the same note the user
-        // had focused before the refresh.
-        if (tabItems.length > 0) {
-            const safeIdx = Math.min(selectedTabIndex, tabItems.length - 1);
-            const active = tabItems[safeIdx];
-            if (active && active.noteType && active.noteId !== undefined) {
-                await loadNote(active.noteType, active.noteId, safeIdx);
-                return;
-            }
-        }
-
-        // Fallback A: rehydrate hasn't fired yet (or returned nothing usable),
-        // but the persisted JSON is on disk. Read it directly so we don't
-        // depend on the effect ordering.
-        if (myself.teamId) {
-            const persisted = loadPersistedTabs(myself.teamId);
-            if (persisted && persisted.tabs.length > 0) {
-                const safeIdx = Math.min(persisted.selectedTabIndex, persisted.tabs.length - 1);
-                const active = persisted.tabs[safeIdx];
-                if (active) {
-                    await loadNote(active.noteType, active.noteId, safeIdx);
-                    return;
-                }
-            }
-        }
-
-        // Fallback B: legacy single-note keys from before this change.
-        const noteType: string | null = localStorage.getItem("lastOpenNoteType");
-        const myNoteId: string | null = localStorage.getItem("lastOpenMyNoteId");
-        const taskNoteId: string | null = localStorage.getItem("lastOpenTaskNoteId");
-        const chatNoteId: string | null = localStorage.getItem("lastOpenChatNoteId");
-        if (noteType && myNoteId) {
-            if (Number(noteType) === 1 && myNoteId) {
-                await loadNote(1, Number(myNoteId), -1);
-            } else if (Number(noteType) === 2 && taskNoteId) {
-                await loadNote(2, Number(taskNoteId), -1);
-            } else if (Number(noteType) === 3 && chatNoteId) {
-                await loadNote(3, Number(chatNoteId), -1);
-            }
-        }
+        // tabsApi.rehydrate() runs automatically on team change; no-op here.
+        return;
     };
 
     // Persist current note type to localStorage
@@ -889,75 +752,201 @@ export const useNoteManagement = (
         localStorage.setItem("currentNoteType", currentNoteType.toString());
     }, [currentNoteType]);
 
-    // Rehydrate the tab strip from localStorage whenever the active team
-    // changes (also covers first-mount-after-refresh once auth lands).
-    // Each persisted ref is resolved to a full note via NoteService (IDB
-    // first, backend fallback) so the renderers see the latest title and
-    // any deleted notes drop out cleanly.
+    // Sync the legacy `current{My,Task,Chat}Note` fields from the active
+    // tab. This keeps unmigrated consumers working while tab switching
+    // remains synchronous (the only async path is the data fetch below,
+    // scoped to the active tab via React's render lifecycle).
+    //
+    // To avoid a one-render "blackout" when crossing note types, we
+    // first try the in-memory cache synchronously and set the new
+    // current* note in the same render the active tab flips. Only if
+    // the cache misses do we clear the previous current* values and
+    // fall back to the async IDB / backend path.
     useEffect(() => {
-        if (!myself.teamId) return;
-        let cancelled = false;
-        // Drop the hydrated flag before the async work so any persist-effect
-        // firing in the gap (e.g. `initializeNoteStates` clearing state on
-        // team switch) skips and can't overwrite the new team's saved record
-        // with the previous team's leftover state.
-        hasHydratedRef.current = false;
+        const active = tabsApi.activeTab;
+        if (!active) {
+            setCurrentMyNote(null);
+            setCurrentTaskNote(null);
+            setCurrentChatNote(null);
+            return;
+        }
 
-        (async () => {
-            const persisted = loadPersistedTabs(myself.teamId);
-            if (!persisted) {
-                if (!cancelled) {
-                    setTabItems([]);
-                    setTmpTabItems([]);
-                    setSelectedTabIndex(0);
-                    hasHydratedRef.current = true;
-                }
-                return;
+        // Synchronous cache hit: write the new current* note, drop the
+        // other kinds, and let the renderer pick it up in this render.
+        // This is the common case — every `openTab` / `update` path
+        // already calls `upsertNoteCache`.
+        const cachedSync = getCachedNote(active.kind, active.noteId);
+        if (cachedSync) {
+            if (active.kind === "my") {
+                setCurrentMyNote(cachedSync as MyNoteProps);
+                setCurrentTaskNote(null);
+                setCurrentChatNote(null);
+                setCurrentNoteType(1);
+            } else if (active.kind === "task") {
+                setCurrentTaskNote(cachedSync as TaskNoteProps);
+                setCurrentMyNote(null);
+                setCurrentChatNote(null);
+                setCurrentNoteType(2);
+            } else {
+                setCurrentChatNote(cachedSync as ChatNoteProps);
+                setCurrentMyNote(null);
+                setCurrentTaskNote(null);
+                setCurrentNoteType(3);
             }
-
-            const resolveAll = async (refs: TabRef[]): Promise<ResolvedNote[]> => {
-                const resolved = await Promise.all(refs.map((r) => resolveTabRef(r)));
-                return resolved.filter((n): n is ResolvedNote => n !== null);
-            };
-
-            const [tabs, tmpTabs] = await Promise.all([
-                resolveAll(persisted.tabs),
-                resolveAll(persisted.tmpTabs),
-            ]);
-
-            if (cancelled) return;
-
-            setTabItems(tabs);
-            setTmpTabItems(tmpTabs);
-            setSelectedTabIndex(
-                tabs.length === 0 ? 0 : Math.min(persisted.selectedTabIndex, tabs.length - 1)
+            recordNoteOpen(
+                active.noteId,
+                active.kind === "my" ? 1 : active.kind === "task" ? 2 : 3
             );
-            hasHydratedRef.current = true;
-        })();
+            return;
+        }
 
+        // Cache miss: drop other-kind stale notes before the async
+        // fetch, so the renderer doesn't momentarily show the previous
+        // tab's content. The same-kind value is left alone — if it's
+        // for the same noteId, the renderer's keying skips a remount;
+        // otherwise it's about to be overwritten.
+        if (active.kind !== "my") setCurrentMyNote(null);
+        if (active.kind !== "task") setCurrentTaskNote(null);
+        if (active.kind !== "chat") setCurrentChatNote(null);
+
+        let cancelled = false;
+        const fetchAndSet = async () => {
+            try {
+                if (active.kind === "my") {
+                    const cached = await noteService.getPersonalNote(active.noteId);
+                    if (cancelled) return;
+                    if (cached) {
+                        const myNote: MyNoteProps = { ...cached, noteType: 1 };
+                        upsertNoteCache(myNote);
+                        setCurrentMyNote(myNote);
+                        setCurrentNoteType(1);
+                        recordNoteOpen(active.noteId, 1);
+                        return;
+                    }
+                    if (!accessToken) return;
+                    const fetched: MyNoteProps = await loadSpecificNote(
+                        myself,
+                        1,
+                        active.noteId,
+                        accessToken
+                    );
+                    if (cancelled) return;
+                    if (fetched && !fetched.error && fetched.noteType === 1) {
+                        addNote(1, fetched);
+                        upsertNoteCache(fetched);
+                        setCurrentMyNote(fetched);
+                        setCurrentNoteType(1);
+                        recordNoteOpen(active.noteId, 1);
+                    }
+                    return;
+                }
+                if (active.kind === "task") {
+                    const cached = await noteService.getTaskNote(active.noteId);
+                    if (cancelled) return;
+                    if (cached) {
+                        const taskNote: TaskNoteProps = { ...cached, noteType: 2 };
+                        upsertNoteCache(taskNote);
+                        setCurrentTaskNote(taskNote);
+                        setCurrentNoteType(2);
+                        recordNoteOpen(active.noteId, 2);
+                        return;
+                    }
+                    if (!accessToken) return;
+                    const fetched: TaskNoteProps = await loadSpecificNote(
+                        myself,
+                        2,
+                        active.noteId,
+                        accessToken
+                    );
+                    if (cancelled) return;
+                    if (fetched && !fetched.error && fetched.noteType === 2) {
+                        addNote(2, fetched);
+                        upsertNoteCache(fetched);
+                        setCurrentTaskNote(fetched);
+                        setCurrentNoteType(2);
+                        recordNoteOpen(active.noteId, 2);
+                    }
+                    return;
+                }
+                const cached = await noteService.getChatNote(active.noteId);
+                if (cancelled) return;
+                if (cached) {
+                    const chatNote: ChatNoteProps = { ...cached, noteType: 3 };
+                    upsertNoteCache(chatNote);
+                    setCurrentChatNote(chatNote);
+                    setCurrentNoteType(3);
+                    recordNoteOpen(active.noteId, 3);
+                    return;
+                }
+                if (!accessToken) return;
+                const fetched: ChatNoteProps = await loadSpecificNote(
+                    myself,
+                    3,
+                    active.noteId,
+                    accessToken
+                );
+                if (cancelled) return;
+                if (fetched && !fetched.error && fetched.noteType === 3) {
+                    addNote(3, fetched);
+                    upsertNoteCache(fetched);
+                    setCurrentChatNote(fetched);
+                    setCurrentNoteType(3);
+                    recordNoteOpen(active.noteId, 3);
+                }
+            } catch (error) {
+                console.error("Error syncing active tab note:", error);
+            }
+        };
+        fetchAndSet();
         return () => {
             cancelled = true;
         };
-        // `accessToken` deliberately not in the deps: a token refresh shouldn't
-        // restart rehydration. We accept that very early renders without a
-        // token will skip the backend fallback for any tabs missing from IDB
-        // (which then surface on next mount).
+        // `myself`/`accessToken`/`recordNoteOpen` deliberately omitted to
+        // avoid re-running on token refresh or memo churn — the effect
+        // re-runs every time the active tab id changes.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [myself.teamId]);
+    }, [tabsApi.activeTabId]);
 
-    // Persist the tab strip on every change. Gated by `hasHydratedRef` so
-    // the empty initial state can never overwrite a saved record before
-    // rehydration runs.
+    // Keep the legacy `tabItems`/`selectedTabIndex` mirrors in sync with
+    // the new tabsApi state so any unmigrated consumer reads a coherent
+    // value. Direct setters are no longer the source of truth — they're
+    // overwritten by this effect on every tabsApi change.
     useEffect(() => {
-        if (!hasHydratedRef.current || !myself.teamId) return;
-        savePersistedTabs(myself.teamId, {
-            selectedTabIndex,
-            tabs: toRefs(tabItems),
-            tmpTabs: toRefs(tmpTabItems),
+        const items = tabsApi.tabs.map((t) => {
+            if (t.kind === "my") {
+                return { noteType: 1, noteId: t.noteId, title: t.title } as any;
+            }
+            if (t.kind === "task") {
+                return {
+                    noteType: 2,
+                    noteId: t.noteId,
+                    projectId: t.projectId,
+                    taskId: t.taskId,
+                    title: t.title,
+                } as any;
+            }
+            return {
+                noteType: 3,
+                noteId: t.noteId,
+                chatType: t.chatType,
+                chatId: t.chatId,
+                isThread: t.isThread,
+                threadId: t.threadId,
+                title: t.title,
+            } as any;
         });
-    }, [tabItems, tmpTabItems, selectedTabIndex, myself.teamId]);
+        setTabItems(items);
+        const idx = tabsApi.activeTabId
+            ? tabsApi.tabs.findIndex((t) => t.id === tabsApi.activeTabId)
+            : -1;
+        setSelectedTabIndex(idx === -1 ? 0 : idx);
+    }, [tabsApi.tabs, tabsApi.activeTabId]);
 
     return {
+        // New tab-strip + chat-panel APIs (synchronous, race-free).
+        tabsApi,
+        chatPanelApi,
+
         // Note type and tabs
         currentNoteType,
         setCurrentNoteType,

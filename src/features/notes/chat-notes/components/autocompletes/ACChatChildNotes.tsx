@@ -22,7 +22,18 @@ export const ACChatChildNotes = (props: ACChatChildNotesProps) => {
     const loading = openSearchBox && options.length === 0;
 
     const onChangeHandler = async (value: ChatNoteProps) => {
-        useNM.setCurrentChatNote(value);
+        useNM.tabsApi.openTab({
+            kind: "chat",
+            noteType: 3,
+            noteId: value.noteId,
+            chatType: value.chatType,
+            chatId: value.chatId,
+            isThread: value.isThread,
+            threadId: value.threadId,
+            id: `chat-${value.noteId}`,
+            title: value.title,
+            teamId: myself.teamId,
+        });
     };
 
     useEffect(() => {

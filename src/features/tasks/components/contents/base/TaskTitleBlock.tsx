@@ -428,9 +428,18 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                             useTM.setIsTaskTableVisible(false);
                                             useNM.setIsTaskNoteVisible(true);
                                             if (useNM.taskNoteMeta.length > 0) {
-                                                useNM.setCurrentTaskNote(
-                                                    useNM.taskNoteMeta[0] as TaskNoteProps
-                                                );
+                                                const meta = useNM
+                                                    .taskNoteMeta[0] as TaskNoteProps;
+                                                useNM.tabsApi.openTab({
+                                                    kind: "task",
+                                                    noteType: 2,
+                                                    noteId: meta.noteId,
+                                                    projectId: meta.projectId,
+                                                    taskId: meta.taskId,
+                                                    id: `task-${meta.noteId}`,
+                                                    title: meta.title,
+                                                    teamId: myself.teamId,
+                                                });
                                             } else {
                                                 if (taskContent.project && taskContent.id) {
                                                     useNM.handleCreateNewTaskNote(
