@@ -371,7 +371,7 @@ const SignInContent = () => {
                     </Typography>
                     <Typography
                         component="a"
-                        href="mailto:ken@genos.tech?subject=Password%20Reset%20Request&body=Hi%2C%0A%0AI%20forgot%20my%20password.%20Could%20you%20please%20reset%20it%3F%0A%0AMy%20email%3A<replace_with_your_email>%20%0A%0AThank%20you."
+                        href="mailto:genos.support@gmail.com?subject=Password%20Reset%20Request&body=Hi%2C%0A%0AI%20forgot%20my%20password.%20Could%20you%20please%20reset%20it%3F%0A%0AMy%20email%3A<replace_with_your_email>%20%0A%0AThank%20you."
                         startDecorator={
                             <EmailRoundedIcon sx={{ color: styles.accentColor, fontSize: 20 }} />
                         }
@@ -384,7 +384,7 @@ const SignInContent = () => {
                             "&:hover": { color: styles.linkHover },
                         }}
                     >
-                        ken@genos.tech
+                        genos.support@gmail.com
                     </Typography>
                     <Button
                         variant="outlined"
