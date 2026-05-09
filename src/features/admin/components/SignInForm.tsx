@@ -23,6 +23,7 @@ import { useNavigate } from "react-router-dom";
 
 import { SignInFormStyles } from "../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../context/AuthContext";
+import { DatabaseUtils } from "../../../db/utils";
 import { SignInResponse } from "../../../types/admin";
 import { signIn } from "../services/signin";
 import { AdminHeader } from "./Header";
@@ -63,6 +64,9 @@ const SignInContent = () => {
             localStorage.setItem("avatarImgPath", signInRes.profile_image_file_name || "");
 
             if (signInRes.user_id) {
+                // Clear all data from indexedDB first.
+                await DatabaseUtils.clearTeamScopedStores();
+
                 navigate("/jointeam");
             } else {
                 console.error("Failed to get userId from sign-in response:", signInRes);

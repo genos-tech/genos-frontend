@@ -6,6 +6,7 @@ import { DB_NAME, DB_VERSION, STORES } from "../config";
 // USER_INFO is intentionally excluded: it is indexed by teamId and shared across teams
 // so it can stay populated for offline access (see loadTeamMembersWorker).
 const TEAM_SCOPED_STORES: readonly string[] = [
+    STORES.USER_INFO,
     STORES.INBOX,
     STORES.ACTIVITY_MESSAGES,
     STORES.DM_CHATS,
