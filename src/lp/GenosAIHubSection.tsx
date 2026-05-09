@@ -8,20 +8,20 @@ export default function GenosAIHubImageSection({ lang = "ja" }: { lang?: Lang })
         lang === "ja"
             ? {
                   eyebrow: "How Genos works",
-                  title: "AIが、会話・タスク・ノートを横断して答えを返す。",
-                  body: "Genosでは、Chat、Task、Noteが別々の箱として分断されるのではなく、AIが参照できるチームの情報としてつながります。ユーザーはAIに質問するだけで、関連する会話、進行中のタスク、残されたドキュメントをまとめて確認できます。",
-                  chips: ["横断検索", "Q&A", "要約", "次アクション"],
+                  title: "AI Agentが、チームの仕事のつながりを理解する。",
+                  body: "Genosでは、Chat、Task、NoteがAI Agentから見える同じcontext layerに保存されます。ユーザーはAIに質問するだけで、関連する議論、進行中のタスク、残された仕様やメモを横断して確認できます。",
+                  chips: ["Context search", "Q&A", "要約", "次アクション"],
                   caption:
-                      "AIを後付けのチャットボットとして置くのではなく、チームに蓄積された会話・タスク・ノートを扱える中心レイヤーとして設計しています。",
+                      "Genosのコアは、AIを後付けのChatbotとして置くことではありません。チームの会話・タスク・ドキュメントを、AIが理解できるプロジェクト記憶として蓄積することです。",
                   imageAlt: "GenosのAI AgentがUser、Chat、Task、Noteとつながる概念図",
               }
             : {
                   eyebrow: "How Genos works",
-                  title: "AI works across chats, tasks, and notes to bring answers back.",
-                  body: "In Genos, Chat, Task, and Note are not separate silos. They become connected team data that AI can search, summarize, and reason over. Users can ask a question and get answers across related conversations, ongoing tasks, and documentation.",
-                  chips: ["Cross-search", "Q&A", "Summary", "Next actions"],
+                  title: "AI agents understand the connections across your team’s work.",
+                  body: "In Genos, Chat, Task, and Note live in the same context layer that AI agents can access. Users can ask a question and get answers across related discussions, active tasks, specs, notes, and decisions.",
+                  chips: ["Context search", "Q&A", "Summary", "Next actions"],
                   caption:
-                      "The key idea is not to add AI as a separate chatbot, but to place it as the central layer that works with the team’s accumulated chats, tasks, and notes.",
+                      "The core idea is not to add AI as a chatbot on top. Genos stores your team’s conversations, tasks, and docs as connected project memory that AI can understand.",
                   imageAlt:
                       "A conceptual diagram showing Genos AI Agent connected with User, Chat, Task, and Note",
               };
@@ -35,7 +35,9 @@ export default function GenosAIHubImageSection({ lang = "ja" }: { lang?: Lang })
                             {t.eyebrow}
                         </p>
 
-                        <h2 className="mt-4 text-2xl font-black tracking-tight text-slate-950 dark:text-white sm:text-5xl lg:text-[46px]">
+                        <h2
+                            className={`mt-4 ${lang === "en" ? "text-[30px]" : "text-[27px]"} font-black tracking-tight text-slate-950 dark:text-white sm:text-5xl lg:text-[46px]`}
+                        >
                             {t.title}
                         </h2>
 
