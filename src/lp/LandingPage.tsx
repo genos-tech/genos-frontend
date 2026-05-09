@@ -26,7 +26,6 @@ import GenosAIHubSection from "./GenosAIHubSection";
 
 const APP_URL = "https://genos.up.railway.app";
 const LINKEDIN_URL = "https://www.linkedin.com/in/kentaro-kamiya-jp/";
-const GITHUB_URL = "https://github.com/kentarokamiyajp";
 const CONTACT_EMAIL = "genos.support@gmail.com";
 const GOOGLE_FORM_URL =
     "https://docs.google.com/forms/d/e/1FAIpQLSeOlcGhTldzM8mhLkKU3h9hw0eKetSPnV9FQ8z4NhJ6Qi3ziw/viewform?usp=publish-editor";
@@ -46,7 +45,7 @@ const copy = {
             badge: "MVP公開中 / Software & Product teams向け",
             title: "AIが仕事の流れを理解する、",
             titleSub: "Context OS for product teams.",
-            lead: "Genosは、チャット・タスク・ドキュメントをAIが理解できる形でつなぐ、software / product team向けのワークスペースです。Slack、Jira、Notionに分断された議論・意思決定・タスクの経緯を、検索とAIエージェントが扱えるチームのコンテキストとして蓄積します。",
+            lead: "Genosは、チャット・タスク・ドキュメントをAIが参照しやすい形でつなぐ、software / product team向けのワークスペースです。Slack、Jira、Notionに分断された議論・意思決定・タスクの経緯を、検索とAIエージェントが活用できるチームのコンテキストとして蓄積します。",
             primary: "デモを試す",
             secondary: "仕組みを見る",
             footnote:
@@ -149,9 +148,9 @@ const copy = {
             ],
         },
         ai: {
-            eyebrow: "AI-native by design",
-            title: "GenosのAIは、Chatbotではなく、チームの記憶にアクセスできるAgent。",
-            body: "GenosはOpenAI APIを利用したAI Agent機能を備えています。AIは、単独の質問に答えるだけでなく、関連するChat、Task、Noteを横断して、過去の経緯、現在の状態、次に取るべきアクションを理解することを目指しています。",
+            eyebrow: "AI Agent beta",
+            title: "Genosは、AI Agentがチームのコンテキストを扱える基盤を作っています。",
+            body: "GenosはOpenAI APIを利用したAI Agent機能をMVPとして検証中です。現在は、関連するChat、Task、Noteを横断して検索・要約・Q&Aを行う体験を改善しています。完璧な自律エージェントではなく、まずはチームの議論、タスク、ドキュメントをAIが参照しやすい形で蓄積することに重点を置いています。",
             items: ["Context search", "Q&A", "要約", "次アクション提案"],
         },
         comparison: {
@@ -182,10 +181,10 @@ const copy = {
             headers: ["テーマ", "一般的な分断", "Genos"],
         },
         cta: {
-            title: "AIがチームの仕事を理解する構造を、まずは触ってみてください。",
-            body: "Genosは現在MVPとして公開中です。Software / Product teamで実際に試しながら、AIがどのようにチームのコンテキストを扱えるべきか、一緒に検証してくれるinitial usersを募集しています。",
+            title: "AIがチームの仕事を理解する構造を、一緒に検証してください。",
+            body: "Genosは現在MVPとして公開中です。AI Agentはまだ発展途上ですが、Chat、Task、Noteをつなげてチームのコンテキストを蓄積する体験を、software / product teamのinitial usersと一緒に磨いていきたいと考えています。",
             primary: "デモを試す",
-            secondary: "LinkedInを見る",
+            secondary: "フィードバックする",
         },
         faq: {
             eyebrow: "FAQ",
@@ -206,6 +205,10 @@ const copy = {
                 {
                     q: "Slack、Jira、Notionとは何が違いますか？",
                     a: "Genosは、単にChat、Task、Noteを同じ画面に置くことではなく、それらをAIが参照できるチームのコンテキストとして接続することを重視しています。AI Agentが関連する会話、タスク、ドキュメントを横断して扱える構造を目指しています。",
+                },
+                {
+                    q: "AI Agentはどこまで使えますか？",
+                    a: "現在のAI Agent機能はMVP / betaとして提供しています。関連するChat、Task、Noteをもとにした検索、要約、Q&Aなどを検証中です。今後、チームのコンテキストをより深く理解し、次アクション提案やナレッジ活用を支援できるよう改善していきます。",
                 },
             ],
         },
@@ -229,7 +232,7 @@ const copy = {
             badge: "MVP is live / Built for software & product teams",
             title: "Context OS",
             titleSub: "for AI-native teams.",
-            lead: "Genos connects chat, tasks, and docs into a context layer that AI can understand. Instead of leaving decisions scattered across Slack, Jira, and Notion, Genos turns your team’s work history into searchable, actionable context for AI agents.",
+            lead: "Genos connects chat, tasks, and docs into a context layer that AI agents can use. Instead of leaving decisions scattered across Slack, Jira, and Notion, Genos turns your team’s work history into searchable, actionable context for AI.",
             primary: "Try the demo",
             secondary: "See how it works",
             footnote:
@@ -332,9 +335,9 @@ const copy = {
             ],
         },
         ai: {
-            eyebrow: "AI-native by design",
-            title: "Genos is not adding a chatbot on top. It is building the context layer AI agents need.",
-            body: "Genos includes AI agent features powered by the OpenAI API. The goal is not just to answer isolated prompts, but to help AI work across related chats, tasks, and notes so it can understand project history, current state, and the next best action.",
+            eyebrow: "AI Agent beta",
+            title: "Genos is building the context layer AI agents need to work with team knowledge.",
+            body: "Genos includes AI agent features powered by the OpenAI API, currently in MVP/beta. We are improving the experience of searching, summarizing, and answering questions across related Chats, Tasks, and Notes. The goal is not to claim a perfect autonomous agent today, but to build the structure that makes team context usable by AI.",
             items: ["Context search", "Q&A", "Summaries", "Next actions"],
         },
         comparison: {
@@ -365,10 +368,10 @@ const copy = {
             headers: ["Theme", "Common fragmentation", "Genos"],
         },
         cta: {
-            title: "Try the context layer your AI agents should have.",
-            body: "Genos is currently available as an MVP. We are looking for initial users from software and product teams who want to test how AI should work with team context, not just isolated documents or chat logs.",
+            title: "Help us test the context layer AI agents should have.",
+            body: "Genos is currently available as an MVP. The AI Agent is still in progress, but the core idea is clear: connect Chats, Tasks, and Notes so team context becomes usable by AI. We are looking for initial users from software and product teams to help shape the product.",
             primary: "Try the demo",
-            secondary: "View LinkedIn",
+            secondary: "Send feedback",
         },
         faq: {
             eyebrow: "FAQ",
@@ -389,6 +392,10 @@ const copy = {
                 {
                     q: "How is it different from Slack, Jira, and Notion?",
                     a: "Genos does not simply place chat, tasks, and notes in the same UI. It connects them as context that AI agents can search, summarize, and reason over. The goal is to make team work understandable to AI.",
+                },
+                {
+                    q: "How advanced is the AI Agent today?",
+                    a: "The AI Agent is currently available as an MVP/beta feature. We are testing search, summarization, and Q&A across related Chats, Tasks, and Notes. The long-term goal is to help AI understand team context more deeply and support next-action suggestions and knowledge workflows.",
                 },
             ],
         },
@@ -1176,7 +1183,7 @@ export default function GenosLandingPage() {
                                     <ArrowRight className="h-5 w-5" />
                                 </a>
                                 <a
-                                    href={LINKEDIN_URL}
+                                    href={GOOGLE_FORM_URL}
                                     target="_blank"
                                     rel="noreferrer"
                                     className="inline-flex items-center justify-center gap-2 rounded-full border border-violet-200 bg-white px-6 py-4 text-base font-black text-slate-900 shadow-sm transition hover:-translate-y-0.5 hover:text-violet-700 dark:border-white/10 dark:bg-white/10 dark:text-white"
@@ -1240,12 +1247,11 @@ export default function GenosLandingPage() {
                         <div className="flex flex-wrap items-center gap-4 text-sm font-semibold text-slate-500 dark:text-slate-400">
                             <span>© {year} Genos</span>
                             <a
-                                href={GITHUB_URL}
+                                href={LINKEDIN_URL}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="inline-flex items-center gap-2 transition hover:text-violet-700 dark:hover:text-white"
                             >
-                                <GitHubIcon className="h-4 w-4" />
                                 {t.footer.creator}
                             </a>
                         </div>
