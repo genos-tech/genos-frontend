@@ -4,6 +4,7 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import DeleteIcon from "@mui/icons-material/Delete";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
+import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import { Box, IconButton, Tooltip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
@@ -251,6 +252,45 @@ export const TaskHeader = ({
                         Task
                     </IconButton>
                 </Tooltip>
+
+                {/* Refresh Button to re-load task list */}
+                {usePM.currentProject?.projectId && (
+                    <Tooltip
+                        size="sm"
+                        title="Refresh Tasks"
+                        variant="outlined"
+                        sx={{
+                            background: styles.menuBg,
+                            border: `1px solid ${styles.menuBorder}`,
+                            borderRadius: "8px",
+                        }}
+                    >
+                        <IconButton
+                            size="sm"
+                            sx={{
+                                background: styles.buttonBg,
+                                border: `1px solid ${styles.buttonBorder}`,
+                                borderRadius: "10px",
+                                width: "36px",
+                                height: "36px",
+                                transition: "all 0.2s ease",
+                                "&:hover": {
+                                    background: styles.buttonHover,
+                                    transform: "translateY(-1px)",
+                                },
+                            }}
+                            onClick={async () => {
+                                if (usePM.currentProject?.projectId) {
+                                    await usePM.refreshProjectTasks(
+                                        usePM.currentProject.projectId
+                                    );
+                                }
+                            }}
+                        >
+                            <RefreshRoundedIcon sx={{ fontSize: "18px" }} />
+                        </IconButton>
+                    </Tooltip>
+                )}
 
                 {/* More Options Dropdown */}
                 {(() => {

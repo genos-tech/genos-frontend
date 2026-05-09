@@ -15,6 +15,7 @@ export interface ProjectManagementState {
     currentProject: ProjectProps | null;
     setCurrentProject: (project: ProjectProps | null) => void;
     loadProjectsAndTasks: (targetProjectId: number) => Promise<void>;
+    refreshProjectTasks: (projectId: number) => Promise<void>;
     // Signal that tasks for `projectId` have just finished being written to
     // IndexedDB by `loadProjectTasks`. Consumers can react to this to fetch
     // the freshly-cached rows into React state, instead of guessing with a
@@ -139,6 +140,14 @@ export const useProjectManagement = (
         }
     };
 
+    const refreshProjectTasks = async (projectId: number) => {
+        await loadProjectTasks(myself, projectId, accessToken);
+        setTsTasksLoadedToIDB({
+            ts: Date.now(),
+            projectId: projectId,
+        });
+    };
+
     // Update project isPrivate if undefined
     useEffect(() => {
         if (currentProject && currentProject.isPrivate === undefined) {
@@ -181,6 +190,7 @@ export const useProjectManagement = (
         currentProject,
         setCurrentProject,
         loadProjectsAndTasks,
+        refreshProjectTasks,
         tsTasksLoadedToIDB,
     };
 };
