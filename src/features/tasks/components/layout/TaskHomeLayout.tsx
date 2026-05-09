@@ -449,7 +449,7 @@ export const TaskHomeLayout = ({
                         useTM.isTaskDashboardVisible) && (
                         <>
                             {renderResizeHandle()}
-                            <Panel id={"2"} maxSize={80} minSize={30} order={2}>
+                            <Panel id={"2"} maxSize={85} minSize={30} order={2}>
                                 {renderMainContent()}
                             </Panel>
                         </>

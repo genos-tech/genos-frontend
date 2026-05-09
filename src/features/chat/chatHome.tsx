@@ -304,7 +304,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                     {useCM.isMainChatVisible === true && (
                         <>
                             <ResizeHandle key="main-chat-resize-handle" />
-                            <Panel id={"2"} maxSize={90} minSize={25} order={2}>
+                            <Panel id={"2"} maxSize={85} minSize={25} order={2}>
                                 <PanelGroup autoSaveId="conditional" direction="vertical">
                                     {/* Sub Chat Pane */}
                                     {useCM.isSubChatVisible === true && (
