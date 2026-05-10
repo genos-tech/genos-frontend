@@ -1,8 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 
-import { sendUpdatedChatNote } from "../../features/notes/chat-notes/services/sendUpdatedChatNote";
-import { addNote } from "../../features/notes/common/services/addNote";
+import { useNoteEditorCore } from "../../features/notes/common/hooks/useNoteEditorCore";
 import { UserProps } from "../../types/admin";
 import { ChatNoteProps } from "../../types/notes";
 
@@ -34,15 +32,10 @@ export interface ChatNoteEditorProps {
 
 interface UseChatNoteEditorReturn extends ChatNoteEditorState, ChatNoteEditorActions {}
 
-// Debounce delay between the user's last body edit and the auto-save firing.
-const AUTO_SAVE_DELAY_MS = 3000;
-
 /**
- * Custom hook for managing chat note editing functionality
- * Handles title editing, body editing, auto-save, and note updates
- *
- * @param props - Configuration object for the chat note editor
- * @returns Object containing state and actions for chat note editing
+ * Chat-note editor hook. Thin wrapper around `useNoteEditorCore` that
+ * preserves the legacy field names (`currentChatNoteTitle` /
+ * `setCurrentChatNoteTitle`) expected by `ChatNoteMain` and `ChatNoteEditor`.
  */
 export const useChatNoteEditor = ({
     currentChatNote,
@@ -50,114 +43,26 @@ export const useChatNoteEditor = ({
     accessToken,
     onNoteUpdate,
 }: ChatNoteEditorProps): UseChatNoteEditorReturn => {
-    const [currentChatNoteTitle, setCurrentChatNoteTitle] = useState<string>(
-        currentChatNote?.title || ""
-    );
-    const [noteBodyEdited, setNoteBodyEdited] = useState(false);
-    const [noteBodySaved, setNoteBodySaved] = useState(false);
-    const [body, setBody] = useState<PartialBlock[]>();
-    const titleInputRef = useRef<HTMLInputElement | null>(null);
-
-    // Update note title and body when current note changes
-    useEffect(() => {
-        if (currentChatNote) {
-            setCurrentChatNoteTitle(currentChatNote.title);
-            setBody(currentChatNote.body);
-        }
-    }, [currentChatNote]);
-
-    const updateNote = useCallback(async () => {
-        if (!currentChatNote || !accessToken) return;
-
-        let newNoteTitle = currentChatNoteTitle;
-
-        // If the note title is empty, use the note original title
-        if (currentChatNoteTitle === "") {
-            newNoteTitle = currentChatNote.title;
-            setCurrentChatNoteTitle(newNoteTitle);
-        }
-
-        const newNote: ChatNoteProps = {
-            ...currentChatNote,
-            title: newNoteTitle,
-            body: body || [],
-        };
-
-        try {
-            // Send the update note to the backend
-            await sendUpdatedChatNote(myself, newNote, accessToken);
-
-            // Add the updated note to the indexedDB
-            await addNote(3, newNote);
-
-            setNoteBodyEdited(false);
-            setNoteBodySaved(true);
-
-            // Notify parent component of the update
-            onNoteUpdate(newNote);
-        } catch (error) {
-            console.error("Failed to update chat note:", error);
-        }
-    }, [currentChatNote, currentChatNoteTitle, body, myself, accessToken, onNoteUpdate]);
-
-    // Keep the latest save fn and edited flag in refs so the debounce timer
-    // and unmount flush always read fresh values without resetting themselves.
-    const updateNoteRef = useRef(updateNote);
-    updateNoteRef.current = updateNote;
-
-    const noteBodyEditedRef = useRef(noteBodyEdited);
-    noteBodyEditedRef.current = noteBodyEdited;
-
-    // Debounced auto-save: fires AUTO_SAVE_DELAY_MS after the user's last body
-    // edit. Each new edit resets the timer, so a continuously typing user is
-    // never interrupted mid-stream.
-    useEffect(() => {
-        if (!noteBodyEdited) return;
-
-        const timerId = setTimeout(() => {
-            updateNoteRef.current();
-        }, AUTO_SAVE_DELAY_MS);
-
-        return () => clearTimeout(timerId);
-    }, [body, noteBodyEdited]);
-
-    // Best-effort flush on unmount so a navigation while a debounce is pending
-    // still persists the latest edit (the body is also safe in Yjs collab).
-    useEffect(() => {
-        return () => {
-            if (noteBodyEditedRef.current) {
-                updateNoteRef.current();
-            }
-        };
-    }, []);
-
-    const handleTitleChange = useCallback((value: string) => {
-        setCurrentChatNoteTitle(value);
-    }, []);
-
-    const handleTitleBlur = useCallback(() => {
-        updateNote();
-    }, [updateNote]);
-
-    const handleBodyChange = useCallback((newBody: PartialBlock[]) => {
-        setBody(newBody);
-        setNoteBodyEdited(true);
-        setNoteBodySaved(false);
-    }, []);
+    const core = useNoteEditorCore<ChatNoteProps>({
+        currentNote: currentChatNote,
+        myself,
+        accessToken,
+        onNoteUpdate,
+    });
 
     return {
-        currentChatNoteTitle,
-        setCurrentChatNoteTitle,
-        titleInputRef,
-        handleTitleChange,
-        handleTitleBlur,
-        body,
-        setBody,
-        handleBodyChange,
-        noteBodyEdited,
-        noteBodySaved,
-        setNoteBodyEdited,
-        setNoteBodySaved,
-        updateNote,
+        currentChatNoteTitle: core.title,
+        setCurrentChatNoteTitle: core.setTitle,
+        titleInputRef: core.titleInputRef,
+        handleTitleChange: core.handleTitleChange,
+        handleTitleBlur: core.handleTitleBlur,
+        body: core.body,
+        setBody: core.setBody,
+        handleBodyChange: core.handleBodyChange,
+        noteBodyEdited: core.noteBodyEdited,
+        noteBodySaved: core.noteBodySaved,
+        setNoteBodyEdited: core.setNoteBodyEdited,
+        setNoteBodySaved: core.setNoteBodySaved,
+        updateNote: core.updateNote,
     };
 };

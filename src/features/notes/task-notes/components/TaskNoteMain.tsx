@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import { PartialBlock } from "@blocknote/core";
 import { Box, IconButton, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
@@ -11,6 +10,7 @@ import { upsertNoteCache } from "../../../../hooks/notes/useNoteData";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
+import { TaskNoteProps } from "../../../../types/notes";
 import { NoteHeaderActions } from "../../common/components/NoteHeaderActions";
 import { useNoteAutoSave } from "../../common/hooks/useNoteAutoSave";
 import { useTaskPreview } from "../../common/hooks/useTaskPreview";
@@ -48,23 +48,44 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
 
     const { accessToken } = useAuth();
 
-    // Local state
-    const [currentTaskNoteTitle, setCurrentTaskNoteTitle] = useState<string>(
-        useNM.currentTaskNote?.title || ""
-    );
     const [openSearchBox, setOpenSearchBox] = useState(false);
-    const [body, setBody] = useState<PartialBlock[]>();
     const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
 
     // Custom hooks
-    const { noteBodyEdited, noteBodySaved, setNoteBodyEdited, setNoteBodySaved, updateNote } =
-        useNoteAutoSave({
-            currentTaskNote: useNM.currentTaskNote,
-            currentTaskNoteTitle,
-            body,
-            myself,
-            accessToken: accessToken || "",
-        });
+    const {
+        noteBodySaved,
+        setNoteBodyEdited,
+        setNoteBodySaved,
+        body,
+        setBody,
+        currentTaskNoteTitle,
+        handleTitleChange,
+        handleTitleBlur,
+    } = useNoteAutoSave({
+        currentTaskNote: useNM.currentTaskNote,
+        myself,
+        accessToken: accessToken || "",
+        onNoteUpdate: (updatedNote: TaskNoteProps) => {
+            // Push the latest title into the new tabs API so the strip
+            // re-renders without going through the legacy
+            // `setTabItems`/`setCurrent*Note` round-trip.
+            useNM.tabsApi.updateTabTitle(updatedNote.noteId, "task", updatedNote.title);
+
+            useNM.setTaskNoteMeta(
+                useNM.taskNoteMeta.map((item) =>
+                    item.noteType === updatedNote.noteType && item.noteId === updatedNote.noteId
+                        ? { ...item, title: updatedNote.title }
+                        : item
+                )
+            );
+
+            // Cache write-through and mirror into the legacy `currentTaskNote`
+            // field so other consumers (header, breadcrumbs, etc.) read the
+            // freshest title without a refetch.
+            upsertNoteCache(updatedNote);
+            useNM.setCurrentTaskNote(updatedNote);
+        },
+    });
 
     const { currentTask } = useTaskPreview({
         currentTaskNote: useNM.currentTaskNote,
@@ -72,20 +93,6 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         accessToken: accessToken || "",
         setCurrentPreviewTask: useTM.setCurrentPreviewTask,
     });
-
-    // Effects
-    // Re-sync local body/title only when the user actually switches to a
-    // different task note. Reference-only updates (e.g. an in-place save that
-    // produces a new currentTaskNote object) must NOT trigger this — the
-    // single TabPanel inside <NoteTabs> is keyed by `noteType-noteId` so it
-    // remounts the editor on real switches and leaves the title input alone
-    // during typing.
-    useEffect(() => {
-        if (useNM.currentTaskNote) {
-            setBody(useNM.currentTaskNote.body);
-            setCurrentTaskNoteTitle(useNM.currentTaskNote.title);
-        }
-    }, [useNM.currentTaskNote?.noteType, useNM.currentTaskNote?.noteId]);
 
     useEffect(() => {
         setNoteBodySaved(false);
@@ -135,14 +142,6 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         }
     }, [useNM, useTM, setIsTaskTableVisible]);
 
-    const handleTitleChange = useCallback((title: string) => {
-        setCurrentTaskNoteTitle(title);
-    }, []);
-
-    const handleTitleBlur = useCallback(() => {
-        updateNote();
-    }, [updateNote]);
-
     const handleCopyNoteLink = useCallback(async () => {
         if (useNM.currentTaskNote) {
             const note = useNM.currentTaskNote;
@@ -154,37 +153,6 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
             }
         }
     }, [useNM.currentTaskNote]);
-
-    // Handle note updates after auto-save
-    useEffect(() => {
-        if (
-            noteBodySaved &&
-            useNM.currentTaskNote &&
-            currentTaskNoteTitle !== useNM.currentTaskNote.title
-        ) {
-            useNM.tabsApi.updateTabTitle(
-                useNM.currentTaskNote.noteId,
-                "task",
-                currentTaskNoteTitle
-            );
-
-            useNM.setTaskNoteMeta(
-                useNM.taskNoteMeta.map((item) =>
-                    item.noteType === useNM.currentTaskNote?.noteType &&
-                    item.noteId === useNM.currentTaskNote?.noteId
-                        ? { ...item, title: currentTaskNoteTitle }
-                        : item
-                )
-            );
-
-            const nextTaskNote = {
-                ...useNM.currentTaskNote,
-                title: currentTaskNoteTitle,
-            };
-            upsertNoteCache(nextTaskNote);
-            useNM.setCurrentTaskNote(nextTaskNote);
-        }
-    }, [noteBodySaved, useNM, currentTaskNoteTitle]);
 
     const pmChat = useCM.allChats.find(
         (chat) =>
