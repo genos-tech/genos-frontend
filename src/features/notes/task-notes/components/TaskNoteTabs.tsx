@@ -27,7 +27,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 
-interface NoteTabsProps {
+interface TaskNoteTabsProps {
     useNM: NoteManagementState;
     body: PartialBlock[] | undefined;
     noteBodySaved: boolean;
@@ -46,7 +46,7 @@ interface NoteTabsProps {
     currentTaskNoteTitle: string;
 }
 
-export const NoteTabs = ({
+export const TaskNoteTabs = ({
     useNM,
     body,
     noteBodySaved,
@@ -63,7 +63,7 @@ export const NoteTabs = ({
     onTitleChange,
     onTitleBlur,
     currentTaskNoteTitle,
-}: NoteTabsProps) => {
+}: TaskNoteTabsProps) => {
     const titleInputRef = useRef<HTMLInputElement | null>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const { mode } = useColorScheme();

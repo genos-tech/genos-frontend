@@ -98,18 +98,11 @@ export const useServiceInitialization = ({
     // panel state).
     useEffect(() => {
         if (activeService === "inbox") {
-            useNM.setCurrentMyNote(null);
-            useNM.setCurrentTaskNote(null);
-            useNM.setCurrentChatNote(null);
+            // Nothing to do here.
         } else if (activeService === "chat") {
             useTM.setIsTaskPreviewVisible(false);
-            useNM.setCurrentMyNote(null);
-            useNM.setCurrentTaskNote(null);
         } else if (activeService === "tasks") {
             useNM.setIsTaskNoteVisible(false);
-            useNM.setCurrentMyNote(null);
-            useNM.setCurrentTaskNote(null);
-            useNM.setCurrentChatNote(null);
         } else if (activeService === "notes") {
             // Notes-home tabs are rehydrated by `tabsApi.rehydrate()` on
             // team change; nothing to do here.

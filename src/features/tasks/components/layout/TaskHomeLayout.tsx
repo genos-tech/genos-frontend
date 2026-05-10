@@ -13,6 +13,8 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
+import { ChatNoteMain } from "../../../notes/chat-notes/components/ChatNoteMain";
+import { MyNoteMain } from "../../../notes/my-notes/components/MyNoteMain";
 import { TaskNoteMain } from "../../../notes/task-notes/components/TaskNoteMain";
 import { SprintBoard } from "../board";
 import { CreateTaskForm } from "../contents/CreateTaskForm";
@@ -246,6 +248,12 @@ export const TaskHomeLayout = ({
         </>
     );
 
+    // Get the currently selected tab's note type
+    // This ensures we render the correct component based on the OPEN note,
+    // not the sidebar category the user clicked on
+    const selectedTab = useNM.tabItems[useNM.selectedTabIndex];
+    const activeNoteType = selectedTab?.noteType ?? useNM.currentNoteType;
+
     const renderTaskNotePanel = () => (
         <>
             <PanelResizeHandle
@@ -276,17 +284,46 @@ export const TaskHomeLayout = ({
                         borderRight: mode === "dark" ? "1px black inset" : "1px lightgrey inset",
                     }}
                 >
-                    <TaskNoteMain
-                        isInTaskPage={true}
-                        myself={myself}
-                        setMyself={setMyself}
-                        socket={socket}
-                        useCM={useCM}
-                        useNM={useNM}
-                        useTEM={useTEM}
-                        useTM={useTM}
-                        useUISM={useUISM}
-                    />
+                    {activeNoteType === 1 && useNM.currentMyNote && (
+                        <MyNoteMain
+                            isInTaskPage={true}
+                            myself={myself}
+                            setMyself={setMyself}
+                            socket={socket}
+                            useCM={useCM}
+                            useNM={useNM}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
+                        />
+                    )}
+                    {activeNoteType === 2 && useNM.currentTaskNote && (
+                        <TaskNoteMain
+                            isInTaskPage={true}
+                            myself={myself}
+                            setMyself={setMyself}
+                            socket={socket}
+                            useCM={useCM}
+                            useNM={useNM}
+                            useTEM={useTEM}
+                            useTM={useTM}
+                            useUISM={useUISM}
+                        />
+                    )}
+                    {activeNoteType === 3 && useNM.currentChatNote && (
+                        <ChatNoteMain
+                            isInTaskPage={true}
+                            myself={myself}
+                            setMyself={setMyself}
+                            socket={socket}
+                            useCM={useCM}
+                            useNM={useNM}
+                            useTEM={useTEM}
+                            useTM={useTM}
+                            useUISM={useUISM}
+                            isInChatPage={false}
+                            usePM={usePM}
+                        />
+                    )}
                 </Box>
             </Panel>
         </>

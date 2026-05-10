@@ -33,6 +33,8 @@ interface ChatNoteMainProps {
     useUISM: UIStateManagementState;
     /** Whether the component is in chat page mode */
     isInChatPage: boolean;
+    /** Whether the component is in task page mode */
+    isInTaskPage: boolean;
     /** Function to set the current preview task ID */
     useTM: TaskManagementState;
     /** Function to set the current project */
@@ -51,6 +53,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
         setMyself,
         useUISM,
         isInChatPage,
+        isInTaskPage,
         useTM,
         usePM,
         useNM,
@@ -220,6 +223,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                     useCM={useCM}
                                     handleCloseTab={handleCloseTab}
                                     isInChatPage={isInChatPage}
+                                    isInTaskPage={isInTaskPage}
                                     myself={myself}
                                     useNM={useNM}
                                     openDeleteNote={openDeleteNote}

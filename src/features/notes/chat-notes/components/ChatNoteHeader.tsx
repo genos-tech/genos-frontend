@@ -29,6 +29,7 @@ import { ACChatChildNotes } from "./autocompletes/ACChatChildNotes";
 interface ChatNoteHeaderProps {
     chat: any;
     isInChatPage: boolean;
+    isInTaskPage: boolean;
     myself: UserProps;
     setMyself: (me: UserProps) => void;
     useUISM: UIStateManagementState;
@@ -50,6 +51,7 @@ interface ChatNoteHeaderProps {
 export const ChatNoteHeader = ({
     chat,
     isInChatPage,
+    isInTaskPage,
     myself,
     setMyself,
     useUISM,
@@ -205,7 +207,7 @@ export const ChatNoteHeader = ({
                 {isInChatPage === false && (
                     <Tooltip
                         size="sm"
-                        title="Open Related Chat"
+                        title="Open related chat"
                         variant="outlined"
                         sx={{
                             background: styles.menuBg,
@@ -306,7 +308,7 @@ export const ChatNoteHeader = ({
                 })()}
 
                 {/* Close Button */}
-                {isInChatPage === true && (
+                {(isInChatPage === true || isInTaskPage === true) && (
                     <Tooltip
                         size="sm"
                         title="Close"
@@ -326,6 +328,9 @@ export const ChatNoteHeader = ({
                                 useCM.setIsChatNoteVisibleInChat(false);
                                 if (useCM.setIsMainChatVisible) {
                                     useCM.setIsMainChatVisible(true);
+                                }
+                                if (isInTaskPage) {
+                                    useNM.setIsTaskNoteVisible(false);
                                 }
                             }}
                         >

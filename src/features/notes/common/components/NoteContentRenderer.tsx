@@ -291,6 +291,7 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
     if (activeNoteType === 1 && useNM.currentMyNote) {
         return (
             <MyNoteMain
+                isInTaskPage={false}
                 useCM={useCM}
                 myself={myself}
                 useNM={useNM}
@@ -341,6 +342,7 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
             <ChatNoteMain
                 useCM={useCM}
                 isInChatPage={false}
+                isInTaskPage={false}
                 myself={myself}
                 useNM={useNM}
                 usePM={usePM}

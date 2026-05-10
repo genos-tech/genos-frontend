@@ -61,6 +61,7 @@ export const ChatNotePanel = ({
                 <ChatNoteMain
                     useCM={useCM}
                     isInChatPage={true}
+                    isInTaskPage={false}
                     myself={myself}
                     useNM={useNM}
                     useTM={useTM}

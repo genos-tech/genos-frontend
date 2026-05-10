@@ -12,12 +12,12 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { NoteHeaderActions } from "../../common/components/NoteHeaderActions";
-import { NoteTabs } from "../../common/components/NoteTabs";
 import { useNoteAutoSave } from "../../common/hooks/useNoteAutoSave";
 import { useTaskPreview } from "../../common/hooks/useTaskPreview";
 import { ModalDeleteTaskNote } from "../modals/ModalDeleteTaskNote";
 import { ACTaskNotes } from "./autocompletes/ACTaskNotes";
 import { TaskNoteHeader } from "./TaskNoteHeader";
+import { TaskNoteTabs } from "./TaskNoteTabs";
 
 type TaskNoteMainProps = {
     useTEM: TeamManagementState;
@@ -264,7 +264,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                         )}
                     </Stack>
 
-                    <NoteTabs
+                    <TaskNoteTabs
                         body={body}
                         useCM={useCM}
                         useNM={useNM}

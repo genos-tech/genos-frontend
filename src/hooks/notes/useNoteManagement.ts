@@ -54,8 +54,6 @@ export interface NoteManagementState {
     setCurrentNoteType: (type: number) => void;
     tabItems: any[];
     setTabItems: (items: any[]) => void;
-    tmpTabItems: any[];
-    setTmpTabItems: (items: any[]) => void;
     selectedTabIndex: number;
     setSelectedTabIndex: (index: number) => void;
 
@@ -163,7 +161,6 @@ export const useNoteManagement = (
         Number(localStorage.getItem("currentNoteType") || "1")
     );
     const [tabItems, setTabItems] = useState<any[]>([]);
-    const [tmpTabItems, setTmpTabItems] = useState<any[]>([]);
     const [selectedTabIndex, setSelectedTabIndex] = useState(0);
 
     // New tab API — synchronous tab operations + persistence-driven
@@ -645,7 +642,6 @@ export const useNoteManagement = (
         setCurrentMyNote(null);
         setMyNoteMeta([]);
         setTabItems([]);
-        setTmpTabItems([]);
         setSelectedTabIndex(0);
         setIsTaskNoteVisible(false);
         setIsTaskVisibleInNote(false);
@@ -952,8 +948,6 @@ export const useNoteManagement = (
         setCurrentNoteType,
         tabItems,
         setTabItems,
-        tmpTabItems,
-        setTmpTabItems,
         selectedTabIndex,
         setSelectedTabIndex,
 

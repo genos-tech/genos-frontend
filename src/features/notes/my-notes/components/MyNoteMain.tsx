@@ -21,6 +21,8 @@ import { ModalDeleteMyNote } from "../modals/ModalDeleteMyNote";
  * Props for the MyNoteMain component
  */
 interface MyNoteMainProps {
+    /** Whether the component is in task page mode */
+    isInTaskPage: boolean;
     /** Team member profiles indexed by user ID */
     useTEM: TeamManagementState;
     /** Socket connection for real-time updates */
@@ -38,7 +40,7 @@ interface MyNoteMainProps {
 }
 
 export const MyNoteMain = (props: MyNoteMainProps) => {
-    const { useTEM, socket, myself, setMyself, useUISM, useNM, useCM } = props;
+    const { isInTaskPage, useTEM, socket, myself, setMyself, useUISM, useNM, useCM } = props;
 
     const { accessToken } = useAuth();
     const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
@@ -161,7 +163,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                     useCM={useCM}
                                     useNM={useNM}
                                     currentTask={undefined}
-                                    isInTaskPage={false}
+                                    isInTaskPage={isInTaskPage}
                                     myself={myself}
                                     noteType={1}
                                     pmChat={undefined}
@@ -169,7 +171,9 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                     socket={socket}
                                     useTEM={useTEM}
                                     useUISM={useUISM}
-                                    onCloseNotes={() => {}}
+                                    onCloseNotes={() => {
+                                        useNM.setIsTaskNoteVisible(false);
+                                    }}
                                     onCopyNoteLink={handleCopyNoteLink}
                                     onCreateChildNote={handleCreateChildNote}
                                     onCreateNewNote={handleCreateNewNote}
