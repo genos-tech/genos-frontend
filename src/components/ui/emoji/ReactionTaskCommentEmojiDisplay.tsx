@@ -1,6 +1,6 @@
-import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
-import { Box, Button, Chip, IconButton, Tooltip } from "@mui/joy";
 import { useEffect, useState } from "react";
+import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
+import { Box, Button, Chip, IconButton, Tooltip, useColorScheme } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { UserProps } from "../../../types/admin";
@@ -53,6 +53,8 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
         setReactions,
         setShowEmojiPicker,
     } = props;
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
     const [baseEmojiList, setBaseEmojiList] = useState<string[]>(["👀", "👍", "✅"]);
     const [groupedReactions, setGroupedReactions] = useState<GroupedReactionProps[]>(
         groupEmojis(reactions)
@@ -184,7 +186,10 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
                                         minWidth: "auto",
                                         paddingX: "4px",
                                         marginBottom: 0.5,
-                                        fontSize: "20px",
+                                        fontSize: "16px",
+                                        "&:hover": {
+                                            backgroundColor: isDark ? "#3730a3" : "#e0e7ff",
+                                        },
                                     }}
                                     onClick={() => handleAddReaction(emoji)}
                                 >
@@ -193,23 +198,28 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
                             ))}
                         </>
                     )}
-                    <IconButton
-                        key={`emoji-icon-${comment.commentId}`}
-                        color="primary"
-                        size="sm"
-                        variant="plain"
-                        sx={{
-                            minWidth: "auto",
-                            paddingX: "4px",
-                            marginBottom: 0.5,
-                            fontSize: "20px",
-                        }}
-                        onClick={() => {
-                            setShowEmojiPicker(true);
-                        }}
-                    >
-                        <SentimentSatisfiedAltIcon sx={{ fontSize: "24px" }} />
-                    </IconButton>
+                    <Tooltip size="sm" title="Emoji Reaction" variant="outlined">
+                        <IconButton
+                            key={`emoji-icon-${comment.commentId}`}
+                            color="primary"
+                            size="sm"
+                            variant="plain"
+                            sx={{
+                                minWidth: "auto",
+                                paddingX: "4px",
+                                marginBottom: 0.5,
+                                fontSize: "16px",
+                                "&:hover": {
+                                    backgroundColor: isDark ? "#3730a3" : "#e0e7ff",
+                                },
+                            }}
+                            onClick={() => {
+                                setShowEmojiPicker(true);
+                            }}
+                        >
+                            <SentimentSatisfiedAltIcon sx={{ fontSize: "24px" }} />
+                        </IconButton>
+                    </Tooltip>
                 </>
             )}
         </Box>

@@ -324,7 +324,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                             onClick={(e) => e.stopPropagation()}
                             sx={{
                                 position: "absolute",
-                                bottom: -12,
+                                bottom: 0,
                                 right: 10,
                             }}
                         >

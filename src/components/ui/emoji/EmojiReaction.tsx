@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
-import { Box, Button, IconButton, Tooltip } from "@mui/joy";
+import { Box, Button, IconButton, Tooltip, useColorScheme } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { UserProps } from "../../../types/admin";
@@ -61,6 +61,8 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
         setShowEmojiPicker,
         setUniqueReactionEmojiCount,
     } = props;
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
     const [baseEmojiList, setBaseEmojiList] = useState<string[]>(["👍", "👀", "✅"]);
     const [groupedReactions, setGroupedReactions] = useState<GroupedReactionProps[]>(
         groupEmojis(reactions)
@@ -252,6 +254,9 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
                                         paddingX: "4px",
                                         paddingY: "0",
                                         fontSize: "16px",
+                                        "&:hover": {
+                                            backgroundColor: isDark ? "#3730a3" : "#e0e7ff",
+                                        },
                                     }}
                                     onClick={() => handleAddReaction(emoji)}
                                 >
@@ -260,7 +265,7 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
                             ))}
                         </>
                     )}
-                    <Tooltip size="sm" title="React" variant="outlined">
+                    <Tooltip size="sm" title="Emoji Reaction" variant="outlined">
                         <IconButton
                             key={`emoji-icon-${message.messageId}`}
                             size="sm"
@@ -271,6 +276,9 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
                                 paddingY: "0",
                                 fontSize: "16px",
                                 fontWeight: "bold",
+                                "&:hover": {
+                                    backgroundColor: isDark ? "#3730a3" : "#e0e7ff",
+                                },
                             }}
                             onClick={() => {
                                 setShowEmojiPicker(true);
