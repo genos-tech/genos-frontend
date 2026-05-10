@@ -40,7 +40,11 @@ type Props = {
     // saw the stale `prev` and dropped `milestoneId`). `autoSyncedSprint`
     // is non-null iff the picker also wants the parent to update the
     // sprint linkage in the same step.
-    onChangeMilestone: (milestoneId: number | null, autoSyncedSprint?: Sprint | null) => void;
+    onChangeMilestone: (
+        milestoneId: number | null,
+        taskId: number | null,
+        autoSyncedSprint?: Sprint | null
+    ) => void;
     showSprint?: boolean;
     showMilestone?: boolean;
     disabled?: boolean;
@@ -257,7 +261,11 @@ export const SprintMilestonePicker = ({
                                     sprints.find((s) => s.sprintId === linkedSprintId) ?? null;
                             }
                         }
-                        onChangeMilestone(v?.id ?? null, autoSyncedSprint);
+                        onChangeMilestone(
+                            v?.id ?? null,
+                            v?.milestone?.taskId ?? null,
+                            autoSyncedSprint
+                        );
                     }}
                     renderOption={(props, option) => {
                         const m = option.milestone;

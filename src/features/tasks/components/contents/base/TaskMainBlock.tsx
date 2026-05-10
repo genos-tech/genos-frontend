@@ -374,7 +374,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     } as TaskProps);
                                     setTaskUpdated?.(true);
                                 }}
-                                onChangeMilestone={(mid, autoSyncedSprint) => {
+                                onChangeMilestone={(mid, taskId, autoSyncedSprint) => {
                                     // Picking a milestone may also
                                     // auto-sync the sprint linkage —
                                     // both updates MUST land in a
@@ -386,6 +386,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     setTaskContent({
                                         ...(taskContent as any),
                                         milestoneId: mid,
+                                        parentTaskId: taskId, // Changing the milestone -> changing the parent task too.
                                         ...(autoSyncedSprint
                                             ? { sprintId: autoSyncedSprint.sprintId }
                                             : {}),
