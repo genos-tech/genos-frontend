@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { codeBlockOptions } from "@blocknote/code-block";
 import {
     BlockNoteSchema,
+    createCodeBlockSpec,
     defaultBlockSpecs,
     defaultInlineContentSpecs,
     filterSuggestionItems,
@@ -46,6 +47,7 @@ import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
+import { codeBlockEnterShortcut } from "./sub/codeBlockExtras";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const django_url = import.meta.env.VITE_DJANGO_URL;
@@ -108,6 +110,11 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
             ...remainingBlockSpecs,
+            // BlockNote 0.49 moved the code-block options out of
+            // `useCreateBlockNote` and into the schema. We override
+            // the default plain-text codeBlock with the syntax-
+            // highlighted one shipped by `@blocknote/code-block`.
+            codeBlock: createCodeBlockSpec(codeBlockOptions),
         },
     });
 
@@ -154,8 +161,11 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
     const initialContent: any[] = message.content;
     const editor = useCreateBlockNote({
         schema,
-        codeBlock: codeBlockOptions,
         uploadFile,
+        // `codeBlockEnterShortcut` augments the built-in
+        // ``` + Space input rule with an Enter-key handler, so
+        // users get the same Markdown shortcut they expect.
+        extensions: [codeBlockEnterShortcut],
         // We override the `placeholders` in our dictionary
         dictionary: {
             ...locale,

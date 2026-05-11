@@ -30,6 +30,7 @@ import { UIStateManagementState } from "../../hooks/common/useUIStateManagement"
 import { UserProps } from "../../types/admin";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
+import { codeBlockEnterShortcut } from "./sub/codeBlockExtras";
 
 type BnTodoPreviewProps = {
     useTEM: TeamManagementState;
@@ -92,6 +93,10 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
     const locale = en;
     const editor = useCreateBlockNote({
         schema,
+        // `codeBlockEnterShortcut` augments the built-in
+        // ``` + Space input rule with an Enter-key handler, so
+        // users get the same Markdown shortcut they expect.
+        extensions: [codeBlockEnterShortcut],
         // We override the `placeholders` in our dictionary
         dictionary: {
             ...locale,

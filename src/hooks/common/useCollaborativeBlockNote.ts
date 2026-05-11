@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { codeBlockOptions } from "@blocknote/code-block";
 import { BlockNoteSchema, PartialBlock } from "@blocknote/core";
 import {
     CommentsExtension,
@@ -33,6 +32,16 @@ type UseCollaborativeBlockNoteOptions = {
     initialBody?: PartialBlock[] | any[];
     enableComments?: boolean;
     teamMemberProfiles?: Record<string, UserProps>;
+    /**
+     * Additional BlockNote extensions to merge into `useCreateBlockNote`'s
+     * options (alongside the comments extension when `enableComments` is on).
+     *
+     * Identity for editor-rebuild deps is derived from each extension's
+     * `key` (BlockNote's `createExtension` enforces this), so callers can
+     * pass a fresh `[ext1, ext2]` literal on every render without tearing
+     * down the editor — as long as the *set of keys* doesn't change.
+     */
+    extensions?: any[];
 };
 
 export type ConnectionStatus = "connecting" | "connected" | "disconnected";
@@ -55,6 +64,7 @@ export function useCollaborativeBlockNote({
     initialBody,
     enableComments = false,
     teamMemberProfiles,
+    extensions,
 }: UseCollaborativeBlockNoteOptions) {
     const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>("connecting");
     const seededRef = useRef(false);
@@ -229,20 +239,43 @@ export function useCollaborativeBlockNote({
         return CommentsExtension({ threadStore, resolveUsers });
     }, [threadStore, resolveUsers]);
 
+    // The caller passes `extensions` as a fresh array literal on every
+    // render; reading the latest value from a ref (rather than baking the
+    // array reference into the editor-options memo deps) keeps the editor
+    // from being rebuilt every render while still letting us include the
+    // current extension list when the options are recomputed.
+    const extensionsRef = useRef(extensions);
+    extensionsRef.current = extensions;
+
+    // Stable fingerprint that only changes when the *set* of extensions
+    // (by `key`) changes — see the JSDoc on `extensions` for why this is
+    // safe to use as the editor-rebuild dep.
+    const extensionsFingerprint = (extensions ?? []).map((ext: any) => ext?.key ?? "").join("|");
+
+    // NOTE: BlockNote 0.49 removed the `codeBlock` option from
+    // `useCreateBlockNote`. Syntax-highlighted code blocks are now
+    // configured via `createCodeBlockSpec(codeBlockOptions)` on the
+    // schema instead, so callers of this hook must add it themselves
+    // (see `bnMyNoteEditor`, `bnChatNoteEditor`, `bnTaskNoteEditor`,
+    // `bnTaskPreview`).
     const editorOptions = useMemo(() => {
+        const extraExtensions = extensionsRef.current ?? [];
+
         if (!provider) {
-            return {
+            const opts: Record<string, any> = {
                 schema,
-                codeBlock: codeBlockOptions,
                 dictionary,
                 uploadFile,
                 initialContent: initialBody && initialBody.length > 0 ? initialBody : undefined,
             };
+            if (extraExtensions.length > 0) {
+                opts.extensions = [...extraExtensions];
+            }
+            return opts;
         }
 
         const opts: Record<string, any> = {
             schema,
-            codeBlock: codeBlockOptions,
             dictionary,
             uploadFile,
             collaboration: {
@@ -252,17 +285,31 @@ export function useCollaborativeBlockNote({
             },
         };
 
+        const allExtensions = [...extraExtensions];
         if (commentsExtension) {
-            opts.extensions = [commentsExtension];
+            allExtensions.push(commentsExtension);
+        }
+        if (allExtensions.length > 0) {
+            opts.extensions = allExtensions;
         }
 
         return opts;
-    }, [provider, schema, dictionary, uploadFile, fragment, user, commentsExtension]);
+    }, [
+        provider,
+        schema,
+        dictionary,
+        uploadFile,
+        fragment,
+        user,
+        commentsExtension,
+        extensionsFingerprint,
+    ]);
 
     const editor = useCreateBlockNote(editorOptions as any, [
         provider,
         documentName,
         commentsExtension,
+        extensionsFingerprint,
     ]);
 
     editorRef.current = editor;

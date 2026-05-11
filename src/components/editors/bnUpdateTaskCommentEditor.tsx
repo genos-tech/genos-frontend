@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { codeBlockOptions } from "@blocknote/code-block";
 import {
     BlockNoteSchema,
+    createCodeBlockSpec,
     defaultBlockSpecs,
     defaultInlineContentSpecs,
     filterSuggestionItems,
@@ -40,6 +41,7 @@ import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
+import { codeBlockEnterShortcut } from "./sub/codeBlockExtras";
 
 type BnUpdateTaskCommentEditorProps = {
     useTEM: TeamManagementState;
@@ -111,6 +113,11 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
             ...remainingBlockSpecs,
+            // BlockNote 0.49 moved the code-block options out of
+            // `useCreateBlockNote` and into the schema. We override
+            // the default plain-text codeBlock with the syntax-
+            // highlighted one shipped by `@blocknote/code-block`.
+            codeBlock: createCodeBlockSpec(codeBlockOptions),
         },
     });
 
@@ -124,7 +131,10 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
     const initialContent: any[] = targetComment.commentBody;
     const editor = useCreateBlockNote({
         schema,
-        codeBlock: codeBlockOptions,
+        // `codeBlockEnterShortcut` augments the built-in
+        // ``` + Space input rule with an Enter-key handler, so
+        // users get the same Markdown shortcut they expect.
+        extensions: [codeBlockEnterShortcut],
         // We override the `placeholders` in our dictionary
         dictionary: {
             ...locale,

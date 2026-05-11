@@ -3,8 +3,10 @@ import "@blocknote/mantine/style.css";
 import "../../App.css";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { codeBlockOptions } from "@blocknote/code-block";
 import {
     BlockNoteSchema,
+    createCodeBlockSpec,
     defaultBlockSpecs,
     defaultInlineContentSpecs,
     filterSuggestionItems,
@@ -63,6 +65,7 @@ import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 import { Alert } from "./sub/Alert";
+import { codeBlockEnterShortcut } from "./sub/codeBlockExtras";
 import { ResetBlockTypeItem } from "./sub/ResetBlockTypeItem";
 import { ThreadsSidebarErrorBoundary } from "./sub/ThreadsSidebarErrorBoundary";
 
@@ -138,6 +141,11 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         },
         blockSpecs: {
             ...remainingBlockSpecs,
+            // BlockNote 0.49 moved the code-block options out of
+            // `useCreateBlockNote` and into the schema. We override
+            // the default plain-text codeBlock with the syntax-
+            // highlighted one shipped by `@blocknote/code-block`.
+            codeBlock: createCodeBlockSpec(codeBlockOptions),
             alert: Alert(),
         },
     });
@@ -214,6 +222,10 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         initialBody: body,
         enableComments: true,
         teamMemberProfiles: useTEM.teamMemberProfiles,
+        // `codeBlockEnterShortcut` augments the built-in
+        // ``` + Space input rule with an Enter-key handler, so
+        // users get the same Markdown shortcut they expect.
+        extensions: [codeBlockEnterShortcut],
     });
 
     // Forward the editor instance to the parent the first time it becomes

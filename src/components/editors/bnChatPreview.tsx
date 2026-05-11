@@ -5,6 +5,7 @@ import { useState } from "react";
 import { codeBlockOptions } from "@blocknote/code-block";
 import {
     BlockNoteSchema,
+    createCodeBlockSpec,
     defaultBlockSpecs,
     defaultInlineContentSpecs,
     PartialBlock,
@@ -67,12 +68,16 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
             ...remainingBlockSpecs,
+            // BlockNote 0.49 moved the code-block options out of
+            // `useCreateBlockNote` and into the schema. We override
+            // the default plain-text codeBlock with the syntax-
+            // highlighted one shipped by `@blocknote/code-block`.
+            codeBlock: createCodeBlockSpec(codeBlockOptions),
         },
     });
 
     const editor = useCreateBlockNote({
         schema,
-        codeBlock: codeBlockOptions,
         initialContent: content.slice(0, -1),
     });
 
