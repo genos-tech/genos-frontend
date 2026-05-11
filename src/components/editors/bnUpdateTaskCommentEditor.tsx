@@ -41,7 +41,10 @@ import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
-import { codeBlockEnterShortcut } from "./sub/codeBlockExtras";
+import {
+    codeBlockEnterShortcut,
+    getBlockTypeSelectItemsWithCodeBlock,
+} from "./sub/codeBlockExtras";
 
 type BnUpdateTaskCommentEditorProps = {
     useTEM: TeamManagementState;
@@ -374,7 +377,10 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                         }}
                     >
                         <FormattingToolbar>
-                            <BlockTypeSelect key={"blockTypeSelect"} />
+                            <BlockTypeSelect
+                                key={"blockTypeSelect"}
+                                items={getBlockTypeSelectItemsWithCodeBlock(editor.dictionary)}
+                            />
 
                             <FileCaptionButton key={"fileCaptionButton"} />
                             <FileReplaceButton key={"replaceFileButton"} />

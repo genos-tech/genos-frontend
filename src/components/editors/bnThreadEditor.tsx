@@ -50,7 +50,10 @@ import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
-import { codeBlockEnterShortcut } from "./sub/codeBlockExtras";
+import {
+    codeBlockEnterShortcut,
+    getBlockTypeSelectItemsWithCodeBlock,
+} from "./sub/codeBlockExtras";
 import { EditorSendButton } from "./sub/EditorSendButton";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
@@ -437,7 +440,10 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                         }}
                     >
                         <FormattingToolbar>
-                            <BlockTypeSelect key={"blockTypeSelect"} />
+                            <BlockTypeSelect
+                                key={"blockTypeSelect"}
+                                items={getBlockTypeSelectItemsWithCodeBlock(editor.dictionary)}
+                            />
 
                             <BasicTextStyleButton
                                 key={"boldStyleButton"}

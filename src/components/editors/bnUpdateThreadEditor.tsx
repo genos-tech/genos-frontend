@@ -47,7 +47,10 @@ import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
-import { codeBlockEnterShortcut } from "./sub/codeBlockExtras";
+import {
+    codeBlockEnterShortcut,
+    getBlockTypeSelectItemsWithCodeBlock,
+} from "./sub/codeBlockExtras";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const django_url = import.meta.env.VITE_DJANGO_URL;
@@ -353,7 +356,10 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                         }}
                     >
                         <FormattingToolbar>
-                            <BlockTypeSelect key={"blockTypeSelect"} />
+                            <BlockTypeSelect
+                                key={"blockTypeSelect"}
+                                items={getBlockTypeSelectItemsWithCodeBlock(editor.dictionary)}
+                            />
 
                             <BasicTextStyleButton
                                 key={"boldStyleButton"}

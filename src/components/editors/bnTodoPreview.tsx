@@ -30,7 +30,10 @@ import { UIStateManagementState } from "../../hooks/common/useUIStateManagement"
 import { UserProps } from "../../types/admin";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
-import { codeBlockEnterShortcut } from "./sub/codeBlockExtras";
+import {
+    codeBlockEnterShortcut,
+    getBlockTypeSelectItemsWithCodeBlock,
+} from "./sub/codeBlockExtras";
 
 type BnTodoPreviewProps = {
     useTEM: TeamManagementState;
@@ -135,7 +138,10 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
                 <FormattingToolbarController
                     formattingToolbar={() => (
                         <FormattingToolbar>
-                            <BlockTypeSelect key={"blockTypeSelect"} />
+                            <BlockTypeSelect
+                                key={"blockTypeSelect"}
+                                items={getBlockTypeSelectItemsWithCodeBlock(editor.dictionary)}
+                            />
 
                             <BasicTextStyleButton
                                 key={"boldStyleButton"}

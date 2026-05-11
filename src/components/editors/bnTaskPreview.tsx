@@ -65,7 +65,10 @@ import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 import { Alert } from "./sub/Alert";
-import { codeBlockEnterShortcut } from "./sub/codeBlockExtras";
+import {
+    codeBlockEnterShortcut,
+    getBlockTypeSelectItemsWithCodeBlock,
+} from "./sub/codeBlockExtras";
 import { ResetBlockTypeItem } from "./sub/ResetBlockTypeItem";
 import { ThreadsSidebarErrorBoundary } from "./sub/ThreadsSidebarErrorBoundary";
 
@@ -357,7 +360,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                                     key={"blockTypeSelect"}
                                     items={[
                                         // Gets the default Block Type Select items.
-                                        ...blockTypeSelectItems(editor.dictionary),
+                                        ...getBlockTypeSelectItemsWithCodeBlock(editor.dictionary),
                                         // Adds an item for the Alert block.
                                         {
                                             name: "Alert",

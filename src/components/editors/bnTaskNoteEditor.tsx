@@ -68,7 +68,10 @@ import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
 import { CreateMentionSpec, MentionMenuItems } from "./Mention";
 import { Alert } from "./sub/Alert";
-import { codeBlockEnterShortcut } from "./sub/codeBlockExtras";
+import {
+    codeBlockEnterShortcut,
+    getBlockTypeSelectItemsWithCodeBlock,
+} from "./sub/codeBlockExtras";
 import { ResetBlockTypeItem } from "./sub/ResetBlockTypeItem";
 import { ThreadsSidebarErrorBoundary } from "./sub/ThreadsSidebarErrorBoundary";
 import { ThreadsSidebarWithPreload } from "./sub/ThreadsSidebarWithPreload";
@@ -345,7 +348,9 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                                             <BlockTypeSelect
                                                 key={"blockTypeSelect"}
                                                 items={[
-                                                    ...blockTypeSelectItems(editor.dictionary),
+                                                    ...getBlockTypeSelectItemsWithCodeBlock(
+                                                        editor.dictionary
+                                                    ),
                                                     {
                                                         name: "Alert",
                                                         type: "alert",
