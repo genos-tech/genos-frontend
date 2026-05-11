@@ -4,7 +4,7 @@ import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlin
 import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import TipsAndUpdatesRoundedIcon from "@mui/icons-material/TipsAndUpdatesRounded";
-import { Box, Chip, IconButton, Stack, Typography, useColorScheme } from "@mui/joy";
+import { Box, Chip, IconButton, Stack, Tooltip, Typography, useColorScheme } from "@mui/joy";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
@@ -155,35 +155,65 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                     </Stack>
 
                     {/* Add Button */}
-                    <IconButton
-                        disabled={isExistingTodaysTodo}
-                        size="sm"
-                        sx={{
-                            background: styles.createButtonBg,
-                            color: "#fff",
-                            borderRadius: "10px",
-                            px: 1.5,
-                            py: 0.75,
-                            fontSize: "13px",
-                            fontWeight: 600,
-                            gap: 0.5,
-                            boxShadow: isDark
-                                ? "0 2px 8px rgba(99,102,241,0.4)"
-                                : "0 2px 8px rgba(79,70,229,0.3)",
-                            transition: "all 0.2s ease",
-                            "&:hover": {
-                                background: styles.createButtonHover,
-                                transform: "translateY(-1px)",
+                    {isExistingTodaysTodo ? (
+                        <Tooltip
+                            title="You already have a todo for today."
+                            variant="outlined"
+                            sx={{ borderRadius: "8px" }}
+                        >
+                            <IconButton
+                                size="sm"
+                                sx={{
+                                    borderRadius: "10px",
+                                    px: 1.5,
+                                    py: 0.75,
+                                    fontSize: "13px",
+                                    fontWeight: 600,
+                                    gap: 0.5,
+                                    background: "rgba(92, 92, 92, 0.12)",
+                                    color: "rgba(255, 255, 255, 0.5)",
+                                    // no hover action
+                                    "&:hover:not(:disabled)": {
+                                        background: "rgba(92, 92, 92, 0.12)",
+                                        color: "rgba(255, 255, 255, 0.5)",
+                                    },
+                                }}
+                            >
+                                <AddIcon sx={{ fontSize: "18px" }} />
+                                New Todo
+                            </IconButton>
+                        </Tooltip>
+                    ) : (
+                        <IconButton
+                            disabled={isExistingTodaysTodo}
+                            size="sm"
+                            sx={{
+                                background: styles.createButtonBg,
+                                color: "#fff",
+                                borderRadius: "10px",
+                                px: 1.5,
+                                py: 0.75,
+                                fontSize: "13px",
+                                fontWeight: 600,
+                                gap: 0.5,
                                 boxShadow: isDark
-                                    ? "0 4px 12px rgba(99,102,241,0.5)"
-                                    : "0 4px 12px rgba(79,70,229,0.4)",
-                            },
-                        }}
-                        onClick={handleCreateNewTodo}
-                    >
-                        <AddIcon sx={{ fontSize: "18px" }} />
-                        New Todo
-                    </IconButton>
+                                    ? "0 2px 8px rgba(99,102,241,0.4)"
+                                    : "0 2px 8px rgba(79,70,229,0.3)",
+                                transition: "all 0.2s ease",
+                                "&:hover": {
+                                    background: styles.createButtonHover,
+                                    transform: "translateY(-1px)",
+                                    boxShadow: isDark
+                                        ? "0 4px 12px rgba(99,102,241,0.5)"
+                                        : "0 4px 12px rgba(79,70,229,0.4)",
+                                },
+                            }}
+                            onClick={handleCreateNewTodo}
+                        >
+                            <AddIcon sx={{ fontSize: "18px" }} />
+                            New Todo
+                        </IconButton>
+                    )}
                 </Stack>
 
                 {/* Filter Row */}
@@ -304,8 +334,8 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                 }}
                                 style={{
                                     height: useCM.isSubChatVisible
-                                        ? `${(currentWindowHeight - 180) * 0.43}px`
-                                        : `${currentWindowHeight - 180}px`,
+                                        ? `${(currentWindowHeight - 250) * 0.43}px`
+                                        : `${currentWindowHeight - 250}px`,
                                 }}
                             />
                         );
