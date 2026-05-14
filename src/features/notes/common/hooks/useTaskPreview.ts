@@ -37,7 +37,8 @@ export const useTaskPreview = ({
     };
 
     useEffect(() => {
-        if (currentTaskNote) {
+        const currentPath = window.location.pathname;
+        if (currentTaskNote && currentPath.includes("/workspace/notes/")) {
             setPreviewTask(currentTaskNote.projectId, currentTaskNote.taskId);
         }
     }, [currentTaskNote]);
