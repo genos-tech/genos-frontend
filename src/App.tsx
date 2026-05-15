@@ -304,6 +304,7 @@ export const App = () => {
                         onApprove={spotlight.onApprove}
                         onAsk={spotlight.onAsk}
                         onClose={spotlight.close}
+                        onNewConversation={spotlight.onNewConversation}
                         onQueryChange={spotlight.setQuery}
                         onReject={spotlight.onReject}
                         onSelect={handleSpotlightSelect}

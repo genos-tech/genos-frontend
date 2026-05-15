@@ -40,6 +40,7 @@ interface Props {
     onAsk: () => void;
     onApprove: () => void;
     onReject: () => void;
+    onNewConversation: () => void;
     ask: AskState;
 }
 
@@ -61,6 +62,7 @@ export const SpotlightOverlay = ({
     onAsk,
     onApprove,
     onReject,
+    onNewConversation,
     ask,
 }: Props) => {
     const { mode } = useColorScheme();
@@ -189,6 +191,7 @@ export const SpotlightOverlay = ({
                     onSelect={onSelect}
                     onApprove={onApprove}
                     onReject={onReject}
+                    onNewConversation={onNewConversation}
                 />
 
                 {/* Results / states */}
@@ -284,9 +287,17 @@ interface AnswerPanelProps {
     onSelect: (r: SpotlightResult) => void;
     onApprove: () => void;
     onReject: () => void;
+    onNewConversation: () => void;
 }
 
-const AnswerPanel = ({ ask, isDark, onSelect, onApprove, onReject }: AnswerPanelProps) => {
+const AnswerPanel = ({
+    ask,
+    isDark,
+    onSelect,
+    onApprove,
+    onReject,
+    onNewConversation,
+}: AnswerPanelProps) => {
     const hasContent =
         ask.isStreaming ||
         ask.answer ||
@@ -344,6 +355,17 @@ const AnswerPanel = ({ ask, isDark, onSelect, onApprove, onReject }: AnswerPanel
                             >
                                 awaiting your approval
                             </Typography>
+                        )}
+                        {ask.sessionId && !ask.isStreaming && (
+                            <Button
+                                size="sm"
+                                variant="plain"
+                                color="neutral"
+                                onClick={onNewConversation}
+                                sx={{ ml: "auto", fontSize: "0.7rem", opacity: 0.6, py: 0 }}
+                            >
+                                New conversation
+                            </Button>
                         )}
                     </Box>
 

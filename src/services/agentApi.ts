@@ -4,12 +4,9 @@
 //   POST /api/v2/agent/decide/   — resume a paused run (approve / reject)
 //
 // Both endpoints stream NDJSON over POST and emit the same event
-// vocabulary. Phase 7 added `tool_call_pending_approval`, which the
-// controller emits when the agent wants to call a write tool. The
-// frontend renders an Approve / Reject card and calls `decideAgent`
-// with the decision + token; the response is another NDJSON stream
-// with the resumed events (tool_call_start, tool_call_result/error,
-// answer_delta, done).
+// vocabulary. Phase 7 added `tool_call_pending_approval`; Phase 8
+// added `session_id` to the `done` event so the frontend can thread
+// conversation history across multiple /ask/ calls.
 //
 // NDJSON event types:
 //   {"type": "tool_call_start", "step", "tool_name", "arguments"}
@@ -19,7 +16,7 @@
 //        "step", "tool_name", "arguments", "approval_token", "run_id"}
 //   {"type": "sources", "sources": [...]}
 //   {"type": "answer_delta", "text": "..."}
-//   {"type": "done"}
+//   {"type": "done", "session_id": "..."}   ← session_id added in Phase 8
 //   {"type": "error", "message": "..."}
 //
 // Why fetch instead of axios: axios doesn't expose the response body
@@ -59,7 +56,7 @@ export interface PendingApprovalPayload {
 export type AgentEvent =
     | { type: "sources"; sources: SpotlightResult[] }
     | { type: "answer_delta"; text: string }
-    | { type: "done" }
+    | { type: "done"; session_id?: string }
     | { type: "error"; message: string }
     | ({ type: "tool_call_start" } & ToolCallStartPayload)
     | ({ type: "tool_call_result" } & ToolCallResultPayload)
@@ -69,7 +66,7 @@ export type AgentEvent =
 interface BaseStreamHandlers {
     onSources: (sources: SpotlightResult[]) => void;
     onDelta: (text: string) => void;
-    onDone: () => void;
+    onDone: (sessionId?: string) => void;
     onError: (message: string) => void;
     onToolStart?: (payload: ToolCallStartPayload) => void;
     onToolResult?: (payload: ToolCallResultPayload) => void;
@@ -81,6 +78,7 @@ export interface AskAgentArgs extends BaseStreamHandlers {
     query: string;
     teamId: string;
     accessToken: string | null;
+    sessionId?: string;
     entityTypes?: Array<"chat" | "task" | "note">;
     signal?: AbortSignal;
 }
@@ -104,6 +102,7 @@ export async function askAgentStream(args: AskAgentArgs): Promise<void> {
             query: args.query,
             team_id: args.teamId,
             entity_types: args.entityTypes,
+            ...(args.sessionId ? { session_id: args.sessionId } : {}),
         },
         args.accessToken,
         args.signal,
@@ -226,7 +225,7 @@ function dispatchLine(line: string, h: BaseStreamHandlers) {
             if (evt.text) h.onDelta(evt.text);
             return;
         case "done":
-            h.onDone();
+            h.onDone(evt.session_id);
             return;
         case "error":
             h.onError(evt.message || "Unknown error");

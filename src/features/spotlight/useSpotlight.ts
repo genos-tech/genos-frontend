@@ -57,6 +57,10 @@ export interface AskState {
     // here. The UI renders an Approve / Reject card; clicking either
     // button calls `onApprove` / `onReject` and clears this field.
     pendingApproval: PendingApprovalPayload | null;
+    // Phase 8: conversation session ID returned by the backend on the
+    // `done` event. Sent back with subsequent /ask/ calls so the model
+    // sees prior Q&A turns as context. Null means fresh session.
+    sessionId: string | null;
 }
 
 export interface UseSpotlightReturn {
@@ -71,6 +75,7 @@ export interface UseSpotlightReturn {
     onAsk: () => void;
     onApprove: () => void;
     onReject: () => void;
+    onNewConversation: () => void;
     ask: AskState;
 }
 
@@ -82,6 +87,7 @@ const EMPTY_ASK_STATE: AskState = {
     askError: null,
     toolEvents: [],
     pendingApproval: null,
+    sessionId: null,
 };
 
 export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpotlightReturn => {
@@ -223,9 +229,15 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
                         stillCurrent(prev) ? { ...prev, answer: prev.answer + text } : prev
                     );
                 },
-                onDone: () => {
+                onDone: (sessionId?: string) => {
                     setAsk((prev) =>
-                        stillCurrent(prev) ? { ...prev, isStreaming: false } : prev
+                        stillCurrent(prev)
+                            ? {
+                                  ...prev,
+                                  isStreaming: false,
+                                  ...(sessionId !== undefined ? { sessionId } : {}),
+                              }
+                            : prev
                     );
                 },
                 onError: (message: string) => {
@@ -351,7 +363,9 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
         const controller = new AbortController();
         askAbortRef.current = controller;
 
-        setAsk({
+        // Preserve sessionId across turns so the backend can thread
+        // conversation history. Reset everything else.
+        setAsk((prev) => ({
             isStreaming: true,
             askedQuery: trimmed,
             answer: "",
@@ -359,16 +373,18 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
             askError: null,
             toolEvents: [],
             pendingApproval: null,
-        });
+            sessionId: prev.sessionId,
+        }));
 
         void askAgentStream({
             query: trimmed,
             teamId,
             accessToken,
+            sessionId: ask.sessionId ?? undefined,
             signal: controller.signal,
             ...buildStreamHandlers(trimmed),
         });
-    }, [query, teamId, accessToken, buildStreamHandlers]);
+    }, [query, teamId, accessToken, buildStreamHandlers, ask.sessionId]);
 
     // ---- Approve / Reject handlers for the pending write tool. ----
     const decide = useCallback(
@@ -412,6 +428,14 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
     const onApprove = useCallback(() => decide("approve"), [decide]);
     const onReject = useCallback(() => decide("reject"), [decide]);
 
+    // ---- New Conversation: clears the session so the next ask starts
+    // fresh with no prior-turn context injected. ----
+    const onNewConversation = useCallback(() => {
+        askAbortRef.current?.abort();
+        askAbortRef.current = null;
+        setAsk(EMPTY_ASK_STATE);
+    }, []);
+
     return {
         isOpen,
         open,
@@ -424,6 +448,7 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
         onAsk,
         onApprove,
         onReject,
+        onNewConversation,
         ask,
     };
 };
