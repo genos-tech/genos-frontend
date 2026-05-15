@@ -29,11 +29,11 @@ const getCardStyles = (
     backgroundColor: isDragging
         ? mode === "dark"
             ? "#2a3a5a"
-            : "#e3f2fd"
+            : "#f3e8ff"
         : isSelected
           ? mode === "dark"
-              ? "#1e3a5f"
-              : "#e3f2fd"
+              ? "#2e1065"
+              : "#f3e8ff"
           : mode === "dark"
             ? "#1a1a24"
             : "#ffffff",
@@ -46,8 +46,8 @@ const getCardStyles = (
             : "0 12px 28px rgba(0, 0, 0, 0.18)"
         : isSelected
           ? mode === "dark"
-              ? "0 0 0 2px rgba(144, 202, 249, 0.5), 0 4px 12px rgba(0, 0, 0, 0.3)"
-              : "0 0 0 2px rgba(25, 118, 210, 0.4), 0 4px 12px rgba(0, 0, 0, 0.1)"
+              ? "0 0 0 2px rgba(167,139,250,0.5), 0 4px 12px rgba(0, 0, 0, 0.3)"
+              : "0 0 0 2px rgba(124,58,237,0.4), 0 4px 12px rgba(0, 0, 0, 0.1)"
           : isHovered
             ? mode === "dark"
                 ? "0 4px 12px rgba(0, 0, 0, 0.4)"
@@ -57,12 +57,12 @@ const getCardStyles = (
               : "0 1px 2px rgba(0, 0, 0, 0.05)",
     border: isDragging
         ? mode === "dark"
-            ? "1px solid rgba(144, 202, 249, 0.3)"
-            : "1px solid rgba(25, 118, 210, 0.3)"
+            ? "1px solid rgba(167,139,250,0.3)"
+            : "1px solid rgba(124,58,237,0.3)"
         : isSelected
           ? mode === "dark"
-              ? "1px solid rgba(144, 202, 249, 0.4)"
-              : "1px solid rgba(25, 118, 210, 0.3)"
+              ? "1px solid rgba(167,139,250,0.4)"
+              : "1px solid rgba(124,58,237,0.3)"
           : mode === "dark"
             ? "1px solid rgba(255, 255, 255, 0.05)"
             : "1px solid rgba(0, 0, 0, 0.04)",
