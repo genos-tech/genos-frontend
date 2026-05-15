@@ -91,7 +91,7 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                           background: isDark
                               ? "linear-gradient(135deg, rgba(124,58,237,0.25) 0%, rgba(124,58,237,0.15) 100%)"
                               : "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
-                          color: isDark ? "#c7d2fe" : "#ffffff",
+                          color: isDark ? "#f3e8ff" : "#ffffff",
                           borderColor: isDark ? "rgba(124,58,237,0.4)" : "#6d28d9",
                       }
                     : customStyles),

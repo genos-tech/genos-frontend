@@ -56,8 +56,8 @@ export const SelectChatPanel = ({ setMainChatPanelSize }: SelectChatPanelProps) 
                         height: 200,
                         borderRadius: "50%",
                         background: isDark
-                            ? "radial-gradient(circle, rgba(59,130,246,0.03) 0%, transparent 70%)"
-                            : "radial-gradient(circle, rgba(59,130,246,0.04) 0%, transparent 70%)",
+                            ? "radial-gradient(circle, rgba(124,58,237,0.03) 0%, transparent 70%)"
+                            : "radial-gradient(circle, rgba(124,58,237,0.04) 0%, transparent 70%)",
                         bottom: "25%",
                         left: "20%",
                         pointerEvents: "none",
