@@ -25,7 +25,7 @@ import { useColorScheme } from "@mui/joy/styles";
 
 import { SpotlightResultItem } from "./SpotlightResultItem";
 import type { EntityType, SpotlightResult } from "./types";
-import type { AskState } from "./useSpotlight";
+import type { AskState, ToolEvent } from "./useSpotlight";
 
 interface Props {
     isOpen: boolean;
@@ -275,7 +275,11 @@ interface AnswerPanelProps {
 
 const AnswerPanel = ({ ask, isDark, onSelect }: AnswerPanelProps) => {
     const hasContent =
-        ask.isStreaming || ask.answer || ask.askError || ask.answerSources.length > 0;
+        ask.isStreaming ||
+        ask.answer ||
+        ask.askError ||
+        ask.answerSources.length > 0 ||
+        ask.toolEvents.length > 0;
 
     return (
         <Box
@@ -320,6 +324,10 @@ const AnswerPanel = ({ ask, isDark, onSelect }: AnswerPanelProps) => {
                             </Box>
                         )}
                     </Box>
+
+                    {ask.toolEvents.length > 0 && (
+                        <ToolProgressList events={ask.toolEvents} isDark={isDark} />
+                    )}
 
                     {ask.askError && (
                         <Typography level="body-sm" sx={{ color: "danger.500", mb: 0.5 }}>
@@ -366,3 +374,99 @@ const AnswerPanel = ({ ask, isDark, onSelect }: AnswerPanelProps) => {
         </Box>
     );
 };
+
+// ──────────────────────────────────────────────────────────────────
+// ToolProgressList — Phase 3 agent activity strip
+//
+// Renders the agent's per-step tool calls above the final answer.
+// Pending steps show a small spinner; completed steps show ✓ and the
+// short summary the backend produced; failed steps show ✗ + the error.
+// Hidden when no events exist (so single-step answers stay clean).
+// ──────────────────────────────────────────────────────────────────
+
+interface ToolProgressListProps {
+    events: ToolEvent[];
+    isDark: boolean;
+}
+
+const ToolProgressList = ({ events, isDark }: ToolProgressListProps) => {
+    return (
+        <Box
+            sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 0.25,
+                mb: 0.75,
+                pl: 0.25,
+                borderLeft: "2px solid",
+                borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
+                pl_: 1,
+            }}
+        >
+            {events.map((e) => (
+                <ToolProgressRow key={`${e.step}:${e.tool_name}`} event={e} />
+            ))}
+        </Box>
+    );
+};
+
+const ToolProgressRow = ({ event }: { event: ToolEvent }) => {
+    const isPending = event.status === "pending";
+    const isError = event.status === "error";
+
+    const label = event.summary || _humanReadableCall(event);
+
+    return (
+        <Box
+            sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 0.75,
+                pl: 1,
+                py: 0.25,
+                fontSize: "0.8rem",
+            }}
+        >
+            {isPending && (
+                <CircularProgress size="sm" sx={{ "--CircularProgress-size": "11px" }} />
+            )}
+            {!isPending && !isError && (
+                <Box
+                    component="span"
+                    sx={{ color: "success.500", fontWeight: 700, width: 14, textAlign: "center" }}
+                >
+                    ✓
+                </Box>
+            )}
+            {isError && (
+                <Box
+                    component="span"
+                    sx={{ color: "danger.500", fontWeight: 700, width: 14, textAlign: "center" }}
+                >
+                    ✗
+                </Box>
+            )}
+            <Typography
+                level="body-xs"
+                sx={{
+                    opacity: isPending ? 0.7 : 0.85,
+                    color: isError ? "danger.500" : undefined,
+                }}
+            >
+                {isError ? `${event.tool_name}: ${event.error}` : label}
+            </Typography>
+        </Box>
+    );
+};
+
+// Fallback label for a still-pending tool call (no summary yet).
+function _humanReadableCall(e: ToolEvent): string {
+    const argPreview =
+        Object.keys(e.arguments).length > 0
+            ? Object.entries(e.arguments)
+                  .slice(0, 2)
+                  .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
+                  .join(", ")
+            : "";
+    return argPreview ? `${e.tool_name}(${argPreview})` : e.tool_name;
+}

@@ -1,11 +1,13 @@
 // Streaming consumer for POST /api/v2/agent/ask.
 //
-// The backend ships NDJSON: one JSON object per newline. Each line
-// has a `type` discriminator:
+// Phase 3: the backend now runs a multi-step Gemini function-calling
+// loop. NDJSON event types:
 //
-//   {"type": "sources", "sources": [...]}
+//   {"type": "tool_call_start", "step": N, "tool_name": "...", "arguments": {...}}
+//   {"type": "tool_call_result", "step": N, "tool_name": "...", "summary": "..."}
+//   {"type": "tool_call_error",  "step": N, "tool_name": "...", "error": "..."}
+//   {"type": "sources", "sources": [...]}        // after each search call
 //   {"type": "answer_delta", "text": "Hello"}
-//   {"type": "answer_delta", "text": ", world"}
 //   {"type": "done"}
 //   {"type": "error", "message": "..."}
 //
@@ -18,6 +20,24 @@ import type { SpotlightResult } from "../features/spotlight/types";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL as string;
 
+export interface ToolCallStartPayload {
+    step: number;
+    tool_name: string;
+    arguments: Record<string, unknown>;
+}
+
+export interface ToolCallResultPayload {
+    step: number;
+    tool_name: string;
+    summary: string;
+}
+
+export interface ToolCallErrorPayload {
+    step: number;
+    tool_name: string;
+    error: string;
+}
+
 export interface AskAgentArgs {
     query: string;
     teamId: string;
@@ -28,13 +48,19 @@ export interface AskAgentArgs {
     onDelta: (text: string) => void;
     onDone: () => void;
     onError: (message: string) => void;
+    onToolStart?: (payload: ToolCallStartPayload) => void;
+    onToolResult?: (payload: ToolCallResultPayload) => void;
+    onToolError?: (payload: ToolCallErrorPayload) => void;
 }
 
 export type AgentEvent =
     | { type: "sources"; sources: SpotlightResult[] }
     | { type: "answer_delta"; text: string }
     | { type: "done" }
-    | { type: "error"; message: string };
+    | { type: "error"; message: string }
+    | ({ type: "tool_call_start" } & ToolCallStartPayload)
+    | ({ type: "tool_call_result" } & ToolCallResultPayload)
+    | ({ type: "tool_call_error" } & ToolCallErrorPayload);
 
 export async function askAgentStream(args: AskAgentArgs): Promise<void> {
     const {
@@ -103,6 +129,16 @@ export async function askAgentStream(args: AskAgentArgs): Promise<void> {
     const decoder = new TextDecoder("utf-8");
     let buffer = "";
 
+    const handlers = {
+        onSources,
+        onDelta,
+        onDone,
+        onError,
+        onToolStart: args.onToolStart,
+        onToolResult: args.onToolResult,
+        onToolError: args.onToolError,
+    };
+
     try {
         while (true) {
             const { value, done } = await reader.read();
@@ -116,14 +152,14 @@ export async function askAgentStream(args: AskAgentArgs): Promise<void> {
                 const line = buffer.slice(0, nl).trim();
                 buffer = buffer.slice(nl + 1);
                 if (line) {
-                    dispatchLine(line, onSources, onDelta, onDone, onError);
+                    dispatchLine(line, handlers);
                 }
                 nl = buffer.indexOf("\n");
             }
         }
         // Flush any final partial line.
         const tail = buffer.trim();
-        if (tail) dispatchLine(tail, onSources, onDelta, onDone, onError);
+        if (tail) dispatchLine(tail, handlers);
     } catch (err) {
         if ((err as Error).name === "AbortError") return;
         onError(`Stream interrupted: ${(err as Error).message}`);
@@ -136,33 +172,58 @@ export async function askAgentStream(args: AskAgentArgs): Promise<void> {
     }
 }
 
-function dispatchLine(
-    line: string,
-    onSources: AskAgentArgs["onSources"],
-    onDelta: AskAgentArgs["onDelta"],
-    onDone: AskAgentArgs["onDone"],
-    onError: AskAgentArgs["onError"]
-) {
+interface DispatchHandlers {
+    onSources: AskAgentArgs["onSources"];
+    onDelta: AskAgentArgs["onDelta"];
+    onDone: AskAgentArgs["onDone"];
+    onError: AskAgentArgs["onError"];
+    onToolStart?: AskAgentArgs["onToolStart"];
+    onToolResult?: AskAgentArgs["onToolResult"];
+    onToolError?: AskAgentArgs["onToolError"];
+}
+
+function dispatchLine(line: string, h: DispatchHandlers) {
     let evt: AgentEvent;
     try {
         evt = JSON.parse(line) as AgentEvent;
     } catch {
         // Server promised NDJSON; bail loudly so we notice.
-        onError(`Malformed NDJSON line: ${line.slice(0, 120)}`);
+        h.onError(`Malformed NDJSON line: ${line.slice(0, 120)}`);
         return;
     }
     switch (evt.type) {
         case "sources":
-            onSources(evt.sources || []);
+            h.onSources(evt.sources || []);
             return;
         case "answer_delta":
-            if (evt.text) onDelta(evt.text);
+            if (evt.text) h.onDelta(evt.text);
             return;
         case "done":
-            onDone();
+            h.onDone();
             return;
         case "error":
-            onError(evt.message || "Unknown error");
+            h.onError(evt.message || "Unknown error");
+            return;
+        case "tool_call_start":
+            h.onToolStart?.({
+                step: evt.step,
+                tool_name: evt.tool_name,
+                arguments: evt.arguments,
+            });
+            return;
+        case "tool_call_result":
+            h.onToolResult?.({
+                step: evt.step,
+                tool_name: evt.tool_name,
+                summary: evt.summary,
+            });
+            return;
+        case "tool_call_error":
+            h.onToolError?.({
+                step: evt.step,
+                tool_name: evt.tool_name,
+                error: evt.error,
+            });
             return;
     }
 }

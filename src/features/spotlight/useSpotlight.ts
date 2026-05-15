@@ -27,6 +27,17 @@ export interface UseSpotlightArgs {
     teamId: string | null | undefined;
 }
 
+export type ToolEventStatus = "pending" | "done" | "error";
+
+export interface ToolEvent {
+    step: number;
+    tool_name: string;
+    arguments: Record<string, unknown>;
+    summary?: string;
+    error?: string;
+    status: ToolEventStatus;
+}
+
 export interface AskState {
     // True while either the search or the LLM stream is in flight.
     isStreaming: boolean;
@@ -40,6 +51,8 @@ export interface AskState {
     answerSources: SpotlightResult[];
     // Set when the stream emits an error event (or transport fails).
     askError: string | null;
+    // Phase 3: per-step tool-call activity log. Ordered by step.
+    toolEvents: ToolEvent[];
 }
 
 export interface UseSpotlightReturn {
@@ -61,6 +74,7 @@ const EMPTY_ASK_STATE: AskState = {
     answer: "",
     answerSources: [],
     askError: null,
+    toolEvents: [],
 };
 
 export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpotlightReturn => {
@@ -208,7 +222,12 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
             answer: "",
             answerSources: [],
             askError: null,
+            toolEvents: [],
         });
+
+        // Helper: only mutate state if we're still the current Ask
+        // (a new query may have superseded us).
+        const stillCurrent = (prev: AskState) => prev.askedQuery === trimmed;
 
         void askAgentStream({
             query: trimmed,
@@ -217,25 +236,63 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
             signal: controller.signal,
             onSources: (sources) => {
                 setAsk((prev) =>
-                    prev.askedQuery === trimmed ? { ...prev, answerSources: sources } : prev
+                    stillCurrent(prev) ? { ...prev, answerSources: sources } : prev
                 );
             },
             onDelta: (text) => {
                 setAsk((prev) =>
-                    prev.askedQuery === trimmed ? { ...prev, answer: prev.answer + text } : prev
+                    stillCurrent(prev) ? { ...prev, answer: prev.answer + text } : prev
                 );
             },
             onDone: () => {
-                setAsk((prev) =>
-                    prev.askedQuery === trimmed ? { ...prev, isStreaming: false } : prev
-                );
+                setAsk((prev) => (stillCurrent(prev) ? { ...prev, isStreaming: false } : prev));
             },
             onError: (message) => {
                 setAsk((prev) =>
-                    prev.askedQuery === trimmed
-                        ? { ...prev, isStreaming: false, askError: message }
-                        : prev
+                    stillCurrent(prev) ? { ...prev, isStreaming: false, askError: message } : prev
                 );
+            },
+            onToolStart: ({ step, tool_name, arguments: args }) => {
+                setAsk((prev) => {
+                    if (!stillCurrent(prev)) return prev;
+                    const next: ToolEvent = {
+                        step,
+                        tool_name,
+                        arguments: args,
+                        status: "pending",
+                    };
+                    return { ...prev, toolEvents: [...prev.toolEvents, next] };
+                });
+            },
+            onToolResult: ({ step, tool_name, summary }) => {
+                setAsk((prev) => {
+                    if (!stillCurrent(prev)) return prev;
+                    return {
+                        ...prev,
+                        toolEvents: prev.toolEvents.map((te) =>
+                            te.step === step &&
+                            te.tool_name === tool_name &&
+                            te.status === "pending"
+                                ? { ...te, status: "done", summary }
+                                : te
+                        ),
+                    };
+                });
+            },
+            onToolError: ({ step, tool_name, error }) => {
+                setAsk((prev) => {
+                    if (!stillCurrent(prev)) return prev;
+                    return {
+                        ...prev,
+                        toolEvents: prev.toolEvents.map((te) =>
+                            te.step === step &&
+                            te.tool_name === tool_name &&
+                            te.status === "pending"
+                                ? { ...te, status: "error", error }
+                                : te
+                        ),
+                    };
+                });
             },
         });
     }, [query, teamId, accessToken]);
