@@ -1,6 +1,7 @@
 import axios from "axios";
 import { Socket } from "socket.io-client";
 
+import { cacheFullTask } from "../../../db/services/task-full.service";
 import { authApi } from "../../../services/api";
 import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
@@ -59,6 +60,14 @@ export const sendUpdatedSpecificTask = async (
                 milestone: updatedTask.milestoneId ?? null,
                 ...(updatedTask.sprintId != null ? { sprint: updatedTask.sprintId } : {}),
             });
+
+            if (res) {
+                // Mirror the freshly-PUT task into the full-task IDB
+                // cache so the next `loadSpecificTask` reflects the
+                // edit without a network refetch. Covers both
+                // metadata-only and body-edit paths.
+                await cacheFullTask(updatedTask);
+            }
 
             if (res && res.data.newly_mentioned_user_ids) {
                 const newly_mentioned_user_ids: string[] = res.data.newly_mentioned_user_ids;

@@ -6,7 +6,7 @@ import { BaseRepository } from "./base";
 // Task repository for managing task data
 export class TaskRepository extends BaseRepository<TaskTableProps> {
     constructor() {
-        super(STORES.TASKS);
+        super(STORES.TASK_META);
     }
 
     // Get task by ID
@@ -27,7 +27,7 @@ export class TaskRepository extends BaseRepository<TaskTableProps> {
             const db = await this.getDB();
             const tx = db.transaction(this.storeName, "readonly");
             const store = tx.objectStore(this.storeName);
-            const index = store.index(INDEX_NAMES.TASKS);
+            const index = store.index(INDEX_NAMES.TASK_META);
             const tasks = await index.getAll(projectId);
             return tasks;
         } catch {
@@ -41,7 +41,7 @@ export class TaskRepository extends BaseRepository<TaskTableProps> {
             const db = await this.getDB();
             const tx = db.transaction(this.storeName, "readonly");
             const store = tx.objectStore(this.storeName);
-            const index = store.index(INDEX_NAMES.TASKS_COMPOUND);
+            const index = store.index(INDEX_NAMES.TASK_META_COMPOUND);
             const tasks = await index.getAll([projectId, status]);
             return tasks;
         } catch {

@@ -101,8 +101,8 @@ function GroupedNoteSectionComponent({
                                         textOverflow: "ellipsis",
                                         whiteSpace: "nowrap",
                                         color: isDark
-                                            ? "rgba(255,255,255,0.35)"
-                                            : "rgba(0,0,0,0.35)",
+                                            ? "rgba(255, 255, 255, 0.71)"
+                                            : "rgba(0, 0, 0, 0.57)",
                                         fontSize: "0.7rem",
                                     }}
                                 >

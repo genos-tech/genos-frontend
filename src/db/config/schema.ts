@@ -113,7 +113,11 @@ export const STORE_CONFIGS: Record<string, StoreConfig> = {
         name: STORES.MDM_MESSAGES,
         keyPath: KEY_PATHS.MDM_MESSAGES,
         indexes: [
-            { name: INDEX_NAMES.MDM_MESSAGES, keyPath: INDEX_KEY_PATHS.MDM_MESSAGES, unique: false },
+            {
+                name: INDEX_NAMES.MDM_MESSAGES,
+                keyPath: INDEX_KEY_PATHS.MDM_MESSAGES,
+                unique: false,
+            },
             {
                 name: INDEX_NAMES.MDM_MESSAGES_COMPOUND,
                 keyPath: [
@@ -188,14 +192,28 @@ export const STORE_CONFIGS: Record<string, StoreConfig> = {
         name: STORES.FLAGGED_MESSAGES,
         keyPath: KEY_PATHS.FLAGGED_MESSAGES,
     },
-    [STORES.TASKS]: {
-        name: STORES.TASKS,
-        keyPath: KEY_PATHS.TASKS,
+    [STORES.TASK_META]: {
+        name: STORES.TASK_META,
+        keyPath: KEY_PATHS.TASK_META,
         indexes: [
-            { name: INDEX_NAMES.TASKS, keyPath: INDEX_KEY_PATHS.TASKS, unique: false },
+            { name: INDEX_NAMES.TASK_META, keyPath: INDEX_KEY_PATHS.TASK_META, unique: false },
             {
-                name: INDEX_NAMES.TASKS_COMPOUND,
-                keyPath: [INDEX_KEY_PATHS.TASKS_COMPOUND[0], INDEX_KEY_PATHS.TASKS_COMPOUND[1]],
+                name: INDEX_NAMES.TASK_META_COMPOUND,
+                keyPath: [
+                    INDEX_KEY_PATHS.TASK_META_COMPOUND[0],
+                    INDEX_KEY_PATHS.TASK_META_COMPOUND[1],
+                ],
+                unique: false,
+            },
+        ],
+    },
+    [STORES.TASK_FULL]: {
+        name: STORES.TASK_FULL,
+        keyPath: KEY_PATHS.TASK_FULL,
+        indexes: [
+            {
+                name: INDEX_NAMES.TASK_FULL_LRU,
+                keyPath: INDEX_KEY_PATHS.TASK_FULL_LRU,
                 unique: false,
             },
         ],
