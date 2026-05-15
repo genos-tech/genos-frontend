@@ -164,7 +164,7 @@ export const SpotlightOverlay = ({
                         borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
                     }}
                 >
-                    <SearchRoundedIcon sx={{ opacity: 0.55 }} />
+                    <SearchRoundedIcon sx={{ opacity: 0.7 }} />
                     <Box
                         ref={inputRef}
                         component="input"
@@ -182,7 +182,7 @@ export const SpotlightOverlay = ({
                             color: "inherit",
                             fontSize: "1rem",
                             fontFamily: "inherit",
-                            "::placeholder": { opacity: 0.5 },
+                            "::placeholder": { opacity: 0.6 },
                         }}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                             onQueryChange(e.target.value)
@@ -264,7 +264,7 @@ export const SpotlightOverlay = ({
                             }}
                         >
                             <CircularProgress size="sm" />
-                            <Typography level="body-sm" sx={{ opacity: 0.65 }}>
+                            <Typography level="body-sm" sx={{ opacity: 0.75 }}>
                                 Searching…
                             </Typography>
                         </Box>
@@ -288,7 +288,7 @@ export const SpotlightOverlay = ({
                                             px: 1.5,
                                             pt: 0.5,
                                             pb: 0.25,
-                                            opacity: 0.55,
+                                            opacity: 0.7,
                                             fontWeight: 600,
                                             textTransform: "uppercase",
                                             letterSpacing: "0.04em",
@@ -325,7 +325,7 @@ const EmptyHint = ({ text, tone }: { text: string; tone?: "error" }) => (
         <Typography
             level="body-sm"
             sx={{
-                opacity: tone === "error" ? 0.9 : 0.55,
+                opacity: tone === "error" ? 0.95 : 0.72,
                 color: tone === "error" ? "danger.500" : undefined,
             }}
         >
@@ -437,8 +437,8 @@ const ConversationPanel = ({
                 }}
             >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <AutoAwesomeRoundedIcon sx={{ fontSize: 16, opacity: 0.5 }} />
-                    <Typography level="body-xs" sx={{ opacity: 0.65 }}>
+                    <AutoAwesomeRoundedIcon sx={{ fontSize: 16, opacity: 0.65 }} />
+                    <Typography level="body-sm" sx={{ opacity: 0.75 }}>
                         Press Enter or click Ask for an AI-generated answer.
                     </Typography>
                 </Box>
@@ -481,7 +481,7 @@ const ConversationPanel = ({
                     />
                     <Typography
                         level="body-xs"
-                        sx={{ opacity: 0.7, fontWeight: 600, textTransform: "uppercase" }}
+                        sx={{ opacity: 0.85, fontWeight: 600, textTransform: "uppercase" }}
                     >
                         AI conversation
                         {turns.length > 0
@@ -492,10 +492,10 @@ const ConversationPanel = ({
                         {(turns.length > 0 || ask.sessionId) && (
                             <Button
                                 size="sm"
-                                variant="plain"
+                                variant="solid"
                                 color="neutral"
                                 onClick={onNewConversation}
-                                sx={{ fontSize: "0.7rem", opacity: 0.65, py: 0 }}
+                                sx={{ fontSize: "0.8rem", opacity: 0.75, py: 0 }}
                             >
                                 New conversation
                             </Button>
@@ -592,7 +592,7 @@ const TurnView = ({
                         display: "flex",
                         alignItems: "flex-start",
                         gap: 0.75,
-                        opacity: 0.75,
+                        opacity: 0.88,
                     }}
                 >
                     <Typography
@@ -601,7 +601,7 @@ const TurnView = ({
                             fontWeight: 700,
                             textTransform: "uppercase",
                             letterSpacing: "0.04em",
-                            opacity: 0.6,
+                            opacity: 0.7,
                             minWidth: 18,
                             mt: "2px",
                         }}
@@ -621,7 +621,7 @@ const TurnView = ({
                         fontWeight: 700,
                         textTransform: "uppercase",
                         letterSpacing: "0.04em",
-                        opacity: 0.6,
+                        opacity: 0.75,
                         minWidth: 18,
                         mt: "2px",
                         color: "primary.500",
@@ -636,7 +636,7 @@ const TurnView = ({
                                 size="sm"
                                 sx={{ "--CircularProgress-size": "12px" }}
                             />
-                            <Typography level="body-xs" sx={{ opacity: 0.55 }}>
+                            <Typography level="body-xs" sx={{ opacity: 0.75 }}>
                                 streaming…
                             </Typography>
                         </Box>
@@ -645,7 +645,7 @@ const TurnView = ({
                         <Typography
                             level="body-xs"
                             sx={{
-                                opacity: 0.7,
+                                opacity: 0.85,
                                 color: "warning.500",
                                 fontWeight: 600,
                                 mb: 0.5,
@@ -676,10 +676,10 @@ const TurnView = ({
 
                     {answer && (
                         <Typography
-                            level="body-sm"
+                            level="body-md"
                             sx={{
                                 whiteSpace: "pre-wrap",
-                                lineHeight: 1.5,
+                                lineHeight: 1.65,
                                 mb: answerSources.length > 0 ? 0.75 : 0,
                             }}
                         >
@@ -688,7 +688,7 @@ const TurnView = ({
                     )}
 
                     {showThinking && (
-                        <Typography level="body-sm" sx={{ opacity: 0.55 }}>
+                        <Typography level="body-sm" sx={{ opacity: 0.75 }}>
                             Thinking…
                         </Typography>
                     )}
@@ -698,12 +698,20 @@ const TurnView = ({
                             {answerSources.slice(0, 6).map((s) => (
                                 <Chip
                                     key={`${s.entity_type}:${s.entity_id}`}
-                                    size="sm"
-                                    variant="soft"
-                                    sx={{ cursor: "pointer", fontSize: "0.65rem" }}
+                                    size="md"
+                                    variant="solid"
+                                    color="primary"
+                                    sx={{
+                                        cursor: "pointer",
+                                        fontSize: "0.78rem",
+                                        maxWidth: "min(340px, 80vw)",
+                                        overflow: "hidden",
+                                        whiteSpace: "nowrap",
+                                        textOverflow: "ellipsis",
+                                    }}
                                     onClick={() => onSelect(s)}
                                 >
-                                    {s.entity_id}
+                                    {_chipLabel(s)}
                                 </Chip>
                             ))}
                         </Box>
@@ -763,7 +771,7 @@ const ToolProgressRow = ({ event }: { event: ToolEvent }) => {
                 gap: 0.75,
                 pl: 1,
                 py: 0.25,
-                fontSize: "0.8rem",
+                fontSize: "0.875rem",
             }}
         >
             {isPending && (
@@ -788,7 +796,7 @@ const ToolProgressRow = ({ event }: { event: ToolEvent }) => {
             <Typography
                 level="body-xs"
                 sx={{
-                    opacity: isPending ? 0.7 : 0.85,
+                    opacity: isPending ? 0.8 : 1,
                     color: isError ? "danger.500" : undefined,
                 }}
             >
@@ -797,6 +805,38 @@ const ToolProgressRow = ({ event }: { event: ToolEvent }) => {
         </Box>
     );
 };
+
+// ──────────────────────────────────────────────────────────────────
+// Source chip label helpers
+// ──────────────────────────────────────────────────────────────────
+
+function _titleSnippet(title: string | null, maxLen = 32): string {
+    if (!title) return "";
+    const t = title.trim();
+    return t.length > maxLen ? t.slice(0, maxLen) + "…" : t;
+}
+
+function _chipLabel(s: SpotlightResult): string {
+    const title = _titleSnippet(s.title);
+    const sep = title ? `: ${title}` : "";
+
+    if (s.entity_type === "task" && s.task_id) {
+        return `task (#${s.task_id})${sep}`;
+    }
+    if (s.entity_type === "chat" && s.chat_id) {
+        const typeLabel = s.chat_type ?? "chat";
+        const base = s.thread_id
+            ? `${typeLabel} (#${s.chat_id}) thread #${s.thread_id}`
+            : `${typeLabel} (#${s.chat_id})`;
+        return `${base}${sep}`;
+    }
+    if (s.entity_type === "note" && s.note_id) {
+        const noteLabel = s.note_type ? `${s.note_type} note` : "note";
+        return `${noteLabel} (#${s.note_id})${sep}`;
+    }
+    // Fallback to raw entity_id if specific ids are absent.
+    return title ? `${s.entity_id}: ${title}` : s.entity_id;
+}
 
 // Fallback label for a still-pending tool call (no summary yet).
 function _humanReadableCall(e: ToolEvent): string {
@@ -863,14 +903,14 @@ const ApprovalCard = ({ pending, isDark, onApprove, onReject }: ApprovalCardProp
                         flexDirection: "column",
                         gap: 0.15,
                         mb: 0.75,
-                        fontSize: "0.78rem",
+                        fontSize: "0.875rem",
                         fontFamily: "monospace",
-                        opacity: 0.85,
+                        opacity: 0.9,
                     }}
                 >
                     {argEntries.map(([k, v]) => (
                         <Box key={k} sx={{ display: "flex", gap: 0.5 }}>
-                            <Box component="span" sx={{ opacity: 0.65 }}>
+                            <Box component="span" sx={{ opacity: 0.8 }}>
                                 {k}:
                             </Box>
                             <Box component="span" sx={{ flex: 1, wordBreak: "break-word" }}>
@@ -886,7 +926,7 @@ const ApprovalCard = ({ pending, isDark, onApprove, onReject }: ApprovalCardProp
                     color="success"
                     variant="solid"
                     onClick={onApprove}
-                    sx={{ fontSize: "0.78rem" }}
+                    sx={{ fontSize: "0.875rem" }}
                 >
                     Approve
                 </Button>
@@ -895,7 +935,7 @@ const ApprovalCard = ({ pending, isDark, onApprove, onReject }: ApprovalCardProp
                     color="neutral"
                     variant="outlined"
                     onClick={onReject}
-                    sx={{ fontSize: "0.78rem" }}
+                    sx={{ fontSize: "0.875rem" }}
                 >
                     Reject
                 </Button>
