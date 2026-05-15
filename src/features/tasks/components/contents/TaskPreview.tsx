@@ -250,8 +250,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                     ...taskEditState.tmpCurrentTaskContent,
                     attachments: taskEditState.uploadedFiles,
                 });
-                setAssignee(taskEditState.tmpCurrentTaskContent.assignee);
-                setReporter(taskEditState.tmpCurrentTaskContent.reporter);
+                setAssignee(taskEditState.tmpCurrentTaskContent.assignee ?? myself);
+                setReporter(taskEditState.tmpCurrentTaskContent.reporter ?? myself);
             })();
             setTabIndexBasedOnContent(
                 taskComments.length,

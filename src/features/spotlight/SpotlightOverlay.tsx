@@ -20,7 +20,7 @@
 // `<Sheet>` at zIndex 13000+ to sit above all other surfaces. See
 // `components/layout/ServiceSwitcherOverlay.tsx` for the prior art.
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
@@ -129,11 +129,42 @@ export const SpotlightOverlay = ({
         return m;
     }, [flatResults]);
 
-    // -1 = nothing highlighted; resets whenever the query changes.
+    // ---- Input performance: decouple display state from search state. ----
+    //
+    // `localInput` is updated on EVERY keystroke (instant, local to this
+    // component). `onQueryChange` (which triggers the backend search and
+    // re-renders the entire hook tree) is only called after a 400 ms
+    // debounce. This means typing no longer re-renders `ConversationPanel`
+    // or the results list — those only update when search results arrive.
+    //
+    // The sync effect is safe: when `query` is cleared from outside (e.g.
+    // after `onAsk` fires `setQuery("")`, or on overlay close), `localInput`
+    // follows. When the debounce fires and `query` catches up to `localInput`,
+    // `setLocalInput(query)` is a no-op because the values match.
+    const [localInput, setLocalInput] = useState(query);
+    const searchTimerRef = useRef<number | null>(null);
+
+    useEffect(() => {
+        setLocalInput(query);
+    }, [query]);
+
+    const handleInputChange = useCallback(
+        (val: string) => {
+            setLocalInput(val);
+            if (searchTimerRef.current !== null) window.clearTimeout(searchTimerRef.current);
+            searchTimerRef.current = window.setTimeout(() => {
+                onQueryChange(val);
+            }, 400);
+        },
+        [onQueryChange]
+    );
+
+    // -1 = nothing highlighted; resets immediately when local input changes
+    // (not after the debounce) so the highlight clears as the user types.
     const [selectedIndex, setSelectedIndex] = useState(-1);
     useEffect(() => {
         setSelectedIndex(-1);
-    }, [query]);
+    }, [localInput]);
 
     const askDisabled = ask.isStreaming || ask.pendingApproval !== null;
     // Show "Follow up" when there is at least one completed turn or the
@@ -142,7 +173,9 @@ export const SpotlightOverlay = ({
 
     if (!isOpen) return null;
 
-    const trimmedQuery = query.trim();
+    // Use localInput for immediate UI feedback (Ask button state, empty hint).
+    // `results` and other hook state still derive from the debounced `query`.
+    const trimmedQuery = localInput.trim();
     const hasQuery = trimmedQuery.length > 0;
     const hasResults = results.length > 0;
 
@@ -205,7 +238,7 @@ export const SpotlightOverlay = ({
                                 ? "Wait for the current answer to finish…"
                                 : "Search chats, tasks, notes — press Enter to ask AI"
                         }
-                        value={query}
+                        value={localInput}
                         sx={{
                             flex: 1,
                             border: "none",
@@ -217,7 +250,7 @@ export const SpotlightOverlay = ({
                             "::placeholder": { opacity: 0.6 },
                         }}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                            onQueryChange(e.target.value)
+                            handleInputChange(e.target.value)
                         }
                         onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                             if (e.key === "ArrowDown") {
@@ -313,6 +346,7 @@ export const SpotlightOverlay = ({
                     agent, not browsing search results. "New conversation"
                     in the conversation header returns them to search. */}
                 <Box
+                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                     sx={{
                         flex: 1,
                         overflowY: "auto",
@@ -451,180 +485,193 @@ const hasAskContent = (ask: AskState): boolean =>
     ask.toolEvents.length > 0 ||
     ask.pendingApproval !== null;
 
-const ConversationPanel = ({
-    ask,
-    turns,
-    isDark,
-    onSelect,
-    onApprove,
-    onReject,
-    onNewConversation,
-    onAsk,
-    askDisabled,
-}: ConversationPanelProps) => {
-    const scrollRef = useRef<HTMLDivElement | null>(null);
-    // True when the user has scrolled away from the bottom. We pause
-    // auto-follow until they return to the bottom themselves OR a new
-    // turn starts (whichever happens first).
-    const userScrolledUpRef = useRef(false);
-    const rafIdRef = useRef<number | null>(null);
+// memo: prevents re-renders when only localInput (the typing state) changes.
+// ConversationPanel has no dependency on the query — it only re-renders when
+// ask/turns/isDark/callbacks change, which happens on streaming events,
+// not on every keystroke.
+const ConversationPanel = memo(
+    ({
+        ask,
+        turns,
+        isDark,
+        onSelect,
+        onApprove,
+        onReject,
+        onNewConversation,
+        onAsk,
+        askDisabled,
+    }: ConversationPanelProps) => {
+        const scrollRef = useRef<HTMLDivElement | null>(null);
+        // True when the user has scrolled away from the bottom. We pause
+        // auto-follow until they return to the bottom themselves OR a new
+        // turn starts (whichever happens first).
+        const userScrolledUpRef = useRef(false);
+        const rafIdRef = useRef<number | null>(null);
 
-    const showHeader = turns.length > 0 || Boolean(ask.sessionId) || hasAskContent(ask);
-    const showAsk = hasAskContent(ask);
+        const showHeader = turns.length > 0 || Boolean(ask.sessionId) || hasAskContent(ask);
+        const showAsk = hasAskContent(ask);
 
-    // Auto-scroll on relevant updates. requestAnimationFrame coalesces
-    // bursts of answer_delta events so we scroll at most once per frame.
-    useEffect(() => {
-        const el = scrollRef.current;
-        if (!el) return;
-        if (userScrolledUpRef.current) return;
-        if (rafIdRef.current !== null) {
-            cancelAnimationFrame(rafIdRef.current);
-        }
-        rafIdRef.current = requestAnimationFrame(() => {
-            rafIdRef.current = null;
-            el.scrollTo({ top: el.scrollHeight });
-        });
-        return () => {
+        // Auto-scroll on relevant updates. requestAnimationFrame coalesces
+        // bursts of answer_delta events so we scroll at most once per frame.
+        useEffect(() => {
+            const el = scrollRef.current;
+            if (!el) return;
+            if (userScrolledUpRef.current) return;
             if (rafIdRef.current !== null) {
                 cancelAnimationFrame(rafIdRef.current);
-                rafIdRef.current = null;
             }
+            rafIdRef.current = requestAnimationFrame(() => {
+                rafIdRef.current = null;
+                el.scrollTo({ top: el.scrollHeight });
+            });
+            return () => {
+                if (rafIdRef.current !== null) {
+                    cancelAnimationFrame(rafIdRef.current);
+                    rafIdRef.current = null;
+                }
+            };
+        }, [
+            ask.answer,
+            ask.isStreaming,
+            ask.pendingApproval,
+            ask.toolEvents.length,
+            turns.length,
+        ]);
+
+        // New turn started → re-enable follow mode. `ask.turnId` bumps
+        // when the user fires a fresh `onAsk`; resuming a paused turn
+        // does NOT bump (see hook), so approve/reject won't yank the
+        // viewport away from a user reading the proposed args.
+        useEffect(() => {
+            userScrolledUpRef.current = false;
+        }, [ask.turnId]);
+
+        const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+            const el = e.currentTarget;
+            const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+            userScrolledUpRef.current = distanceFromBottom > SCROLL_FOLLOW_THRESHOLD_PX;
         };
-    }, [ask.answer, ask.isStreaming, ask.pendingApproval, ask.toolEvents.length, turns.length]);
 
-    // New turn started → re-enable follow mode. `ask.turnId` bumps
-    // when the user fires a fresh `onAsk`; resuming a paused turn
-    // does NOT bump (see hook), so approve/reject won't yank the
-    // viewport away from a user reading the proposed args.
-    useEffect(() => {
-        userScrolledUpRef.current = false;
-    }, [ask.turnId]);
+        // Idle hint when there's no history and nothing in-flight. Matches
+        // the pre-Phase-12 placeholder so the empty-state feel is unchanged.
+        if (!showHeader && !showAsk) {
+            return (
+                <Box
+                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                    sx={{
+                        px: 2,
+                        py: 1.25,
+                        borderBottom: "1px solid",
+                        borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+                        background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.015)",
+                    }}
+                >
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <AutoAwesomeRoundedIcon sx={{ fontSize: 16, opacity: 0.65 }} />
+                        <Typography level="body-sm" sx={{ opacity: 0.75 }}>
+                            Press Enter or click Ask for an AI-generated answer.
+                        </Typography>
+                    </Box>
+                </Box>
+            );
+        }
 
-    const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-        const el = e.currentTarget;
-        const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-        userScrolledUpRef.current = distanceFromBottom > SCROLL_FOLLOW_THRESHOLD_PX;
-    };
-
-    // Idle hint when there's no history and nothing in-flight. Matches
-    // the pre-Phase-12 placeholder so the empty-state feel is unchanged.
-    if (!showHeader && !showAsk) {
         return (
             <Box
+                ref={scrollRef}
+                onScroll={handleScroll}
                 sx={{
+                    maxHeight: "40vh",
+                    overflowY: "auto",
                     px: 2,
                     py: 1.25,
                     borderBottom: "1px solid",
                     borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
                     background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.015)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 1.25,
                 }}
             >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <AutoAwesomeRoundedIcon sx={{ fontSize: 16, opacity: 0.65 }} />
-                    <Typography level="body-sm" sx={{ opacity: 0.75 }}>
-                        Press Enter or click Ask for an AI-generated answer.
-                    </Typography>
-                </Box>
+                {showHeader && (
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                            position: "sticky",
+                            top: 0,
+                            py: 0.25,
+                            background: isDark ? "rgba(30,20,46,0.92)" : "rgba(250,248,255,0.96)",
+                            zIndex: 1,
+                        }}
+                    >
+                        <AutoAwesomeRoundedIcon
+                            sx={{ fontSize: 16, opacity: 0.7, color: "primary.500" }}
+                        />
+                        <Typography
+                            level="body-xs"
+                            sx={{ opacity: 0.85, fontWeight: 600, textTransform: "uppercase" }}
+                        >
+                            AI conversation
+                            {turns.length > 0
+                                ? ` · ${turns.length} turn${turns.length === 1 ? "" : "s"}`
+                                : ""}
+                        </Typography>
+                        <Box sx={{ ml: "auto" }}>
+                            {(turns.length > 0 || ask.sessionId) && (
+                                <Button
+                                    size="sm"
+                                    variant="solid"
+                                    color="neutral"
+                                    onClick={onNewConversation}
+                                    sx={{ fontSize: "0.8rem", opacity: 0.75, py: 0 }}
+                                >
+                                    New conversation
+                                </Button>
+                            )}
+                        </Box>
+                    </Box>
+                )}
+
+                {turns.map((t) => (
+                    <TurnView
+                        key={t.id}
+                        askedQuery={t.askedQuery}
+                        answer={t.answer}
+                        answerSources={t.answerSources}
+                        toolEvents={t.toolEvents}
+                        askError={t.askError}
+                        isCurrent={false}
+                        isDark={isDark}
+                        onSelect={onSelect}
+                        onRetry={() => onAsk(t.askedQuery)}
+                        askDisabled={askDisabled}
+                    />
+                ))}
+
+                {showAsk && (
+                    <TurnView
+                        askedQuery={ask.askedQuery}
+                        answer={ask.answer}
+                        answerSources={ask.answerSources}
+                        toolEvents={ask.toolEvents}
+                        askError={ask.askError}
+                        isCurrent
+                        isStreaming={ask.isStreaming}
+                        pendingApproval={ask.pendingApproval}
+                        isDark={isDark}
+                        onSelect={onSelect}
+                        onApprove={onApprove}
+                        onReject={onReject}
+                        onRetry={() => onAsk(ask.askedQuery)}
+                        askDisabled={askDisabled}
+                    />
+                )}
             </Box>
         );
     }
-
-    return (
-        <Box
-            ref={scrollRef}
-            onScroll={handleScroll}
-            sx={{
-                maxHeight: "40vh",
-                overflowY: "auto",
-                px: 2,
-                py: 1.25,
-                borderBottom: "1px solid",
-                borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
-                background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.015)",
-                display: "flex",
-                flexDirection: "column",
-                gap: 1.25,
-            }}
-        >
-            {showHeader && (
-                <Box
-                    sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        position: "sticky",
-                        top: 0,
-                        py: 0.25,
-                        background: isDark ? "rgba(30,20,46,0.92)" : "rgba(250,248,255,0.96)",
-                        zIndex: 1,
-                    }}
-                >
-                    <AutoAwesomeRoundedIcon
-                        sx={{ fontSize: 16, opacity: 0.7, color: "primary.500" }}
-                    />
-                    <Typography
-                        level="body-xs"
-                        sx={{ opacity: 0.85, fontWeight: 600, textTransform: "uppercase" }}
-                    >
-                        AI conversation
-                        {turns.length > 0
-                            ? ` · ${turns.length} turn${turns.length === 1 ? "" : "s"}`
-                            : ""}
-                    </Typography>
-                    <Box sx={{ ml: "auto" }}>
-                        {(turns.length > 0 || ask.sessionId) && (
-                            <Button
-                                size="sm"
-                                variant="solid"
-                                color="neutral"
-                                onClick={onNewConversation}
-                                sx={{ fontSize: "0.8rem", opacity: 0.75, py: 0 }}
-                            >
-                                New conversation
-                            </Button>
-                        )}
-                    </Box>
-                </Box>
-            )}
-
-            {turns.map((t) => (
-                <TurnView
-                    key={t.id}
-                    askedQuery={t.askedQuery}
-                    answer={t.answer}
-                    answerSources={t.answerSources}
-                    toolEvents={t.toolEvents}
-                    askError={t.askError}
-                    isCurrent={false}
-                    isDark={isDark}
-                    onSelect={onSelect}
-                    onRetry={() => onAsk(t.askedQuery)}
-                    askDisabled={askDisabled}
-                />
-            ))}
-
-            {showAsk && (
-                <TurnView
-                    askedQuery={ask.askedQuery}
-                    answer={ask.answer}
-                    answerSources={ask.answerSources}
-                    toolEvents={ask.toolEvents}
-                    askError={ask.askError}
-                    isCurrent
-                    isStreaming={ask.isStreaming}
-                    pendingApproval={ask.pendingApproval}
-                    isDark={isDark}
-                    onSelect={onSelect}
-                    onApprove={onApprove}
-                    onReject={onReject}
-                    onRetry={() => onAsk(ask.askedQuery)}
-                    askDisabled={askDisabled}
-                />
-            )}
-        </Box>
-    );
-};
+);
 
 // ──────────────────────────────────────────────────────────────────
 // TurnView — one Q&A unit
