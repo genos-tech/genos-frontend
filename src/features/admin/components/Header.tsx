@@ -46,7 +46,7 @@ export const AdminHeader = () => {
                         cursor: "pointer",
                         "&:hover": {
                             transform: "scale(1.05) rotate(-3deg)",
-                            boxShadow: `${styles.logoShadow}, 0 0 30px rgba(99,102,241,0.3)`,
+                            boxShadow: `${styles.logoShadow}, 0 0 30px rgba(124,58,237,0.3)`,
                         },
                         "&::before": {
                             content: '""',
@@ -118,12 +118,12 @@ export const AdminHeader = () => {
                 sx={{
                     p: 0.5,
                     borderRadius: "10px",
-                    background: isDark ? "rgba(99,102,241,0.1)" : "rgba(99,102,241,0.05)",
-                    border: `1px solid ${isDark ? "rgba(99,102,241,0.2)" : "rgba(99,102,241,0.1)"}`,
+                    background: isDark ? "rgba(124,58,237,0.1)" : "rgba(124,58,237,0.05)",
+                    border: `1px solid ${isDark ? "rgba(124,58,237,0.2)" : "rgba(124,58,237,0.1)"}`,
                     transition: "all 0.2s ease",
                     "&:hover": {
-                        background: isDark ? "rgba(99,102,241,0.15)" : "rgba(99,102,241,0.1)",
-                        borderColor: isDark ? "rgba(99,102,241,0.3)" : "rgba(99,102,241,0.2)",
+                        background: isDark ? "rgba(124,58,237,0.15)" : "rgba(124,58,237,0.1)",
+                        borderColor: isDark ? "rgba(124,58,237,0.3)" : "rgba(124,58,237,0.2)",
                     },
                 }}
             >

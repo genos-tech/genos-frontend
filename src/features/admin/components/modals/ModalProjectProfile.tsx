@@ -27,6 +27,7 @@ import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithSt
 import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/FileSizeRejectionSnackbar";
 import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
 import { ProfileModalStyles } from "../../../../components/ui/styles/commonStyle";
+import { purplePalette } from "../../../../theme/purplePalette";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -72,6 +73,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const styles = isDark ? ProfileModalStyles.dark : ProfileModalStyles.light;
+    const palette = isDark ? purplePalette.dark : purplePalette.light;
 
     const [projectProfile, setProjectProfile] = useState<ProjectProfileProps | null>(null);
 
@@ -234,12 +236,12 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                     borderRadius: "16px",
                                     boxShadow: isDark
                                         ? "0 4px 20px rgba(0,0,0,0.3)"
-                                        : "0 4px 20px rgba(99,102,241,0.08)",
+                                        : "0 4px 20px rgba(124,58,237,0.08)",
                                     transition: "all 0.3s ease",
                                     "&:hover": {
                                         boxShadow: isDark
                                             ? "0 8px 30px rgba(0,0,0,0.4)"
-                                            : "0 8px 30px rgba(99,102,241,0.12)",
+                                            : "0 8px 30px rgba(124,58,237,0.12)",
                                     },
                                 }}
                             >
@@ -267,8 +269,8 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                 "&:hover": {
                                                     transform: "scale(1.02)",
                                                     boxShadow: isDark
-                                                        ? "0 0 50px rgba(99,102,241,0.5), 0 0 100px rgba(139,92,246,0.3)"
-                                                        : "0 0 50px rgba(99,102,241,0.3), 0 0 100px rgba(139,92,246,0.15)",
+                                                        ? "0 0 50px rgba(124,58,237,0.5), 0 0 100px rgba(139,92,246,0.3)"
+                                                        : "0 0 50px rgba(124,58,237,0.3), 0 0 100px rgba(139,92,246,0.15)",
                                                 },
                                             }}
                                         >
@@ -300,14 +302,14 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                     variant="soft"
                                                     sx={{
                                                         background: isDark
-                                                            ? "linear-gradient(135deg, rgba(99,102,241,0.3) 0%, rgba(139,92,246,0.3) 100%)"
-                                                            : "linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.15) 100%)",
+                                                            ? "linear-gradient(135deg, rgba(124,58,237,0.3) 0%, rgba(139,92,246,0.3) 100%)"
+                                                            : "linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(139,92,246,0.15) 100%)",
                                                         border: `1px solid ${styles.border}`,
                                                         transition: "all 0.2s ease",
                                                         "&:hover": {
                                                             background: isDark
-                                                                ? "linear-gradient(135deg, rgba(99,102,241,0.5) 0%, rgba(139,92,246,0.5) 100%)"
-                                                                : "linear-gradient(135deg, rgba(99,102,241,0.25) 0%, rgba(139,92,246,0.25) 100%)",
+                                                                ? "linear-gradient(135deg, rgba(124,58,237,0.5) 0%, rgba(139,92,246,0.5) 100%)"
+                                                                : "linear-gradient(135deg, rgba(124,58,237,0.25) 0%, rgba(139,92,246,0.25) 100%)",
                                                             transform: "scale(1.1)",
                                                         },
                                                     }}
@@ -322,7 +324,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                     <EditIcon
                                                         sx={{
                                                             fontSize: "30px",
-                                                            color: isDark ? "#a78bfa" : "#7c3aed",
+                                                            color: styles.accentColor,
                                                         }}
                                                     />
                                                 </IconButton>
@@ -402,9 +404,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                         <EmailRoundedIcon
                                                             fontSize="small"
                                                             sx={{
-                                                                color: isDark
-                                                                    ? "#818cf8"
-                                                                    : "#4f46e5",
+                                                                color: styles.accentColor,
                                                             }}
                                                         />
                                                     }
@@ -415,7 +415,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                         pb: "8px",
                                                         transition: "all 0.2s ease",
                                                         "&:hover": {
-                                                            color: isDark ? "#a78bfa" : "#7c3aed",
+                                                            color: styles.accentColor,
                                                         },
                                                     }}
                                                 >
@@ -458,9 +458,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                         startDecorator={
                                                             <SearchIcon
                                                                 sx={{
-                                                                    color: isDark
-                                                                        ? "#818cf8"
-                                                                        : "#4f46e5",
+                                                                    color: styles.accentColor,
                                                                     fontSize: "18px",
                                                                 }}
                                                             />
@@ -496,17 +494,13 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                             fontSize: "14px",
                                                             transition: "all 0.2s ease",
                                                             "&:hover": {
-                                                                borderColor: isDark
-                                                                    ? "#818cf8"
-                                                                    : "#4f46e5",
+                                                                borderColor: styles.accentColor,
                                                             },
                                                             "&:focus-within": {
-                                                                borderColor: isDark
-                                                                    ? "#818cf8"
-                                                                    : "#4f46e5",
+                                                                borderColor: styles.accentColor,
                                                                 boxShadow: isDark
-                                                                    ? "0 0 0 2px rgba(99,102,241,0.2)"
-                                                                    : "0 0 0 2px rgba(99,102,241,0.1)",
+                                                                    ? "0 0 0 2px rgba(124,58,237,0.2)"
+                                                                    : "0 0 0 2px rgba(124,58,237,0.1)",
                                                             },
                                                         }}
                                                     />
@@ -518,7 +512,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                         overflow: "auto",
                                                         background: isDark
                                                             ? "rgba(0,0,0,0.2)"
-                                                            : "rgba(99,102,241,0.03)",
+                                                            : "rgba(124,58,237,0.03)",
                                                         borderRadius: "12px",
                                                         border: `1px solid ${styles.border}`,
                                                         p: 1,
@@ -594,16 +588,12 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                             py: 0.5,
                                                             borderRadius: "20px",
                                                             background: projectProfile?.isPrivate
-                                                                ? isDark
-                                                                    ? "linear-gradient(135deg, rgba(239,68,68,0.2) 0%, rgba(220,38,38,0.2) 100%)"
-                                                                    : "linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(220,38,38,0.15) 100%)"
-                                                                : isDark
-                                                                  ? "linear-gradient(135deg, rgba(34,197,94,0.2) 0%, rgba(22,163,74,0.2) 100%)"
-                                                                  : "linear-gradient(135deg, rgba(34,197,94,0.15) 0%, rgba(22,163,74,0.15) 100%)",
+                                                                ? palette.dangerTintBg
+                                                                : palette.successTintBg,
                                                             border: `1px solid ${
                                                                 projectProfile?.isPrivate
-                                                                    ? "rgba(239,68,68,0.3)"
-                                                                    : "rgba(34,197,94,0.3)"
+                                                                    ? palette.dangerTintBorder
+                                                                    : palette.successTintBorder
                                                             }`,
                                                         }}
                                                     >
@@ -612,12 +602,8 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                             sx={{
                                                                 userSelect: "text",
                                                                 color: projectProfile?.isPrivate
-                                                                    ? isDark
-                                                                        ? "#f87171"
-                                                                        : "#dc2626"
-                                                                    : isDark
-                                                                      ? "#4ade80"
-                                                                      : "#16a34a",
+                                                                    ? palette.dangerTint
+                                                                    : palette.successTint,
                                                             }}
                                                         >
                                                             {projectProfile?.isPrivate
@@ -647,8 +633,8 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                             py: 0.5,
                                                             borderRadius: "8px",
                                                             background: isDark
-                                                                ? "rgba(99,102,241,0.1)"
-                                                                : "rgba(99,102,241,0.05)",
+                                                                ? "rgba(124,58,237,0.1)"
+                                                                : "rgba(124,58,237,0.05)",
                                                             border: `1px solid ${styles.border}`,
                                                         }}
                                                     >

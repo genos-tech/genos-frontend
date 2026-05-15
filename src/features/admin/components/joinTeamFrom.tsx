@@ -26,6 +26,7 @@ import { useNavigate } from "react-router-dom";
 import { io, Socket } from "socket.io-client";
 
 import { JoinTeamFormStyles } from "../../../components/ui/styles/commonStyle";
+import { purplePalette, purpleTheme } from "../../../theme/purplePalette";
 import { useAuth } from "../../../context/AuthContext";
 import { wsJoinTeamHook } from "../../../hooks/common/useWebSocket";
 import {
@@ -70,6 +71,7 @@ const JoinTeamContent = () => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const styles = isDark ? JoinTeamFormStyles.dark : JoinTeamFormStyles.light;
+    const palette = isDark ? purplePalette.dark : purplePalette.light;
 
     const ws_url = import.meta.env.VITE_WS_BASE_URL;
     const [socketInstance, setSocketInstance] = useState<Socket | null>(null);
@@ -319,7 +321,7 @@ const JoinTeamContent = () => {
                                     sx={{
                                         mb: 2,
                                         borderRadius: "12px",
-                                        border: "1px solid rgba(239,68,68,0.3)",
+                                        border: `1px solid ${palette.dangerTintBorder}`,
                                     }}
                                 >
                                     {moveToTeamErrorMessage}
@@ -331,7 +333,7 @@ const JoinTeamContent = () => {
                                         width: 36,
                                         height: 36,
                                         borderRadius: "10px",
-                                        background: `linear-gradient(135deg, ${styles.accentColor} 0%, ${isDark ? "#22d3ee" : "#0891b2"} 100%)`,
+                                        background: `linear-gradient(135deg, ${styles.accentColor} 0%, ${palette.accentStrong} 100%)`,
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
@@ -436,8 +438,7 @@ const JoinTeamContent = () => {
                                         width: 36,
                                         height: 36,
                                         borderRadius: "10px",
-                                        background:
-                                            "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)",
+                                        background: `linear-gradient(135deg, ${palette.successTint} 0%, ${palette.accentStrong} 100%)`,
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
@@ -462,7 +463,7 @@ const JoinTeamContent = () => {
                                     sx={{
                                         mb: 2,
                                         borderRadius: "12px",
-                                        border: "1px solid rgba(239,68,68,0.3)",
+                                        border: `1px solid ${palette.dangerTintBorder}`,
                                     }}
                                 >
                                     {moveToTeamErrorMessage}
@@ -507,13 +508,11 @@ const JoinTeamContent = () => {
                                     startDecorator={<SendRoundedIcon />}
                                     onClick={() => getApproveToJoinTeam(foundTeamDetails)}
                                     sx={{
-                                        background:
-                                            "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)",
+                                        background: palette.primaryButtonBg,
                                         borderRadius: "10px",
-                                        boxShadow: "0 4px 12px rgba(34,197,94,0.3)",
+                                        boxShadow: palette.primaryButtonShadow,
                                         "&:hover": {
-                                            background:
-                                                "linear-gradient(135deg, #4ade80 0%, #22c55e 100%)",
+                                            background: palette.primaryButtonHover,
                                             transform: "translateY(-1px)",
                                         },
                                     }}
@@ -542,7 +541,7 @@ const JoinTeamContent = () => {
                                         width: 36,
                                         height: 36,
                                         borderRadius: "10px",
-                                        background: `linear-gradient(135deg, ${styles.accentColor} 0%, ${isDark ? "#22d3ee" : "#0891b2"} 100%)`,
+                                        background: `linear-gradient(135deg, ${styles.accentColor} 0%, ${palette.accentStrong} 100%)`,
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
@@ -580,7 +579,7 @@ const JoinTeamContent = () => {
                                     sx={{
                                         mb: 2,
                                         borderRadius: "12px",
-                                        border: "1px solid rgba(239,68,68,0.3)",
+                                        border: `1px solid ${palette.dangerTintBorder}`,
                                     }}
                                 >
                                     {searchTeamErrorMessage}
@@ -661,8 +660,7 @@ const JoinTeamContent = () => {
                                     width: 36,
                                     height: 36,
                                     borderRadius: "10px",
-                                    background:
-                                        "linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)",
+                                    background: palette.primaryButtonBg,
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "center",
@@ -673,7 +671,7 @@ const JoinTeamContent = () => {
                             <Typography
                                 level="title-lg"
                                 sx={{
-                                    color: isDark ? "#a855f7" : "#7c3aed",
+                                    color: styles.accentColor,
                                     fontWeight: 600,
                                 }}
                             >
@@ -687,7 +685,7 @@ const JoinTeamContent = () => {
                                 sx={{
                                     mb: 2,
                                     borderRadius: "12px",
-                                    border: "1px solid rgba(239,68,68,0.3)",
+                                    border: `1px solid ${palette.dangerTintBorder}`,
                                 }}
                             >
                                 {createTeamErrorMessage}
@@ -722,7 +720,7 @@ const JoinTeamContent = () => {
                                     startDecorator={
                                         <GroupsRoundedIcon
                                             sx={{
-                                                color: isDark ? "#a855f7" : "#7c3aed",
+                                                color: styles.accentColor,
                                                 fontSize: 20,
                                             }}
                                         />
@@ -730,8 +728,8 @@ const JoinTeamContent = () => {
                                     sx={{
                                         ...inputStyle,
                                         "&:focus-within": {
-                                            borderColor: isDark ? "#a855f7" : "#7c3aed",
-                                            boxShadow: "0 0 0 3px rgba(168,85,247,0.2)",
+                                            borderColor: palette.inputFocusBorder,
+                                            boxShadow: palette.inputFocusShadow,
                                         },
                                     }}
                                 />
@@ -743,15 +741,13 @@ const JoinTeamContent = () => {
                                 sx={{
                                     mt: 2,
                                     py: 1.25,
-                                    background:
-                                        "linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)",
+                                    background: palette.primaryButtonBg,
                                     borderRadius: "12px",
                                     fontWeight: 600,
-                                    boxShadow: "0 4px 16px rgba(168,85,247,0.4)",
+                                    boxShadow: palette.primaryButtonShadow,
                                     transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                                     "&:hover": {
-                                        background:
-                                            "linear-gradient(135deg, #c084fc 0%, #a855f7 100%)",
+                                        background: palette.primaryButtonHover,
                                         transform: "translateY(-2px)",
                                     },
                                 }}
@@ -817,7 +813,7 @@ const JoinTeamContent = () => {
 
 export const JoinTeam = () => {
     return (
-        <CssVarsProvider disableTransitionOnChange>
+        <CssVarsProvider disableTransitionOnChange theme={purpleTheme}>
             <CssBaseline />
             <GlobalStyles
                 styles={{

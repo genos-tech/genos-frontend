@@ -22,6 +22,7 @@ import { CssVarsProvider, useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 
 import { SignInFormStyles } from "../../../components/ui/styles/commonStyle";
+import { purplePalette, purpleTheme } from "../../../theme/purplePalette";
 import { useAuth } from "../../../context/AuthContext";
 import { DatabaseUtils } from "../../../db/utils";
 import { SignInResponse } from "../../../types/admin";
@@ -46,6 +47,7 @@ const SignInContent = () => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const styles = isDark ? SignInFormStyles.dark : SignInFormStyles.light;
+    const palette = isDark ? purplePalette.dark : purplePalette.light;
 
     const _signin = async (email: string, password: string) => {
         const signInRes: SignInResponse = await signIn(email, password, setErrorMessage);
@@ -185,7 +187,7 @@ const SignInContent = () => {
                                     color="danger"
                                     sx={{
                                         borderRadius: "12px",
-                                        border: "1px solid rgba(239,68,68,0.3)",
+                                        border: `1px solid ${palette.dangerTintBorder}`,
                                     }}
                                 >
                                     {errorMessage}
@@ -321,7 +323,7 @@ const SignInContent = () => {
                                         "&:hover": {
                                             background: styles.buttonHover,
                                             transform: "translateY(-2px)",
-                                            boxShadow: `${styles.buttonShadow}, 0 8px 24px rgba(99,102,241,0.3)`,
+                                            boxShadow: `${styles.buttonShadow}, 0 8px 24px rgba(124,58,237,0.3)`,
                                         },
                                     }}
                                 >
@@ -414,7 +416,7 @@ const SignInContent = () => {
 
 export const SignInForm = () => {
     return (
-        <CssVarsProvider disableTransitionOnChange>
+        <CssVarsProvider disableTransitionOnChange theme={purpleTheme}>
             <CssBaseline />
             <GlobalStyles
                 styles={{
