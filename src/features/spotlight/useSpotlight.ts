@@ -14,6 +14,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import axios, { CanceledError } from "axios";
 
+import { askAgentStream } from "../../services/agentApi";
 import { searchSpotlight } from "../../services/searchApi";
 import { isMac } from "../../utils/platform";
 import type { SpotlightResult } from "./types";
@@ -26,6 +27,21 @@ export interface UseSpotlightArgs {
     teamId: string | null | undefined;
 }
 
+export interface AskState {
+    // True while either the search or the LLM stream is in flight.
+    isStreaming: boolean;
+    // The query the answer is for. May lag behind the input.
+    askedQuery: string;
+    // Accumulated answer text from the Gemini stream.
+    answer: string;
+    // Citation sources returned by the backend before the stream
+    // started. We keep these separate from the `results` of
+    // type-to-filter so the UI can show them attached to the answer.
+    answerSources: SpotlightResult[];
+    // Set when the stream emits an error event (or transport fails).
+    askError: string | null;
+}
+
 export interface UseSpotlightReturn {
     isOpen: boolean;
     open: () => void;
@@ -36,7 +52,16 @@ export interface UseSpotlightReturn {
     isLoading: boolean;
     error: string | null;
     onAsk: () => void;
+    ask: AskState;
 }
+
+const EMPTY_ASK_STATE: AskState = {
+    isStreaming: false,
+    askedQuery: "",
+    answer: "",
+    answerSources: [],
+    askError: null,
+};
 
 export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpotlightReturn => {
     const [isOpen, setIsOpen] = useState(false);
@@ -44,10 +69,14 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
     const [results, setResults] = useState<SpotlightResult[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [ask, setAsk] = useState<AskState>(EMPTY_ASK_STATE);
 
     // Used to abort in-flight searches when the query changes or the
     // overlay closes.
     const abortRef = useRef<AbortController | null>(null);
+    // Separate abort handle for the Ask stream so a new search doesn't
+    // cancel an in-progress answer.
+    const askAbortRef = useRef<AbortController | null>(null);
     // Read latest open state from inside the global keydown listener
     // without re-registering it on every render.
     const isOpenRef = useRef(isOpen);
@@ -87,10 +116,13 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
         // results when re-opening).
         abortRef.current?.abort();
         abortRef.current = null;
+        askAbortRef.current?.abort();
+        askAbortRef.current = null;
         setQuery("");
         setResults([]);
         setIsLoading(false);
         setError(null);
+        setAsk(EMPTY_ASK_STATE);
     }, [isOpen]);
 
     // ---- Debounced search on query change while overlay is open. ----
@@ -152,15 +184,61 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
     const open = useCallback(() => setIsOpen(true), []);
     const close = useCallback(() => setIsOpen(false), []);
 
-    // ---- Enter / Ask button handler. Phase 1: stub. ----
+    // ---- Enter / Ask button handler: stream Gemini's RAG answer. ----
     const onAsk = useCallback(() => {
         const trimmed = query.trim();
         if (!trimmed) return;
-        // Phase 2 will replace this with a streaming call to
-        // POST /api/v2/agent/ask. For now we just log so we can confirm
-        // the wiring works end-to-end.
-        console.log("[Spotlight] would invoke Gemini for query:", trimmed);
-    }, [query]);
+        if (!teamId) {
+            setAsk({
+                ...EMPTY_ASK_STATE,
+                askedQuery: trimmed,
+                askError: "No team selected.",
+            });
+            return;
+        }
+
+        // Cancel any prior in-flight Ask before starting a new one.
+        askAbortRef.current?.abort();
+        const controller = new AbortController();
+        askAbortRef.current = controller;
+
+        setAsk({
+            isStreaming: true,
+            askedQuery: trimmed,
+            answer: "",
+            answerSources: [],
+            askError: null,
+        });
+
+        void askAgentStream({
+            query: trimmed,
+            teamId,
+            accessToken,
+            signal: controller.signal,
+            onSources: (sources) => {
+                setAsk((prev) =>
+                    prev.askedQuery === trimmed ? { ...prev, answerSources: sources } : prev
+                );
+            },
+            onDelta: (text) => {
+                setAsk((prev) =>
+                    prev.askedQuery === trimmed ? { ...prev, answer: prev.answer + text } : prev
+                );
+            },
+            onDone: () => {
+                setAsk((prev) =>
+                    prev.askedQuery === trimmed ? { ...prev, isStreaming: false } : prev
+                );
+            },
+            onError: (message) => {
+                setAsk((prev) =>
+                    prev.askedQuery === trimmed
+                        ? { ...prev, isStreaming: false, askError: message }
+                        : prev
+                );
+            },
+        });
+    }, [query, teamId, accessToken]);
 
     return {
         isOpen,
@@ -172,5 +250,6 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
         isLoading,
         error,
         onAsk,
+        ask,
     };
 };

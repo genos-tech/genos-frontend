@@ -295,6 +295,7 @@ export const App = () => {
                         previewIndex={serviceSwitcherPreviewIndex}
                     />
                     <SpotlightOverlay
+                        ask={spotlight.ask}
                         error={spotlight.error}
                         isLoading={spotlight.isLoading}
                         isOpen={spotlight.isOpen}

@@ -20,11 +20,12 @@
 import { useEffect, useMemo, useRef } from "react";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import { Box, Button, CircularProgress, Sheet, Typography } from "@mui/joy";
+import { Box, Button, Chip, CircularProgress, Sheet, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { SpotlightResultItem } from "./SpotlightResultItem";
 import type { EntityType, SpotlightResult } from "./types";
+import type { AskState } from "./useSpotlight";
 
 interface Props {
     isOpen: boolean;
@@ -36,6 +37,7 @@ interface Props {
     error: string | null;
     onSelect: (r: SpotlightResult) => void;
     onAsk: () => void;
+    ask: AskState;
 }
 
 const SECTION_ORDER: { key: EntityType; label: string }[] = [
@@ -54,6 +56,7 @@ export const SpotlightOverlay = ({
     error,
     onSelect,
     onAsk,
+    ask,
 }: Props) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -173,25 +176,9 @@ export const SpotlightOverlay = ({
                     </Button>
                 </Box>
 
-                {/* AI-answer placeholder (Phase 2 will render the
-                    streaming Gemini answer here). */}
-                <Box
-                    sx={{
-                        px: 2,
-                        py: 1.25,
-                        borderBottom: "1px solid",
-                        borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                        background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.015)",
-                    }}
-                >
-                    <AutoAwesomeRoundedIcon sx={{ fontSize: 16, opacity: 0.5 }} />
-                    <Typography level="body-xs" sx={{ opacity: 0.65 }}>
-                        Press Enter or click Ask for an AI-generated answer (coming soon).
-                    </Typography>
-                </Box>
+                {/* AI answer panel. Empty (idle hint) until the user
+                    asks; renders streaming Gemini output once invoked. */}
+                <AnswerPanel ask={ask} isDark={isDark} onSelect={onSelect} />
 
                 {/* Results / states */}
                 <Box sx={{ flex: 1, overflowY: "auto", px: 1, py: 1 }}>
@@ -279,3 +266,103 @@ const EmptyHint = ({ text, tone }: { text: string; tone?: "error" }) => (
         </Typography>
     </Box>
 );
+
+interface AnswerPanelProps {
+    ask: AskState;
+    isDark: boolean;
+    onSelect: (r: SpotlightResult) => void;
+}
+
+const AnswerPanel = ({ ask, isDark, onSelect }: AnswerPanelProps) => {
+    const hasContent =
+        ask.isStreaming || ask.answer || ask.askError || ask.answerSources.length > 0;
+
+    return (
+        <Box
+            sx={{
+                px: 2,
+                py: 1.25,
+                borderBottom: "1px solid",
+                borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+                background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.015)",
+            }}
+        >
+            {!hasContent && (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <AutoAwesomeRoundedIcon sx={{ fontSize: 16, opacity: 0.5 }} />
+                    <Typography level="body-xs" sx={{ opacity: 0.65 }}>
+                        Press Enter or click Ask for an AI-generated answer.
+                    </Typography>
+                </Box>
+            )}
+
+            {hasContent && (
+                <Box>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.75 }}>
+                        <AutoAwesomeRoundedIcon
+                            sx={{ fontSize: 16, opacity: 0.7, color: "primary.500" }}
+                        />
+                        <Typography
+                            level="body-xs"
+                            sx={{ opacity: 0.7, fontWeight: 600, textTransform: "uppercase" }}
+                        >
+                            AI answer
+                        </Typography>
+                        {ask.isStreaming && (
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                                <CircularProgress
+                                    size="sm"
+                                    sx={{ "--CircularProgress-size": "12px" }}
+                                />
+                                <Typography level="body-xs" sx={{ opacity: 0.55 }}>
+                                    streaming…
+                                </Typography>
+                            </Box>
+                        )}
+                    </Box>
+
+                    {ask.askError && (
+                        <Typography level="body-sm" sx={{ color: "danger.500", mb: 0.5 }}>
+                            {ask.askError}
+                        </Typography>
+                    )}
+
+                    {ask.answer && (
+                        <Typography
+                            level="body-sm"
+                            sx={{
+                                whiteSpace: "pre-wrap",
+                                lineHeight: 1.5,
+                                mb: ask.answerSources.length > 0 ? 0.75 : 0,
+                            }}
+                        >
+                            {ask.answer}
+                        </Typography>
+                    )}
+
+                    {!ask.answer && ask.isStreaming && !ask.askError && (
+                        <Typography level="body-sm" sx={{ opacity: 0.55 }}>
+                            Thinking…
+                        </Typography>
+                    )}
+
+                    {ask.answerSources.length > 0 && (
+                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 0.5 }}>
+                            {ask.answerSources.slice(0, 6).map((s) => (
+                                <Chip
+                                    key={`${s.entity_type}:${s.entity_id}`}
+                                    size="sm"
+                                    variant="soft"
+                                    sx={{ cursor: "pointer", fontSize: "0.65rem" }}
+                                    onClick={() => onSelect(s)}
+                                >
+                                    {s.entity_id}
+                                </Chip>
+                            ))}
+                        </Box>
+                    )}
+                </Box>
+            )}
+        </Box>
+    );
+};
