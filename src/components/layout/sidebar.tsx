@@ -29,6 +29,7 @@ import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { InboxManagementState } from "../../hooks/inbox/useInboxManagement";
+import { purplePalette } from "../../theme/purplePalette";
 import { UserProps } from "../../types/admin";
 import { isMac } from "../../utils/platform";
 import { ColorSchemeToggle } from "./colorSchemeToggle";
@@ -40,6 +41,11 @@ const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 // Navigation item configuration. `shortcutKey` mirrors `SERVICE_BY_KEY` in
 // `hooks/common/useGlobalServiceShortcut.ts` — keep them in sync so the
 // tooltip displays the combo the listener actually responds to.
+const NAV_ACCENT = {
+    dark: purplePalette.dark.accentSoft,
+    light: purplePalette.light.accent,
+};
+
 const NAV_ITEMS = [
     {
         id: 0,
@@ -47,7 +53,7 @@ const NAV_ITEMS = [
         label: "Inbox",
         path: "/workspace/inbox",
         shortcutKey: "I",
-        colorScheme: { dark: "#a78bfa", light: "#7c3aed" },
+        colorScheme: NAV_ACCENT,
     },
     {
         id: 1,
@@ -55,7 +61,7 @@ const NAV_ITEMS = [
         label: "Chats",
         path: "/workspace/chat",
         shortcutKey: "C",
-        colorScheme: { dark: "#a78bfa", light: "#7c3aed" },
+        colorScheme: NAV_ACCENT,
     },
     {
         id: 2,
@@ -63,7 +69,7 @@ const NAV_ITEMS = [
         label: "Tasks",
         path: "/workspace/tasks",
         shortcutKey: "T",
-        colorScheme: { dark: "#a78bfa", light: "#7c3aed" },
+        colorScheme: NAV_ACCENT,
     },
     {
         id: 3,
@@ -71,7 +77,7 @@ const NAV_ITEMS = [
         label: "Notes",
         path: "/workspace/notes",
         shortcutKey: "N",
-        colorScheme: { dark: "#a78bfa", light: "#7c3aed" },
+        colorScheme: NAV_ACCENT,
     },
 ];
 
@@ -90,6 +96,11 @@ export const Sidebar = (props: SidebarProps) => {
     const { setAccessToken } = useAuth();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const palette = isDark ? purplePalette.dark : purplePalette.light;
+    // Solid bg color used to "cut out" badges and avatar borders against
+    // the sidebar gradient — must match the gradient's start color so the
+    // ring blends seamlessly into the surface behind it.
+    const sidebarBg = isDark ? "rgba(20,14,34,1)" : "rgba(252,250,255,1)";
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -176,10 +187,10 @@ export const Sidebar = (props: SidebarProps) => {
                 display: "flex",
                 flexDirection: "column",
                 borderRight: "1px solid",
-                borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+                borderColor: palette.divider,
                 background: isDark
-                    ? "linear-gradient(180deg, rgba(18,18,22,1) 0%, rgba(12,12,16,1) 100%)"
-                    : "linear-gradient(180deg, rgba(252,252,255,1) 0%, rgba(248,248,252,1) 100%)",
+                    ? "linear-gradient(180deg, rgba(20,14,34,1) 0%, rgba(11,10,22,1) 100%)"
+                    : "linear-gradient(180deg, rgba(252,250,255,1) 0%, rgba(248,245,255,1) 100%)",
                 overflow: "hidden",
             }}
         >
@@ -455,11 +466,9 @@ export const Sidebar = (props: SidebarProps) => {
                                     borderRadius: "12px",
                                     transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                                     "&:hover": {
-                                        background: isDark
-                                            ? "rgba(239,68,68,0.12)"
-                                            : "rgba(220,38,38,0.08)",
+                                        background: palette.dangerTintBg,
                                         "& .logout-icon": {
-                                            color: isDark ? "#f87171" : "#dc2626",
+                                            color: palette.dangerTint,
                                         },
                                     },
                                 }}
@@ -548,7 +557,7 @@ export const Sidebar = (props: SidebarProps) => {
                                 width: 34,
                                 height: 34,
                                 border: "2px solid",
-                                borderColor: isDark ? "rgba(18,18,22,1)" : "rgba(252,252,255,1)",
+                                borderColor: sidebarBg,
                             }}
                         >
                             {myself.userName[0].toUpperCase()}
@@ -574,7 +583,7 @@ export const Sidebar = (props: SidebarProps) => {
                                   ? "#6b7280"
                                   : "#9ca3af",
                         border: "2px solid",
-                        borderColor: isDark ? "rgba(18,18,22,1)" : "rgba(252,252,255,1)",
+                        borderColor: sidebarBg,
                         boxShadow:
                             myself?.isOfflineForced !== "true"
                                 ? isDark
