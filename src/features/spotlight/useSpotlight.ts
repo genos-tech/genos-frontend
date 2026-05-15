@@ -115,7 +115,7 @@ export interface UseSpotlightReturn {
     results: SpotlightResult[];
     isLoading: boolean;
     error: string | null;
-    onAsk: () => void;
+    onAsk: (overrideQuery?: string) => void;
     onApprove: () => void;
     onReject: () => void;
     onCancel: () => void;
@@ -478,80 +478,85 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
     );
 
     // ---- Enter / Ask button handler: stream the agent's answer. ----
-    const onAsk = useCallback(() => {
-        const trimmed = query.trim();
-        if (!trimmed) return;
-        // Defense: never start a new ask while the previous one is
-        // still streaming or awaiting approval. The UI also disables
-        // the Ask button + Enter in these states.
-        if (ask.isStreaming || ask.pendingApproval !== null) return;
-        if (!teamId) {
+    // `overrideQuery` is supplied by the retry button on past turns so
+    // it can bypass the query input state without a render cycle.
+    const onAsk = useCallback(
+        (overrideQuery?: string) => {
+            const trimmed = (overrideQuery !== undefined ? overrideQuery : query).trim();
+            if (!trimmed) return;
+            // Defense: never start a new ask while the previous one is
+            // still streaming or awaiting approval. The UI also disables
+            // the Ask button + Enter in these states.
+            if (ask.isStreaming || ask.pendingApproval !== null) return;
+            if (!teamId) {
+                setAsk({
+                    ...EMPTY_ASK_STATE,
+                    sessionId: ask.sessionId,
+                    turnId: ask.turnId + 1,
+                    askedQuery: trimmed,
+                    askError: "No team selected.",
+                });
+                return;
+            }
+
+            // Cancel any prior in-flight Ask before starting a new one.
+            askAbortRef.current?.abort();
+            const controller = new AbortController();
+            askAbortRef.current = controller;
+
+            // Read turnId and sessionId directly from the current `ask`
+            // value — NOT from inside a setAsk updater. In React 18,
+            // updater functions run during the commit phase (after the
+            // synchronous event handler returns), so any variable assigned
+            // inside the updater is still at its initial value when the
+            // code below runs. If askedTurnId stayed 0 here while the
+            // state update set turnId:1, every `stillCurrent` check in the
+            // stream handlers would return false and all events would be
+            // silently dropped, leaving `isStreaming` stuck at true forever.
+            const askedTurnId = ask.turnId + 1;
+
             setAsk({
-                ...EMPTY_ASK_STATE,
-                sessionId: ask.sessionId,
-                turnId: ask.turnId + 1,
+                isStreaming: true,
                 askedQuery: trimmed,
-                askError: "No team selected.",
+                answer: "",
+                answerSources: [],
+                askError: null,
+                toolEvents: [],
+                pendingApproval: null,
+                sessionId: ask.sessionId,
+                turnId: askedTurnId,
             });
-            return;
-        }
 
-        // Cancel any prior in-flight Ask before starting a new one.
-        askAbortRef.current?.abort();
-        const controller = new AbortController();
-        askAbortRef.current = controller;
+            void askAgentStream({
+                query: trimmed,
+                teamId,
+                accessToken,
+                sessionId: ask.sessionId ?? undefined,
+                signal: controller.signal,
+                ...buildStreamHandlers(askedTurnId),
+            });
 
-        // Read turnId and sessionId directly from the current `ask`
-        // value — NOT from inside a setAsk updater. In React 18,
-        // updater functions run during the commit phase (after the
-        // synchronous event handler returns), so any variable assigned
-        // inside the updater is still at its initial value when the
-        // code below runs. If askedTurnId stayed 0 here while the
-        // state update set turnId:1, every `stillCurrent` check in the
-        // stream handlers would return false and all events would be
-        // silently dropped, leaving `isStreaming` stuck at true forever.
-        const askedTurnId = ask.turnId + 1;
+            // Optimistically increment the local usage counter so the UI
+            // reflects the new count without waiting for the next /usage/ fetch.
+            // The backend is the authoritative gate; this is display-only.
+            setDailyUsage((prev) => (prev ? { ...prev, used: prev.used + 1 } : prev));
 
-        setAsk({
-            isStreaming: true,
-            askedQuery: trimmed,
-            answer: "",
-            answerSources: [],
-            askError: null,
-            toolEvents: [],
-            pendingApproval: null,
-            sessionId: ask.sessionId,
-            turnId: askedTurnId,
-        });
-
-        void askAgentStream({
-            query: trimmed,
+            // Clear the input immediately after submitting. The question is
+            // already captured in `ask.askedQuery` and visible in the
+            // conversation history, so the input is ready for the next one.
+            setQuery("");
+        },
+        [
+            query,
             teamId,
             accessToken,
-            sessionId: ask.sessionId ?? undefined,
-            signal: controller.signal,
-            ...buildStreamHandlers(askedTurnId),
-        });
-
-        // Optimistically increment the local usage counter so the UI
-        // reflects the new count without waiting for the next /usage/ fetch.
-        // The backend is the authoritative gate; this is display-only.
-        setDailyUsage((prev) => (prev ? { ...prev, used: prev.used + 1 } : prev));
-
-        // Clear the input immediately after submitting. The question is
-        // already captured in `ask.askedQuery` and visible in the
-        // conversation history, so the input is ready for the next one.
-        setQuery("");
-    }, [
-        query,
-        teamId,
-        accessToken,
-        buildStreamHandlers,
-        ask.isStreaming,
-        ask.pendingApproval,
-        ask.turnId,
-        ask.sessionId,
-    ]);
+            buildStreamHandlers,
+            ask.isStreaming,
+            ask.pendingApproval,
+            ask.turnId,
+            ask.sessionId,
+        ]
+    );
 
     // ---- Approve / Reject handlers for the pending write tool. ----
     //

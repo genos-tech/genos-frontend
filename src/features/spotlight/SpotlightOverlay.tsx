@@ -20,10 +20,13 @@
 // `<Sheet>` at zIndex 13000+ to sit above all other surfaces. See
 // `components/layout/ServiceSwitcherOverlay.tsx` for the prior art.
 
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
+import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
+import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
+import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import { Box, Button, Chip, CircularProgress, Sheet, Typography } from "@mui/joy";
+import { Box, Button, Chip, CircularProgress, IconButton, Sheet, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -43,7 +46,7 @@ interface Props {
     isLoading: boolean;
     error: string | null;
     onSelect: (r: SpotlightResult) => void;
-    onAsk: () => void;
+    onAsk: (overrideQuery?: string) => void;
     onApprove: () => void;
     onReject: () => void;
     onCancel: () => void;
@@ -239,7 +242,7 @@ export const SpotlightOverlay = ({
                         size="sm"
                         startDecorator={<AutoAwesomeRoundedIcon sx={{ fontSize: 16 }} />}
                         variant="solid"
-                        onClick={onAsk}
+                        onClick={() => onAsk()}
                     >
                         Ask
                     </Button>
@@ -256,6 +259,8 @@ export const SpotlightOverlay = ({
                     onApprove={onApprove}
                     onReject={onReject}
                     onNewConversation={onNewConversation}
+                    onAsk={onAsk}
+                    askDisabled={askDisabled}
                 />
 
                 {/* Results / states — hidden once a conversation is in
@@ -381,6 +386,8 @@ interface ConversationPanelProps {
     onApprove: () => void;
     onReject: () => void;
     onNewConversation: () => void;
+    onAsk: (overrideQuery?: string) => void;
+    askDisabled: boolean;
 }
 
 const hasAskContent = (ask: AskState): boolean =>
@@ -399,6 +406,8 @@ const ConversationPanel = ({
     onApprove,
     onReject,
     onNewConversation,
+    onAsk,
+    askDisabled,
 }: ConversationPanelProps) => {
     const scrollRef = useRef<HTMLDivElement | null>(null);
     // True when the user has scrolled away from the bottom. We pause
@@ -537,6 +546,8 @@ const ConversationPanel = ({
                     isCurrent={false}
                     isDark={isDark}
                     onSelect={onSelect}
+                    onRetry={() => onAsk(t.askedQuery)}
+                    askDisabled={askDisabled}
                 />
             ))}
 
@@ -554,6 +565,8 @@ const ConversationPanel = ({
                     onSelect={onSelect}
                     onApprove={onApprove}
                     onReject={onReject}
+                    onRetry={() => onAsk(ask.askedQuery)}
+                    askDisabled={askDisabled}
                 />
             )}
         </Box>
@@ -582,6 +595,8 @@ interface TurnViewProps {
     onSelect: (r: SpotlightResult) => void;
     onApprove?: () => void;
     onReject?: () => void;
+    onRetry?: () => void;
+    askDisabled?: boolean;
 }
 
 const TurnView = ({
@@ -597,8 +612,31 @@ const TurnView = ({
     onSelect,
     onApprove,
     onReject,
+    onRetry,
+    askDisabled,
 }: TurnViewProps) => {
+    const [copied, setCopied] = useState(false);
+
+    const handleCopy = useCallback(() => {
+        if (!answer) return;
+        navigator.clipboard
+            .writeText(answer)
+            .then(() => {
+                setCopied(true);
+                window.setTimeout(() => setCopied(false), 2000);
+            })
+            .catch(() => {
+                /* ignore — e.g. non-secure context */
+            });
+    }, [answer]);
+
     const showThinking = isCurrent && isStreaming && !answer && !askError;
+    // Show copy for any turn with answer text.
+    // Show retry for past turns (always) and current turn when there's an error.
+    const showCopy = Boolean(answer);
+    const showRetry = Boolean(askedQuery) && (!isCurrent || Boolean(askError));
+    const showActions = showCopy || showRetry;
+
     return (
         <Box
             sx={{
@@ -606,6 +644,10 @@ const TurnView = ({
                 flexDirection: "column",
                 gap: 0.5,
                 opacity: isCurrent ? 1 : 0.92,
+                // Reveal action buttons on hover; always visible on touch devices.
+                "& .turn-actions": { opacity: 0, transition: "opacity 0.15s" },
+                "&:hover .turn-actions": { opacity: 1 },
+                "@media (hover: none)": { "& .turn-actions": { opacity: 1 } },
             }}
         >
             {askedQuery && (
@@ -814,6 +856,44 @@ const TurnView = ({
                     )}
                 </Box>
             </Box>
+
+            {/* Per-turn action bar: Copy + Retry — fades in on hover */}
+            {showActions && (
+                <Box
+                    className="turn-actions"
+                    sx={{ display: "flex", justifyContent: "flex-end", gap: 0.25, mt: 0.25 }}
+                >
+                    {showCopy && (
+                        <IconButton
+                            size="sm"
+                            variant="plain"
+                            color={copied ? "success" : "neutral"}
+                            onClick={handleCopy}
+                            title="Copy answer"
+                            sx={{ minWidth: 0, p: "3px" }}
+                        >
+                            {copied ? (
+                                <CheckRoundedIcon sx={{ fontSize: 14 }} />
+                            ) : (
+                                <ContentCopyRoundedIcon sx={{ fontSize: 14 }} />
+                            )}
+                        </IconButton>
+                    )}
+                    {showRetry && (
+                        <IconButton
+                            size="sm"
+                            variant="plain"
+                            color="neutral"
+                            disabled={askDisabled}
+                            onClick={onRetry}
+                            title="Ask again"
+                            sx={{ minWidth: 0, p: "3px" }}
+                        >
+                            <ReplayRoundedIcon sx={{ fontSize: 14 }} />
+                        </IconButton>
+                    )}
+                </Box>
+            )}
         </Box>
     );
 };
