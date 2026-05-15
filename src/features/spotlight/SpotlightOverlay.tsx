@@ -115,6 +115,26 @@ export const SpotlightOverlay = ({
         return byType;
     }, [results]);
 
+    // Flat list in display order (chat → task → note) used for arrow-key
+    // navigation and the highlighted-index → onSelect mapping.
+    const flatResults = useMemo(
+        () => SECTION_ORDER.flatMap(({ key }) => grouped[key] ?? []),
+        [grouped]
+    );
+    // Map from "type:id" → flat index so each SpotlightResultItem can
+    // receive isHighlighted without searching the array on every render.
+    const flatIndexOf = useMemo(() => {
+        const m = new Map<string, number>();
+        flatResults.forEach((r, i) => m.set(`${r.entity_type}:${r.entity_id}`, i));
+        return m;
+    }, [flatResults]);
+
+    // -1 = nothing highlighted; resets whenever the query changes.
+    const [selectedIndex, setSelectedIndex] = useState(-1);
+    useEffect(() => {
+        setSelectedIndex(-1);
+    }, [query]);
+
     const askDisabled = ask.isStreaming || ask.pendingApproval !== null;
     // Show "Follow up" when there is at least one completed turn or the
     // current session is active — i.e., the user is mid-conversation.
@@ -200,8 +220,28 @@ export const SpotlightOverlay = ({
                             onQueryChange(e.target.value)
                         }
                         onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                            if (e.key === "ArrowDown") {
+                                if (flatResults.length === 0) return;
+                                e.preventDefault();
+                                setSelectedIndex((prev) =>
+                                    Math.min(prev + 1, flatResults.length - 1)
+                                );
+                                return;
+                            }
+                            if (e.key === "ArrowUp") {
+                                e.preventDefault();
+                                setSelectedIndex((prev) => Math.max(prev - 1, -1));
+                                return;
+                            }
                             if (e.key === "Enter") {
                                 e.preventDefault();
+                                // If a result row is highlighted, navigate to
+                                // it rather than firing the AI ask.
+                                if (selectedIndex >= 0 && flatResults[selectedIndex]) {
+                                    onSelect(flatResults[selectedIndex]);
+                                    setSelectedIndex(-1);
+                                    return;
+                                }
                                 // Block Enter from firing a new ask while the
                                 // previous turn is still streaming or awaiting
                                 // user approval. The input itself stays
@@ -339,7 +379,15 @@ export const SpotlightOverlay = ({
                                             <SpotlightResultItem
                                                 key={`${r.entity_type}:${r.entity_id}`}
                                                 result={r}
-                                                onSelect={onSelect}
+                                                isHighlighted={
+                                                    flatIndexOf.get(
+                                                        `${r.entity_type}:${r.entity_id}`
+                                                    ) === selectedIndex
+                                                }
+                                                onSelect={(selected) => {
+                                                    setSelectedIndex(-1);
+                                                    onSelect(selected);
+                                                }}
                                             />
                                         ))}
                                     </Box>
