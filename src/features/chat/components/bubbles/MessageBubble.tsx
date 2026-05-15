@@ -27,11 +27,18 @@ import { BubbleMoreMenu } from "./BubbleMoreMenu";
 import { BubbleUnderBar } from "./BubbleUnderBar";
 import { BubbleUserName } from "./BubbleUserName";
 
-// Color schemes for sent/received bubbles - improved for better text contrast
+// Color schemes for sent/received bubbles - improved for better text contrast.
+// `sent` is harmonized with ThreadMessageBubble.BUBBLE_COLORS.sent so a
+// user's own messages render with the same purple in chat and thread views.
+// `focused` is intentionally GREEN — cross-file functional carve-out
+// mirroring ThreadMessageBubble.focused and TaskCommentBubble.focused so
+// deep-linked target messages share the same focus tint across surfaces.
+// `threadActive` uses a brighter purple so it stays visually distinct from
+// `sent` (both purple-family).
 const BUBBLE_COLORS = {
     sent: {
-        dark: { bg: "#1e1b4b", border: "#3730a3", text: "#e0e7ff" },
-        light: { bg: "#eef2ff", border: "#c7d2fe", text: "#1e1b4b" },
+        dark: { bg: "#3b0764", border: "#7c3aed", text: "#f3e8ff" },
+        light: { bg: "#f5f3ff", border: "#c4b5fd", text: "#3b0764" },
     },
     received: {
         dark: { bg: "#1f2937", border: "#374151", text: "#f3f4f6" },
@@ -42,8 +49,8 @@ const BUBBLE_COLORS = {
         light: { bg: "#dcfce7", border: "#22c55e", text: "#14532d" },
     },
     threadActive: {
-        dark: { bg: "#1e1b4b", border: "#6366f1", text: "#e0e7ff" },
-        light: { bg: "#eef2ff", border: "#818cf8", text: "#1e1b4b" },
+        dark: { bg: "#4c1d95", border: "#a78bfa", text: "#f3e8ff" },
+        light: { bg: "#ede9fe", border: "#a78bfa", text: "#3b0764" },
     },
 } as const;
 
@@ -642,8 +649,8 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                             ? `0 4px 20px rgba(34,197,94,0.2), inset 0 1px 0 rgba(255,255,255,0.05)`
                                             : `0 4px 20px rgba(22,163,74,0.15)`
                                         : isDark
-                                          ? `0 4px 20px rgba(99,102,241,0.2), inset 0 1px 0 rgba(255,255,255,0.05)`
-                                          : `0 4px 20px rgba(99,102,241,0.15)`
+                                          ? `0 4px 20px rgba(124,58,237,0.2), inset 0 1px 0 rgba(255,255,255,0.05)`
+                                          : `0 4px 20px rgba(124,58,237,0.15)`
                                     : isDark
                                       ? "0 2px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.03)"
                                       : "0 2px 8px rgba(0,0,0,0.06)",

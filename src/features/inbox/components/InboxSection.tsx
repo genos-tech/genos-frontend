@@ -6,6 +6,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
+import { purplePalette } from "../../../theme/purplePalette";
 import { InboxSectionProps } from "../types/inboxTypes";
 import { InboxBubble } from "./InboxBubble";
 
@@ -36,6 +37,7 @@ export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionExtendedProps
     ) => {
         const { mode } = useColorScheme();
         const isDark = mode === "dark";
+        const palette = isDark ? purplePalette.dark : purplePalette.light;
         const navigate = useNavigate();
         const basePath = isRequest ? "/workspace/inbox/requests" : "/workspace/inbox/activities";
 
@@ -152,8 +154,8 @@ export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionExtendedProps
                                 alignItems: "center",
                                 justifyContent: "center",
                                 background: isDark
-                                    ? "linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(139,92,246,0.08) 100%)"
-                                    : "linear-gradient(135deg, rgba(79,70,229,0.08) 0%, rgba(124,58,237,0.04) 100%)",
+                                    ? "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(139,92,246,0.08) 100%)"
+                                    : "linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(124,58,237,0.04) 100%)",
                                 border: "1px solid",
                                 borderColor: isDark
                                     ? "rgba(139,92,246,0.15)"
@@ -181,7 +183,7 @@ export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionExtendedProps
                                 <CheckCircleOutlineRoundedIcon
                                     sx={{
                                         fontSize: 36,
-                                        color: isDark ? "#a78bfa" : "#7c3aed",
+                                        color: palette.accentSoft,
                                         opacity: 0.8,
                                     }}
                                 />
@@ -189,7 +191,7 @@ export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionExtendedProps
                                 <InboxRoundedIcon
                                     sx={{
                                         fontSize: 36,
-                                        color: isDark ? "#a78bfa" : "#7c3aed",
+                                        color: palette.accentSoft,
                                         opacity: 0.8,
                                     }}
                                 />

@@ -120,11 +120,11 @@ function RecentNoteItemComponent({ note, noteType, useNM }: RecentNoteItemProps)
                         backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
                     },
                     "&.Mui-selected": {
-                        backgroundColor: isDark ? "rgba(99,102,241,0.12)" : "rgba(79,70,229,0.08)",
+                        backgroundColor: isDark ? "rgba(124,58,237,0.12)" : "rgba(124,58,237,0.08)",
                         "&:hover": {
                             backgroundColor: isDark
-                                ? "rgba(99,102,241,0.18)"
-                                : "rgba(79,70,229,0.12)",
+                                ? "rgba(124,58,237,0.18)"
+                                : "rgba(124,58,237,0.12)",
                         },
                     },
                 }}

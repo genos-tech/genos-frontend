@@ -11,6 +11,7 @@ import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 
 import { ServiceSwitcherOverlay } from "./components/layout/ServiceSwitcherOverlay";
 import { Sidebar } from "./components/layout/sidebar";
+import { purpleTheme } from "./theme/purplePalette";
 import { AvatarContextProvider } from "./components/ui/avatars/AvatarContext";
 import { InitialLoad } from "./components/ui/misc/InitialLoad";
 import { ChatHome } from "./features/chat/chatHome";
@@ -254,7 +255,7 @@ export const App = () => {
 
     if (isTooSmall) {
         return (
-            <CssVarsProvider disableTransitionOnChange>
+            <CssVarsProvider disableTransitionOnChange theme={purpleTheme}>
                 <CssBaseline />
                 <Box
                     sx={{
@@ -282,7 +283,7 @@ export const App = () => {
     }
 
     return (
-        <CssVarsProvider disableTransitionOnChange>
+        <CssVarsProvider disableTransitionOnChange theme={purpleTheme}>
             <CssBaseline />
             <ThemePreferenceProvider>
                 <NotificationsProvider value={useNotif}>

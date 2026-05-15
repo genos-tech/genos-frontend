@@ -204,8 +204,8 @@ export const ModalJoinGM: React.FC<Props> = ({ socket, myself, openJoinGM, setOp
                         sx={{
                             mb: 2,
                             borderRadius: "10px",
-                            backgroundColor: "rgba(239, 68, 68, 0.1)",
-                            border: "1px solid rgba(239, 68, 68, 0.3)",
+                            backgroundColor: "rgba(232,121,195,0.1)",
+                            border: "1px solid rgba(232,121,195,0.3)",
                             textAlign: "left",
                         }}
                     >

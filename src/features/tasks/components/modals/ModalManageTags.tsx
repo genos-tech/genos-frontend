@@ -166,10 +166,10 @@ export const ModalManageTags: React.FC<Props> = ({
                     animation: `${fadeIn} 0.2s ease-out`,
                     background:
                         "linear-gradient(145deg, rgba(30, 30, 40, 0.95) 0%, rgba(20, 20, 28, 0.98) 100%)",
-                    border: "1px solid rgba(99, 102, 241, 0.2)",
+                    border: "1px solid rgba(124,58,237,0.2)",
                     borderRadius: "16px",
                     boxShadow:
-                        "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(99, 102, 241, 0.1)",
+                        "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(124,58,237,0.1)",
                     minWidth: "400px",
                     maxHeight: "70vh",
                     p: 3,
@@ -186,8 +186,8 @@ export const ModalManageTags: React.FC<Props> = ({
                             height: 40,
                             borderRadius: "10px",
                             background:
-                                "linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%)",
-                            border: "1px solid rgba(99, 102, 241, 0.3)",
+                                "linear-gradient(135deg, rgba(124,58,237,0.2) 0%, rgba(139, 92, 246, 0.2) 100%)",
+                            border: "1px solid rgba(124,58,237,0.3)",
                         }}
                     >
                         <LocalOfferIcon sx={{ color: "rgba(139, 92, 246, 0.9)", fontSize: 22 }} />
@@ -195,7 +195,7 @@ export const ModalManageTags: React.FC<Props> = ({
                     <Typography
                         level="h4"
                         sx={{
-                            background: "linear-gradient(135deg, #c7d2fe 0%, #a5b4fc 100%)",
+                            background: "linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%)",
                             WebkitBackgroundClip: "text",
                             WebkitTextFillColor: "transparent",
                             fontWeight: 600,
@@ -223,8 +223,8 @@ export const ModalManageTags: React.FC<Props> = ({
                         sx={{
                             mb: 2,
                             borderRadius: "10px",
-                            backgroundColor: "rgba(239, 68, 68, 0.1)",
-                            border: "1px solid rgba(239, 68, 68, 0.3)",
+                            backgroundColor: "rgba(232,121,195,0.1)",
+                            border: "1px solid rgba(232,121,195,0.3)",
                         }}
                     >
                         {errorMessage}
@@ -261,12 +261,12 @@ export const ModalManageTags: React.FC<Props> = ({
                                 borderRadius: "10px",
                                 backgroundColor:
                                     editingTag === tag.tagName
-                                        ? "rgba(99, 102, 241, 0.08)"
+                                        ? "rgba(124,58,237,0.08)"
                                         : "rgba(255,255,255,0.02)",
                                 border: "1px solid",
                                 borderColor:
                                     editingTag === tag.tagName
-                                        ? "rgba(99, 102, 241, 0.2)"
+                                        ? "rgba(124,58,237,0.2)"
                                         : "rgba(255,255,255,0.05)",
                                 transition: "all 0.15s ease",
                                 "&:hover": {
@@ -328,8 +328,8 @@ export const ModalManageTags: React.FC<Props> = ({
                                             disabled={!editName.trim()}
                                             onClick={() => saveEdit(tag.tagName)}
                                             sx={{
-                                                color: "rgba(34, 197, 94, 0.8)",
-                                                "&:hover": { color: "#22c55e" },
+                                                color: "rgba(124,58,237,0.8)",
+                                                "&:hover": { color: "#7c3aed" },
                                             }}
                                         >
                                             <CheckRoundedIcon sx={{ fontSize: 18 }} />
@@ -374,7 +374,7 @@ export const ModalManageTags: React.FC<Props> = ({
                                         >
                                             <Typography
                                                 level="body-xs"
-                                                sx={{ color: "rgba(239, 68, 68, 0.8)", mr: 0.5 }}
+                                                sx={{ color: "rgba(232,121,195,0.8)", mr: 0.5 }}
                                             >
                                                 Delete?
                                             </Typography>
@@ -415,7 +415,7 @@ export const ModalManageTags: React.FC<Props> = ({
                                                     sx={{
                                                         color: "rgba(255,255,255,0.4)",
                                                         "&:hover": {
-                                                            color: "rgba(99, 102, 241, 0.9)",
+                                                            color: "rgba(124,58,237,0.9)",
                                                         },
                                                     }}
                                                 >
@@ -433,7 +433,7 @@ export const ModalManageTags: React.FC<Props> = ({
                                                     sx={{
                                                         color: "rgba(255,255,255,0.4)",
                                                         "&:hover": {
-                                                            color: "rgba(239, 68, 68, 0.9)",
+                                                            color: "rgba(232,121,195,0.9)",
                                                         },
                                                     }}
                                                 >

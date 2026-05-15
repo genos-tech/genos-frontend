@@ -99,7 +99,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
         "&:hover": {
             background: styles.dangerHover,
             transform: "translateY(-1px)",
-            boxShadow: "0 4px 12px rgba(239,68,68,0.2)",
+            boxShadow: "0 4px 12px rgba(232,121,195,0.2)",
         },
     };
 
@@ -322,7 +322,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                         sx={dangerButtonStyle}
                         onClick={() => switchSubToMain()}
                     >
-                        <CloseRoundedIcon sx={{ fontSize: 18, color: "#ef4444" }} />
+                        <CloseRoundedIcon sx={{ fontSize: 18, color: "#c026a8" }} />
                     </IconButton>
                 </Tooltip>
             </Stack>

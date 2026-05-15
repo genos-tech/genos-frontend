@@ -13,10 +13,11 @@ export const BubbleAttachmentSheet = (props: BubbleAttachmentSheetTypes) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
 
-    // Attachment color scheme
+    // Attachment color scheme (palette purple — single accent for the
+    // attachment chip; not encoding attachment-type differences).
     const attachmentColor = {
-        dark: { primary: "#60a5fa", secondary: "#3b82f6" },
-        light: { primary: "#3b82f6", secondary: "#2563eb" },
+        dark: { primary: "#a78bfa", secondary: "#7c3aed" },
+        light: { primary: "#7c3aed", secondary: "#6d28d9" },
     };
     const colors = isDark ? attachmentColor.dark : attachmentColor.light;
 

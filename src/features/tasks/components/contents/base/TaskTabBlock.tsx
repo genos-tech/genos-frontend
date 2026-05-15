@@ -715,8 +715,8 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                             justifyContent: "center",
                                             gap: 1,
                                             background: isDark
-                                                ? "linear-gradient(135deg, rgba(139,92,246,0.1) 0%, rgba(99,102,241,0.08) 100%)"
-                                                : "linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(79,70,229,0.06) 100%)",
+                                                ? "linear-gradient(135deg, rgba(139,92,246,0.1) 0%, rgba(124,58,237,0.08) 100%)"
+                                                : "linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(124,58,237,0.06) 100%)",
                                             border: "1px solid",
                                             borderColor: isDark
                                                 ? "rgba(139,92,246,0.2)"
@@ -726,8 +726,8 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                             transition: "all 0.2s ease",
                                             "&:hover": {
                                                 background: isDark
-                                                    ? "linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(99,102,241,0.12) 100%)"
-                                                    : "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(79,70,229,0.1) 100%)",
+                                                    ? "linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(124,58,237,0.12) 100%)"
+                                                    : "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(124,58,237,0.1) 100%)",
                                                 borderColor: isDark
                                                     ? "rgba(139,92,246,0.3)"
                                                     : "rgba(124,58,237,0.25)",
@@ -890,8 +890,8 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                 top: -8,
                                                 right: -8,
                                                 background: isDark
-                                                    ? "rgba(239,68,68,0.2)"
-                                                    : "rgba(239,68,68,0.15)",
+                                                    ? "rgba(232,121,195,0.2)"
+                                                    : "rgba(232,121,195,0.15)",
                                                 borderRadius: "50%",
                                                 width: 20,
                                                 height: 20,
@@ -899,7 +899,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                 minHeight: 20,
                                                 zIndex: 6,
                                                 "&:hover": {
-                                                    background: "rgba(239,68,68,0.3)",
+                                                    background: "rgba(232,121,195,0.3)",
                                                 },
                                                 "&.Mui-disabled": {
                                                     opacity: 0.4,
@@ -992,7 +992,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                 minHeight: 24,
                                                 zIndex: 6,
                                                 "&:hover": {
-                                                    background: "rgba(239,68,68,0.7)",
+                                                    background: "rgba(232,121,195,0.7)",
                                                 },
                                                 "&.Mui-disabled": {
                                                     opacity: 0.4,
@@ -1056,8 +1056,8 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                     py: 0.8,
                                     gap: 1,
                                     background: isDark
-                                        ? "linear-gradient(135deg, rgba(139,92,246,0.12) 0%, rgba(99,102,241,0.1) 100%)"
-                                        : "linear-gradient(135deg, rgba(124,58,237,0.1) 0%, rgba(79,70,229,0.08) 100%)",
+                                        ? "linear-gradient(135deg, rgba(139,92,246,0.12) 0%, rgba(124,58,237,0.1) 100%)"
+                                        : "linear-gradient(135deg, rgba(124,58,237,0.1) 0%, rgba(124,58,237,0.08) 100%)",
                                     border: "1px solid",
                                     borderColor: isDark
                                         ? "rgba(139,92,246,0.2)"
@@ -1066,8 +1066,8 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                     transition: "all 0.2s ease",
                                     "&:hover": {
                                         background: isDark
-                                            ? "linear-gradient(135deg, rgba(139,92,246,0.18) 0%, rgba(99,102,241,0.15) 100%)"
-                                            : "linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(79,70,229,0.12) 100%)",
+                                            ? "linear-gradient(135deg, rgba(139,92,246,0.18) 0%, rgba(124,58,237,0.15) 100%)"
+                                            : "linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(124,58,237,0.12) 100%)",
                                     },
                                 }}
                                 onClick={handleButtonClick}

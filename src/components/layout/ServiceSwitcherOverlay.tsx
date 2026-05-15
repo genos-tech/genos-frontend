@@ -6,6 +6,7 @@ import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded
 import { Box, Sheet, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { purplePalette } from "../../theme/purplePalette";
 import { isMac } from "../../utils/platform";
 
 // Visual metadata for the Cmd+Tab–style service switcher overlay. Indexed
@@ -44,6 +45,7 @@ export const ServiceSwitcherOverlay = ({
 }: ServiceSwitcherOverlayProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const palette = isDark ? purplePalette.dark : purplePalette.light;
 
     // Hint matches the cycle gesture in `useGlobalServiceShortcut`: hold the
     // platform "switcher" modifier (Cmd on mac, Alt elsewhere) and tap Ctrl
@@ -55,7 +57,7 @@ export const ServiceSwitcherOverlay = ({
 
     if (previewIndex === null) return null;
 
-    const accent = isDark ? "#a78bfa" : "#7c3aed";
+    const accent = isDark ? purplePalette.dark.accentSoft : purplePalette.light.accent;
 
     return (
         <Box
@@ -82,12 +84,14 @@ export const ServiceSwitcherOverlay = ({
                     gap: 1.5,
                     backdropFilter: "blur(20px) saturate(180%)",
                     WebkitBackdropFilter: "blur(20px) saturate(180%)",
-                    background: isDark ? "rgba(28, 28, 32, 0.78)" : "rgba(248, 248, 252, 0.82)",
+                    background: isDark
+                        ? "rgba(30,20,46,0.82)"
+                        : "rgba(250,248,255,0.85)",
                     border: "1px solid",
-                    borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+                    borderColor: palette.border,
                     boxShadow: isDark
-                        ? "0 24px 60px rgba(0,0,0,0.55)"
-                        : "0 24px 60px rgba(15,15,30,0.18)",
+                        ? "0 24px 60px rgba(0,0,0,0.55), 0 0 40px rgba(124,58,237,0.18)"
+                        : "0 24px 60px rgba(124,58,237,0.18)",
                 }}
             >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>

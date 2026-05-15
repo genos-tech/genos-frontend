@@ -533,12 +533,12 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                                 },
                                 "&.Mui-selected": {
                                     backgroundColor: isDark
-                                        ? "rgba(99,102,241,0.15)"
-                                        : "rgba(79,70,229,0.1)",
+                                        ? "rgba(124,58,237,0.15)"
+                                        : "rgba(124,58,237,0.1)",
                                     "&:hover": {
                                         backgroundColor: isDark
-                                            ? "rgba(99,102,241,0.2)"
-                                            : "rgba(79,70,229,0.15)",
+                                            ? "rgba(124,58,237,0.2)"
+                                            : "rgba(124,58,237,0.15)",
                                     },
                                 },
                             }}

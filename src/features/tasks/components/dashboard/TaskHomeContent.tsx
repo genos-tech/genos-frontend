@@ -653,8 +653,8 @@ export const TaskHomeContent = ({
                                     alignItems: "center",
                                     justifyContent: "center",
                                     background: isDark
-                                        ? "linear-gradient(135deg, rgba(59,130,246,0.2) 0%, rgba(99,102,241,0.2) 100%)"
-                                        : "linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(99,102,241,0.15) 100%)",
+                                        ? "linear-gradient(135deg, rgba(59,130,246,0.2) 0%, rgba(124,58,237,0.2) 100%)"
+                                        : "linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(124,58,237,0.15) 100%)",
                                 }}
                             >
                                 <TrendingUpRoundedIcon
@@ -846,21 +846,21 @@ export const TaskHomeContent = ({
                                             sx={{
                                                 minWidth: 220,
                                                 fontWeight: 600,
-                                                color: isDark ? "#a5b4fc" : "#6366f1",
+                                                color: isDark ? "#a78bfa" : "#7c3aed",
                                                 backgroundColor: isDark
-                                                    ? "rgba(99,102,241,0.1)"
-                                                    : "rgba(99,102,241,0.08)",
+                                                    ? "rgba(124,58,237,0.1)"
+                                                    : "rgba(124,58,237,0.08)",
                                                 border: "1px solid",
                                                 borderColor: isDark
-                                                    ? "rgba(99,102,241,0.3)"
-                                                    : "rgba(99,102,241,0.2)",
+                                                    ? "rgba(124,58,237,0.3)"
+                                                    : "rgba(124,58,237,0.2)",
                                                 "&:hover": {
                                                     backgroundColor: isDark
-                                                        ? "rgba(99,102,241,0.15)"
-                                                        : "rgba(99,102,241,0.12)",
+                                                        ? "rgba(124,58,237,0.15)"
+                                                        : "rgba(124,58,237,0.12)",
                                                 },
                                                 "& .MuiSelect-indicator": {
-                                                    color: isDark ? "#a5b4fc" : "#6366f1",
+                                                    color: isDark ? "#a78bfa" : "#7c3aed",
                                                 },
                                             }}
                                             onChange={(_, value) => {
@@ -958,7 +958,7 @@ export const TaskHomeContent = ({
                                     sx={{
                                         color: isDark
                                             ? "rgba(165,180,252,0.7)"
-                                            : "rgba(99,102,241,0.6)",
+                                            : "rgba(124,58,237,0.6)",
                                         fontWeight: 500,
                                     }}
                                 >
@@ -1197,7 +1197,7 @@ export const TaskHomeContent = ({
                                 sx={{ mt: 1, mb: -0.5 }}
                             >
                                 <CalendarMonthRoundedIcon
-                                    sx={{ fontSize: 18, color: "#6366f1" }}
+                                    sx={{ fontSize: 18, color: "#7c3aed" }}
                                 />
                                 <Typography
                                     level="title-lg"
@@ -1871,7 +1871,7 @@ export const TaskHomeContent = ({
                                 {renderDistributionCard(
                                     "Effort Distribution",
                                     <TrendingUpRoundedIcon
-                                        sx={{ fontSize: 16, color: "#6366f1" }}
+                                        sx={{ fontSize: 16, color: "#7c3aed" }}
                                     />,
                                     effortBreakdown,
                                     effortColors

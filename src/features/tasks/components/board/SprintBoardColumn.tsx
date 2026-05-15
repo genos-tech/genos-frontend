@@ -54,8 +54,8 @@ const getDropAreaStyles = (
     minHeight: 100,
     backgroundColor: isDraggingOver
         ? mode === "dark"
-            ? "rgba(144, 202, 249, 0.1)"
-            : "rgba(25, 118, 210, 0.06)"
+            ? "rgba(167,139,250,0.1)"
+            : "rgba(124,58,237,0.06)"
         : "transparent",
     transition: "background-color 0.15s ease",
     overflowY: "auto",

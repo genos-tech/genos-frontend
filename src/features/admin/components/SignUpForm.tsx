@@ -20,6 +20,7 @@ import { CssVarsProvider, useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 
 import { SignUpFormStyles } from "../../../components/ui/styles/commonStyle";
+import { purplePalette, purpleTheme } from "../../../theme/purplePalette";
 import { SignUpResponse } from "../../../types/admin";
 import { signUp } from "../services/signup";
 import { AdminHeader } from "./Header";
@@ -40,6 +41,7 @@ const SignUpContent = () => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const styles = isDark ? SignUpFormStyles.dark : SignUpFormStyles.light;
+    const palette = isDark ? purplePalette.dark : purplePalette.light;
 
     const _signup = async (username: string, email: string, password: string) => {
         const signUpRes: SignUpResponse = await signUp(
@@ -153,7 +155,7 @@ const SignUpContent = () => {
                                     color="danger"
                                     sx={{
                                         borderRadius: "12px",
-                                        border: "1px solid rgba(239,68,68,0.3)",
+                                        border: `1px solid ${palette.dangerTintBorder}`,
                                     }}
                                 >
                                     {errorMessage}
@@ -298,7 +300,7 @@ const SignUpContent = () => {
                                         "&:hover": {
                                             background: styles.buttonHover,
                                             transform: "translateY(-2px)",
-                                            boxShadow: `${styles.buttonShadow}, 0 8px 24px rgba(34,197,94,0.3)`,
+                                            boxShadow: `${styles.buttonShadow}, 0 8px 24px ${palette.glow}`,
                                         },
                                     }}
                                 >
@@ -346,7 +348,7 @@ const SignUpContent = () => {
 
 export const SignUpForm = () => {
     return (
-        <CssVarsProvider disableTransitionOnChange>
+        <CssVarsProvider disableTransitionOnChange theme={purpleTheme}>
             <CssBaseline />
             <GlobalStyles
                 styles={{

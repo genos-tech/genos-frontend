@@ -211,8 +211,8 @@ const EmptyState = ({ chatType }: { chatType: number }) => {
                     alignItems: "center",
                     justifyContent: "center",
                     background: isDark
-                        ? "linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.06) 100%)"
-                        : "linear-gradient(135deg, rgba(79,70,229,0.08) 0%, rgba(124,58,237,0.04) 100%)",
+                        ? "linear-gradient(135deg, rgba(124,58,237,0.1) 0%, rgba(139,92,246,0.06) 100%)"
+                        : "linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(124,58,237,0.04) 100%)",
                     border: "1px solid",
                     borderColor: isDark ? "rgba(139,92,246,0.12)" : "rgba(124,58,237,0.08)",
                     mb: 2,

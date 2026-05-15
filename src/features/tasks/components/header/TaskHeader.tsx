@@ -112,7 +112,7 @@ export const TaskHeader = ({
                 py: 2,
                 boxShadow: isDark
                     ? "0 4px 20px rgba(0,0,0,0.3)"
-                    : "0 4px 20px rgba(99,102,241,0.08)",
+                    : "0 4px 20px rgba(124,58,237,0.08)",
             }}
         >
             {/* Project Title Section */}
@@ -235,15 +235,15 @@ export const TaskHeader = ({
                             fontWeight: 600,
                             gap: 0.5,
                             boxShadow: isDark
-                                ? "0 2px 8px rgba(99,102,241,0.4)"
-                                : "0 2px 8px rgba(79,70,229,0.3)",
+                                ? "0 2px 8px rgba(124,58,237,0.4)"
+                                : "0 2px 8px rgba(124,58,237,0.3)",
                             transition: "all 0.2s ease",
                             "&:hover": {
                                 background: styles.createButtonHover,
                                 transform: "translateY(-1px)",
                                 boxShadow: isDark
-                                    ? "0 4px 12px rgba(99,102,241,0.5)"
-                                    : "0 4px 12px rgba(79,70,229,0.4)",
+                                    ? "0 4px 12px rgba(124,58,237,0.5)"
+                                    : "0 4px 12px rgba(124,58,237,0.4)",
                             },
                         }}
                         onClick={useTM.handleCreateTask}
