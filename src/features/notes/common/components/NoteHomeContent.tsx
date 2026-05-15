@@ -793,10 +793,10 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
                     sx={{
                         p: 2.5,
                         background: isDark
-                            ? "linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(147,51,234,0.08) 100%)"
-                            : "linear-gradient(135deg, rgba(59,130,246,0.06) 0%, rgba(147,51,234,0.06) 100%)",
+                            ? "linear-gradient(135deg, rgba(124,58,237,0.10) 0%, rgba(168,85,247,0.10) 100%)"
+                            : "linear-gradient(135deg, rgba(124,58,237,0.06) 0%, rgba(168,85,247,0.06) 100%)",
                         border: "1px solid",
-                        borderColor: isDark ? "rgba(99,102,241,0.15)" : "rgba(99,102,241,0.1)",
+                        borderColor: isDark ? "rgba(124,58,237,0.15)" : "rgba(124,58,237,0.1)",
                     }}
                 >
                     <Stack alignItems="center" direction="row" spacing={2}>
@@ -809,14 +809,14 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
                                 alignItems: "center",
                                 justifyContent: "center",
                                 backgroundColor: isDark
-                                    ? "rgba(99,102,241,0.15)"
-                                    : "rgba(99,102,241,0.1)",
+                                    ? "rgba(124,58,237,0.15)"
+                                    : "rgba(124,58,237,0.1)",
                             }}
                         >
                             <TipsAndUpdatesRoundedIcon
                                 sx={{
                                     fontSize: 22,
-                                    color: isDark ? "#a5b4fc" : "#6366f1",
+                                    color: isDark ? "#a78bfa" : "#7c3aed",
                                 }}
                             />
                         </Box>

@@ -174,13 +174,13 @@ export const NoteHeaderActions = ({
                         sx={{
                             p: 0.5,
                             borderRadius: "10px",
-                            background: isDark ? "rgba(99,102,241,0.1)" : "rgba(79,70,229,0.06)",
-                            border: `1px solid ${isDark ? "rgba(99,102,241,0.2)" : "rgba(79,70,229,0.12)"}`,
+                            background: isDark ? "rgba(124,58,237,0.1)" : "rgba(124,58,237,0.06)",
+                            border: `1px solid ${isDark ? "rgba(124,58,237,0.2)" : "rgba(124,58,237,0.12)"}`,
                             transition: "all 0.2s ease",
                             "&:hover": {
                                 background: isDark
-                                    ? "rgba(99,102,241,0.15)"
-                                    : "rgba(79,70,229,0.1)",
+                                    ? "rgba(124,58,237,0.15)"
+                                    : "rgba(124,58,237,0.1)",
                             },
                         }}
                     >
@@ -443,7 +443,7 @@ export const NoteHeaderActions = ({
                         <CancelIcon
                             sx={{
                                 fontSize: "20px",
-                                color: isDark ? "#f87171" : "#dc2626",
+                                color: isDark ? "#e879c3" : "#c026a8",
                             }}
                         />
                     </IconButton>

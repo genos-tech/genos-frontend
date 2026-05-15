@@ -278,17 +278,17 @@ export const TaskNoteTabs = ({
                                         },
                                         "&.Mui-selected": {
                                             background: isDark
-                                                ? "linear-gradient(135deg, rgba(129,140,248,0.16) 0%, rgba(99,102,241,0.10) 100%)"
-                                                : "linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(79,70,229,0.06) 100%)",
+                                                ? "linear-gradient(135deg, rgba(124,58,237,0.16) 0%, rgba(124,58,237,0.10) 100%)"
+                                                : "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(124,58,237,0.06) 100%)",
                                             border: isDark
-                                                ? "1px solid rgba(129,140,248,0.28)"
-                                                : "1px solid rgba(99,102,241,0.20)",
-                                            color: isDark ? "#a5b4fc" : "#4f46e5",
+                                                ? "1px solid rgba(124,58,237,0.28)"
+                                                : "1px solid rgba(124,58,237,0.20)",
+                                            color: isDark ? "#a78bfa" : "#6d28d9",
                                             boxShadow: isDark
                                                 ? "0 2px 8px rgba(0,0,0,0.3)"
-                                                : "0 2px 8px rgba(99,102,241,0.18)",
+                                                : "0 2px 8px rgba(124,58,237,0.18)",
                                             "& .tab-icon": {
-                                                color: isDark ? "#a5b4fc" : "#6366f1",
+                                                color: isDark ? "#a78bfa" : "#7c3aed",
                                             },
                                             "& .close-btn": {
                                                 opacity: 1,

@@ -22,41 +22,52 @@ interface NoteBreadcrumbsProps {
     maxTitleLength?: number;
 }
 
+// Static category-color presets. The first three keys (primary/success/
+// warning) are FUNCTIONAL carve-outs: each maps to a distinct note category
+// (My / Task / Chat) so users tell categories apart by hue at a glance.
+// Do NOT collapse these into the unified purple brand palette.
+// `danger` uses the palette dangerTint family (purple-pink) and `neutral`
+// stays gray — both are presets without a current functional caller.
 const colorSchemes = {
     primary: {
-        bg: "linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(99, 102, 241, 0.08) 100%)",
-        iconBg: "linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)",
-        text: "#3b82f6",
-        hoverBg: "rgba(59, 130, 246, 0.08)",
-        activeBg: "rgba(59, 130, 246, 0.15)",
+        // My Notes — indigo. Harmonized with getNoteTypeColor (NoteHomeContent)
+        // and getTypeColor (RecentNoteItem) so all 3 surfaces match.
+        bg: "linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(99,102,241,0.08) 100%)",
+        iconBg: "linear-gradient(135deg, #818cf8 0%, #6366f1 100%)",
+        text: "#6366f1",
+        hoverBg: "rgba(99,102,241,0.08)",
+        activeBg: "rgba(99,102,241,0.15)",
     },
     success: {
-        bg: "linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(16, 185, 129, 0.08) 100%)",
+        // Task Notes — green (functional carve-out).
+        bg: "linear-gradient(135deg, rgba(34,197,94,0.12) 0%, rgba(16,185,129,0.08) 100%)",
         iconBg: "linear-gradient(135deg, #22c55e 0%, #10b981 100%)",
         text: "#22c55e",
-        hoverBg: "rgba(34, 197, 94, 0.08)",
-        activeBg: "rgba(34, 197, 94, 0.15)",
+        hoverBg: "rgba(34,197,94,0.08)",
+        activeBg: "rgba(34,197,94,0.15)",
     },
     warning: {
-        bg: "linear-gradient(135deg, rgba(251, 146, 60, 0.12) 0%, rgba(245, 158, 11, 0.08) 100%)",
+        // Chat Notes — orange (functional carve-out).
+        bg: "linear-gradient(135deg, rgba(251,146,60,0.12) 0%, rgba(245,158,11,0.08) 100%)",
         iconBg: "linear-gradient(135deg, #fb923c 0%, #f59e0b 100%)",
         text: "#f59e0b",
-        hoverBg: "rgba(251, 146, 60, 0.08)",
-        activeBg: "rgba(251, 146, 60, 0.15)",
+        hoverBg: "rgba(251,146,60,0.08)",
+        activeBg: "rgba(251,146,60,0.15)",
     },
     danger: {
-        bg: "linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(220, 38, 38, 0.08) 100%)",
-        iconBg: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
-        text: "#ef4444",
-        hoverBg: "rgba(239, 68, 68, 0.08)",
-        activeBg: "rgba(239, 68, 68, 0.15)",
+        // Palette dangerTint family (purple-pink). Currently unused preset.
+        bg: "linear-gradient(135deg, rgba(232,121,195,0.12) 0%, rgba(192,38,168,0.08) 100%)",
+        iconBg: "linear-gradient(135deg, #e879c3 0%, #c026a8 100%)",
+        text: "#c026a8",
+        hoverBg: "rgba(232,121,195,0.08)",
+        activeBg: "rgba(232,121,195,0.15)",
     },
     neutral: {
-        bg: "linear-gradient(135deg, rgba(107, 114, 128, 0.12) 0%, rgba(75, 85, 99, 0.08) 100%)",
+        bg: "linear-gradient(135deg, rgba(107,114,128,0.12) 0%, rgba(75,85,99,0.08) 100%)",
         iconBg: "linear-gradient(135deg, #6b7280 0%, #4b5563 100%)",
         text: "#6b7280",
-        hoverBg: "rgba(107, 114, 128, 0.08)",
-        activeBg: "rgba(107, 114, 128, 0.15)",
+        hoverBg: "rgba(107,114,128,0.08)",
+        activeBg: "rgba(107,114,128,0.15)",
     },
 };
 
