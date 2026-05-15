@@ -116,23 +116,23 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
                             flexShrink: 0,
                             borderRadius: "8px",
                             border: "1px solid",
-                            borderColor: isDark ? "rgba(99,102,241,0.3)" : "rgba(79,70,229,0.25)",
+                            borderColor: isDark ? "rgba(124,58,237,0.3)" : "rgba(124,58,237,0.25)",
                             background: isDark
-                                ? "linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(99,102,241,0.08) 100%)"
-                                : "linear-gradient(135deg, rgba(79,70,229,0.12) 0%, rgba(79,70,229,0.05) 100%)",
+                                ? "linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(124,58,237,0.08) 100%)"
+                                : "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(124,58,237,0.05) 100%)",
                             cursor: "pointer",
                             transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                             "&:hover": {
                                 background: isDark
-                                    ? "linear-gradient(135deg, rgba(99,102,241,0.25) 0%, rgba(99,102,241,0.15) 100%)"
-                                    : "linear-gradient(135deg, rgba(79,70,229,0.2) 0%, rgba(79,70,229,0.1) 100%)",
+                                    ? "linear-gradient(135deg, rgba(124,58,237,0.25) 0%, rgba(124,58,237,0.15) 100%)"
+                                    : "linear-gradient(135deg, rgba(124,58,237,0.2) 0%, rgba(124,58,237,0.1) 100%)",
                                 borderColor: isDark
-                                    ? "rgba(99,102,241,0.5)"
-                                    : "rgba(79,70,229,0.4)",
+                                    ? "rgba(124,58,237,0.5)"
+                                    : "rgba(124,58,237,0.4)",
                                 transform: "translateY(-1px)",
                                 boxShadow: isDark
-                                    ? "0 3px 10px rgba(99,102,241,0.2)"
-                                    : "0 3px 10px rgba(79,70,229,0.15)",
+                                    ? "0 3px 10px rgba(124,58,237,0.2)"
+                                    : "0 3px 10px rgba(124,58,237,0.15)",
                             },
                             "&:active": {
                                 transform: "translateY(0)",
@@ -144,7 +144,7 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
                             sx={{
                                 fontWeight: 600,
                                 fontSize: "0.7rem",
-                                color: isDark ? "#a5b4fc" : "#4f46e5",
+                                color: isDark ? "#a78bfa" : "#6d28d9",
                                 letterSpacing: "0.01em",
                             }}
                         >

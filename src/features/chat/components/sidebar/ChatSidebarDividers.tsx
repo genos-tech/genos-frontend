@@ -179,8 +179,8 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                                 transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                                 background: isActive
                                     ? isDark
-                                        ? "linear-gradient(135deg, rgba(99,102,241,0.18) 0%, rgba(139,92,246,0.12) 100%)"
-                                        : "linear-gradient(135deg, rgba(79,70,229,0.12) 0%, rgba(124,58,237,0.06) 100%)"
+                                        ? "linear-gradient(135deg, rgba(124,58,237,0.18) 0%, rgba(139,92,246,0.12) 100%)"
+                                        : "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(124,58,237,0.06) 100%)"
                                     : "transparent",
                                 border: "1px solid",
                                 borderColor: isActive
@@ -191,8 +191,8 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                                 "&:hover": {
                                     background: isActive
                                         ? isDark
-                                            ? "linear-gradient(135deg, rgba(99,102,241,0.22) 0%, rgba(139,92,246,0.16) 100%)"
-                                            : "linear-gradient(135deg, rgba(79,70,229,0.16) 0%, rgba(124,58,237,0.1) 100%)"
+                                            ? "linear-gradient(135deg, rgba(124,58,237,0.22) 0%, rgba(139,92,246,0.16) 100%)"
+                                            : "linear-gradient(135deg, rgba(124,58,237,0.16) 0%, rgba(124,58,237,0.1) 100%)"
                                         : isDark
                                           ? "rgba(255,255,255,0.04)"
                                           : "rgba(0,0,0,0.03)",

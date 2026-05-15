@@ -150,7 +150,7 @@ export const ModalCreateGM: React.FC<Props> = ({
                             height: 40,
                             borderRadius: "10px",
                             background:
-                                "linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%)",
+                                "linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(124,58,237,0.2) 100%)",
                             border: "1px solid rgba(59, 130, 246, 0.3)",
                         }}
                     >
@@ -448,7 +448,7 @@ export const ModalCreateGM: React.FC<Props> = ({
                         disabled={!chatName.trim()}
                         onClick={handleCreateGroup}
                         sx={{
-                            background: "linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)",
+                            background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
                             borderRadius: "10px",
                             px: 3,
                             fontWeight: 600,

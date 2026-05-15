@@ -232,8 +232,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         width: "60%",
                         height: "40%",
                         background: isDark
-                            ? "radial-gradient(ellipse at top right, rgba(99,102,241,0.04) 0%, transparent 60%)"
-                            : "radial-gradient(ellipse at top right, rgba(79,70,229,0.03) 0%, transparent 60%)",
+                            ? "radial-gradient(ellipse at top right, rgba(124,58,237,0.04) 0%, transparent 60%)"
+                            : "radial-gradient(ellipse at top right, rgba(124,58,237,0.03) 0%, transparent 60%)",
                         pointerEvents: "none",
                     }}
                 />
@@ -404,8 +404,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                     transition: "all 0.2s ease",
                                     background: showOnlyUnreadItems
                                         ? isDark
-                                            ? "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)"
-                                            : "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)"
+                                            ? "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)"
+                                            : "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)"
                                         : isDark
                                           ? "rgba(255,255,255,0.06)"
                                           : "rgba(0,0,0,0.04)",
@@ -418,8 +418,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                     "&:hover": {
                                         background: showOnlyUnreadItems
                                             ? isDark
-                                                ? "linear-gradient(135deg, #818cf8 0%, #a78bfa 100%)"
-                                                : "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)"
+                                                ? "linear-gradient(135deg, #a78bfa 0%, #c084fc 100%)"
+                                                : "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)"
                                             : isDark
                                               ? "rgba(255,255,255,0.1)"
                                               : "rgba(0,0,0,0.06)",
