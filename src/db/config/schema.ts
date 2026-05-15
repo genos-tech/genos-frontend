@@ -230,6 +230,11 @@ export const STORE_CONFIGS: Record<string, StoreConfig> = {
         name: STORES.CHAT_NOTES,
         keyPath: KEY_PATHS.CHAT_NOTES,
     },
+    [STORES.TODOS]: {
+        name: STORES.TODOS,
+        keyPath: KEY_PATHS.TODOS,
+        indexes: [{ name: INDEX_NAMES.TODOS, keyPath: INDEX_KEY_PATHS.TODOS, unique: false }],
+    },
 };
 
 // Initialize database with proper schema
