@@ -9,6 +9,9 @@ import { useInboxItems } from "./hooks/useInboxItems";
 import { useInboxScroll } from "./hooks/useInboxScroll";
 import { InboxHomeProps } from "./types/inboxTypes";
 
+import { LayoutStyles } from "../../components/ui/styles/commonStyle";
+import { purplePalette } from "../../theme/purplePalette";
+
 // Wrapper component for Activities section with item routing
 const ActivitiesSection = (props: InboxHomeProps & { items: any[]; virtuosoRef: any }) => {
     const { itemId } = useParams<{ itemId?: string }>();
@@ -72,47 +75,15 @@ export const InboxHome = (props: InboxHomeProps) => {
     const activityVirtuosoRef = useInboxScroll(activityInboxItems);
     const requestVirtuosoRef = useInboxScroll(requestInboxItems);
 
+    const ls = isDark ? LayoutStyles.dark : LayoutStyles.light;
+    const p = isDark ? purplePalette.dark : purplePalette.light;
+
     return (
-        <Box sx={{ display: "flex", minHeight: "100dvh", flex: 1, minWidth: 0 }}>
-            <Sheet
-                sx={{
-                    width: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                    background: isDark
-                        ? "linear-gradient(180deg, rgba(20,14,34,1) 0%, rgba(11,10,22,1) 100%)"
-                        : "linear-gradient(180deg, rgba(252,250,255,1) 0%, rgba(248,245,255,1) 100%)",
-                    position: "relative",
-                    overflow: "hidden",
-                }}
-            >
-                {/* Background decoration */}
-                <Box
-                    sx={{
-                        position: "absolute",
-                        top: 0,
-                        right: 0,
-                        width: "50%",
-                        height: "60%",
-                        background: isDark
-                            ? "radial-gradient(ellipse at top right, rgba(124,58,237,0.06) 0%, transparent 60%)"
-                            : "radial-gradient(ellipse at top right, rgba(124,58,237,0.04) 0%, transparent 60%)",
-                        pointerEvents: "none",
-                    }}
-                />
-                <Box
-                    sx={{
-                        position: "absolute",
-                        bottom: 0,
-                        left: 0,
-                        width: "40%",
-                        height: "40%",
-                        background: isDark
-                            ? "radial-gradient(ellipse at bottom left, rgba(139,92,246,0.04) 0%, transparent 60%)"
-                            : "radial-gradient(ellipse at bottom left, rgba(124,58,237,0.03) 0%, transparent 60%)",
-                        pointerEvents: "none",
-                    }}
-                />
+        <Box sx={LayoutStyles.outerWrapper}>
+            <Sheet sx={{ width: "100%", ...ls.serviceSurface }}>
+                {/* Background decorations */}
+                <Box sx={ls.decorTopRight} />
+                <Box sx={ls.decorBottomLeft} />
 
                 {/* Header */}
                 <InboxHeader />
@@ -242,19 +213,13 @@ export const InboxHome = (props: InboxHomeProps) => {
                         px: 3,
                         py: 1.5,
                         borderTop: "1px solid",
-                        borderColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
+                        borderColor: p.borderMuted,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                     }}
                 >
-                    <Typography
-                        level="body-xs"
-                        sx={{
-                            color: isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.25)",
-                            fontSize: 10,
-                        }}
-                    >
+                    <Typography level="body-xs" sx={{ color: p.textSubtle, fontSize: 10 }}>
                         Keep your inbox tidy
                     </Typography>
                 </Box>

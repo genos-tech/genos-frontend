@@ -1,10 +1,13 @@
 import { useState } from "react";
-import { Box } from "@mui/joy";
+import { Box, Sheet } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 
 import { TaskHomeLayout } from "./components/layout/TaskHomeLayout";
 import { TaskHomeModals } from "./components/modals/TaskHomeModals";
 import { useTaskRouting } from "./hooks/useTaskRouting";
 import { TaskHomeProps } from "./types/TaskHomeTypes";
+
+import { LayoutStyles } from "../../components/ui/styles/commonStyle";
 
 export const TaskHome = (props: TaskHomeProps) => {
     const { useTEM, socket, myself, setMyself, useUISM, useCM, useNM, usePM, useTM, useSM } =
@@ -49,38 +52,46 @@ export const TaskHome = (props: TaskHomeProps) => {
         useTM.setIsTaskTableVisible(false);
     };
 
-    return (
-        <Box sx={{ display: "flex", minHeight: "100dvh", flex: 1, minWidth: 0 }}>
-            <TaskHomeLayout
-                useCM={useCM}
-                myself={myself}
-                useNM={useNM}
-                usePM={usePM}
-                setMyself={setMyself}
-                socket={socket}
-                useTEM={useTEM}
-                useTM={useTM}
-                useSM={useSM}
-                useUISM={useUISM}
-                onCloseTaskHome={handleCloseTaskHome}
-                onCreateProject={handleCreateProject}
-                onCreateTag={handleCreateTag}
-                onDeleteProject={handleDeleteProject}
-                setOpenJoinProject={setOpenJoinProject}
-            />
+    const { mode } = useColorScheme();
+    const ls = mode === "dark" ? LayoutStyles.dark : LayoutStyles.light;
 
-            <TaskHomeModals
-                useCM={useCM}
-                myself={myself}
-                openDeleteProject={openDeleteProject}
-                openJoinProject={openJoinProject}
-                usePM={usePM}
-                setOpenDeleteProject={setOpenDeleteProject}
-                setOpenJoinProject={setOpenJoinProject}
-                socket={socket}
-                useTM={useTM}
-                useSM={useSM}
-            />
+    return (
+        <Box sx={LayoutStyles.outerWrapper}>
+            <Sheet sx={ls.serviceSurface}>
+                <Box sx={ls.decorTopRight} />
+                <Box sx={ls.decorBottomLeft} />
+
+                <TaskHomeLayout
+                    useCM={useCM}
+                    myself={myself}
+                    useNM={useNM}
+                    usePM={usePM}
+                    setMyself={setMyself}
+                    socket={socket}
+                    useTEM={useTEM}
+                    useTM={useTM}
+                    useSM={useSM}
+                    useUISM={useUISM}
+                    onCloseTaskHome={handleCloseTaskHome}
+                    onCreateProject={handleCreateProject}
+                    onCreateTag={handleCreateTag}
+                    onDeleteProject={handleDeleteProject}
+                    setOpenJoinProject={setOpenJoinProject}
+                />
+
+                <TaskHomeModals
+                    useCM={useCM}
+                    myself={myself}
+                    openDeleteProject={openDeleteProject}
+                    openJoinProject={openJoinProject}
+                    usePM={usePM}
+                    setOpenDeleteProject={setOpenDeleteProject}
+                    setOpenJoinProject={setOpenJoinProject}
+                    socket={socket}
+                    useTM={useTM}
+                    useSM={useSM}
+                />
+            </Sheet>
 
             {/* Hover Animation with CSS */}
             <style>

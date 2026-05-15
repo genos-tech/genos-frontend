@@ -405,8 +405,7 @@ export const ProfileModalStyles = {
         labelColor: D.textMuted,
         valueColor: D.text,
         hoverBg: D.hoverBg,
-        avatarGlow:
-            "0 0 40px rgba(124,58,237,0.4), 0 0 80px rgba(139,92,246,0.2)",
+        avatarGlow: "0 0 40px rgba(124,58,237,0.4), 0 0 80px rgba(139,92,246,0.2)",
         accentColor: D.accentSoft,
         inputBg: "rgba(20,14,34,0.95)",
     },
@@ -419,8 +418,7 @@ export const ProfileModalStyles = {
         labelColor: L.textMuted,
         valueColor: L.text,
         hoverBg: L.hoverBg,
-        avatarGlow:
-            "0 0 40px rgba(124,58,237,0.2), 0 0 80px rgba(139,92,246,0.1)",
+        avatarGlow: "0 0 40px rgba(124,58,237,0.2), 0 0 80px rgba(139,92,246,0.1)",
         accentColor: L.accent,
         inputBg: "rgba(255,255,255,0.95)",
     },
@@ -490,3 +488,137 @@ export const TaskFilterMenuStyles = {
         resetBorder: L.dangerTintBorder,
     },
 };
+
+// Shared layout style tokens applied to the top-level Shell of each service
+// Home (chat, tasks, notes, inbox). Consumers pick dark or light based on
+// `useColorScheme()`, then spread the relevant sub-object into their sx prop.
+export const LayoutStyles = {
+    // Mode-independent: the outermost Box every Home renders
+    outerWrapper: {
+        display: "flex",
+        minHeight: "100dvh",
+        flex: 1,
+        minWidth: 0,
+    } as const,
+
+    dark: {
+        // Ambient gradient surface — applied to the Sheet that wraps each service's content
+        serviceSurface: {
+            flex: 1,
+            display: "flex",
+            flexDirection: "column" as const,
+            background: "linear-gradient(180deg, rgba(20,14,34,1) 0%, rgba(11,10,22,1) 100%)",
+            position: "relative" as const,
+            overflow: "hidden" as const,
+        },
+
+        // Subtle radial glow decorations (position: absolute, pointerEvents: none)
+        decorTopRight: {
+            position: "absolute" as const,
+            top: 0,
+            right: 0,
+            width: "50%",
+            height: "60%",
+            pointerEvents: "none" as const,
+            background:
+                "radial-gradient(ellipse at top right, rgba(124,58,237,0.06) 0%, transparent 60%)",
+        },
+        decorBottomLeft: {
+            position: "absolute" as const,
+            bottom: 0,
+            left: 0,
+            width: "40%",
+            height: "40%",
+            pointerEvents: "none" as const,
+            background:
+                "radial-gradient(ellipse at bottom left, rgba(139,92,246,0.04) 0%, transparent 60%)",
+        },
+
+        // Box that wraps a sidebar Panel (the left resizable column)
+        sidebarPanel: {
+            height: "100%",
+            width: "100%",
+            borderRight: "1px solid",
+            borderColor: D.border,
+        },
+
+        // Box that wraps a main content Panel (right-side resizable column with header offset)
+        mainPanel: {
+            px: { xs: 1, md: 2 },
+            pt: {
+                xs: "calc(12px + var(--Header-height))",
+                sm: "calc(12px + var(--Header-height))",
+                md: 3,
+            },
+            pb: { xs: 2, sm: 2, md: 3 },
+            flex: 1,
+            display: "flex",
+            flexDirection: "column" as const,
+            minWidth: 0,
+            height: "100dvh",
+            overflow: "hidden" as const,
+            gap: 1,
+            borderRight: "1px solid",
+            borderColor: D.border,
+        },
+    },
+
+    light: {
+        serviceSurface: {
+            flex: 1,
+            display: "flex",
+            flexDirection: "column" as const,
+            background:
+                "linear-gradient(180deg, rgba(252,250,255,1) 0%, rgba(248,245,255,1) 100%)",
+            position: "relative" as const,
+            overflow: "hidden" as const,
+        },
+
+        decorTopRight: {
+            position: "absolute" as const,
+            top: 0,
+            right: 0,
+            width: "50%",
+            height: "60%",
+            pointerEvents: "none" as const,
+            background:
+                "radial-gradient(ellipse at top right, rgba(124,58,237,0.04) 0%, transparent 60%)",
+        },
+        decorBottomLeft: {
+            position: "absolute" as const,
+            bottom: 0,
+            left: 0,
+            width: "40%",
+            height: "40%",
+            pointerEvents: "none" as const,
+            background:
+                "radial-gradient(ellipse at bottom left, rgba(124,58,237,0.03) 0%, transparent 60%)",
+        },
+
+        sidebarPanel: {
+            height: "100%",
+            width: "100%",
+            borderRight: "1px solid",
+            borderColor: L.border,
+        },
+
+        mainPanel: {
+            px: { xs: 1, md: 2 },
+            pt: {
+                xs: "calc(12px + var(--Header-height))",
+                sm: "calc(12px + var(--Header-height))",
+                md: 3,
+            },
+            pb: { xs: 2, sm: 2, md: 3 },
+            flex: 1,
+            display: "flex",
+            flexDirection: "column" as const,
+            minWidth: 0,
+            height: "100dvh",
+            overflow: "hidden" as const,
+            gap: 1,
+            borderRight: "1px solid",
+            borderColor: L.border,
+        },
+    },
+} as const;
