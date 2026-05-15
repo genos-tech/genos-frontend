@@ -26,7 +26,7 @@ import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import { Box, Button, Chip, CircularProgress, Sheet, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
-import type { PendingApprovalPayload } from "../../services/agentApi";
+import type { AgentUsage, PendingApprovalPayload } from "../../services/agentApi";
 import { purplePalette } from "../../theme/purplePalette";
 import { SpotlightResultItem } from "./SpotlightResultItem";
 import type { EntityType, SpotlightResult } from "./types";
@@ -48,6 +48,7 @@ interface Props {
     onNewConversation: () => void;
     ask: AskState;
     turns: CompletedTurn[];
+    dailyUsage: AgentUsage | null;
 }
 
 const SECTION_ORDER: { key: EntityType; label: string }[] = [
@@ -78,6 +79,7 @@ export const SpotlightOverlay = ({
     onNewConversation,
     ask,
     turns,
+    dailyUsage,
 }: Props) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -200,6 +202,23 @@ export const SpotlightOverlay = ({
                             }
                         }}
                     />
+                    {/* Daily usage pill — hidden for unlimited users */}
+                    {dailyUsage && !dailyUsage.is_unlimited && (
+                        <Typography
+                            level="body-xs"
+                            sx={{
+                                whiteSpace: "nowrap",
+                                fontVariantNumeric: "tabular-nums",
+                                opacity: dailyUsage.used >= (dailyUsage.limit ?? Infinity) ? 1 : 0.65,
+                                color:
+                                    dailyUsage.used >= (dailyUsage.limit ?? Infinity)
+                                        ? "warning.500"
+                                        : undefined,
+                            }}
+                        >
+                            {dailyUsage.used} / {dailyUsage.limit} asks today
+                        </Typography>
+                    )}
                     {ask.isStreaming && (
                         <Button
                             size="sm"

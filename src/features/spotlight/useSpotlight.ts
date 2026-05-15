@@ -31,7 +31,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import axios, { CanceledError } from "axios";
 
-import { askAgentStream, decideAgent, type PendingApprovalPayload } from "../../services/agentApi";
+import {
+    askAgentStream,
+    decideAgent,
+    fetchAgentUsage,
+    type AgentUsage,
+    type PendingApprovalPayload,
+} from "../../services/agentApi";
 import { searchSpotlight } from "../../services/searchApi";
 import { isMac } from "../../utils/platform";
 import type { SpotlightResult } from "./types";
@@ -116,6 +122,7 @@ export interface UseSpotlightReturn {
     onNewConversation: () => void;
     ask: AskState;
     turns: CompletedTurn[];
+    dailyUsage: AgentUsage | null;
 }
 
 const EMPTY_ASK_STATE: AskState = {
@@ -138,6 +145,7 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
     const [error, setError] = useState<string | null>(null);
     const [ask, setAsk] = useState<AskState>(EMPTY_ASK_STATE);
     const [turns, setTurns] = useState<CompletedTurn[]>([]);
+    const [dailyUsage, setDailyUsage] = useState<AgentUsage | null>(null);
 
     // Used to abort in-flight searches when the query changes or the
     // overlay closes.
@@ -179,6 +187,20 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
         document.addEventListener("keydown", handleKeyDown);
         return () => document.removeEventListener("keydown", handleKeyDown);
     }, []);
+
+    // ---- Fetch daily usage from the backend when the overlay opens. ----
+    // Re-fetches each open so the count is fresh after page navigations.
+    // Silently no-ops on failure — the backend enforces the limit regardless.
+    useEffect(() => {
+        if (!isOpen || !accessToken) return;
+        let cancelled = false;
+        fetchAgentUsage(accessToken).then((usage) => {
+            if (!cancelled) setDailyUsage(usage);
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [isOpen, accessToken]);
 
     // ---- Overlay close: clear transient query / results, preserve
     // conversation. ----
@@ -511,6 +533,11 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
             ...buildStreamHandlers(askedTurnId),
         });
 
+        // Optimistically increment the local usage counter so the UI
+        // reflects the new count without waiting for the next /usage/ fetch.
+        // The backend is the authoritative gate; this is display-only.
+        setDailyUsage((prev) => (prev ? { ...prev, used: prev.used + 1 } : prev));
+
         // Clear the input immediately after submitting. The question is
         // already captured in `ask.askedQuery` and visible in the
         // conversation history, so the input is ready for the next one.
@@ -638,5 +665,6 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
         onNewConversation,
         ask,
         turns,
+        dailyUsage,
     };
 };

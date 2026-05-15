@@ -91,6 +91,24 @@ export interface DecideAgentArgs extends BaseStreamHandlers {
     signal?: AbortSignal;
 }
 
+export interface AgentUsage {
+    used: number;
+    limit: number | null; // null = unlimited
+    is_unlimited: boolean;
+}
+
+export async function fetchAgentUsage(accessToken: string): Promise<AgentUsage | null> {
+    try {
+        const resp = await fetch(`${API_BASE}/agent/usage/`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (!resp.ok) return null;
+        return (await resp.json()) as AgentUsage;
+    } catch {
+        return null;
+    }
+}
+
 export async function askAgentStream(args: AskAgentArgs): Promise<void> {
     if (!args.accessToken) {
         args.onError("Not signed in.");

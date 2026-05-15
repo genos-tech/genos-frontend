@@ -312,6 +312,7 @@ export const App = () => {
                         onQueryChange={spotlight.setQuery}
                         onReject={spotlight.onReject}
                         onSelect={handleSpotlightSelect}
+                        dailyUsage={spotlight.dailyUsage}
                     />
                     <Snackbar
                         anchorOrigin={{ vertical: "top", horizontal: "center" }}
