@@ -48,6 +48,10 @@ const RESULT_LIMIT = 20;
 // agent's own SESSION_MAX_PRIOR_TURNS (3 by default) controls how many
 // the model actually sees; this cap is purely a UI memory bound.
 const MAX_TURNS_IN_HISTORY = 20;
+// localStorage persistence (Phase 17)
+const STORAGE_KEY = (teamId: string) => `spotlight:session:v1:${teamId}`;
+const STORAGE_TTL_MS = 4 * 60 * 60 * 1000; // 4 hours
+const MAX_STORED_TURNS = 10; // lower cap than in-memory to limit storage size
 
 export interface UseSpotlightArgs {
     accessToken: string | null;
@@ -202,6 +206,36 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
         };
     }, [isOpen, accessToken]);
 
+    // ---- Hydrate conversation from localStorage on mount / team change. ----
+    // Restores up to MAX_STORED_TURNS prior turns + sessionId so a page
+    // reload doesn't lose the conversation context. TTL of 4 h prevents
+    // stale history from reappearing the next morning. Any corrupt or
+    // version-mismatched entry is silently discarded.
+    useEffect(() => {
+        if (!teamId) return;
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY(teamId));
+            if (!raw) return;
+            const stored = JSON.parse(raw) as {
+                version: number;
+                savedAt: number;
+                sessionId: string | null;
+                turns: CompletedTurn[];
+            };
+            if (stored.version !== 1) return;
+            if (Date.now() - stored.savedAt > STORAGE_TTL_MS) return;
+            const restoredTurns = stored.turns ?? [];
+            if (restoredTurns.length === 0 && !stored.sessionId) return;
+            setTurns(restoredTurns);
+            setAsk((prev) => ({ ...prev, sessionId: stored.sessionId ?? null }));
+            // Seed promotedTurnIdsRef so stale handlers can't double-promote
+            // a turn that was already snapshotted in a prior page session.
+            restoredTurns.forEach((t) => promotedTurnIdsRef.current.add(t.id));
+        } catch {
+            // Ignore corrupt / missing localStorage entries.
+        }
+    }, [teamId]); // eslint-disable-line react-hooks/exhaustive-deps
+
     // ---- Overlay close: clear transient query / results, preserve
     // conversation. ----
     //
@@ -226,6 +260,35 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
         // the conversation can resume on re-open.
         setAsk((prev) => (prev.isStreaming ? { ...prev, isStreaming: false } : prev));
     }, [isOpen]);
+
+    // ---- Persist conversation to localStorage on turns / sessionId change. ----
+    // Debounced 500 ms so high-frequency answer_delta updates (which don't
+    // change turns or sessionId) never trigger a write.
+    // toolEvents are stripped before storing — they can contain large
+    // argument blobs and are not needed for conversation resumption.
+    useEffect(() => {
+        if (!teamId) return;
+        const timer = window.setTimeout(() => {
+            try {
+                const toStore = turns.slice(-MAX_STORED_TURNS).map((t) => ({
+                    ...t,
+                    toolEvents: [], // strip large blobs
+                }));
+                localStorage.setItem(
+                    STORAGE_KEY(teamId),
+                    JSON.stringify({
+                        version: 1,
+                        savedAt: Date.now(),
+                        sessionId: ask.sessionId,
+                        turns: toStore,
+                    })
+                );
+            } catch {
+                // Ignore quota errors silently — conversation still works in-memory.
+            }
+        }, 500);
+        return () => window.clearTimeout(timer);
+    }, [turns, ask.sessionId, teamId]);
 
     // ---- Debounced search on query change while overlay is open. ----
     useEffect(() => {
@@ -652,7 +715,16 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
         promotedTurnIdsRef.current.clear();
         setTurns([]);
         setAsk(EMPTY_ASK_STATE);
-    }, []);
+        // Wipe persisted state immediately so a reload after "New conversation"
+        // opens a blank overlay rather than restoring the cleared history.
+        if (teamId) {
+            try {
+                localStorage.removeItem(STORAGE_KEY(teamId));
+            } catch {
+                /* ignore */
+            }
+        }
+    }, [teamId]);
 
     return {
         isOpen,
