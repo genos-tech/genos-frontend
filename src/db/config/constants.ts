@@ -1,6 +1,6 @@
 // Database constants
 export const DB_NAME = "genosData";
-export const DB_VERSION = 1;
+export const DB_VERSION = 2;
 
 // Store names
 export const STORES = {
@@ -20,7 +20,7 @@ export const STORES = {
     PM_MESSAGES: "pmMessages",
     PM_THREAD_MESSAGES: "pmThreadMessages",
     FLAGGED_MESSAGES: "flaggedMessages",
-    TASKS: "tasks",
+    TASK_META: "taskMeta",
     PERSONAL_NOTES: "personalNotes",
     TASK_NOTES: "taskNotes",
     CHAT_NOTES: "chatNotes",
@@ -44,7 +44,7 @@ export const KEY_PATHS = {
     PM_MESSAGES: "messageIdWithChatId",
     PM_THREAD_MESSAGES: "messageIdWithChatIdAndThreadId",
     FLAGGED_MESSAGES: "flaggedMessageId",
-    TASKS: "id",
+    TASK_META: "id",
     PERSONAL_NOTES: "noteId",
     TASK_NOTES: "noteId",
     CHAT_NOTES: "noteId",
@@ -73,8 +73,8 @@ export const INDEX_NAMES = {
     PM_MESSAGES_COMPOUND: "PmMessagesCompoundIndex",
     PM_THREAD_MESSAGES: "PmThreadMessagesIndex",
     PM_THREAD_MESSAGES_COMPOUND: "PmThreadMessagesCompoundIndex",
-    TASKS: "TasksIndex",
-    TASKS_COMPOUND: "TasksCompoundIndex",
+    TASK_META: "TaskMetaIndex",
+    TASK_META_COMPOUND: "TaskMetaCompoundIndex",
 } as const;
 
 // Index key paths
@@ -100,6 +100,6 @@ export const INDEX_KEY_PATHS = {
     PM_MESSAGES_COMPOUND: ["chatId", "messageIdWithChatId"],
     PM_THREAD_MESSAGES: "chatId",
     PM_THREAD_MESSAGES_COMPOUND: ["chatId", "threadId"],
-    TASKS: "projectId",
-    TASKS_COMPOUND: ["projectId", "status"],
+    TASK_META: "projectId",
+    TASK_META_COMPOUND: ["projectId", "status"],
 } as const;
