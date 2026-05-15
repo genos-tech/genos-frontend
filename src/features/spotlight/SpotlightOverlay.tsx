@@ -21,11 +21,14 @@
 // `components/layout/ServiceSwitcherOverlay.tsx` for the prior art.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
+import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
 import { Box, Button, Chip, CircularProgress, IconButton, Sheet, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import ReactMarkdown from "react-markdown";
@@ -67,6 +70,8 @@ const SECTION_ORDER: { key: EntityType; label: string }[] = [
 // fires while at-bottom; if the user has scrolled up to read history,
 // we leave them in place.
 const SCROLL_FOLLOW_THRESHOLD_PX = 50;
+// Number of citation chips shown before the "+N more" expand button.
+const CHIPS_INITIAL = 4;
 
 export const SpotlightOverlay = ({
     isOpen,
@@ -616,6 +621,7 @@ const TurnView = ({
     askDisabled,
 }: TurnViewProps) => {
     const [copied, setCopied] = useState(false);
+    const [showAllSources, setShowAllSources] = useState(false);
 
     const handleCopy = useCallback(() => {
         if (!answer) return;
@@ -831,29 +837,84 @@ const TurnView = ({
                         </Typography>
                     )}
 
-                    {answerSources.length > 0 && (
-                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 0.5 }}>
-                            {answerSources.slice(0, 6).map((s) => (
-                                <Chip
-                                    key={`${s.entity_type}:${s.entity_id}`}
-                                    size="md"
-                                    variant="solid"
-                                    color="primary"
+                    {answerSources.length > 0 &&
+                        (() => {
+                            const visible = showAllSources
+                                ? answerSources
+                                : answerSources.slice(0, CHIPS_INITIAL);
+                            const hiddenCount = answerSources.length - CHIPS_INITIAL;
+                            return (
+                                <Box
                                     sx={{
-                                        cursor: "pointer",
-                                        fontSize: "0.78rem",
-                                        maxWidth: "min(340px, 80vw)",
-                                        overflow: "hidden",
-                                        whiteSpace: "nowrap",
-                                        textOverflow: "ellipsis",
+                                        display: "flex",
+                                        flexWrap: "wrap",
+                                        gap: 0.5,
+                                        mt: 0.5,
+                                        alignItems: "center",
                                     }}
-                                    onClick={() => onSelect(s)}
                                 >
-                                    {_chipLabel(s)}
-                                </Chip>
-                            ))}
-                        </Box>
-                    )}
+                                    {visible.map((s) => (
+                                        <Chip
+                                            key={`${s.entity_type}:${s.entity_id}`}
+                                            size="md"
+                                            variant="solid"
+                                            color="primary"
+                                            startDecorator={_sourceIcon(s.entity_type)}
+                                            sx={{
+                                                cursor: "pointer",
+                                                fontSize: "0.78rem",
+                                                maxWidth: "min(340px, 80vw)",
+                                                overflow: "hidden",
+                                                whiteSpace: "nowrap",
+                                                textOverflow: "ellipsis",
+                                                transition: "box-shadow 0.15s, transform 0.1s",
+                                                "&:hover": {
+                                                    boxShadow:
+                                                        "0 0 0 2px var(--joy-palette-primary-300)",
+                                                    transform: "translateY(-1px)",
+                                                },
+                                            }}
+                                            onClick={() => onSelect(s)}
+                                        >
+                                            {_chipLabel(s)}
+                                        </Chip>
+                                    ))}
+                                    {!showAllSources && hiddenCount > 0 && (
+                                        <Button
+                                            size="sm"
+                                            variant="plain"
+                                            color="primary"
+                                            onClick={() => setShowAllSources(true)}
+                                            sx={{
+                                                minHeight: 0,
+                                                py: 0,
+                                                px: 0.5,
+                                                fontSize: "0.78rem",
+                                            }}
+                                        >
+                                            +{hiddenCount} more
+                                        </Button>
+                                    )}
+                                    {showAllSources && answerSources.length > CHIPS_INITIAL && (
+                                        <Button
+                                            size="sm"
+                                            variant="plain"
+                                            color="neutral"
+                                            onClick={() => setShowAllSources(false)}
+                                            sx={{
+                                                minHeight: 0,
+                                                py: 0,
+                                                px: 0.5,
+                                                fontSize: "0.78rem",
+                                                opacity: 0.65,
+                                            }}
+                                        >
+                                            Show less
+                                        </Button>
+                                    )}
+                                </Box>
+                            );
+                        })()}
                 </Box>
             </Box>
 
@@ -1012,6 +1073,13 @@ function _chipLabel(s: SpotlightResult): string {
     }
     // Fallback to raw entity_id if specific ids are absent.
     return title ? `${s.entity_id}: ${title}` : s.entity_id;
+}
+
+function _sourceIcon(entityType: string) {
+    if (entityType === "task") return <AssignmentRoundedIcon sx={{ fontSize: 13 }} />;
+    if (entityType === "chat") return <ChatBubbleOutlineRoundedIcon sx={{ fontSize: 13 }} />;
+    if (entityType === "note") return <StickyNote2RoundedIcon sx={{ fontSize: 13 }} />;
+    return undefined;
 }
 
 // Fallback label for a still-pending tool call (no summary yet).
