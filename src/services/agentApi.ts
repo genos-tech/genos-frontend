@@ -1,20 +1,30 @@
-// Streaming consumer for POST /api/v2/agent/ask.
+// Streaming consumers for the agent endpoints.
 //
-// Phase 3: the backend now runs a multi-step Gemini function-calling
-// loop. NDJSON event types:
+//   POST /api/v2/agent/ask/      — start a fresh run
+//   POST /api/v2/agent/decide/   — resume a paused run (approve / reject)
 //
-//   {"type": "tool_call_start", "step": N, "tool_name": "...", "arguments": {...}}
-//   {"type": "tool_call_result", "step": N, "tool_name": "...", "summary": "..."}
-//   {"type": "tool_call_error",  "step": N, "tool_name": "...", "error": "..."}
-//   {"type": "sources", "sources": [...]}        // after each search call
-//   {"type": "answer_delta", "text": "Hello"}
+// Both endpoints stream NDJSON over POST and emit the same event
+// vocabulary. Phase 7 added `tool_call_pending_approval`, which the
+// controller emits when the agent wants to call a write tool. The
+// frontend renders an Approve / Reject card and calls `decideAgent`
+// with the decision + token; the response is another NDJSON stream
+// with the resumed events (tool_call_start, tool_call_result/error,
+// answer_delta, done).
+//
+// NDJSON event types:
+//   {"type": "tool_call_start", "step", "tool_name", "arguments"}
+//   {"type": "tool_call_result", "step", "tool_name", "summary"}
+//   {"type": "tool_call_error",  "step", "tool_name", "error"}
+//   {"type": "tool_call_pending_approval",
+//        "step", "tool_name", "arguments", "approval_token", "run_id"}
+//   {"type": "sources", "sources": [...]}
+//   {"type": "answer_delta", "text": "..."}
 //   {"type": "done"}
 //   {"type": "error", "message": "..."}
 //
 // Why fetch instead of axios: axios doesn't expose the response body
-// as a ReadableStream in the browser, so we'd have to buffer the
-// whole reply before the user sees anything. Native fetch + the body
-// reader gives us token-by-token streaming.
+// as a ReadableStream in the browser. Native fetch + the body reader
+// gives us token-by-token streaming.
 
 import type { SpotlightResult } from "../features/spotlight/types";
 
@@ -38,19 +48,12 @@ export interface ToolCallErrorPayload {
     error: string;
 }
 
-export interface AskAgentArgs {
-    query: string;
-    teamId: string;
-    accessToken: string | null;
-    entityTypes?: Array<"chat" | "task" | "note">;
-    signal?: AbortSignal;
-    onSources: (sources: SpotlightResult[]) => void;
-    onDelta: (text: string) => void;
-    onDone: () => void;
-    onError: (message: string) => void;
-    onToolStart?: (payload: ToolCallStartPayload) => void;
-    onToolResult?: (payload: ToolCallResultPayload) => void;
-    onToolError?: (payload: ToolCallErrorPayload) => void;
+export interface PendingApprovalPayload {
+    step: number;
+    tool_name: string;
+    arguments: Record<string, unknown>;
+    approval_token: string;
+    run_id: string;
 }
 
 export type AgentEvent =
@@ -60,51 +63,101 @@ export type AgentEvent =
     | { type: "error"; message: string }
     | ({ type: "tool_call_start" } & ToolCallStartPayload)
     | ({ type: "tool_call_result" } & ToolCallResultPayload)
-    | ({ type: "tool_call_error" } & ToolCallErrorPayload);
+    | ({ type: "tool_call_error" } & ToolCallErrorPayload)
+    | ({ type: "tool_call_pending_approval" } & PendingApprovalPayload);
+
+interface BaseStreamHandlers {
+    onSources: (sources: SpotlightResult[]) => void;
+    onDelta: (text: string) => void;
+    onDone: () => void;
+    onError: (message: string) => void;
+    onToolStart?: (payload: ToolCallStartPayload) => void;
+    onToolResult?: (payload: ToolCallResultPayload) => void;
+    onToolError?: (payload: ToolCallErrorPayload) => void;
+    onPendingApproval?: (payload: PendingApprovalPayload) => void;
+}
+
+export interface AskAgentArgs extends BaseStreamHandlers {
+    query: string;
+    teamId: string;
+    accessToken: string | null;
+    entityTypes?: Array<"chat" | "task" | "note">;
+    signal?: AbortSignal;
+}
+
+export interface DecideAgentArgs extends BaseStreamHandlers {
+    runId: string;
+    approvalToken: string;
+    decision: "approve" | "reject";
+    accessToken: string | null;
+    signal?: AbortSignal;
+}
 
 export async function askAgentStream(args: AskAgentArgs): Promise<void> {
-    const {
-        query,
-        teamId,
-        accessToken,
-        entityTypes,
-        signal,
-        onSources,
-        onDelta,
-        onDone,
-        onError,
-    } = args;
-
-    if (!accessToken) {
-        onError("Not signed in.");
+    if (!args.accessToken) {
+        args.onError("Not signed in.");
         return;
     }
+    await runNdjsonStream(
+        `${API_BASE}/agent/ask/`,
+        {
+            query: args.query,
+            team_id: args.teamId,
+            entity_types: args.entityTypes,
+        },
+        args.accessToken,
+        args.signal,
+        args
+    );
+}
 
+export async function decideAgent(args: DecideAgentArgs): Promise<void> {
+    if (!args.accessToken) {
+        args.onError("Not signed in.");
+        return;
+    }
+    await runNdjsonStream(
+        `${API_BASE}/agent/decide/`,
+        {
+            run_id: args.runId,
+            approval_token: args.approvalToken,
+            decision: args.decision,
+        },
+        args.accessToken,
+        args.signal,
+        args
+    );
+}
+
+// Shared NDJSON consumer. Used by both /ask/ and /decide/ — the wire
+// protocol is identical, only the request body differs.
+async function runNdjsonStream(
+    url: string,
+    body: unknown,
+    accessToken: string,
+    signal: AbortSignal | undefined,
+    handlers: BaseStreamHandlers
+): Promise<void> {
     let resp: Response;
     try {
-        resp = await fetch(`${API_BASE}/agent/ask/`, {
+        resp = await fetch(url, {
             method: "POST",
             signal,
             headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${accessToken}`,
             },
-            body: JSON.stringify({
-                query,
-                team_id: teamId,
-                entity_types: entityTypes,
-            }),
+            body: JSON.stringify(body),
         });
     } catch (err) {
         // AbortError is expected when the user closes the overlay /
         // types a new query; silently swallow it.
         if ((err as Error).name === "AbortError") return;
-        onError(`Network error: ${(err as Error).message}`);
+        handlers.onError(`Network error: ${(err as Error).message}`);
         return;
     }
 
     if (!resp.ok) {
-        // Try to extract a JSON error body; fall back to raw text.
         let message = `Server returned ${resp.status}`;
         try {
             const data = await resp.json();
@@ -117,27 +170,17 @@ export async function askAgentStream(args: AskAgentArgs): Promise<void> {
                 // ignore
             }
         }
-        onError(message);
+        handlers.onError(message);
         return;
     }
 
     const reader = resp.body?.getReader();
     if (!reader) {
-        onError("Streaming response has no body.");
+        handlers.onError("Streaming response has no body.");
         return;
     }
     const decoder = new TextDecoder("utf-8");
     let buffer = "";
-
-    const handlers = {
-        onSources,
-        onDelta,
-        onDone,
-        onError,
-        onToolStart: args.onToolStart,
-        onToolResult: args.onToolResult,
-        onToolError: args.onToolError,
-    };
 
     try {
         while (true) {
@@ -145,24 +188,19 @@ export async function askAgentStream(args: AskAgentArgs): Promise<void> {
             if (done) break;
             buffer += decoder.decode(value, { stream: true });
 
-            // Split on newlines; keep the trailing partial line in
-            // the buffer for the next iteration.
             let nl = buffer.indexOf("\n");
             while (nl !== -1) {
                 const line = buffer.slice(0, nl).trim();
                 buffer = buffer.slice(nl + 1);
-                if (line) {
-                    dispatchLine(line, handlers);
-                }
+                if (line) dispatchLine(line, handlers);
                 nl = buffer.indexOf("\n");
             }
         }
-        // Flush any final partial line.
         const tail = buffer.trim();
         if (tail) dispatchLine(tail, handlers);
     } catch (err) {
         if ((err as Error).name === "AbortError") return;
-        onError(`Stream interrupted: ${(err as Error).message}`);
+        handlers.onError(`Stream interrupted: ${(err as Error).message}`);
     } finally {
         try {
             reader.releaseLock();
@@ -172,22 +210,11 @@ export async function askAgentStream(args: AskAgentArgs): Promise<void> {
     }
 }
 
-interface DispatchHandlers {
-    onSources: AskAgentArgs["onSources"];
-    onDelta: AskAgentArgs["onDelta"];
-    onDone: AskAgentArgs["onDone"];
-    onError: AskAgentArgs["onError"];
-    onToolStart?: AskAgentArgs["onToolStart"];
-    onToolResult?: AskAgentArgs["onToolResult"];
-    onToolError?: AskAgentArgs["onToolError"];
-}
-
-function dispatchLine(line: string, h: DispatchHandlers) {
+function dispatchLine(line: string, h: BaseStreamHandlers) {
     let evt: AgentEvent;
     try {
         evt = JSON.parse(line) as AgentEvent;
     } catch {
-        // Server promised NDJSON; bail loudly so we notice.
         h.onError(`Malformed NDJSON line: ${line.slice(0, 120)}`);
         return;
     }
@@ -223,6 +250,15 @@ function dispatchLine(line: string, h: DispatchHandlers) {
                 step: evt.step,
                 tool_name: evt.tool_name,
                 error: evt.error,
+            });
+            return;
+        case "tool_call_pending_approval":
+            h.onPendingApproval?.({
+                step: evt.step,
+                tool_name: evt.tool_name,
+                arguments: evt.arguments,
+                approval_token: evt.approval_token,
+                run_id: evt.run_id,
             });
             return;
     }

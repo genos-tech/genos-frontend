@@ -14,7 +14,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import axios, { CanceledError } from "axios";
 
-import { askAgentStream } from "../../services/agentApi";
+import { askAgentStream, decideAgent, type PendingApprovalPayload } from "../../services/agentApi";
 import { searchSpotlight } from "../../services/searchApi";
 import { isMac } from "../../utils/platform";
 import type { SpotlightResult } from "./types";
@@ -53,6 +53,10 @@ export interface AskState {
     askError: string | null;
     // Phase 3: per-step tool-call activity log. Ordered by step.
     toolEvents: ToolEvent[];
+    // Phase 7: when the agent calls a write tool, the loop pauses
+    // here. The UI renders an Approve / Reject card; clicking either
+    // button calls `onApprove` / `onReject` and clears this field.
+    pendingApproval: PendingApprovalPayload | null;
 }
 
 export interface UseSpotlightReturn {
@@ -65,6 +69,8 @@ export interface UseSpotlightReturn {
     isLoading: boolean;
     error: string | null;
     onAsk: () => void;
+    onApprove: () => void;
+    onReject: () => void;
     ask: AskState;
 }
 
@@ -75,6 +81,7 @@ const EMPTY_ASK_STATE: AskState = {
     answerSources: [],
     askError: null,
     toolEvents: [],
+    pendingApproval: null,
 };
 
 export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpotlightReturn => {
@@ -198,7 +205,135 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
     const open = useCallback(() => setIsOpen(true), []);
     const close = useCallback(() => setIsOpen(false), []);
 
-    // ---- Enter / Ask button handler: stream Gemini's RAG answer. ----
+    // Builds the shared callback set used by both `askAgentStream`
+    // (fresh /ask/) and `decideAgent` (resume). Both flows update the
+    // same `ask` state, so the UI sees one continuous answer panel
+    // even when a pause + resume happens in the middle.
+    const buildStreamHandlers = useCallback(
+        (askedQuery: string) => {
+            const stillCurrent = (prev: AskState) => prev.askedQuery === askedQuery;
+            return {
+                onSources: (sources: SpotlightResult[]) => {
+                    setAsk((prev) =>
+                        stillCurrent(prev) ? { ...prev, answerSources: sources } : prev
+                    );
+                },
+                onDelta: (text: string) => {
+                    setAsk((prev) =>
+                        stillCurrent(prev) ? { ...prev, answer: prev.answer + text } : prev
+                    );
+                },
+                onDone: () => {
+                    setAsk((prev) =>
+                        stillCurrent(prev) ? { ...prev, isStreaming: false } : prev
+                    );
+                },
+                onError: (message: string) => {
+                    setAsk((prev) =>
+                        stillCurrent(prev)
+                            ? { ...prev, isStreaming: false, askError: message }
+                            : prev
+                    );
+                },
+                onToolStart: ({
+                    step,
+                    tool_name,
+                    arguments: args,
+                }: {
+                    step: number;
+                    tool_name: string;
+                    arguments: Record<string, unknown>;
+                }) => {
+                    setAsk((prev) => {
+                        if (!stillCurrent(prev)) return prev;
+                        // If the same (step, tool_name) is already in
+                        // the list as `pending` it's the resume call
+                        // re-announcing the previously-paused tool —
+                        // don't duplicate the row.
+                        const dup = prev.toolEvents.some(
+                            (te) =>
+                                te.step === step &&
+                                te.tool_name === tool_name &&
+                                te.status === "pending"
+                        );
+                        if (dup) return prev;
+                        const next: ToolEvent = {
+                            step,
+                            tool_name,
+                            arguments: args,
+                            status: "pending",
+                        };
+                        return { ...prev, toolEvents: [...prev.toolEvents, next] };
+                    });
+                },
+                onToolResult: ({
+                    step,
+                    tool_name,
+                    summary,
+                }: {
+                    step: number;
+                    tool_name: string;
+                    summary: string;
+                }) => {
+                    setAsk((prev) => {
+                        if (!stillCurrent(prev)) return prev;
+                        return {
+                            ...prev,
+                            toolEvents: prev.toolEvents.map((te) =>
+                                te.step === step &&
+                                te.tool_name === tool_name &&
+                                te.status === "pending"
+                                    ? { ...te, status: "done" as const, summary }
+                                    : te
+                            ),
+                        };
+                    });
+                },
+                onToolError: ({
+                    step,
+                    tool_name,
+                    error,
+                }: {
+                    step: number;
+                    tool_name: string;
+                    error: string;
+                }) => {
+                    setAsk((prev) => {
+                        if (!stillCurrent(prev)) return prev;
+                        return {
+                            ...prev,
+                            toolEvents: prev.toolEvents.map((te) =>
+                                te.step === step &&
+                                te.tool_name === tool_name &&
+                                te.status === "pending"
+                                    ? { ...te, status: "error" as const, error }
+                                    : te
+                            ),
+                        };
+                    });
+                },
+                onPendingApproval: (payload: PendingApprovalPayload) => {
+                    setAsk((prev) =>
+                        stillCurrent(prev)
+                            ? {
+                                  ...prev,
+                                  // Stream is "paused" not "ended". The UI
+                                  // shows an Approve/Reject card; spinner
+                                  // text changes from "streaming…" to a
+                                  // waiting-for-user state.
+                                  isStreaming: false,
+                                  pendingApproval: payload,
+                              }
+                            : prev
+                    );
+                },
+            };
+        },
+        // setAsk is stable (React state setter); no dep needed.
+        []
+    );
+
+    // ---- Enter / Ask button handler: stream the agent's answer. ----
     const onAsk = useCallback(() => {
         const trimmed = query.trim();
         if (!trimmed) return;
@@ -223,79 +358,59 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
             answerSources: [],
             askError: null,
             toolEvents: [],
+            pendingApproval: null,
         });
-
-        // Helper: only mutate state if we're still the current Ask
-        // (a new query may have superseded us).
-        const stillCurrent = (prev: AskState) => prev.askedQuery === trimmed;
 
         void askAgentStream({
             query: trimmed,
             teamId,
             accessToken,
             signal: controller.signal,
-            onSources: (sources) => {
-                setAsk((prev) =>
-                    stillCurrent(prev) ? { ...prev, answerSources: sources } : prev
-                );
-            },
-            onDelta: (text) => {
-                setAsk((prev) =>
-                    stillCurrent(prev) ? { ...prev, answer: prev.answer + text } : prev
-                );
-            },
-            onDone: () => {
-                setAsk((prev) => (stillCurrent(prev) ? { ...prev, isStreaming: false } : prev));
-            },
-            onError: (message) => {
-                setAsk((prev) =>
-                    stillCurrent(prev) ? { ...prev, isStreaming: false, askError: message } : prev
-                );
-            },
-            onToolStart: ({ step, tool_name, arguments: args }) => {
-                setAsk((prev) => {
-                    if (!stillCurrent(prev)) return prev;
-                    const next: ToolEvent = {
-                        step,
-                        tool_name,
-                        arguments: args,
-                        status: "pending",
-                    };
-                    return { ...prev, toolEvents: [...prev.toolEvents, next] };
-                });
-            },
-            onToolResult: ({ step, tool_name, summary }) => {
-                setAsk((prev) => {
-                    if (!stillCurrent(prev)) return prev;
-                    return {
-                        ...prev,
-                        toolEvents: prev.toolEvents.map((te) =>
-                            te.step === step &&
-                            te.tool_name === tool_name &&
-                            te.status === "pending"
-                                ? { ...te, status: "done", summary }
-                                : te
-                        ),
-                    };
-                });
-            },
-            onToolError: ({ step, tool_name, error }) => {
-                setAsk((prev) => {
-                    if (!stillCurrent(prev)) return prev;
-                    return {
-                        ...prev,
-                        toolEvents: prev.toolEvents.map((te) =>
-                            te.step === step &&
-                            te.tool_name === tool_name &&
-                            te.status === "pending"
-                                ? { ...te, status: "error", error }
-                                : te
-                        ),
-                    };
-                });
-            },
+            ...buildStreamHandlers(trimmed),
         });
-    }, [query, teamId, accessToken]);
+    }, [query, teamId, accessToken, buildStreamHandlers]);
+
+    // ---- Approve / Reject handlers for the pending write tool. ----
+    const decide = useCallback(
+        (decision: "approve" | "reject") => {
+            setAsk((prev) => {
+                if (!prev.pendingApproval) return prev;
+                const payload = prev.pendingApproval;
+                const askedQuery = prev.askedQuery;
+
+                // Mark the pending tool's row as transitioning. The
+                // resume stream will fire tool_call_start (deduped via
+                // buildStreamHandlers) followed by result/error to fill
+                // it in properly.
+                const next: AskState = {
+                    ...prev,
+                    pendingApproval: null,
+                    isStreaming: true,
+                };
+
+                // Reuse the same abort controller bucket; new request
+                // supersedes anything older.
+                askAbortRef.current?.abort();
+                const controller = new AbortController();
+                askAbortRef.current = controller;
+
+                void decideAgent({
+                    runId: payload.run_id,
+                    approvalToken: payload.approval_token,
+                    decision,
+                    accessToken,
+                    signal: controller.signal,
+                    ...buildStreamHandlers(askedQuery),
+                });
+
+                return next;
+            });
+        },
+        [accessToken, buildStreamHandlers]
+    );
+
+    const onApprove = useCallback(() => decide("approve"), [decide]);
+    const onReject = useCallback(() => decide("reject"), [decide]);
 
     return {
         isOpen,
@@ -307,6 +422,8 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
         isLoading,
         error,
         onAsk,
+        onApprove,
+        onReject,
         ask,
     };
 };

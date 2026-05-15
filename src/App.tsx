@@ -301,9 +301,11 @@ export const App = () => {
                         isOpen={spotlight.isOpen}
                         query={spotlight.query}
                         results={spotlight.results}
+                        onApprove={spotlight.onApprove}
                         onAsk={spotlight.onAsk}
                         onClose={spotlight.close}
                         onQueryChange={spotlight.setQuery}
+                        onReject={spotlight.onReject}
                         onSelect={handleSpotlightSelect}
                     />
                     <Snackbar

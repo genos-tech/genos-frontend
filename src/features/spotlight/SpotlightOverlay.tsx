@@ -23,6 +23,7 @@ import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import { Box, Button, Chip, CircularProgress, Sheet, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import type { PendingApprovalPayload } from "../../services/agentApi";
 import { SpotlightResultItem } from "./SpotlightResultItem";
 import type { EntityType, SpotlightResult } from "./types";
 import type { AskState, ToolEvent } from "./useSpotlight";
@@ -37,6 +38,8 @@ interface Props {
     error: string | null;
     onSelect: (r: SpotlightResult) => void;
     onAsk: () => void;
+    onApprove: () => void;
+    onReject: () => void;
     ask: AskState;
 }
 
@@ -56,6 +59,8 @@ export const SpotlightOverlay = ({
     error,
     onSelect,
     onAsk,
+    onApprove,
+    onReject,
     ask,
 }: Props) => {
     const { mode } = useColorScheme();
@@ -178,7 +183,13 @@ export const SpotlightOverlay = ({
 
                 {/* AI answer panel. Empty (idle hint) until the user
                     asks; renders streaming Gemini output once invoked. */}
-                <AnswerPanel ask={ask} isDark={isDark} onSelect={onSelect} />
+                <AnswerPanel
+                    ask={ask}
+                    isDark={isDark}
+                    onSelect={onSelect}
+                    onApprove={onApprove}
+                    onReject={onReject}
+                />
 
                 {/* Results / states */}
                 <Box sx={{ flex: 1, overflowY: "auto", px: 1, py: 1 }}>
@@ -271,15 +282,18 @@ interface AnswerPanelProps {
     ask: AskState;
     isDark: boolean;
     onSelect: (r: SpotlightResult) => void;
+    onApprove: () => void;
+    onReject: () => void;
 }
 
-const AnswerPanel = ({ ask, isDark, onSelect }: AnswerPanelProps) => {
+const AnswerPanel = ({ ask, isDark, onSelect, onApprove, onReject }: AnswerPanelProps) => {
     const hasContent =
         ask.isStreaming ||
         ask.answer ||
         ask.askError ||
         ask.answerSources.length > 0 ||
-        ask.toolEvents.length > 0;
+        ask.toolEvents.length > 0 ||
+        ask.pendingApproval !== null;
 
     return (
         <Box
@@ -312,7 +326,7 @@ const AnswerPanel = ({ ask, isDark, onSelect }: AnswerPanelProps) => {
                         >
                             AI answer
                         </Typography>
-                        {ask.isStreaming && (
+                        {ask.isStreaming && !ask.pendingApproval && (
                             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                                 <CircularProgress
                                     size="sm"
@@ -323,10 +337,27 @@ const AnswerPanel = ({ ask, isDark, onSelect }: AnswerPanelProps) => {
                                 </Typography>
                             </Box>
                         )}
+                        {ask.pendingApproval && (
+                            <Typography
+                                level="body-xs"
+                                sx={{ opacity: 0.7, color: "warning.500", fontWeight: 600 }}
+                            >
+                                awaiting your approval
+                            </Typography>
+                        )}
                     </Box>
 
                     {ask.toolEvents.length > 0 && (
                         <ToolProgressList events={ask.toolEvents} isDark={isDark} />
+                    )}
+
+                    {ask.pendingApproval && (
+                        <ApprovalCard
+                            pending={ask.pendingApproval}
+                            isDark={isDark}
+                            onApprove={onApprove}
+                            onReject={onReject}
+                        />
                     )}
 
                     {ask.askError && (
@@ -470,3 +501,95 @@ function _humanReadableCall(e: ToolEvent): string {
             : "";
     return argPreview ? `${e.tool_name}(${argPreview})` : e.tool_name;
 }
+
+// ──────────────────────────────────────────────────────────────────
+// ApprovalCard — Phase 7 write-tool gate
+//
+// Rendered when the agent loop has paused on a tool flagged
+// `requires_approval=True` (currently only `create_task`). Shows the
+// tool name + the arguments the model proposed, and offers Approve /
+// Reject buttons that call back into the hook. Either choice resumes
+// the same stream via POST /api/v2/agent/decide/.
+// ──────────────────────────────────────────────────────────────────
+
+interface ApprovalCardProps {
+    pending: PendingApprovalPayload;
+    isDark: boolean;
+    onApprove: () => void;
+    onReject: () => void;
+}
+
+const ApprovalCard = ({ pending, isDark, onApprove, onReject }: ApprovalCardProps) => {
+    const argEntries = Object.entries(pending.arguments || {});
+    return (
+        <Box
+            sx={{
+                mt: 0.75,
+                mb: 0.75,
+                px: 1.25,
+                py: 1,
+                borderRadius: "10px",
+                border: "1px solid",
+                borderColor: isDark ? "rgba(255,180,0,0.35)" : "rgba(180,120,0,0.4)",
+                background: isDark ? "rgba(255,180,0,0.06)" : "rgba(255,180,0,0.08)",
+            }}
+        >
+            <Typography
+                level="body-xs"
+                sx={{
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.04em",
+                    color: "warning.500",
+                    mb: 0.5,
+                }}
+            >
+                Approval required: {pending.tool_name}
+            </Typography>
+            {argEntries.length > 0 && (
+                <Box
+                    sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 0.15,
+                        mb: 0.75,
+                        fontSize: "0.78rem",
+                        fontFamily: "monospace",
+                        opacity: 0.85,
+                    }}
+                >
+                    {argEntries.map(([k, v]) => (
+                        <Box key={k} sx={{ display: "flex", gap: 0.5 }}>
+                            <Box component="span" sx={{ opacity: 0.65 }}>
+                                {k}:
+                            </Box>
+                            <Box component="span" sx={{ flex: 1, wordBreak: "break-word" }}>
+                                {typeof v === "string" ? v : JSON.stringify(v)}
+                            </Box>
+                        </Box>
+                    ))}
+                </Box>
+            )}
+            <Box sx={{ display: "flex", gap: 0.75 }}>
+                <Button
+                    size="sm"
+                    color="success"
+                    variant="solid"
+                    onClick={onApprove}
+                    sx={{ fontSize: "0.78rem" }}
+                >
+                    Approve
+                </Button>
+                <Button
+                    size="sm"
+                    color="neutral"
+                    variant="outlined"
+                    onClick={onReject}
+                    sx={{ fontSize: "0.78rem" }}
+                >
+                    Reject
+                </Button>
+            </Box>
+        </Box>
+    );
+};
