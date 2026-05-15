@@ -28,10 +28,10 @@ import {
 // consistent across thread bubbles and task comments.
 const COMMENT_COLORS = {
     dark: {
-        bg: "#1e1b4b",
-        border: "#3730a3",
-        text: "#e0e7ff",
-        secondaryText: "rgba(224, 231, 255, 0.6)",
+        bg: "#2e1065",
+        border: "#6d28d9",
+        text: "#f3e8ff",
+        secondaryText: "rgba(243, 232, 255, 0.6)",
     },
     light: {
         bg: "#ffffff",
@@ -39,6 +39,10 @@ const COMMENT_COLORS = {
         text: "#111827",
         secondaryText: "rgba(17, 24, 39, 0.55)",
     },
+    // `focused` is intentionally GREEN — mirrors ThreadMessageBubble.
+    // BUBBLE_COLORS.focused so deep-linked target comments share the
+    // same focus tint across chat threads and task comments. Functional
+    // cross-file carve-out; do not unify with brand purple.
     focused: {
         dark: {
             bg: "#14532d",
@@ -269,8 +273,8 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                                     ? "0 4px 16px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05)"
                                     : "0 4px 16px rgba(0,0,0,0.1)",
                                 borderColor: isDark
-                                    ? "rgba(99, 102, 241, 0.4)"
-                                    : "rgba(99, 102, 241, 0.25)",
+                                    ? "rgba(124,58,237,0.4)"
+                                    : "rgba(124,58,237,0.25)",
                             },
                         }}
                     >

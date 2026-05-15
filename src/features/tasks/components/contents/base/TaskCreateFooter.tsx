@@ -128,8 +128,8 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
                     borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
                     transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                     "&:hover": {
-                        background: isDark ? "rgba(239,68,68,0.12)" : "rgba(239,68,68,0.08)",
-                        borderColor: isDark ? "rgba(239,68,68,0.3)" : "rgba(239,68,68,0.25)",
+                        background: isDark ? "rgba(232,121,195,0.12)" : "rgba(232,121,195,0.08)",
+                        borderColor: isDark ? "rgba(232,121,195,0.3)" : "rgba(232,121,195,0.25)",
                         color: "#ef4444",
                     },
                     "&:active": {
@@ -157,26 +157,26 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
                         ? isDark
                             ? "rgba(255,255,255,0.08)"
                             : "rgba(0,0,0,0.08)"
-                        : "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                        : "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
                     color: isDisabled
                         ? isDark
                             ? "rgba(255,255,255,0.3)"
                             : "rgba(0,0,0,0.3)"
                         : "white",
-                    boxShadow: isDisabled ? "none" : "0 2px 8px rgba(99, 102, 241, 0.3)",
+                    boxShadow: isDisabled ? "none" : "0 2px 8px rgba(124,58,237,0.3)",
                     transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                     "&:hover": {
                         background: isDisabled
                             ? isDark
                                 ? "rgba(255,255,255,0.08)"
                                 : "rgba(0,0,0,0.08)"
-                            : "linear-gradient(135deg, #818cf8 0%, #a78bfa 100%)",
-                        boxShadow: isDisabled ? "none" : "0 4px 12px rgba(99, 102, 241, 0.4)",
+                            : "linear-gradient(135deg, #a78bfa 0%, #c084fc 100%)",
+                        boxShadow: isDisabled ? "none" : "0 4px 12px rgba(124,58,237,0.4)",
                         transform: isDisabled ? "none" : "translateY(-1px)",
                     },
                     "&:active": {
                         transform: isDisabled ? "none" : "translateY(0)",
-                        boxShadow: isDisabled ? "none" : "0 2px 6px rgba(99, 102, 241, 0.25)",
+                        boxShadow: isDisabled ? "none" : "0 2px 6px rgba(124,58,237,0.25)",
                     },
                     "&:disabled": {
                         background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
