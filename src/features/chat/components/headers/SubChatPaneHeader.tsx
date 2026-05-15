@@ -21,34 +21,34 @@ import { HeaderUserName } from "./HeaderUserName";
 const ChatPaneHeaderStyles = {
     dark: {
         containerBg: "linear-gradient(135deg, rgba(30,32,44,0.95) 0%, rgba(20,22,34,0.98) 100%)",
-        containerBorder: "rgba(99,102,241,0.15)",
-        buttonBg: "linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(139,92,246,0.12) 100%)",
+        containerBorder: "rgba(124,58,237,0.15)",
+        buttonBg: "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(139,92,246,0.12) 100%)",
         buttonHover:
-            "linear-gradient(135deg, rgba(99,102,241,0.22) 0%, rgba(139,92,246,0.22) 100%)",
-        buttonBorder: "rgba(99,102,241,0.3)",
-        primaryButtonBg: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
-        primaryButtonHover: "linear-gradient(135deg, #818cf8 0%, #a78bfa 100%)",
-        dangerBg: "linear-gradient(135deg, rgba(239,68,68,0.12) 0%, rgba(220,38,38,0.12) 100%)",
-        dangerHover: "linear-gradient(135deg, rgba(239,68,68,0.22) 0%, rgba(220,38,38,0.22) 100%)",
-        dangerBorder: "rgba(239,68,68,0.3)",
-        accentColor: "#818cf8",
-        glowColor: "rgba(99,102,241,0.25)",
+            "linear-gradient(135deg, rgba(124,58,237,0.22) 0%, rgba(139,92,246,0.22) 100%)",
+        buttonBorder: "rgba(124,58,237,0.3)",
+        primaryButtonBg: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
+        primaryButtonHover: "linear-gradient(135deg, #a78bfa 0%, #c084fc 100%)",
+        dangerBg: "linear-gradient(135deg, rgba(232,121,195,0.12) 0%, rgba(192,38,168,0.12) 100%)",
+        dangerHover: "linear-gradient(135deg, rgba(232,121,195,0.22) 0%, rgba(192,38,168,0.22) 100%)",
+        dangerBorder: "rgba(232,121,195,0.3)",
+        accentColor: "#a78bfa",
+        glowColor: "rgba(124,58,237,0.25)",
     },
     light: {
         containerBg:
             "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(238,242,255,0.5) 100%)",
-        containerBorder: "rgba(79,70,229,0.12)",
-        buttonBg: "linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(139,92,246,0.08) 100%)",
+        containerBorder: "rgba(124,58,237,0.12)",
+        buttonBg: "linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(139,92,246,0.08) 100%)",
         buttonHover:
-            "linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.15) 100%)",
-        buttonBorder: "rgba(79,70,229,0.2)",
-        primaryButtonBg: "linear-gradient(135deg, #6366f1 0%, #7c3aed 100%)",
-        primaryButtonHover: "linear-gradient(135deg, #818cf8 0%, #8b5cf6 100%)",
-        dangerBg: "linear-gradient(135deg, rgba(239,68,68,0.08) 0%, rgba(220,38,38,0.08) 100%)",
-        dangerHover: "linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(220,38,38,0.15) 100%)",
-        dangerBorder: "rgba(239,68,68,0.2)",
-        accentColor: "#6366f1",
-        glowColor: "rgba(99,102,241,0.15)",
+            "linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(139,92,246,0.15) 100%)",
+        buttonBorder: "rgba(124,58,237,0.2)",
+        primaryButtonBg: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
+        primaryButtonHover: "linear-gradient(135deg, #a78bfa 0%, #c084fc 100%)",
+        dangerBg: "linear-gradient(135deg, rgba(232,121,195,0.08) 0%, rgba(192,38,168,0.08) 100%)",
+        dangerHover: "linear-gradient(135deg, rgba(232,121,195,0.15) 0%, rgba(192,38,168,0.15) 100%)",
+        dangerBorder: "rgba(232,121,195,0.2)",
+        accentColor: "#7c3aed",
+        glowColor: "rgba(124,58,237,0.15)",
     },
 };
 
@@ -127,7 +127,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
         "&:hover": {
             background: styles.dangerHover,
             transform: "translateY(-1px)",
-            boxShadow: "0 4px 12px rgba(239,68,68,0.2)",
+            boxShadow: "0 4px 12px rgba(232,121,195,0.2)",
         },
     };
 
@@ -316,7 +316,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                         sx={dangerButtonStyle}
                         onClick={() => useCM.setIsSubChatVisible(false)}
                     >
-                        <CloseRoundedIcon sx={{ fontSize: 18, color: "#ef4444" }} />
+                        <CloseRoundedIcon sx={{ fontSize: 18, color: "#c026a8" }} />
                     </IconButton>
                 </Tooltip>
             </Stack>

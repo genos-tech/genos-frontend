@@ -259,8 +259,8 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             py: 0.5,
                             borderRadius: "8px",
                             background: isDark
-                                ? "linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.1) 100%)"
-                                : "linear-gradient(135deg, rgba(79,70,229,0.1) 0%, rgba(124,58,237,0.06) 100%)",
+                                ? "linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(139,92,246,0.1) 100%)"
+                                : "linear-gradient(135deg, rgba(124,58,237,0.1) 0%, rgba(124,58,237,0.06) 100%)",
                             border: "1px solid",
                             borderColor: isDark ? "rgba(139,92,246,0.2)" : "rgba(124,58,237,0.15)",
                         }}
@@ -273,10 +273,10 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 background: isDark
                                     ? isMilestone
                                         ? "linear-gradient(135deg, #ff8c00 0%, #ff6b00 100%)"
-                                        : "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)"
+                                        : "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)"
                                     : isMilestone
                                       ? "linear-gradient(135deg, #ff8c00 0%, #ff6b00 100%)"
-                                      : "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
+                                      : "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
                                 animation: "pulse 2s infinite",
                                 "@keyframes pulse": {
                                     "0%, 100%": { opacity: 1 },

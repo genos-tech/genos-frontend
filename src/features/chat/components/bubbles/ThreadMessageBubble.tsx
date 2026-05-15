@@ -22,7 +22,11 @@ import { BubbleThreadMoreMenu } from "./BubbleThreadMoreMenu";
 import { BubbleUnderBar } from "./BubbleUnderBar";
 import { BubbleUserName } from "./BubbleUserName";
 
-// Color schemes for sent/received bubbles - improved for better text contrast
+// Color schemes for sent/received bubbles - improved for better text contrast.
+// `sent` palette purple is harmonized with MessageBubble.BUBBLE_COLORS.sent.
+// `focused` is intentionally GREEN — cross-file functional carve-out
+// mirroring MessageBubble.focused and TaskCommentBubble.focused so
+// deep-linked target messages share the same focus tint across surfaces.
 const BUBBLE_COLORS = {
     sent: {
         dark: { bg: "#3b0764", border: "#7c3aed", text: "#f3e8ff" },

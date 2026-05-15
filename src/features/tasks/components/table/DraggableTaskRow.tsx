@@ -81,10 +81,10 @@ const getTableRowStyles = (
 
     const getBackgroundColor = () => {
         if (isDragging) {
-            return mode === "dark" ? "#1e3a5f" : "#e3f2fd";
+            return mode === "dark" ? "#2e1065" : "#f3e8ff";
         }
         if (isSelected) {
-            return mode === "dark" ? "rgba(99, 102, 241, 0.15)" : "rgba(99, 102, 241, 0.08)";
+            return mode === "dark" ? "rgba(124,58,237,0.15)" : "rgba(124,58,237,0.08)";
         }
         return mode === "dark" ? DEPTH_COLORS_DARK[depthIdx] : DEPTH_COLORS_LIGHT[depthIdx];
     };
@@ -101,8 +101,8 @@ const getTableRowStyles = (
         backgroundColor: getBackgroundColor(),
         borderLeft: isSelected
             ? mode === "dark"
-                ? "3px solid #818cf8"
-                : "3px solid #6366f1"
+                ? "3px solid #a78bfa"
+                : "3px solid #7c3aed"
             : rowDepth > 0
               ? `3px solid ${DEPTH_BORDER_COLORS[depthIdx]}`
               : "3px solid transparent",
@@ -112,8 +112,8 @@ const getTableRowStyles = (
                 : "0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1)"
             : isSelected
               ? mode === "dark"
-                  ? "inset 0 0 0 1px rgba(129, 140, 248, 0.2)"
-                  : "inset 0 0 0 1px rgba(99, 102, 241, 0.1)"
+                  ? "inset 0 0 0 1px rgba(167,139,250,0.2)"
+                  : "inset 0 0 0 1px rgba(124,58,237,0.1)"
               : "none",
         borderRadius: isDragging ? 6 : 0,
         // Don't use transitions when dragging - it interferes with drag positioning
@@ -155,8 +155,8 @@ const getDragHandleStyles = (
     opacity: isDragging ? 1 : 0.3,
     color: isDragging
         ? mode === "dark"
-            ? "#90caf9"
-            : "#1976d2"
+            ? "#a78bfa"
+            : "#7c3aed"
         : mode === "dark"
           ? "#888"
           : "#666",
@@ -165,8 +165,8 @@ const getDragHandleStyles = (
     borderRadius: 4,
     backgroundColor: isDragging
         ? mode === "dark"
-            ? "rgba(144, 202, 249, 0.15)"
-            : "rgba(25, 118, 210, 0.1)"
+            ? "rgba(167,139,250,0.15)"
+            : "rgba(124,58,237,0.1)"
         : "transparent",
 });
 
@@ -356,15 +356,15 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                             color: isMilestoneRow
                                 ? "#f97316"
                                 : mode === "dark"
-                                  ? "#90caf9"
-                                  : "#1976d2",
+                                  ? "#a78bfa"
+                                  : "#7c3aed",
                             fontWeight: 600,
                             "&:hover": {
                                 backgroundColor: isMilestoneRow
                                     ? "rgba(249, 115, 22, 0.12)"
                                     : mode === "dark"
-                                      ? "rgba(144, 202, 249, 0.15)"
-                                      : "rgba(25, 118, 210, 0.1)",
+                                      ? "rgba(167,139,250,0.15)"
+                                      : "rgba(124,58,237,0.1)",
                             },
                         }}
                     >
@@ -375,8 +375,8 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                                 color: isMilestoneRow
                                     ? "#f97316"
                                     : mode === "dark"
-                                      ? "#90caf9"
-                                      : "#1976d2",
+                                      ? "#a78bfa"
+                                      : "#7c3aed",
                             }}
                         >
                             #{task.id}
@@ -448,7 +448,7 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                                     borderRadius: "6px",
                                 },
                                 "&:hover .MuiOutlinedInput-notchedOutline": {
-                                    borderColor: mode === "dark" ? "#90caf9" : "#1976d2",
+                                    borderColor: mode === "dark" ? "#a78bfa" : "#7c3aed",
                                 },
                             }}
                         >
@@ -589,8 +589,8 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                                 color: isMilestoneRow
                                     ? "#f97316"
                                     : mode === "dark"
-                                      ? "#90caf9"
-                                      : "#1976d2",
+                                      ? "#a78bfa"
+                                      : "#7c3aed",
                             },
                         }}
                     >
@@ -719,14 +719,14 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                                             transition: "all 0.15s ease",
                                             backgroundColor: isSelected
                                                 ? mode === "dark"
-                                                    ? "rgba(144, 202, 249, 0.15)"
-                                                    : "rgba(25, 118, 210, 0.08)"
+                                                    ? "rgba(167,139,250,0.15)"
+                                                    : "rgba(124,58,237,0.08)"
                                                 : "transparent",
                                             "&:hover": {
                                                 backgroundColor:
                                                     mode === "dark"
-                                                        ? "rgba(144, 202, 249, 0.2)"
-                                                        : "rgba(25, 118, 210, 0.12)",
+                                                        ? "rgba(167,139,250,0.2)"
+                                                        : "rgba(124,58,237,0.12)",
                                             },
                                             display: "flex",
                                             gap: 1.5,
@@ -786,11 +786,11 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                                             },
                                             "&:hover fieldset": {
                                                 borderColor:
-                                                    mode === "dark" ? "#90caf9" : "#1976d2",
+                                                    mode === "dark" ? "#a78bfa" : "#7c3aed",
                                             },
                                             "&.Mui-focused fieldset": {
                                                 borderColor:
-                                                    mode === "dark" ? "#90caf9" : "#1976d2",
+                                                    mode === "dark" ? "#a78bfa" : "#7c3aed",
                                                 borderWidth: "1.5px",
                                             },
                                         },
@@ -931,7 +931,7 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                                     borderRadius: "6px",
                                 },
                                 "&:hover .MuiOutlinedInput-notchedOutline": {
-                                    borderColor: mode === "dark" ? "#90caf9" : "#1976d2",
+                                    borderColor: mode === "dark" ? "#a78bfa" : "#7c3aed",
                                 },
                             }}
                         >
@@ -1057,7 +1057,7 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                                     borderRadius: "6px",
                                 },
                                 "&:hover .MuiOutlinedInput-notchedOutline": {
-                                    borderColor: mode === "dark" ? "#90caf9" : "#1976d2",
+                                    borderColor: mode === "dark" ? "#a78bfa" : "#7c3aed",
                                 },
                             }}
                         >
@@ -1208,7 +1208,7 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                             cursor: "pointer",
                             fontWeight: 500,
                             "&:hover": {
-                                color: mode === "dark" ? "#90caf9" : "#1976d2",
+                                color: mode === "dark" ? "#a78bfa" : "#7c3aed",
                             },
                         }}
                     >

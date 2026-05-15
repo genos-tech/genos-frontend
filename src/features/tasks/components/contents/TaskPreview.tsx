@@ -250,8 +250,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                     ...taskEditState.tmpCurrentTaskContent,
                     attachments: taskEditState.uploadedFiles,
                 });
-                setAssignee(taskEditState.tmpCurrentTaskContent.assignee);
-                setReporter(taskEditState.tmpCurrentTaskContent.reporter);
+                setAssignee(taskEditState.tmpCurrentTaskContent.assignee ?? myself);
+                setReporter(taskEditState.tmpCurrentTaskContent.reporter ?? myself);
             })();
             setTabIndexBasedOnContent(
                 taskComments.length,
@@ -559,8 +559,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                             right: 0,
                             height: "3px",
                             background: isDark
-                                ? "linear-gradient(90deg, #4f46e5 0%, #7c3aed 50%, #a855f7 100%)"
-                                : "linear-gradient(90deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)",
+                                ? "linear-gradient(90deg, #6d28d9 0%, #7c3aed 50%, #9333ea 100%)"
+                                : "linear-gradient(90deg, #a78bfa 0%, #8b5cf6 50%, #c084fc 100%)",
                             borderRadius: "16px 16px 0 0",
                             opacity: 0.8,
                         }}
@@ -1482,7 +1482,7 @@ const MilestonePreviewInner = ({
                     left: 0,
                     right: 0,
                     height: 3,
-                    background: "linear-gradient(90deg, #4f46e5 0%, #7c3aed 50%, #a855f7 100%)",
+                    background: "linear-gradient(90deg, #6d28d9 0%, #7c3aed 50%, #9333ea 100%)",
                     borderRadius: "16px 16px 0 0",
                 }}
             />

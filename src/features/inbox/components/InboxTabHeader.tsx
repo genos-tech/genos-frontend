@@ -4,6 +4,8 @@ import { Box, Chip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import { purplePalette } from "../../../theme/purplePalette";
+
 type InboxTab = "requests" | "activities";
 
 type InboxTabHeaderProps = {
@@ -13,6 +15,7 @@ type InboxTabHeaderProps = {
 export const InboxTabHeader = ({ requestCount }: InboxTabHeaderProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -52,7 +55,7 @@ export const InboxTabHeader = ({ requestCount }: InboxTabHeaderProps) => {
                 py: 1.5,
                 borderBottom: "1px solid",
                 borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
-                background: isDark ? "rgba(20,20,25,0.6)" : "rgba(250,250,252,0.8)",
+                background: isDark ? "rgba(20,14,34,0.6)" : "rgba(250,248,255,0.8)",
             }}
         >
             {tabs.map((tab) => {
@@ -72,8 +75,8 @@ export const InboxTabHeader = ({ requestCount }: InboxTabHeaderProps) => {
                             transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                             background: isActive
                                 ? isDark
-                                    ? "linear-gradient(135deg, rgba(99,102,241,0.18) 0%, rgba(139,92,246,0.12) 100%)"
-                                    : "linear-gradient(135deg, rgba(79,70,229,0.12) 0%, rgba(124,58,237,0.06) 100%)"
+                                    ? "linear-gradient(135deg, rgba(124,58,237,0.18) 0%, rgba(139,92,246,0.12) 100%)"
+                                    : "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(124,58,237,0.06) 100%)"
                                 : "transparent",
                             border: "1px solid",
                             borderColor: isActive
@@ -84,8 +87,8 @@ export const InboxTabHeader = ({ requestCount }: InboxTabHeaderProps) => {
                             "&:hover": {
                                 background: isActive
                                     ? isDark
-                                        ? "linear-gradient(135deg, rgba(99,102,241,0.22) 0%, rgba(139,92,246,0.16) 100%)"
-                                        : "linear-gradient(135deg, rgba(79,70,229,0.16) 0%, rgba(124,58,237,0.1) 100%)"
+                                        ? "linear-gradient(135deg, rgba(124,58,237,0.22) 0%, rgba(139,92,246,0.16) 100%)"
+                                        : "linear-gradient(135deg, rgba(124,58,237,0.16) 0%, rgba(124,58,237,0.1) 100%)"
                                     : isDark
                                       ? "rgba(255,255,255,0.04)"
                                       : "rgba(0,0,0,0.03)",
@@ -95,9 +98,7 @@ export const InboxTabHeader = ({ requestCount }: InboxTabHeaderProps) => {
                         <Box
                             sx={{
                                 color: isActive
-                                    ? isDark
-                                        ? "#a78bfa"
-                                        : "#7c3aed"
+                                    ? palette.accentSoft
                                     : isDark
                                       ? "rgba(255,255,255,0.5)"
                                       : "rgba(0,0,0,0.45)",
@@ -136,13 +137,9 @@ export const InboxTabHeader = ({ requestCount }: InboxTabHeaderProps) => {
                                     fontWeight: 700,
                                     px: 0.85,
                                     pt: 0.15,
-                                    background: isDark
-                                        ? "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)"
-                                        : "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
+                                    background: palette.primaryButtonBg,
                                     border: "none",
-                                    boxShadow: isDark
-                                        ? "0 2px 8px rgba(99,102,241,0.35)"
-                                        : "0 2px 8px rgba(79,70,229,0.3)",
+                                    boxShadow: palette.shadowSoft,
                                     animation: "pulse 2s infinite",
                                     "@keyframes pulse": {
                                         "0%, 100%": { opacity: 1 },

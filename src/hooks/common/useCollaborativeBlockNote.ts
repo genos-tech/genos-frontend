@@ -8,6 +8,7 @@ import {
 } from "@blocknote/core/comments";
 import { useCreateBlockNote } from "@blocknote/react";
 import { HocuspocusProvider } from "@hocuspocus/provider";
+import { IndexeddbPersistence } from "y-indexeddb";
 import * as Y from "yjs";
 
 import { UserProps } from "../../types/admin";
@@ -125,7 +126,7 @@ export function useCollaborativeBlockNote({
         [isDocumentEmpty]
     );
 
-    const { doc, provider, fragment } = useMemo(() => {
+    const { doc, provider, idbProvider, fragment } = useMemo(() => {
         seededRef.current = false;
         syncedRef.current = false;
         fragmentRef.current = null;
@@ -134,8 +135,16 @@ export function useCollaborativeBlockNote({
         const frag = yjsDoc.getXmlFragment("document-store");
 
         if (!COLLAB_URL || !accessToken) {
-            return { doc: yjsDoc, provider: null, fragment: frag };
+            return { doc: yjsDoc, provider: null, idbProvider: null, fragment: frag };
         }
+
+        // Persist Yjs update history to IndexedDB keyed by documentName.
+        // On the next open the stored updates are replayed into the doc
+        // synchronously (in IndexedDB terms: before the WebSocket round-trip),
+        // so the editor renders with content on the first frame instead of
+        // showing blank for the ~200-300 ms the Hocuspocus connection takes.
+        // New write-updates are forwarded automatically; no manual sync needed.
+        const idb = new IndexeddbPersistence(documentName, yjsDoc);
 
         const trySeedFallback = () => {
             if (!seededRef.current) {
@@ -166,7 +175,7 @@ export function useCollaborativeBlockNote({
             },
         });
 
-        return { doc: yjsDoc, provider: hocuspocusProvider, fragment: frag };
+        return { doc: yjsDoc, provider: hocuspocusProvider, idbProvider: idb, fragment: frag };
     }, [documentName, accessToken, seedDocument]);
 
     // Retry seeding when initialBody arrives after sync or connection failure
@@ -233,6 +242,12 @@ export function useCollaborativeBlockNote({
             provider?.destroy();
         };
     }, [provider]);
+
+    useEffect(() => {
+        return () => {
+            idbProvider?.destroy();
+        };
+    }, [idbProvider]);
 
     const commentsExtension = useMemo(() => {
         if (!threadStore) return null;

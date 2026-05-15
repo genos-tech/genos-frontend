@@ -1,8 +1,10 @@
-import { Box } from "@mui/joy";
+import { Box, Sheet } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Panel, PanelGroup } from "react-resizable-panels";
 import { Socket } from "socket.io-client";
 
+import { ResizeHandle } from "../../components/ui/ResizeHandle";
+import { LayoutStyles } from "../../components/ui/styles/commonStyle";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
@@ -14,8 +16,6 @@ import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
 import { NoteContentRenderer } from "./common/components/NoteContentRenderer";
 import { NoteSidebar } from "./common/components/NoteSidebar";
-import { ResizeHandle } from "./common/components/ResizeHandle";
-import { ResizeHandleStyles } from "./common/components/ResizeHandleStyles";
 import { useNoteRouting } from "./common/hooks/useNoteRouting";
 import { TaskPreviewPanel } from "./task-notes/components/TaskPreviewPanel";
 
@@ -41,18 +41,20 @@ export const NoteHome = (props: NoteHomeProps) => {
 
     const { mode } = useColorScheme();
 
+    const ls = mode === "dark" ? LayoutStyles.dark : LayoutStyles.light;
+
+    const noteContentBox = {
+        px: 1,
+        height: "100dvh",
+        borderRight: "1px solid",
+        borderColor: ls.sidebarPanel.borderColor,
+    };
+
     const renderMainContent = () => {
         if (useNM.currentNoteType === 0) {
             return (
                 <Panel id={"2"} maxSize={85} minSize={35} order={2}>
-                    <Box
-                        sx={{
-                            paddingX: 1,
-                            height: "100dvh",
-                            borderRight:
-                                mode === "dark" ? "1px black inset" : "1px lightgrey inset",
-                        }}
-                    >
+                    <Box sx={noteContentBox}>
                         <NoteContentRenderer
                             useCM={useCM}
                             myself={myself}
@@ -71,13 +73,7 @@ export const NoteHome = (props: NoteHomeProps) => {
 
         return (
             <Panel id={"3"} maxSize={85} minSize={35} order={3}>
-                <Box
-                    sx={{
-                        paddingX: 1,
-                        height: "100dvh",
-                        borderRight: mode === "dark" ? "1px black inset" : "1px lightgrey inset",
-                    }}
-                >
+                <Box sx={noteContentBox}>
                     <NoteContentRenderer
                         useCM={useCM}
                         myself={myself}
@@ -95,41 +91,49 @@ export const NoteHome = (props: NoteHomeProps) => {
     };
 
     return (
-        <Box sx={{ display: "flex", minHeight: "100dvh", flex: 1, minWidth: 0 }}>
-            <PanelGroup direction="horizontal">
-                <Panel id={"1"} maxSize={25} minSize={10} order={1}>
-                    <Box
-                        sx={{
-                            height: "100%",
-                            width: "100%",
-                            borderColor: mode === "dark" ? "black" : "white",
-                            borderRight:
-                                mode === "dark" ? "1px black inset" : "1px lightgrey inset",
-                        }}
-                    >
-                        <NoteSidebar useNM={useNM} allChats={useCM.allChats} />
-                    </Box>
-                </Panel>
+        <Box sx={LayoutStyles.outerWrapper}>
+            <Sheet sx={ls.serviceSurface}>
+                <Box sx={ls.decorTopRight} />
+                <Box sx={ls.decorBottomLeft} />
 
-                <ResizeHandle />
+                <PanelGroup direction="horizontal" style={{ flex: 1 }}>
+                    <Panel id={"1"} maxSize={25} minSize={10} order={1}>
+                        <Box sx={ls.sidebarPanel}>
+                            <NoteSidebar useNM={useNM} allChats={useCM.allChats} />
+                        </Box>
+                    </Panel>
 
-                {renderMainContent()}
+                    <ResizeHandle className="note-resize-handle" />
 
-                <TaskPreviewPanel
-                    useCM={useCM}
-                    myself={myself}
-                    useNM={useNM}
-                    usePM={usePM}
-                    setMyself={setMyself}
-                    socket={socket}
-                    useTEM={useTEM}
-                    useTM={useTM}
-                    useSM={useSM}
-                    useUISM={useUISM}
-                />
-            </PanelGroup>
+                    {renderMainContent()}
 
-            <ResizeHandleStyles />
+                    <TaskPreviewPanel
+                        useCM={useCM}
+                        myself={myself}
+                        useNM={useNM}
+                        usePM={usePM}
+                        setMyself={setMyself}
+                        socket={socket}
+                        useTEM={useTEM}
+                        useTM={useTM}
+                        useSM={useSM}
+                        useUISM={useUISM}
+                    />
+                </PanelGroup>
+            </Sheet>
+
+            {/* Hover Animation with CSS */}
+            <style>
+                {`
+                .note-resize-handle {
+                    transition: all 0.3s ease-in-out;
+                }
+                .note-resize-handle:hover {
+                    background-color: grey !important;
+                    width: 8px !important;
+                }
+                `}
+            </style>
         </Box>
     );
 };

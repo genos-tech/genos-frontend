@@ -12,11 +12,15 @@ import { BnChatPreview } from "../../../components/editors/bnChatPreview";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
+import { purplePalette } from "../../../theme/purplePalette";
 import { UserProps } from "../../../types/admin";
 import { InboxItemProps } from "../../../types/common";
 import { extractYYYYMMDDHHMM } from "../../../utils/dateUtils";
 
-// Item type configurations for cleaner code
+// Item type configurations for cleaner code. `colorScheme` is intentionally
+// NOT mapped to the unified purple palette — each request type needs a
+// distinct hue (Team=blue, Project=green, GM=pink) so the user can tell
+// request types apart at a glance in a dense inbox.
 const ITEM_TYPE_CONFIG: Record<
     number,
     {
@@ -64,6 +68,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
     const { useTEM, socket, myself, setMyself, inboxItem, useUISM, useCM } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const [localStatus, setLocalStatus] = useState<"approved" | "rejected" | null>(null);
     const [isHovered, setIsHovered] = useState<boolean>(false);
 
@@ -230,20 +235,12 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                                     py: 0.75,
                                     background:
                                         resolvedStatus === "rejected"
-                                            ? isDark
-                                                ? "rgba(239,68,68,0.12)"
-                                                : "rgba(239,68,68,0.1)"
-                                            : isDark
-                                              ? "rgba(74,222,128,0.12)"
-                                              : "rgba(34,197,94,0.1)",
+                                            ? palette.dangerTintBg
+                                            : palette.successTintBg,
                                     color:
                                         resolvedStatus === "rejected"
-                                            ? isDark
-                                                ? "#f87171"
-                                                : "#dc2626"
-                                            : isDark
-                                              ? "#4ade80"
-                                              : "#16a34a",
+                                            ? palette.dangerTint
+                                            : palette.successTint,
                                     "&.Mui-disabled": {
                                         opacity: 0.9,
                                     },
@@ -267,18 +264,12 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                                         fontSize: "0.75rem",
                                         px: 2,
                                         py: 0.75,
-                                        borderColor: isDark
-                                            ? "rgba(239,68,68,0.4)"
-                                            : "rgba(239,68,68,0.3)",
-                                        color: isDark ? "#f87171" : "#dc2626",
+                                        borderColor: palette.dangerTintBorder,
+                                        color: palette.dangerTint,
                                         transition: "all 0.2s ease",
                                         "&:hover": {
-                                            background: isDark
-                                                ? "rgba(239,68,68,0.15)"
-                                                : "rgba(239,68,68,0.08)",
-                                            borderColor: isDark
-                                                ? "rgba(239,68,68,0.6)"
-                                                : "rgba(239,68,68,0.5)",
+                                            background: palette.dangerTintBg,
+                                            borderColor: palette.dangerTintBorder,
                                             transform: "translateY(-1px)",
                                         },
                                         "&:active": {
@@ -301,21 +292,15 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                                         fontSize: "0.75rem",
                                         px: 2.5,
                                         py: 0.75,
-                                        background: isDark
-                                            ? "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)"
-                                            : "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
-                                        boxShadow: isDark
-                                            ? "0 4px 12px rgba(99,102,241,0.35)"
-                                            : "0 4px 12px rgba(79,70,229,0.3)",
+                                        background: palette.primaryButtonBg,
+                                        boxShadow: palette.primaryButtonShadow,
                                         transition: "all 0.2s ease",
                                         "&:hover": {
-                                            background: isDark
-                                                ? "linear-gradient(135deg, #818cf8 0%, #a78bfa 100%)"
-                                                : "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                                            background: palette.primaryButtonHover,
                                             transform: "translateY(-1px)",
                                             boxShadow: isDark
-                                                ? "0 6px 16px rgba(99,102,241,0.45)"
-                                                : "0 6px 16px rgba(79,70,229,0.4)",
+                                                ? "0 6px 16px rgba(124,58,237,0.5)"
+                                                : "0 6px 16px rgba(124,58,237,0.4)",
                                         },
                                         "&:active": {
                                             transform: "translateY(0)",

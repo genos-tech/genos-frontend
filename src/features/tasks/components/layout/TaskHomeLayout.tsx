@@ -2,9 +2,11 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import WorkspacesRoundedIcon from "@mui/icons-material/WorkspacesRounded";
 import { Box, Button, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import { Panel, PanelGroup } from "react-resizable-panels";
 import { Socket } from "socket.io-client";
 
+import { ResizeHandle } from "../../../../components/ui/ResizeHandle";
+import { LayoutStyles } from "../../../../components/ui/styles/commonStyle";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -71,41 +73,10 @@ export const TaskHomeLayout = ({
     setOpenJoinProject,
 }: TaskHomeLayoutProps) => {
     const { mode } = useColorScheme();
-
-    const renderResizeHandle = () => (
-        <PanelResizeHandle
-            className="task-resize-handle"
-            style={{
-                width: "1px",
-                backgroundColor: mode === "dark" ? "black" : "white",
-                transition: "all 0.3s ease-in-out",
-                cursor: "col-resize",
-            }}
-        />
-    );
+    const ls = mode === "dark" ? LayoutStyles.dark : LayoutStyles.light;
 
     const renderMainContent = () => (
-        <Box
-            className="MainContent"
-            component="main"
-            sx={{
-                px: { xs: 1, md: 2 },
-                pt: {
-                    xs: "calc(12px + var(--Header-height))",
-                    sm: "calc(12px + var(--Header-height))",
-                    md: 3,
-                },
-                pb: { xs: 2, sm: 2, md: 3 },
-                flex: 1,
-                display: "flex",
-                flexDirection: "column",
-                minWidth: 0,
-                height: "100dvh",
-                overflow: "hidden",
-                gap: 1,
-                borderRight: mode === "dark" ? "1px black inset" : "1px lightgrey inset",
-            }}
-        >
+        <Box className="MainContent" component="main" sx={ls.mainPanel}>
             {useTM.isTaskDashboardVisible && (
                 <TaskDashboard
                     myself={myself}
@@ -172,26 +143,9 @@ export const TaskHomeLayout = ({
 
     const renderCreateTaskPanel = () => (
         <>
-            {renderResizeHandle()}
+            <ResizeHandle className="task-resize-handle" />
             <Panel id={"4"} maxSize={80} minSize={30} order={4}>
-                <Box
-                    sx={{
-                        px: { xs: 1, md: 2 },
-                        pt: {
-                            xs: "calc(12px + var(--Header-height))",
-                            sm: "calc(12px + var(--Header-height))",
-                            md: 2,
-                        },
-                        pb: { xs: 2, sm: 2, md: 3 },
-                        flex: 1,
-                        display: "flex",
-                        flexDirection: "column",
-                        minWidth: 0,
-                        height: "100dvh",
-                        gap: 1,
-                        borderRight: mode === "dark" ? "1px black inset" : "1px lightgrey inset",
-                    }}
-                >
+                <Box sx={ls.mainPanel}>
                     <CreateTaskForm
                         chatType={-1}
                         myself={myself}
@@ -212,25 +166,9 @@ export const TaskHomeLayout = ({
 
     const renderTaskPreviewPanel = () => (
         <>
-            {renderResizeHandle()}
+            <ResizeHandle className="task-resize-handle" />
             <Panel defaultSize={50} id={"3"} maxSize={80} minSize={30} order={3}>
-                <Box
-                    sx={{
-                        px: { xs: 1, md: 2 },
-                        pt: {
-                            xs: "calc(12px + var(--Header-height))",
-                            sm: "calc(12px + var(--Header-height))",
-                            md: 2,
-                        },
-                        pb: { xs: 2, sm: 2, md: 3 },
-                        flex: 1,
-                        display: "flex",
-                        flexDirection: "column",
-                        minWidth: 0,
-                        height: "100dvh",
-                        gap: 1,
-                    }}
-                >
+                <Box sx={ls.mainPanel}>
                     <TaskPreview
                         myself={myself}
                         setMyself={setMyself}
@@ -256,34 +194,9 @@ export const TaskHomeLayout = ({
 
     const renderTaskNotePanel = () => (
         <>
-            <PanelResizeHandle
-                className="resize-handle"
-                style={{
-                    width: "1px",
-                    backgroundColor: mode === "dark" ? "grey" : "lightgrey",
-                    transition: "all 0.3s ease-in-out",
-                    cursor: "col-resize",
-                }}
-            />
+            <ResizeHandle className="task-resize-handle" />
             <Panel defaultSize={50} id={"7"} maxSize={100} minSize={50} order={7}>
-                <Box
-                    sx={{
-                        px: { xs: 1, md: 2 },
-                        pt: {
-                            xs: "calc(12px + var(--Header-height))",
-                            sm: "calc(12px + var(--Header-height))",
-                            md: 2,
-                        },
-                        pb: { xs: 2, sm: 2, md: 3 },
-                        flex: 1,
-                        display: "flex",
-                        flexDirection: "column",
-                        minWidth: 0,
-                        height: "100dvh",
-                        gap: 1,
-                        borderRight: mode === "dark" ? "1px black inset" : "1px lightgrey inset",
-                    }}
-                >
+                <Box sx={ls.mainPanel}>
                     {activeNoteType === 1 && useNM.currentMyNote && (
                         <MyNoteMain
                             isInTaskPage={true}
@@ -338,7 +251,7 @@ export const TaskHomeLayout = ({
 
         return (
             <>
-                {renderResizeHandle()}
+                <ResizeHandle className="task-resize-handle" />
                 <Panel id={"6"} maxSize={100} minSize={70} order={6}>
                     <Box
                         sx={{
@@ -348,7 +261,8 @@ export const TaskHomeLayout = ({
                             justifyContent: "center",
                             alignItems: "center",
                             p: 4,
-                            borderRight: isDark ? "1px black inset" : "1px lightgrey inset",
+                            borderRight: "1px solid",
+                            borderColor: ls.sidebarPanel.borderColor,
                             background: isDark
                                 ? `radial-gradient(1200px 600px at 50% 0%, ${accent}10 0%, transparent 60%)`
                                 : `radial-gradient(1200px 600px at 50% 0%, ${accent}0d 0%, transparent 60%)`,
@@ -454,16 +368,9 @@ export const TaskHomeLayout = ({
     };
 
     return (
-        <PanelGroup autoSaveId="conditional" direction="horizontal">
+        <PanelGroup autoSaveId="conditional" direction="horizontal" style={{ flex: 1 }}>
             <Panel defaultSize={10} id={"1"} maxSize={30} minSize={10} order={1}>
-                <Box
-                    sx={{
-                        height: "100%",
-                        width: "100%",
-                        borderColor: mode === "dark" ? "black" : "white",
-                        borderRight: mode === "dark" ? "1px black inset" : "1px lightgrey inset",
-                    }}
-                >
+                <Box sx={ls.sidebarPanel}>
                     <TaskSidebar
                         myself={myself}
                         setMyself={setMyself}
@@ -485,7 +392,7 @@ export const TaskHomeLayout = ({
                         useTM.isSprintBoardVisible ||
                         useTM.isTaskDashboardVisible) && (
                         <>
-                            {renderResizeHandle()}
+                            <ResizeHandle className="task-resize-handle" />
                             <Panel id={"2"} maxSize={85} minSize={30} order={2}>
                                 {renderMainContent()}
                             </Panel>

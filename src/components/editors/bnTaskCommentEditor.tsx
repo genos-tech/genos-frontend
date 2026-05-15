@@ -143,6 +143,12 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         },
     });
 
+    // Track the previous task id so we can clear the editor only when the
+    // user actually switches to a different task. Depending on the full `task`
+    // object would fire on every re-render where the parent recreates the prop
+    // reference (e.g. when currentPreviewTask loads), which wiped typed text.
+    const prevTaskIdRef = useRef<number | undefined>(undefined);
+
     const boxRef = useRef<HTMLDivElement>(null);
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
@@ -195,8 +201,11 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     }, [selectedEmoji]);
 
     useEffect(() => {
-        editor.replaceBlocks(editor.document, []);
-    }, [task]);
+        if (prevTaskIdRef.current !== undefined && prevTaskIdRef.current !== task?.id) {
+            editor.replaceBlocks(editor.document, []);
+        }
+        prevTaskIdRef.current = task?.id;
+    }, [task?.id]);
 
     // Send a new comment.
     //

@@ -72,7 +72,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                     border: `1px solid ${styles.avatarBorder}`,
                     transition: "all 0.2s ease",
                     "&:hover": {
-                        background: isDark ? "rgba(99,102,241,0.15)" : "rgba(99,102,241,0.1)",
+                        background: isDark ? "rgba(124,58,237,0.15)" : "rgba(124,58,237,0.1)",
                     },
                 }}
             >

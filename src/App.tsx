@@ -16,6 +16,9 @@ import { InitialLoad } from "./components/ui/misc/InitialLoad";
 import { ChatHome } from "./features/chat/chatHome";
 import { InboxHome } from "./features/inbox/inboxHome";
 import { NoteHome } from "./features/notes/NoteHome";
+import { SpotlightOverlay } from "./features/spotlight/SpotlightOverlay";
+import { CHAT_TYPE_CODE, SpotlightResult } from "./features/spotlight/types";
+import { useSpotlight } from "./features/spotlight/useSpotlight";
 import { TaskHome } from "./features/tasks/taskHome";
 import { useAppInitialization } from "./hooks/common/useAppInitialization";
 import { useGlobalServiceShortcut } from "./hooks/common/useGlobalServiceShortcut";
@@ -32,6 +35,8 @@ import { NotificationsProvider } from "./services/notifications/NotificationsCon
 import { NotificationToastHost } from "./services/notifications/NotificationToastHost";
 import { PermissionBanner } from "./services/notifications/PermissionBanner";
 import { NotificationIntent } from "./services/notifications/types";
+
+import { purpleTheme } from "./theme/purplePalette";
 
 const API_DOWN_THRESHOLD = 3;
 
@@ -169,6 +174,50 @@ export const App = () => {
     // and exposes the manager that the websocket router pushes intents to.
     const useNotif = useNotifications(myself, accessToken, openIntent);
 
+    // Global Cmd-K / Ctrl-K Spotlight overlay. The hook owns open/close
+    // state, the keyboard listener, the debounced query, and an `onAsk`
+    // stub (Phase 1 just logs; Phase 2 will dispatch the Gemini RAG
+    // call). Navigation on result-click is handled here so we have
+    // every navigator (useCM / navigate) in scope.
+    const spotlight = useSpotlight({
+        accessToken,
+        teamId: useTEM.currentTeamId,
+    });
+
+    const handleSpotlightSelect = useCallback(
+        (r: SpotlightResult) => {
+            spotlight.close();
+            if (r.entity_type === "task" && r.task_id && r.project_id) {
+                navigate(`/workspace/tasks/project/${r.project_id}/task/${r.task_id}`);
+                return;
+            }
+            if (r.entity_type === "chat" && r.chat_type && r.chat_id) {
+                const chatTypeCode = CHAT_TYPE_CODE[r.chat_type];
+                const numericChatId = Number(r.chat_id);
+                const numericThreadId = r.thread_id ? Number(r.thread_id) : 0;
+                useCM.moveToSpecificChat(
+                    chatTypeCode,
+                    numericChatId,
+                    numericThreadId,
+                    false,
+                    numericThreadId !== 0,
+                    useTM.setCurrentPreviewTaskId,
+                    usePM.setCurrentProject
+                );
+                return;
+            }
+            if (r.entity_type === "note") {
+                // Notes don't have a deep-link route yet (see plan
+                // file's "Known caveats" — true note deep-link is a
+                // follow-up). For now just take the user to the notes
+                // home and let them find it there.
+                navigate("/workspace/notes");
+                return;
+            }
+        },
+        [spotlight, navigate, useCM, useTM, usePM]
+    );
+
     // Tell the manager which chat / thread / task is currently in view so it
     // can suppress notifications for that surface.
     useEffect(() => {
@@ -207,7 +256,7 @@ export const App = () => {
 
     if (isTooSmall) {
         return (
-            <CssVarsProvider disableTransitionOnChange>
+            <CssVarsProvider disableTransitionOnChange theme={purpleTheme}>
                 <CssBaseline />
                 <Box
                     sx={{
@@ -235,7 +284,7 @@ export const App = () => {
     }
 
     return (
-        <CssVarsProvider disableTransitionOnChange>
+        <CssVarsProvider disableTransitionOnChange theme={purpleTheme}>
             <CssBaseline />
             <ThemePreferenceProvider>
                 <NotificationsProvider value={useNotif}>
@@ -244,15 +293,33 @@ export const App = () => {
                         onOpenIntent={openIntent}
                     />
                     <ServiceSwitcherOverlay
-                        previewIndex={serviceSwitcherPreviewIndex}
                         mruOrder={serviceSwitcherMruOrder}
+                        previewIndex={serviceSwitcherPreviewIndex}
+                    />
+                    <SpotlightOverlay
+                        ask={spotlight.ask}
+                        error={spotlight.error}
+                        isLoading={spotlight.isLoading}
+                        isOpen={spotlight.isOpen}
+                        query={spotlight.query}
+                        results={spotlight.results}
+                        turns={spotlight.turns}
+                        onApprove={spotlight.onApprove}
+                        onAsk={spotlight.onAsk}
+                        onCancel={spotlight.onCancel}
+                        onClose={spotlight.close}
+                        onNewConversation={spotlight.onNewConversation}
+                        onQueryChange={spotlight.setQuery}
+                        onReject={spotlight.onReject}
+                        onSelect={handleSpotlightSelect}
+                        dailyUsage={spotlight.dailyUsage}
                     />
                     <Snackbar
                         anchorOrigin={{ vertical: "top", horizontal: "center" }}
-                        open={showWsDisconnected || showApiDown}
                         color="danger"
-                        variant="soft"
+                        open={showWsDisconnected || showApiDown}
                         sx={{ gap: 1 }}
+                        variant="soft"
                     >
                         <Stack spacing={0.5}>
                             {showWsDisconnected && (
@@ -294,8 +361,8 @@ export const App = () => {
                     ) : (
                         <div className="main-container">
                             <PermissionBanner
-                                permission={useNotif.permission}
                                 masterEnabled={useNotif.preferences.masterEnabled}
+                                permission={useNotif.permission}
                                 requestPermission={useNotif.requestPermission}
                             />
                             {/* Sidebar lives here (outside <Routes>) so it
@@ -330,11 +397,11 @@ export const App = () => {
                                     }}
                                 >
                                     <Sidebar
-                                        useCM={useCM}
-                                        useIM={useIM}
                                         myself={myself}
                                         setMyself={setMyself}
                                         socket={socketInstance}
+                                        useCM={useCM}
+                                        useIM={useIM}
                                         useTEM={useTEM}
                                         useUISM={useUISM}
                                     />
@@ -343,11 +410,11 @@ export const App = () => {
                                             path="inbox/*"
                                             element={
                                                 <InboxHome
-                                                    useCM={useCM}
-                                                    useIM={useIM}
                                                     myself={myself}
                                                     setMyself={setMyself}
                                                     socket={socketInstance}
+                                                    useCM={useCM}
+                                                    useIM={useIM}
                                                     useTEM={useTEM}
                                                     useUISM={useUISM}
                                                 />
@@ -357,16 +424,16 @@ export const App = () => {
                                             path="chat/*"
                                             element={
                                                 <ChatHome
-                                                    useCM={useCM}
-                                                    useIM={useIM}
                                                     myself={myself}
-                                                    useNM={useNM}
-                                                    usePM={usePM}
                                                     setMyself={setMyself}
                                                     socket={socketInstance}
+                                                    useCM={useCM}
+                                                    useIM={useIM}
+                                                    useNM={useNM}
+                                                    usePM={usePM}
+                                                    useSM={useSM}
                                                     useTEM={useTEM}
                                                     useTM={useTM}
-                                                    useSM={useSM}
                                                     useUISM={useUISM}
                                                 />
                                             }
@@ -375,16 +442,16 @@ export const App = () => {
                                             path="tasks/*"
                                             element={
                                                 <TaskHome
-                                                    useCM={useCM}
-                                                    useIM={useIM}
                                                     myself={myself}
-                                                    useNM={useNM}
-                                                    usePM={usePM}
                                                     setMyself={setMyself}
                                                     socket={socketInstance}
+                                                    useCM={useCM}
+                                                    useIM={useIM}
+                                                    useNM={useNM}
+                                                    usePM={usePM}
+                                                    useSM={useSM}
                                                     useTEM={useTEM}
                                                     useTM={useTM}
-                                                    useSM={useSM}
                                                     useUISM={useUISM}
                                                 />
                                             }
@@ -393,22 +460,22 @@ export const App = () => {
                                             path="notes/*"
                                             element={
                                                 <NoteHome
-                                                    useCM={useCM}
-                                                    useIM={useIM}
                                                     myself={myself}
-                                                    useNM={useNM}
-                                                    usePM={usePM}
                                                     setMyself={setMyself}
                                                     socket={socketInstance}
+                                                    useCM={useCM}
+                                                    useIM={useIM}
+                                                    useNM={useNM}
+                                                    usePM={usePM}
+                                                    useSM={useSM}
                                                     useTEM={useTEM}
                                                     useTM={useTM}
-                                                    useSM={useSM}
                                                     useUISM={useUISM}
                                                 />
                                             }
                                         />
                                         {/* Default redirect to inbox */}
-                                        <Route path="" element={<Navigate to="inbox" replace />} />
+                                        <Route element={<Navigate to="inbox" replace />} path="" />
                                     </Routes>
                                 </Box>
                             </AvatarContextProvider>

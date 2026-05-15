@@ -300,6 +300,11 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
     const isOwnMessage = message.sender.userId === myself.userId;
     const canDelete = message.messageId !== 1 && isOwnMessage;
 
+    // Per-action hues below are a functional category color scheme — users
+    // recognise actions by colour at a glance (copy=emerald, flag=red/amber,
+    // edit=cyan). The `delete` action is the only generic destructive
+    // affordance and uses palette.dangerTint instead of red. The `flag` red
+    // is also a cross-file functional carve-out (see chatListItemForFlagMessages).
     const menuItems: MenuItemConfig[] = [
         {
             id: "copyLink",
@@ -338,8 +343,8 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
             label: "Delete message",
             icon: <DeleteOutlineRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleDeleteClick,
-            color: { light: "#dc2626", dark: "#f87171" },
-            hoverBg: { light: "rgba(220,38,38,0.12)", dark: "rgba(248,113,113,0.18)" },
+            color: { light: "#c026a8", dark: "#e879c3" },
+            hoverBg: { light: "rgba(192,38,168,0.12)", dark: "rgba(232,121,195,0.18)" },
             visible: canDelete,
             danger: true,
         },

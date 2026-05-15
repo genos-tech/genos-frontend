@@ -667,7 +667,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                 mb: 1,
                 boxShadow: isDark
                     ? "0 4px 20px rgba(0,0,0,0.3)"
-                    : "0 4px 20px rgba(99,102,241,0.08)",
+                    : "0 4px 20px rgba(124,58,237,0.08)",
             }}
         >
             <Stack
@@ -682,7 +682,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                     <FilterListIcon
                         sx={{
                             fontSize: "18px",
-                            color: isDark ? "#818cf8" : "#4f46e5",
+                            color: isDark ? "#a78bfa" : "#6d28d9",
                         }}
                     />
                     <Typography

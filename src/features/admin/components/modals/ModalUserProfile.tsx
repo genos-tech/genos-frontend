@@ -270,13 +270,13 @@ export const UserProfile = (props: UserProfileProps) => {
                                     borderRadius: "16px",
                                     boxShadow: isDark
                                         ? "0 4px 20px rgba(0,0,0,0.3)"
-                                        : "0 4px 20px rgba(99,102,241,0.08)",
+                                        : "0 4px 20px rgba(124,58,237,0.08)",
                                     transition: "all 0.3s ease",
                                     p: { xs: 2, md: 3 },
                                     "&:hover": {
                                         boxShadow: isDark
                                             ? "0 8px 30px rgba(0,0,0,0.4)"
-                                            : "0 8px 30px rgba(99,102,241,0.12)",
+                                            : "0 8px 30px rgba(124,58,237,0.12)",
                                     },
                                 }}
                             >
@@ -305,8 +305,8 @@ export const UserProfile = (props: UserProfileProps) => {
                                                 "&:hover": {
                                                     transform: "scale(1.02)",
                                                     boxShadow: isDark
-                                                        ? "0 0 50px rgba(99,102,241,0.5), 0 0 100px rgba(139,92,246,0.3)"
-                                                        : "0 0 50px rgba(99,102,241,0.3), 0 0 100px rgba(139,92,246,0.15)",
+                                                        ? "0 0 50px rgba(124,58,237,0.5), 0 0 100px rgba(139,92,246,0.3)"
+                                                        : "0 0 50px rgba(124,58,237,0.3), 0 0 100px rgba(139,92,246,0.15)",
                                                 },
                                             }}
                                             onClick={() => setOpenUserProfile(true)}
@@ -341,14 +341,14 @@ export const UserProfile = (props: UserProfileProps) => {
                                                         size="sm"
                                                         sx={{
                                                             background: isDark
-                                                                ? "linear-gradient(135deg, rgba(99,102,241,0.3) 0%, rgba(139,92,246,0.3) 100%)"
-                                                                : "linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.15) 100%)",
+                                                                ? "linear-gradient(135deg, rgba(124,58,237,0.3) 0%, rgba(139,92,246,0.3) 100%)"
+                                                                : "linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(139,92,246,0.15) 100%)",
                                                             border: `1px solid ${styles.border}`,
                                                             transition: "all 0.2s ease",
                                                             "&:hover": {
                                                                 background: isDark
-                                                                    ? "linear-gradient(135deg, rgba(99,102,241,0.5) 0%, rgba(139,92,246,0.5) 100%)"
-                                                                    : "linear-gradient(135deg, rgba(99,102,241,0.25) 0%, rgba(139,92,246,0.25) 100%)",
+                                                                    ? "linear-gradient(135deg, rgba(124,58,237,0.5) 0%, rgba(139,92,246,0.5) 100%)"
+                                                                    : "linear-gradient(135deg, rgba(124,58,237,0.25) 0%, rgba(139,92,246,0.25) 100%)",
                                                                 transform: "scale(1.1)",
                                                             },
                                                         }}
@@ -357,9 +357,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                         <EditIcon
                                                             sx={{
                                                                 fontSize: "20px",
-                                                                color: isDark
-                                                                    ? "#8b5cf6"
-                                                                    : "#6366f1",
+                                                                color: styles.accentColor,
                                                             }}
                                                         />
                                                     </IconButton>
@@ -391,7 +389,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                     <EmailRoundedIcon
                                                         fontSize="small"
                                                         sx={{
-                                                            color: isDark ? "#8b5cf6" : "#6366f1",
+                                                            color: styles.accentColor,
                                                         }}
                                                     />
                                                 }
@@ -402,7 +400,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                     transition: "all 0.2s ease",
                                                     fontSize: "14px",
                                                     "&:hover": {
-                                                        color: isDark ? "#8b5cf6" : "#6366f1",
+                                                        color: styles.accentColor,
                                                     },
                                                 }}
                                             >
@@ -447,8 +445,8 @@ export const UserProfile = (props: UserProfileProps) => {
                                                     py: 0.75,
                                                     borderRadius: "8px",
                                                     background: isDark
-                                                        ? "rgba(99,102,241,0.1)"
-                                                        : "rgba(99,102,241,0.05)",
+                                                        ? "rgba(124,58,237,0.1)"
+                                                        : "rgba(124,58,237,0.05)",
                                                     border: `1px solid ${styles.border}`,
                                                     display: "inline-flex",
                                                     width: "fit-content",
@@ -488,8 +486,8 @@ export const UserProfile = (props: UserProfileProps) => {
                                                         py: 0.5,
                                                         borderRadius: "6px",
                                                         background: isDark
-                                                            ? "rgba(99,102,241,0.3)"
-                                                            : "rgba(99,102,241,0.05)",
+                                                            ? "rgba(124,58,237,0.3)"
+                                                            : "rgba(124,58,237,0.05)",
                                                         border: `1px solid ${styles.border}`,
                                                         overflow: "hidden",
                                                     }}
@@ -529,8 +527,8 @@ export const UserProfile = (props: UserProfileProps) => {
                                                         py: 0.5,
                                                         borderRadius: "6px",
                                                         background: isDark
-                                                            ? "rgba(99,102,241,0.3)"
-                                                            : "rgba(99,102,241,0.05)",
+                                                            ? "rgba(124,58,237,0.3)"
+                                                            : "rgba(124,58,237,0.05)",
                                                         border: `1px solid ${styles.border}`,
                                                         overflow: "hidden",
                                                     }}
@@ -613,8 +611,8 @@ export const UserProfile = (props: UserProfileProps) => {
                                                         py: 0.5,
                                                         borderRadius: "6px",
                                                         background: isDark
-                                                            ? "rgba(99,102,241,0.1)"
-                                                            : "rgba(99,102,241,0.05)",
+                                                            ? "rgba(124,58,237,0.1)"
+                                                            : "rgba(124,58,237,0.05)",
                                                         border: `1px solid ${styles.border}`,
                                                         width: "fit-content",
                                                     }}
@@ -663,7 +661,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                     startDecorator={
                                         <QuestionAnswerRoundedIcon
                                             sx={{
-                                                color: isDark ? "#8b5cf6" : "#6366f1",
+                                                color: styles.accentColor,
                                                 fontSize: "18px",
                                             }}
                                         />
@@ -674,19 +672,19 @@ export const UserProfile = (props: UserProfileProps) => {
                                         py: 0.75,
                                         borderRadius: "10px",
                                         background: isDark
-                                            ? "linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.2) 100%)"
-                                            : "linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.1) 100%)",
+                                            ? "linear-gradient(135deg, rgba(124,58,237,0.2) 0%, rgba(139,92,246,0.2) 100%)"
+                                            : "linear-gradient(135deg, rgba(124,58,237,0.1) 0%, rgba(139,92,246,0.1) 100%)",
                                         border: `1px solid ${styles.border}`,
                                         color: styles.valueColor,
                                         transition: "all 0.2s ease",
                                         "&:hover": {
                                             background: isDark
-                                                ? "linear-gradient(135deg, rgba(99,102,241,0.4) 0%, rgba(139,92,246,0.4) 100%)"
-                                                : "linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.2) 100%)",
+                                                ? "linear-gradient(135deg, rgba(124,58,237,0.4) 0%, rgba(139,92,246,0.4) 100%)"
+                                                : "linear-gradient(135deg, rgba(124,58,237,0.2) 0%, rgba(139,92,246,0.2) 100%)",
                                             transform: "translateY(-2px)",
                                             boxShadow: isDark
-                                                ? "0 4px 12px rgba(99,102,241,0.3)"
-                                                : "0 4px 12px rgba(99,102,241,0.2)",
+                                                ? "0 4px 12px rgba(124,58,237,0.3)"
+                                                : "0 4px 12px rgba(124,58,237,0.2)",
                                         },
                                     }}
                                     onClick={() => {

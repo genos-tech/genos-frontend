@@ -1,6 +1,6 @@
 // Database constants
 export const DB_NAME = "genosData";
-export const DB_VERSION = 3;
+export const DB_VERSION = 4;
 
 // LRU cap for the full-task cache (TASK_FULL store).
 export const MAX_CACHED_FULL_TASKS = 500;
@@ -28,6 +28,7 @@ export const STORES = {
     PERSONAL_NOTES: "personalNotes",
     TASK_NOTES: "taskNotes",
     CHAT_NOTES: "chatNotes",
+    TODOS: "todos",
 } as const;
 
 // Key paths for object stores
@@ -53,6 +54,7 @@ export const KEY_PATHS = {
     PERSONAL_NOTES: "noteId",
     TASK_NOTES: "noteId",
     CHAT_NOTES: "noteId",
+    TODOS: "todoId",
 } as const;
 
 // Index names
@@ -81,6 +83,7 @@ export const INDEX_NAMES = {
     TASK_META: "TaskMetaIndex",
     TASK_META_COMPOUND: "TaskMetaCompoundIndex",
     TASK_FULL_LRU: "TaskFullLRUIndex",
+    TODOS: "TodosUserIndex",
 } as const;
 
 // Index key paths
@@ -109,4 +112,5 @@ export const INDEX_KEY_PATHS = {
     TASK_META: "projectId",
     TASK_META_COMPOUND: ["projectId", "status"],
     TASK_FULL_LRU: "accessedAt",
+    TODOS: "userId",
 } as const;

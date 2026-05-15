@@ -91,8 +91,8 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                     transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                     background: selected
                         ? isDark
-                            ? "linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.1) 100%)"
-                            : "linear-gradient(135deg, rgba(79,70,229,0.1) 0%, rgba(124,58,237,0.06) 100%)"
+                            ? "linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(139,92,246,0.1) 100%)"
+                            : "linear-gradient(135deg, rgba(124,58,237,0.1) 0%, rgba(124,58,237,0.06) 100%)"
                         : isHovered
                           ? isDark
                               ? "rgba(255,255,255,0.04)"
@@ -109,16 +109,16 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                     "&:hover": {
                         background: selected
                             ? isDark
-                                ? "linear-gradient(135deg, rgba(99,102,241,0.18) 0%, rgba(139,92,246,0.12) 100%)"
-                                : "linear-gradient(135deg, rgba(79,70,229,0.12) 0%, rgba(124,58,237,0.08) 100%)"
+                                ? "linear-gradient(135deg, rgba(124,58,237,0.18) 0%, rgba(139,92,246,0.12) 100%)"
+                                : "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(124,58,237,0.08) 100%)"
                             : isDark
                               ? "rgba(255,255,255,0.05)"
                               : "rgba(0,0,0,0.04)",
                     },
                     "&.Mui-selected": {
                         background: isDark
-                            ? "linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.1) 100%)"
-                            : "linear-gradient(135deg, rgba(79,70,229,0.1) 0%, rgba(124,58,237,0.06) 100%)",
+                            ? "linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(139,92,246,0.1) 100%)"
+                            : "linear-gradient(135deg, rgba(124,58,237,0.1) 0%, rgba(124,58,237,0.06) 100%)",
                     },
                 }}
                 onClick={() => {
@@ -137,8 +137,8 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
                             height: "60%",
                             borderRadius: "0 4px 4px 0",
                             background: isDark
-                                ? "linear-gradient(180deg, #6366f1 0%, #8b5cf6 100%)"
-                                : "linear-gradient(180deg, #4f46e5 0%, #7c3aed 100%)",
+                                ? "linear-gradient(180deg, #7c3aed 0%, #6d28d9 100%)"
+                                : "linear-gradient(180deg, #7c3aed 0%, #6d28d9 100%)",
                         }}
                     />
                 )}

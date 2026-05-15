@@ -119,14 +119,14 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                 alignItems: "center",
                                 justifyContent: "center",
                                 background: isDark
-                                    ? "linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.2) 100%)"
-                                    : "linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(139,92,246,0.12) 100%)",
+                                    ? "linear-gradient(135deg, rgba(124,58,237,0.2) 0%, rgba(139,92,246,0.2) 100%)"
+                                    : "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(139,92,246,0.12) 100%)",
                             }}
                         >
                             <TaskAltRoundedIcon
                                 sx={{
                                     fontSize: 20,
-                                    color: isDark ? "#a5b4fc" : "#6366f1",
+                                    color: isDark ? "#a78bfa" : "#7c3aed",
                                 }}
                             />
                         </Box>
@@ -197,15 +197,15 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                 fontWeight: 600,
                                 gap: 0.5,
                                 boxShadow: isDark
-                                    ? "0 2px 8px rgba(99,102,241,0.4)"
-                                    : "0 2px 8px rgba(79,70,229,0.3)",
+                                    ? "0 2px 8px rgba(124,58,237,0.4)"
+                                    : "0 2px 8px rgba(124,58,237,0.3)",
                                 transition: "all 0.2s ease",
                                 "&:hover": {
                                     background: styles.createButtonHover,
                                     transform: "translateY(-1px)",
                                     boxShadow: isDark
-                                        ? "0 4px 12px rgba(99,102,241,0.5)"
-                                        : "0 4px 12px rgba(79,70,229,0.4)",
+                                        ? "0 4px 12px rgba(124,58,237,0.5)"
+                                        : "0 4px 12px rgba(124,58,237,0.4)",
                                 },
                             }}
                             onClick={handleCreateNewTodo}
@@ -415,10 +415,10 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                     px: 2.5,
                     py: 2,
                     borderTop: "1px solid",
-                    borderColor: isDark ? "rgba(99,102,241,0.15)" : "rgba(99,102,241,0.1)",
+                    borderColor: isDark ? "rgba(124,58,237,0.15)" : "rgba(124,58,237,0.1)",
                     background: isDark
-                        ? "linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(147,51,234,0.08) 100%)"
-                        : "linear-gradient(135deg, rgba(59,130,246,0.06) 0%, rgba(147,51,234,0.06) 100%)",
+                        ? "linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(168,85,247,0.08) 100%)"
+                        : "linear-gradient(135deg, rgba(124,58,237,0.06) 0%, rgba(168,85,247,0.06) 100%)",
                 }}
             >
                 <Stack alignItems="center" direction="row" spacing={2}>
@@ -432,14 +432,14 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                             justifyContent: "center",
                             flexShrink: 0,
                             backgroundColor: isDark
-                                ? "rgba(99,102,241,0.15)"
-                                : "rgba(99,102,241,0.1)",
+                                ? "rgba(124,58,237,0.15)"
+                                : "rgba(124,58,237,0.1)",
                         }}
                     >
                         <TipsAndUpdatesRoundedIcon
                             sx={{
                                 fontSize: 22,
-                                color: isDark ? "#a5b4fc" : "#6366f1",
+                                color: isDark ? "#a78bfa" : "#7c3aed",
                             }}
                         />
                     </Box>

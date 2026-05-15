@@ -114,8 +114,8 @@ export const ActivityHeader: React.FC<ActivityHeaderProps> = ({
                             height: 8,
                             borderRadius: "50%",
                             background: isDark
-                                ? "linear-gradient(135deg, #a78bfa 0%, #818cf8 100%)"
-                                : "linear-gradient(135deg, #7c3aed 0%, #6366f1 100%)",
+                                ? "linear-gradient(135deg, #a78bfa 0%, #c084fc 100%)"
+                                : "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)",
                             boxShadow: isDark
                                 ? "0 0 8px rgba(167,139,250,0.5)"
                                 : "0 0 8px rgba(124,58,237,0.4)",

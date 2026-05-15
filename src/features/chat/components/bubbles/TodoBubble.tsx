@@ -17,9 +17,11 @@ import { ToDoFactProps } from "../../../../types/chat";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 import { updateTodo } from "../../services/updateTodo";
 
-// Color schemes
+// Color schemes. `today` is the brand-purple highlight for the current
+// day's todo. `completed` (green) and `incomplete` (gray) are functional
+// state indicators kept distinct from the brand by hue.
 const TODO_COLORS = {
-    today: { dark: "#6366f1", light: "#4f46e5" },
+    today: { dark: "#a78bfa", light: "#7c3aed" },
     completed: { dark: "#22c55e", light: "#16a34a" },
     incomplete: { dark: "#94a3b8", light: "#64748b" },
 } as const;

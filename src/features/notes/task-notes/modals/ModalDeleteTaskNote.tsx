@@ -89,9 +89,9 @@ export const ModalDeleteTaskNote: React.FC<Props> = ({
                     animation: `${fadeIn} 0.2s ease-out`,
                     background:
                         "linear-gradient(145deg, rgba(30, 30, 40, 0.95) 0%, rgba(20, 20, 28, 0.98) 100%)",
-                    border: "1px solid rgba(239, 68, 68, 0.2)",
+                    border: "1px solid rgba(232,121,195,0.2)",
                     borderRadius: "16px",
-                    boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(239, 68, 68, 0.1)",
+                    boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(232,121,195,0.1)",
                     minWidth: "360px",
                     p: 3,
                     textAlign: "center",
@@ -106,8 +106,8 @@ export const ModalDeleteTaskNote: React.FC<Props> = ({
                         width: 56,
                         height: 56,
                         borderRadius: "14px",
-                        background: "linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.15) 100%)",
-                        border: "1px solid rgba(239, 68, 68, 0.25)",
+                        background: "linear-gradient(135deg, rgba(232,121,195,0.15) 0%, rgba(192,38,168,0.15) 100%)",
+                        border: "1px solid rgba(232,121,195,0.25)",
                         mx: "auto",
                         mb: 2,
                         "&:hover": {
@@ -115,7 +115,7 @@ export const ModalDeleteTaskNote: React.FC<Props> = ({
                         },
                     }}
                 >
-                    <NoteIcon sx={{ color: "rgba(239, 68, 68, 0.9)", fontSize: 28 }} />
+                    <NoteIcon sx={{ color: "rgba(232,121,195,0.9)", fontSize: 28 }} />
                 </Box>
 
                 {/* Title */}
@@ -134,7 +134,7 @@ export const ModalDeleteTaskNote: React.FC<Props> = ({
                 <Typography
                     level="title-md"
                     sx={{
-                        background: "linear-gradient(135deg, #f87171 0%, #ef4444 100%)",
+                        background: "linear-gradient(135deg, #e879c3 0%, #c026a8 100%)",
                         WebkitBackgroundClip: "text",
                         WebkitTextFillColor: "transparent",
                         fontWeight: 600,
@@ -164,8 +164,8 @@ export const ModalDeleteTaskNote: React.FC<Props> = ({
                         sx={{
                             mb: 2,
                             borderRadius: "10px",
-                            backgroundColor: "rgba(239, 68, 68, 0.1)",
-                            border: "1px solid rgba(239, 68, 68, 0.3)",
+                            backgroundColor: "rgba(232,121,195,0.1)",
+                            border: "1px solid rgba(232,121,195,0.3)",
                             textAlign: "left",
                         }}
                     >
@@ -196,15 +196,15 @@ export const ModalDeleteTaskNote: React.FC<Props> = ({
                     <Button
                         onClick={handleDeleteNote}
                         sx={{
-                            background: "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+                            background: "linear-gradient(135deg, #c026a8 0%, #9d2386 100%)",
                             borderRadius: "10px",
                             px: 3,
                             fontWeight: 600,
-                            boxShadow: "0 4px 15px rgba(239, 68, 68, 0.3)",
+                            boxShadow: "0 4px 15px rgba(232,121,195,0.3)",
                             transition: "all 0.2s ease",
                             "&:hover": {
                                 transform: "translateY(-1px)",
-                                boxShadow: "0 6px 20px rgba(239, 68, 68, 0.4)",
+                                boxShadow: "0 6px 20px rgba(232,121,195,0.4)",
                             },
                         }}
                     >

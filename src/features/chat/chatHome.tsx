@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Box, Sheet, Snackbar } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Panel, PanelGroup } from "react-resizable-panels";
+
+import { LayoutStyles } from "../../components/ui/styles/commonStyle";
 import { Socket } from "socket.io-client";
 
 import { ChatProvider } from "./context/ChatContext";
@@ -225,6 +227,8 @@ export const ChatHome = (props: ChatHomeProps) => {
         }
     }, [useTM.currentPreviewTask]);
 
+    const ls = mode === "dark" ? LayoutStyles.dark : LayoutStyles.light;
+
     return (
         <ChatProvider
             useCM={useCM}
@@ -239,7 +243,7 @@ export const ChatHome = (props: ChatHomeProps) => {
             currentThreadTaskId={currentThreadTaskId}
             setCurrentThreadTaskId={setCurrentThreadTaskId}
         >
-            <Box sx={{ display: "flex", minHeight: "100dvh", flex: 1, minWidth: 0 }}>
+            <Box sx={LayoutStyles.outerWrapper}>
                 <Snackbar
                     anchorOrigin={{ vertical: "top", horizontal: "right" }}
                     autoHideDuration={1500}
@@ -258,18 +262,14 @@ export const ChatHome = (props: ChatHomeProps) => {
                     Todo added from the message.
                 </Snackbar>
 
-                <PanelGroup autoSaveId="conditional" direction="horizontal">
+                <Sheet sx={ls.serviceSurface}>
+                    <Box sx={ls.decorTopRight} />
+                    <Box sx={ls.decorBottomLeft} />
+
+                <PanelGroup autoSaveId="conditional" direction="horizontal" style={{ flex: 1 }}>
                     {/* Chat Sidebar pane which is always visible */}
                     <Panel id={"1"} maxSize={30} minSize={10} order={1}>
-                        <Box
-                            sx={{
-                                height: "100%",
-                                width: "100%",
-                                borderColor: mode === "dark" ? "black" : "white",
-                                borderRight:
-                                    mode === "dark" ? "1px black inset" : "1px lightgrey inset",
-                            }}
-                        >
+                        <Box sx={ls.sidebarPanel}>
                             <Sheet
                                 sx={{
                                     position: { xs: "fixed", sm: "sticky" },
@@ -472,6 +472,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                     {/* Modal for creating a new tag */}
                     <ModalCreateTag myself={myself} useTM={useTM} usePM={usePM} />
                 </PanelGroup>
+                </Sheet>
 
                 {/* Hover Animation with CSS */}
                 <style>

@@ -82,11 +82,11 @@ function FavoriteNoteItemComponent({ note, noteType, useNM }: FavoriteNoteItemPr
                         },
                     },
                     "&.Mui-selected": {
-                        backgroundColor: isDark ? "rgba(99,102,241,0.12)" : "rgba(79,70,229,0.08)",
+                        backgroundColor: isDark ? "rgba(124,58,237,0.12)" : "rgba(124,58,237,0.08)",
                         "&:hover": {
                             backgroundColor: isDark
-                                ? "rgba(99,102,241,0.18)"
-                                : "rgba(79,70,229,0.12)",
+                                ? "rgba(124,58,237,0.18)"
+                                : "rgba(124,58,237,0.12)",
                         },
                     },
                 }}
@@ -100,8 +100,7 @@ function FavoriteNoteItemComponent({ note, noteType, useNM }: FavoriteNoteItemPr
                         flexShrink: 0,
                         backgroundColor: isSelected
                             ? isDark
-                                ? "#6366f1"
-                                : "#4f46e5"
+                                ? "#a78bfa" : "#6d28d9"
                             : isDark
                               ? "rgba(255,255,255,0.2)"
                               : "rgba(0,0,0,0.15)",

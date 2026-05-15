@@ -53,11 +53,11 @@ export const ChildNoteCreator = memo(function ChildNoteCreator({
                         transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                         "&:hover": {
                             backgroundColor: isDark
-                                ? "rgba(99,102,241,0.08)"
-                                : "rgba(79,70,229,0.06)",
-                            borderColor: isDark ? "rgba(99,102,241,0.3)" : "rgba(79,70,229,0.25)",
+                                ? "rgba(124,58,237,0.08)"
+                                : "rgba(124,58,237,0.06)",
+                            borderColor: isDark ? "rgba(124,58,237,0.3)" : "rgba(124,58,237,0.25)",
                             "& .add-icon": {
-                                color: isDark ? "#818cf8" : "#6366f1",
+                                color: isDark ? "#a78bfa" : "#7c3aed",
                                 transform: "rotate(90deg)",
                             },
                             "& .add-text": {
