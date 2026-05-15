@@ -204,7 +204,7 @@ export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
                                     isDark ? 0.35 : 0.6
                                 ),
                                 color: isDark
-                                    ? item.status.color || "#60a5fa"
+                                    ? item.status.color || "#a78bfa"
                                     : item.status.textColor || item.status.color,
                                 border: "1px solid",
                                 borderColor: alpha(
