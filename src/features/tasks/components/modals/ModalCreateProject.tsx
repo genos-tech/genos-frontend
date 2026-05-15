@@ -199,7 +199,7 @@ export const ModalCreateProject: React.FC<Props> = ({ myself, usePM, setIsNewPro
                     <Typography
                         level="h4"
                         sx={{
-                            background: "linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)",
+                            background: "linear-gradient(135deg, #ddd6fe 0%, #c4b5fd 100%)",
                             WebkitBackgroundClip: "text",
                             WebkitTextFillColor: "transparent",
                             fontWeight: 600,
