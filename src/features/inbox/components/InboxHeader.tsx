@@ -2,9 +2,12 @@ import AllInboxRoundedIcon from "@mui/icons-material/AllInboxRounded";
 import { Box, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { purplePalette } from "../../../theme/purplePalette";
+
 export const InboxHeader = () => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const palette = isDark ? purplePalette.dark : purplePalette.light;
 
     return (
         <Box
@@ -16,8 +19,8 @@ export const InboxHeader = () => {
                 borderBottom: "1px solid",
                 borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
                 background: isDark
-                    ? "linear-gradient(135deg, rgba(30,30,35,0.95) 0%, rgba(25,25,30,0.98) 100%)"
-                    : "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(250,250,252,1) 100%)",
+                    ? "linear-gradient(135deg, rgba(30,20,46,0.95) 0%, rgba(22,16,36,0.98) 100%)"
+                    : "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(250,248,255,1) 100%)",
                 backdropFilter: "blur(12px)",
                 position: "relative",
                 overflow: "hidden",
@@ -31,9 +34,7 @@ export const InboxHeader = () => {
                     left: 0,
                     right: 0,
                     height: "2px",
-                    background: isDark
-                        ? "linear-gradient(90deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)"
-                        : "linear-gradient(90deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%)",
+                    background: palette.titleGradient,
                     opacity: 0.8,
                 }}
             />
@@ -48,15 +49,15 @@ export const InboxHeader = () => {
                     alignItems: "center",
                     justifyContent: "center",
                     background: isDark
-                        ? "linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(139,92,246,0.15) 100%)"
-                        : "linear-gradient(135deg, rgba(79,70,229,0.12) 0%, rgba(124,58,237,0.08) 100%)",
+                        ? "linear-gradient(135deg, rgba(124,58,237,0.2) 0%, rgba(139,92,246,0.15) 100%)"
+                        : "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(124,58,237,0.08) 100%)",
                     mr: 1.5,
                 }}
             >
                 <AllInboxRoundedIcon
                     sx={{
                         fontSize: 20,
-                        color: isDark ? "#a78bfa" : "#7c3aed",
+                        color: palette.accentSoft,
                     }}
                 />
             </Box>
@@ -70,7 +71,7 @@ export const InboxHeader = () => {
                         letterSpacing: "-0.01em",
                         background: isDark
                             ? "linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.85) 100%)"
-                            : "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)",
+                            : "linear-gradient(135deg, #2e1065 0%, #4c1d95 100%)",
                         WebkitBackgroundClip: "text",
                         WebkitTextFillColor: "transparent",
                         backgroundClip: "text",

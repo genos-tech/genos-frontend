@@ -80,8 +80,8 @@ export const InboxHome = (props: InboxHomeProps) => {
                     display: "flex",
                     flexDirection: "column",
                     background: isDark
-                        ? "linear-gradient(180deg, rgba(18,18,22,1) 0%, rgba(12,12,16,1) 100%)"
-                        : "linear-gradient(180deg, rgba(248,248,252,1) 0%, rgba(244,244,250,1) 100%)",
+                        ? "linear-gradient(180deg, rgba(20,14,34,1) 0%, rgba(11,10,22,1) 100%)"
+                        : "linear-gradient(180deg, rgba(252,250,255,1) 0%, rgba(248,245,255,1) 100%)",
                     position: "relative",
                     overflow: "hidden",
                 }}
@@ -95,8 +95,8 @@ export const InboxHome = (props: InboxHomeProps) => {
                         width: "50%",
                         height: "60%",
                         background: isDark
-                            ? "radial-gradient(ellipse at top right, rgba(99,102,241,0.06) 0%, transparent 60%)"
-                            : "radial-gradient(ellipse at top right, rgba(79,70,229,0.04) 0%, transparent 60%)",
+                            ? "radial-gradient(ellipse at top right, rgba(124,58,237,0.06) 0%, transparent 60%)"
+                            : "radial-gradient(ellipse at top right, rgba(124,58,237,0.04) 0%, transparent 60%)",
                         pointerEvents: "none",
                     }}
                 />
