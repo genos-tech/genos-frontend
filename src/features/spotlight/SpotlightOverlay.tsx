@@ -7,9 +7,12 @@
 //     as the user narrows their query.
 //   - Clicking a result navigates to its existing detail view (handled
 //     in the parent via `onSelect`).
-//   - Pressing Enter or clicking "Ask" invokes `onAsk` — Phase 1 stub,
-//     Phase 2 will dispatch a Gemini RAG call and render the answer
-//     in the placeholder panel below.
+//   - Pressing Enter or clicking "Ask" invokes `onAsk` which streams
+//     the agent's answer.
+//   - Phase 12: completed turns persist in a scrollable history above
+//     the input row so the user can ask follow-up questions and read
+//     prior Q&A. Ask is blocked while a turn is streaming or awaiting
+//     write-tool approval.
 //   - Escape closes (handled by the hook).
 //
 // Layout follows the codebase's existing overlay convention: fixed
@@ -27,7 +30,7 @@ import type { PendingApprovalPayload } from "../../services/agentApi";
 import { purplePalette } from "../../theme/purplePalette";
 import { SpotlightResultItem } from "./SpotlightResultItem";
 import type { EntityType, SpotlightResult } from "./types";
-import type { AskState, ToolEvent } from "./useSpotlight";
+import type { AskState, CompletedTurn, ToolEvent } from "./useSpotlight";
 
 interface Props {
     isOpen: boolean;
@@ -41,8 +44,10 @@ interface Props {
     onAsk: () => void;
     onApprove: () => void;
     onReject: () => void;
+    onCancel: () => void;
     onNewConversation: () => void;
     ask: AskState;
+    turns: CompletedTurn[];
 }
 
 const SECTION_ORDER: { key: EntityType; label: string }[] = [
@@ -50,6 +55,12 @@ const SECTION_ORDER: { key: EntityType; label: string }[] = [
     { key: "task", label: "Tasks" },
     { key: "note", label: "Notes" },
 ];
+
+// Distance from the bottom (px) under which we consider the user
+// "at the bottom" of the conversation. Streaming auto-scroll only
+// fires while at-bottom; if the user has scrolled up to read history,
+// we leave them in place.
+const SCROLL_FOLLOW_THRESHOLD_PX = 50;
 
 export const SpotlightOverlay = ({
     isOpen,
@@ -63,8 +74,10 @@ export const SpotlightOverlay = ({
     onAsk,
     onApprove,
     onReject,
+    onCancel,
     onNewConversation,
     ask,
+    turns,
 }: Props) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -89,6 +102,11 @@ export const SpotlightOverlay = ({
         }
         return byType;
     }, [results]);
+
+    const askDisabled = ask.isStreaming || ask.pendingApproval !== null;
+    // Show "Follow up" when there is at least one completed turn or the
+    // current session is active — i.e., the user is mid-conversation.
+    const hasConversation = turns.length > 0 || Boolean(ask.sessionId);
 
     if (!isOpen) return null;
 
@@ -150,7 +168,11 @@ export const SpotlightOverlay = ({
                     <Box
                         ref={inputRef}
                         component="input"
-                        placeholder="Search chats, tasks, notes — press Enter to ask AI"
+                        placeholder={
+                            askDisabled
+                                ? "Wait for the current answer to finish…"
+                                : "Search chats, tasks, notes — press Enter to ask AI"
+                        }
                         value={query}
                         sx={{
                             flex: 1,
@@ -168,13 +190,30 @@ export const SpotlightOverlay = ({
                         onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                             if (e.key === "Enter") {
                                 e.preventDefault();
+                                // Block Enter from firing a new ask while the
+                                // previous turn is still streaming or awaiting
+                                // user approval. The input itself stays
+                                // editable so the search typeahead keeps
+                                // working in the results section below.
+                                if (askDisabled) return;
                                 onAsk();
                             }
                         }}
                     />
+                    {ask.isStreaming && (
+                        <Button
+                            size="sm"
+                            variant="plain"
+                            color="danger"
+                            onClick={onCancel}
+                            sx={{ fontSize: "0.8rem", whiteSpace: "nowrap" }}
+                        >
+                            Cancel
+                        </Button>
+                    )}
                     <Button
                         color="primary"
-                        disabled={!hasQuery}
+                        disabled={!hasQuery || askDisabled}
                         size="sm"
                         startDecorator={<AutoAwesomeRoundedIcon sx={{ fontSize: 16 }} />}
                         variant="solid"
@@ -184,10 +223,12 @@ export const SpotlightOverlay = ({
                     </Button>
                 </Box>
 
-                {/* AI answer panel. Empty (idle hint) until the user
-                    asks; renders streaming Gemini output once invoked. */}
-                <AnswerPanel
+                {/* Conversation history + current in-flight turn.
+                    Rendered as a single scrollable region so past turns
+                    stay readable while a new one streams in below them. */}
+                <ConversationPanel
                     ask={ask}
+                    turns={turns}
                     isDark={isDark}
                     onSelect={onSelect}
                     onApprove={onApprove}
@@ -195,8 +236,19 @@ export const SpotlightOverlay = ({
                     onNewConversation={onNewConversation}
                 />
 
-                {/* Results / states */}
-                <Box sx={{ flex: 1, overflowY: "auto", px: 1, py: 1 }}>
+                {/* Results / states — hidden once a conversation is in
+                    progress. In Q&A mode the user is talking to the
+                    agent, not browsing search results. "New conversation"
+                    in the conversation header returns them to search. */}
+                <Box
+                    sx={{
+                        flex: 1,
+                        overflowY: "auto",
+                        px: 1,
+                        py: 1,
+                        display: hasConversation ? "none" : undefined,
+                    }}
+                >
                     {!hasQuery && (
                         <EmptyHint text="Start typing to search across chats, tasks, and notes." />
                     )}
@@ -282,8 +334,26 @@ const EmptyHint = ({ text, tone }: { text: string; tone?: "error" }) => (
     </Box>
 );
 
-interface AnswerPanelProps {
+// ──────────────────────────────────────────────────────────────────
+// ConversationPanel — Phase 12 multi-turn history container
+//
+// Renders, in document order:
+//   1. A conversation header with the "New conversation" button
+//      (visible when there's any prior turn or an active sessionId).
+//   2. Every completed turn from `turns` as an immutable <TurnView>.
+//   3. The in-flight `ask` as a current-flagged <TurnView>, if it
+//      has anything to show.
+//
+// Auto-scroll: when the user is at (or near) the bottom of the
+// container, new content scrolls into view via requestAnimationFrame
+// (coalesces high-frequency answer_delta updates). When the user
+// scrolls up to read history, follow mode is disabled until they
+// manually scroll back to the bottom OR a new turn starts.
+// ──────────────────────────────────────────────────────────────────
+
+interface ConversationPanelProps {
     ask: AskState;
+    turns: CompletedTurn[];
     isDark: boolean;
     onSelect: (r: SpotlightResult) => void;
     onApprove: () => void;
@@ -291,126 +361,341 @@ interface AnswerPanelProps {
     onNewConversation: () => void;
 }
 
-const AnswerPanel = ({
+const hasAskContent = (ask: AskState): boolean =>
+    ask.isStreaming ||
+    Boolean(ask.answer) ||
+    Boolean(ask.askError) ||
+    ask.answerSources.length > 0 ||
+    ask.toolEvents.length > 0 ||
+    ask.pendingApproval !== null;
+
+const ConversationPanel = ({
     ask,
+    turns,
     isDark,
     onSelect,
     onApprove,
     onReject,
     onNewConversation,
-}: AnswerPanelProps) => {
-    const hasContent =
-        ask.isStreaming ||
-        ask.answer ||
-        ask.askError ||
-        ask.answerSources.length > 0 ||
-        ask.toolEvents.length > 0 ||
-        ask.pendingApproval !== null;
+}: ConversationPanelProps) => {
+    const scrollRef = useRef<HTMLDivElement | null>(null);
+    // True when the user has scrolled away from the bottom. We pause
+    // auto-follow until they return to the bottom themselves OR a new
+    // turn starts (whichever happens first).
+    const userScrolledUpRef = useRef(false);
+    const rafIdRef = useRef<number | null>(null);
 
-    return (
-        <Box
-            sx={{
-                px: 2,
-                py: 1.25,
-                borderBottom: "1px solid",
-                borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
-                background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.015)",
-            }}
-        >
-            {!hasContent && (
+    const showHeader = turns.length > 0 || Boolean(ask.sessionId) || hasAskContent(ask);
+    const showAsk = hasAskContent(ask);
+
+    // Auto-scroll on relevant updates. requestAnimationFrame coalesces
+    // bursts of answer_delta events so we scroll at most once per frame.
+    useEffect(() => {
+        const el = scrollRef.current;
+        if (!el) return;
+        if (userScrolledUpRef.current) return;
+        if (rafIdRef.current !== null) {
+            cancelAnimationFrame(rafIdRef.current);
+        }
+        rafIdRef.current = requestAnimationFrame(() => {
+            rafIdRef.current = null;
+            el.scrollTo({ top: el.scrollHeight });
+        });
+        return () => {
+            if (rafIdRef.current !== null) {
+                cancelAnimationFrame(rafIdRef.current);
+                rafIdRef.current = null;
+            }
+        };
+    }, [ask.answer, ask.isStreaming, ask.pendingApproval, ask.toolEvents.length, turns.length]);
+
+    // New turn started → re-enable follow mode. `ask.turnId` bumps
+    // when the user fires a fresh `onAsk`; resuming a paused turn
+    // does NOT bump (see hook), so approve/reject won't yank the
+    // viewport away from a user reading the proposed args.
+    useEffect(() => {
+        userScrolledUpRef.current = false;
+    }, [ask.turnId]);
+
+    const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+        const el = e.currentTarget;
+        const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+        userScrolledUpRef.current = distanceFromBottom > SCROLL_FOLLOW_THRESHOLD_PX;
+    };
+
+    // Idle hint when there's no history and nothing in-flight. Matches
+    // the pre-Phase-12 placeholder so the empty-state feel is unchanged.
+    if (!showHeader && !showAsk) {
+        return (
+            <Box
+                sx={{
+                    px: 2,
+                    py: 1.25,
+                    borderBottom: "1px solid",
+                    borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+                    background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.015)",
+                }}
+            >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <AutoAwesomeRoundedIcon sx={{ fontSize: 16, opacity: 0.5 }} />
                     <Typography level="body-xs" sx={{ opacity: 0.65 }}>
                         Press Enter or click Ask for an AI-generated answer.
                     </Typography>
                 </Box>
-            )}
+            </Box>
+        );
+    }
 
-            {hasContent && (
-                <Box>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.75 }}>
-                        <AutoAwesomeRoundedIcon
-                            sx={{ fontSize: 16, opacity: 0.7, color: "primary.500" }}
-                        />
-                        <Typography
-                            level="body-xs"
-                            sx={{ opacity: 0.7, fontWeight: 600, textTransform: "uppercase" }}
-                        >
-                            AI answer
-                        </Typography>
-                        {ask.isStreaming && !ask.pendingApproval && (
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                                <CircularProgress
-                                    size="sm"
-                                    sx={{ "--CircularProgress-size": "12px" }}
-                                />
-                                <Typography level="body-xs" sx={{ opacity: 0.55 }}>
-                                    streaming…
-                                </Typography>
-                            </Box>
-                        )}
-                        {ask.pendingApproval && (
-                            <Typography
-                                level="body-xs"
-                                sx={{ opacity: 0.7, color: "warning.500", fontWeight: 600 }}
-                            >
-                                awaiting your approval
-                            </Typography>
-                        )}
-                        {ask.sessionId && !ask.isStreaming && (
+    return (
+        <Box
+            ref={scrollRef}
+            onScroll={handleScroll}
+            sx={{
+                maxHeight: "40vh",
+                overflowY: "auto",
+                px: 2,
+                py: 1.25,
+                borderBottom: "1px solid",
+                borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+                background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.015)",
+                display: "flex",
+                flexDirection: "column",
+                gap: 1.25,
+            }}
+        >
+            {showHeader && (
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        position: "sticky",
+                        top: 0,
+                        py: 0.25,
+                        background: isDark ? "rgba(30,20,46,0.92)" : "rgba(250,248,255,0.96)",
+                        zIndex: 1,
+                    }}
+                >
+                    <AutoAwesomeRoundedIcon
+                        sx={{ fontSize: 16, opacity: 0.7, color: "primary.500" }}
+                    />
+                    <Typography
+                        level="body-xs"
+                        sx={{ opacity: 0.7, fontWeight: 600, textTransform: "uppercase" }}
+                    >
+                        AI conversation
+                        {turns.length > 0
+                            ? ` · ${turns.length} turn${turns.length === 1 ? "" : "s"}`
+                            : ""}
+                    </Typography>
+                    <Box sx={{ ml: "auto" }}>
+                        {(turns.length > 0 || ask.sessionId) && (
                             <Button
                                 size="sm"
                                 variant="plain"
                                 color="neutral"
                                 onClick={onNewConversation}
-                                sx={{ ml: "auto", fontSize: "0.7rem", opacity: 0.6, py: 0 }}
+                                sx={{ fontSize: "0.7rem", opacity: 0.65, py: 0 }}
                             >
                                 New conversation
                             </Button>
                         )}
                     </Box>
+                </Box>
+            )}
 
-                    {ask.toolEvents.length > 0 && (
-                        <ToolProgressList events={ask.toolEvents} isDark={isDark} />
+            {turns.map((t) => (
+                <TurnView
+                    key={t.id}
+                    askedQuery={t.askedQuery}
+                    answer={t.answer}
+                    answerSources={t.answerSources}
+                    toolEvents={t.toolEvents}
+                    askError={t.askError}
+                    isCurrent={false}
+                    isDark={isDark}
+                    onSelect={onSelect}
+                />
+            ))}
+
+            {showAsk && (
+                <TurnView
+                    askedQuery={ask.askedQuery}
+                    answer={ask.answer}
+                    answerSources={ask.answerSources}
+                    toolEvents={ask.toolEvents}
+                    askError={ask.askError}
+                    isCurrent
+                    isStreaming={ask.isStreaming}
+                    pendingApproval={ask.pendingApproval}
+                    isDark={isDark}
+                    onSelect={onSelect}
+                    onApprove={onApprove}
+                    onReject={onReject}
+                />
+            )}
+        </Box>
+    );
+};
+
+// ──────────────────────────────────────────────────────────────────
+// TurnView — one Q&A unit
+//
+// Past turns (`isCurrent=false`) render statically. Current turn
+// (`isCurrent=true`) additionally shows the streaming spinner, the
+// "Thinking…" placeholder while the answer is empty, and the
+// approval card when a write tool is paused.
+// ──────────────────────────────────────────────────────────────────
+
+interface TurnViewProps {
+    askedQuery: string;
+    answer: string;
+    answerSources: SpotlightResult[];
+    toolEvents: ToolEvent[];
+    askError: string | null;
+    isCurrent: boolean;
+    isStreaming?: boolean;
+    pendingApproval?: PendingApprovalPayload | null;
+    isDark: boolean;
+    onSelect: (r: SpotlightResult) => void;
+    onApprove?: () => void;
+    onReject?: () => void;
+}
+
+const TurnView = ({
+    askedQuery,
+    answer,
+    answerSources,
+    toolEvents,
+    askError,
+    isCurrent,
+    isStreaming,
+    pendingApproval,
+    isDark,
+    onSelect,
+    onApprove,
+    onReject,
+}: TurnViewProps) => {
+    const showThinking = isCurrent && isStreaming && !answer && !askError;
+    return (
+        <Box
+            sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 0.5,
+                opacity: isCurrent ? 1 : 0.92,
+            }}
+        >
+            {askedQuery && (
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: 0.75,
+                        opacity: 0.75,
+                    }}
+                >
+                    <Typography
+                        level="body-xs"
+                        sx={{
+                            fontWeight: 700,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.04em",
+                            opacity: 0.6,
+                            minWidth: 18,
+                            mt: "2px",
+                        }}
+                    >
+                        Q
+                    </Typography>
+                    <Typography level="body-sm" sx={{ fontWeight: 500, whiteSpace: "pre-wrap" }}>
+                        {askedQuery}
+                    </Typography>
+                </Box>
+            )}
+
+            <Box sx={{ display: "flex", alignItems: "flex-start", gap: 0.75 }}>
+                <Typography
+                    level="body-xs"
+                    sx={{
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.04em",
+                        opacity: 0.6,
+                        minWidth: 18,
+                        mt: "2px",
+                        color: "primary.500",
+                    }}
+                >
+                    A
+                </Typography>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                    {isCurrent && isStreaming && !pendingApproval && (
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 0.5 }}>
+                            <CircularProgress
+                                size="sm"
+                                sx={{ "--CircularProgress-size": "12px" }}
+                            />
+                            <Typography level="body-xs" sx={{ opacity: 0.55 }}>
+                                streaming…
+                            </Typography>
+                        </Box>
+                    )}
+                    {isCurrent && pendingApproval && (
+                        <Typography
+                            level="body-xs"
+                            sx={{
+                                opacity: 0.7,
+                                color: "warning.500",
+                                fontWeight: 600,
+                                mb: 0.5,
+                            }}
+                        >
+                            awaiting your approval
+                        </Typography>
                     )}
 
-                    {ask.pendingApproval && (
+                    {toolEvents.length > 0 && (
+                        <ToolProgressList events={toolEvents} isDark={isDark} />
+                    )}
+
+                    {isCurrent && pendingApproval && onApprove && onReject && (
                         <ApprovalCard
-                            pending={ask.pendingApproval}
+                            pending={pendingApproval}
                             isDark={isDark}
                             onApprove={onApprove}
                             onReject={onReject}
                         />
                     )}
 
-                    {ask.askError && (
+                    {askError && (
                         <Typography level="body-sm" sx={{ color: "danger.500", mb: 0.5 }}>
-                            {ask.askError}
+                            {askError}
                         </Typography>
                     )}
 
-                    {ask.answer && (
+                    {answer && (
                         <Typography
                             level="body-sm"
                             sx={{
                                 whiteSpace: "pre-wrap",
                                 lineHeight: 1.5,
-                                mb: ask.answerSources.length > 0 ? 0.75 : 0,
+                                mb: answerSources.length > 0 ? 0.75 : 0,
                             }}
                         >
-                            {ask.answer}
+                            {answer}
                         </Typography>
                     )}
 
-                    {!ask.answer && ask.isStreaming && !ask.askError && (
+                    {showThinking && (
                         <Typography level="body-sm" sx={{ opacity: 0.55 }}>
                             Thinking…
                         </Typography>
                     )}
 
-                    {ask.answerSources.length > 0 && (
+                    {answerSources.length > 0 && (
                         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 0.5 }}>
-                            {ask.answerSources.slice(0, 6).map((s) => (
+                            {answerSources.slice(0, 6).map((s) => (
                                 <Chip
                                     key={`${s.entity_type}:${s.entity_id}`}
                                     size="sm"
@@ -424,7 +709,7 @@ const AnswerPanel = ({
                         </Box>
                     )}
                 </Box>
-            )}
+            </Box>
         </Box>
     );
 };
@@ -529,10 +814,11 @@ function _humanReadableCall(e: ToolEvent): string {
 // ApprovalCard — Phase 7 write-tool gate
 //
 // Rendered when the agent loop has paused on a tool flagged
-// `requires_approval=True` (currently only `create_task`). Shows the
-// tool name + the arguments the model proposed, and offers Approve /
-// Reject buttons that call back into the hook. Either choice resumes
-// the same stream via POST /api/v2/agent/decide/.
+// `requires_approval=True` (currently `create_task`, `update_task`,
+// `add_comment`, `create_note`). Shows the tool name + the arguments
+// the model proposed, and offers Approve / Reject buttons that call
+// back into the hook. Either choice resumes the same stream via
+// POST /api/v2/agent/decide/.
 // ──────────────────────────────────────────────────────────────────
 
 interface ApprovalCardProps {

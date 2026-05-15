@@ -11,7 +11,6 @@ import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 
 import { ServiceSwitcherOverlay } from "./components/layout/ServiceSwitcherOverlay";
 import { Sidebar } from "./components/layout/sidebar";
-import { purpleTheme } from "./theme/purplePalette";
 import { AvatarContextProvider } from "./components/ui/avatars/AvatarContext";
 import { InitialLoad } from "./components/ui/misc/InitialLoad";
 import { ChatHome } from "./features/chat/chatHome";
@@ -36,6 +35,8 @@ import { NotificationsProvider } from "./services/notifications/NotificationsCon
 import { NotificationToastHost } from "./services/notifications/NotificationToastHost";
 import { PermissionBanner } from "./services/notifications/PermissionBanner";
 import { NotificationIntent } from "./services/notifications/types";
+
+import { purpleTheme } from "./theme/purplePalette";
 
 const API_DOWN_THRESHOLD = 3;
 
@@ -302,8 +303,10 @@ export const App = () => {
                         isOpen={spotlight.isOpen}
                         query={spotlight.query}
                         results={spotlight.results}
+                        turns={spotlight.turns}
                         onApprove={spotlight.onApprove}
                         onAsk={spotlight.onAsk}
+                        onCancel={spotlight.onCancel}
                         onClose={spotlight.close}
                         onNewConversation={spotlight.onNewConversation}
                         onQueryChange={spotlight.setQuery}

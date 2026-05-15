@@ -180,6 +180,7 @@ async function runNdjsonStream(
     }
     const decoder = new TextDecoder("utf-8");
     let buffer = "";
+    let doneEventReceived = false;
 
     try {
         while (true) {
@@ -191,15 +192,25 @@ async function runNdjsonStream(
             while (nl !== -1) {
                 const line = buffer.slice(0, nl).trim();
                 buffer = buffer.slice(nl + 1);
-                if (line) dispatchLine(line, handlers);
+                if (line) {
+                    if (!doneEventReceived) {
+                        doneEventReceived = dispatchLine(line, handlers);
+                    }
+                }
                 nl = buffer.indexOf("\n");
             }
         }
         const tail = buffer.trim();
-        if (tail) dispatchLine(tail, handlers);
+        if (tail && !doneEventReceived) {
+            doneEventReceived = dispatchLine(tail, handlers);
+        }
     } catch (err) {
+        // AbortError is expected when the user cancels or closes the
+        // overlay; silently swallow it — the hook's onCancel already
+        // cleans up the streaming state manually.
         if ((err as Error).name === "AbortError") return;
         handlers.onError(`Stream interrupted: ${(err as Error).message}`);
+        return;
     } finally {
         try {
             reader.releaseLock();
@@ -207,50 +218,61 @@ async function runNdjsonStream(
             // ignore
         }
     }
+
+    // If the server closed the connection without sending a `done`
+    // event (e.g. mid-stream server crash, network drop), surface an
+    // error so the hook's `onError` handler runs and clears the
+    // `isStreaming` flag. Without this the UI would show "streaming…"
+    // forever.
+    if (!doneEventReceived) {
+        handlers.onError("The answer stream ended unexpectedly. Please try again.");
+    }
 }
 
-function dispatchLine(line: string, h: BaseStreamHandlers) {
+// Returns true only for the `done` event so the caller can detect a
+// clean stream finish vs a connection that closed without one.
+function dispatchLine(line: string, h: BaseStreamHandlers): boolean {
     let evt: AgentEvent;
     try {
         evt = JSON.parse(line) as AgentEvent;
     } catch {
         h.onError(`Malformed NDJSON line: ${line.slice(0, 120)}`);
-        return;
+        return false;
     }
     switch (evt.type) {
         case "sources":
             h.onSources(evt.sources || []);
-            return;
+            return false;
         case "answer_delta":
             if (evt.text) h.onDelta(evt.text);
-            return;
+            return false;
         case "done":
             h.onDone(evt.session_id);
-            return;
+            return true; // signals clean finish
         case "error":
             h.onError(evt.message || "Unknown error");
-            return;
+            return false;
         case "tool_call_start":
             h.onToolStart?.({
                 step: evt.step,
                 tool_name: evt.tool_name,
                 arguments: evt.arguments,
             });
-            return;
+            return false;
         case "tool_call_result":
             h.onToolResult?.({
                 step: evt.step,
                 tool_name: evt.tool_name,
                 summary: evt.summary,
             });
-            return;
+            return false;
         case "tool_call_error":
             h.onToolError?.({
                 step: evt.step,
                 tool_name: evt.tool_name,
                 error: evt.error,
             });
-            return;
+            return false;
         case "tool_call_pending_approval":
             h.onPendingApproval?.({
                 step: evt.step,
@@ -259,6 +281,7 @@ function dispatchLine(line: string, h: BaseStreamHandlers) {
                 approval_token: evt.approval_token,
                 run_id: evt.run_id,
             });
-            return;
+            return false;
     }
+    return false;
 }
