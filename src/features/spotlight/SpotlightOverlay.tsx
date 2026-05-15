@@ -24,6 +24,7 @@ import { Box, Button, Chip, CircularProgress, Sheet, Typography } from "@mui/joy
 import { useColorScheme } from "@mui/joy/styles";
 
 import type { PendingApprovalPayload } from "../../services/agentApi";
+import { purplePalette } from "../../theme/purplePalette";
 import { SpotlightResultItem } from "./SpotlightResultItem";
 import type { EntityType, SpotlightResult } from "./types";
 import type { AskState, ToolEvent } from "./useSpotlight";
@@ -124,7 +125,7 @@ export const SpotlightOverlay = ({
                     borderRadius: "16px",
                     backdropFilter: "blur(20px) saturate(180%)",
                     WebkitBackdropFilter: "blur(20px) saturate(180%)",
-                    background: isDark ? "rgba(28, 28, 32, 0.92)" : "rgba(252, 252, 254, 0.96)",
+                    background: isDark ? "rgba(30,20,46,0.92)" : "rgba(250,248,255,0.96)",
                     border: "1px solid",
                     borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
                     boxShadow: isDark
@@ -543,6 +544,7 @@ interface ApprovalCardProps {
 
 const ApprovalCard = ({ pending, isDark, onApprove, onReject }: ApprovalCardProps) => {
     const argEntries = Object.entries(pending.arguments || {});
+    const palette = isDark ? purplePalette.dark : purplePalette.light;
     return (
         <Box
             sx={{
@@ -552,8 +554,8 @@ const ApprovalCard = ({ pending, isDark, onApprove, onReject }: ApprovalCardProp
                 py: 1,
                 borderRadius: "10px",
                 border: "1px solid",
-                borderColor: isDark ? "rgba(255,180,0,0.35)" : "rgba(180,120,0,0.4)",
-                background: isDark ? "rgba(255,180,0,0.06)" : "rgba(255,180,0,0.08)",
+                borderColor: palette.warningTintBorder,
+                background: palette.warningTintBg,
             }}
         >
             <Typography
@@ -562,7 +564,7 @@ const ApprovalCard = ({ pending, isDark, onApprove, onReject }: ApprovalCardProp
                     fontWeight: 700,
                     textTransform: "uppercase",
                     letterSpacing: "0.04em",
-                    color: "warning.500",
+                    color: palette.warningTint,
                     mb: 0.5,
                 }}
             >

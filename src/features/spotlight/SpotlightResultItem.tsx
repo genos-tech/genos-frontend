@@ -9,6 +9,7 @@ import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded
 import { Box, Chip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { purplePalette } from "../../theme/purplePalette";
 import type { SpotlightResult } from "./types";
 
 interface Props {
@@ -59,6 +60,7 @@ const subtitleFor = (r: SpotlightResult): string => {
 export const SpotlightResultItem = ({ result, isHighlighted, onSelect }: Props) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const Icon = ENTITY_ICON[result.entity_type] ?? QuestionAnswerRoundedIcon;
 
     return (
@@ -76,8 +78,8 @@ export const SpotlightResultItem = ({ result, isHighlighted, onSelect }: Props) 
                 border: "1px solid transparent",
                 background: isHighlighted
                     ? isDark
-                        ? "rgba(255,255,255,0.06)"
-                        : "rgba(0,0,0,0.04)"
+                        ? "rgba(124,58,237,0.12)"
+                        : "rgba(124,58,237,0.06)"
                     : "transparent",
                 cursor: "pointer",
                 textAlign: "left",
@@ -85,7 +87,7 @@ export const SpotlightResultItem = ({ result, isHighlighted, onSelect }: Props) 
                 font: "inherit",
                 transition: "background 120ms ease",
                 "&:hover": {
-                    background: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.035)",
+                    background: palette.hoverBg,
                 },
             }}
             onClick={() => onSelect(result)}
@@ -99,7 +101,7 @@ export const SpotlightResultItem = ({ result, isHighlighted, onSelect }: Props) 
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+                    background: isDark ? "rgba(124,58,237,0.12)" : "rgba(124,58,237,0.08)",
                 }}
             >
                 <Icon sx={{ fontSize: 18, opacity: 0.75 }} />
