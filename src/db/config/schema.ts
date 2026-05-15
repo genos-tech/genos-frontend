@@ -207,6 +207,17 @@ export const STORE_CONFIGS: Record<string, StoreConfig> = {
             },
         ],
     },
+    [STORES.TASK_FULL]: {
+        name: STORES.TASK_FULL,
+        keyPath: KEY_PATHS.TASK_FULL,
+        indexes: [
+            {
+                name: INDEX_NAMES.TASK_FULL_LRU,
+                keyPath: INDEX_KEY_PATHS.TASK_FULL_LRU,
+                unique: false,
+            },
+        ],
+    },
     [STORES.PERSONAL_NOTES]: {
         name: STORES.PERSONAL_NOTES,
         keyPath: KEY_PATHS.PERSONAL_NOTES,

@@ -1,6 +1,9 @@
 // Database constants
 export const DB_NAME = "genosData";
-export const DB_VERSION = 2;
+export const DB_VERSION = 3;
+
+// LRU cap for the full-task cache (TASK_FULL store).
+export const MAX_CACHED_FULL_TASKS = 500;
 
 // Store names
 export const STORES = {
@@ -21,6 +24,7 @@ export const STORES = {
     PM_THREAD_MESSAGES: "pmThreadMessages",
     FLAGGED_MESSAGES: "flaggedMessages",
     TASK_META: "taskMeta",
+    TASK_FULL: "taskFull",
     PERSONAL_NOTES: "personalNotes",
     TASK_NOTES: "taskNotes",
     CHAT_NOTES: "chatNotes",
@@ -45,6 +49,7 @@ export const KEY_PATHS = {
     PM_THREAD_MESSAGES: "messageIdWithChatIdAndThreadId",
     FLAGGED_MESSAGES: "flaggedMessageId",
     TASK_META: "id",
+    TASK_FULL: "id",
     PERSONAL_NOTES: "noteId",
     TASK_NOTES: "noteId",
     CHAT_NOTES: "noteId",
@@ -75,6 +80,7 @@ export const INDEX_NAMES = {
     PM_THREAD_MESSAGES_COMPOUND: "PmThreadMessagesCompoundIndex",
     TASK_META: "TaskMetaIndex",
     TASK_META_COMPOUND: "TaskMetaCompoundIndex",
+    TASK_FULL_LRU: "TaskFullLRUIndex",
 } as const;
 
 // Index key paths
@@ -102,4 +108,5 @@ export const INDEX_KEY_PATHS = {
     PM_THREAD_MESSAGES_COMPOUND: ["chatId", "threadId"],
     TASK_META: "projectId",
     TASK_META_COMPOUND: ["projectId", "status"],
+    TASK_FULL_LRU: "accessedAt",
 } as const;

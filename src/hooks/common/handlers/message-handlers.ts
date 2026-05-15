@@ -1,6 +1,7 @@
 import { Socket } from "socket.io-client";
 
 import { ChatService } from "../../../db/services/chat.service";
+import { invalidateCachedFullTask } from "../../../db/services/task-full.service";
 import { addChat } from "../../../features/chat/services/addChat";
 import { addMessage } from "../../../features/chat/services/addMessage";
 import { addThreadMessage } from "../../../features/chat/services/addThreadMessage";
@@ -565,6 +566,14 @@ const handlePMMessage = async (
         currentPreviewTaskId === newMessage.taskId
     ) {
         setIsTaskUpdatedBySomeone(true);
+    }
+
+    // Invalidate the per-task full-data cache whenever a project
+    // message carries a taskId, regardless of whether the user is
+    // currently previewing that task. Keeps the next `loadSpecificTask`
+    // for this id correct after edits made by other clients.
+    if (newMessage.taskId != null) {
+        await invalidateCachedFullTask(newMessage.taskId);
     }
 
     const updatedChat = await makePMUpdatedChat(newMessage, useCM.allChats);
