@@ -140,6 +140,31 @@ const formatRelativeTime = (dateStr: string | null): string => {
     return `${weeks} weeks ago`;
 };
 
+type DueTone = "overdue" | "today" | "soon" | "later" | "none";
+// Compact, human-readable due-date label used by the My Tasks "Up Next" list.
+// `tone` lets the caller pick the right color without re-parsing the date.
+const formatDueLabel = (dueDate: string | null): { text: string; tone: DueTone } => {
+    if (!dueDate) return { text: "No due date", tone: "none" };
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const d = new Date(dueDate);
+    d.setHours(0, 0, 0, 0);
+    const diffDays = Math.round((d.getTime() - today.getTime()) / 86400000);
+    if (diffDays < 0) return { text: `Overdue ${-diffDays}d`, tone: "overdue" };
+    if (diffDays === 0) return { text: "Due today", tone: "today" };
+    if (diffDays === 1) return { text: "Due tomorrow", tone: "soon" };
+    if (diffDays <= 6) {
+        return {
+            text: `Due ${d.toLocaleDateString(undefined, { weekday: "short" })}`,
+            tone: "soon",
+        };
+    }
+    return {
+        text: `Due ${d.toLocaleDateString(undefined, { month: "short", day: "numeric" })}`,
+        tone: "later",
+    };
+};
+
 export const TaskHomeContent = ({
     useTM,
     usePM,
@@ -423,6 +448,98 @@ export const TaskHomeContent = ({
         });
         return { overdue, upcoming };
     }, [effectiveTasks]);
+
+    // ── My Tasks (assigned to the logged-in user) ──
+    // Personal lens over effectiveTasks. Counts feed the KPI strip; the
+    // ranked list ("Up Next") surfaces what to look at next.
+    const myTasks = useMemo(
+        () => effectiveTasks.filter((t) => t.assigneeId === myself.userId),
+        [effectiveTasks, myself.userId]
+    );
+
+    const myStats = useMemo(() => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const weekAhead = new Date(today);
+        weekAhead.setDate(weekAhead.getDate() + 7);
+
+        let openCount = 0;
+        let wipCount = 0;
+        let pendingCount = 0;
+        let closedCount = 0;
+        let overdueCount = 0;
+        let dueThisWeekCount = 0;
+        for (const t of myTasks) {
+            const isClosed = t.effectiveStatus === "Closed";
+            if (t.effectiveStatus === "Open") openCount++;
+            else if (t.effectiveStatus === "WIP") wipCount++;
+            else if (t.effectiveStatus === "Pending") pendingCount++;
+            else if (isClosed) closedCount++;
+
+            if (!isClosed && t.dueDate) {
+                const d = new Date(t.dueDate);
+                d.setHours(0, 0, 0, 0);
+                if (d < today) overdueCount++;
+                else if (d <= weekAhead) dueThisWeekCount++;
+            }
+        }
+        const totalCount = openCount + wipCount + pendingCount + closedCount;
+        const activeCount = openCount + wipCount + pendingCount;
+        const completionPct = totalCount > 0 ? Math.round((closedCount / totalCount) * 100) : 0;
+        return {
+            openCount,
+            wipCount,
+            pendingCount,
+            closedCount,
+            totalCount,
+            activeCount,
+            overdueCount,
+            dueThisWeekCount,
+            completionPct,
+        };
+    }, [myTasks]);
+
+    // Top 5 active tasks to look at next. Ranking:
+    //   1. Overdue first (most overdue first)
+    //   2. Then priority order (Critical → Minimal → no priority)
+    //   3. Then soonest due date (no due date last)
+    //   4. Tie-break on most recently updated
+    const myUpNext = useMemo(() => {
+        const todayMs = (() => {
+            const d = new Date();
+            d.setHours(0, 0, 0, 0);
+            return d.getTime();
+        })();
+        const priorityRank: Record<string, number> = {
+            Critical: 0,
+            High: 1,
+            Normal: 2,
+            Low: 3,
+            Minimal: 4,
+        };
+        const active = myTasks.filter((t) => t.effectiveStatus !== "Closed");
+        return active
+            .slice()
+            .sort((a, b) => {
+                const da = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
+                const db = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
+                const aOver = a.dueDate != null && da < todayMs;
+                const bOver = b.dueDate != null && db < todayMs;
+                if (aOver !== bOver) return aOver ? -1 : 1;
+                if (aOver && bOver) return da - db;
+
+                const pa = priorityRank[a.priority ?? ""] ?? 5;
+                const pb = priorityRank[b.priority ?? ""] ?? 5;
+                if (pa !== pb) return pa - pb;
+
+                if (da !== db) return da - db;
+
+                const ua = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+                const ub = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+                return ub - ua;
+            })
+            .slice(0, 5);
+    }, [myTasks]);
 
     // ── Handlers ──
     const projectCount = usePM.teamProjects?.length || 0;
@@ -1456,6 +1573,393 @@ export const TaskHomeContent = ({
                                         </Typography>
                                     </Stack>
                                 </Card>
+                            )}
+
+                            {/* ════════ My Tasks banner ════════ */}
+                            {/* Personal-lens divider: separates sprint-scoped sections
+                            above from "what's on my plate" below. */}
+                            <Stack
+                                alignItems="center"
+                                direction="row"
+                                spacing={1}
+                                sx={{ mt: 2, mb: -0.5 }}
+                            >
+                                <PersonRoundedIcon sx={{ fontSize: 18, color: "#22c55e" }} />
+                                <Typography
+                                    level="title-lg"
+                                    sx={{ fontWeight: 700, color: textPrimary }}
+                                >
+                                    My Tasks
+                                </Typography>
+                                <Chip size="sm" sx={{ ml: 0.5 }} variant="soft">
+                                    {myStats.totalCount} assigned
+                                </Chip>
+                                <Box
+                                    sx={{
+                                        flex: 1,
+                                        height: 1,
+                                        background: cardBorder,
+                                        ml: 1,
+                                    }}
+                                />
+                            </Stack>
+
+                            {/* ════════ Section MY: My Tasks ════════ */}
+                            {myStats.totalCount === 0 ? (
+                                <Card
+                                    variant="soft"
+                                    sx={{
+                                        p: 4,
+                                        textAlign: "center",
+                                        background: cardBg,
+                                        border: "2px dashed",
+                                        borderColor: cardBorder,
+                                    }}
+                                >
+                                    <Stack alignItems="center" spacing={2}>
+                                        <Box
+                                            sx={{
+                                                width: 56,
+                                                height: 56,
+                                                borderRadius: "14px",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                background: isDark
+                                                    ? "rgba(34,197,94,0.1)"
+                                                    : "rgba(34,197,94,0.08)",
+                                            }}
+                                        >
+                                            <PersonRoundedIcon
+                                                sx={{
+                                                    fontSize: 28,
+                                                    color: isDark ? "#4ade80" : "#22c55e",
+                                                }}
+                                            />
+                                        </Box>
+                                        <Typography
+                                            level="title-md"
+                                            sx={{ fontWeight: 600, color: textPrimary }}
+                                        >
+                                            Nothing assigned to you yet
+                                        </Typography>
+                                        <Typography level="body-sm" sx={{ color: textMuted }}>
+                                            Tasks assigned to you in this project will show up
+                                            here.
+                                        </Typography>
+                                    </Stack>
+                                </Card>
+                            ) : (
+                                <Stack spacing={2}>
+                                    {/* KPI strip */}
+                                    <Grid spacing={1.5} container>
+                                        {(
+                                            [
+                                                {
+                                                    label: "Active",
+                                                    value: String(myStats.activeCount),
+                                                    color: "#3b82f6",
+                                                    icon: (
+                                                        <PlayCircleOutlineRoundedIcon
+                                                            sx={{ fontSize: 18 }}
+                                                        />
+                                                    ),
+                                                },
+                                                {
+                                                    label: "Closed",
+                                                    value: String(myStats.closedCount),
+                                                    color: "#22c55e",
+                                                    icon: (
+                                                        <CheckCircleOutlineRoundedIcon
+                                                            sx={{ fontSize: 18 }}
+                                                        />
+                                                    ),
+                                                },
+                                                {
+                                                    label: "Overdue",
+                                                    value: String(myStats.overdueCount),
+                                                    color: "#ef4444",
+                                                    icon: (
+                                                        <WarningAmberRoundedIcon
+                                                            sx={{ fontSize: 18 }}
+                                                        />
+                                                    ),
+                                                },
+                                                {
+                                                    label: "Due This Week",
+                                                    value: String(myStats.dueThisWeekCount),
+                                                    color: "#f59e0b",
+                                                    icon: (
+                                                        <CalendarMonthRoundedIcon
+                                                            sx={{ fontSize: 18 }}
+                                                        />
+                                                    ),
+                                                },
+                                                {
+                                                    label: "Completion",
+                                                    value: `${myStats.completionPct}%`,
+                                                    color: "#a78bfa",
+                                                    icon: (
+                                                        <TrendingUpRoundedIcon
+                                                            sx={{ fontSize: 18 }}
+                                                        />
+                                                    ),
+                                                },
+                                            ] as const
+                                        ).map((tile) => (
+                                            <Grid key={tile.label} md={2.4} sm={4} xs={6}>
+                                                <Card
+                                                    variant="soft"
+                                                    sx={{
+                                                        p: 2,
+                                                        background: isDark
+                                                            ? `${tile.color}1F`
+                                                            : `${tile.color}14`,
+                                                        border: "1px solid",
+                                                        borderColor: cardBorder,
+                                                        transition: "transform 0.2s ease",
+                                                        "&:hover": {
+                                                            transform: "translateY(-2px)",
+                                                        },
+                                                    }}
+                                                >
+                                                    <Stack spacing={1}>
+                                                        <Box
+                                                            sx={{
+                                                                width: 32,
+                                                                height: 32,
+                                                                borderRadius: "8px",
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                justifyContent: "center",
+                                                                color: tile.color,
+                                                                backgroundColor: isDark
+                                                                    ? "rgba(255,255,255,0.06)"
+                                                                    : "rgba(255,255,255,0.8)",
+                                                            }}
+                                                        >
+                                                            {tile.icon}
+                                                        </Box>
+                                                        <Box>
+                                                            <Typography
+                                                                level="h3"
+                                                                sx={{
+                                                                    fontWeight: 700,
+                                                                    fontSize: "1.4rem",
+                                                                    color: textPrimary,
+                                                                }}
+                                                            >
+                                                                {tile.value}
+                                                            </Typography>
+                                                            <Typography
+                                                                level="body-xs"
+                                                                sx={{
+                                                                    color: textSecondary,
+                                                                    fontWeight: 500,
+                                                                }}
+                                                            >
+                                                                {tile.label}
+                                                            </Typography>
+                                                        </Box>
+                                                    </Stack>
+                                                </Card>
+                                            </Grid>
+                                        ))}
+                                    </Grid>
+
+                                    {/* Up Next list */}
+                                    <Box>
+                                        <Stack
+                                            alignItems="center"
+                                            direction="row"
+                                            spacing={1}
+                                            sx={{ mb: 1 }}
+                                        >
+                                            <Typography
+                                                level="body-sm"
+                                                sx={{ color: textSecondary, fontWeight: 600 }}
+                                            >
+                                                Up Next
+                                            </Typography>
+                                            <Typography level="body-xs" sx={{ color: textMuted }}>
+                                                ranked by overdue → priority → due date
+                                            </Typography>
+                                        </Stack>
+                                        {myUpNext.length === 0 ? (
+                                            <Card
+                                                variant="outlined"
+                                                sx={{
+                                                    p: 2,
+                                                    background: cardBg,
+                                                    borderColor: cardBorder,
+                                                }}
+                                            >
+                                                <Typography
+                                                    level="body-sm"
+                                                    sx={{
+                                                        color: textMuted,
+                                                        textAlign: "center",
+                                                    }}
+                                                >
+                                                    All your assigned tasks are closed — nothing to
+                                                    do here.
+                                                </Typography>
+                                            </Card>
+                                        ) : (
+                                            <Stack spacing={0.75}>
+                                                {myUpNext.map((task) => {
+                                                    const sc =
+                                                        STATUS_COLORS[task.effectiveStatus] ||
+                                                        STATUS_COLORS.Open;
+                                                    const pSwatch = task.priority
+                                                        ? PRIORITY_COLORS[task.priority]
+                                                        : undefined;
+                                                    const pColor = pSwatch
+                                                        ? isDark
+                                                            ? pSwatch.dark
+                                                            : pSwatch.light
+                                                        : textMuted;
+                                                    const due = formatDueLabel(task.dueDate);
+                                                    const dueColor =
+                                                        due.tone === "overdue"
+                                                            ? "#ef4444"
+                                                            : due.tone === "today" ||
+                                                                due.tone === "soon"
+                                                              ? "#f59e0b"
+                                                              : textMuted;
+                                                    return (
+                                                        <Card
+                                                            key={task.id}
+                                                            variant="outlined"
+                                                            sx={{
+                                                                p: 1.25,
+                                                                cursor: "pointer",
+                                                                background: cardBg,
+                                                                borderColor: cardBorder,
+                                                                transition: "all 0.2s ease",
+                                                                "&:hover": {
+                                                                    borderColor: sc.text,
+                                                                    background: isDark
+                                                                        ? "rgba(255,255,255,0.04)"
+                                                                        : "rgba(255,255,255,0.9)",
+                                                                },
+                                                            }}
+                                                            onClick={() =>
+                                                                handleTaskClick(Number(task.id))
+                                                            }
+                                                        >
+                                                            <Stack
+                                                                alignItems="center"
+                                                                direction="row"
+                                                                spacing={1.5}
+                                                            >
+                                                                <Box
+                                                                    sx={{
+                                                                        width: 8,
+                                                                        height: 8,
+                                                                        borderRadius: "50%",
+                                                                        backgroundColor: pColor,
+                                                                        flexShrink: 0,
+                                                                    }}
+                                                                />
+                                                                <Stack
+                                                                    alignItems="center"
+                                                                    direction="row"
+                                                                    spacing={0.75}
+                                                                    sx={{ flex: 1, minWidth: 0 }}
+                                                                >
+                                                                    <Typography
+                                                                        level="body-xs"
+                                                                        sx={{
+                                                                            fontWeight: 600,
+                                                                            color: textMuted,
+                                                                            flexShrink: 0,
+                                                                        }}
+                                                                    >
+                                                                        #{task.id}
+                                                                    </Typography>
+                                                                    {task.isMilestone === true && (
+                                                                        <FlagRoundedIcon
+                                                                            sx={{
+                                                                                fontSize: 12,
+                                                                                color: "#f97316",
+                                                                                flexShrink: 0,
+                                                                            }}
+                                                                        />
+                                                                    )}
+                                                                    <Typography
+                                                                        level="body-sm"
+                                                                        sx={{
+                                                                            fontWeight: 500,
+                                                                            color: textPrimary,
+                                                                            overflow: "hidden",
+                                                                            textOverflow:
+                                                                                "ellipsis",
+                                                                            whiteSpace: "nowrap",
+                                                                        }}
+                                                                    >
+                                                                        {task.title ||
+                                                                            "Untitled Task"}
+                                                                    </Typography>
+                                                                </Stack>
+                                                                {task.priority && (
+                                                                    <Chip
+                                                                        size="sm"
+                                                                        variant="soft"
+                                                                        sx={{
+                                                                            fontSize: "0.65rem",
+                                                                            fontWeight: 600,
+                                                                            backgroundColor: `${pColor}1F`,
+                                                                            color: pColor,
+                                                                            flexShrink: 0,
+                                                                            display: {
+                                                                                xs: "none",
+                                                                                sm: "inline-flex",
+                                                                            },
+                                                                        }}
+                                                                    >
+                                                                        {task.priority}
+                                                                    </Chip>
+                                                                )}
+                                                                <Chip
+                                                                    size="sm"
+                                                                    variant="soft"
+                                                                    startDecorator={getStatusIcon(
+                                                                        task.effectiveStatus,
+                                                                        12
+                                                                    )}
+                                                                    sx={{
+                                                                        fontSize: "0.65rem",
+                                                                        backgroundColor: sc.bg,
+                                                                        color: sc.text,
+                                                                        flexShrink: 0,
+                                                                    }}
+                                                                >
+                                                                    {task.effectiveStatus}
+                                                                </Chip>
+                                                                <Typography
+                                                                    level="body-xs"
+                                                                    sx={{
+                                                                        color: dueColor,
+                                                                        fontWeight:
+                                                                            due.tone === "overdue"
+                                                                                ? 700
+                                                                                : 500,
+                                                                        flexShrink: 0,
+                                                                        minWidth: 90,
+                                                                        textAlign: "right",
+                                                                    }}
+                                                                >
+                                                                    {due.text}
+                                                                </Typography>
+                                                            </Stack>
+                                                        </Card>
+                                                    );
+                                                })}
+                                            </Stack>
+                                        )}
+                                    </Box>
+                                </Stack>
                             )}
 
                             {/* ════════ Overall Insights banner ════════ */}
