@@ -142,55 +142,34 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
             return;
         }
 
-        if (isCompact) {
-            const anchor = toolbarRef.current ?? bubbleRef.current;
-            if (!anchor) return;
-            const rect = anchor.getBoundingClientRect();
-            const viewportHeight = window.innerHeight;
-            const viewportWidth = window.innerWidth;
-            const pickerHeight = 435;
-            const pickerWidth = 352;
-
-            if (viewportHeight - rect.bottom > pickerHeight + 20) {
-                setPickerTopPosition(rect.bottom + 10);
-            } else if (rect.top > pickerHeight + 20) {
-                setPickerTopPosition(rect.top - pickerHeight - 10);
-            } else {
-                setPickerTopPosition(20);
-            }
-            setPickerBottomPosition(0);
-
-            const desiredLeft = rect.right - pickerWidth;
-            const leftPos = Math.max(20, Math.min(desiredLeft, viewportWidth - pickerWidth - 20));
-            setPickerLeftPosition(leftPos);
-            setPickerRightPosition("auto");
-            setEmojiPickerPositionCalculated(true);
-            return;
-        }
-
-        if (!bubbleRef.current) return;
-        const rect = bubbleRef.current.getBoundingClientRect();
+        // Viewport-clamped fixed positioning, used in both bubble and
+        // compact modes. Anchors to the floating toolbar when present
+        // (compact mode), otherwise to the bubble container (bubble
+        // mode). The picker's right edge aligns with the anchor's right
+        // edge, then clamps to viewport so it never falls off-screen.
+        const anchor = toolbarRef.current ?? bubbleRef.current;
+        if (!anchor) return;
+        const rect = anchor.getBoundingClientRect();
         const viewportHeight = window.innerHeight;
+        const viewportWidth = window.innerWidth;
         const pickerHeight = 435;
+        const pickerWidth = 352;
 
-        setPickerTopPosition("auto");
-        if (rect.top > pickerHeight + 20) {
-            setPickerBottomPosition(40);
-        } else if (viewportHeight - rect.bottom > pickerHeight + 20) {
-            setPickerBottomPosition(-pickerHeight - 20);
+        if (viewportHeight - rect.bottom > pickerHeight + 20) {
+            setPickerTopPosition(rect.bottom + 10);
+        } else if (rect.top > pickerHeight + 20) {
+            setPickerTopPosition(rect.top - pickerHeight - 10);
         } else {
-            setPickerBottomPosition(40);
+            setPickerTopPosition(20);
         }
+        setPickerBottomPosition(0);
 
-        if (isSent) {
-            setPickerRightPosition(0);
-            setPickerLeftPosition("auto");
-        } else {
-            setPickerLeftPosition(0);
-            setPickerRightPosition("auto");
-        }
+        const desiredLeft = rect.right - pickerWidth;
+        const leftPos = Math.max(20, Math.min(desiredLeft, viewportWidth - pickerWidth - 20));
+        setPickerLeftPosition(leftPos);
+        setPickerRightPosition("auto");
         setEmojiPickerPositionCalculated(true);
-    }, [showEmojiPicker, isSent, isCompact]);
+    }, [showEmojiPicker]);
 
     useEffect(() => {
         setReactions(message.reactions || []);
@@ -538,9 +517,11 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                             pickerBottomPosition={pickerBottomPosition}
                             pickerLeftPosition={pickerLeftPosition}
                             pickerRightPosition={pickerRightPosition}
+                            pickerTopPosition={pickerTopPosition}
                             setSelectedEmoji={setSelectedEmoji}
                             setShowEmojiPicker={setShowEmojiPicker}
                             showEmojiPicker={showEmojiPicker}
+                            useFixedPosition={true}
                         />
                     )}
                     <Sheet
