@@ -2,7 +2,7 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import "../../App.css";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { codeBlockOptions } from "@blocknote/code-block";
 import {
     BlockNoteSchema,
@@ -99,6 +99,9 @@ type BnTaskNoteEditorProps = {
      *  Viewers see the body but only the comment-add button. The
      *  caller passes `useNM.currentNoteMembers` directly. */
     currentNoteMembers: NoteRoleMember[];
+    // See `BnMyNoteEditor` — bumped on restore so we can push the new
+    // body into the live Yjs doc via `editor.replaceBlocks`.
+    resyncSignal?: number | string;
 };
 export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
     const {
@@ -114,6 +117,7 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
         useCM,
         useUISM,
         currentNoteMembers,
+        resyncSignal,
     } = props;
 
     // Editor vs. viewer toggle. See `bnMyNoteEditor` for the
@@ -246,6 +250,27 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
         editor.insertInlineContent([{ type: "text", text: emoji, styles: {} }]);
         setShowEmojiPicker(false);
     };
+
+    // Push the restored body into the live Yjs doc on a parent-bumped
+    // `resyncSignal`. See `BnMyNoteEditor` for the rationale.
+    const restoredBodyRef = useRef(body);
+    restoredBodyRef.current = body;
+    const lastSeenResyncRef = useRef(resyncSignal);
+    useEffect(() => {
+        if (lastSeenResyncRef.current === resyncSignal) return;
+        lastSeenResyncRef.current = resyncSignal;
+        if (!editor) return;
+        const next = restoredBodyRef.current;
+        // BlockNote requires at least one block; substitute an empty
+        // paragraph when the restored body is empty so the editor
+        // visibly clears.
+        const replacement = next && next.length > 0 ? next : [{ type: "paragraph" }];
+        try {
+            (editor as any).replaceBlocks(editor.document, replacement);
+        } catch {
+            // Best-effort
+        }
+    }, [resyncSignal, editor]);
 
     const countLines = (nodes: any[]): number => {
         let count = 0;

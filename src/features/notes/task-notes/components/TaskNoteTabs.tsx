@@ -458,6 +458,7 @@ export const TaskNoteTabs = ({
                         currentTaskNote={useNM.currentTaskNote}
                         currentNoteMembers={useNM.currentNoteMembers}
                         myself={myself}
+                        resyncSignal={useNM.noteResyncNonce}
                         setBody={setBody}
                         setMyself={setMyself}
                         setNoteBodyEdited={setNoteBodyEdited}

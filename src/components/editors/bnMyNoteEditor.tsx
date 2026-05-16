@@ -2,7 +2,7 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import "../../App.css";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { codeBlockOptions } from "@blocknote/code-block";
 import {
     BlockNoteSchema,
@@ -99,6 +99,13 @@ type BnMyNoteEditorProps = {
      *  Viewers see the body but only the comment-add button. The
      *  caller passes `useNM.currentNoteMembers` directly. */
     currentNoteMembers: NoteRoleMember[];
+    // Bumped by `useNoteManagement.restoreNoteVersion` after a successful
+    // restore. On change, we push `body` into the live Yjs doc via
+    // `editor.replaceBlocks`, which syncs the restored content to
+    // Hocuspocus / IDB persistence / all collaborators. Without this the
+    // editor keeps rendering Yjs's existing CRDT state (the pre-restore
+    // body) even though local React state was updated.
+    resyncSignal?: number | string;
 };
 export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
     const {
@@ -114,6 +121,7 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
         useUISM,
         useCM,
         currentNoteMembers,
+        resyncSignal,
     } = props;
 
     // Editor vs. viewer toggle. `null` (no explicit grant) means the
@@ -252,6 +260,32 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
         editor.insertInlineContent([{ type: "text", text: emoji, styles: {} }]);
         setShowEmojiPicker(false);
     };
+
+    // Push the restored body into the live Yjs doc when the parent bumps
+    // `resyncSignal`. The first render is skipped so we don't clobber the
+    // initial seed on mount; subsequent changes correspond to a restore
+    // and trigger a Yjs replace (which syncs to Hocuspocus + IDB + all
+    // other collaborators).
+    const restoredBodyRef = useRef(body);
+    restoredBodyRef.current = body;
+    const lastSeenResyncRef = useRef(resyncSignal);
+    useEffect(() => {
+        if (lastSeenResyncRef.current === resyncSignal) return;
+        lastSeenResyncRef.current = resyncSignal;
+        if (!editor) return;
+        const next = restoredBodyRef.current;
+        // BlockNote requires at least one block; if the restored body is
+        // empty, substitute a single empty paragraph so the editor
+        // visibly clears instead of silently keeping the previous content.
+        const replacement = next && next.length > 0 ? next : [{ type: "paragraph" }];
+        try {
+            (editor as any).replaceBlocks(editor.document, replacement);
+        } catch {
+            // Best-effort: if the editor isn't ready yet, the next render
+            // will pick up the seeded body via useCollaborativeBlockNote's
+            // retry effect.
+        }
+    }, [resyncSignal, editor]);
 
     const countLines = (nodes: any[]): number => {
         let count = 0;

@@ -110,6 +110,7 @@ export const NoteEditor = ({
                 currentMyNote={useNM.currentMyNote as MyNoteProps}
                 currentNoteMembers={useNM.currentNoteMembers}
                 myself={myself}
+                resyncSignal={useNM.noteResyncNonce}
                 setBody={onBodyChange}
                 setMyself={setMyself}
                 setNoteBodyEdited={() => {}} // This will be handled by the hook

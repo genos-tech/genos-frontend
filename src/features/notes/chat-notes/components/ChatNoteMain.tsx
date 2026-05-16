@@ -78,6 +78,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
         currentChatNote: activeChatNote,
         myself,
         accessToken,
+        resyncSignal: useNM.noteResyncNonce,
         onNoteUpdate: (updatedNote: ChatNoteProps) => {
             // Cache write-through so the per-tab data hook sees the
             // freshest body on next mount. We deliberately no longer
@@ -122,6 +123,9 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                         : item
                 )
             );
+
+            // Optimistically flip the history chip to "by me · just now".
+            useNM.bumpNoteVersionsHead(updatedNote.noteType, updatedNote.noteId);
         },
     });
 
@@ -279,6 +283,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                             currentChatNote={activeChatNote}
                                             currentNoteMembers={useNM.currentNoteMembers}
                                             myself={myself}
+                                            resyncSignal={useNM.noteResyncNonce}
                                             setMyself={setMyself}
                                             socket={socket}
                                             useTEM={useTEM}

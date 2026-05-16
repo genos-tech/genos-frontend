@@ -65,6 +65,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         currentTaskNote: useNM.currentTaskNote,
         myself,
         accessToken: accessToken || "",
+        resyncSignal: useNM.noteResyncNonce,
         onNoteUpdate: (updatedNote: TaskNoteProps) => {
             // Push the latest title into the new tabs API so the strip
             // re-renders without going through the legacy
@@ -84,6 +85,9 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
             // freshest title without a refetch.
             upsertNoteCache(updatedNote);
             useNM.setCurrentTaskNote(updatedNote);
+
+            // Optimistically flip the history chip to "by me · just now".
+            useNM.bumpNoteVersionsHead(updatedNote.noteType, updatedNote.noteId);
         },
     });
 
@@ -199,7 +203,16 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                             </Box>
                         )}
 
-                        {isInTaskPage === false && <TaskNoteHeader useNM={useNM} />}
+                        {isInTaskPage === false && (
+                            <TaskNoteHeader
+                                useNM={useNM}
+                                myself={myself}
+                                setMyself={setMyself}
+                                socket={socket}
+                                useCM={useCM}
+                                useUISM={useUISM}
+                            />
+                        )}
 
                         <NoteHeaderActions
                             useCM={useCM}

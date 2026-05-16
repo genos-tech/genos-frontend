@@ -129,3 +129,23 @@ export type SharedNoteMetaProps = MyNoteMetaProps & {
 export type SharedNoteMetaTreeNode = SharedNoteMetaProps & {
     children: SharedNoteMetaTreeNode[];
 };
+
+// Version history
+export type NoteVersionEditor = {
+    userId: string;
+    userName: string;
+    avatarUrl: string | null;
+};
+
+export type NoteVersionMeta = {
+    versionNo: number;
+    editor: NoteVersionEditor | null;
+    title: string;
+    restoredFromVersionNo: number | null;
+    tsCreatedAt: string;
+    tsUpdatedAt: string;
+};
+
+export type NoteVersionDetail = NoteVersionMeta & {
+    body: PartialBlock[] | any[];
+};

@@ -9,6 +9,7 @@ interface UseNoteAutoSaveProps {
     myself: UserProps;
     accessToken: string;
     onNoteUpdate?: (updatedNote: TaskNoteProps) => void;
+    resyncSignal?: number | string;
 }
 
 interface UseNoteAutoSaveReturn {
@@ -43,12 +44,14 @@ export const useNoteAutoSave = ({
     myself,
     accessToken,
     onNoteUpdate,
+    resyncSignal,
 }: UseNoteAutoSaveProps): UseNoteAutoSaveReturn => {
     const core = useNoteEditorCore<TaskNoteProps>({
         currentNote: currentTaskNote,
         myself,
         accessToken,
         onNoteUpdate,
+        resyncSignal,
     });
 
     return {

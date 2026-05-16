@@ -12,6 +12,11 @@ export interface UseNoteEditorCoreProps<T extends EditableNote> {
     myself: UserProps;
     accessToken: string | null;
     onNoteUpdate?: (updatedNote: T) => void;
+    // Bumped externally to force a re-sync of local `title`/`body` from
+    // `currentNote` even when the note identity hasn't changed (e.g.
+    // restore-from-history, which rewrites the body but keeps the same
+    // noteType/noteId).
+    resyncSignal?: number | string;
 }
 
 export interface UseNoteEditorCoreReturn {
@@ -30,8 +35,14 @@ export interface UseNoteEditorCoreReturn {
     updateNote: () => Promise<void>;
 }
 
-const identityOf = (note: EditableNote | null): string =>
-    note ? `${note.noteType}-${note.noteId}` : "";
+const identityOf = (
+    note: EditableNote | null,
+    resyncSignal: number | string | undefined
+): string => {
+    if (!note) return "";
+    const suffix = resyncSignal !== undefined ? `-${resyncSignal}` : "";
+    return `${note.noteType}-${note.noteId}${suffix}`;
+};
 
 /**
  * Shared editor state + auto-save engine for personal, task, and chat notes.
@@ -62,6 +73,7 @@ export function useNoteEditorCore<T extends EditableNote>({
     myself,
     accessToken,
     onNoteUpdate,
+    resyncSignal,
 }: UseNoteEditorCoreProps<T>): UseNoteEditorCoreReturn {
     const [title, setTitle] = useState<string>(currentNote?.title ?? "");
     const [body, setBody] = useState<PartialBlock[] | undefined>(
@@ -71,7 +83,7 @@ export function useNoteEditorCore<T extends EditableNote>({
     const [noteBodySaved, setNoteBodySaved] = useState(false);
     const titleInputRef = useRef<HTMLInputElement | null>(null);
 
-    const identityKey = identityOf(currentNote);
+    const identityKey = identityOf(currentNote, resyncSignal);
     const [syncedIdentityKey, setSyncedIdentityKey] = useState<string>(identityKey);
 
     if (syncedIdentityKey !== identityKey) {
@@ -94,7 +106,7 @@ export function useNoteEditorCore<T extends EditableNote>({
         // to `currentNote`. This is the window (one render) right after a
         // tab switch where a pending debounce timer would otherwise persist
         // the previous note's content onto the new note.
-        if (syncedIdentityKey !== identityOf(currentNote)) {
+        if (syncedIdentityKey !== identityOf(currentNote, resyncSignal)) {
             return;
         }
 
@@ -118,7 +130,16 @@ export function useNoteEditorCore<T extends EditableNote>({
         } catch (error) {
             console.error("Failed to update note:", error);
         }
-    }, [currentNote, title, body, myself, accessToken, onNoteUpdate, syncedIdentityKey]);
+    }, [
+        currentNote,
+        title,
+        body,
+        myself,
+        accessToken,
+        onNoteUpdate,
+        syncedIdentityKey,
+        resyncSignal,
+    ]);
 
     // Keep the latest save fn and edited flag in refs so the debounce timer
     // and unmount flush always read fresh values without resetting themselves.

@@ -50,6 +50,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
         currentMyNote: useNM.currentMyNote,
         myself,
         accessToken,
+        resyncSignal: useNM.noteResyncNonce,
         onNoteUpdate: (updatedNote: MyNoteProps) => {
             // Push the latest title into the new tabs API so the strip
             // re-renders without going through the legacy
@@ -70,6 +71,10 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                         : item
                 )
             );
+
+            // Optimistically flip the history chip to "by me · just now"
+            // without waiting for a full version refetch.
+            useNM.bumpNoteVersionsHead(updatedNote.noteType, updatedNote.noteId);
         },
     });
 
@@ -162,7 +167,14 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                     mb: "5px",
                                 }}
                             >
-                                <MyNoteHeader useNM={useNM} />
+                                <MyNoteHeader
+                                    useNM={useNM}
+                                    myself={myself}
+                                    setMyself={setMyself}
+                                    socket={socket}
+                                    useCM={useCM}
+                                    useUISM={useUISM}
+                                />
 
                                 <NoteHeaderActions
                                     useCM={useCM}
