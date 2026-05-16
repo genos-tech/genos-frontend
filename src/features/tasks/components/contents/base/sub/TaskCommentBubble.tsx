@@ -302,8 +302,8 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                     pr: 1,
                     borderLeft: "3px solid",
                     borderLeftColor: focusAccent,
-                    borderBottom: "1px solid",
-                    borderBottomColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+                    borderTop: "1px solid",
+                    borderTopColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
                     backgroundColor: showUnderBarOption
                         ? isDark
                             ? "rgba(255,255,255,0.03)"
