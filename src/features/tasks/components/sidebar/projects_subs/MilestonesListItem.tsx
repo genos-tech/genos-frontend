@@ -24,6 +24,7 @@ import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../../components/ui/avatars/avatarWithStatus";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
+import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { SprintMilestoneManagementState } from "../../../../../hooks/tasks/useSprintMilestoneManagement";
@@ -39,6 +40,7 @@ const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type Props = {
     currentProjectId: number;
+    usePM: ProjectManagementState;
     useSM: SprintMilestoneManagementState;
     useTM: TaskManagementState;
     useTEM: TeamManagementState;
@@ -51,6 +53,7 @@ type Props = {
 
 export const MilestonesListItem = ({
     currentProjectId,
+    usePM,
     useSM,
     useTM,
     useTEM,
@@ -70,12 +73,40 @@ export const MilestonesListItem = ({
         [useSM.projectMilestones, currentProjectId, sprints]
     );
 
-    const handleOpen = (milestoneId: number) => {
+    const handleOpen = async (milestoneId: number) => {
+        // If the clicked milestone belongs to a different project than the
+        // one currently in focus, switch projects first. MilestonePreviewInner
+        // resolves the milestone via `useSM.projectMilestones[currentProject.projectId]`
+        // (TaskPreview.tsx:913-919), so without the switch it would never find
+        // the milestone and would fall back to the "Loading milestone…" branch
+        // that auto-closes after 3s.
+        const needsProjectSwitch = currentProjectId !== usePM.currentProject?.projectId;
+        if (needsProjectSwitch) {
+            const target = usePM.teamProjects?.find((p) => p.projectId === currentProjectId);
+            if (!target) return;
+            // Close the existing preview first: while `isTaskPreviewVisible`
+            // is true, useTaskRouting's URL-update effect skips its navigate(),
+            // which leaves `targetUrlProjectId.current` stale and lets the
+            // enforce-match effect revert the project switch.
+            useTM.closeTaskPreview();
+            useTM.setTableMilestoneFilterId(null);
+            useTM.setAllTasks([]);
+            await usePM.loadProjectsAndTasks(currentProjectId);
+            usePM.setCurrentProject({
+                projectId: target.projectId,
+                projectName: target.projectName,
+                projectTags: target.projectTags || [],
+                isPrivate: target.isPrivate,
+                systemUserId: target.systemUserId,
+            });
+        }
+
         // Open the milestone preview AND scope the task table to this
         // milestone (its backing task as the root + its children).
-        // Re-clicking a milestone toggles the table-scope off again so
-        // users can quickly bounce between scoped / unscoped views.
-        const isAlreadyScoped = useTM.tableMilestoneFilterId === milestoneId;
+        // Re-clicking a milestone in the same project toggles the
+        // table-scope off again; a cross-project click always scopes-on.
+        const isAlreadyScoped =
+            !needsProjectSwitch && useTM.tableMilestoneFilterId === milestoneId;
         useTM.setCurrentPreviewKind("milestone");
         useTM.setCurrentPreviewMilestoneId(milestoneId);
         useTM.setIsTaskPreviewVisible(true);

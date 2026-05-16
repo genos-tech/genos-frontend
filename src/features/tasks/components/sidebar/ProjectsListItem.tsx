@@ -267,6 +267,7 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                     >
                                         <MilestonesListItem
                                             currentProjectId={projectId}
+                                            usePM={usePM}
                                             useSM={useSM}
                                             useTM={useTM}
                                             useTEM={useTEM}
