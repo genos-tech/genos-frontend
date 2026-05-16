@@ -23,17 +23,35 @@ import { NoteTreeRenderer } from "./NoteTreeRenderer";
 import { NoteTypeSection } from "./NoteTypeSection";
 import { RecentNoteItem } from "./RecentNoteItem";
 
-// Types for grouped notes
-interface TaskGroup {
+// Types for grouped task notes (Project → Milestone → Task → Subtask).
+// `directNotes` on a milestone are notes attached to the milestone's own
+// backing task. `subtasks` flatten any depth ≥ 2 under the immediate
+// parent task — strict-3-level UX.
+interface SubtaskGroup {
     taskId: number;
     taskTitle: string;
     notes: TaskNoteMetaTreeNode[];
 }
 
+interface TaskGroup {
+    taskId: number;
+    taskTitle: string;
+    notes: TaskNoteMetaTreeNode[];
+    subtasks: SubtaskGroup[];
+}
+
+interface MilestoneGroup {
+    milestoneId: number;
+    milestoneTitle: string;
+    directNotes: TaskNoteMetaTreeNode[];
+    tasks: TaskGroup[];
+}
+
 interface ProjectGroup {
     projectId: number;
     projectName: string;
-    tasks: TaskGroup[];
+    milestones: MilestoneGroup[];
+    looseTasks: TaskGroup[];
 }
 
 interface ChatGroup {
@@ -49,37 +67,159 @@ interface ChatTypeGroup {
     chats: ChatGroup[];
 }
 
-// Utility function to group task notes by project, then by task
+// Group task notes by Project → Milestone (optional) → Task → Subtask.
+// Resolution rules:
+//   1. `isMilestone === true` notes attach to the milestone's `directNotes`.
+//   2. Notes whose task has a `milestoneId` slot into that MilestoneGroup;
+//      otherwise they go into `looseTasks` directly under the project.
+//   3. Within (2), `parentTaskId == null` → the note's task is L2; else
+//      L2 is the immediate parent and the note's task becomes an L3
+//      subtask. This is the strict-3-level collapse: chains deeper than
+//      two levels of task nesting flatten under the immediate parent.
 function groupTaskNotes(notes: TaskNoteMetaTreeNode[]): ProjectGroup[] {
-    const projectMap: Map<number, ProjectGroup> = new Map();
+    const projectMap = new Map<number, ProjectGroup>();
 
-    for (const note of notes) {
-        // Get or create project group
-        if (!projectMap.has(note.projectId)) {
-            projectMap.set(note.projectId, {
+    const getProjectGroup = (note: TaskNoteMetaTreeNode): ProjectGroup => {
+        let pg = projectMap.get(note.projectId);
+        if (!pg) {
+            pg = {
                 projectId: note.projectId,
                 projectName: note.projectName || `Project ${note.projectId}`,
-                tasks: [],
-            });
+                milestones: [],
+                looseTasks: [],
+            };
+            projectMap.set(note.projectId, pg);
         }
-        const projectGroup = projectMap.get(note.projectId)!;
+        return pg;
+    };
 
-        // Find or create task group within project
-        let taskGroup = projectGroup.tasks.find((t) => t.taskId === note.taskId);
-        if (!taskGroup) {
-            taskGroup = {
-                taskId: note.taskId,
-                taskTitle: note.taskTitle || `Task #${note.taskId}`,
+    const getMilestoneGroup = (
+        pg: ProjectGroup,
+        milestoneId: number,
+        milestoneTitle: string
+    ): MilestoneGroup => {
+        let mg = pg.milestones.find((m) => m.milestoneId === milestoneId);
+        if (!mg) {
+            mg = {
+                milestoneId,
+                milestoneTitle: milestoneTitle || `Milestone ${milestoneId}`,
+                directNotes: [],
+                tasks: [],
+            };
+            pg.milestones.push(mg);
+        }
+        return mg;
+    };
+
+    const findOrCreateTaskGroup = (
+        tasks: TaskGroup[],
+        taskId: number,
+        taskTitle: string
+    ): TaskGroup => {
+        let tg = tasks.find((t) => t.taskId === taskId);
+        if (!tg) {
+            tg = {
+                taskId,
+                taskTitle: taskTitle || `Task #${taskId}`,
+                notes: [],
+                subtasks: [],
+            };
+            tasks.push(tg);
+        }
+        return tg;
+    };
+
+    const findOrCreateSubtaskGroup = (
+        tg: TaskGroup,
+        taskId: number,
+        taskTitle: string
+    ): SubtaskGroup => {
+        let sg = tg.subtasks.find((s) => s.taskId === taskId);
+        if (!sg) {
+            sg = {
+                taskId,
+                taskTitle: taskTitle || `Task #${taskId}`,
                 notes: [],
             };
-            projectGroup.tasks.push(taskGroup);
+            tg.subtasks.push(sg);
+        }
+        return sg;
+    };
+
+    for (const note of notes) {
+        const pg = getProjectGroup(note);
+
+        // Case 1: the note's task IS a milestone's backing task. The note
+        // attaches to the milestone level itself (`directNotes`), not to
+        // any task folder.
+        if (note.isMilestone === true && note.milestoneId != null) {
+            const mg = getMilestoneGroup(pg, note.milestoneId, note.milestoneTitle ?? "");
+            mg.directNotes.push(note);
+            continue;
         }
 
-        taskGroup.notes.push(note);
+        // Choose the bucket of L2 tasks: inside a milestone or "loose"
+        // tasks directly under the project.
+        let bucketTasks: TaskGroup[];
+        if (note.milestoneId != null) {
+            const mg = getMilestoneGroup(pg, note.milestoneId, note.milestoneTitle ?? "");
+            bucketTasks = mg.tasks;
+        } else {
+            bucketTasks = pg.looseTasks;
+        }
+
+        // L2 cases:
+        //   (a) the note's task has no parent task at all, or
+        //   (b) the parent IS the milestone's backing task — in which case
+        //       the "parent" folder is the milestone folder itself, so the
+        //       note's task should sit directly underneath the milestone
+        //       (not as L3 inside a duplicate "Task N" folder that points
+        //       at the same task the milestone already represents).
+        const parentIsMilestoneBacking = note.parentTaskIsMilestone === true;
+        if (note.parentTaskId == null || parentIsMilestoneBacking) {
+            const tg = findOrCreateTaskGroup(bucketTasks, note.taskId, note.taskTitle ?? "");
+            tg.notes.push(note);
+        } else {
+            // L3 subtask — the parent task is L2, the note's task is L3.
+            // Strict-3 collapse: if the real task tree is deeper than 2
+            // levels, every deeper task still parents under its immediate
+            // parent here.
+            const tg = findOrCreateTaskGroup(
+                bucketTasks,
+                note.parentTaskId,
+                note.parentTaskTitle ?? ""
+            );
+            const sg = findOrCreateSubtaskGroup(tg, note.taskId, note.taskTitle ?? "");
+            sg.notes.push(note);
+        }
     }
 
     return Array.from(projectMap.values());
 }
+
+// Auto-expand helpers — return true if the active note (by id) lives
+// anywhere in the subtree, so the section opens to reveal it.
+const taskGroupContainsNote = (tg: TaskGroup, noteId: number | undefined): boolean => {
+    if (noteId == null) return false;
+    return (
+        tg.notes.some((n) => n.noteId === noteId) ||
+        tg.subtasks.some((s) => s.notes.some((n) => n.noteId === noteId))
+    );
+};
+const milestoneGroupContainsNote = (mg: MilestoneGroup, noteId: number | undefined): boolean => {
+    if (noteId == null) return false;
+    return (
+        mg.directNotes.some((n) => n.noteId === noteId) ||
+        mg.tasks.some((tg) => taskGroupContainsNote(tg, noteId))
+    );
+};
+const projectGroupContainsNote = (pg: ProjectGroup, noteId: number | undefined): boolean => {
+    if (noteId == null) return false;
+    return (
+        pg.milestones.some((mg) => milestoneGroupContainsNote(mg, noteId)) ||
+        pg.looseTasks.some((tg) => taskGroupContainsNote(tg, noteId))
+    );
+};
 
 // Utility function to group chat notes by chat type, then by chat name
 function groupChatNotes(notes: ChatNoteMetaTreeNode[], allChats: AllChatProps[]): ChatTypeGroup[] {
@@ -235,32 +375,77 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         [chatNoteState.tmpMetaTree, allChats]
     );
 
-    // Render grouped task notes (Project → Task → Notes)
+    // Render grouped task notes
+    // (Project → Milestone (optional) → Task → Subtask → Notes).
+    // Milestones and "loose" tasks (no milestone) coexist at L1 under
+    // the project. Subtasks (L3) collapse under the immediate parent
+    // task — see `groupTaskNotes` for the resolution rules.
+    const renderTaskGroup = (
+        taskGroup: TaskGroup,
+        keyPrefix: string,
+        activeNoteId: number | undefined
+    ) => (
+        <GroupedNoteSection
+            key={`${keyPrefix}-task-${taskGroup.taskId}`}
+            groupKey={`${keyPrefix}-task-${taskGroup.taskId}`}
+            groupLabel={`#${taskGroup.taskId}`}
+            subLabel={taskGroup.taskTitle}
+            defaultExpanded={taskGroupContainsNote(taskGroup, activeNoteId)}
+        >
+            {taskGroup.notes.map((note) => renderTaskNoteTreeItem(note))}
+            {taskGroup.subtasks.map((subGroup) => (
+                <GroupedNoteSection
+                    key={`${keyPrefix}-task-${taskGroup.taskId}-sub-${subGroup.taskId}`}
+                    groupKey={`${keyPrefix}-task-${taskGroup.taskId}-sub-${subGroup.taskId}`}
+                    groupLabel={`#${subGroup.taskId}`}
+                    subLabel={subGroup.taskTitle}
+                    defaultExpanded={subGroup.notes.some((n) => n.noteId === activeNoteId)}
+                >
+                    {subGroup.notes.map((note) => renderTaskNoteTreeItem(note))}
+                </GroupedNoteSection>
+            ))}
+        </GroupedNoteSection>
+    );
+
     const renderGroupedTaskNotes = () =>
-        groupedTaskNotes.map((projectGroup) => (
-            <GroupedNoteSection
-                key={`project-${projectGroup.projectId}`}
-                groupKey={`project-${projectGroup.projectId}`}
-                groupLabel={projectGroup.projectName}
-                defaultExpanded={projectGroup.tasks.some((taskGroup) =>
-                    taskGroup.notes.some((note) => note.noteId === useNM.currentTaskNote?.noteId)
-                )}
-            >
-                {projectGroup.tasks.map((taskGroup) => (
-                    <GroupedNoteSection
-                        key={`task-${projectGroup.projectId}-${taskGroup.taskId}`}
-                        groupKey={`task-${projectGroup.projectId}-${taskGroup.taskId}`}
-                        groupLabel={`#${taskGroup.taskId}`}
-                        subLabel={taskGroup.taskTitle}
-                        defaultExpanded={taskGroup.notes.some(
-                            (note) => note.noteId === useNM.currentTaskNote?.noteId
-                        )}
-                    >
-                        {taskGroup.notes.map((note) => renderTaskNoteTreeItem(note))}
-                    </GroupedNoteSection>
-                ))}
-            </GroupedNoteSection>
-        ));
+        groupedTaskNotes.map((projectGroup) => {
+            const activeNoteId = useNM.currentTaskNote?.noteId;
+            const projectKey = `project-${projectGroup.projectId}`;
+            return (
+                <GroupedNoteSection
+                    key={projectKey}
+                    groupKey={projectKey}
+                    groupLabel={projectGroup.projectName}
+                    defaultExpanded={projectGroupContainsNote(projectGroup, activeNoteId)}
+                >
+                    {projectGroup.milestones.map((milestoneGroup) => {
+                        const milestoneKey = `${projectKey}-milestone-${milestoneGroup.milestoneId}`;
+                        return (
+                            <GroupedNoteSection
+                                key={milestoneKey}
+                                groupKey={milestoneKey}
+                                groupLabel={`🚩 ${milestoneGroup.milestoneTitle}`}
+                                subLabel="Milestone"
+                                defaultExpanded={milestoneGroupContainsNote(
+                                    milestoneGroup,
+                                    activeNoteId
+                                )}
+                            >
+                                {milestoneGroup.directNotes.map((note) =>
+                                    renderTaskNoteTreeItem(note)
+                                )}
+                                {milestoneGroup.tasks.map((taskGroup) =>
+                                    renderTaskGroup(taskGroup, milestoneKey, activeNoteId)
+                                )}
+                            </GroupedNoteSection>
+                        );
+                    })}
+                    {projectGroup.looseTasks.map((taskGroup) =>
+                        renderTaskGroup(taskGroup, projectKey, activeNoteId)
+                    )}
+                </GroupedNoteSection>
+            );
+        });
 
     // Render grouped chat notes (Chat Type → Chat Name → Notes)
     const renderGroupedChatNotes = () =>

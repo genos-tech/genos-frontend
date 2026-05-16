@@ -15,6 +15,7 @@ import {
     ThreadMessageProps,
     ThreadProps,
 } from "../../../types/chat";
+import { emptyDmPartnerUser } from "../../../utils/defaultProps";
 import { ChatManagementState } from "../../chats/useChatManagement";
 import {
     makeDMUpdatedChat,
@@ -204,7 +205,7 @@ export const handleRegularMessage = async (
     if (newMessage.chatType === 1) {
         await handleDMMessage(newMessage, newChatMessage, context, myself, useCM, socket);
     } else if (newMessage.chatType === 2) {
-        await handleGMMessage(newMessage, newChatMessage, context, useCM);
+        await handleGMMessage(newMessage, newChatMessage, context, useCM, socket);
     } else if (newMessage.chatType === 3) {
         await handlePMMessage(
             newMessage,
@@ -342,7 +343,8 @@ const handleGMMessage = async (
     newMessage: NewMessageProps,
     newChatMessage: MessageProps,
     context: any,
-    useCM: ChatManagementState
+    useCM: ChatManagementState,
+    socket: Socket
 ) => {
     const updatedChat = await makeGMUpdatedChat(newMessage, useCM.allChats);
 
@@ -354,6 +356,15 @@ const handleGMMessage = async (
     if (newMessage.isEdited) {
         updateCurrentChat(updatedChat, useCM);
     } else if (!context.fromMe) {
+        // Unknown GM = the creator just added the user via `gm_members_added`.
+        // Mirror the MDM branch: emit "join" so the socket enters the
+        // `gm-{id}` room (the room is reconstructed from `gm/ids/` only on
+        // reconnect, so without this real-time messages would be missed
+        // until the next refresh).
+        const isNewGM = !useCM.allChats.some(
+            (c) => c.chatId === newMessage.chatId && c.chatType === 2
+        );
+
         if (useCM.allChats.length > 0 && !newMessage.isReactionUpdated) {
             await updateAllChat(
                 updatedChat,
@@ -363,6 +374,15 @@ const handleGMMessage = async (
             );
         }
         updateCurrentChat(updatedChat, useCM);
+
+        if (isNewGM && socket) {
+            socket.emit("join", {
+                joiningCGId: newMessage.chatId,
+                joiningCGName: newMessage.chatName,
+                chatType: 2,
+                dmPartnerUser: emptyDmPartnerUser,
+            });
+        }
     }
 };
 

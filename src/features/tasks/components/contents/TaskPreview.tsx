@@ -196,12 +196,42 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         return () => clearInterval(intervalId);
     }, [taskEditState.taskBodyEdited]);
 
+    // Race guard for the "stale load reverts a fresh edit" bug:
+    // `useProjectTaskManagement` fires `loadTask` on every preview-open. If
+    // the user clicks Start Task / Complete Task / etc. before that load
+    // returns, the load's response (pre-edit) lands AFTER our save and the
+    // sync effect below would clobber the local edit. We track the time of
+    // the most recent local edit (taskUpdated flip) and suppress same-task
+    // overwrites in a short window after it.
+    const lastLocalEditAtRef = useRef<number>(0);
+    useEffect(() => {
+        if (taskEditState.taskUpdated) {
+            lastLocalEditAtRef.current = Date.now();
+        }
+    }, [taskEditState.taskUpdated]);
+    // Reset the guard when the user switches to a different task so the new
+    // task's first sync isn't suppressed.
+    useEffect(() => {
+        lastLocalEditAtRef.current = 0;
+    }, [taskEditState.currentTaskId]);
+
     // Update variables when an user change the target task
     useEffect(() => {
         if (taskEditState.taskBodyEdited) {
             sendUpdatedTask(true);
         } else {
             if (useTM.currentPreviewTask) {
+                // Same-task overwrites within the post-edit window are
+                // almost always stale (either our own save's echo — local
+                // state is already correct — or a `loadTask` that started
+                // before our save and finished after it). Skip them.
+                const LOCAL_EDIT_SUPPRESS_MS = 5000;
+                const isSameTask =
+                    taskEditState.tmpCurrentTaskContent?.id === useTM.currentPreviewTask.id;
+                const recentLocalEdit =
+                    Date.now() - lastLocalEditAtRef.current < LOCAL_EDIT_SUPPRESS_MS;
+                if (isSameTask && recentLocalEdit) return;
+
                 taskEditState.setTmpCurrentTaskContent(useTM.currentPreviewTask);
                 taskEditState.setCurrentTaskId(useTM.currentPreviewTask.id);
                 taskEditState.setTaskTitle(useTM.currentPreviewTask.title);

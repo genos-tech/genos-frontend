@@ -32,6 +32,7 @@ import { Socket } from "socket.io-client";
 
 import { taskThreadMessageForCommentAddedTemplate } from "../../features/tasks/utils/TaskMessageTemplate";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { useEditorDraft } from "../../hooks/common/useEditorDraft";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
@@ -143,11 +144,13 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         },
     });
 
-    // Track the previous task id so we can clear the editor only when the
-    // user actually switches to a different task. Depending on the full `task`
-    // object would fire on every re-render where the parent recreates the prop
-    // reference (e.g. when currentPreviewTask loads), which wiped typed text.
-    const prevTaskIdRef = useRef<number | undefined>(undefined);
+    // Per-task draft cache: see `useEditorDraft` for the
+    // load/save/clear lifecycle. Replaces the old `prevTaskIdRef`
+    // bookkeeping — the hook tracks the previously-loaded key
+    // internally and won't clobber the editor on re-renders where
+    // `task` is recreated but `task.id` is unchanged.
+    const draftCacheKey = task?.id != null ? `task-comment:${task.id}` : null;
+    const { saveDraft, clearDraft } = useEditorDraft(editor, draftCacheKey);
 
     const boxRef = useRef<HTMLDivElement>(null);
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
@@ -200,13 +203,6 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         }
     }, [selectedEmoji]);
 
-    useEffect(() => {
-        if (prevTaskIdRef.current !== undefined && prevTaskIdRef.current !== task?.id) {
-            editor.replaceBlocks(editor.document, []);
-        }
-        prevTaskIdRef.current = task?.id;
-    }, [task?.id]);
-
     // Send a new comment.
     //
     // Old behaviour deferred BOTH the optimistic list-append AND the
@@ -251,6 +247,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
 
         setTaskComments([...taskComments, optimistic]);
         editor.replaceBlocks(editor.document, []);
+        clearDraft();
         setEditorDocLength(0);
         setNumEditorLines(0);
 
@@ -368,6 +365,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                         const comments: any[] = editor.document;
                         setNumEditorLines(countLines(comments));
                         setEditorDocLength(editor.document.length);
+                        saveDraft(editor.document);
                     }}
                     onKeyDown={(event) => {
                         if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {

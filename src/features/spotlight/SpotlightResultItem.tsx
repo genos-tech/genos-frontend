@@ -25,6 +25,12 @@ const ENTITY_ICON = {
     note: NoteAltRoundedIcon,
 };
 
+const ENTITY_ICON_GRADIENT: Record<string, string> = {
+    chat: "linear-gradient(135deg, #fb923c 0%, #f59e0b 100%)",
+    task: "linear-gradient(135deg, #22c55e 0%, #10b981 100%)",
+    note: "linear-gradient(135deg, #818cf8 0%, #6366f1 100%)",
+};
+
 // Dark-mode text colors tuned for the translucent purple sheet behind
 // the Spotlight overlay. Replaces opacity-based dimming, which muddies
 // text against the translucent background.
@@ -207,6 +213,7 @@ export const SpotlightResultItem = ({ result, query, isHighlighted, onSelect }: 
     const isDark = mode === "dark";
     const palette = isDark ? purplePalette.dark : purplePalette.light;
     const Icon = ENTITY_ICON[result.entity_type] ?? QuestionAnswerRoundedIcon;
+    const iconGradient = ENTITY_ICON_GRADIENT[result.entity_type] ?? ENTITY_ICON_GRADIENT.chat;
 
     return (
         <Box
@@ -246,10 +253,11 @@ export const SpotlightResultItem = ({ result, query, isHighlighted, onSelect }: 
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    background: isDark ? "rgba(124,58,237,0.12)" : "rgba(124,58,237,0.08)",
+                    background: iconGradient,
+                    opacity: 0.85,
                 }}
             >
-                <Icon sx={{ fontSize: 18, opacity: 0.75 }} />
+                <Icon sx={{ fontSize: 20, color: "#fff" }} />
             </Box>
 
             <Box sx={{ minWidth: 0, flex: 1 }}>

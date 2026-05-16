@@ -34,6 +34,10 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, GMProfileProps } from "../../../../types/chat";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
+import {
+    bumpGMProfileImageVersion,
+    useGMProfileImageVersion,
+} from "../../../../utils/gmProfileImageVersion";
 import { addChat } from "../../services/addChat";
 import { loadGMProfile } from "../../services/loadGMProfile";
 
@@ -75,6 +79,26 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
     const styles = isDark ? ProfileModalStyles.dark : ProfileModalStyles.light;
 
     const [gmProfile, setGmProfile] = useState<GMProfileProps | null>(null);
+
+    // Pull the current chat row from `useCM.allChats` so the avatar
+    // in this modal reflects the freshest profile-image filename
+    // after `funcSetAllChats()` runs — the `gmChat` prop is captured
+    // by the parent at modal-open time and otherwise goes stale.
+    const liveChat = useMemo(() => {
+        const found = useCM.allChats.find(
+            (c) => c.chatId === gmChat.chatId && c.chatType === gmChat.chatType
+        );
+        return found ?? gmChat;
+    }, [useCM.allChats, gmChat]);
+
+    // Cache-buster shared with GMAvatar (see `gmProfileImageVersion`).
+    // Bumped at the end of `handleSelectedFiles` so this modal *and*
+    // every mounted GMAvatar refetch the new image even when the
+    // backend reuses the filename.
+    const imageVersion = useGMProfileImageVersion(gmChat.chatType, gmChat.chatId);
+    const avatarSrc = liveChat.profileImagePath
+        ? `${media_url}/${liveChat.profileImagePath}${imageVersion > 0 ? `?v=${imageVersion}` : ""}`
+        : undefined;
 
     // Member search state
     const [memberSearchQuery, setMemberSearchQuery] = useState("");
@@ -136,7 +160,12 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
         if (!uploadProfileImageResponse.ok) {
             throw new Error("Failed to upload user profile image.");
         } else {
-            addChat(
+            // Await both writes so `funcSetAllChats()` reads the
+            // updated IndexedDB row instead of racing the worker
+            // postMessage. Without this the in-memory `allChats`
+            // refresh can pick up the pre-upload row and the avatar
+            // stays stale even with the cache-buster.
+            await addChat(
                 {
                     ...gmChat,
                     profileImagePath: uploadProfileImageData.profile_image_file_name,
@@ -144,6 +173,11 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                 gmChat.chatType
             );
             await useCM.funcSetAllChats();
+            // Bump the per-chat image version so this modal and
+            // every mounted GMAvatar refetch with a fresh `?v=N`
+            // query string — covers the case where the backend
+            // wrote the new bytes under the same filename.
+            bumpGMProfileImageVersion(gmChat.chatType, gmChat.chatId);
         }
     };
 
@@ -256,7 +290,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                         }}
                                     >
                                         <Avatar
-                                            src={`${media_url}/${gmChat.profileImagePath}`}
+                                            src={avatarSrc}
                                             sx={{
                                                 width: 180,
                                                 height: 180,

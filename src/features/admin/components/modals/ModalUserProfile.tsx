@@ -208,10 +208,19 @@ export const UserProfile = (props: UserProfileProps) => {
                     }}
                 >
                     <Box sx={{ flex: 1, width: "100%", p: 2 }}>
+                        {/* `useFixedPosition` portals the picker to document.body
+                        with position:fixed + z-index 99999, side-stepping both
+                        the modal's `overflow: hidden` clipping and the zero-
+                        height `<div className="relative">` anchor inside the
+                        picker. `calc(50vw - 175px)` horizontally centers a
+                        ~350px-wide emoji-mart picker on any viewport. */}
                         <EmojiPicker
                             setSelectedEmoji={setSelectedEmoji}
                             setShowEmojiPicker={setShowEmojiPicker}
                             showEmojiPicker={showEmojiPicker}
+                            useFixedPosition
+                            pickerBottomPosition="20vh"
+                            pickerLeftPosition="calc(50vw - 175px)"
                         />
                         <Box
                             sx={{

@@ -38,6 +38,7 @@ import { addChat } from "../../features/chat/services/addChat";
 import { addMessage } from "../../features/chat/services/addMessage";
 import { getFirstLine } from "../../features/chat/utils/common";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { useEditorDraft } from "../../hooks/common/useEditorDraft";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
@@ -292,9 +293,14 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
         }
     }, [numEditorLines]);
 
-    useEffect(() => {
-        editor.replaceBlocks(editor.document, []);
-    }, [chat]);
+    // Restore (or clear) the editor when the user navigates between
+    // chats, and persist unsent typing as a per-chat draft. See
+    // `useEditorDraft` for the load/save/clear lifecycle.
+    const draftCacheKey =
+        chat?.chatId != null && chat?.chatType != null
+            ? `chat:${chat.chatType}:${chat.chatId}`
+            : null;
+    const { saveDraft, clearDraft } = useEditorDraft(editor, draftCacheKey);
 
     const sendingMessage = async () => {
         if (editor.document.length > 1 && socket !== null) {
@@ -413,6 +419,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                             await useCM.funcSetAllChats();
 
                             editor.replaceBlocks(editor.document, []);
+                            clearDraft();
                         }
                     }
                 }
@@ -471,6 +478,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                         const comments: any[] = editor.document;
                         setNumEditorLines(countLines(comments));
                         setEditorDocLength(editor.document.length);
+                        saveDraft(editor.document);
                     }}
                     onKeyDown={async (event) => {
                         if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {

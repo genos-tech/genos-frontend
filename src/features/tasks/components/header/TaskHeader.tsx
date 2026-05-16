@@ -61,6 +61,14 @@ export const TaskHeader = ({
         []
     );
     const loading = openSearch && teamTaskSearchOptions.length === 0;
+    const currentProjectId = usePM.currentProject?.projectId;
+    // Drop the cached search results whenever the focused project changes so
+    // the next open-search reloads scoped to the new project. Without this,
+    // `loading` stays false (cache is non-empty) and the user would keep
+    // seeing the previous project's tasks.
+    useEffect(() => {
+        setTeamTaskSearchOptions([]);
+    }, [currentProjectId]);
     useEffect(() => {
         let active = true;
 
@@ -69,9 +77,12 @@ export const TaskHeader = ({
         }
 
         (async () => {
+            // Pass the current project id (falling back to -1 = "no filter"
+            // when no project is selected) so the header search only surfaces
+            // tasks from the project the user is looking at.
             const loadedTeamTasks: SearchTeamTasksResponse[] = await loadTeamTaskList(
                 myself,
-                -1,
+                currentProjectId ?? -1,
                 "open,wip,pending",
                 -1,
                 accessToken,
@@ -86,7 +97,7 @@ export const TaskHeader = ({
         return () => {
             active = false;
         };
-    }, [loading]);
+    }, [loading, currentProjectId]);
     // =======================================================================
 
     const pmChat = useCM.allChats.find(

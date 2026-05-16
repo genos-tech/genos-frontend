@@ -162,6 +162,30 @@ export const createChatGroup = async (
             }
         }
 
+        // After the DB records exist, notify each newly-added member's live
+        // socket so their client (a) shows the new GM in the sidebar and
+        // (b) joins the `gm-{id}` socket room immediately — without this,
+        // members only see the GM after a reconnect because the room
+        // membership is reconstructed from `gm/ids/` on connect.
+        if (selectedMemberIds.length > 0) {
+            const tsNow = getLocalCurrentTimestamp();
+            socket.emit("gm_members_added", {
+                gmId: data.chatId,
+                gmName: data.chatName,
+                isPrivate: isPrivate,
+                memberIds: selectedMemberIds,
+                sender: myself,
+                joinMessage: {
+                    messageId: 1,
+                    content: createGroupMessage,
+                    contentText: gmCreatedMessage,
+                    tsSent: tsNow,
+                    tsUpdated: tsNow,
+                    sender: myself,
+                },
+            });
+        }
+
         addGMChatAndMessage(myself, data, isPrivate, useCM);
         setOpen(false);
         setCreateCGErrorMessage("");
