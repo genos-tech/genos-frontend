@@ -48,6 +48,7 @@
         "idb": "^8.0.3",
         "lucide-react": "^1.14.0",
         "luxon": "^3.7.2",
+        "posthog-js": "^1.373.5",
         "react": "^19.1.1",
         "react-beautiful-dnd": "^13.1.1",
         "react-dom": "^19.1.1",

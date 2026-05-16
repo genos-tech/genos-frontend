@@ -1,5 +1,7 @@
 import { createContext, ReactNode, useContext, useEffect, useRef, useState } from "react";
 
+import { analytics } from "../services/analytics";
+
 interface AuthContextType {
     accessToken: string | null;
     setAccessToken: (token: string | null) => void;
@@ -120,6 +122,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         clearRefreshTimer();
         AUTH_LOCAL_STORAGE_KEYS.forEach((key) => localStorage.setItem(key, ""));
         localStorage.setItem("isOfflineForced", "false");
+        analytics.reset();
         setAccessToken(null);
 
         // Avoid stacking redirects if the user is already on the
