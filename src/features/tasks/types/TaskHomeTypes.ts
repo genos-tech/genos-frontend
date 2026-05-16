@@ -111,7 +111,8 @@ export interface TaskHomeLayoutProps {
         openTaskNoteInChat: boolean,
         openThreadTaskPreview: boolean,
         setCurrentPreviewTaskId: (id: number) => void,
-        setCurrentProject: (project: any) => void
+        setCurrentProject: (project: any) => void,
+        messageId?: number
     ) => void;
     socket: Socket | null;
 

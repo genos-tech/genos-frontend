@@ -271,11 +271,7 @@ export const SpotlightResultItem = ({ result, query, isHighlighted, onSelect }: 
                         }}
                     >
                         <HighlightedText
-                            text={windowAroundMatch(
-                                result.snippet,
-                                query,
-                                result.matched_terms
-                            )}
+                            text={windowAroundMatch(result.snippet, query, result.matched_terms)}
                             query={query}
                             extraTerms={result.matched_terms}
                             boldColor={isDark ? DARK_TEXT_STRONG : undefined}
@@ -284,6 +280,7 @@ export const SpotlightResultItem = ({ result, query, isHighlighted, onSelect }: 
                 )}
                 {result.matched_chunk_types.length > 0 && (
                     <Box sx={{ mt: 0.5, display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+                        <Typography level="body-sm">Matched in</Typography>
                         {result.matched_chunk_types.map((ct) => (
                             <Chip key={ct} size="sm" sx={{ fontSize: "0.75rem" }} variant="soft">
                                 {ct}

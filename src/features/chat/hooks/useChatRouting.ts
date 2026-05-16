@@ -440,6 +440,27 @@ export const useChatRouting = ({ useCM, useTM, myself }: UseChatRoutingProps) =>
         if (!typePath) return;
 
         const newPath = buildChatPath(typePath, currentMainChat.chatId);
+
+        // Guard against stripping valid deep-link segments. The `pathname`
+        // variable in this closure can briefly lag the actual browser URL
+        // when state + router updates aren't batched into the same render
+        // (e.g. Spotlight's `moveToSpecificChat` does setCurrentMainChat
+        // + navigate("/chat/pm/1/message/6") inside an async fn; the
+        // render that fires this effect sometimes sees the new
+        // currentMainChat but the OLD pathname, so the equality check at
+        // the top of the effect fails and we end up here, replacing the
+        // freshly-pushed `/message/6` URL back to chat-level only).
+        //
+        // We check `window.location.pathname` directly — it always
+        // reflects the true URL. If the real URL is already inside the
+        // chat we're syncing to (i.e. starts with `newPath + "/"` or
+        // equals `newPath`), leave it alone; the trailing `/thread/...`
+        // and `/message/...` segments are intentional and should survive.
+        const currentBrowserPath = window.location.pathname;
+        if (currentBrowserPath === newPath || currentBrowserPath.startsWith(newPath + "/")) {
+            return;
+        }
+
         // Only update if path is different
         if (newPath !== pathname && newPath !== lastNavigatedPath.current) {
             lastNavigatedPath.current = newPath;

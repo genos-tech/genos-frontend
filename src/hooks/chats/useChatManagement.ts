@@ -68,7 +68,12 @@ export interface ChatManagementState {
         openTaskNoteInChat: boolean,
         openThreadTaskPreview: boolean,
         setCurrentPreviewTaskId: (id: number) => void,
-        setCurrentProject: (project: any) => void
+        setCurrentProject: (project: any) => void,
+        // Optional matched-message focus (used by Spotlight). When > 0
+        // the helper sets `moveToSpecificIndex` on the chat / thread
+        // so the list scrolls to the bubble, and appends `/message/:id`
+        // to the URL. Callers that don't need message focus omit it.
+        messageId?: number
     ) => Promise<void>;
     moveToSpecificThreadChat: (
         chat: AllChatProps,
@@ -250,7 +255,8 @@ export const useChatManagement = (
         openTaskNoteInChat: boolean,
         openThreadTaskPreview: boolean,
         setCurrentPreviewTaskId: (id: number) => void,
-        setCurrentProject: (project: any) => void
+        setCurrentProject: (project: any) => void,
+        messageId?: number
     ) => {
         // Get the URL path for the chat type
         const chatTypePath = CHAT_TYPE_REVERSE_MAP[chatType];
@@ -258,6 +264,17 @@ export const useChatManagement = (
             console.error(`Invalid chat type: ${chatType}`);
             return;
         }
+
+        // Build the destination URL once. Adding `/message/:id` is
+        // optional — Spotlight passes it when the search response
+        // identified the specific matched bubble; other callers don't.
+        const hasMessage = messageId !== undefined && messageId > 0;
+        const buildPath = (): string => {
+            let path = `/workspace/chat/${chatTypePath}/${chatId}`;
+            if (threadId > 0) path += `/thread/${threadId}`;
+            if (hasMessage) path += `/message/${messageId}`;
+            return path;
+        };
 
         // Switching to the chat service is implicit: every code path below
         // calls `navigate("/workspace/chat/...")`, and the URL is now the source
@@ -273,17 +290,19 @@ export const useChatManagement = (
         if (!targetChat) {
             console.error(`Chat not found: chatType=${chatType}, chatId=${chatId}`);
             // Still navigate to the chat page - the routing hook will handle loading
-            if (threadId > 0) {
-                navigate(`/workspace/chat/${chatTypePath}/${chatId}/thread/${threadId}`);
-            } else {
-                navigate(`/workspace/chat/${chatTypePath}/${chatId}`);
-            }
+            navigate(buildPath());
             return;
         }
 
         try {
             const messages = await popSpecificMessages(chatId, chatType);
             const newChat: ChatProps = defineNewChat(targetChat, messages);
+            // Spotlight may have asked us to focus a specific bubble in
+            // the main channel. The chat list reads `moveToSpecificIndex`
+            // (formatted as "{chatId}-{messageId}") to scroll-target.
+            if (hasMessage && threadId === 0) {
+                newChat.moveToSpecificIndex = `${chatId}-${messageId}`;
+            }
             setCurrentMainChat(newChat);
 
             if (threadId > 0) {
@@ -296,24 +315,28 @@ export const useChatManagement = (
                     if (newThread.taskExist === true && newThread.taskId) {
                         setCurrentPreviewTaskId(newThread.taskId);
                     }
+                    // Re-apply moveToSpecificIndex for thread-message
+                    // focus. `moveToSpecificThreadChat` set the thread
+                    // without it; we add it here so a Spotlight match
+                    // on a thread bubble actually scrolls.
+                    if (hasMessage) {
+                        setCurrentThreadChat({
+                            ...newThread,
+                            moveToSpecificIndex: `${chatId}-${threadId}-${messageId}`,
+                        });
+                    }
                 }
                 setIsMainChatVisible(true);
                 setIsThreadVisible(true);
-                // Navigate to thread URL
-                navigate(`/workspace/chat/${chatTypePath}/${chatId}/thread/${threadId}`);
+                navigate(buildPath());
             } else {
                 setIsMainChatVisible(true);
-                // Navigate to chat URL
-                navigate(`/workspace/chat/${chatTypePath}/${chatId}`);
+                navigate(buildPath());
             }
         } catch (error) {
             console.error(error);
             // Still navigate on error to show the chat page
-            if (threadId > 0) {
-                navigate(`/workspace/chat/${chatTypePath}/${chatId}/thread/${threadId}`);
-            } else {
-                navigate(`/workspace/chat/${chatTypePath}/${chatId}`);
-            }
+            navigate(buildPath());
         }
     };
 

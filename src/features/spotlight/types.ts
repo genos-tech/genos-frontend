@@ -28,6 +28,11 @@ export interface SpotlightResult {
     chat_type: ChatTypeLabel | null;
     chat_id: string | null;
     thread_id: string | null;
+    // The specific message inside the chat / thread that matched.
+    // Null when the matching chunk wasn't a single message (e.g. a
+    // thread-window chunk or an anchor chunk), or for non-chat results.
+    // Spotlight uses it to deep-link the chat URL down to the bubble.
+    message_id: string | null;
 
     // Task-specific
     task_id: string | null;

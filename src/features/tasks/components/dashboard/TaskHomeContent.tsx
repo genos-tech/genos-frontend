@@ -785,14 +785,14 @@ export const TaskHomeContent = ({
                                 />
                             </Box>
                             <Typography
-                                level="h3"
+                                level="h2"
                                 sx={{
                                     fontWeight: 700,
                                     color: textPrimary,
                                     letterSpacing: "-0.02em",
                                 }}
                             >
-                                Sprint Dashboard
+                                Task Stats
                             </Typography>
                         </Stack>
                         <Typography level="body-sm" sx={{ color: textMuted }}>
@@ -1323,7 +1323,7 @@ export const TaskHomeContent = ({
                                     sx={{ fontSize: 18, color: "#7c3aed" }}
                                 />
                                 <Typography
-                                    level="title-lg"
+                                    level="h3"
                                     sx={{ fontWeight: 700, color: textPrimary }}
                                 >
                                     Sprint Insights
@@ -1586,7 +1586,7 @@ export const TaskHomeContent = ({
                             >
                                 <PersonRoundedIcon sx={{ fontSize: 18, color: "#22c55e" }} />
                                 <Typography
-                                    level="title-lg"
+                                    level="h3"
                                     sx={{ fontWeight: 700, color: textPrimary }}
                                 >
                                     My Tasks
@@ -1973,7 +1973,7 @@ export const TaskHomeContent = ({
                             >
                                 <TrendingUpRoundedIcon sx={{ fontSize: 18, color: "#3b82f6" }} />
                                 <Typography
-                                    level="title-lg"
+                                    level="h3"
                                     sx={{ fontWeight: 700, color: textPrimary }}
                                 >
                                     Overall Insights
