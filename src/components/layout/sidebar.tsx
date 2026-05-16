@@ -33,6 +33,7 @@ import { InboxManagementState } from "../../hooks/inbox/useInboxManagement";
 import { analytics } from "../../services/analytics";
 import { purplePalette } from "../../theme/purplePalette";
 import { UserProps } from "../../types/admin";
+import { clearAllEditorDrafts } from "../../utils/editorDraftStorage";
 import { isMac } from "../../utils/platform";
 import { ColorSchemeToggle } from "./colorSchemeToggle";
 import { SettingsModal } from "./SettingsModal";
@@ -148,6 +149,7 @@ export const Sidebar = (props: SidebarProps) => {
                 ];
                 keysToRemove.forEach((key) => localStorage.setItem(key, ""));
                 localStorage.setItem("isOfflineForced", "false");
+                clearAllEditorDrafts();
                 analytics.reset();
 
                 setAccessToken(null);

@@ -37,6 +37,7 @@ import { useAuth } from "../../context/AuthContext";
 import { addThreadMessage } from "../../features/chat/services/addThreadMessage";
 import { getFirstLine } from "../../features/chat/utils/common";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { useEditorDraft } from "../../hooks/common/useEditorDraft";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
@@ -276,9 +277,15 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
         }
     }, [numEditorLines]);
 
-    useEffect(() => {
-        editor.replaceBlocks(editor.document, []);
-    }, [thread]);
+    // Per-thread draft cache: see `useEditorDraft` for the
+    // load/save/clear lifecycle. Keyed by chatType + chatId +
+    // threadId so each thread keeps its own in-progress reply
+    // separate from the parent chat's main-channel draft.
+    const draftCacheKey =
+        thread?.chatType != null && thread?.chatId != null && thread?.threadId != null
+            ? `thread:${thread.chatType}:${thread.chatId}:${thread.threadId}`
+            : null;
+    const { saveDraft, clearDraft } = useEditorDraft(editor, draftCacheKey);
 
     const sendingThreadMessage = async () => {
         if (editor.document.length > 1 && socket !== null) {
@@ -361,6 +368,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                     addThreadMessage(newThreadMessage, thread.chatType);
 
                     editor.replaceBlocks(editor.document, []);
+                    clearDraft();
                 }
             );
         }
@@ -417,6 +425,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                         const comments: any[] = editor.document;
                         setNumEditorLines(countLines(comments));
                         setEditorDocLength(editor.document.length);
+                        saveDraft(editor.document);
                     }}
                     onKeyDown={(event) => {
                         if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {

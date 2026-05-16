@@ -1,6 +1,7 @@
 import { createContext, ReactNode, useContext, useEffect, useRef, useState } from "react";
 
 import { analytics } from "../services/analytics";
+import { clearAllEditorDrafts } from "../utils/editorDraftStorage";
 
 interface AuthContextType {
     accessToken: string | null;
@@ -122,6 +123,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         clearRefreshTimer();
         AUTH_LOCAL_STORAGE_KEYS.forEach((key) => localStorage.setItem(key, ""));
         localStorage.setItem("isOfflineForced", "false");
+        clearAllEditorDrafts();
         analytics.reset();
         setAccessToken(null);
 
