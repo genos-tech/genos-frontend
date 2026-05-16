@@ -1303,9 +1303,40 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
     const hoverBg = mode === "dark" ? DEPTH_HOVER_DARK[depthIdx] : DEPTH_HOVER_LIGHT[depthIdx];
 
     return (
-        <Draggable draggableId={String(task.id)} index={index} isDragDisabled={false}>
+        <Draggable
+            draggableId={String(task.id)}
+            index={index}
+            isDragDisabled={task.isMilestone === true}
+        >
             {(provided, snapshot) => {
                 const showHoverBg = !snapshot.isDragging && !isSelected;
+                // `react-beautiful-dnd` populates `combineTargetFor`
+                // on the row that's about to absorb the dragged task
+                // (the cursor is hovering over its centre, not its
+                // edge). `isCombining` is the mirror state on the
+                // dragged row. We use both to make the "drop to nest"
+                // intent visible — without these cues the user can't
+                // tell whether releasing the mouse will reparent or
+                // just reorder.
+                const isCombineTarget = snapshot.combineTargetFor != null;
+                const isCombineSource = snapshot.combineWith != null;
+                const isDark = mode === "dark";
+                // Two-stop palette so the pulse can breathe between a
+                // calm and a bright accent — feels alive instead of
+                // just "highlighted".
+                const accent = isDark ? "#a78bfa" : "#7c3aed";
+                const accentHot = isDark ? "#c4b5fd" : "#a855f7";
+                const pulseBgLow = isDark ? "rgba(167,139,250,0.08)" : "rgba(124,58,237,0.05)";
+                const pulseBgHigh = isDark ? "rgba(167,139,250,0.22)" : "rgba(124,58,237,0.16)";
+                const pulseShadowLow = isDark
+                    ? "inset 0 0 0 2px rgba(167,139,250,0.6), 0 0 8px rgba(167,139,250,0.25)"
+                    : "inset 0 0 0 2px rgba(124,58,237,0.55), 0 0 6px rgba(124,58,237,0.2)";
+                const pulseShadowHigh = isDark
+                    ? "inset 0 0 0 2px #c4b5fd, 0 0 26px rgba(167,139,250,0.65), 0 0 12px rgba(196,181,253,0.5)"
+                    : "inset 0 0 0 2px #a855f7, 0 0 22px rgba(124,58,237,0.55), 0 0 10px rgba(168,85,247,0.45)";
+                const shimmerGradient = isDark
+                    ? "linear-gradient(90deg, transparent 0%, transparent 35%, rgba(196,181,253,0.35) 50%, transparent 65%, transparent 100%)"
+                    : "linear-gradient(90deg, transparent 0%, transparent 35%, rgba(168,85,247,0.28) 50%, transparent 65%, transparent 100%)";
                 return (
                     <Box
                         // `react-beautiful-dnd`'s `innerRef` is a callback
@@ -1331,7 +1362,47 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                         // re-render of the row + every cell + the
                         // assignee `<UserAvatar>` subtree.
                         sx={{
-                            "&:hover": showHoverBg ? { backgroundColor: hoverBg } : {},
+                            position: "relative",
+                            transition: "transform 150ms ease, opacity 150ms ease",
+                            ...(isCombineTarget && {
+                                zIndex: 2,
+                                animation: "combineTargetPulse 1.1s ease-in-out infinite",
+                                "@keyframes combineTargetPulse": {
+                                    "0%, 100%": {
+                                        backgroundColor: pulseBgLow,
+                                        boxShadow: pulseShadowLow,
+                                    },
+                                    "50%": {
+                                        backgroundColor: pulseBgHigh,
+                                        boxShadow: pulseShadowHigh,
+                                    },
+                                },
+                                // Shimmer sweep — a soft accent stripe
+                                // slides left → right across the row to
+                                // reinforce "this is the live drop zone".
+                                "&::after": {
+                                    content: '""',
+                                    position: "absolute",
+                                    inset: 0,
+                                    background: shimmerGradient,
+                                    backgroundSize: "200% 100%",
+                                    pointerEvents: "none",
+                                    animation: "combineTargetSweep 1.6s linear infinite",
+                                    zIndex: 1,
+                                },
+                                "@keyframes combineTargetSweep": {
+                                    "0%": { backgroundPosition: "200% 0" },
+                                    "100%": { backgroundPosition: "-100% 0" },
+                                },
+                            }),
+                            ...(isCombineSource && {
+                                opacity: 0.55,
+                                transform: "scale(0.97)",
+                            }),
+                            "&:hover":
+                                showHoverBg && !isCombineTarget
+                                    ? { backgroundColor: hoverBg }
+                                    : {},
                             "&:hover .task-row-drag-handle": {
                                 opacity: snapshot.isDragging ? 1 : 0.8,
                             },
@@ -1347,6 +1418,56 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                             }
                         }}
                     >
+                        {/* Floating hint that pops in when this row will
+                            absorb the dragged task — anchors to the row
+                            via `position: relative` on the Box above. */}
+                        {isCombineTarget && (
+                            <Box
+                                sx={{
+                                    position: "absolute",
+                                    top: "50%",
+                                    right: 12,
+                                    px: 1.25,
+                                    py: 0.4,
+                                    borderRadius: "8px",
+                                    background: `linear-gradient(135deg, ${accent} 0%, ${accentHot} 100%)`,
+                                    color: "#fff",
+                                    fontSize: "0.7rem",
+                                    fontWeight: 700,
+                                    letterSpacing: "0.04em",
+                                    textTransform: "uppercase",
+                                    pointerEvents: "none",
+                                    zIndex: 4,
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 0.5,
+                                    animation:
+                                        "dropToNestPop 180ms ease-out, dropToNestBreathe 1.1s ease-in-out 180ms infinite",
+                                    "@keyframes dropToNestPop": {
+                                        from: {
+                                            opacity: 0,
+                                            transform: "translateY(-50%) scale(0.8)",
+                                        },
+                                        to: {
+                                            opacity: 1,
+                                            transform: "translateY(-50%) scale(1)",
+                                        },
+                                    },
+                                    "@keyframes dropToNestBreathe": {
+                                        "0%, 100%": {
+                                            transform: "translateY(-50%) scale(1)",
+                                            boxShadow: `0 4px 10px rgba(0,0,0,0.2), 0 0 0 0 ${accentHot}55`,
+                                        },
+                                        "50%": {
+                                            transform: "translateY(-50%) scale(1.06)",
+                                            boxShadow: `0 6px 16px rgba(0,0,0,0.28), 0 0 0 6px ${accentHot}00`,
+                                        },
+                                    },
+                                }}
+                            >
+                                ↳ Drop to nest
+                            </Box>
+                        )}
                         {/* Drag Handle */}
                         <div
                             {...provided.dragHandleProps}

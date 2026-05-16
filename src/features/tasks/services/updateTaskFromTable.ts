@@ -39,7 +39,14 @@ export const updateTaskFromTable = async (
             return updatedRow;
         }
 
-        // Update the task with the new values from the table
+        // Update the task with the new values from the table.
+        // `parentTaskId` and `milestoneId` are forwarded so the
+        // drag-to-reparent path in DraggableTaskTable can reuse this
+        // helper — the row carries the desired new parent / milestone
+        // and the PUT propagates both via `parent_task_id` and
+        // `milestone` (see sendUpdatedSpecificTask). `TaskProps`'s
+        // `parentTaskId` is `number | null`, so we coerce the
+        // table-shaped `string | null`.
         const updatedTask: TaskProps = {
             ...fullTask,
             title: updatedRow.title || "",
@@ -56,6 +63,11 @@ export const updateTaskFromTable = async (
                 level: updatedRow.effortLevel,
             },
             dueDate: updatedRow.dueDate || "",
+            milestoneId: updatedRow.milestoneId ?? null,
+            parentTaskId:
+                updatedRow.parentTaskId != null && updatedRow.parentTaskId !== ""
+                    ? Number(updatedRow.parentTaskId)
+                    : null,
         };
 
         // Handle assignee update if it changed

@@ -767,8 +767,94 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         [sortConfig]
     );
 
-    // Handle drag end for reordering
+    // Reparent a task by dropping it ONTO another row (the `combine`
+    // gesture from react-beautiful-dnd). Milestones can't be moved;
+    // tasks can land under any other task — including a milestone
+    // row, in which case they inherit that milestone's id too so
+    // sprint / milestone-scoped views stay consistent. Optimistic +
+    // log-on-error matches the existing `handleRowUpdate` convention.
+    const reparentTask = async (draggedId: string, targetId: string) => {
+        if (draggedId === targetId) return;
+
+        const dragged =
+            currentDisplayingTasks.find((t) => String(t.id) === draggedId) ||
+            useTM.allTasks.find((t) => String(t.id) === draggedId);
+        const target =
+            currentDisplayingTasks.find((t) => String(t.id) === targetId) ||
+            useTM.allTasks.find((t) => String(t.id) === targetId);
+        if (!dragged || !target) return;
+
+        // Milestones are pinned and never reparented. The Draggable
+        // itself is also disabled for milestone rows, so this is a
+        // belt-and-braces guard.
+        if (dragged.isMilestone === true) return;
+
+        // Already a child of this target — no-op.
+        if (dragged.parentTaskId != null && String(dragged.parentTaskId) === String(target.id)) {
+            return;
+        }
+
+        // Cycle check: target must not be a descendant of dragged.
+        // Walks `useTM.allTasks` (not the filtered `childrenByParent`)
+        // so a filter-hidden descendant still blocks the move.
+        const isDescendant = (ancestorId: string, candidateId: string): boolean => {
+            const queue: string[] = [ancestorId];
+            const visited = new Set<string>();
+            while (queue.length > 0) {
+                const current = queue.shift();
+                if (current == null || visited.has(current)) continue;
+                visited.add(current);
+                for (const t of useTM.allTasks) {
+                    if (t.parentTaskId == null) continue;
+                    if (String(t.parentTaskId) !== current) continue;
+                    const cid = String(t.id);
+                    if (cid === candidateId) return true;
+                    queue.push(cid);
+                }
+            }
+            return false;
+        };
+        if (isDescendant(draggedId, targetId)) return;
+
+        const updated: TaskTableProps = {
+            ...dragged,
+            parentTaskId: String(target.id),
+            milestoneId: target.milestoneId ?? null,
+        };
+
+        // Optimistic state update — mirrors the milestone-edit path
+        // in `handleRowUpdate` (see lines ~902 / 905).
+        setCurrentDisplayingTasks((prev) =>
+            prev.map((t) => (String(t.id) === String(dragged.id) ? updated : t))
+        );
+        useTM.setAllTasks((prev) =>
+            prev.map((t) => (String(t.id) === String(dragged.id) ? updated : t))
+        );
+
+        // Auto-expand the new parent so the reparented row stays
+        // visible — otherwise it disappears into a collapsed subtree.
+        setExpandedRows((prev) => {
+            if (prev.has(String(target.id))) return prev;
+            const next = new Set(prev);
+            next.add(String(target.id));
+            return next;
+        });
+
+        try {
+            await updateTaskFromTable(updated, myself, socket || null, accessToken, teamMembers);
+        } catch (error) {
+            console.error("Error reparenting task:", error);
+        }
+    };
+
+    // Handle drag end: combine = drop ONTO another row (reparent +
+    // persist); destination = drop between rows (local reorder only,
+    // matches previous behaviour).
     const handleDragEnd = (result: DropResult) => {
+        if (result.combine) {
+            void reparentTask(result.draggableId, result.combine.draggableId);
+            return;
+        }
         if (!result.destination) return;
 
         const items = Array.from(currentDisplayingTasks);
@@ -1158,7 +1244,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                             direction="vertical"
                             droppableId="task-table"
                             ignoreContainerClipping={false}
-                            isCombineEnabled={false}
+                            isCombineEnabled={true}
                             isDropDisabled={false}
                         >
                             {(provided, snapshot) => (
