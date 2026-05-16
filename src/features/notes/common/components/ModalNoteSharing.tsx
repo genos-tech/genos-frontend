@@ -192,7 +192,15 @@ export const ModalNoteSharing = ({
                                         <Avatar size="sm" src={m.avatarUrl || undefined}>
                                             {m.userName?.[0]?.toUpperCase() || "?"}
                                         </Avatar>
-                                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                                        <Box
+                                            sx={{
+                                                flex: 1,
+                                                minWidth: 0,
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 1,
+                                            }}
+                                        >
                                             <Typography
                                                 level="body-sm"
                                                 sx={{
@@ -203,16 +211,16 @@ export const ModalNoteSharing = ({
                                                 }}
                                             >
                                                 {m.userName}
-                                                {isSelf && (
-                                                    <Chip
-                                                        size="sm"
-                                                        variant="soft"
-                                                        sx={{ ml: 1, fontSize: 10 }}
-                                                    >
-                                                        you
-                                                    </Chip>
-                                                )}
                                             </Typography>
+                                            {isSelf && (
+                                                <Chip
+                                                    size="sm"
+                                                    variant="soft"
+                                                    sx={{ fontSize: 10, flexShrink: 0 }}
+                                                >
+                                                    you
+                                                </Chip>
+                                            )}
                                         </Box>
                                         <Select
                                             size="sm"
