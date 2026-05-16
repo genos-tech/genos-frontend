@@ -45,8 +45,13 @@ import remarkGfm from "remark-gfm";
 
 import type { AgentUsage, PendingApprovalPayload } from "../../services/agentApi";
 import { purplePalette } from "../../theme/purplePalette";
-import { HighlightedText, SpotlightResultItem } from "./SpotlightResultItem";
-import type { EntityType, SpotlightResult } from "./types";
+import {
+    badgeFor,
+    entitySubtitle,
+    HighlightedText,
+    SpotlightResultItem,
+} from "./SpotlightResultItem";
+import type { SpotlightResult } from "./types";
 import type { AskState, CompletedTurn, ToolEvent } from "./useSpotlight";
 
 interface Props {
@@ -71,12 +76,6 @@ interface Props {
     // tooltip and Spotlight stays a pure search overlay.
     aiAnswersEnabled: boolean;
 }
-
-const SECTION_ORDER: { key: EntityType; label: string }[] = [
-    { key: "chat", label: "Chats" },
-    { key: "task", label: "Tasks" },
-    { key: "note", label: "Notes" },
-];
 
 // Distance from the bottom (px) under which we consider the user
 // "at the bottom" of the conversation. Streaming auto-scroll only
@@ -125,31 +124,20 @@ export const SpotlightOverlay = ({
         return () => window.clearTimeout(t);
     }, [isOpen]);
 
-    const grouped = useMemo(() => {
-        const byType: Record<EntityType, SpotlightResult[]> = {
-            chat: [],
-            task: [],
-            note: [],
-        };
-        for (const r of results) {
-            if (byType[r.entity_type]) byType[r.entity_type].push(r);
-        }
-        return byType;
-    }, [results]);
-
-    // Flat list in display order (chat → task → note) used for arrow-key
-    // navigation and the highlighted-index → onSelect mapping.
-    const flatResults = useMemo(
-        () => SECTION_ORDER.flatMap(({ key }) => grouped[key] ?? []),
-        [grouped]
-    );
-    // Map from "type:id" → flat index so each SpotlightResultItem can
-    // receive isHighlighted without searching the array on every render.
-    const flatIndexOf = useMemo(() => {
+    // Results are rendered in the order the backend returned them —
+    // i.e. by relevance score, regardless of entity type. The icon and
+    // subtitle on each row make the entity kind obvious, so the
+    // user-side cost of mixing chats/tasks/notes is low and the win is
+    // getting the most-relevant hit at the top.
+    //
+    // `resultIndexOf` maps "type:id" → position so each
+    // SpotlightResultItem can compute `isHighlighted` without scanning
+    // the array on every render.
+    const resultIndexOf = useMemo(() => {
         const m = new Map<string, number>();
-        flatResults.forEach((r, i) => m.set(`${r.entity_type}:${r.entity_id}`, i));
+        results.forEach((r, i) => m.set(`${r.entity_type}:${r.entity_id}`, i));
         return m;
-    }, [flatResults]);
+    }, [results]);
 
     // ---- Input performance: decouple display state from search state. ----
     //
@@ -283,11 +271,9 @@ export const SpotlightOverlay = ({
                         }
                         onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                             if (e.key === "ArrowDown") {
-                                if (flatResults.length === 0) return;
+                                if (results.length === 0) return;
                                 e.preventDefault();
-                                setSelectedIndex((prev) =>
-                                    Math.min(prev + 1, flatResults.length - 1)
-                                );
+                                setSelectedIndex((prev) => Math.min(prev + 1, results.length - 1));
                                 return;
                             }
                             if (e.key === "ArrowUp") {
@@ -299,8 +285,8 @@ export const SpotlightOverlay = ({
                                 e.preventDefault();
                                 // If a result row is highlighted, navigate to
                                 // it rather than firing the AI ask.
-                                if (selectedIndex >= 0 && flatResults[selectedIndex]) {
-                                    onSelect(flatResults[selectedIndex]);
+                                if (selectedIndex >= 0 && results[selectedIndex]) {
+                                    onSelect(results[selectedIndex]);
                                     setSelectedIndex(-1);
                                     return;
                                 }
@@ -442,54 +428,31 @@ export const SpotlightOverlay = ({
                         />
                     )}
 
-                    {hasResults &&
-                        SECTION_ORDER.map(({ key, label }) => {
-                            const section = grouped[key];
-                            if (!section || section.length === 0) return null;
-                            return (
-                                <Box key={key} sx={{ mb: 1.25 }}>
-                                    <Typography
-                                        level="body-sm"
-                                        sx={{
-                                            px: 1.5,
-                                            pt: 0.5,
-                                            pb: 0.25,
-                                            opacity: isDark ? 1 : 0.7,
-                                            color: isDark ? DARK_TEXT_MEDIUM : undefined,
-                                            fontWeight: 600,
-                                            textTransform: "uppercase",
-                                            letterSpacing: "0.04em",
-                                        }}
-                                    >
-                                        {label} ({section.length})
-                                    </Typography>
-                                    <Box
-                                        sx={{
-                                            display: "flex",
-                                            flexDirection: "column",
-                                            gap: 0.25,
-                                        }}
-                                    >
-                                        {section.map((r) => (
-                                            <SpotlightResultItem
-                                                key={`${r.entity_type}:${r.entity_id}`}
-                                                result={r}
-                                                query={query}
-                                                isHighlighted={
-                                                    flatIndexOf.get(
-                                                        `${r.entity_type}:${r.entity_id}`
-                                                    ) === selectedIndex
-                                                }
-                                                onSelect={(selected) => {
-                                                    setSelectedIndex(-1);
-                                                    onSelect(selected);
-                                                }}
-                                            />
-                                        ))}
-                                    </Box>
-                                </Box>
-                            );
-                        })}
+                    {hasResults && (
+                        <Box
+                            sx={{
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: 0.25,
+                            }}
+                        >
+                            {results.map((r) => (
+                                <SpotlightResultItem
+                                    key={`${r.entity_type}:${r.entity_id}`}
+                                    result={r}
+                                    query={query}
+                                    isHighlighted={
+                                        resultIndexOf.get(`${r.entity_type}:${r.entity_id}`) ===
+                                        selectedIndex
+                                    }
+                                    onSelect={(selected) => {
+                                        setSelectedIndex(-1);
+                                        onSelect(selected);
+                                    }}
+                                />
+                            ))}
+                        </Box>
+                    )}
                 </Box>
             </Sheet>
         </Box>
@@ -1256,19 +1219,25 @@ function _chipLabel(s: SpotlightResult): string {
     const title = _titleSnippet(s.title);
     const sep = title ? `: ${title}` : "";
 
+    // Reuse the same vocabulary the result rows use so the agent's
+    // source citations don't drift from the search-result subtitles.
+    // `entitySubtitle` returns e.g. "Direct message" / "Task" / "Chat
+    // note"; `badgeFor` returns "Thread" / "Comment" / null when the
+    // matched chunk was a thread reply / task comment.
+    const subtitle = entitySubtitle(s);
+    const badge = badgeFor(s);
+
     if (s.entity_type === "task" && s.task_id) {
-        return `task (#${s.task_id})${sep}`;
+        const label = badge === "Comment" ? `${subtitle} comment` : subtitle;
+        return `${label} (#${s.task_id})${sep}`;
     }
     if (s.entity_type === "chat" && s.chat_id) {
-        const typeLabel = s.chat_type ?? "chat";
-        const base = s.thread_id
-            ? `${typeLabel} (#${s.chat_id}) thread #${s.thread_id}`
-            : `${typeLabel} (#${s.chat_id})`;
-        return `${base}${sep}`;
+        const label = badge === "Thread" ? `${subtitle} thread` : subtitle;
+        return `${label} (#${s.chat_id})${sep}`;
     }
     if (s.entity_type === "note" && s.note_id) {
-        const noteLabel = s.note_type ? `${s.note_type} note` : "note";
-        return `${noteLabel} (#${s.note_id})${sep}`;
+        const label = badge === "Thread" ? `${subtitle} (thread)` : subtitle;
+        return `${label} (#${s.note_id})${sep}`;
     }
     // Fallback to raw entity_id if specific ids are absent.
     return title ? `${s.entity_id}: ${title}` : s.entity_id;

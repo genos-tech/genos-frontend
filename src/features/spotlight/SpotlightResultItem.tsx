@@ -33,8 +33,10 @@ const DARK_TEXT_MEDIUM = "#cebfeb";
 const DARK_TEXT_SOFT = "#a89bbf";
 
 // Friendly label shown next to the icon for context (e.g. "DM",
-// "Group chat", "Personal note"). Falls back gracefully.
-const subtitleFor = (r: SpotlightResult): string => {
+// "Group chat", "Personal note"). Exported so the agent's source-chip
+// renderer (`_chipLabel` in SpotlightOverlay) reuses the same wording
+// — keeps the two surfaces from drifting.
+export const entitySubtitle = (r: SpotlightResult): string => {
     if (r.entity_type === "chat") {
         switch (r.chat_type) {
             case "dm":
@@ -63,6 +65,32 @@ const subtitleFor = (r: SpotlightResult): string => {
         }
     }
     return "";
+};
+
+// Short uppercase tag rendered next to the subtitle when the matched
+// chunk wasn't a top-level message/title. Returns null when the hit
+// is "plain" (main-channel chat, task title/body, non-thread note).
+//
+// Signal sources:
+//   - Chat thread reply: `entity_type=chat` AND `thread_id` set.
+//     The chunker only writes thread_id on chunks INSIDE a thread; the
+//     entity is also distinct from the main-channel entity, so this
+//     check is robust.
+//   - Task comment: `entity_type=task` AND the best-ranked chunk type
+//     is "task_comment". `matched_chunk_types[0]` is the chunk_type
+//     of the highest-scoring chunk for the entity (see
+//     `_group_by_entity` in backend `search.py`).
+//   - Chat note attached to a thread: `entity_type=note`,
+//     `note_type=chat` AND `thread_id` set on the chunk.
+export const badgeFor = (r: SpotlightResult): string | null => {
+    if (r.entity_type === "chat" && r.thread_id) return "Thread";
+    if (r.entity_type === "task" && r.matched_chunk_types[0] === "task_comment") {
+        return "Comment";
+    }
+    if (r.entity_type === "note" && r.note_type === "chat" && r.thread_id) {
+        return "Thread";
+    }
+    return null;
 };
 
 // Bolds substrings of `text` that match any token built from
@@ -254,8 +282,37 @@ export const SpotlightResultItem = ({ result, query, isHighlighted, onSelect }: 
                             flexShrink: 0,
                         }}
                     >
-                        {subtitleFor(result)}
+                        {entitySubtitle(result)}
                     </Typography>
+                    {(() => {
+                        const badge = badgeFor(result);
+                        if (!badge) return null;
+                        // Small uppercase pill that turns the otherwise-
+                        // ambiguous "Direct message" / "Task" subtitle into
+                        // an obvious "this is a thread reply / task comment"
+                        // signal. Colored from the purple palette to match
+                        // the rest of the overlay's accent treatment.
+                        return (
+                            <Chip
+                                size="sm"
+                                variant="soft"
+                                color="primary"
+                                sx={{
+                                    fontSize: "0.6rem",
+                                    fontWeight: 700,
+                                    letterSpacing: "0.06em",
+                                    textTransform: "uppercase",
+                                    flexShrink: 0,
+                                    minHeight: 0,
+                                    py: "1px",
+                                    px: "6px",
+                                    "--Chip-paddingInline": "6px",
+                                }}
+                            >
+                                {badge}
+                            </Chip>
+                        );
+                    })()}
                 </Box>
                 {result.snippet && (
                     <Typography
@@ -277,16 +334,6 @@ export const SpotlightResultItem = ({ result, query, isHighlighted, onSelect }: 
                             boldColor={isDark ? DARK_TEXT_STRONG : undefined}
                         />
                     </Typography>
-                )}
-                {result.matched_chunk_types.length > 0 && (
-                    <Box sx={{ mt: 0.5, display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-                        <Typography level="body-sm">Matched in</Typography>
-                        {result.matched_chunk_types.map((ct) => (
-                            <Chip key={ct} size="sm" sx={{ fontSize: "0.75rem" }} variant="soft">
-                                {ct}
-                            </Chip>
-                        ))}
-                    </Box>
                 )}
             </Box>
         </Box>
