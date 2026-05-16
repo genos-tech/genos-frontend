@@ -435,17 +435,18 @@ export const NoteHeaderActions = ({
                                     key={m.userId}
                                     sx={{
                                         ml: idx === 0 ? 0 : "-8px",
+                                        // Leftmost avatar paints on top
+                                        // (matches the MDMAvatar reference
+                                        // pattern). `position: relative`
+                                        // is required for `z-index` to
+                                        // take effect inside a flex row.
+                                        position: "relative",
+                                        zIndex: visibleMembers.length - idx,
                                         // Crisp ring so overlapping
                                         // avatars stay readable against
                                         // the pill background.
                                         borderRadius: "50%",
                                         boxShadow: `0 0 0 2px ${isDark ? "#1a1623" : "#ffffff"}`,
-                                        // The presence dot sits at the
-                                        // bottom-right of UserAvatar's
-                                        // 17px tall absolute box, so we
-                                        // need a hair of bottom space to
-                                        // avoid the dot getting clipped
-                                        // by the pill's bottom border.
                                         lineHeight: 0,
                                     }}
                                 >
@@ -471,6 +472,12 @@ export const NoteHeaderActions = ({
                                 <Box
                                     sx={{
                                         ml: "-8px",
+                                        // Sits visually behind the last
+                                        // avatar so its left edge gets
+                                        // overlapped, consistent with the
+                                        // rest of the stack.
+                                        position: "relative",
+                                        zIndex: 0,
                                         height: 26,
                                         minWidth: 26,
                                         px: 0.75,
@@ -652,6 +659,10 @@ export const NoteHeaderActions = ({
                     noteId={activeNoteId}
                     noteTitle={activeNoteTitle}
                     myself={myself}
+                    setMyself={setMyself}
+                    socket={socket}
+                    useCM={useCM}
+                    useUISM={useUISM}
                     teamMembers={useTEM.teamMembers}
                     useNM={useNM}
                 />

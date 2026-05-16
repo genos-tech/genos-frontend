@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import PersonAddRoundedIcon from "@mui/icons-material/PersonAddRounded";
 import {
-    Avatar,
     Box,
     Button,
     Chip,
@@ -19,6 +18,9 @@ import {
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
+import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { UserProps } from "../../../../types/admin";
 import { NoteRoleMember } from "../../../../types/notes";
@@ -30,6 +32,13 @@ interface ModalNoteSharingProps {
     noteId: number;
     noteTitle: string;
     myself: UserProps;
+    // Plumbed through to `AvatarWithStatus`. The shim no longer reads
+    // these (they come from `AvatarContextProvider`), but the type still
+    // requires them so we keep the prop surface explicit.
+    setMyself: (me: UserProps) => void;
+    socket: any;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
     teamMembers: UserProps[];
     useNM: NoteManagementState;
 }
@@ -51,6 +60,10 @@ export const ModalNoteSharing = ({
     noteId,
     noteTitle,
     myself,
+    setMyself,
+    socket,
+    useCM,
+    useUISM,
     teamMembers,
     useNM,
 }: ModalNoteSharingProps) => {
@@ -189,9 +202,22 @@ export const ModalNoteSharing = ({
                                             }`,
                                         }}
                                     >
-                                        <Avatar size="sm" src={m.avatarUrl || undefined}>
-                                            {m.userName?.[0]?.toUpperCase() || "?"}
-                                        </Avatar>
+                                        <AvatarWithStatus
+                                            avatarSize={32}
+                                            avatarUser={
+                                                {
+                                                    userId: m.userId,
+                                                    userName: m.userName,
+                                                    avatarImgPath: m.avatarUrl ?? "",
+                                                } as UserProps
+                                            }
+                                            isYou={isSelf}
+                                            myself={myself}
+                                            setMyself={setMyself}
+                                            socket={socket}
+                                            useCM={useCM}
+                                            useUISM={useUISM}
+                                        />
                                         <Box
                                             sx={{
                                                 flex: 1,
@@ -327,9 +353,16 @@ export const ModalNoteSharing = ({
                                                 },
                                             }}
                                         >
-                                            <Avatar size="sm" src={u.avatarImgPath || undefined}>
-                                                {u.userName?.[0]?.toUpperCase() || "?"}
-                                            </Avatar>
+                                            <AvatarWithStatus
+                                                avatarSize={32}
+                                                avatarUser={u}
+                                                isYou={false}
+                                                myself={myself}
+                                                setMyself={setMyself}
+                                                socket={socket}
+                                                useCM={useCM}
+                                                useUISM={useUISM}
+                                            />
                                             <Box sx={{ flex: 1, minWidth: 0 }}>
                                                 <Typography
                                                     level="body-sm"
