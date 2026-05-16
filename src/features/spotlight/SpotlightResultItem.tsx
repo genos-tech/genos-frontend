@@ -249,7 +249,7 @@ export const SpotlightResultItem = ({ result, query, isHighlighted, onSelect }: 
                     background: isDark ? "rgba(124,58,237,0.12)" : "rgba(124,58,237,0.08)",
                 }}
             >
-                <Icon sx={{ fontSize: 18, opacity: 0.75 }} />
+                <Icon sx={{ fontSize: 24, opacity: 0.75 }} color="primary" />
             </Box>
 
             <Box sx={{ minWidth: 0, flex: 1 }}>
