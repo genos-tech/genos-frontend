@@ -3,6 +3,7 @@ import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { useBubbleStylePreference } from "../../../../hooks/common/useBubbleStylePreference";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -93,6 +94,8 @@ export const MessageListRenderer = ({
 
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const { style: bubbleStyle } = useBubbleStylePreference();
+    const isCompact = bubbleStyle === "compact";
 
     const renderDateSeparator = (index: number) => {
         if (
@@ -225,6 +228,7 @@ export const MessageListRenderer = ({
     return (
         <Box sx={wrapperSx}>
             <Virtuoso
+                key={bubbleStyle}
                 ref={virtuosoRef}
                 atBottomThreshold={128}
                 atTopStateChange={handleAtTop}
@@ -249,17 +253,20 @@ export const MessageListRenderer = ({
                             {dateSeparator}
                             <Stack
                                 direction="row"
-                                spacing={2}
+                                spacing={isCompact ? 0 : 2}
                                 sx={{
-                                    flexDirection: isYou ? "row-reverse" : "row",
+                                    flexDirection: isCompact
+                                        ? "row"
+                                        : isYou
+                                          ? "row-reverse"
+                                          : "row",
                                     paddingTop: paddingTop,
                                     paddingBottom: paddingBottom,
-                                    paddingX: 1,
+                                    paddingX: isCompact ? 0 : 1,
                                 }}
                             >
                                 {isThread ? (
                                     <ThreadMessageBubble
-                                        useCM={useCM}
                                         currentMessageIndex={index}
                                         isFocused={isFocused}
                                         isScrolling={isScrolling}
@@ -270,32 +277,33 @@ export const MessageListRenderer = ({
                                         setIsInEdit={setIsInEdit}
                                         setMyself={setMyself}
                                         setTargetMessageIndex={() => {}}
+                                        setTodoFromMessageBubble={setTodoFromMessageBubble}
                                         socket={socket}
-                                        useTEM={useTEM}
                                         thread={chat as ThreadProps}
+                                        useCM={useCM}
+                                        useTEM={useTEM}
                                         useUISM={useUISM}
                                         variant={isYou ? "sent" : "received"}
-                                        setTodoFromMessageBubble={setTodoFromMessageBubble}
                                     />
                                 ) : (
                                     <MessageBubble
                                         chat={chat as ChatProps}
-                                        useCM={useCM}
                                         isFocused={isFocused}
                                         isScrolling={isScrolling}
                                         isSimpleBubble={isSimpleBubble}
                                         message={message as MessageProps}
                                         myself={myself}
-                                        usePM={usePM}
                                         setEditTargetMessage={setEditTargetMessage}
                                         setIsInEdit={setIsInEdit}
                                         setMyself={setMyself}
+                                        setTodoFromMessageBubble={setTodoFromMessageBubble}
                                         socket={socket}
+                                        useCM={useCM}
+                                        usePM={usePM}
                                         useTEM={useTEM}
+                                        useTM={useTM}
                                         useUISM={useUISM}
                                         variant={isYou ? "sent" : "received"}
-                                        useTM={useTM}
-                                        setTodoFromMessageBubble={setTodoFromMessageBubble}
                                     />
                                 )}
                             </Stack>
