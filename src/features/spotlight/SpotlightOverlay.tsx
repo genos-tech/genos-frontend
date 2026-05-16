@@ -36,7 +36,7 @@ import remarkGfm from "remark-gfm";
 
 import type { AgentUsage, PendingApprovalPayload } from "../../services/agentApi";
 import { purplePalette } from "../../theme/purplePalette";
-import { SpotlightResultItem } from "./SpotlightResultItem";
+import { HighlightedText, SpotlightResultItem } from "./SpotlightResultItem";
 import type { EntityType, SpotlightResult } from "./types";
 import type { AskState, CompletedTurn, ToolEvent } from "./useSpotlight";
 
@@ -72,6 +72,14 @@ const SECTION_ORDER: { key: EntityType; label: string }[] = [
 const SCROLL_FOLLOW_THRESHOLD_PX = 50;
 // Number of citation chips shown before the "+N more" expand button.
 const CHIPS_INITIAL = 4;
+
+// Dark-mode text colors tuned for legibility against the translucent
+// purple sheet background (rgba(30,20,46,0.92)). These replace
+// opacity-based dimming, which compounds with the bg translucency to
+// produce muddy, hard-to-read text.
+const DARK_TEXT_STRONG = "#f1e8ff";
+const DARK_TEXT_MEDIUM = "#cebfeb";
+const DARK_TEXT_SOFT = "#a89bbf";
 
 export const SpotlightOverlay = ({
     isOpen,
@@ -244,10 +252,12 @@ export const SpotlightOverlay = ({
                             border: "none",
                             outline: "none",
                             background: "transparent",
-                            color: "inherit",
-                            fontSize: "1rem",
+                            color: isDark ? DARK_TEXT_STRONG : "inherit",
+                            fontSize: "1.0625rem",
                             fontFamily: "inherit",
-                            "::placeholder": { opacity: 0.6 },
+                            "::placeholder": isDark
+                                ? { color: DARK_TEXT_SOFT, opacity: 1 }
+                                : { opacity: 0.6 },
                         }}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                             handleInputChange(e.target.value)
@@ -288,16 +298,22 @@ export const SpotlightOverlay = ({
                     {/* Daily usage pill — hidden for unlimited users */}
                     {dailyUsage && !dailyUsage.is_unlimited && (
                         <Typography
-                            level="body-xs"
+                            level="body-sm"
                             sx={{
                                 whiteSpace: "nowrap",
                                 fontVariantNumeric: "tabular-nums",
                                 opacity:
-                                    dailyUsage.used >= (dailyUsage.limit ?? Infinity) ? 1 : 0.65,
+                                    dailyUsage.used >= (dailyUsage.limit ?? Infinity)
+                                        ? 1
+                                        : isDark
+                                          ? 1
+                                          : 0.65,
                                 color:
                                     dailyUsage.used >= (dailyUsage.limit ?? Infinity)
                                         ? "warning.500"
-                                        : undefined,
+                                        : isDark
+                                          ? DARK_TEXT_MEDIUM
+                                          : undefined,
                             }}
                         >
                             {dailyUsage.used} / {dailyUsage.limit} asks today
@@ -309,7 +325,7 @@ export const SpotlightOverlay = ({
                             variant="plain"
                             color="danger"
                             onClick={onCancel}
-                            sx={{ fontSize: "0.8rem", whiteSpace: "nowrap" }}
+                            sx={{ fontSize: "0.875rem", whiteSpace: "nowrap" }}
                         >
                             Cancel
                         </Button>
@@ -356,7 +372,10 @@ export const SpotlightOverlay = ({
                     }}
                 >
                     {!hasQuery && (
-                        <EmptyHint text="Start typing to search across chats, tasks, and notes." />
+                        <EmptyHint
+                            text="Start typing to search across chats, tasks, and notes."
+                            isDark={isDark}
+                        />
                     )}
 
                     {hasQuery && isLoading && !hasResults && (
@@ -370,16 +389,25 @@ export const SpotlightOverlay = ({
                             }}
                         >
                             <CircularProgress size="sm" />
-                            <Typography level="body-sm" sx={{ opacity: 0.75 }}>
+                            <Typography
+                                level="body-md"
+                                sx={{
+                                    opacity: isDark ? 1 : 0.75,
+                                    color: isDark ? DARK_TEXT_MEDIUM : undefined,
+                                }}
+                            >
                                 Searching…
                             </Typography>
                         </Box>
                     )}
 
-                    {hasQuery && error && <EmptyHint text={error} tone="error" />}
+                    {hasQuery && error && <EmptyHint text={error} tone="error" isDark={isDark} />}
 
                     {hasQuery && !isLoading && !error && !hasResults && (
-                        <EmptyHint text="No matches yet — try different keywords." />
+                        <EmptyHint
+                            text="No matches yet — try different keywords."
+                            isDark={isDark}
+                        />
                     )}
 
                     {hasResults &&
@@ -389,12 +417,13 @@ export const SpotlightOverlay = ({
                             return (
                                 <Box key={key} sx={{ mb: 1.25 }}>
                                     <Typography
-                                        level="body-xs"
+                                        level="body-sm"
                                         sx={{
                                             px: 1.5,
                                             pt: 0.5,
                                             pb: 0.25,
-                                            opacity: 0.7,
+                                            opacity: isDark ? 1 : 0.7,
+                                            color: isDark ? DARK_TEXT_MEDIUM : undefined,
                                             fontWeight: 600,
                                             textTransform: "uppercase",
                                             letterSpacing: "0.04em",
@@ -413,6 +442,7 @@ export const SpotlightOverlay = ({
                                             <SpotlightResultItem
                                                 key={`${r.entity_type}:${r.entity_id}`}
                                                 result={r}
+                                                query={query}
                                                 isHighlighted={
                                                     flatIndexOf.get(
                                                         `${r.entity_type}:${r.entity_id}`
@@ -434,13 +464,13 @@ export const SpotlightOverlay = ({
     );
 };
 
-const EmptyHint = ({ text, tone }: { text: string; tone?: "error" }) => (
+const EmptyHint = ({ text, tone, isDark }: { text: string; tone?: "error"; isDark?: boolean }) => (
     <Box sx={{ px: 1.5, py: 1.25 }}>
         <Typography
-            level="body-sm"
+            level="body-md"
             sx={{
-                opacity: tone === "error" ? 0.95 : 0.72,
-                color: tone === "error" ? "danger.500" : undefined,
+                opacity: tone === "error" ? 0.95 : isDark ? 1 : 0.72,
+                color: tone === "error" ? "danger.500" : isDark ? DARK_TEXT_MEDIUM : undefined,
             }}
         >
             {text}
@@ -568,7 +598,13 @@ const ConversationPanel = memo(
                 >
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                         <AutoAwesomeRoundedIcon sx={{ fontSize: 16, opacity: 0.65 }} />
-                        <Typography level="body-sm" sx={{ opacity: 0.75 }}>
+                        <Typography
+                            level="body-md"
+                            sx={{
+                                opacity: isDark ? 1 : 0.75,
+                                color: isDark ? DARK_TEXT_MEDIUM : undefined,
+                            }}
+                        >
                             Press Enter or click Ask for an AI-generated answer.
                         </Typography>
                     </Box>
@@ -610,8 +646,13 @@ const ConversationPanel = memo(
                             sx={{ fontSize: 16, opacity: 0.7, color: "primary.500" }}
                         />
                         <Typography
-                            level="body-xs"
-                            sx={{ opacity: 0.85, fontWeight: 600, textTransform: "uppercase" }}
+                            level="body-sm"
+                            sx={{
+                                opacity: isDark ? 1 : 0.85,
+                                color: isDark ? DARK_TEXT_STRONG : undefined,
+                                fontWeight: 600,
+                                textTransform: "uppercase",
+                            }}
                         >
                             AI conversation
                             {turns.length > 0
@@ -625,7 +666,7 @@ const ConversationPanel = memo(
                                     variant="solid"
                                     color="neutral"
                                     onClick={onNewConversation}
-                                    sx={{ fontSize: "0.8rem", opacity: 0.75, py: 0 }}
+                                    sx={{ fontSize: "0.875rem", opacity: 0.75, py: 0 }}
                                 >
                                     New conversation
                                 </Button>
@@ -744,7 +785,7 @@ const TurnView = ({
                 display: "flex",
                 flexDirection: "column",
                 gap: 0.5,
-                opacity: isCurrent ? 1 : 0.92,
+                opacity: isCurrent ? 1 : isDark ? 1 : 0.92,
                 // Reveal action buttons on hover; always visible on touch devices.
                 "& .turn-actions": { opacity: 0, transition: "opacity 0.15s" },
                 "&:hover .turn-actions": { opacity: 1 },
@@ -757,23 +798,31 @@ const TurnView = ({
                         display: "flex",
                         alignItems: "flex-start",
                         gap: 0.75,
-                        opacity: 0.88,
+                        opacity: isDark ? 1 : 0.88,
                     }}
                 >
                     <Typography
-                        level="body-xs"
+                        level="body-sm"
                         sx={{
                             fontWeight: 700,
                             textTransform: "uppercase",
                             letterSpacing: "0.04em",
-                            opacity: 0.7,
+                            opacity: isDark ? 1 : 0.7,
+                            color: isDark ? DARK_TEXT_MEDIUM : undefined,
                             minWidth: 18,
                             mt: "2px",
                         }}
                     >
                         Q
                     </Typography>
-                    <Typography level="body-sm" sx={{ fontWeight: 500, whiteSpace: "pre-wrap" }}>
+                    <Typography
+                        level="body-md"
+                        sx={{
+                            fontWeight: 500,
+                            whiteSpace: "pre-wrap",
+                            color: isDark ? DARK_TEXT_STRONG : undefined,
+                        }}
+                    >
                         {askedQuery}
                     </Typography>
                 </Box>
@@ -781,12 +830,12 @@ const TurnView = ({
 
             <Box sx={{ display: "flex", alignItems: "flex-start", gap: 0.75 }}>
                 <Typography
-                    level="body-xs"
+                    level="body-sm"
                     sx={{
                         fontWeight: 700,
                         textTransform: "uppercase",
                         letterSpacing: "0.04em",
-                        opacity: 0.75,
+                        opacity: isDark ? 1 : 0.75,
                         minWidth: 18,
                         mt: "2px",
                         color: "primary.500",
@@ -801,14 +850,20 @@ const TurnView = ({
                                 size="sm"
                                 sx={{ "--CircularProgress-size": "12px" }}
                             />
-                            <Typography level="body-xs" sx={{ opacity: 0.75 }}>
+                            <Typography
+                                level="body-sm"
+                                sx={{
+                                    opacity: isDark ? 1 : 0.75,
+                                    color: isDark ? DARK_TEXT_MEDIUM : undefined,
+                                }}
+                            >
                                 streaming…
                             </Typography>
                         </Box>
                     )}
                     {isCurrent && pendingApproval && (
                         <Typography
-                            level="body-xs"
+                            level="body-sm"
                             sx={{
                                 opacity: 0.85,
                                 color: "warning.500",
@@ -834,7 +889,7 @@ const TurnView = ({
                     )}
 
                     {askError && (
-                        <Typography level="body-sm" sx={{ color: "danger.500", mb: 0.5 }}>
+                        <Typography level="body-md" sx={{ color: "danger.500", mb: 0.5 }}>
                             {askError}
                         </Typography>
                     )}
@@ -843,7 +898,8 @@ const TurnView = ({
                         <Box
                             sx={{
                                 lineHeight: 1.65,
-                                fontSize: "0.9375rem",
+                                fontSize: "1rem",
+                                color: isDark ? DARK_TEXT_STRONG : undefined,
                                 mb: answerSources.length > 0 ? 0.75 : 0,
                                 // paragraphs — reset default browser margins
                                 "& p": { m: 0, mb: 0.75 },
@@ -857,7 +913,7 @@ const TurnView = ({
                                     borderRadius: "6px",
                                     p: 1,
                                     my: 0.75,
-                                    fontSize: "0.825rem",
+                                    fontSize: "0.875rem",
                                     background: isDark
                                         ? "rgba(255,255,255,0.06)"
                                         : "rgba(0,0,0,0.04)",
@@ -899,7 +955,7 @@ const TurnView = ({
                                 "& table": {
                                     borderCollapse: "collapse",
                                     width: "100%",
-                                    fontSize: "0.875rem",
+                                    fontSize: "0.9375rem",
                                     my: 0.75,
                                 },
                                 "& th, & td": {
@@ -927,7 +983,13 @@ const TurnView = ({
                     )}
 
                     {showThinking && (
-                        <Typography level="body-sm" sx={{ opacity: 0.75 }}>
+                        <Typography
+                            level="body-md"
+                            sx={{
+                                opacity: isDark ? 1 : 0.75,
+                                color: isDark ? DARK_TEXT_MEDIUM : undefined,
+                            }}
+                        >
                             Thinking…
                         </Typography>
                     )}
@@ -957,7 +1019,7 @@ const TurnView = ({
                                             startDecorator={_sourceIcon(s.entity_type)}
                                             sx={{
                                                 cursor: "pointer",
-                                                fontSize: "0.78rem",
+                                                fontSize: "0.875rem",
                                                 maxWidth: "min(340px, 80vw)",
                                                 overflow: "hidden",
                                                 whiteSpace: "nowrap",
@@ -971,7 +1033,11 @@ const TurnView = ({
                                             }}
                                             onClick={() => onSelect(s)}
                                         >
-                                            {_chipLabel(s)}
+                                            <HighlightedText
+                                                text={_chipLabel(s)}
+                                                query={askedQuery}
+                                                extraTerms={s.matched_terms}
+                                            />
                                         </Chip>
                                     ))}
                                     {!showAllSources && hiddenCount > 0 && (
@@ -984,7 +1050,7 @@ const TurnView = ({
                                                 minHeight: 0,
                                                 py: 0,
                                                 px: 0.5,
-                                                fontSize: "0.78rem",
+                                                fontSize: "0.875rem",
                                             }}
                                         >
                                             +{hiddenCount} more
@@ -1000,7 +1066,7 @@ const TurnView = ({
                                                 minHeight: 0,
                                                 py: 0,
                                                 px: 0.5,
-                                                fontSize: "0.78rem",
+                                                fontSize: "0.875rem",
                                                 opacity: 0.65,
                                             }}
                                         >
@@ -1083,13 +1149,13 @@ const ToolProgressList = ({ events, isDark }: ToolProgressListProps) => {
             }}
         >
             {events.map((e) => (
-                <ToolProgressRow key={`${e.step}:${e.tool_name}`} event={e} />
+                <ToolProgressRow key={`${e.step}:${e.tool_name}`} event={e} isDark={isDark} />
             ))}
         </Box>
     );
 };
 
-const ToolProgressRow = ({ event }: { event: ToolEvent }) => {
+const ToolProgressRow = ({ event, isDark }: { event: ToolEvent; isDark: boolean }) => {
     const isPending = event.status === "pending";
     const isError = event.status === "error";
 
@@ -1103,7 +1169,7 @@ const ToolProgressRow = ({ event }: { event: ToolEvent }) => {
                 gap: 0.75,
                 pl: 1,
                 py: 0.25,
-                fontSize: "0.875rem",
+                fontSize: "0.9375rem",
             }}
         >
             {isPending && (
@@ -1126,10 +1192,16 @@ const ToolProgressRow = ({ event }: { event: ToolEvent }) => {
                 </Box>
             )}
             <Typography
-                level="body-xs"
+                level="body-sm"
                 sx={{
-                    opacity: isPending ? 0.8 : 1,
-                    color: isError ? "danger.500" : undefined,
+                    opacity: isPending ? (isDark ? 1 : 0.8) : 1,
+                    color: isError
+                        ? "danger.500"
+                        : isDark
+                          ? isPending
+                              ? DARK_TEXT_MEDIUM
+                              : DARK_TEXT_STRONG
+                          : undefined,
                 }}
             >
                 {isError ? `${event.tool_name}: ${event.error}` : label}
@@ -1224,7 +1296,7 @@ const ApprovalCard = ({ pending, isDark, onApprove, onReject }: ApprovalCardProp
             }}
         >
             <Typography
-                level="body-xs"
+                level="body-sm"
                 sx={{
                     fontWeight: 700,
                     textTransform: "uppercase",
@@ -1242,7 +1314,7 @@ const ApprovalCard = ({ pending, isDark, onApprove, onReject }: ApprovalCardProp
                         flexDirection: "column",
                         gap: 0.15,
                         mb: 0.75,
-                        fontSize: "0.875rem",
+                        fontSize: "0.9375rem",
                         fontFamily: "monospace",
                         opacity: 0.9,
                     }}
@@ -1265,7 +1337,7 @@ const ApprovalCard = ({ pending, isDark, onApprove, onReject }: ApprovalCardProp
                     color="success"
                     variant="solid"
                     onClick={onApprove}
-                    sx={{ fontSize: "0.875rem" }}
+                    sx={{ fontSize: "0.9375rem" }}
                 >
                     Approve
                 </Button>
@@ -1274,7 +1346,7 @@ const ApprovalCard = ({ pending, isDark, onApprove, onReject }: ApprovalCardProp
                     color="neutral"
                     variant="outlined"
                     onClick={onReject}
-                    sx={{ fontSize: "0.875rem" }}
+                    sx={{ fontSize: "0.9375rem" }}
                 >
                     Reject
                 </Button>

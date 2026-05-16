@@ -17,6 +17,11 @@ export interface SpotlightResult {
     keyword_rank: number | null;
     vector_rank: number | null;
     matched_chunk_types: string[]; // e.g. ["chat_message", "chat_thread_window"]
+    // Analyzer-aware tokens (incl. stemmed/synonym forms) extracted from
+    // the OpenSearch highlight response. Empty for vector-only hits.
+    // The frontend merges these with the literal query tokens when
+    // bolding matches.
+    matched_terms: string[];
     updated_at: string | null;
 
     // Chat-specific (present when entity_type === "chat")
