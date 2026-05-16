@@ -29,15 +29,29 @@ import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
-import { Box, Button, Chip, CircularProgress, IconButton, Sheet, Typography } from "@mui/joy";
+import {
+    Box,
+    Button,
+    Chip,
+    CircularProgress,
+    IconButton,
+    Sheet,
+    Tooltip,
+    Typography,
+} from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import type { AgentUsage, PendingApprovalPayload } from "../../services/agentApi";
 import { purplePalette } from "../../theme/purplePalette";
-import { SpotlightResultItem } from "./SpotlightResultItem";
-import type { EntityType, SpotlightResult } from "./types";
+import {
+    badgeFor,
+    entitySubtitle,
+    HighlightedText,
+    SpotlightResultItem,
+} from "./SpotlightResultItem";
+import type { SpotlightResult } from "./types";
 import type { AskState, CompletedTurn, ToolEvent } from "./useSpotlight";
 
 interface Props {
@@ -57,13 +71,11 @@ interface Props {
     ask: AskState;
     turns: CompletedTurn[];
     dailyUsage: AgentUsage | null;
+    // From Settings → Spotlight → AI answers. When false, the Ask
+    // button and Enter shortcut are disabled with an explanatory
+    // tooltip and Spotlight stays a pure search overlay.
+    aiAnswersEnabled: boolean;
 }
-
-const SECTION_ORDER: { key: EntityType; label: string }[] = [
-    { key: "chat", label: "Chats" },
-    { key: "task", label: "Tasks" },
-    { key: "note", label: "Notes" },
-];
 
 // Distance from the bottom (px) under which we consider the user
 // "at the bottom" of the conversation. Streaming auto-scroll only
@@ -72,6 +84,14 @@ const SECTION_ORDER: { key: EntityType; label: string }[] = [
 const SCROLL_FOLLOW_THRESHOLD_PX = 50;
 // Number of citation chips shown before the "+N more" expand button.
 const CHIPS_INITIAL = 4;
+
+// Dark-mode text colors tuned for legibility against the translucent
+// purple sheet background (rgba(30,20,46,0.92)). These replace
+// opacity-based dimming, which compounds with the bg translucency to
+// produce muddy, hard-to-read text.
+const DARK_TEXT_STRONG = "#f1e8ff";
+const DARK_TEXT_MEDIUM = "#cebfeb";
+const DARK_TEXT_SOFT = "#a89bbf";
 
 export const SpotlightOverlay = ({
     isOpen,
@@ -90,6 +110,7 @@ export const SpotlightOverlay = ({
     ask,
     turns,
     dailyUsage,
+    aiAnswersEnabled,
 }: Props) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -103,31 +124,20 @@ export const SpotlightOverlay = ({
         return () => window.clearTimeout(t);
     }, [isOpen]);
 
-    const grouped = useMemo(() => {
-        const byType: Record<EntityType, SpotlightResult[]> = {
-            chat: [],
-            task: [],
-            note: [],
-        };
-        for (const r of results) {
-            if (byType[r.entity_type]) byType[r.entity_type].push(r);
-        }
-        return byType;
-    }, [results]);
-
-    // Flat list in display order (chat → task → note) used for arrow-key
-    // navigation and the highlighted-index → onSelect mapping.
-    const flatResults = useMemo(
-        () => SECTION_ORDER.flatMap(({ key }) => grouped[key] ?? []),
-        [grouped]
-    );
-    // Map from "type:id" → flat index so each SpotlightResultItem can
-    // receive isHighlighted without searching the array on every render.
-    const flatIndexOf = useMemo(() => {
+    // Results are rendered in the order the backend returned them —
+    // i.e. by relevance score, regardless of entity type. The icon and
+    // subtitle on each row make the entity kind obvious, so the
+    // user-side cost of mixing chats/tasks/notes is low and the win is
+    // getting the most-relevant hit at the top.
+    //
+    // `resultIndexOf` maps "type:id" → position so each
+    // SpotlightResultItem can compute `isHighlighted` without scanning
+    // the array on every render.
+    const resultIndexOf = useMemo(() => {
         const m = new Map<string, number>();
-        flatResults.forEach((r, i) => m.set(`${r.entity_type}:${r.entity_id}`, i));
+        results.forEach((r, i) => m.set(`${r.entity_type}:${r.entity_id}`, i));
         return m;
-    }, [flatResults]);
+    }, [results]);
 
     // ---- Input performance: decouple display state from search state. ----
     //
@@ -166,7 +176,10 @@ export const SpotlightOverlay = ({
         setSelectedIndex(-1);
     }, [localInput]);
 
-    const askDisabled = ask.isStreaming || ask.pendingApproval !== null;
+    // Three reasons Ask can be disabled — kept as separate flags so the
+    // placeholder/tooltip can explain *why* without re-deriving them.
+    const askBusy = ask.isStreaming || ask.pendingApproval !== null;
+    const askDisabled = askBusy || !aiAnswersEnabled;
     // Show "Follow up" when there is at least one completed turn or the
     // current session is active — i.e., the user is mid-conversation.
     const hasConversation = turns.length > 0 || Boolean(ask.sessionId);
@@ -234,9 +247,11 @@ export const SpotlightOverlay = ({
                         ref={inputRef}
                         component="input"
                         placeholder={
-                            askDisabled
+                            askBusy
                                 ? "Wait for the current answer to finish…"
-                                : "Search chats, tasks, notes — press Enter to ask AI"
+                                : !aiAnswersEnabled
+                                  ? "Search chats, tasks, notes (AI answers off)"
+                                  : "Search chats, tasks, notes — press Enter to ask AI"
                         }
                         value={localInput}
                         sx={{
@@ -244,21 +259,21 @@ export const SpotlightOverlay = ({
                             border: "none",
                             outline: "none",
                             background: "transparent",
-                            color: "inherit",
-                            fontSize: "1rem",
+                            color: isDark ? DARK_TEXT_STRONG : "inherit",
+                            fontSize: "1.0625rem",
                             fontFamily: "inherit",
-                            "::placeholder": { opacity: 0.6 },
+                            "::placeholder": isDark
+                                ? { color: DARK_TEXT_SOFT, opacity: 1 }
+                                : { opacity: 0.6 },
                         }}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                             handleInputChange(e.target.value)
                         }
                         onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                             if (e.key === "ArrowDown") {
-                                if (flatResults.length === 0) return;
+                                if (results.length === 0) return;
                                 e.preventDefault();
-                                setSelectedIndex((prev) =>
-                                    Math.min(prev + 1, flatResults.length - 1)
-                                );
+                                setSelectedIndex((prev) => Math.min(prev + 1, results.length - 1));
                                 return;
                             }
                             if (e.key === "ArrowUp") {
@@ -270,8 +285,8 @@ export const SpotlightOverlay = ({
                                 e.preventDefault();
                                 // If a result row is highlighted, navigate to
                                 // it rather than firing the AI ask.
-                                if (selectedIndex >= 0 && flatResults[selectedIndex]) {
-                                    onSelect(flatResults[selectedIndex]);
+                                if (selectedIndex >= 0 && results[selectedIndex]) {
+                                    onSelect(results[selectedIndex]);
                                     setSelectedIndex(-1);
                                     return;
                                 }
@@ -288,16 +303,22 @@ export const SpotlightOverlay = ({
                     {/* Daily usage pill — hidden for unlimited users */}
                     {dailyUsage && !dailyUsage.is_unlimited && (
                         <Typography
-                            level="body-xs"
+                            level="body-sm"
                             sx={{
                                 whiteSpace: "nowrap",
                                 fontVariantNumeric: "tabular-nums",
                                 opacity:
-                                    dailyUsage.used >= (dailyUsage.limit ?? Infinity) ? 1 : 0.65,
+                                    dailyUsage.used >= (dailyUsage.limit ?? Infinity)
+                                        ? 1
+                                        : isDark
+                                          ? 1
+                                          : 0.65,
                                 color:
                                     dailyUsage.used >= (dailyUsage.limit ?? Infinity)
                                         ? "warning.500"
-                                        : undefined,
+                                        : isDark
+                                          ? DARK_TEXT_MEDIUM
+                                          : undefined,
                             }}
                         >
                             {dailyUsage.used} / {dailyUsage.limit} asks today
@@ -309,21 +330,34 @@ export const SpotlightOverlay = ({
                             variant="plain"
                             color="danger"
                             onClick={onCancel}
-                            sx={{ fontSize: "0.8rem", whiteSpace: "nowrap" }}
+                            sx={{ fontSize: "0.875rem", whiteSpace: "nowrap" }}
                         >
                             Cancel
                         </Button>
                     )}
-                    <Button
-                        color="primary"
-                        disabled={!hasQuery || askDisabled}
+                    <Tooltip
+                        title={!aiAnswersEnabled ? "Enable AI answers in Settings" : ""}
+                        // Empty title disables the tooltip in MUI Joy.
+                        placement="bottom"
                         size="sm"
-                        startDecorator={<AutoAwesomeRoundedIcon sx={{ fontSize: 16 }} />}
-                        variant="solid"
-                        onClick={() => onAsk()}
+                        variant="outlined"
                     >
-                        Ask
-                    </Button>
+                        {/* Span wrapper lets the tooltip fire over a
+                            disabled button (pointer events on a disabled
+                            <button> are suppressed in Chromium). */}
+                        <Box component="span" sx={{ display: "inline-flex" }}>
+                            <Button
+                                color="primary"
+                                disabled={!hasQuery || askDisabled}
+                                size="sm"
+                                startDecorator={<AutoAwesomeRoundedIcon sx={{ fontSize: 16 }} />}
+                                variant="solid"
+                                onClick={() => onAsk()}
+                            >
+                                Ask
+                            </Button>
+                        </Box>
+                    </Tooltip>
                 </Box>
 
                 {/* Conversation history + current in-flight turn.
@@ -356,7 +390,10 @@ export const SpotlightOverlay = ({
                     }}
                 >
                     {!hasQuery && (
-                        <EmptyHint text="Start typing to search across chats, tasks, and notes." />
+                        <EmptyHint
+                            text="Start typing to search across chats, tasks, and notes."
+                            isDark={isDark}
+                        />
                     )}
 
                     {hasQuery && isLoading && !hasResults && (
@@ -370,77 +407,65 @@ export const SpotlightOverlay = ({
                             }}
                         >
                             <CircularProgress size="sm" />
-                            <Typography level="body-sm" sx={{ opacity: 0.75 }}>
+                            <Typography
+                                level="body-md"
+                                sx={{
+                                    opacity: isDark ? 1 : 0.75,
+                                    color: isDark ? DARK_TEXT_MEDIUM : undefined,
+                                }}
+                            >
                                 Searching…
                             </Typography>
                         </Box>
                     )}
 
-                    {hasQuery && error && <EmptyHint text={error} tone="error" />}
+                    {hasQuery && error && <EmptyHint text={error} tone="error" isDark={isDark} />}
 
                     {hasQuery && !isLoading && !error && !hasResults && (
-                        <EmptyHint text="No matches yet — try different keywords." />
+                        <EmptyHint
+                            text="No matches yet — try different keywords."
+                            isDark={isDark}
+                        />
                     )}
 
-                    {hasResults &&
-                        SECTION_ORDER.map(({ key, label }) => {
-                            const section = grouped[key];
-                            if (!section || section.length === 0) return null;
-                            return (
-                                <Box key={key} sx={{ mb: 1.25 }}>
-                                    <Typography
-                                        level="body-xs"
-                                        sx={{
-                                            px: 1.5,
-                                            pt: 0.5,
-                                            pb: 0.25,
-                                            opacity: 0.7,
-                                            fontWeight: 600,
-                                            textTransform: "uppercase",
-                                            letterSpacing: "0.04em",
-                                        }}
-                                    >
-                                        {label} ({section.length})
-                                    </Typography>
-                                    <Box
-                                        sx={{
-                                            display: "flex",
-                                            flexDirection: "column",
-                                            gap: 0.25,
-                                        }}
-                                    >
-                                        {section.map((r) => (
-                                            <SpotlightResultItem
-                                                key={`${r.entity_type}:${r.entity_id}`}
-                                                result={r}
-                                                isHighlighted={
-                                                    flatIndexOf.get(
-                                                        `${r.entity_type}:${r.entity_id}`
-                                                    ) === selectedIndex
-                                                }
-                                                onSelect={(selected) => {
-                                                    setSelectedIndex(-1);
-                                                    onSelect(selected);
-                                                }}
-                                            />
-                                        ))}
-                                    </Box>
-                                </Box>
-                            );
-                        })}
+                    {hasResults && (
+                        <Box
+                            sx={{
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: 0.25,
+                            }}
+                        >
+                            {results.map((r) => (
+                                <SpotlightResultItem
+                                    key={`${r.entity_type}:${r.entity_id}`}
+                                    result={r}
+                                    query={query}
+                                    isHighlighted={
+                                        resultIndexOf.get(`${r.entity_type}:${r.entity_id}`) ===
+                                        selectedIndex
+                                    }
+                                    onSelect={(selected) => {
+                                        setSelectedIndex(-1);
+                                        onSelect(selected);
+                                    }}
+                                />
+                            ))}
+                        </Box>
+                    )}
                 </Box>
             </Sheet>
         </Box>
     );
 };
 
-const EmptyHint = ({ text, tone }: { text: string; tone?: "error" }) => (
+const EmptyHint = ({ text, tone, isDark }: { text: string; tone?: "error"; isDark?: boolean }) => (
     <Box sx={{ px: 1.5, py: 1.25 }}>
         <Typography
-            level="body-sm"
+            level="body-md"
             sx={{
-                opacity: tone === "error" ? 0.95 : 0.72,
-                color: tone === "error" ? "danger.500" : undefined,
+                opacity: tone === "error" ? 0.95 : isDark ? 1 : 0.72,
+                color: tone === "error" ? "danger.500" : isDark ? DARK_TEXT_MEDIUM : undefined,
             }}
         >
             {text}
@@ -568,7 +593,13 @@ const ConversationPanel = memo(
                 >
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                         <AutoAwesomeRoundedIcon sx={{ fontSize: 16, opacity: 0.65 }} />
-                        <Typography level="body-sm" sx={{ opacity: 0.75 }}>
+                        <Typography
+                            level="body-md"
+                            sx={{
+                                opacity: isDark ? 1 : 0.75,
+                                color: isDark ? DARK_TEXT_MEDIUM : undefined,
+                            }}
+                        >
                             Press Enter or click Ask for an AI-generated answer.
                         </Typography>
                     </Box>
@@ -610,8 +641,13 @@ const ConversationPanel = memo(
                             sx={{ fontSize: 16, opacity: 0.7, color: "primary.500" }}
                         />
                         <Typography
-                            level="body-xs"
-                            sx={{ opacity: 0.85, fontWeight: 600, textTransform: "uppercase" }}
+                            level="body-sm"
+                            sx={{
+                                opacity: isDark ? 1 : 0.85,
+                                color: isDark ? DARK_TEXT_STRONG : undefined,
+                                fontWeight: 600,
+                                textTransform: "uppercase",
+                            }}
                         >
                             AI conversation
                             {turns.length > 0
@@ -625,7 +661,7 @@ const ConversationPanel = memo(
                                     variant="solid"
                                     color="neutral"
                                     onClick={onNewConversation}
-                                    sx={{ fontSize: "0.8rem", opacity: 0.75, py: 0 }}
+                                    sx={{ fontSize: "0.875rem", opacity: 0.75, py: 0 }}
                                 >
                                     New conversation
                                 </Button>
@@ -744,7 +780,7 @@ const TurnView = ({
                 display: "flex",
                 flexDirection: "column",
                 gap: 0.5,
-                opacity: isCurrent ? 1 : 0.92,
+                opacity: isCurrent ? 1 : isDark ? 1 : 0.92,
                 // Reveal action buttons on hover; always visible on touch devices.
                 "& .turn-actions": { opacity: 0, transition: "opacity 0.15s" },
                 "&:hover .turn-actions": { opacity: 1 },
@@ -757,23 +793,31 @@ const TurnView = ({
                         display: "flex",
                         alignItems: "flex-start",
                         gap: 0.75,
-                        opacity: 0.88,
+                        opacity: isDark ? 1 : 0.88,
                     }}
                 >
                     <Typography
-                        level="body-xs"
+                        level="body-sm"
                         sx={{
                             fontWeight: 700,
                             textTransform: "uppercase",
                             letterSpacing: "0.04em",
-                            opacity: 0.7,
+                            opacity: isDark ? 1 : 0.7,
+                            color: isDark ? DARK_TEXT_MEDIUM : undefined,
                             minWidth: 18,
                             mt: "2px",
                         }}
                     >
                         Q
                     </Typography>
-                    <Typography level="body-sm" sx={{ fontWeight: 500, whiteSpace: "pre-wrap" }}>
+                    <Typography
+                        level="body-md"
+                        sx={{
+                            fontWeight: 500,
+                            whiteSpace: "pre-wrap",
+                            color: isDark ? DARK_TEXT_STRONG : undefined,
+                        }}
+                    >
                         {askedQuery}
                     </Typography>
                 </Box>
@@ -781,12 +825,12 @@ const TurnView = ({
 
             <Box sx={{ display: "flex", alignItems: "flex-start", gap: 0.75 }}>
                 <Typography
-                    level="body-xs"
+                    level="body-sm"
                     sx={{
                         fontWeight: 700,
                         textTransform: "uppercase",
                         letterSpacing: "0.04em",
-                        opacity: 0.75,
+                        opacity: isDark ? 1 : 0.75,
                         minWidth: 18,
                         mt: "2px",
                         color: "primary.500",
@@ -801,14 +845,20 @@ const TurnView = ({
                                 size="sm"
                                 sx={{ "--CircularProgress-size": "12px" }}
                             />
-                            <Typography level="body-xs" sx={{ opacity: 0.75 }}>
+                            <Typography
+                                level="body-sm"
+                                sx={{
+                                    opacity: isDark ? 1 : 0.75,
+                                    color: isDark ? DARK_TEXT_MEDIUM : undefined,
+                                }}
+                            >
                                 streaming…
                             </Typography>
                         </Box>
                     )}
                     {isCurrent && pendingApproval && (
                         <Typography
-                            level="body-xs"
+                            level="body-sm"
                             sx={{
                                 opacity: 0.85,
                                 color: "warning.500",
@@ -834,7 +884,7 @@ const TurnView = ({
                     )}
 
                     {askError && (
-                        <Typography level="body-sm" sx={{ color: "danger.500", mb: 0.5 }}>
+                        <Typography level="body-md" sx={{ color: "danger.500", mb: 0.5 }}>
                             {askError}
                         </Typography>
                     )}
@@ -843,7 +893,8 @@ const TurnView = ({
                         <Box
                             sx={{
                                 lineHeight: 1.65,
-                                fontSize: "0.9375rem",
+                                fontSize: "1rem",
+                                color: isDark ? DARK_TEXT_STRONG : undefined,
                                 mb: answerSources.length > 0 ? 0.75 : 0,
                                 // paragraphs — reset default browser margins
                                 "& p": { m: 0, mb: 0.75 },
@@ -857,7 +908,7 @@ const TurnView = ({
                                     borderRadius: "6px",
                                     p: 1,
                                     my: 0.75,
-                                    fontSize: "0.825rem",
+                                    fontSize: "0.875rem",
                                     background: isDark
                                         ? "rgba(255,255,255,0.06)"
                                         : "rgba(0,0,0,0.04)",
@@ -899,7 +950,7 @@ const TurnView = ({
                                 "& table": {
                                     borderCollapse: "collapse",
                                     width: "100%",
-                                    fontSize: "0.875rem",
+                                    fontSize: "0.9375rem",
                                     my: 0.75,
                                 },
                                 "& th, & td": {
@@ -927,7 +978,13 @@ const TurnView = ({
                     )}
 
                     {showThinking && (
-                        <Typography level="body-sm" sx={{ opacity: 0.75 }}>
+                        <Typography
+                            level="body-md"
+                            sx={{
+                                opacity: isDark ? 1 : 0.75,
+                                color: isDark ? DARK_TEXT_MEDIUM : undefined,
+                            }}
+                        >
                             Thinking…
                         </Typography>
                     )}
@@ -957,7 +1014,7 @@ const TurnView = ({
                                             startDecorator={_sourceIcon(s.entity_type)}
                                             sx={{
                                                 cursor: "pointer",
-                                                fontSize: "0.78rem",
+                                                fontSize: "0.875rem",
                                                 maxWidth: "min(340px, 80vw)",
                                                 overflow: "hidden",
                                                 whiteSpace: "nowrap",
@@ -971,7 +1028,11 @@ const TurnView = ({
                                             }}
                                             onClick={() => onSelect(s)}
                                         >
-                                            {_chipLabel(s)}
+                                            <HighlightedText
+                                                text={_chipLabel(s)}
+                                                query={askedQuery}
+                                                extraTerms={s.matched_terms}
+                                            />
                                         </Chip>
                                     ))}
                                     {!showAllSources && hiddenCount > 0 && (
@@ -984,7 +1045,7 @@ const TurnView = ({
                                                 minHeight: 0,
                                                 py: 0,
                                                 px: 0.5,
-                                                fontSize: "0.78rem",
+                                                fontSize: "0.875rem",
                                             }}
                                         >
                                             +{hiddenCount} more
@@ -1000,7 +1061,7 @@ const TurnView = ({
                                                 minHeight: 0,
                                                 py: 0,
                                                 px: 0.5,
-                                                fontSize: "0.78rem",
+                                                fontSize: "0.875rem",
                                                 opacity: 0.65,
                                             }}
                                         >
@@ -1083,13 +1144,13 @@ const ToolProgressList = ({ events, isDark }: ToolProgressListProps) => {
             }}
         >
             {events.map((e) => (
-                <ToolProgressRow key={`${e.step}:${e.tool_name}`} event={e} />
+                <ToolProgressRow key={`${e.step}:${e.tool_name}`} event={e} isDark={isDark} />
             ))}
         </Box>
     );
 };
 
-const ToolProgressRow = ({ event }: { event: ToolEvent }) => {
+const ToolProgressRow = ({ event, isDark }: { event: ToolEvent; isDark: boolean }) => {
     const isPending = event.status === "pending";
     const isError = event.status === "error";
 
@@ -1103,7 +1164,7 @@ const ToolProgressRow = ({ event }: { event: ToolEvent }) => {
                 gap: 0.75,
                 pl: 1,
                 py: 0.25,
-                fontSize: "0.875rem",
+                fontSize: "0.9375rem",
             }}
         >
             {isPending && (
@@ -1126,10 +1187,16 @@ const ToolProgressRow = ({ event }: { event: ToolEvent }) => {
                 </Box>
             )}
             <Typography
-                level="body-xs"
+                level="body-sm"
                 sx={{
-                    opacity: isPending ? 0.8 : 1,
-                    color: isError ? "danger.500" : undefined,
+                    opacity: isPending ? (isDark ? 1 : 0.8) : 1,
+                    color: isError
+                        ? "danger.500"
+                        : isDark
+                          ? isPending
+                              ? DARK_TEXT_MEDIUM
+                              : DARK_TEXT_STRONG
+                          : undefined,
                 }}
             >
                 {isError ? `${event.tool_name}: ${event.error}` : label}
@@ -1152,19 +1219,25 @@ function _chipLabel(s: SpotlightResult): string {
     const title = _titleSnippet(s.title);
     const sep = title ? `: ${title}` : "";
 
+    // Reuse the same vocabulary the result rows use so the agent's
+    // source citations don't drift from the search-result subtitles.
+    // `entitySubtitle` returns e.g. "Direct message" / "Task" / "Chat
+    // note"; `badgeFor` returns "Thread" / "Comment" / null when the
+    // matched chunk was a thread reply / task comment.
+    const subtitle = entitySubtitle(s);
+    const badge = badgeFor(s);
+
     if (s.entity_type === "task" && s.task_id) {
-        return `task (#${s.task_id})${sep}`;
+        const label = badge === "Comment" ? `${subtitle} comment` : subtitle;
+        return `${label} (#${s.task_id})${sep}`;
     }
     if (s.entity_type === "chat" && s.chat_id) {
-        const typeLabel = s.chat_type ?? "chat";
-        const base = s.thread_id
-            ? `${typeLabel} (#${s.chat_id}) thread #${s.thread_id}`
-            : `${typeLabel} (#${s.chat_id})`;
-        return `${base}${sep}`;
+        const label = badge === "Thread" ? `${subtitle} thread` : subtitle;
+        return `${label} (#${s.chat_id})${sep}`;
     }
     if (s.entity_type === "note" && s.note_id) {
-        const noteLabel = s.note_type ? `${s.note_type} note` : "note";
-        return `${noteLabel} (#${s.note_id})${sep}`;
+        const label = badge === "Thread" ? `${subtitle} (thread)` : subtitle;
+        return `${label} (#${s.note_id})${sep}`;
     }
     // Fallback to raw entity_id if specific ids are absent.
     return title ? `${s.entity_id}: ${title}` : s.entity_id;
@@ -1224,7 +1297,7 @@ const ApprovalCard = ({ pending, isDark, onApprove, onReject }: ApprovalCardProp
             }}
         >
             <Typography
-                level="body-xs"
+                level="body-sm"
                 sx={{
                     fontWeight: 700,
                     textTransform: "uppercase",
@@ -1242,7 +1315,7 @@ const ApprovalCard = ({ pending, isDark, onApprove, onReject }: ApprovalCardProp
                         flexDirection: "column",
                         gap: 0.15,
                         mb: 0.75,
-                        fontSize: "0.875rem",
+                        fontSize: "0.9375rem",
                         fontFamily: "monospace",
                         opacity: 0.9,
                     }}
@@ -1265,7 +1338,7 @@ const ApprovalCard = ({ pending, isDark, onApprove, onReject }: ApprovalCardProp
                     color="success"
                     variant="solid"
                     onClick={onApprove}
-                    sx={{ fontSize: "0.875rem" }}
+                    sx={{ fontSize: "0.9375rem" }}
                 >
                     Approve
                 </Button>
@@ -1274,7 +1347,7 @@ const ApprovalCard = ({ pending, isDark, onApprove, onReject }: ApprovalCardProp
                     color="neutral"
                     variant="outlined"
                     onClick={onReject}
-                    sx={{ fontSize: "0.875rem" }}
+                    sx={{ fontSize: "0.9375rem" }}
                 >
                     Reject
                 </Button>

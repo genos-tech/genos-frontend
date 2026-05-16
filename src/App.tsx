@@ -25,6 +25,7 @@ import { useGlobalServiceShortcut } from "./hooks/common/useGlobalServiceShortcu
 import { useNotifications } from "./hooks/common/useNotifications";
 import { useProjectTaskManagement } from "./hooks/common/useProjectTaskManagement";
 import { useServiceInitialization } from "./hooks/common/useServiceInitialization";
+import { SpotlightPreferencesProvider } from "./hooks/common/useSpotlightPreferences";
 import { webSocketSync } from "./hooks/common/useSyncManagement";
 import { ThemePreferenceProvider } from "./hooks/common/useThemePreference";
 import { useThreadTaskHandling } from "./hooks/common/useThreadTaskHandling";
@@ -184,17 +185,45 @@ export const App = () => {
         teamId: useTEM.currentTeamId,
     });
 
+    // Translate a Spotlight result row into the canonical deep-link URL
+    // for its entity type. We set the URL directly (rather than calling
+    // feature-level helpers like `useCM.moveToSpecificChat`) so:
+    //   • routing logic stays in one place,
+    //   • the destination page's existing URL→state effects load and
+    //     focus the entity uniformly, regardless of which page we're
+    //     coming from, and
+    //   • the URL itself reflects the deep link, so reload/back/share
+    //     all work.
+    //
+    // Caveat: SpotlightResult does not yet carry a message_id, so chat
+    // hits can focus the right chat/thread but not the exact matching
+    // message bubble. Surfacing message_id from the search response is
+    // a separate backend change.
     const handleSpotlightSelect = useCallback(
         (r: SpotlightResult) => {
             spotlight.close();
+
             if (r.entity_type === "task" && r.task_id && r.project_id) {
                 navigate(`/workspace/tasks/project/${r.project_id}/task/${r.task_id}`);
                 return;
             }
+
             if (r.entity_type === "chat" && r.chat_type && r.chat_id) {
+                // Use the chat-management helper rather than a bare
+                // `navigate(...)`: for a chat the user hasn't opened
+                // this session, `useChatRouting`'s URL→state effect
+                // calls `popSpecificMessages` which returns an empty
+                // array and then silently early-returns — the URL
+                // updates but `currentMainChat` is never set, so the
+                // chat surface stays blank. `moveToSpecificChat` sets
+                // `currentMainChat` regardless of cache state and
+                // performs the navigation itself (now including any
+                // `/message/:id` segment and the matching
+                // moveToSpecificIndex for scroll-target).
                 const chatTypeCode = CHAT_TYPE_CODE[r.chat_type];
                 const numericChatId = Number(r.chat_id);
                 const numericThreadId = r.thread_id ? Number(r.thread_id) : 0;
+                const numericMessageId = r.message_id ? Number(r.message_id) : undefined;
                 useCM.moveToSpecificChat(
                     chatTypeCode,
                     numericChatId,
@@ -202,15 +231,79 @@ export const App = () => {
                     false,
                     numericThreadId !== 0,
                     useTM.setCurrentPreviewTaskId,
-                    usePM.setCurrentProject
+                    usePM.setCurrentProject,
+                    numericMessageId
                 );
                 return;
             }
-            if (r.entity_type === "note") {
-                // Notes don't have a deep-link route yet (see plan
-                // file's "Known caveats" — true note deep-link is a
-                // follow-up). For now just take the user to the notes
-                // home and let them find it there.
+
+            if (r.entity_type === "note" && r.note_id) {
+                if (r.note_type === "personal") {
+                    navigate(`/workspace/notes/my/${r.note_id}`);
+                    return;
+                }
+                if (r.note_type === "task") {
+                    // Need project_id + task_id to deep-link. project_id
+                    // has been on the chunk for a while; task_id is new
+                    // (chunker only just started writing it). For pre-fix
+                    // chunks the task_id only exists inside
+                    // `related_entity_ids` as "task:N" — parse it from
+                    // there so old data works without a reindex.
+                    let projectId: string | null = r.project_id;
+                    let taskId: string | null = r.task_id;
+                    if (!taskId) {
+                        for (const rel of r.related_entity_ids || []) {
+                            if (rel.startsWith("task:")) {
+                                taskId = rel.slice("task:".length) || null;
+                                break;
+                            }
+                        }
+                    }
+                    if (projectId && taskId) {
+                        navigate(
+                            `/workspace/notes/task/project/${projectId}` +
+                                `/task/${taskId}/note/${r.note_id}`
+                        );
+                        return;
+                    }
+                    // No project/task coordinates anywhere — fall
+                    // through to notes home.
+                }
+                if (r.note_type === "chat") {
+                    // Chat notes need chat_type + chat_id + thread_id
+                    // to deep-link. New chunks carry them as top-level
+                    // fields; older chunks (pre-routing-fix) only have
+                    // them inside `related_entity_ids` as strings like
+                    // "dm:5" or "pm:1:thread:3". Parse from there as a
+                    // fallback so old data works without a reindex.
+                    let chatType: typeof r.chat_type = r.chat_type;
+                    let chatId: string | null = r.chat_id;
+                    let threadId: string | null = r.thread_id;
+                    if (!chatType || !chatId || !threadId) {
+                        for (const rel of r.related_entity_ids || []) {
+                            const parts = rel.split(":");
+                            const t = parts[0];
+                            if (t === "dm" || t === "gm" || t === "pm" || t === "mdm") {
+                                if (!chatType) chatType = t;
+                                if (!chatId) chatId = parts[1] ?? null;
+                                if (!threadId && parts[2] === "thread") {
+                                    threadId = parts[3] ?? null;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    if (chatType && chatId && threadId) {
+                        navigate(
+                            `/workspace/notes/chat/${chatType}` +
+                                `/${chatId}/thread/${threadId}/note/${r.note_id}`
+                        );
+                        return;
+                    }
+                    // Chat note without a deep-link URL (no thread_id
+                    // available anywhere): fall through to notes home.
+                }
+                // Fallback when note metadata is incomplete.
                 navigate("/workspace/notes");
                 return;
             }
@@ -287,85 +380,87 @@ export const App = () => {
         <CssVarsProvider disableTransitionOnChange theme={purpleTheme}>
             <CssBaseline />
             <ThemePreferenceProvider>
-                <NotificationsProvider value={useNotif}>
-                    <NotificationToastHost
-                        subscribeToasts={useNotif.subscribeToasts}
-                        onOpenIntent={openIntent}
-                    />
-                    <ServiceSwitcherOverlay
-                        mruOrder={serviceSwitcherMruOrder}
-                        previewIndex={serviceSwitcherPreviewIndex}
-                    />
-                    <SpotlightOverlay
-                        ask={spotlight.ask}
-                        error={spotlight.error}
-                        isLoading={spotlight.isLoading}
-                        isOpen={spotlight.isOpen}
-                        query={spotlight.query}
-                        results={spotlight.results}
-                        turns={spotlight.turns}
-                        onApprove={spotlight.onApprove}
-                        onAsk={spotlight.onAsk}
-                        onCancel={spotlight.onCancel}
-                        onClose={spotlight.close}
-                        onNewConversation={spotlight.onNewConversation}
-                        onQueryChange={spotlight.setQuery}
-                        onReject={spotlight.onReject}
-                        onSelect={handleSpotlightSelect}
-                        dailyUsage={spotlight.dailyUsage}
-                    />
-                    <Snackbar
-                        anchorOrigin={{ vertical: "top", horizontal: "center" }}
-                        color="danger"
-                        open={showWsDisconnected || showApiDown}
-                        sx={{ gap: 1 }}
-                        variant="soft"
-                    >
-                        <Stack spacing={0.5}>
-                            {showWsDisconnected && (
-                                <Typography
-                                    level="body-sm"
-                                    sx={{
-                                        fontWeight: 500,
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 1,
-                                    }}
-                                >
-                                    <WifiOffRoundedIcon sx={{ fontSize: 16 }} />
-                                    Real-time connection lost. Attempting to reconnect...
-                                </Typography>
-                            )}
-                            {showApiDown && (
-                                <Typography
-                                    level="body-sm"
-                                    sx={{
-                                        fontWeight: 500,
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 1,
-                                    }}
-                                >
-                                    <CloudOffRoundedIcon sx={{ fontSize: 16 }} />
-                                    API server is unreachable.
-                                </Typography>
-                            )}
-                        </Stack>
-                    </Snackbar>
-                    {useUISM.isLoading ? (
-                        <InitialLoad
-                            myself={myself}
-                            setCurrentMainChat={useCM.setCurrentMainChat}
-                            setIsLoading={useUISM.setIsLoading}
+                <SpotlightPreferencesProvider>
+                    <NotificationsProvider value={useNotif}>
+                        <NotificationToastHost
+                            subscribeToasts={useNotif.subscribeToasts}
+                            onOpenIntent={openIntent}
                         />
-                    ) : (
-                        <div className="main-container">
-                            <PermissionBanner
-                                masterEnabled={useNotif.preferences.masterEnabled}
-                                permission={useNotif.permission}
-                                requestPermission={useNotif.requestPermission}
+                        <ServiceSwitcherOverlay
+                            mruOrder={serviceSwitcherMruOrder}
+                            previewIndex={serviceSwitcherPreviewIndex}
+                        />
+                        <SpotlightOverlay
+                            ask={spotlight.ask}
+                            error={spotlight.error}
+                            isLoading={spotlight.isLoading}
+                            isOpen={spotlight.isOpen}
+                            query={spotlight.query}
+                            results={spotlight.results}
+                            turns={spotlight.turns}
+                            onApprove={spotlight.onApprove}
+                            onAsk={spotlight.onAsk}
+                            onCancel={spotlight.onCancel}
+                            onClose={spotlight.close}
+                            onNewConversation={spotlight.onNewConversation}
+                            onQueryChange={spotlight.setQuery}
+                            onReject={spotlight.onReject}
+                            onSelect={handleSpotlightSelect}
+                            dailyUsage={spotlight.dailyUsage}
+                            aiAnswersEnabled={spotlight.aiAnswersEnabled}
+                        />
+                        <Snackbar
+                            anchorOrigin={{ vertical: "top", horizontal: "center" }}
+                            color="danger"
+                            open={showWsDisconnected || showApiDown}
+                            sx={{ gap: 1 }}
+                            variant="soft"
+                        >
+                            <Stack spacing={0.5}>
+                                {showWsDisconnected && (
+                                    <Typography
+                                        level="body-sm"
+                                        sx={{
+                                            fontWeight: 500,
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 1,
+                                        }}
+                                    >
+                                        <WifiOffRoundedIcon sx={{ fontSize: 16 }} />
+                                        Real-time connection lost. Attempting to reconnect...
+                                    </Typography>
+                                )}
+                                {showApiDown && (
+                                    <Typography
+                                        level="body-sm"
+                                        sx={{
+                                            fontWeight: 500,
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 1,
+                                        }}
+                                    >
+                                        <CloudOffRoundedIcon sx={{ fontSize: 16 }} />
+                                        API server is unreachable.
+                                    </Typography>
+                                )}
+                            </Stack>
+                        </Snackbar>
+                        {useUISM.isLoading ? (
+                            <InitialLoad
+                                myself={myself}
+                                setCurrentMainChat={useCM.setCurrentMainChat}
+                                setIsLoading={useUISM.setIsLoading}
                             />
-                            {/* Sidebar lives here (outside <Routes>) so it
+                        ) : (
+                            <div className="main-container">
+                                <PermissionBanner
+                                    masterEnabled={useNotif.preferences.masterEnabled}
+                                    permission={useNotif.permission}
+                                    requestPermission={useNotif.requestPermission}
+                                />
+                                {/* Sidebar lives here (outside <Routes>) so it
                                 is mounted once for the whole authenticated
                                 shell. Switching services only swaps the
                                 routed content next to it instead of
@@ -378,110 +473,115 @@ export const App = () => {
                                 profile by `userId` from a single source
                                 of truth instead of taking a fan-out of
                                 props at every callsite. */}
-                            <AvatarContextProvider
-                                value={{
-                                    myself,
-                                    setMyself,
-                                    teamMemberProfiles: useTEM.teamMemberProfiles,
-                                    setTeamMemberProfiles: useTEM.setTeamMemberProfiles,
-                                    socket: socketInstance,
-                                    useCM,
-                                    useUISM,
-                                }}
-                            >
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        minHeight: "100dvh",
-                                        width: "100vw",
+                                <AvatarContextProvider
+                                    value={{
+                                        myself,
+                                        setMyself,
+                                        teamMemberProfiles: useTEM.teamMemberProfiles,
+                                        setTeamMemberProfiles: useTEM.setTeamMemberProfiles,
+                                        socket: socketInstance,
+                                        useCM,
+                                        useUISM,
                                     }}
                                 >
-                                    <Sidebar
-                                        myself={myself}
-                                        setMyself={setMyself}
-                                        socket={socketInstance}
-                                        useCM={useCM}
-                                        useIM={useIM}
-                                        useTEM={useTEM}
-                                        useUISM={useUISM}
-                                    />
-                                    <Routes>
-                                        <Route
-                                            path="inbox/*"
-                                            element={
-                                                <InboxHome
-                                                    myself={myself}
-                                                    setMyself={setMyself}
-                                                    socket={socketInstance}
-                                                    useCM={useCM}
-                                                    useIM={useIM}
-                                                    useTEM={useTEM}
-                                                    useUISM={useUISM}
-                                                />
-                                            }
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            minHeight: "100dvh",
+                                            width: "100vw",
+                                        }}
+                                    >
+                                        <Sidebar
+                                            myself={myself}
+                                            setMyself={setMyself}
+                                            socket={socketInstance}
+                                            useCM={useCM}
+                                            useIM={useIM}
+                                            useTEM={useTEM}
+                                            useUISM={useUISM}
+                                            onOpenSpotlight={spotlight.open}
                                         />
-                                        <Route
-                                            path="chat/*"
-                                            element={
-                                                <ChatHome
-                                                    myself={myself}
-                                                    setMyself={setMyself}
-                                                    socket={socketInstance}
-                                                    useCM={useCM}
-                                                    useIM={useIM}
-                                                    useNM={useNM}
-                                                    usePM={usePM}
-                                                    useSM={useSM}
-                                                    useTEM={useTEM}
-                                                    useTM={useTM}
-                                                    useUISM={useUISM}
-                                                />
-                                            }
-                                        />
-                                        <Route
-                                            path="tasks/*"
-                                            element={
-                                                <TaskHome
-                                                    myself={myself}
-                                                    setMyself={setMyself}
-                                                    socket={socketInstance}
-                                                    useCM={useCM}
-                                                    useIM={useIM}
-                                                    useNM={useNM}
-                                                    usePM={usePM}
-                                                    useSM={useSM}
-                                                    useTEM={useTEM}
-                                                    useTM={useTM}
-                                                    useUISM={useUISM}
-                                                />
-                                            }
-                                        />
-                                        <Route
-                                            path="notes/*"
-                                            element={
-                                                <NoteHome
-                                                    myself={myself}
-                                                    setMyself={setMyself}
-                                                    socket={socketInstance}
-                                                    useCM={useCM}
-                                                    useIM={useIM}
-                                                    useNM={useNM}
-                                                    usePM={usePM}
-                                                    useSM={useSM}
-                                                    useTEM={useTEM}
-                                                    useTM={useTM}
-                                                    useUISM={useUISM}
-                                                />
-                                            }
-                                        />
-                                        {/* Default redirect to inbox */}
-                                        <Route element={<Navigate to="inbox" replace />} path="" />
-                                    </Routes>
-                                </Box>
-                            </AvatarContextProvider>
-                        </div>
-                    )}
-                </NotificationsProvider>
+                                        <Routes>
+                                            <Route
+                                                path="inbox/*"
+                                                element={
+                                                    <InboxHome
+                                                        myself={myself}
+                                                        setMyself={setMyself}
+                                                        socket={socketInstance}
+                                                        useCM={useCM}
+                                                        useIM={useIM}
+                                                        useTEM={useTEM}
+                                                        useUISM={useUISM}
+                                                    />
+                                                }
+                                            />
+                                            <Route
+                                                path="chat/*"
+                                                element={
+                                                    <ChatHome
+                                                        myself={myself}
+                                                        setMyself={setMyself}
+                                                        socket={socketInstance}
+                                                        useCM={useCM}
+                                                        useIM={useIM}
+                                                        useNM={useNM}
+                                                        usePM={usePM}
+                                                        useSM={useSM}
+                                                        useTEM={useTEM}
+                                                        useTM={useTM}
+                                                        useUISM={useUISM}
+                                                    />
+                                                }
+                                            />
+                                            <Route
+                                                path="tasks/*"
+                                                element={
+                                                    <TaskHome
+                                                        myself={myself}
+                                                        setMyself={setMyself}
+                                                        socket={socketInstance}
+                                                        useCM={useCM}
+                                                        useIM={useIM}
+                                                        useNM={useNM}
+                                                        usePM={usePM}
+                                                        useSM={useSM}
+                                                        useTEM={useTEM}
+                                                        useTM={useTM}
+                                                        useUISM={useUISM}
+                                                    />
+                                                }
+                                            />
+                                            <Route
+                                                path="notes/*"
+                                                element={
+                                                    <NoteHome
+                                                        myself={myself}
+                                                        setMyself={setMyself}
+                                                        socket={socketInstance}
+                                                        useCM={useCM}
+                                                        useIM={useIM}
+                                                        useNM={useNM}
+                                                        usePM={usePM}
+                                                        useSM={useSM}
+                                                        useTEM={useTEM}
+                                                        useTM={useTM}
+                                                        useUISM={useUISM}
+                                                    />
+                                                }
+                                            />
+                                            {/* Default redirect to inbox */}
+                                            <Route
+                                                element={<Navigate to="inbox" replace />}
+                                                path=""
+                                            />
+                                        </Routes>
+                                    </Box>
+                                </AvatarContextProvider>
+                            </div>
+                        )}
+                    </NotificationsProvider>
+                </SpotlightPreferencesProvider>
             </ThemePreferenceProvider>
         </CssVarsProvider>
     );

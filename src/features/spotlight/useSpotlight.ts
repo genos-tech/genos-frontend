@@ -31,6 +31,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import axios, { CanceledError } from "axios";
 
+import { useSpotlightPreferences } from "../../hooks/common/useSpotlightPreferences";
 import {
     askAgentStream,
     decideAgent,
@@ -127,6 +128,10 @@ export interface UseSpotlightReturn {
     ask: AskState;
     turns: CompletedTurn[];
     dailyUsage: AgentUsage | null;
+    // Mirror of the AI-answers preference. The overlay reads this to
+    // disable the Ask button and the Enter handler when the user has
+    // turned the LLM path off in Settings.
+    aiAnswersEnabled: boolean;
 }
 
 const EMPTY_ASK_STATE: AskState = {
@@ -150,6 +155,12 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
     const [ask, setAsk] = useState<AskState>(EMPTY_ASK_STATE);
     const [turns, setTurns] = useState<CompletedTurn[]>([]);
     const [dailyUsage, setDailyUsage] = useState<AgentUsage | null>(null);
+
+    // User-toggleable gates for the LLM path. `webSearch` is forwarded
+    // to the agent backend; `aiAnswers` is checked at the overlay layer
+    // (the Ask button is disabled when it's off, and `onAsk` short-
+    // circuits as a defense-in-depth guard).
+    const { aiAnswers, webSearch } = useSpotlightPreferences();
 
     // Used to abort in-flight searches when the query changes or the
     // overlay closes.
@@ -551,6 +562,10 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
             // still streaming or awaiting approval. The UI also disables
             // the Ask button + Enter in these states.
             if (ask.isStreaming || ask.pendingApproval !== null) return;
+            // AI answers disabled in Settings — silently ignore. The UI
+            // also disables the Ask button + Enter, so reaching here
+            // would only happen via a stale handler or programmatic call.
+            if (!aiAnswers) return;
             if (!teamId) {
                 setAsk({
                     ...EMPTY_ASK_STATE,
@@ -595,6 +610,7 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
                 teamId,
                 accessToken,
                 sessionId: ask.sessionId ?? undefined,
+                allowWebSearch: webSearch,
                 signal: controller.signal,
                 ...buildStreamHandlers(askedTurnId),
             });
@@ -618,6 +634,8 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
             ask.pendingApproval,
             ask.turnId,
             ask.sessionId,
+            aiAnswers,
+            webSearch,
         ]
     );
 
@@ -743,5 +761,6 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
         ask,
         turns,
         dailyUsage,
+        aiAnswersEnabled: aiAnswers,
     };
 };

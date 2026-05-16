@@ -4,6 +4,7 @@ import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
+import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import {
     Avatar,
@@ -89,10 +90,11 @@ type SidebarProps = {
     useIM: InboxManagementState;
     useCM: ChatManagementState;
     useUISM: UIStateManagementState;
+    onOpenSpotlight: () => void;
 };
 
 export const Sidebar = (props: SidebarProps) => {
-    const { useTEM, socket, myself, setMyself, useIM, useCM, useUISM } = props;
+    const { useTEM, socket, myself, setMyself, useIM, useCM, useUISM, onOpenSpotlight } = props;
     const { setAccessToken } = useAuth();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -254,6 +256,81 @@ export const Sidebar = (props: SidebarProps) => {
                         px: 1,
                     }}
                 >
+                    {/* Spotlight search — overlay, not a route, so no
+                        active state. Shortcut hint in the tooltip
+                        mirrors the binding in `useSpotlight.ts`. */}
+                    <ListItem>
+                        <Tooltip
+                            title={isMac() ? "Search · ⌘ K" : "Search · Ctrl + K"}
+                            placement="right"
+                            size="sm"
+                            variant="outlined"
+                            sx={{ zIndex: 10020 }}
+                        >
+                            <ListItemButton
+                                onClick={onOpenSpotlight}
+                                sx={{
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                    py: 1,
+                                    px: 1.25,
+                                    borderRadius: "12px",
+                                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                    background: "transparent",
+                                    border: "1px solid transparent",
+                                    "&:hover": {
+                                        background: isDark
+                                            ? "rgba(255,255,255,0.04)"
+                                            : "rgba(0,0,0,0.03)",
+                                        transform: "translateY(-1px)",
+                                    },
+                                    "&:active": {
+                                        transform: "translateY(0)",
+                                    },
+                                }}
+                            >
+                                <Box
+                                    sx={{
+                                        width: 32,
+                                        height: 32,
+                                        borderRadius: "10px",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        background: isDark
+                                            ? "rgba(255,255,255,0.04)"
+                                            : "rgba(0,0,0,0.03)",
+                                        transition: "all 0.2s ease",
+                                    }}
+                                >
+                                    <SearchRoundedIcon
+                                        sx={{
+                                            fontSize: 20,
+                                            color: isDark
+                                                ? "rgba(255,255,255,0.55)"
+                                                : "rgba(0,0,0,0.5)",
+                                            transition: "color 0.2s ease",
+                                        }}
+                                    />
+                                </Box>
+                                <Typography
+                                    level="body-xs"
+                                    sx={{
+                                        mt: 0.5,
+                                        fontSize: "0.65rem",
+                                        fontWeight: 500,
+                                        color: isDark
+                                            ? "rgba(255,255,255,0.55)"
+                                            : "rgba(0,0,0,0.5)",
+                                        transition: "all 0.2s ease",
+                                    }}
+                                >
+                                    Search
+                                </Typography>
+                            </ListItemButton>
+                        </Tooltip>
+                    </ListItem>
+
                     {NAV_ITEMS.map((item) => {
                         const Icon = item.icon;
                         const isActive = location.pathname.includes(item.path);

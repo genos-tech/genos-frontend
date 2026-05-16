@@ -17,12 +17,22 @@ export interface SpotlightResult {
     keyword_rank: number | null;
     vector_rank: number | null;
     matched_chunk_types: string[]; // e.g. ["chat_message", "chat_thread_window"]
+    // Analyzer-aware tokens (incl. stemmed/synonym forms) extracted from
+    // the OpenSearch highlight response. Empty for vector-only hits.
+    // The frontend merges these with the literal query tokens when
+    // bolding matches.
+    matched_terms: string[];
     updated_at: string | null;
 
     // Chat-specific (present when entity_type === "chat")
     chat_type: ChatTypeLabel | null;
     chat_id: string | null;
     thread_id: string | null;
+    // The specific message inside the chat / thread that matched.
+    // Null when the matching chunk wasn't a single message (e.g. a
+    // thread-window chunk or an anchor chunk), or for non-chat results.
+    // Spotlight uses it to deep-link the chat URL down to the bubble.
+    message_id: string | null;
 
     // Task-specific
     task_id: string | null;
