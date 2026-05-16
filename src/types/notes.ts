@@ -36,6 +36,15 @@ export type TaskNoteMetaProps = {
     taskId: number;
     projectName?: string;
     taskTitle?: string;
+    // Task-hierarchy hints used by the sidebar to nest notes under
+    // Project → Milestone → Task → Subtask. Optional for backwards-
+    // compatibility with older API responses; missing fields fall the
+    // note back to a "loose task at project level".
+    parentTaskId?: number | null;
+    parentTaskTitle?: string | null;
+    isMilestone?: boolean;
+    milestoneId?: number | null;
+    milestoneTitle?: string | null;
     title: string;
     tsUpdated: string;
     error?: string;

@@ -16,6 +16,13 @@ export interface TaskNoteMetaTreeNode extends BaseNoteTreeNode {
     taskId: number;
     projectName?: string;
     taskTitle?: string;
+    // Mirrors `TaskNoteMetaProps` in `types/notes.ts`. Drives the
+    // Project → Milestone → Task → Subtask grouping in `NoteSidebar`.
+    parentTaskId?: number | null;
+    parentTaskTitle?: string | null;
+    isMilestone?: boolean;
+    milestoneId?: number | null;
+    milestoneTitle?: string | null;
 }
 
 export interface ChatNoteMetaTreeNode extends BaseNoteTreeNode {
