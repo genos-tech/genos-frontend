@@ -24,6 +24,7 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { UserProps } from "../../../../types/admin";
 import { NoteRoleMember } from "../../../../types/notes";
+import { getMyNoteRoleId, NOTE_ROLE_OWNER } from "../utils/noteRoles";
 
 interface ModalNoteSharingProps {
     open: boolean;
@@ -43,7 +44,7 @@ interface ModalNoteSharingProps {
     useNM: NoteManagementState;
 }
 
-const ROLE_OWNER = 1;
+const ROLE_OWNER = NOTE_ROLE_OWNER;
 const ROLE_EDITOR = 2;
 const ROLE_VIEWER = 3;
 
@@ -85,7 +86,7 @@ export const ModalNoteSharing = ({
         [members]
     );
 
-    const myRoleId = memberByUserId.get(String(myself.userId))?.roleId ?? null;
+    const myRoleId = getMyNoteRoleId(members, myself.userId);
     const isOwner = myRoleId === ROLE_OWNER;
 
     const candidates = useMemo(() => {

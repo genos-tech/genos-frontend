@@ -24,6 +24,7 @@ import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 import { TaskProps } from "../../../../types/tasks";
 import { isMac } from "../../../../utils/platform";
+import { getMyNoteRoleId, NOTE_ROLE_OWNER } from "../utils/noteRoles";
 import { ModalNoteSharing } from "./ModalNoteSharing";
 
 interface NoteHeaderActionsProps {
@@ -87,10 +88,9 @@ export const NoteHeaderActions = ({
 
     // Members + my role on the currently-opened note.
     const members = useNM.currentNoteMembers;
-    const myMembership = members.find((m) => String(m.userId) === String(myself.userId));
-    const myRoleId = myMembership?.roleId ?? null;
-    const isOwner = myRoleId === 1;
-    const ownerMember = members.find((m) => m.roleId === 1);
+    const myRoleId = getMyNoteRoleId(members, myself.userId);
+    const isOwner = myRoleId === NOTE_ROLE_OWNER;
+    const ownerMember = members.find((m) => m.roleId === NOTE_ROLE_OWNER);
     const otherMembers = members.filter((m) => String(m.userId) !== String(myself.userId));
 
     // Cap the inline avatar count so the strip stays compact next to

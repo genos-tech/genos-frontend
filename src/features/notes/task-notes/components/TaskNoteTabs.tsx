@@ -456,6 +456,7 @@ export const TaskNoteTabs = ({
                         body={body || []}
                         useCM={useCM}
                         currentTaskNote={useNM.currentTaskNote}
+                        currentNoteMembers={useNM.currentNoteMembers}
                         myself={myself}
                         setBody={setBody}
                         setMyself={setMyself}

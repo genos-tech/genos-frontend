@@ -52,12 +52,16 @@ import { RiAlertFill } from "react-icons/ri";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
+import {
+    getMyNoteRoleId,
+    isNoteEditableForRole,
+} from "../../features/notes/common/utils/noteRoles";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useCollaborativeBlockNote } from "../../hooks/common/useCollaborativeBlockNote";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
-import { TaskNoteProps } from "../../types/notes";
+import { NoteRoleMember, TaskNoteProps } from "../../types/notes";
 import { getUserColor } from "../../utils/collabUtils";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
@@ -91,6 +95,10 @@ type BnTaskNoteEditorProps = {
     setNoteBodySaved?: (value: boolean) => void;
     useCM: ChatManagementState;
     useUISM: UIStateManagementState;
+    /** Explicit note-role members. Used to gate edit affordances —
+     *  Viewers see the body but only the comment-add button. The
+     *  caller passes `useNM.currentNoteMembers` directly. */
+    currentNoteMembers: NoteRoleMember[];
 };
 export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
     const {
@@ -105,7 +113,13 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
         setNoteBodySaved,
         useCM,
         useUISM,
+        currentNoteMembers,
     } = props;
+
+    // Editor vs. viewer toggle. See `bnMyNoteEditor` for the
+    // rationale on the `null` (implicit-owner) branch.
+    const myRoleId = getMyNoteRoleId(currentNoteMembers, myself.userId);
+    const isEditable = isNoteEditableForRole(myRoleId);
 
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
@@ -299,6 +313,7 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                 <BlockNoteView
                     className="bn-box"
                     comments={false}
+                    editable={isEditable}
                     editor={editor as any}
                     emojiPicker={false}
                     formattingToolbar={false}
@@ -334,110 +349,132 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                     >
                         <div className="bn-editor-section">
                             <BlockNoteViewEditor>
-                                <SideMenuController
-                                    sideMenu={(props) => (
-                                        <SideMenu
-                                            {...props}
-                                            dragHandleMenu={CustomDragHandleMenu}
-                                        />
-                                    )}
-                                />
+                                {isEditable && (
+                                    <SideMenuController
+                                        sideMenu={(props) => (
+                                            <SideMenu
+                                                {...props}
+                                                dragHandleMenu={CustomDragHandleMenu}
+                                            />
+                                        )}
+                                    />
+                                )}
                                 <FormattingToolbarController
                                     formattingToolbar={() => (
                                         <FormattingToolbar>
-                                            <BlockTypeSelect
-                                                key={"blockTypeSelect"}
-                                                items={[
-                                                    ...getBlockTypeSelectItemsWithCodeBlock(
-                                                        editor.dictionary
-                                                    ),
-                                                    {
-                                                        name: "Alert",
-                                                        type: "alert",
-                                                        icon: RiAlertFill,
-                                                    } satisfies BlockTypeSelectItem,
-                                                ]}
-                                            />
+                                            {isEditable && (
+                                                <BlockTypeSelect
+                                                    key={"blockTypeSelect"}
+                                                    items={[
+                                                        ...getBlockTypeSelectItemsWithCodeBlock(
+                                                            editor.dictionary
+                                                        ),
+                                                        {
+                                                            name: "Alert",
+                                                            type: "alert",
+                                                            icon: RiAlertFill,
+                                                        } satisfies BlockTypeSelectItem,
+                                                    ]}
+                                                />
+                                            )}
 
-                                            <BasicTextStyleButton
-                                                key={"boldStyleButton"}
-                                                basicTextStyle={"bold"}
-                                            />
-                                            <BasicTextStyleButton
-                                                key={"italicStyleButton"}
-                                                basicTextStyle={"italic"}
-                                            />
-                                            <BasicTextStyleButton
-                                                key={"underlineStyleButton"}
-                                                basicTextStyle={"underline"}
-                                            />
-                                            <BasicTextStyleButton
-                                                key={"strikeStyleButton"}
-                                                basicTextStyle={"strike"}
-                                            />
-                                            <BasicTextStyleButton
-                                                key={"codeStyleButton"}
-                                                basicTextStyle={"code"}
-                                            />
-                                            <TextAlignButton
-                                                key={"textAlignLeftButton"}
-                                                textAlignment={"left"}
-                                            />
-                                            <TextAlignButton
-                                                key={"textAlignCenterButton"}
-                                                textAlignment={"center"}
-                                            />
-                                            <TextAlignButton
-                                                key={"textAlignRightButton"}
-                                                textAlignment={"right"}
-                                            />
-                                            <ColorStyleButton key={"colorStyleButton"} />
-                                            <CreateLinkButton key={"createLinkButton"} />
-                                            <FileCaptionButton key={"fileCaptionButton"} />
-                                            <FileReplaceButton key={"fileReplaceButton"} />
+                                            {isEditable && (
+                                                <>
+                                                    <BasicTextStyleButton
+                                                        key={"boldStyleButton"}
+                                                        basicTextStyle={"bold"}
+                                                    />
+                                                    <BasicTextStyleButton
+                                                        key={"italicStyleButton"}
+                                                        basicTextStyle={"italic"}
+                                                    />
+                                                    <BasicTextStyleButton
+                                                        key={"underlineStyleButton"}
+                                                        basicTextStyle={"underline"}
+                                                    />
+                                                    <BasicTextStyleButton
+                                                        key={"strikeStyleButton"}
+                                                        basicTextStyle={"strike"}
+                                                    />
+                                                    <BasicTextStyleButton
+                                                        key={"codeStyleButton"}
+                                                        basicTextStyle={"code"}
+                                                    />
+                                                    <TextAlignButton
+                                                        key={"textAlignLeftButton"}
+                                                        textAlignment={"left"}
+                                                    />
+                                                    <TextAlignButton
+                                                        key={"textAlignCenterButton"}
+                                                        textAlignment={"center"}
+                                                    />
+                                                    <TextAlignButton
+                                                        key={"textAlignRightButton"}
+                                                        textAlignment={"right"}
+                                                    />
+                                                    <ColorStyleButton key={"colorStyleButton"} />
+                                                    <CreateLinkButton key={"createLinkButton"} />
+                                                    <FileCaptionButton key={"fileCaptionButton"} />
+                                                    <FileReplaceButton key={"fileReplaceButton"} />
+                                                </>
+                                            )}
                                             {threadStore && (
                                                 <AddCommentButton key={"addCommentButton"} />
                                             )}
-                                            <FileDeleteButton key={"fileDeleteButton"} />
-                                            <FileDownloadButton key={"fileDownloadButton"} />
-                                            <FilePreviewButton key={"filePreviewButton"} />
-                                            <FileRenameButton key={"fileRenameButton"} />
-                                            <TableCellMergeButton key={"tableCellMergeButton"} />
+                                            {isEditable && (
+                                                <>
+                                                    <FileDeleteButton key={"fileDeleteButton"} />
+                                                    <FileDownloadButton
+                                                        key={"fileDownloadButton"}
+                                                    />
+                                                    <FilePreviewButton key={"filePreviewButton"} />
+                                                    <FileRenameButton key={"fileRenameButton"} />
+                                                    <TableCellMergeButton
+                                                        key={"tableCellMergeButton"}
+                                                    />
+                                                </>
+                                            )}
                                         </FormattingToolbar>
                                     )}
                                 />
 
-                                <SuggestionMenuController
-                                    triggerCharacter={"@"}
-                                    getItems={async (query) =>
-                                        filterSuggestionItems(
-                                            MentionMenuItems(
-                                                useTEM.teamMemberProfiles,
-                                                editor,
-                                                useTEM.teamMembers
-                                            ),
-                                            query
-                                        )
-                                    }
-                                />
-                                <SuggestionMenuController
-                                    triggerCharacter={"/"}
-                                    getItems={async (query) =>
-                                        filterSuggestionItems(
-                                            getCustomSlashMenuItems(
-                                                editor as unknown as typeof schema.BlockNoteEditor
-                                            ),
-                                            query
-                                        )
-                                    }
-                                />
-                                <SuggestionMenuController
-                                    getItems={async (query) =>
-                                        getEmojiSuggestionItems(editor, query)
-                                    }
-                                    minQueryLength={2}
-                                    triggerCharacter={":"}
-                                />
+                                {isEditable && (
+                                    <SuggestionMenuController
+                                        triggerCharacter={"@"}
+                                        getItems={async (query) =>
+                                            filterSuggestionItems(
+                                                MentionMenuItems(
+                                                    useTEM.teamMemberProfiles,
+                                                    editor,
+                                                    useTEM.teamMembers
+                                                ),
+                                                query
+                                            )
+                                        }
+                                    />
+                                )}
+                                {isEditable && (
+                                    <SuggestionMenuController
+                                        triggerCharacter={"/"}
+                                        getItems={async (query) =>
+                                            filterSuggestionItems(
+                                                getCustomSlashMenuItems(
+                                                    editor as unknown as typeof schema.BlockNoteEditor
+                                                ),
+                                                query
+                                            )
+                                        }
+                                    />
+                                )}
+                                {isEditable && (
+                                    <SuggestionMenuController
+                                        getItems={async (query) =>
+                                            getEmojiSuggestionItems(editor, query)
+                                        }
+                                        minQueryLength={2}
+                                        triggerCharacter={":"}
+                                    />
+                                )}
 
                                 {threadStore && <FloatingComposerController />}
                                 {threadStore && !showThreadsSidebar && (

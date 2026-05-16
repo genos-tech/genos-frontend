@@ -277,6 +277,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                             body={chatNoteEditor.body}
                                             useCM={useCM}
                                             currentChatNote={activeChatNote}
+                                            currentNoteMembers={useNM.currentNoteMembers}
                                             myself={myself}
                                             setMyself={setMyself}
                                             socket={socket}

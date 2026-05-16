@@ -108,6 +108,7 @@ export const NoteEditor = ({
                 body={body || []}
                 useCM={useCM}
                 currentMyNote={useNM.currentMyNote as MyNoteProps}
+                currentNoteMembers={useNM.currentNoteMembers}
                 myself={myself}
                 setBody={onBodyChange}
                 setMyself={setMyself}
