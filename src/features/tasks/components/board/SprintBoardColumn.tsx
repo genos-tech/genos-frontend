@@ -2,6 +2,7 @@ import React from "react";
 import Box from "@mui/joy/Box";
 import { useColorScheme } from "@mui/joy/styles";
 import Typography from "@mui/joy/Typography";
+import { alpha } from "@mui/system";
 import { Droppable } from "react-beautiful-dnd";
 
 import { UserProps } from "../../../../types/admin";
@@ -43,23 +44,6 @@ const getColumnHeaderStyles = (mode: "light" | "dark" | undefined): React.CSSPro
     backgroundColor: mode === "dark" ? "rgba(255, 255, 255, 0.02)" : "rgba(0, 0, 0, 0.01)",
     borderBottom:
         mode === "dark" ? "1px solid rgba(255, 255, 255, 0.05)" : "1px solid rgba(0, 0, 0, 0.05)",
-});
-
-const getDropAreaStyles = (
-    isDraggingOver: boolean,
-    mode: "light" | "dark" | undefined
-): React.CSSProperties => ({
-    flex: 1,
-    padding: 8,
-    minHeight: 100,
-    backgroundColor: isDraggingOver
-        ? mode === "dark"
-            ? "rgba(167,139,250,0.1)"
-            : "rgba(124,58,237,0.06)"
-        : "transparent",
-    transition: "background-color 0.15s ease",
-    overflowY: "auto",
-    overflowX: "hidden",
 });
 
 type SprintBoardColumnProps = {
@@ -136,70 +120,147 @@ export const SprintBoardColumn = ({
                 isCombineEnabled={false}
                 ignoreContainerClipping={false}
             >
-                {(provided, snapshot) => (
-                    <div
-                        className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        style={getDropAreaStyles(snapshot.isDraggingOver, mode)}
-                    >
-                        {tasks.length === 0 ? (
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    flex: 1,
-                                    minHeight: 120,
-                                    border:
-                                        mode === "dark"
-                                            ? "1px dashed rgba(255, 255, 255, 0.08)"
-                                            : "1px dashed rgba(0, 0, 0, 0.08)",
-                                    borderRadius: 6,
-                                    color: mode === "dark" ? "#555" : "#aaa",
-                                    backgroundColor:
-                                        mode === "dark"
-                                            ? "rgba(255, 255, 255, 0.01)"
-                                            : "rgba(0, 0, 0, 0.01)",
-                                }}
-                            >
-                                <Typography
-                                    level="body-xs"
-                                    sx={{ fontSize: "0.7rem", fontWeight: 500 }}
+                {(provided, snapshot) => {
+                    const isOver = snapshot.isDraggingOver;
+                    // Animations derive from `column.color` so each
+                    // column glows in its own identity (blue Open,
+                    // orange WIP, etc.) instead of a generic purple.
+                    // `alpha()` is the same helper used by the task
+                    // row pulse for consistency.
+                    const accent = column.color;
+                    const pulseBgLow = alpha(accent, isDark ? 0.08 : 0.05);
+                    const pulseBgHigh = alpha(accent, isDark ? 0.22 : 0.16);
+                    const pulseShadowLow = `inset 0 0 0 2px ${alpha(
+                        accent,
+                        0.55
+                    )}, 0 0 8px ${alpha(accent, 0.2)}`;
+                    const pulseShadowHigh = `inset 0 0 0 2px ${accent}, 0 0 26px ${alpha(
+                        accent,
+                        0.55
+                    )}, 0 0 12px ${alpha(accent, 0.4)}`;
+                    const shimmerGradient = `linear-gradient(90deg, transparent 0%, transparent 35%, ${alpha(
+                        accent,
+                        isDark ? 0.4 : 0.32
+                    )} 50%, transparent 65%, transparent 100%)`;
+                    return (
+                        <Box
+                            className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                            ref={provided.innerRef}
+                            {...provided.droppableProps}
+                            sx={{
+                                position: "relative",
+                                flex: 1,
+                                padding: 1,
+                                minHeight: 100,
+                                overflowY: "auto",
+                                overflowX: "hidden",
+                                transition: "background-color 150ms ease",
+                                ...(isOver && {
+                                    animation: "sprintColumnPulse 1.1s ease-in-out infinite",
+                                    "@keyframes sprintColumnPulse": {
+                                        "0%, 100%": {
+                                            backgroundColor: pulseBgLow,
+                                            boxShadow: pulseShadowLow,
+                                        },
+                                        "50%": {
+                                            backgroundColor: pulseBgHigh,
+                                            boxShadow: pulseShadowHigh,
+                                        },
+                                    },
+                                    // Shimmer sweep across the column —
+                                    // mirrors the task-row "Drop to nest"
+                                    // cue so the gesture vocabulary
+                                    // stays consistent across surfaces.
+                                    "&::after": {
+                                        content: '""',
+                                        position: "absolute",
+                                        inset: 0,
+                                        background: shimmerGradient,
+                                        backgroundSize: "200% 100%",
+                                        pointerEvents: "none",
+                                        animation: "sprintColumnSweep 1.6s linear infinite",
+                                        zIndex: 1,
+                                    },
+                                    "@keyframes sprintColumnSweep": {
+                                        "0%": { backgroundPosition: "200% 0" },
+                                        "100%": { backgroundPosition: "-100% 0" },
+                                    },
+                                }),
+                            }}
+                        >
+                            {tasks.length === 0 ? (
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        flex: 1,
+                                        minHeight: 120,
+                                        border: isOver
+                                            ? `2px dashed ${accent}`
+                                            : mode === "dark"
+                                              ? "1px dashed rgba(255, 255, 255, 0.08)"
+                                              : "1px dashed rgba(0, 0, 0, 0.08)",
+                                        borderRadius: 6,
+                                        color: isOver ? accent : mode === "dark" ? "#555" : "#aaa",
+                                        backgroundColor: isOver
+                                            ? alpha(accent, 0.08)
+                                            : mode === "dark"
+                                              ? "rgba(255, 255, 255, 0.01)"
+                                              : "rgba(0, 0, 0, 0.01)",
+                                        transform: isOver ? "scale(1.02)" : "scale(1)",
+                                        transition:
+                                            "border 150ms ease, color 150ms ease, background-color 150ms ease, transform 150ms ease",
+                                        position: "relative",
+                                        zIndex: 2,
+                                    }}
                                 >
-                                    Drop tasks here
-                                </Typography>
-                            </Box>
-                        ) : (
-                            tasks.map((task, index) => {
-                                // For a milestone backing row, the
-                                // matching preview is keyed off the
-                                // milestone id, not the backing task's
-                                // id, since the click handler routes
-                                // through `setCurrentPreviewMilestoneId`.
-                                const isMilestoneRow = task.isMilestone === true;
-                                const isSelected = isMilestoneRow
-                                    ? !!isMilestonePreviewActive &&
-                                      selectedMilestoneId != null &&
-                                      task.milestoneId === selectedMilestoneId
-                                    : selectedTaskId === Number(task.id);
-                                return (
-                                    <SprintBoardCard
-                                        key={task.id}
-                                        task={task}
-                                        index={index}
-                                        myself={myself}
-                                        teamMemberProfiles={teamMemberProfiles}
-                                        onTaskClick={onTaskClick}
-                                        isSelected={isSelected}
-                                    />
-                                );
-                            })
-                        )}
-                        {provided.placeholder}
-                    </div>
-                )}
+                                    <Typography
+                                        level="body-xs"
+                                        sx={{
+                                            fontSize: "0.7rem",
+                                            fontWeight: isOver ? 700 : 500,
+                                            letterSpacing: isOver ? "0.04em" : "normal",
+                                            textTransform: isOver ? "uppercase" : "none",
+                                            color: "inherit",
+                                            transition:
+                                                "font-weight 150ms ease, letter-spacing 150ms ease",
+                                        }}
+                                    >
+                                        {isOver ? `↳ Drop to ${column.title}` : "Drop tasks here"}
+                                    </Typography>
+                                </Box>
+                            ) : (
+                                tasks.map((task, index) => {
+                                    // For a milestone backing row, the
+                                    // matching preview is keyed off the
+                                    // milestone id, not the backing task's
+                                    // id, since the click handler routes
+                                    // through `setCurrentPreviewMilestoneId`.
+                                    const isMilestoneRow = task.isMilestone === true;
+                                    const isSelected = isMilestoneRow
+                                        ? !!isMilestonePreviewActive &&
+                                          selectedMilestoneId != null &&
+                                          task.milestoneId === selectedMilestoneId
+                                        : selectedTaskId === Number(task.id);
+                                    return (
+                                        <SprintBoardCard
+                                            key={task.id}
+                                            task={task}
+                                            index={index}
+                                            myself={myself}
+                                            teamMemberProfiles={teamMemberProfiles}
+                                            onTaskClick={onTaskClick}
+                                            isSelected={isSelected}
+                                        />
+                                    );
+                                })
+                            )}
+                            {provided.placeholder}
+                        </Box>
+                    );
+                }}
             </Droppable>
         </div>
     );
