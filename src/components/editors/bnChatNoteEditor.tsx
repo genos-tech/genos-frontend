@@ -268,6 +268,14 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
     const restoredBodyRef = useRef(body);
     restoredBodyRef.current = body;
     const lastSeenResyncRef = useRef(resyncSignal);
+
+    // See `bnMyNoteEditor` for the full rationale. Gates the
+    // "edited" signal on real DOM user input so opening a note
+    // doesn't fire an auto-save.
+    const userInteractedRef = useRef(false);
+    useEffect(() => {
+        userInteractedRef.current = false;
+    }, [currentChatNote?.noteId]);
     useEffect(() => {
         if (lastSeenResyncRef.current === resyncSignal) return;
         lastSeenResyncRef.current = resyncSignal;
@@ -360,7 +368,9 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
                     data-changing-font-demo
                     onChange={() => {
                         setBody(editor.document);
-                        if (setNoteBodyEdited) {
+                        // See `userInteractedRef` for why this is
+                        // gated rather than always firing.
+                        if (userInteractedRef.current && setNoteBodyEdited) {
                             setNoteBodyEdited(true);
                             if (setNoteBodySaved) {
                                 setNoteBodySaved(false);
@@ -376,7 +386,27 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
                                 handleImageClick((target as HTMLImageElement).src);
                             }
                         }}
+                        onPaste={() => {
+                            userInteractedRef.current = true;
+                        }}
+                        onDrop={() => {
+                            userInteractedRef.current = true;
+                        }}
+                        onBeforeInput={() => {
+                            userInteractedRef.current = true;
+                        }}
+                        onCompositionStart={() => {
+                            userInteractedRef.current = true;
+                        }}
                         onKeyDown={(event) => {
+                            if (
+                                event.key !== "Shift" &&
+                                event.key !== "Control" &&
+                                event.key !== "Meta" &&
+                                event.key !== "Alt"
+                            ) {
+                                userInteractedRef.current = true;
+                            }
                             if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
                                 if (editor.document.length > 1) {
                                     //Auto saving logic here

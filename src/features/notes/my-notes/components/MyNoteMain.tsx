@@ -245,6 +245,8 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                             myself={myself}
                                             noteBodySaved={noteEditor.noteBodySaved}
                                             setMyself={setMyself}
+                                            setNoteBodyEdited={noteEditor.setNoteBodyEdited}
+                                            setNoteBodySaved={noteEditor.setNoteBodySaved}
                                             socket={socket}
                                             useTEM={useTEM}
                                             titleInputRef={noteEditor.titleInputRef}

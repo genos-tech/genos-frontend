@@ -269,6 +269,22 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
     const restoredBodyRef = useRef(body);
     restoredBodyRef.current = body;
     const lastSeenResyncRef = useRef(resyncSignal);
+
+    // Distinguish "real user input" from "initial sync" / "collab
+    // remote update" so opening a note doesn't trigger an auto-save.
+    // BlockNote fires `onChange` once the editor finishes loading the
+    // initial body (and again on every Yjs sync tick), and the
+    // previous version of this component called `setNoteBodyEdited(true)`
+    // from inside that handler unconditionally — arming the
+    // `useNoteEditorCore` debounce timer for a save no one asked for.
+    // We flip this ref to true on actual DOM input events
+    // (keypress, paste, drop, IME composition) and gate the
+    // "edited" signal on it. The ref resets to false every time the
+    // user opens a different note.
+    const userInteractedRef = useRef(false);
+    useEffect(() => {
+        userInteractedRef.current = false;
+    }, [currentMyNote?.noteId]);
     useEffect(() => {
         if (lastSeenResyncRef.current === resyncSignal) return;
         lastSeenResyncRef.current = resyncSignal;
@@ -363,7 +379,11 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                     data-changing-font-demo
                     onChange={() => {
                         setBody(editor.document);
-                        if (setNoteBodyEdited) {
+                        // Only count this as a real edit if the user
+                        // has actually typed / pasted / dropped since
+                        // opening the note. See `userInteractedRef`
+                        // above for the rationale.
+                        if (userInteractedRef.current && setNoteBodyEdited) {
                             setNoteBodyEdited(true);
                             if (setNoteBodySaved) {
                                 setNoteBodySaved(false);
@@ -379,7 +399,30 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                                 handleImageClick((target as HTMLImageElement).src);
                             }
                         }}
+                        onPaste={() => {
+                            userInteractedRef.current = true;
+                        }}
+                        onDrop={() => {
+                            userInteractedRef.current = true;
+                        }}
+                        onBeforeInput={() => {
+                            userInteractedRef.current = true;
+                        }}
+                        onCompositionStart={() => {
+                            userInteractedRef.current = true;
+                        }}
                         onKeyDown={(event) => {
+                            // Ignore plain modifier-only events (Shift,
+                            // Ctrl, Cmd, Meta) — they shouldn't mark
+                            // the note as "edited" by themselves.
+                            if (
+                                event.key !== "Shift" &&
+                                event.key !== "Control" &&
+                                event.key !== "Meta" &&
+                                event.key !== "Alt"
+                            ) {
+                                userInteractedRef.current = true;
+                            }
                             if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
                                 if (editor.document.length > 1) {
                                     //Auto saving logic here

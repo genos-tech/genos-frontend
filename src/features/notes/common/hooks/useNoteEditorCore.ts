@@ -181,9 +181,16 @@ export function useNoteEditorCore<T extends EditableNote>({
     }, [updateNote]);
 
     const handleBodyChange = useCallback((newBody: PartialBlock[]) => {
+        // Pure body sync. The edited / saved flags are intentionally
+        // NOT flipped here — `BlockNoteView.onChange` fires whenever
+        // the document changes for ANY reason (initial body load,
+        // Yjs sync, remote collaborator typing) and auto-setting
+        // `noteBodyEdited` from this path triggered spurious
+        // auto-saves the moment a note opened. The note editors flip
+        // those flags themselves, gated on `userInteractedRef` so
+        // only real local keystrokes / paste / drop / IME input
+        // count as edits.
         setBody(newBody);
-        setNoteBodyEdited(true);
-        setNoteBodySaved(false);
     }, []);
 
     return {
