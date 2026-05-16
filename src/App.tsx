@@ -404,6 +404,7 @@ export const App = () => {
                                         useIM={useIM}
                                         useTEM={useTEM}
                                         useUISM={useUISM}
+                                        onOpenSpotlight={spotlight.open}
                                     />
                                     <Routes>
                                         <Route

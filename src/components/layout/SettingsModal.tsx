@@ -129,6 +129,10 @@ const KeyboardShortcutsSection = () => {
                 "Available anywhere. The letter shortcuts now compose navigation with a creation action; the cycle gesture works like the macOS Cmd+Tab switcher.",
             rows: [
                 {
+                    label: "Open Spotlight search",
+                    combo: [isMac() ? "⌘" : "Ctrl", "K"],
+                },
+                {
                     label: "Open Tasks and start a new task",
                     combo: [...modifierKeys, "T"],
                 },
