@@ -451,6 +451,12 @@ export const TaskHomeContent = ({
     const handleProjectChange = async (projectId: number) => {
         const selectedProject = usePM.teamProjects?.find((p) => p.projectId === projectId);
         if (selectedProject && projectId !== usePM.currentProject?.projectId) {
+            // An open task preview keeps `isTaskPreviewVisible=true`, which makes
+            // useTaskRouting's URL-update effect skip its navigate(). The
+            // enforce-match effect then reverts currentProject to the stale
+            // `targetUrlProjectId.current`. Close the preview first so the URL
+            // (and the routing target) tracks the new project.
+            useTM.closeTaskPreview();
             useTM.setAllTasks([]);
             await usePM.loadProjectsAndTasks(projectId);
             usePM.setCurrentProject({
