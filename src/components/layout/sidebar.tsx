@@ -30,6 +30,7 @@ import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { InboxManagementState } from "../../hooks/inbox/useInboxManagement";
+import { analytics } from "../../services/analytics";
 import { purplePalette } from "../../theme/purplePalette";
 import { UserProps } from "../../types/admin";
 import { isMac } from "../../utils/platform";
@@ -147,6 +148,7 @@ export const Sidebar = (props: SidebarProps) => {
                 ];
                 keysToRemove.forEach((key) => localStorage.setItem(key, ""));
                 localStorage.setItem("isOfflineForced", "false");
+                analytics.reset();
 
                 setAccessToken(null);
                 navigate("/");
@@ -220,13 +222,13 @@ export const Sidebar = (props: SidebarProps) => {
             >
                 <TeamDropdown
                     myself={myself}
+                    setAvatarUserId={setAvatarUserId}
                     setMyself={setMyself}
-                    useTEM={useTEM}
+                    setOpenUserProfile={setOpenUserProfile}
                     socket={socket}
                     useCM={useCM}
+                    useTEM={useTEM}
                     useUISM={useUISM}
-                    setAvatarUserId={setAvatarUserId}
-                    setOpenUserProfile={setOpenUserProfile}
                 />
                 <ColorSchemeToggle />
             </Box>
@@ -261,14 +263,13 @@ export const Sidebar = (props: SidebarProps) => {
                         mirrors the binding in `useSpotlight.ts`. */}
                     <ListItem>
                         <Tooltip
-                            title={isMac() ? "Search · ⌘ K" : "Search · Ctrl + K"}
                             placement="right"
                             size="sm"
-                            variant="outlined"
                             sx={{ zIndex: 10020 }}
+                            title={isMac() ? "Search · ⌘ K" : "Search · Ctrl + K"}
+                            variant="outlined"
                         >
                             <ListItemButton
-                                onClick={onOpenSpotlight}
                                 sx={{
                                     flexDirection: "column",
                                     alignItems: "center",
@@ -288,6 +289,7 @@ export const Sidebar = (props: SidebarProps) => {
                                         transform: "translateY(0)",
                                     },
                                 }}
+                                onClick={onOpenSpotlight}
                             >
                                 <Box
                                     sx={{
@@ -340,14 +342,13 @@ export const Sidebar = (props: SidebarProps) => {
                         return (
                             <ListItem key={item.id}>
                                 <Tooltip
-                                    title={isMac() ? "Hold ⌘ + tap Ctrl" : "Hold Ctrl + tap Alt"}
                                     placement="right"
                                     size="sm"
-                                    variant="outlined"
                                     sx={{ zIndex: 10020 }}
+                                    title={isMac() ? "Hold ⌘ + tap Ctrl" : "Hold Ctrl + tap Alt"}
+                                    variant="outlined"
                                 >
                                     <ListItemButton
-                                        onClick={() => handleNavClick(item.path)}
                                         sx={{
                                             flexDirection: "column",
                                             alignItems: "center",
@@ -380,6 +381,7 @@ export const Sidebar = (props: SidebarProps) => {
                                                 transform: "translateY(0)",
                                             },
                                         }}
+                                        onClick={() => handleNavClick(item.path)}
                                     >
                                         <Badge
                                             badgeContent={badgeCount > 0 ? badgeCount : 0}
@@ -472,12 +474,11 @@ export const Sidebar = (props: SidebarProps) => {
                         <Tooltip
                             placement="right"
                             size="sm"
+                            sx={{ zIndex: 10020 }}
                             title="Settings"
                             variant="outlined"
-                            sx={{ zIndex: 10020 }}
                         >
                             <ListItemButton
-                                onClick={() => setOpenSettings(true)}
                                 sx={{
                                     flexDirection: "column",
                                     alignItems: "center",
@@ -496,6 +497,7 @@ export const Sidebar = (props: SidebarProps) => {
                                         },
                                     },
                                 }}
+                                onClick={() => setOpenSettings(true)}
                             >
                                 <Box
                                     sx={{
@@ -529,12 +531,11 @@ export const Sidebar = (props: SidebarProps) => {
                         <Tooltip
                             placement="right"
                             size="sm"
+                            sx={{ zIndex: 10020 }}
                             title="Sign out"
                             variant="outlined"
-                            sx={{ zIndex: 10020 }}
                         >
                             <ListItemButton
-                                onClick={handleLogout}
                                 sx={{
                                     flexDirection: "column",
                                     alignItems: "center",
@@ -549,6 +550,7 @@ export const Sidebar = (props: SidebarProps) => {
                                         },
                                     },
                                 }}
+                                onClick={handleLogout}
                             >
                                 <Box
                                     sx={{
@@ -585,7 +587,6 @@ export const Sidebar = (props: SidebarProps) => {
 
             {/* User Avatar Section */}
             <Box
-                onClick={() => setOpenUserProfile(true)}
                 sx={{
                     display: "flex",
                     justifyContent: "center",
@@ -593,13 +594,14 @@ export const Sidebar = (props: SidebarProps) => {
                     cursor: "pointer",
                     position: "relative",
                 }}
+                onClick={() => setOpenUserProfile(true)}
             >
                 <Tooltip
                     placement="right"
                     size="sm"
+                    sx={{ zIndex: 10020 }}
                     title="Open My Profile"
                     variant="outlined"
-                    sx={{ zIndex: 10020 }}
                 >
                     <Box
                         sx={{
@@ -672,29 +674,29 @@ export const Sidebar = (props: SidebarProps) => {
             </Box>
 
             <UserProfile
-                useCM={useCM}
                 isYou={true}
                 myself={myself}
                 openUserProfile={openUserProfile}
                 setMyself={setMyself}
                 setOpenUserProfile={setOpenUserProfile}
                 socket={socket}
-                useUISM={useUISM}
+                useCM={useCM}
                 user={useTEM.teamMemberProfiles[myself.userId]}
+                useUISM={useUISM}
             />
 
             {/* User profile for team members */}
             {avatarUserId && (
                 <UserProfile
-                    useCM={useCM}
                     isYou={false}
                     myself={myself}
                     openUserProfile={openUserProfile}
                     setMyself={setMyself}
                     setOpenUserProfile={setOpenUserProfile}
                     socket={socket}
-                    useUISM={useUISM}
+                    useCM={useCM}
                     user={useTEM.teamMemberProfiles[avatarUserId]}
+                    useUISM={useUISM}
                 />
             )}
 
