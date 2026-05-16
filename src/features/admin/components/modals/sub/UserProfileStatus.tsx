@@ -14,13 +14,15 @@ import {
     Stack,
     Typography,
 } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 
 import { PulseDot } from "../../../../../components/ui/misc/PulseDot";
+import { ProfileModalStyles } from "../../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../../context/AuthContext";
 import { UserProps } from "../../../../../types/admin";
 import { updateUserProfile } from "../../../services/updateUserProfile";
 
-const templateCustomStatueOptions = [
+const PRESET_STATUSES = [
     "🧠 In the Zone",
     "💨 AFK",
     "☕ Coffee Break",
@@ -35,7 +37,10 @@ const templateCustomStatueOptions = [
     "🚫 Do Not Disturb",
 ];
 
-type UserProfileStatusProps = {
+const PRESENCE_GREEN = "#4caf50";
+const PRESENCE_GREY = "#999";
+
+type Props = {
     myself: UserProps;
     setMyself: (value: UserProps) => void;
     isYou: boolean;
@@ -44,189 +49,158 @@ type UserProfileStatusProps = {
     selectedEmoji: any;
     setSelectedEmoji: (value: any) => void;
 };
-export const UserProfileStatus = (props: UserProfileStatusProps) => {
-    const { myself, setMyself, isYou, user, setShowEmojiPicker, selectedEmoji, setSelectedEmoji } =
-        props;
+
+export const UserProfileStatus = ({
+    myself,
+    setMyself,
+    isYou,
+    user,
+    setShowEmojiPicker,
+    selectedEmoji,
+    setSelectedEmoji,
+}: Props) => {
     const { accessToken } = useAuth();
+    const { mode } = useColorScheme();
+    const styles = mode === "dark" ? ProfileModalStyles.dark : ProfileModalStyles.light;
 
-    const [profileUser, setProfileUser] = useState<UserProps | undefined>(
-        isYou === true ? myself : user
-    );
-    useEffect(() => {
-        if (isYou === true) {
-            setProfileUser(myself);
-        } else {
-            setProfileUser(user);
-        }
-    }, [user]);
+    // Derive directly from props. Mirroring this in useState — as the
+    // previous version did — produced a stale `profileUser` whenever
+    // `myself` updated without `user` changing, because the sync effect's
+    // dep array only watched `user`.
+    const profileUser = isYou ? myself : user;
+    const isSelfView = myself.userId === profileUser?.userId;
 
-    const [openCustomStatusEditor, setOpenCustomStatusEditor] = useState(false);
-    const [isStatusUpdated, setIsStatusUpdated] = useState(false);
+    const isOffline = isSelfView
+        ? myself.isOfflineForced === "true"
+        : profileUser?.isOnline !== true || profileUser?.isOfflineForced === "true";
+    const presenceColor = isOffline ? PRESENCE_GREY : PRESENCE_GREEN;
+    const presenceLabel = isOffline ? (isSelfView ? "Offline (Forced)" : "Offline") : "Online";
+    const customStatus = profileUser?.customStatus ?? "";
+
+    const [openEditor, setOpenEditor] = useState(false);
     const [newStatus, setNewStatus] = useState("");
-    const [customStatusValue, setCustomStatusValue] = useState(
-        profileUser ? profileUser.customStatus : "Update Status"
-    );
-    useEffect(() => {
-        if (isStatusUpdated === false && openCustomStatusEditor === false) {
-            setCustomStatusValue(profileUser ? profileUser.customStatus : "Update Status");
-        }
-    }, [profileUser, isStatusUpdated]);
 
-    const insertEmoji = (emoji: any) => {
-        setNewStatus(emoji + " " + newStatus);
-        setSelectedEmoji(null);
-    };
+    // The emoji picker lives in the parent modal; it pushes a selected
+    // emoji back through `selectedEmoji`. Functional setState here avoids
+    // clobbering edits the user made between opening the picker and
+    // picking an emoji.
     useEffect(() => {
-        if (selectedEmoji !== null) {
-            insertEmoji(selectedEmoji);
-        }
-    }, [selectedEmoji]);
+        if (selectedEmoji == null) return;
+        setNewStatus((prev) => `${selectedEmoji} ${prev}`);
+        setSelectedEmoji(null);
+    }, [selectedEmoji, setSelectedEmoji]);
+
+    const handleOpenEditor = () => {
+        setNewStatus(myself.customStatus ?? "");
+        setOpenEditor(true);
+    };
+    const handleCloseEditor = () => setOpenEditor(false);
+
+    const persistCustomStatus = (status: string) => {
+        updateUserProfile({
+            accessToken: accessToken,
+            userId: myself.userId,
+            customStatus: status,
+        });
+        setMyself({ ...myself, customStatus: status });
+        localStorage.setItem("customStatus", status);
+    };
+    const handleSet = () => {
+        if (newStatus !== "") persistCustomStatus(newStatus);
+        handleCloseEditor();
+    };
+    const handleReset = () => {
+        persistCustomStatus("");
+        setNewStatus("");
+        handleCloseEditor();
+    };
+
+    const persistPresence = (forced: "true" | "false") => {
+        updateUserProfile({
+            accessToken: accessToken,
+            userId: myself.userId,
+            isOfflineForced: forced,
+        });
+        setMyself({ ...myself, isOfflineForced: forced });
+        localStorage.setItem("isOfflineForced", forced);
+    };
+
+    const chipBase = {
+        borderRadius: "sm",
+        fontSize: "16px",
+    } as const;
 
     return (
-        <Stack direction={"column"}>
+        <Stack direction="column" spacing={1}>
             <Typography
                 component="div"
                 fontSize={28}
                 fontWeight="bold"
+                noWrap
                 endDecorator={
-                    <Stack direction={"row"} spacing={0.5}>
+                    <Stack direction="row" spacing={0.5}>
+                        {/* Presence chip — dropdown for self, static for others */}
                         <Dropdown>
                             <MenuButton
+                                disabled={!isSelfView}
                                 slots={{ root: IconButton }}
                                 slotProps={{
-                                    root: {
-                                        variant: "outlined",
-                                        color: "neutral",
-                                    },
+                                    root: { variant: "outlined", color: "neutral" },
                                 }}
                             >
                                 <Chip
                                     color="neutral"
                                     size="md"
                                     variant="plain"
-                                    slotProps={{
-                                        root: {
-                                            component: "span",
-                                        },
-                                    }}
+                                    slotProps={{ root: { component: "span" } }}
                                     startDecorator={
                                         <Box sx={{ ml: "-5px" }}>
-                                            <PulseDot
-                                                color={
-                                                    myself.userId === profileUser?.userId
-                                                        ? myself?.isOfflineForced !== "true"
-                                                            ? "#4caf50"
-                                                            : "#999"
-                                                        : profileUser?.isOnline === true &&
-                                                            profileUser?.isOfflineForced !== "true"
-                                                          ? "#4caf50"
-                                                          : "#999"
-                                                }
-                                            />
+                                            <PulseDot color={presenceColor} />
                                         </Box>
                                     }
-                                    sx={{
-                                        borderRadius: "sm",
-                                        fontSize: "16px",
-                                    }}
+                                    sx={chipBase}
                                 >
-                                    {myself.userId === profileUser?.userId
-                                        ? myself?.isOfflineForced !== "true"
-                                            ? "Online"
-                                            : "Offline (Forced)"
-                                        : profileUser?.isOnline === true &&
-                                            profileUser?.isOfflineForced !== "true"
-                                          ? "Online"
-                                          : "Offline"}
+                                    {presenceLabel}
                                 </Chip>
                             </MenuButton>
-                            {myself.userId === profileUser?.userId && (
+                            {isSelfView && (
                                 <Menu sx={{ zIndex: 10010 }}>
-                                    <MenuItem
-                                        onClick={() => {
-                                            updateUserProfile({
-                                                accessToken: accessToken,
-                                                userId: myself.userId,
-                                                isOfflineForced: "false",
-                                            });
-                                            setMyself({
-                                                ...myself,
-                                                isOfflineForced: "false",
-                                            });
-                                            localStorage.setItem("isOfflineForced", "false");
-                                        }}
-                                    >
-                                        <PulseDot color={"#4caf50"} />
+                                    <MenuItem onClick={() => persistPresence("false")}>
+                                        <PulseDot color={PRESENCE_GREEN} />
                                         Set Online
                                     </MenuItem>
-                                    <MenuItem
-                                        onClick={() => {
-                                            updateUserProfile({
-                                                accessToken: accessToken,
-                                                userId: myself.userId,
-                                                isOfflineForced: "true",
-                                            });
-                                            setMyself({
-                                                ...myself,
-                                                isOfflineForced: "true",
-                                            });
-                                            localStorage.setItem("isOfflineForced", "true");
-                                        }}
-                                    >
-                                        <PulseDot color={"#999"} />
+                                    <MenuItem onClick={() => persistPresence("true")}>
+                                        <PulseDot color={PRESENCE_GREY} />
                                         Set Always Offline
                                     </MenuItem>
                                 </Menu>
                             )}
                         </Dropdown>
 
-                        {myself.userId === profileUser?.userId && (
-                            <>
-                                {openCustomStatusEditor === false && (
-                                    <Chip
-                                        color="neutral"
-                                        size="md"
-                                        sx={{ borderRadius: "sm" }}
-                                        variant="outlined"
-                                        onClick={() => {
-                                            setOpenCustomStatusEditor(true);
-                                        }}
-                                    >
-                                        {myself.customStatus !== ""
-                                            ? myself.customStatus
-                                            : "Update Status"}
-                                    </Chip>
-                                )}
-                            </>
+                        {!openEditor && (
+                            <Chip
+                                color="neutral"
+                                size="md"
+                                variant="outlined"
+                                onClick={isSelfView ? handleOpenEditor : undefined}
+                                sx={{
+                                    ...chipBase,
+                                    cursor: isSelfView ? "pointer" : "default",
+                                    transition: "background-color 0.15s ease",
+                                    "&:hover": isSelfView
+                                        ? { backgroundColor: styles.hoverBg }
+                                        : undefined,
+                                }}
+                            >
+                                {customStatus !== "" ? customStatus : "Update Status"}
+                            </Chip>
                         )}
 
-                        {myself.userId !== profileUser?.userId && (
-                            <>
-                                {openCustomStatusEditor === false && (
-                                    <Chip
-                                        color="neutral"
-                                        size="md"
-                                        sx={{ borderRadius: "sm" }}
-                                        variant="outlined"
-                                        onClick={() => {}}
-                                    >
-                                        {customStatusValue !== "Update Status" &&
-                                        customStatusValue != ""
-                                            ? customStatusValue
-                                            : "Update Status"}
-                                    </Chip>
-                                )}
-                            </>
-                        )}
-
-                        {/* Update custom status */}
-                        {openCustomStatusEditor === true && (
-                            <Stack direction={"row"} justifyContent={"center"} spacing={0.5}>
+                        {openEditor && (
+                            <Stack direction="row" justifyContent="center" spacing={0.5}>
                                 <IconButton
                                     variant="outlined"
-                                    onClick={() => {
-                                        setShowEmojiPicker(true);
-                                    }}
+                                    onClick={() => setShowEmojiPicker(true)}
                                 >
                                     <SentimentSatisfiedAltIcon />
                                 </IconButton>
@@ -234,21 +208,16 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                                     <MenuButton
                                         slots={{ root: IconButton }}
                                         slotProps={{
-                                            root: {
-                                                variant: "outlined",
-                                                color: "neutral",
-                                            },
+                                            root: { variant: "outlined", color: "neutral" },
                                         }}
                                     >
                                         <ArrowDropDown />
                                     </MenuButton>
                                     <Menu sx={{ zIndex: 10010 }}>
-                                        {templateCustomStatueOptions.map((template, idx) => (
+                                        {PRESET_STATUSES.map((template) => (
                                             <MenuItem
-                                                key={idx}
-                                                onClick={() => {
-                                                    setNewStatus(template);
-                                                }}
+                                                key={template}
+                                                onClick={() => setNewStatus(template)}
                                             >
                                                 {template}
                                             </MenuItem>
@@ -258,7 +227,7 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                                 <Input
                                     placeholder="Set your status…"
                                     size="sm"
-                                    sx={{ width: "200px" }}
+                                    sx={{ width: 200 }}
                                     value={newStatus}
                                     variant="outlined"
                                     onChange={(e) => setNewStatus(e.target.value)}
@@ -267,36 +236,18 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                         )}
                     </Stack>
                 }
-                noWrap
             >
                 {profileUser?.userName}
             </Typography>
-            {openCustomStatusEditor === true && (
-                <Stack direction={"row"} justifyContent={"center"} spacing={0.5}>
+
+            {openEditor && (
+                <Stack direction="row" justifyContent="center" spacing={0.5}>
                     <Button
                         color="danger"
                         size="md"
                         variant="outlined"
-                        sx={{
-                            borderRadius: "sm",
-                            fontWeight: "bold",
-                        }}
-                        onClick={() => {
-                            setOpenCustomStatusEditor(false);
-                            setIsStatusUpdated(true);
-                            setCustomStatusValue("Update Status");
-                            setNewStatus("");
-                            updateUserProfile({
-                                accessToken: accessToken,
-                                userId: myself.userId,
-                                customStatus: "",
-                            });
-                            setMyself({
-                                ...myself,
-                                customStatus: "",
-                            });
-                            localStorage.setItem("customStatus", "");
-                        }}
+                        sx={{ borderRadius: "sm", fontWeight: "bold" }}
+                        onClick={handleReset}
                     >
                         RESET
                     </Button>
@@ -304,13 +255,8 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                         color="neutral"
                         size="md"
                         variant="outlined"
-                        sx={{
-                            borderRadius: "sm",
-                            fontWeight: "bold",
-                        }}
-                        onClick={() => {
-                            setOpenCustomStatusEditor(false);
-                        }}
+                        sx={{ borderRadius: "sm", fontWeight: "bold" }}
+                        onClick={handleCloseEditor}
                     >
                         CANCEL
                     </Button>
@@ -318,27 +264,8 @@ export const UserProfileStatus = (props: UserProfileStatusProps) => {
                         color="primary"
                         size="md"
                         variant="soft"
-                        sx={{
-                            borderRadius: "sm",
-                            fontWeight: "bold",
-                        }}
-                        onClick={() => {
-                            if (newStatus && newStatus !== "") {
-                                setCustomStatusValue(newStatus);
-                                updateUserProfile({
-                                    accessToken: accessToken,
-                                    userId: myself.userId,
-                                    customStatus: newStatus,
-                                });
-                                setMyself({
-                                    ...myself,
-                                    customStatus: newStatus,
-                                });
-                                localStorage.setItem("customStatus", newStatus);
-                                setIsStatusUpdated(true);
-                            }
-                            setOpenCustomStatusEditor(false);
-                        }}
+                        sx={{ borderRadius: "sm", fontWeight: "bold" }}
+                        onClick={handleSet}
                     >
                         SET
                     </Button>
