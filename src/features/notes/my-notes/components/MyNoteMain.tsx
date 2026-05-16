@@ -50,6 +50,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
         currentMyNote: useNM.currentMyNote,
         myself,
         accessToken,
+        resyncSignal: useNM.noteResyncNonce,
         onNoteUpdate: (updatedNote: MyNoteProps) => {
             // Push the latest title into the new tabs API so the strip
             // re-renders without going through the legacy
@@ -70,6 +71,10 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                         : item
                 )
             );
+
+            // Optimistically flip the history chip to "by me · just now"
+            // without waiting for a full version refetch.
+            useNM.bumpNoteVersionsHead(updatedNote.noteType, updatedNote.noteId);
         },
     });
 
@@ -121,7 +126,12 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
 
     const handleCopyNoteLink = async () => {
         if (useNM.currentMyNote) {
-            const noteUrl = `${window.location.origin}/workspace/notes/my/${useNM.currentMyNote.noteId}`;
+            // Recipients of a shared note are in the "Shared Notes"
+            // bucket; emit a /shared/ link so when they click it the
+            // sidebar opens the right section.
+            const isShared = useNM.currentNoteType === 4;
+            const segment = isShared ? "shared" : "my";
+            const noteUrl = `${window.location.origin}/workspace/notes/${segment}/${useNM.currentMyNote.noteId}`;
             try {
                 await navigator.clipboard.writeText(noteUrl);
             } catch (err) {
@@ -157,7 +167,14 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                     mb: "5px",
                                 }}
                             >
-                                <MyNoteHeader useNM={useNM} />
+                                <MyNoteHeader
+                                    useNM={useNM}
+                                    myself={myself}
+                                    setMyself={setMyself}
+                                    socket={socket}
+                                    useCM={useCM}
+                                    useUISM={useUISM}
+                                />
 
                                 <NoteHeaderActions
                                     useCM={useCM}
@@ -228,6 +245,8 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                                             myself={myself}
                                             noteBodySaved={noteEditor.noteBodySaved}
                                             setMyself={setMyself}
+                                            setNoteBodyEdited={noteEditor.setNoteBodyEdited}
+                                            setNoteBodySaved={noteEditor.setNoteBodySaved}
                                             socket={socket}
                                             useTEM={useTEM}
                                             titleInputRef={noteEditor.titleInputRef}

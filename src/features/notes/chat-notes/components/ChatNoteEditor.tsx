@@ -9,7 +9,7 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
-import { ChatNoteProps } from "../../../../types/notes";
+import { ChatNoteProps, NoteRoleMember } from "../../../../types/notes";
 
 interface ChatNoteEditorProps {
     currentChatNote: ChatNoteProps;
@@ -28,6 +28,10 @@ interface ChatNoteEditorProps {
     socket: Socket | null;
     useTEM: TeamManagementState;
     useUISM: UIStateManagementState;
+    /** Forwarded to `BnChatNoteEditor` so it can switch between
+     *  editor and viewer modes based on the current user's role. */
+    currentNoteMembers: NoteRoleMember[];
+    resyncSignal?: number | string;
 }
 
 export const ChatNoteEditor = ({
@@ -47,6 +51,8 @@ export const ChatNoteEditor = ({
     useTEM,
     useCM,
     useUISM,
+    currentNoteMembers,
+    resyncSignal,
 }: ChatNoteEditorProps) => {
     return (
         <>
@@ -111,7 +117,9 @@ export const ChatNoteEditor = ({
                 body={body}
                 useCM={useCM}
                 currentChatNote={currentChatNote}
+                currentNoteMembers={currentNoteMembers}
                 myself={myself}
+                resyncSignal={resyncSignal}
                 setBody={onBodyChange}
                 setMyself={setMyself}
                 setNoteBodyEdited={setNoteBodyEdited}

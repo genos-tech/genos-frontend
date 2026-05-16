@@ -2,7 +2,7 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import "../../App.css";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { codeBlockOptions } from "@blocknote/code-block";
 import {
     BlockNoteSchema,
@@ -52,12 +52,16 @@ import { RiAlertFill } from "react-icons/ri";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
+import {
+    getMyNoteRoleId,
+    isNoteEditableForRole,
+} from "../../features/notes/common/utils/noteRoles";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useCollaborativeBlockNote } from "../../hooks/common/useCollaborativeBlockNote";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
-import { MyNoteProps } from "../../types/notes";
+import { MyNoteProps, NoteRoleMember } from "../../types/notes";
 import { getUserColor } from "../../utils/collabUtils";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
@@ -91,6 +95,17 @@ type BnMyNoteEditorProps = {
     useUISM: UIStateManagementState;
     useTEM: TeamManagementState;
     useCM: ChatManagementState;
+    /** Explicit note-role members. Used to gate edit affordances —
+     *  Viewers see the body but only the comment-add button. The
+     *  caller passes `useNM.currentNoteMembers` directly. */
+    currentNoteMembers: NoteRoleMember[];
+    // Bumped by `useNoteManagement.restoreNoteVersion` after a successful
+    // restore. On change, we push `body` into the live Yjs doc via
+    // `editor.replaceBlocks`, which syncs the restored content to
+    // Hocuspocus / IDB persistence / all collaborators. Without this the
+    // editor keeps rendering Yjs's existing CRDT state (the pre-restore
+    // body) even though local React state was updated.
+    resyncSignal?: number | string;
 };
 export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
     const {
@@ -105,7 +120,15 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
         setNoteBodySaved,
         useUISM,
         useCM,
+        currentNoteMembers,
+        resyncSignal,
     } = props;
+
+    // Editor vs. viewer toggle. `null` (no explicit grant) means the
+    // user is the implicit owner of an unshared personal note —
+    // treat as editable. Comments stay enabled in both modes.
+    const myRoleId = getMyNoteRoleId(currentNoteMembers, myself.userId);
+    const isEditable = isNoteEditableForRole(myRoleId);
 
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
@@ -238,6 +261,48 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
         setShowEmojiPicker(false);
     };
 
+    // Push the restored body into the live Yjs doc when the parent bumps
+    // `resyncSignal`. The first render is skipped so we don't clobber the
+    // initial seed on mount; subsequent changes correspond to a restore
+    // and trigger a Yjs replace (which syncs to Hocuspocus + IDB + all
+    // other collaborators).
+    const restoredBodyRef = useRef(body);
+    restoredBodyRef.current = body;
+    const lastSeenResyncRef = useRef(resyncSignal);
+
+    // Distinguish "real user input" from "initial sync" / "collab
+    // remote update" so opening a note doesn't trigger an auto-save.
+    // BlockNote fires `onChange` once the editor finishes loading the
+    // initial body (and again on every Yjs sync tick), and the
+    // previous version of this component called `setNoteBodyEdited(true)`
+    // from inside that handler unconditionally — arming the
+    // `useNoteEditorCore` debounce timer for a save no one asked for.
+    // We flip this ref to true on actual DOM input events
+    // (keypress, paste, drop, IME composition) and gate the
+    // "edited" signal on it. The ref resets to false every time the
+    // user opens a different note.
+    const userInteractedRef = useRef(false);
+    useEffect(() => {
+        userInteractedRef.current = false;
+    }, [currentMyNote?.noteId]);
+    useEffect(() => {
+        if (lastSeenResyncRef.current === resyncSignal) return;
+        lastSeenResyncRef.current = resyncSignal;
+        if (!editor) return;
+        const next = restoredBodyRef.current;
+        // BlockNote requires at least one block; if the restored body is
+        // empty, substitute a single empty paragraph so the editor
+        // visibly clears instead of silently keeping the previous content.
+        const replacement = next && next.length > 0 ? next : [{ type: "paragraph" }];
+        try {
+            (editor as any).replaceBlocks(editor.document, replacement);
+        } catch {
+            // Best-effort: if the editor isn't ready yet, the next render
+            // will pick up the seeded body via useCollaborativeBlockNote's
+            // retry effect.
+        }
+    }, [resyncSignal, editor]);
+
     const countLines = (nodes: any[]): number => {
         let count = 0;
         for (const node of nodes) {
@@ -304,6 +369,7 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                 <BlockNoteView
                     className="bn-box"
                     comments={false}
+                    editable={isEditable}
                     editor={editor as any}
                     emojiPicker={false}
                     formattingToolbar={false}
@@ -313,7 +379,11 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                     data-changing-font-demo
                     onChange={() => {
                         setBody(editor.document);
-                        if (setNoteBodyEdited) {
+                        // Only count this as a real edit if the user
+                        // has actually typed / pasted / dropped since
+                        // opening the note. See `userInteractedRef`
+                        // above for the rationale.
+                        if (userInteractedRef.current && setNoteBodyEdited) {
                             setNoteBodyEdited(true);
                             if (setNoteBodySaved) {
                                 setNoteBodySaved(false);
@@ -329,7 +399,30 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                                 handleImageClick((target as HTMLImageElement).src);
                             }
                         }}
+                        onPaste={() => {
+                            userInteractedRef.current = true;
+                        }}
+                        onDrop={() => {
+                            userInteractedRef.current = true;
+                        }}
+                        onBeforeInput={() => {
+                            userInteractedRef.current = true;
+                        }}
+                        onCompositionStart={() => {
+                            userInteractedRef.current = true;
+                        }}
                         onKeyDown={(event) => {
+                            // Ignore plain modifier-only events (Shift,
+                            // Ctrl, Cmd, Meta) — they shouldn't mark
+                            // the note as "edited" by themselves.
+                            if (
+                                event.key !== "Shift" &&
+                                event.key !== "Control" &&
+                                event.key !== "Meta" &&
+                                event.key !== "Alt"
+                            ) {
+                                userInteractedRef.current = true;
+                            }
                             if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
                                 if (editor.document.length > 1) {
                                     //Auto saving logic here
@@ -339,110 +432,132 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                     >
                         <div className="bn-editor-section">
                             <BlockNoteViewEditor>
-                                <SideMenuController
-                                    sideMenu={(props) => (
-                                        <SideMenu
-                                            {...props}
-                                            dragHandleMenu={CustomDragHandleMenu}
-                                        />
-                                    )}
-                                />
+                                {isEditable && (
+                                    <SideMenuController
+                                        sideMenu={(props) => (
+                                            <SideMenu
+                                                {...props}
+                                                dragHandleMenu={CustomDragHandleMenu}
+                                            />
+                                        )}
+                                    />
+                                )}
                                 <FormattingToolbarController
                                     formattingToolbar={() => (
                                         <FormattingToolbar>
-                                            <BlockTypeSelect
-                                                key={"blockTypeSelect"}
-                                                items={[
-                                                    ...getBlockTypeSelectItemsWithCodeBlock(
-                                                        editor.dictionary
-                                                    ),
-                                                    {
-                                                        name: "Alert",
-                                                        type: "alert",
-                                                        icon: RiAlertFill,
-                                                    } satisfies BlockTypeSelectItem,
-                                                ]}
-                                            />
+                                            {isEditable && (
+                                                <BlockTypeSelect
+                                                    key={"blockTypeSelect"}
+                                                    items={[
+                                                        ...getBlockTypeSelectItemsWithCodeBlock(
+                                                            editor.dictionary
+                                                        ),
+                                                        {
+                                                            name: "Alert",
+                                                            type: "alert",
+                                                            icon: RiAlertFill,
+                                                        } satisfies BlockTypeSelectItem,
+                                                    ]}
+                                                />
+                                            )}
 
-                                            <BasicTextStyleButton
-                                                key={"boldStyleButton"}
-                                                basicTextStyle={"bold"}
-                                            />
-                                            <BasicTextStyleButton
-                                                key={"italicStyleButton"}
-                                                basicTextStyle={"italic"}
-                                            />
-                                            <BasicTextStyleButton
-                                                key={"underlineStyleButton"}
-                                                basicTextStyle={"underline"}
-                                            />
-                                            <BasicTextStyleButton
-                                                key={"strikeStyleButton"}
-                                                basicTextStyle={"strike"}
-                                            />
-                                            <BasicTextStyleButton
-                                                key={"codeStyleButton"}
-                                                basicTextStyle={"code"}
-                                            />
-                                            <TextAlignButton
-                                                key={"textAlignLeftButton"}
-                                                textAlignment={"left"}
-                                            />
-                                            <TextAlignButton
-                                                key={"textAlignCenterButton"}
-                                                textAlignment={"center"}
-                                            />
-                                            <TextAlignButton
-                                                key={"textAlignRightButton"}
-                                                textAlignment={"right"}
-                                            />
-                                            <ColorStyleButton key={"colorStyleButton"} />
-                                            <CreateLinkButton key={"createLinkButton"} />
-                                            <FileCaptionButton key={"fileCaptionButton"} />
-                                            <FileReplaceButton key={"fileReplaceButton"} />
+                                            {isEditable && (
+                                                <>
+                                                    <BasicTextStyleButton
+                                                        key={"boldStyleButton"}
+                                                        basicTextStyle={"bold"}
+                                                    />
+                                                    <BasicTextStyleButton
+                                                        key={"italicStyleButton"}
+                                                        basicTextStyle={"italic"}
+                                                    />
+                                                    <BasicTextStyleButton
+                                                        key={"underlineStyleButton"}
+                                                        basicTextStyle={"underline"}
+                                                    />
+                                                    <BasicTextStyleButton
+                                                        key={"strikeStyleButton"}
+                                                        basicTextStyle={"strike"}
+                                                    />
+                                                    <BasicTextStyleButton
+                                                        key={"codeStyleButton"}
+                                                        basicTextStyle={"code"}
+                                                    />
+                                                    <TextAlignButton
+                                                        key={"textAlignLeftButton"}
+                                                        textAlignment={"left"}
+                                                    />
+                                                    <TextAlignButton
+                                                        key={"textAlignCenterButton"}
+                                                        textAlignment={"center"}
+                                                    />
+                                                    <TextAlignButton
+                                                        key={"textAlignRightButton"}
+                                                        textAlignment={"right"}
+                                                    />
+                                                    <ColorStyleButton key={"colorStyleButton"} />
+                                                    <CreateLinkButton key={"createLinkButton"} />
+                                                    <FileCaptionButton key={"fileCaptionButton"} />
+                                                    <FileReplaceButton key={"fileReplaceButton"} />
+                                                </>
+                                            )}
                                             {threadStore && (
                                                 <AddCommentButton key={"addCommentButton"} />
                                             )}
-                                            <FileDeleteButton key={"fileDeleteButton"} />
-                                            <FileDownloadButton key={"fileDownloadButton"} />
-                                            <FilePreviewButton key={"filePreviewButton"} />
-                                            <FileRenameButton key={"fileRenameButton"} />
-                                            <TableCellMergeButton key={"tableCellMergeButton"} />
+                                            {isEditable && (
+                                                <>
+                                                    <FileDeleteButton key={"fileDeleteButton"} />
+                                                    <FileDownloadButton
+                                                        key={"fileDownloadButton"}
+                                                    />
+                                                    <FilePreviewButton key={"filePreviewButton"} />
+                                                    <FileRenameButton key={"fileRenameButton"} />
+                                                    <TableCellMergeButton
+                                                        key={"tableCellMergeButton"}
+                                                    />
+                                                </>
+                                            )}
                                         </FormattingToolbar>
                                     )}
                                 />
 
-                                <SuggestionMenuController
-                                    triggerCharacter={"@"}
-                                    getItems={async (query) =>
-                                        filterSuggestionItems(
-                                            MentionMenuItems(
-                                                useTEM.teamMemberProfiles,
-                                                editor,
-                                                useTEM.teamMembers
-                                            ),
-                                            query
-                                        )
-                                    }
-                                />
-                                <SuggestionMenuController
-                                    triggerCharacter={"/"}
-                                    getItems={async (query) =>
-                                        filterSuggestionItems(
-                                            getCustomSlashMenuItems(
-                                                editor as unknown as typeof schema.BlockNoteEditor
-                                            ),
-                                            query
-                                        )
-                                    }
-                                />
-                                <SuggestionMenuController
-                                    getItems={async (query) =>
-                                        getEmojiSuggestionItems(editor, query)
-                                    }
-                                    minQueryLength={2}
-                                    triggerCharacter={":"}
-                                />
+                                {isEditable && (
+                                    <SuggestionMenuController
+                                        triggerCharacter={"@"}
+                                        getItems={async (query) =>
+                                            filterSuggestionItems(
+                                                MentionMenuItems(
+                                                    useTEM.teamMemberProfiles,
+                                                    editor,
+                                                    useTEM.teamMembers
+                                                ),
+                                                query
+                                            )
+                                        }
+                                    />
+                                )}
+                                {isEditable && (
+                                    <SuggestionMenuController
+                                        triggerCharacter={"/"}
+                                        getItems={async (query) =>
+                                            filterSuggestionItems(
+                                                getCustomSlashMenuItems(
+                                                    editor as unknown as typeof schema.BlockNoteEditor
+                                                ),
+                                                query
+                                            )
+                                        }
+                                    />
+                                )}
+                                {isEditable && (
+                                    <SuggestionMenuController
+                                        getItems={async (query) =>
+                                            getEmojiSuggestionItems(editor, query)
+                                        }
+                                        minQueryLength={2}
+                                        triggerCharacter={":"}
+                                    />
+                                )}
 
                                 {threadStore && <FloatingComposerController />}
                                 {threadStore && !showThreadsSidebar && (

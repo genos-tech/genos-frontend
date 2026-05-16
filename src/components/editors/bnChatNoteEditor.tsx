@@ -2,7 +2,7 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import "../../App.css";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { codeBlockOptions } from "@blocknote/code-block";
 import {
     BlockNoteSchema,
@@ -52,12 +52,16 @@ import { RiAlertFill } from "react-icons/ri";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
+import {
+    getMyNoteRoleId,
+    isNoteEditableForRole,
+} from "../../features/notes/common/utils/noteRoles";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useCollaborativeBlockNote } from "../../hooks/common/useCollaborativeBlockNote";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
-import { ChatNoteProps } from "../../types/notes";
+import { ChatNoteProps, NoteRoleMember } from "../../types/notes";
 import { getUserColor } from "../../utils/collabUtils";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
@@ -91,6 +95,13 @@ type BnChatNoteEditorProps = {
     setNoteBodyEdited?: (value: boolean) => void;
     setNoteBodySaved?: (value: boolean) => void;
     useUISM: UIStateManagementState;
+    /** Explicit note-role members. Used to gate edit affordances —
+     *  Viewers see the body but only the comment-add button. The
+     *  caller passes `useNM.currentNoteMembers` directly. */
+    currentNoteMembers: NoteRoleMember[];
+    // See `BnMyNoteEditor` — bumped on restore so we can push the new
+    // body into the live Yjs doc via `editor.replaceBlocks`.
+    resyncSignal?: number | string;
 };
 export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
     const {
@@ -105,7 +116,14 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
         setNoteBodySaved,
         useUISM,
         useCM,
+        currentNoteMembers,
+        resyncSignal,
     } = props;
+
+    // Editor vs. viewer toggle. See `bnMyNoteEditor` for the
+    // rationale on the `null` (implicit-owner) branch.
+    const myRoleId = getMyNoteRoleId(currentNoteMembers, myself.userId);
+    const isEditable = isNoteEditableForRole(myRoleId);
 
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
@@ -245,6 +263,35 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
         setShowEmojiPicker(false);
     };
 
+    // Push the restored body into the live Yjs doc on a parent-bumped
+    // `resyncSignal`. See `BnMyNoteEditor` for the rationale.
+    const restoredBodyRef = useRef(body);
+    restoredBodyRef.current = body;
+    const lastSeenResyncRef = useRef(resyncSignal);
+
+    // See `bnMyNoteEditor` for the full rationale. Gates the
+    // "edited" signal on real DOM user input so opening a note
+    // doesn't fire an auto-save.
+    const userInteractedRef = useRef(false);
+    useEffect(() => {
+        userInteractedRef.current = false;
+    }, [currentChatNote?.noteId]);
+    useEffect(() => {
+        if (lastSeenResyncRef.current === resyncSignal) return;
+        lastSeenResyncRef.current = resyncSignal;
+        if (!editor) return;
+        const next = restoredBodyRef.current;
+        // BlockNote requires at least one block; substitute an empty
+        // paragraph when the restored body is empty so the editor
+        // visibly clears.
+        const replacement = next && next.length > 0 ? next : [{ type: "paragraph" }];
+        try {
+            (editor as any).replaceBlocks(editor.document, replacement);
+        } catch {
+            // Best-effort
+        }
+    }, [resyncSignal, editor]);
+
     const countLines = (nodes: any[]): number => {
         let count = 0;
         for (const node of nodes) {
@@ -311,6 +358,7 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
                 <BlockNoteView
                     className="bn-box"
                     comments={false}
+                    editable={isEditable}
                     editor={editor as any}
                     emojiPicker={false}
                     formattingToolbar={false}
@@ -320,7 +368,9 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
                     data-changing-font-demo
                     onChange={() => {
                         setBody(editor.document);
-                        if (setNoteBodyEdited) {
+                        // See `userInteractedRef` for why this is
+                        // gated rather than always firing.
+                        if (userInteractedRef.current && setNoteBodyEdited) {
                             setNoteBodyEdited(true);
                             if (setNoteBodySaved) {
                                 setNoteBodySaved(false);
@@ -336,7 +386,27 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
                                 handleImageClick((target as HTMLImageElement).src);
                             }
                         }}
+                        onPaste={() => {
+                            userInteractedRef.current = true;
+                        }}
+                        onDrop={() => {
+                            userInteractedRef.current = true;
+                        }}
+                        onBeforeInput={() => {
+                            userInteractedRef.current = true;
+                        }}
+                        onCompositionStart={() => {
+                            userInteractedRef.current = true;
+                        }}
                         onKeyDown={(event) => {
+                            if (
+                                event.key !== "Shift" &&
+                                event.key !== "Control" &&
+                                event.key !== "Meta" &&
+                                event.key !== "Alt"
+                            ) {
+                                userInteractedRef.current = true;
+                            }
                             if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
                                 if (editor.document.length > 1) {
                                     //Auto saving logic here
@@ -346,110 +416,132 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
                     >
                         <div className="bn-editor-section">
                             <BlockNoteViewEditor>
-                                <SideMenuController
-                                    sideMenu={(props) => (
-                                        <SideMenu
-                                            {...props}
-                                            dragHandleMenu={CustomDragHandleMenu}
-                                        />
-                                    )}
-                                />
+                                {isEditable && (
+                                    <SideMenuController
+                                        sideMenu={(props) => (
+                                            <SideMenu
+                                                {...props}
+                                                dragHandleMenu={CustomDragHandleMenu}
+                                            />
+                                        )}
+                                    />
+                                )}
                                 <FormattingToolbarController
                                     formattingToolbar={() => (
                                         <FormattingToolbar>
-                                            <BlockTypeSelect
-                                                key={"blockTypeSelect"}
-                                                items={[
-                                                    ...getBlockTypeSelectItemsWithCodeBlock(
-                                                        editor.dictionary
-                                                    ),
-                                                    {
-                                                        name: "Alert",
-                                                        type: "alert",
-                                                        icon: RiAlertFill,
-                                                    } satisfies BlockTypeSelectItem,
-                                                ]}
-                                            />
+                                            {isEditable && (
+                                                <BlockTypeSelect
+                                                    key={"blockTypeSelect"}
+                                                    items={[
+                                                        ...getBlockTypeSelectItemsWithCodeBlock(
+                                                            editor.dictionary
+                                                        ),
+                                                        {
+                                                            name: "Alert",
+                                                            type: "alert",
+                                                            icon: RiAlertFill,
+                                                        } satisfies BlockTypeSelectItem,
+                                                    ]}
+                                                />
+                                            )}
 
-                                            <BasicTextStyleButton
-                                                key={"boldStyleButton"}
-                                                basicTextStyle={"bold"}
-                                            />
-                                            <BasicTextStyleButton
-                                                key={"italicStyleButton"}
-                                                basicTextStyle={"italic"}
-                                            />
-                                            <BasicTextStyleButton
-                                                key={"underlineStyleButton"}
-                                                basicTextStyle={"underline"}
-                                            />
-                                            <BasicTextStyleButton
-                                                key={"strikeStyleButton"}
-                                                basicTextStyle={"strike"}
-                                            />
-                                            <BasicTextStyleButton
-                                                key={"codeStyleButton"}
-                                                basicTextStyle={"code"}
-                                            />
-                                            <TextAlignButton
-                                                key={"textAlignLeftButton"}
-                                                textAlignment={"left"}
-                                            />
-                                            <TextAlignButton
-                                                key={"textAlignCenterButton"}
-                                                textAlignment={"center"}
-                                            />
-                                            <TextAlignButton
-                                                key={"textAlignRightButton"}
-                                                textAlignment={"right"}
-                                            />
-                                            <ColorStyleButton key={"colorStyleButton"} />
-                                            <CreateLinkButton key={"createLinkButton"} />
-                                            <FileCaptionButton key={"fileCaptionButton"} />
-                                            <FileReplaceButton key={"fileReplaceButton"} />
+                                            {isEditable && (
+                                                <>
+                                                    <BasicTextStyleButton
+                                                        key={"boldStyleButton"}
+                                                        basicTextStyle={"bold"}
+                                                    />
+                                                    <BasicTextStyleButton
+                                                        key={"italicStyleButton"}
+                                                        basicTextStyle={"italic"}
+                                                    />
+                                                    <BasicTextStyleButton
+                                                        key={"underlineStyleButton"}
+                                                        basicTextStyle={"underline"}
+                                                    />
+                                                    <BasicTextStyleButton
+                                                        key={"strikeStyleButton"}
+                                                        basicTextStyle={"strike"}
+                                                    />
+                                                    <BasicTextStyleButton
+                                                        key={"codeStyleButton"}
+                                                        basicTextStyle={"code"}
+                                                    />
+                                                    <TextAlignButton
+                                                        key={"textAlignLeftButton"}
+                                                        textAlignment={"left"}
+                                                    />
+                                                    <TextAlignButton
+                                                        key={"textAlignCenterButton"}
+                                                        textAlignment={"center"}
+                                                    />
+                                                    <TextAlignButton
+                                                        key={"textAlignRightButton"}
+                                                        textAlignment={"right"}
+                                                    />
+                                                    <ColorStyleButton key={"colorStyleButton"} />
+                                                    <CreateLinkButton key={"createLinkButton"} />
+                                                    <FileCaptionButton key={"fileCaptionButton"} />
+                                                    <FileReplaceButton key={"fileReplaceButton"} />
+                                                </>
+                                            )}
                                             {threadStore && (
                                                 <AddCommentButton key={"addCommentButton"} />
                                             )}
-                                            <FileDeleteButton key={"fileDeleteButton"} />
-                                            <FileDownloadButton key={"fileDownloadButton"} />
-                                            <FilePreviewButton key={"filePreviewButton"} />
-                                            <FileRenameButton key={"fileRenameButton"} />
-                                            <TableCellMergeButton key={"tableCellMergeButton"} />
+                                            {isEditable && (
+                                                <>
+                                                    <FileDeleteButton key={"fileDeleteButton"} />
+                                                    <FileDownloadButton
+                                                        key={"fileDownloadButton"}
+                                                    />
+                                                    <FilePreviewButton key={"filePreviewButton"} />
+                                                    <FileRenameButton key={"fileRenameButton"} />
+                                                    <TableCellMergeButton
+                                                        key={"tableCellMergeButton"}
+                                                    />
+                                                </>
+                                            )}
                                         </FormattingToolbar>
                                     )}
                                 />
 
-                                <SuggestionMenuController
-                                    triggerCharacter={"@"}
-                                    getItems={async (query) =>
-                                        filterSuggestionItems(
-                                            MentionMenuItems(
-                                                useTEM.teamMemberProfiles,
-                                                editor,
-                                                useTEM.teamMembers
-                                            ),
-                                            query
-                                        )
-                                    }
-                                />
-                                <SuggestionMenuController
-                                    triggerCharacter={"/"}
-                                    getItems={async (query) =>
-                                        filterSuggestionItems(
-                                            getCustomSlashMenuItems(
-                                                editor as unknown as typeof schema.BlockNoteEditor
-                                            ),
-                                            query
-                                        )
-                                    }
-                                />
-                                <SuggestionMenuController
-                                    getItems={async (query) =>
-                                        getEmojiSuggestionItems(editor, query)
-                                    }
-                                    minQueryLength={2}
-                                    triggerCharacter={":"}
-                                />
+                                {isEditable && (
+                                    <SuggestionMenuController
+                                        triggerCharacter={"@"}
+                                        getItems={async (query) =>
+                                            filterSuggestionItems(
+                                                MentionMenuItems(
+                                                    useTEM.teamMemberProfiles,
+                                                    editor,
+                                                    useTEM.teamMembers
+                                                ),
+                                                query
+                                            )
+                                        }
+                                    />
+                                )}
+                                {isEditable && (
+                                    <SuggestionMenuController
+                                        triggerCharacter={"/"}
+                                        getItems={async (query) =>
+                                            filterSuggestionItems(
+                                                getCustomSlashMenuItems(
+                                                    editor as unknown as typeof schema.BlockNoteEditor
+                                                ),
+                                                query
+                                            )
+                                        }
+                                    />
+                                )}
+                                {isEditable && (
+                                    <SuggestionMenuController
+                                        getItems={async (query) =>
+                                            getEmojiSuggestionItems(editor, query)
+                                        }
+                                        minQueryLength={2}
+                                        triggerCharacter={":"}
+                                    />
+                                )}
 
                                 {threadStore && <FloatingComposerController />}
                                 {threadStore && !showThreadsSidebar && (

@@ -18,12 +18,14 @@ export const useNoteEditor = ({
     myself,
     accessToken,
     onNoteUpdate,
-}: NoteEditorProps): UseNoteEditorReturn => {
+    resyncSignal,
+}: NoteEditorProps & { resyncSignal?: number | string }): UseNoteEditorReturn => {
     const core = useNoteEditorCore<MyNoteProps>({
         currentNote: currentMyNote,
         myself,
         accessToken,
         onNoteUpdate,
+        resyncSignal,
     });
 
     return {

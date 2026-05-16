@@ -251,7 +251,7 @@ export const SpotlightOverlay = ({
                                 ? "Wait for the current answer to finish…"
                                 : !aiAnswersEnabled
                                   ? "Search chats, tasks, notes (AI answers off)"
-                                  : "Search chats, tasks, notes — press Enter to ask AI"
+                                  : "Search chats, tasks, notes — press Enter to ask Genos"
                         }
                         value={localInput}
                         sx={{
@@ -580,31 +580,7 @@ const ConversationPanel = memo(
         // Idle hint when there's no history and nothing in-flight. Matches
         // the pre-Phase-12 placeholder so the empty-state feel is unchanged.
         if (!showHeader && !showAsk) {
-            return (
-                <Box
-                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                    sx={{
-                        px: 2,
-                        py: 1.25,
-                        borderBottom: "1px solid",
-                        borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
-                        background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.015)",
-                    }}
-                >
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <AutoAwesomeRoundedIcon sx={{ fontSize: 16, opacity: 0.65 }} />
-                        <Typography
-                            level="body-md"
-                            sx={{
-                                opacity: isDark ? 1 : 0.75,
-                                color: isDark ? DARK_TEXT_MEDIUM : undefined,
-                            }}
-                        >
-                            Press Enter or click Ask for an AI-generated answer.
-                        </Typography>
-                    </Box>
-                </Box>
-            );
+            return null;
         }
 
         return (

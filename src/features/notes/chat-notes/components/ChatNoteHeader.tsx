@@ -24,6 +24,7 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ModalDeleteChatNote } from "../../chat-notes/modals/ModalDeleteChatNote";
 import { NoteBreadcrumbs } from "../../common/components/NoteBreadcrumbs";
+import { NoteHistoryChip } from "../../common/components/NoteHistoryChip";
 import { ACChatChildNotes } from "./autocompletes/ACChatChildNotes";
 
 interface ChatNoteHeaderProps {
@@ -150,16 +151,50 @@ export const ChatNoteHeader = ({
             )}
 
             {isInChatPage === false && (
-                <NoteBreadcrumbs
-                    color="warning"
-                    icon={<QuestionAnswerRoundedIcon />}
-                    label="Chat Notes"
-                    noteChain={useNM.currentChatNoteChain}
-                    onNodeClick={(noteId) => useNM.loadNote(3, noteId, -1)}
-                />
+                <Stack
+                    alignItems="center"
+                    direction="row"
+                    spacing={1}
+                    sx={{ minWidth: 0, flex: 1 }}
+                >
+                    <NoteBreadcrumbs
+                        color="warning"
+                        icon={<QuestionAnswerRoundedIcon />}
+                        label="Chat Notes"
+                        noteChain={useNM.currentChatNoteChain}
+                        onNodeClick={(noteId) => useNM.loadNote(3, noteId, -1)}
+                    />
+                    <NoteHistoryChip
+                        useNM={useNM}
+                        noteType={3}
+                        noteId={useNM.currentChatNote?.noteId ?? 0}
+                        myself={myself}
+                        setMyself={setMyself}
+                        socket={socket}
+                        useCM={useCM}
+                        useUISM={useUISM}
+                    />
+                </Stack>
             )}
 
             <Stack alignItems="center" direction="row" spacing={1} sx={{ pb: 0.5 }}>
+                {/* History chip — in chat-page mode the breadcrumb is
+                    replaced by `ACChatChildNotes` on the left, so we
+                    keep the version chip with the other action buttons
+                    on the right instead of orphaning it. */}
+                {isInChatPage === true && useNM.currentChatNote && (
+                    <NoteHistoryChip
+                        useNM={useNM}
+                        noteType={3}
+                        noteId={useNM.currentChatNote?.noteId ?? 0}
+                        myself={myself}
+                        setMyself={setMyself}
+                        socket={socket}
+                        useCM={useCM}
+                        useUISM={useUISM}
+                    />
+                )}
+
                 {/* Chat Avatars with styled containers */}
                 {chat && chat.chatType === 1 && (
                     <Box sx={avatarContainerStyle}>

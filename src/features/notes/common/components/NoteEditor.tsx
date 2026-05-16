@@ -21,6 +21,14 @@ interface NoteEditorProps {
     onTitleChange: (value: string) => void;
     onTitleBlur: () => void;
     onBodyChange: (newBody: PartialBlock[]) => void;
+    /** Real setters forwarded to `BnMyNoteEditor` so it can flip the
+     *  edited / saved flags only when the user actually typed —
+     *  see `userInteractedRef` in the editor. Used to be `() => {}`
+     *  noops here while `handleBodyChange` did the work, but that
+     *  fired even on initial body load, triggering spurious
+     *  auto-saves the moment a note opened. */
+    setNoteBodyEdited: (edited: boolean) => void;
+    setNoteBodySaved: (saved: boolean) => void;
     useCM: ChatManagementState;
     setMyself: (me: UserProps) => void;
     useUISM: UIStateManagementState;
@@ -38,6 +46,8 @@ export const NoteEditor = ({
     onTitleChange,
     onTitleBlur,
     onBodyChange,
+    setNoteBodyEdited,
+    setNoteBodySaved,
     useCM,
     setMyself,
     useUISM,
@@ -108,11 +118,13 @@ export const NoteEditor = ({
                 body={body || []}
                 useCM={useCM}
                 currentMyNote={useNM.currentMyNote as MyNoteProps}
+                currentNoteMembers={useNM.currentNoteMembers}
                 myself={myself}
+                resyncSignal={useNM.noteResyncNonce}
                 setBody={onBodyChange}
                 setMyself={setMyself}
-                setNoteBodyEdited={() => {}} // This will be handled by the hook
-                setNoteBodySaved={() => {}} // This will be handled by the hook
+                setNoteBodyEdited={setNoteBodyEdited}
+                setNoteBodySaved={setNoteBodySaved}
                 socket={socket}
                 useTEM={useTEM}
                 useUISM={useUISM}

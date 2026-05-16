@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import CloseRounded from "@mui/icons-material/CloseRounded";
 import { Avatar, Box, IconButton, Snackbar, Stack, Typography } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 
 import { NotificationIntent } from "./types";
 
@@ -27,6 +28,9 @@ export const NotificationToastHost = ({
     subscribeToasts,
     onOpenIntent,
 }: NotificationToastHostProps) => {
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
+
     const [queue, setQueue] = useState<NotificationIntent[]>([]);
     const [active, setActive] = useState<NotificationIntent | null>(null);
 
@@ -66,6 +70,18 @@ export const NotificationToastHost = ({
                 alignItems: "stretch",
                 boxShadow: "lg",
                 borderRadius: "xl",
+                // Joy's `variant="soft"` ships with a translucent
+                // `softBg` token — pleasant on a static surface, but
+                // for a floating toast it lets the page bleed
+                // through and makes the body text hard to read.
+                // Force an opaque surface here and add a matching
+                // border so the edge stays crisp; the soft variant
+                // still drives the text / icon tint.
+                backgroundColor: isDark ? "#1f1d2c" : "#ffffff",
+                border: isDark
+                    ? "1px solid rgba(167,139,250,0.25)"
+                    : "1px solid rgba(124,58,237,0.18)",
+                backdropFilter: "none",
             }}
         >
             {active ? (

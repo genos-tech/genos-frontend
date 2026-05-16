@@ -1,3 +1,4 @@
+import { useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import CancelIcon from "@mui/icons-material/Cancel";
@@ -5,11 +6,13 @@ import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import NoteAddRoundedIcon from "@mui/icons-material/NoteAddRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
+import PersonAddRoundedIcon from "@mui/icons-material/PersonAddRounded";
 import { Box, IconButton, Stack, Tooltip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 import { useNavigate } from "react-router-dom";
 
+import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { NoteHeaderActionsStyles } from "../../../../components/ui/styles/commonStyle";
@@ -21,6 +24,8 @@ import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 import { TaskProps } from "../../../../types/tasks";
 import { isMac } from "../../../../utils/platform";
+import { getMyNoteRoleId, NOTE_ROLE_OWNER } from "../utils/noteRoles";
+import { ModalNoteSharing } from "./ModalNoteSharing";
 
 interface NoteHeaderActionsProps {
     noteType: number;
@@ -65,6 +70,40 @@ export const NoteHeaderActions = ({
     const isDark = mode === "dark";
     const styles = isDark ? NoteHeaderActionsStyles.dark : NoteHeaderActionsStyles.light;
     const navigate = useNavigate();
+
+    // Resolve the active note from useNM based on noteType so the share
+    // modal targets the note shown in this header. noteType=4 (shared
+    // personal notes) reuses the currentMyNote slot since the backend
+    // serves them from the same endpoint.
+    const activeNote =
+        noteType === 1 || noteType === 4
+            ? useNM.currentMyNote
+            : noteType === 2
+              ? useNM.currentTaskNote
+              : noteType === 3
+                ? useNM.currentChatNote
+                : null;
+    const activeNoteId = activeNote?.noteId ?? null;
+    const activeNoteTitle = activeNote?.title ?? "";
+
+    // Members + my role on the currently-opened note.
+    const members = useNM.currentNoteMembers;
+    const myRoleId = getMyNoteRoleId(members, myself.userId);
+    const isOwner = myRoleId === NOTE_ROLE_OWNER;
+    const ownerMember = members.find((m) => m.roleId === NOTE_ROLE_OWNER);
+    const otherMembers = members.filter((m) => String(m.userId) !== String(myself.userId));
+
+    // Cap the inline avatar count so the strip stays compact next to
+    // the other 36px header buttons. The remainder collapses into a
+    // `+N` pill at the end.
+    const MAX_AVATARS_INLINE = 3;
+    const visibleMembers = members.slice(0, MAX_AVATARS_INLINE);
+    const overflowCount = Math.max(members.length - MAX_AVATARS_INLINE, 0);
+
+    const [shareOpen, setShareOpen] = useState(false);
+    const openShareModal = () => {
+        if (activeNoteId != null) setShareOpen(true);
+    };
 
     // Common action button style
     const actionButtonStyle = {
@@ -352,9 +391,170 @@ export const NoteHeaderActions = ({
                 </Stack>
             )}
 
+            {/* Member avatar strip + Share button.
+                The strip is a 36px-tall pill that visually matches the
+                surrounding action buttons (New Note, More, Close). Each
+                avatar uses `AvatarWithStatus` so presence dots and the
+                click-to-open profile flow stay consistent with the rest
+                of the app. The Share button is only interactive for the
+                note owner — non-owners see the avatars alone with a
+                tooltip naming the owner. */}
+            {activeNoteId != null && members.length > 0 && (
+                <Stack alignItems="center" direction="row" spacing={0.75}>
+                    <Tooltip
+                        size="sm"
+                        title={
+                            ownerMember
+                                ? `Owner: ${ownerMember.userName}${
+                                      otherMembers.length > 0
+                                          ? ` · ${otherMembers.length} more`
+                                          : ""
+                                  }`
+                                : "Members"
+                        }
+                        variant="outlined"
+                    >
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                height: 36,
+                                pl: 0.75,
+                                pr: overflowCount > 0 ? 1 : 0.75,
+                                borderRadius: "10px",
+                                background: styles.buttonBg,
+                                border: `1px solid ${styles.buttonBorder}`,
+                                transition: "all 0.2s ease",
+                                "&:hover": {
+                                    background: styles.buttonHover,
+                                },
+                            }}
+                        >
+                            {visibleMembers.map((m, idx) => (
+                                <Box
+                                    key={m.userId}
+                                    sx={{
+                                        ml: idx === 0 ? 0 : "-8px",
+                                        // Leftmost avatar paints on top
+                                        // (matches the MDMAvatar reference
+                                        // pattern). `position: relative`
+                                        // is required for `z-index` to
+                                        // take effect inside a flex row.
+                                        position: "relative",
+                                        zIndex: visibleMembers.length - idx,
+                                        // Crisp ring so overlapping
+                                        // avatars stay readable against
+                                        // the pill background.
+                                        borderRadius: "50%",
+                                        boxShadow: `0 0 0 2px ${isDark ? "#1a1623" : "#ffffff"}`,
+                                        lineHeight: 0,
+                                    }}
+                                >
+                                    <AvatarWithStatus
+                                        avatarSize={26}
+                                        avatarUser={
+                                            {
+                                                userId: m.userId,
+                                                userName: m.userName,
+                                                avatarImgPath: m.avatarUrl ?? "",
+                                            } as UserProps
+                                        }
+                                        isYou={String(m.userId) === String(myself.userId)}
+                                        myself={myself}
+                                        setMyself={setMyself}
+                                        socket={socket}
+                                        useCM={useCM}
+                                        useUISM={useUISM}
+                                    />
+                                </Box>
+                            ))}
+                            {overflowCount > 0 && (
+                                <Box
+                                    sx={{
+                                        ml: "-8px",
+                                        // Sits visually behind the last
+                                        // avatar so its left edge gets
+                                        // overlapped, consistent with the
+                                        // rest of the stack.
+                                        position: "relative",
+                                        zIndex: 0,
+                                        height: 26,
+                                        minWidth: 26,
+                                        px: 0.75,
+                                        borderRadius: "50%",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        background: isDark
+                                            ? "rgba(255,255,255,0.12)"
+                                            : "rgba(0,0,0,0.08)",
+                                        boxShadow: `0 0 0 2px ${isDark ? "#1a1623" : "#ffffff"}`,
+                                    }}
+                                >
+                                    <Typography
+                                        level="body-xs"
+                                        sx={{
+                                            fontSize: 10,
+                                            fontWeight: 700,
+                                            color: styles.textColor,
+                                            lineHeight: 1,
+                                        }}
+                                    >
+                                        +{overflowCount}
+                                    </Typography>
+                                </Box>
+                            )}
+                        </Box>
+                    </Tooltip>
+
+                    {isOwner && (
+                        <Tooltip size="sm" title="Share" variant="outlined">
+                            <Box
+                                component="button"
+                                type="button"
+                                aria-label="Share note"
+                                onClick={openShareModal}
+                                sx={{
+                                    ...actionButtonStyle,
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: 0.5,
+                                    px: 1.25,
+                                    cursor: "pointer",
+                                    font: "inherit",
+                                    "&:focus-visible": {
+                                        outline: `2px solid ${styles.accentColor}`,
+                                        outlineOffset: 2,
+                                    },
+                                }}
+                            >
+                                <PersonAddRoundedIcon sx={{ fontSize: 16 }} />
+                                <Typography
+                                    level="body-xs"
+                                    sx={{
+                                        fontWeight: 600,
+                                        color: "inherit",
+                                        letterSpacing: "-0.01em",
+                                    }}
+                                >
+                                    Share
+                                </Typography>
+                            </Box>
+                        </Tooltip>
+                    )}
+                </Stack>
+            )}
+
             {/* More Actions Dropdown */}
             {(() => {
                 const items: MoreMenuItem[] = [
+                    {
+                        id: "shareNote",
+                        label: "Share…",
+                        icon: <PersonAddRoundedIcon sx={{ fontSize: 18 }} />,
+                        visible: isOwner && activeNoteId != null,
+                        onClick: openShareModal,
+                    },
                     {
                         id: "copyNoteLink",
                         label: "Copy note link",
@@ -448,6 +648,24 @@ export const NoteHeaderActions = ({
                         />
                     </IconButton>
                 </Tooltip>
+            )}
+
+            {/* Share modal */}
+            {activeNoteId != null && (
+                <ModalNoteSharing
+                    open={shareOpen}
+                    onClose={() => setShareOpen(false)}
+                    noteType={noteType === 4 ? 1 : noteType}
+                    noteId={activeNoteId}
+                    noteTitle={activeNoteTitle}
+                    myself={myself}
+                    setMyself={setMyself}
+                    socket={socket}
+                    useCM={useCM}
+                    useUISM={useUISM}
+                    teamMembers={useTEM.teamMembers}
+                    useNM={useNM}
+                />
             )}
         </Stack>
     );

@@ -28,6 +28,7 @@ export interface ChatNoteEditorProps {
     myself: UserProps;
     accessToken: string | null;
     onNoteUpdate: (updatedNote: ChatNoteProps) => void;
+    resyncSignal?: number | string;
 }
 
 interface UseChatNoteEditorReturn extends ChatNoteEditorState, ChatNoteEditorActions {}
@@ -42,12 +43,14 @@ export const useChatNoteEditor = ({
     myself,
     accessToken,
     onNoteUpdate,
+    resyncSignal,
 }: ChatNoteEditorProps): UseChatNoteEditorReturn => {
     const core = useNoteEditorCore<ChatNoteProps>({
         currentNote: currentChatNote,
         myself,
         accessToken,
         onNoteUpdate,
+        resyncSignal,
     });
 
     return {
