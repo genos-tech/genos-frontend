@@ -7,20 +7,12 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import NoteAddRoundedIcon from "@mui/icons-material/NoteAddRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import PersonAddRoundedIcon from "@mui/icons-material/PersonAddRounded";
-import {
-    Avatar,
-    AvatarGroup,
-    Box,
-    Button,
-    IconButton,
-    Stack,
-    Tooltip,
-    Typography,
-} from "@mui/joy";
+import { Box, IconButton, Stack, Tooltip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 import { useNavigate } from "react-router-dom";
 
+import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { NoteHeaderActionsStyles } from "../../../../components/ui/styles/commonStyle";
@@ -79,9 +71,11 @@ export const NoteHeaderActions = ({
     const navigate = useNavigate();
 
     // Resolve the active note from useNM based on noteType so the share
-    // modal targets the note shown in this header.
+    // modal targets the note shown in this header. noteType=4 (shared
+    // personal notes) reuses the currentMyNote slot since the backend
+    // serves them from the same endpoint.
     const activeNote =
-        noteType === 1
+        noteType === 1 || noteType === 4
             ? useNM.currentMyNote
             : noteType === 2
               ? useNM.currentTaskNote
@@ -98,6 +92,13 @@ export const NoteHeaderActions = ({
     const isOwner = myRoleId === 1;
     const ownerMember = members.find((m) => m.roleId === 1);
     const otherMembers = members.filter((m) => String(m.userId) !== String(myself.userId));
+
+    // Cap the inline avatar count so the strip stays compact next to
+    // the other 36px header buttons. The remainder collapses into a
+    // `+N` pill at the end.
+    const MAX_AVATARS_INLINE = 3;
+    const visibleMembers = members.slice(0, MAX_AVATARS_INLINE);
+    const overflowCount = Math.max(members.length - MAX_AVATARS_INLINE, 0);
 
     const [shareOpen, setShareOpen] = useState(false);
     const openShareModal = () => {
@@ -390,10 +391,14 @@ export const NoteHeaderActions = ({
                 </Stack>
             )}
 
-            {/* Member avatar strip + Share button. Rendered for any note
-                type once the role members have loaded. The Share button is
-                only interactive for owners — non-owners see the avatars in
-                read-only form with a tooltip identifying the owner. */}
+            {/* Member avatar strip + Share button.
+                The strip is a 36px-tall pill that visually matches the
+                surrounding action buttons (New Note, More, Close). Each
+                avatar uses `AvatarWithStatus` so presence dots and the
+                click-to-open profile flow stay consistent with the rest
+                of the app. The Share button is only interactive for the
+                note owner — non-owners see the avatars alone with a
+                tooltip naming the owner. */}
             {activeNoteId != null && members.length > 0 && (
                 <Stack alignItems="center" direction="row" spacing={0.75}>
                     <Tooltip
@@ -409,37 +414,125 @@ export const NoteHeaderActions = ({
                         }
                         variant="outlined"
                     >
-                        <AvatarGroup size="sm" sx={{ "--Avatar-size": "26px" }}>
-                            {members.slice(0, 3).map((m) => (
-                                <Avatar
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                height: 36,
+                                pl: 0.75,
+                                pr: overflowCount > 0 ? 1 : 0.75,
+                                borderRadius: "10px",
+                                background: styles.buttonBg,
+                                border: `1px solid ${styles.buttonBorder}`,
+                                transition: "all 0.2s ease",
+                                "&:hover": {
+                                    background: styles.buttonHover,
+                                },
+                            }}
+                        >
+                            {visibleMembers.map((m, idx) => (
+                                <Box
                                     key={m.userId}
-                                    src={m.avatarUrl || undefined}
-                                    sx={{ border: "none" }}
+                                    sx={{
+                                        ml: idx === 0 ? 0 : "-8px",
+                                        // Crisp ring so overlapping
+                                        // avatars stay readable against
+                                        // the pill background.
+                                        borderRadius: "50%",
+                                        boxShadow: `0 0 0 2px ${isDark ? "#1a1623" : "#ffffff"}`,
+                                        // The presence dot sits at the
+                                        // bottom-right of UserAvatar's
+                                        // 17px tall absolute box, so we
+                                        // need a hair of bottom space to
+                                        // avoid the dot getting clipped
+                                        // by the pill's bottom border.
+                                        lineHeight: 0,
+                                    }}
                                 >
-                                    {m.userName?.[0]?.toUpperCase() || "?"}
-                                </Avatar>
+                                    <AvatarWithStatus
+                                        avatarSize={26}
+                                        avatarUser={
+                                            {
+                                                userId: m.userId,
+                                                userName: m.userName,
+                                                avatarImgPath: m.avatarUrl ?? "",
+                                            } as UserProps
+                                        }
+                                        isYou={String(m.userId) === String(myself.userId)}
+                                        myself={myself}
+                                        setMyself={setMyself}
+                                        socket={socket}
+                                        useCM={useCM}
+                                        useUISM={useUISM}
+                                    />
+                                </Box>
                             ))}
-                            {members.length > 3 && (
-                                <Avatar sx={{ border: "none" }}>+{members.length - 3}</Avatar>
+                            {overflowCount > 0 && (
+                                <Box
+                                    sx={{
+                                        ml: "-8px",
+                                        height: 26,
+                                        minWidth: 26,
+                                        px: 0.75,
+                                        borderRadius: "50%",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        background: isDark
+                                            ? "rgba(255,255,255,0.12)"
+                                            : "rgba(0,0,0,0.08)",
+                                        boxShadow: `0 0 0 2px ${isDark ? "#1a1623" : "#ffffff"}`,
+                                    }}
+                                >
+                                    <Typography
+                                        level="body-xs"
+                                        sx={{
+                                            fontSize: 10,
+                                            fontWeight: 700,
+                                            color: styles.textColor,
+                                            lineHeight: 1,
+                                        }}
+                                    >
+                                        +{overflowCount}
+                                    </Typography>
+                                </Box>
                             )}
-                        </AvatarGroup>
+                        </Box>
                     </Tooltip>
+
                     {isOwner && (
                         <Tooltip size="sm" title="Share" variant="outlined">
-                            <Button
-                                size="sm"
-                                variant="plain"
-                                startDecorator={<PersonAddRoundedIcon sx={{ fontSize: 16 }} />}
+                            <Box
+                                component="button"
+                                type="button"
+                                aria-label="Share note"
                                 onClick={openShareModal}
                                 sx={{
                                     ...actionButtonStyle,
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: 0.5,
                                     px: 1.25,
-                                    fontSize: "12px",
-                                    fontWeight: 600,
+                                    cursor: "pointer",
+                                    font: "inherit",
+                                    "&:focus-visible": {
+                                        outline: `2px solid ${styles.accentColor}`,
+                                        outlineOffset: 2,
+                                    },
                                 }}
                             >
-                                Share
-                            </Button>
+                                <PersonAddRoundedIcon sx={{ fontSize: 16 }} />
+                                <Typography
+                                    level="body-xs"
+                                    sx={{
+                                        fontWeight: 600,
+                                        color: "inherit",
+                                        letterSpacing: "-0.01em",
+                                    }}
+                                >
+                                    Share
+                                </Typography>
+                            </Box>
                         </Tooltip>
                     )}
                 </Stack>
