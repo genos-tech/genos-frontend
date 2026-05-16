@@ -1,4 +1,4 @@
-import { loadSpecificTaskTmp } from "../../features/tasks/services/loadSpecificTaskTmp";
+import { loadProjectTasksFromApi } from "../../features/tasks/services/loadProjectTasksFromApi";
 import { UserProps } from "../../types/admin";
 import { TaskTableProps } from "../../types/tasks";
 import { TaskRepository } from "../repositories";
@@ -18,7 +18,11 @@ self.onmessage = async (event) => {
     // }
 
     // Load data from backend
-    const taskList: TaskTableProps[] = await loadSpecificTaskTmp(myself, projectId, accessToken);
+    const taskList: TaskTableProps[] = await loadProjectTasksFromApi(
+        myself,
+        projectId,
+        accessToken
+    );
     await taskRepository.batchInsert(taskList);
 
     // Send finish a message

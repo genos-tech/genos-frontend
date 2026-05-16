@@ -3,7 +3,11 @@ import axios from "axios";
 import { authApi } from "../../../services/api";
 import { UserProps } from "../../../types/admin";
 
-export const loadSpecificTaskTmp = async (
+// Direct API call to `getProjectTasks`. Used by `loadProjectTasksWorker`
+// to populate IndexedDB; main-thread callers should go through
+// `loadProjectTasks` (the worker wrapper, which also dedupes in-flight
+// requests) instead of calling this directly.
+export const loadProjectTasksFromApi = async (
     myself: UserProps,
     projectId: number,
     accessToken: string | null

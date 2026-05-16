@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { loadProjectTasks } from "../../features/tasks/services/loadProjectTasks";
 import { loadTeamProjects } from "../../features/tasks/services/loadTeamProjects";
@@ -36,12 +36,17 @@ export const useProjectManagement = (
         { ts: number; projectId: number } | undefined
     >(undefined);
 
-    let tsLastLoadProjectAndTasks: number | undefined = undefined;
+    // Held in a ref because the `[myself]` effect below uses this to
+    // throttle re-fires. The previous `let` reset to undefined on every
+    // render, so the throttle check was always taking the "first run"
+    // branch — every myself update triggered another `loadProjectsAndTasks`
+    // (and therefore another `getProjectTasks` fetch).
+    const tsLastLoadProjectAndTasks = useRef<number | undefined>(undefined);
 
     const loadProjectsAndTasks = async (targetProjectId: number = -1) => {
         // Load the latest project as initial process
         const loadedTeamProjects: ProjectProps[] = await loadTeamProjects(myself, accessToken);
-        tsLastLoadProjectAndTasks = Date.now();
+        tsLastLoadProjectAndTasks.current = Date.now();
 
         // When the user has just switched teams, any caller-supplied
         // `targetProjectId` (and any cached lastProjectId on localStorage,
@@ -164,10 +169,8 @@ export const useProjectManagement = (
     useEffect(() => {
         const intervalMs: number = 1000;
         const now = Date.now();
-        if (
-            tsLastLoadProjectAndTasks === undefined ||
-            (tsLastLoadProjectAndTasks && now - tsLastLoadProjectAndTasks >= intervalMs)
-        ) {
+        const last = tsLastLoadProjectAndTasks.current;
+        if (last === undefined || now - last >= intervalMs) {
             setTimeout(() => {
                 (async () => {
                     await loadProjectsAndTasks(
