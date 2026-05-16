@@ -20,6 +20,7 @@ import {
     Switch,
     Typography,
 } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 
 import { useSpotlightPreferences } from "../../hooks/common/useSpotlightPreferences";
 import { ThemePreference, useThemePreference } from "../../hooks/common/useThemePreference";
@@ -295,9 +296,12 @@ const KeyboardShortcutsSection = () => {
  * App root, so the modal needs no notification-specific props.
  */
 export const SettingsModal = ({ open, onClose }: Props) => {
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
     return (
         <Modal open={open} onClose={onClose}>
             <ModalDialog
+                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 size="lg"
                 sx={{
                     width: { xs: "92vw", sm: 550, md: 700 },
