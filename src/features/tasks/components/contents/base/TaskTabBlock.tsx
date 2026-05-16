@@ -336,12 +336,31 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     // milestone preview, which feeds in the milestone's backing task
     // through `taskContent.id` (the milestone-id and task-id channels
     // are kept distinct on `useTM`).
+    //
+    // `previousTaskIdRef` tracks the last *defined* id we saw so a
+    // save flow that briefly flips `taskContent?.id` through
+    // `undefined` and back to the same id doesn't snap the user's
+    // tab back to Comments. Tab only resets when the rendered task
+    // actually changes.
+    const previousTaskIdRef = useRef(taskContent?.id);
     useEffect(() => {
+        const currentId = taskContent?.id;
+
         setImages([]);
         setTextFiles([]);
         setUploadingFiles([]);
         setNumOfUploadingFiles(0);
-        setTabIndex(0);
+
+        if (
+            currentId != null &&
+            previousTaskIdRef.current != null &&
+            currentId !== previousTaskIdRef.current
+        ) {
+            setTabIndex(0);
+        }
+        if (currentId != null) {
+            previousTaskIdRef.current = currentId;
+        }
     }, [taskContent?.id]);
 
     useEffect(() => {
