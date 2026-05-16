@@ -80,6 +80,10 @@ export interface AskAgentArgs extends BaseStreamHandlers {
     accessToken: string | null;
     sessionId?: string;
     entityTypes?: Array<"chat" | "task" | "note">;
+    // When false, the backend filters the web-browse tool out of the
+    // agent's tool list so the model can't call it. Defaults to true
+    // (current behavior) if omitted.
+    allowWebSearch?: boolean;
     signal?: AbortSignal;
 }
 
@@ -121,6 +125,10 @@ export async function askAgentStream(args: AskAgentArgs): Promise<void> {
             team_id: args.teamId,
             entity_types: args.entityTypes,
             ...(args.sessionId ? { session_id: args.sessionId } : {}),
+            // Omit the field entirely when the toggle is at the default
+            // (true) — keeps the wire format unchanged for existing
+            // clients and the backend default.
+            ...(args.allowWebSearch === false ? { allow_web_search: false } : {}),
         },
         args.accessToken,
         args.signal,

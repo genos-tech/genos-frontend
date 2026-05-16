@@ -29,7 +29,16 @@ import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
-import { Box, Button, Chip, CircularProgress, IconButton, Sheet, Typography } from "@mui/joy";
+import {
+    Box,
+    Button,
+    Chip,
+    CircularProgress,
+    IconButton,
+    Sheet,
+    Tooltip,
+    Typography,
+} from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -57,6 +66,10 @@ interface Props {
     ask: AskState;
     turns: CompletedTurn[];
     dailyUsage: AgentUsage | null;
+    // From Settings → Spotlight → AI answers. When false, the Ask
+    // button and Enter shortcut are disabled with an explanatory
+    // tooltip and Spotlight stays a pure search overlay.
+    aiAnswersEnabled: boolean;
 }
 
 const SECTION_ORDER: { key: EntityType; label: string }[] = [
@@ -98,6 +111,7 @@ export const SpotlightOverlay = ({
     ask,
     turns,
     dailyUsage,
+    aiAnswersEnabled,
 }: Props) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -174,7 +188,10 @@ export const SpotlightOverlay = ({
         setSelectedIndex(-1);
     }, [localInput]);
 
-    const askDisabled = ask.isStreaming || ask.pendingApproval !== null;
+    // Three reasons Ask can be disabled — kept as separate flags so the
+    // placeholder/tooltip can explain *why* without re-deriving them.
+    const askBusy = ask.isStreaming || ask.pendingApproval !== null;
+    const askDisabled = askBusy || !aiAnswersEnabled;
     // Show "Follow up" when there is at least one completed turn or the
     // current session is active — i.e., the user is mid-conversation.
     const hasConversation = turns.length > 0 || Boolean(ask.sessionId);
@@ -242,9 +259,11 @@ export const SpotlightOverlay = ({
                         ref={inputRef}
                         component="input"
                         placeholder={
-                            askDisabled
+                            askBusy
                                 ? "Wait for the current answer to finish…"
-                                : "Search chats, tasks, notes — press Enter to ask AI"
+                                : !aiAnswersEnabled
+                                  ? "Search chats, tasks, notes (AI answers off)"
+                                  : "Search chats, tasks, notes — press Enter to ask AI"
                         }
                         value={localInput}
                         sx={{
@@ -330,16 +349,29 @@ export const SpotlightOverlay = ({
                             Cancel
                         </Button>
                     )}
-                    <Button
-                        color="primary"
-                        disabled={!hasQuery || askDisabled}
+                    <Tooltip
+                        title={!aiAnswersEnabled ? "Enable AI answers in Settings" : ""}
+                        // Empty title disables the tooltip in MUI Joy.
+                        placement="bottom"
                         size="sm"
-                        startDecorator={<AutoAwesomeRoundedIcon sx={{ fontSize: 16 }} />}
-                        variant="solid"
-                        onClick={() => onAsk()}
+                        variant="outlined"
                     >
-                        Ask
-                    </Button>
+                        {/* Span wrapper lets the tooltip fire over a
+                            disabled button (pointer events on a disabled
+                            <button> are suppressed in Chromium). */}
+                        <Box component="span" sx={{ display: "inline-flex" }}>
+                            <Button
+                                color="primary"
+                                disabled={!hasQuery || askDisabled}
+                                size="sm"
+                                startDecorator={<AutoAwesomeRoundedIcon sx={{ fontSize: 16 }} />}
+                                variant="solid"
+                                onClick={() => onAsk()}
+                            >
+                                Ask
+                            </Button>
+                        </Box>
+                    </Tooltip>
                 </Box>
 
                 {/* Conversation history + current in-flight turn.

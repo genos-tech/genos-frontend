@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
 import KeyboardRoundedIcon from "@mui/icons-material/KeyboardRounded";
@@ -16,9 +17,11 @@ import {
     Select,
     Sheet,
     Stack,
+    Switch,
     Typography,
 } from "@mui/joy";
 
+import { useSpotlightPreferences } from "../../hooks/common/useSpotlightPreferences";
 import { ThemePreference, useThemePreference } from "../../hooks/common/useThemePreference";
 import { NotificationSettingsPanel } from "../../services/notifications/NotificationSettingsPanel";
 import { getServiceShortcutModifierKeys, isMac } from "../../utils/platform";
@@ -105,6 +108,62 @@ const AppearanceSection = () => {
                         </Stack>
                     </Option>
                 </Select>
+            </Stack>
+        </Sheet>
+    );
+};
+
+const SpotlightSection = () => {
+    const { aiAnswers, webSearch, setAiAnswers, setWebSearch } = useSpotlightPreferences();
+    return (
+        <Sheet variant="outlined" sx={{ p: 2, borderRadius: "lg" }}>
+            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+                <AutoAwesomeRoundedIcon />
+                <Typography level="title-md">Spotlight</Typography>
+            </Stack>
+            <Typography level="body-xs" sx={{ mb: 1.5 }}>
+                Spotlight always searches your chats, tasks, and notes. The toggles below gate the
+                optional LLM-powered answers, which count against your daily ask quota.
+            </Typography>
+
+            <Stack
+                direction="row"
+                spacing={2}
+                alignItems="center"
+                justifyContent="space-between"
+                sx={{ mb: 1.5 }}
+            >
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography level="title-sm">AI answers</Typography>
+                    <Typography level="body-xs">
+                        Lets the "Ask" button send your query to the agent. When off, Spotlight
+                        returns search results only.
+                    </Typography>
+                </Box>
+                <Switch checked={aiAnswers} onChange={(e) => setAiAnswers(e.target.checked)} />
+            </Stack>
+
+            <Divider />
+
+            <Stack
+                direction="row"
+                spacing={2}
+                alignItems="center"
+                justifyContent="space-between"
+                sx={{ mt: 1.5, opacity: aiAnswers ? 1 : 0.5 }}
+            >
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography level="title-sm">Web search</Typography>
+                    <Typography level="body-xs">
+                        Allow the agent to browse the web when answering. Requires AI answers to be
+                        on.
+                    </Typography>
+                </Box>
+                <Switch
+                    checked={webSearch}
+                    disabled={!aiAnswers}
+                    onChange={(e) => setWebSearch(e.target.checked)}
+                />
             </Stack>
         </Sheet>
     );
@@ -260,6 +319,7 @@ export const SettingsModal = ({ open, onClose }: Props) => {
                 <Divider sx={{ mb: 2 }} />
                 <Stack spacing={2}>
                     <AppearanceSection />
+                    <SpotlightSection />
                     <NotificationSettingsPanel />
                     <KeyboardShortcutsSection />
                 </Stack>
