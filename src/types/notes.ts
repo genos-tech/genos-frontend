@@ -109,3 +109,23 @@ export type ChatNoteProps = {
 export type ChatNoteMetaTreeNode = ChatNoteMetaProps & {
     children: ChatNoteMetaTreeNode[];
 };
+
+// Role members on a note (owner / editor / viewer)
+export type NoteRoleMember = {
+    userId: string;
+    userName: string;
+    avatarUrl: string | null;
+    roleId: number;
+    tsCreated: string;
+};
+
+// Personal notes shared with me by another user
+export type SharedNoteMetaProps = MyNoteMetaProps & {
+    ownerId: string;
+    ownerName: string;
+    roleId: number;
+};
+
+export type SharedNoteMetaTreeNode = SharedNoteMetaProps & {
+    children: SharedNoteMetaTreeNode[];
+};

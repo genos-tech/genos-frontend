@@ -8,12 +8,14 @@ const NOTE_TYPE_MAP: Record<string, number> = {
     my: 1,
     task: 2,
     chat: 3,
+    shared: 4,
 };
 
 const NOTE_TYPE_REVERSE_MAP: Record<number, string> = {
     1: "my",
     2: "task",
     3: "chat",
+    4: "shared",
 };
 
 // Chat type constants matching the existing codebase
@@ -89,8 +91,9 @@ export const useNoteRouting = ({ useNM }: UseNoteRoutingProps) => {
             result.noteType = noteTypeStr;
         }
 
-        if (noteTypeStr === "my") {
-            // My notes: /workspace/notes/my/:noteId
+        if (noteTypeStr === "my" || noteTypeStr === "shared") {
+            // My notes:     /workspace/notes/my/:noteId
+            // Shared notes: /workspace/notes/shared/:noteId
             if (pathParts[notesIndex + 2]) {
                 result.noteId = Number(pathParts[notesIndex + 2]);
             }
@@ -199,7 +202,7 @@ export const useNoteRouting = ({ useNM }: UseNoteRoutingProps) => {
 
         // Load specific note if noteId is in URL
         if (routeInfo.noteId) {
-            // Determine internal note type (1 = my, 2 = task, 3 = chat)
+            // Determine internal note type (1 = my, 2 = task, 3 = chat, 4 = shared)
             let internalNoteType: number;
             if (routeInfo.noteType === "my") {
                 internalNoteType = 1;
@@ -207,6 +210,8 @@ export const useNoteRouting = ({ useNM }: UseNoteRoutingProps) => {
                 internalNoteType = 2;
             } else if (routeInfo.noteType === "chat") {
                 internalNoteType = 3;
+            } else if (routeInfo.noteType === "shared") {
+                internalNoteType = 4;
             } else {
                 hasHandledInitialUrl.current = true;
                 return;
@@ -214,12 +219,14 @@ export const useNoteRouting = ({ useNM }: UseNoteRoutingProps) => {
 
             // If the active tab already matches the URL, the rehydrate
             // (or a previous open) has us covered — just mark handled
-            // and bail. This is the guard the plan calls for.
+            // and bail. Shared notes (type 4) reuse the "my" tab kind
+            // since the backend serves them from the same endpoint.
             const active = useNM.tabsApi.activeTab;
             const alreadyOpen =
                 active &&
                 active.noteId === routeInfo.noteId &&
                 ((internalNoteType === 1 && active.kind === "my") ||
+                    (internalNoteType === 4 && active.kind === "my") ||
                     (internalNoteType === 2 && active.kind === "task") ||
                     (internalNoteType === 3 && active.kind === "chat"));
 
@@ -256,6 +263,9 @@ export const useNoteRouting = ({ useNM }: UseNoteRoutingProps) => {
         if (useNM.currentNoteType === 1 && useNM.currentMyNote) {
             // My note
             newPath = `/workspace/notes/my/${useNM.currentMyNote.noteId}`;
+        } else if (useNM.currentNoteType === 4 && useNM.currentMyNote) {
+            // Shared note (backed by the same personal note slot)
+            newPath = `/workspace/notes/shared/${useNM.currentMyNote.noteId}`;
         } else if (useNM.currentNoteType === 2 && useNM.currentTaskNote) {
             // Task note
             const { projectId, taskId, noteId } = useNM.currentTaskNote;

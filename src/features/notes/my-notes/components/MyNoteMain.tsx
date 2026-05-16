@@ -121,7 +121,12 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
 
     const handleCopyNoteLink = async () => {
         if (useNM.currentMyNote) {
-            const noteUrl = `${window.location.origin}/workspace/notes/my/${useNM.currentMyNote.noteId}`;
+            // Recipients of a shared note are in the "Shared Notes"
+            // bucket; emit a /shared/ link so when they click it the
+            // sidebar opens the right section.
+            const isShared = useNM.currentNoteType === 4;
+            const segment = isShared ? "shared" : "my";
+            const noteUrl = `${window.location.origin}/workspace/notes/${segment}/${useNM.currentMyNote.noteId}`;
             try {
                 await navigator.clipboard.writeText(noteUrl);
             } catch (err) {

@@ -67,7 +67,9 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
         }
     }, [shouldBeExpanded, currentChain, useNM.tabItems]);
 
-    // Check if this specific node is currently selected
+    // Check if this specific node is currently selected.
+    // noteType=4 (shared personal notes) shares the editor slot with
+    // myNote, so it highlights against `currentMyNote`.
     const isSelected =
         useNM.currentNoteType === noteType &&
         node?.noteId ===
@@ -77,7 +79,9 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                   ? useNM.currentTaskNote?.noteId
                   : noteType === 3
                     ? useNM.currentChatNote?.noteId
-                    : 0);
+                    : noteType === 4
+                      ? useNM.currentMyNote?.noteId
+                      : 0);
 
     const handleClick = () => {
         useNM.setCurrentNoteType(noteType);
@@ -210,7 +214,8 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                             flexShrink: 0,
                             backgroundColor: isSelected
                                 ? isDark
-                                    ? "#a78bfa" : "#6d28d9"
+                                    ? "#a78bfa"
+                                    : "#6d28d9"
                                 : isDark
                                   ? "rgba(255,255,255,0.2)"
                                   : "rgba(0,0,0,0.15)",

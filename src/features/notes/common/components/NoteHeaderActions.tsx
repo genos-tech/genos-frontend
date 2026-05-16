@@ -1,3 +1,4 @@
+import { useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import CancelIcon from "@mui/icons-material/Cancel";
@@ -5,7 +6,17 @@ import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import NoteAddRoundedIcon from "@mui/icons-material/NoteAddRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
-import { Box, IconButton, Stack, Tooltip, Typography } from "@mui/joy";
+import PersonAddRoundedIcon from "@mui/icons-material/PersonAddRounded";
+import {
+    Avatar,
+    AvatarGroup,
+    Box,
+    Button,
+    IconButton,
+    Stack,
+    Tooltip,
+    Typography,
+} from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 import { useNavigate } from "react-router-dom";
@@ -21,6 +32,7 @@ import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 import { TaskProps } from "../../../../types/tasks";
 import { isMac } from "../../../../utils/platform";
+import { ModalNoteSharing } from "./ModalNoteSharing";
 
 interface NoteHeaderActionsProps {
     noteType: number;
@@ -65,6 +77,32 @@ export const NoteHeaderActions = ({
     const isDark = mode === "dark";
     const styles = isDark ? NoteHeaderActionsStyles.dark : NoteHeaderActionsStyles.light;
     const navigate = useNavigate();
+
+    // Resolve the active note from useNM based on noteType so the share
+    // modal targets the note shown in this header.
+    const activeNote =
+        noteType === 1
+            ? useNM.currentMyNote
+            : noteType === 2
+              ? useNM.currentTaskNote
+              : noteType === 3
+                ? useNM.currentChatNote
+                : null;
+    const activeNoteId = activeNote?.noteId ?? null;
+    const activeNoteTitle = activeNote?.title ?? "";
+
+    // Members + my role on the currently-opened note.
+    const members = useNM.currentNoteMembers;
+    const myMembership = members.find((m) => String(m.userId) === String(myself.userId));
+    const myRoleId = myMembership?.roleId ?? null;
+    const isOwner = myRoleId === 1;
+    const ownerMember = members.find((m) => m.roleId === 1);
+    const otherMembers = members.filter((m) => String(m.userId) !== String(myself.userId));
+
+    const [shareOpen, setShareOpen] = useState(false);
+    const openShareModal = () => {
+        if (activeNoteId != null) setShareOpen(true);
+    };
 
     // Common action button style
     const actionButtonStyle = {
@@ -352,9 +390,71 @@ export const NoteHeaderActions = ({
                 </Stack>
             )}
 
+            {/* Member avatar strip + Share button. Rendered for any note
+                type once the role members have loaded. The Share button is
+                only interactive for owners — non-owners see the avatars in
+                read-only form with a tooltip identifying the owner. */}
+            {activeNoteId != null && members.length > 0 && (
+                <Stack alignItems="center" direction="row" spacing={0.75}>
+                    <Tooltip
+                        size="sm"
+                        title={
+                            ownerMember
+                                ? `Owner: ${ownerMember.userName}${
+                                      otherMembers.length > 0
+                                          ? ` · ${otherMembers.length} more`
+                                          : ""
+                                  }`
+                                : "Members"
+                        }
+                        variant="outlined"
+                    >
+                        <AvatarGroup size="sm" sx={{ "--Avatar-size": "26px" }}>
+                            {members.slice(0, 3).map((m) => (
+                                <Avatar
+                                    key={m.userId}
+                                    src={m.avatarUrl || undefined}
+                                    sx={{ border: "none" }}
+                                >
+                                    {m.userName?.[0]?.toUpperCase() || "?"}
+                                </Avatar>
+                            ))}
+                            {members.length > 3 && (
+                                <Avatar sx={{ border: "none" }}>+{members.length - 3}</Avatar>
+                            )}
+                        </AvatarGroup>
+                    </Tooltip>
+                    {isOwner && (
+                        <Tooltip size="sm" title="Share" variant="outlined">
+                            <Button
+                                size="sm"
+                                variant="plain"
+                                startDecorator={<PersonAddRoundedIcon sx={{ fontSize: 16 }} />}
+                                onClick={openShareModal}
+                                sx={{
+                                    ...actionButtonStyle,
+                                    px: 1.25,
+                                    fontSize: "12px",
+                                    fontWeight: 600,
+                                }}
+                            >
+                                Share
+                            </Button>
+                        </Tooltip>
+                    )}
+                </Stack>
+            )}
+
             {/* More Actions Dropdown */}
             {(() => {
                 const items: MoreMenuItem[] = [
+                    {
+                        id: "shareNote",
+                        label: "Share…",
+                        icon: <PersonAddRoundedIcon sx={{ fontSize: 18 }} />,
+                        visible: isOwner && activeNoteId != null,
+                        onClick: openShareModal,
+                    },
                     {
                         id: "copyNoteLink",
                         label: "Copy note link",
@@ -448,6 +548,20 @@ export const NoteHeaderActions = ({
                         />
                     </IconButton>
                 </Tooltip>
+            )}
+
+            {/* Share modal */}
+            {activeNoteId != null && (
+                <ModalNoteSharing
+                    open={shareOpen}
+                    onClose={() => setShareOpen(false)}
+                    noteType={noteType === 4 ? 1 : noteType}
+                    noteId={activeNoteId}
+                    noteTitle={activeNoteTitle}
+                    myself={myself}
+                    teamMembers={useTEM.teamMembers}
+                    useNM={useNM}
+                />
             )}
         </Stack>
     );

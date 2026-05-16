@@ -12,7 +12,12 @@ import { useColorScheme } from "@mui/joy/styles";
 
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { AllChatProps } from "../../../../types/chat";
-import { ChatNoteMetaProps, MyNoteMetaProps, TaskNoteMetaProps } from "../../../../types/notes";
+import {
+    ChatNoteMetaProps,
+    MyNoteMetaProps,
+    SharedNoteMetaTreeNode,
+    TaskNoteMetaProps,
+} from "../../../../types/notes";
 import { ChildNoteCreator } from "../../chat-notes/components/ChildNoteCreator";
 import { useNoteTreeState } from "../hooks/useNoteTreeState";
 import { ChatNoteMetaTreeNode, TaskNoteMetaTreeNode } from "../types/noteTypes";
@@ -298,6 +303,11 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         useNM.getRecentNotesMeta();
     }, []);
 
+    // Load personal notes shared with me — drives the noteType=4 bucket.
+    useEffect(() => {
+        useNM.getSharedNoteMeta();
+    }, []);
+
     // Use custom hooks for each note type
     const myNoteState = useNoteTreeState({
         metaTree: useNM.myNoteMetaTree,
@@ -318,6 +328,16 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         currentChain: useNM.currentChatNoteChain,
         selectedTabIndex: useNM.selectedTabIndex,
         currentNote: useNM.currentChatNote,
+    });
+
+    // Shared-with-me personal notes. They are backed by the same
+    // personal-note endpoint, so we point the tree's currentNote at
+    // `currentMyNote` to drive the row highlight.
+    const sharedNoteState = useNoteTreeState<SharedNoteMetaTreeNode>({
+        metaTree: useNM.sharedNoteMetaTree,
+        currentChain: undefined,
+        selectedTabIndex: useNM.selectedTabIndex,
+        currentNote: useNM.currentMyNote,
     });
 
     // Render functions for each note type
@@ -363,6 +383,27 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         />
     );
 
+    // Shared notes render as personal notes (same hierarchy), but pass
+    // noteType={4} so the sidebar highlight and currentNoteType track
+    // the "Shared Notes" bucket.
+    const renderSharedNoteTreeItem = (node: any) => (
+        <NoteTreeRenderer
+            key={node.noteId}
+            currentChain={sharedNoteState.tmpCurrentChain}
+            useNM={useNM}
+            node={node}
+            noteType={4}
+            timestamp={sharedNoteState.timestamp}
+            createChildNoteList={(node) => (
+                <ChildNoteCreator
+                    useNM={useNM}
+                    node={node}
+                    timestamp={sharedNoteState.timestamp}
+                />
+            )}
+        />
+    );
+
     // Grouped task notes by project and task
     const groupedTaskNotes = useMemo(
         () => groupTaskNotes(taskNoteState.tmpMetaTree as TaskNoteMetaTreeNode[]),
@@ -374,6 +415,26 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         () => groupChatNotes(chatNoteState.tmpMetaTree as ChatNoteMetaTreeNode[], allChats),
         [chatNoteState.tmpMetaTree, allChats]
     );
+
+    // Grouped shared notes by the sharer (ownerName)
+    const groupedSharedNotes = useMemo(() => {
+        const map = new Map<
+            string,
+            { ownerId: string; ownerName: string; notes: SharedNoteMetaTreeNode[] }
+        >();
+        (sharedNoteState.tmpMetaTree as SharedNoteMetaTreeNode[]).forEach((note) => {
+            const key = String(note.ownerId);
+            if (!map.has(key)) {
+                map.set(key, {
+                    ownerId: note.ownerId,
+                    ownerName: note.ownerName || "Unknown",
+                    notes: [],
+                });
+            }
+            map.get(key)!.notes.push(note);
+        });
+        return Array.from(map.values());
+    }, [sharedNoteState.tmpMetaTree]);
 
     // Render grouped task notes
     // (Project → Milestone (optional) → Task → Subtask → Notes).
@@ -446,6 +507,21 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 </GroupedNoteSection>
             );
         });
+
+    // Render grouped shared notes (Sharer → Notes)
+    const renderGroupedSharedNotes = () =>
+        groupedSharedNotes.map((sharer) => (
+            <GroupedNoteSection
+                key={`sharer-${sharer.ownerId}`}
+                groupKey={`sharer-${sharer.ownerId}`}
+                groupLabel={sharer.ownerName}
+                defaultExpanded={sharer.notes.some(
+                    (note) => note.noteId === useNM.currentMyNote?.noteId
+                )}
+            >
+                {sharer.notes.map((note) => renderSharedNoteTreeItem(note))}
+            </GroupedNoteSection>
+        ));
 
     // Render grouped chat notes (Chat Type → Chat Name → Notes)
     const renderGroupedChatNotes = () =>
@@ -651,10 +727,10 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             noteType: 4,
             icon: <ShareRoundedIcon sx={{ fontSize: 18 }} />,
             title: "Shared Notes",
-            state: null,
+            state: sharedNoteState,
             renderTree: null,
-            isDisabled: true,
-            isGrouped: false,
+            renderGrouped: renderGroupedSharedNotes,
+            isGrouped: true,
         },
     ];
 
@@ -811,27 +887,14 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                             useNM={useNM}
                             noteType={config.noteType}
                             title={config.title}
-                            isDisabled={config.isDisabled}
                         >
-                            {config.isGrouped && config.renderGrouped ? (
-                                config.renderGrouped()
-                            ) : config.state && config.renderTree ? (
-                                config.state.tmpMetaTree.map((root) => config.renderTree!(root))
-                            ) : config.isDisabled ? (
-                                <Box sx={{ px: 2, py: 1 }}>
-                                    <Typography
-                                        level="body-xs"
-                                        sx={{
-                                            color: isDark
-                                                ? "rgba(255,255,255,0.35)"
-                                                : "rgba(0,0,0,0.35)",
-                                            fontStyle: "italic",
-                                        }}
-                                    >
-                                        Coming soon
-                                    </Typography>
-                                </Box>
-                            ) : null}
+                            {config.isGrouped && config.renderGrouped
+                                ? config.renderGrouped()
+                                : config.state && config.renderTree
+                                  ? config.state.tmpMetaTree.map((root) =>
+                                        config.renderTree!(root)
+                                    )
+                                  : null}
                         </NoteTypeSection>
                     ))}
                 </List>

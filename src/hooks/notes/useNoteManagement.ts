@@ -5,7 +5,11 @@ import { createEmptyChatNote } from "../../features/notes/chat-notes/services/cr
 import { loadChatNoteMeta } from "../../features/notes/chat-notes/services/loadChatNoteMeta";
 import { loadChatNotesByChatId } from "../../features/notes/chat-notes/services/loadChatNotesByChatId";
 import { addNote } from "../../features/notes/common/services/addNote";
+import { deleteNoteRole } from "../../features/notes/common/services/deleteNoteRole";
+import { loadNoteRoles } from "../../features/notes/common/services/loadNoteRoles";
+import { loadSharedNotesMeta } from "../../features/notes/common/services/loadSharedNotesMeta";
 import { loadSpecificNote } from "../../features/notes/common/services/loadSpecificNote";
+import { updateNoteRole } from "../../features/notes/common/services/updateNoteRole";
 import {
     addNoteFavorite,
     FavoriteNotesMetaResponse,
@@ -29,11 +33,19 @@ import {
     MyNoteMetaProps,
     MyNoteMetaTreeNode,
     MyNoteProps,
+    NoteRoleMember,
+    SharedNoteMetaProps,
+    SharedNoteMetaTreeNode,
     TaskNoteMetaProps,
     TaskNoteMetaTreeNode,
     TaskNoteProps,
 } from "../../types/notes";
-import { buildChatNoteTree, buildMyNoteTree, buildTaskNoteTree } from "../../utils/note";
+import {
+    buildChatNoteTree,
+    buildMyNoteTree,
+    buildSharedNoteTree,
+    buildTaskNoteTree,
+} from "../../utils/note";
 import { initCurrentChatNoteChain, updataChatNoteChain } from "./chatNote";
 import { initCurrentMyNoteChain, updataMyNoteChain } from "./myNote";
 import { updataTaskNoteChain } from "./taskNote";
@@ -97,6 +109,24 @@ export interface NoteManagementState {
     setRecentNotes: (notes: RecentNotesMetaResponse | null) => void;
     getRecentNotesMeta: () => Promise<void>;
     recordNoteOpen: (noteId: number, noteType: number) => Promise<void>;
+
+    // Note role management (sharing)
+    currentNoteMembers: NoteRoleMember[];
+    setCurrentNoteMembers: (members: NoteRoleMember[]) => void;
+    loadNoteMembers: (noteType: number, noteId: number) => Promise<void>;
+    grantNoteRole: (
+        noteType: number,
+        noteId: number,
+        targetUserId: string,
+        roleId: number
+    ) => Promise<void>;
+    revokeNoteRole: (noteType: number, noteId: number, targetUserId: string) => Promise<void>;
+
+    // Shared-with-me personal notes (drives the noteType=4 sidebar bucket)
+    sharedNoteMeta: SharedNoteMetaProps[];
+    setSharedNoteMeta: (meta: SharedNoteMetaProps[]) => void;
+    sharedNoteMetaTree: SharedNoteMetaTreeNode[];
+    getSharedNoteMeta: () => Promise<void>;
 
     // Visibility states
     isTaskNoteVisible: boolean;
@@ -209,6 +239,13 @@ export const useNoteManagement = (
 
     // Recent notes
     const [recentNotes, setRecentNotes] = useState<RecentNotesMetaResponse | null>(null);
+
+    // Role members on the currently-opened note
+    const [currentNoteMembers, setCurrentNoteMembers] = useState<NoteRoleMember[]>([]);
+
+    // Shared-with-me personal notes (drives the noteType=4 sidebar bucket)
+    const [sharedNoteMeta, setSharedNoteMeta] = useState<SharedNoteMetaProps[]>([]);
+    const [sharedNoteMetaTree, setSharedNoteMetaTree] = useState<SharedNoteMetaTreeNode[]>([]);
 
     // Visibility states
     const [isTaskNoteVisible, setIsTaskNoteVisible] = useState(false);
@@ -568,6 +605,45 @@ export const useNoteManagement = (
         return isFavorited;
     };
 
+    // Note role management (sharing) functions
+    const loadNoteMembers = async (noteType: number, noteId: number) => {
+        if (!accessToken) {
+            setCurrentNoteMembers([]);
+            return;
+        }
+        const members = await loadNoteRoles(myself, noteType, noteId, accessToken);
+        setCurrentNoteMembers(members);
+    };
+
+    const grantNoteRole = async (
+        noteType: number,
+        noteId: number,
+        targetUserId: string,
+        roleId: number
+    ) => {
+        if (!accessToken) return;
+        await updateNoteRole(myself, noteType, noteId, targetUserId, roleId, accessToken);
+        await loadNoteMembers(noteType, noteId);
+    };
+
+    const revokeNoteRole = async (noteType: number, noteId: number, targetUserId: string) => {
+        if (!accessToken) return;
+        const ok = await deleteNoteRole(myself, noteType, noteId, targetUserId, accessToken);
+        if (ok) {
+            await loadNoteMembers(noteType, noteId);
+        }
+    };
+
+    // Shared-with-me personal notes
+    const getSharedNoteMeta = async () => {
+        const loaded = await loadSharedNotesMeta(myself, accessToken);
+        setSharedNoteMeta(loaded);
+    };
+
+    useEffect(() => {
+        setSharedNoteMetaTree(buildSharedNoteTree(sharedNoteMeta));
+    }, [sharedNoteMeta]);
+
     // Recent notes functions
     const getRecentNotesMeta = async () => {
         const loadedRecents = await loadRecentNotesMeta(myself, accessToken);
@@ -694,6 +770,13 @@ export const useNoteManagement = (
     const loadNote = async (noteType: number, noteId: number, _nextTabIndex: number) => {
         if (!accessToken) return;
         try {
+            // Shared personal notes live in note_type=1 on the backend; the
+            // separate noteType=4 only exists to drive the sidebar bucket
+            // and the route, so we transparently alias to the personal
+            // note load path here.
+            if (noteType === 4) {
+                noteType = 1;
+            }
             if (noteType === 1) {
                 const cached = await noteService.getPersonalNote(noteId);
                 if (cached) {
@@ -785,6 +868,17 @@ export const useNoteManagement = (
             return;
         }
 
+        // Shared notes (type 4) ride on the same tab kind ("my") as
+        // owned personal notes, so we disambiguate via the
+        // shared-meta list: if the active personal note is in that
+        // list, the bucket is "Shared Notes" (4); otherwise it's
+        // "My Notes" (1). Used in both the cached-sync and async
+        // branches so the sidebar highlight, the noteType=4
+        // routing-write effect, and `NoteTreeRenderer.isSelected`
+        // all see a consistent value.
+        const personalBucketType = () =>
+            sharedNoteMeta.some((n) => n.noteId === active.noteId) ? 4 : 1;
+
         // Synchronous cache hit: write the new current* note, drop the
         // other kinds, and let the renderer pick it up in this render.
         // This is the common case — every `openTab` / `update` path
@@ -795,7 +889,7 @@ export const useNoteManagement = (
                 setCurrentMyNote(cachedSync as MyNoteProps);
                 setCurrentTaskNote(null);
                 setCurrentChatNote(null);
-                setCurrentNoteType(1);
+                setCurrentNoteType(personalBucketType());
             } else if (active.kind === "task") {
                 setCurrentTaskNote(cachedSync as TaskNoteProps);
                 setCurrentMyNote(null);
@@ -833,7 +927,7 @@ export const useNoteManagement = (
                         const myNote: MyNoteProps = { ...cached, noteType: 1 };
                         upsertNoteCache(myNote);
                         setCurrentMyNote(myNote);
-                        setCurrentNoteType(1);
+                        setCurrentNoteType(personalBucketType());
                         recordNoteOpen(active.noteId, 1);
                         return;
                     }
@@ -849,7 +943,7 @@ export const useNoteManagement = (
                         addNote(1, fetched);
                         upsertNoteCache(fetched);
                         setCurrentMyNote(fetched);
-                        setCurrentNoteType(1);
+                        setCurrentNoteType(personalBucketType());
                         recordNoteOpen(active.noteId, 1);
                     }
                     return;
@@ -918,6 +1012,19 @@ export const useNoteManagement = (
         // `myself`/`accessToken`/`recordNoteOpen` deliberately omitted to
         // avoid re-running on token refresh or memo churn — the effect
         // re-runs every time the active tab id changes.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [tabsApi.activeTabId]);
+
+    // Refresh note role members whenever the active note changes so the
+    // header's avatar strip and Share button see fresh data.
+    useEffect(() => {
+        const active = tabsApi.activeTab;
+        if (!active) {
+            setCurrentNoteMembers([]);
+            return;
+        }
+        const nt = active.kind === "my" ? 1 : active.kind === "task" ? 2 : 3;
+        loadNoteMembers(nt, active.noteId);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tabsApi.activeTabId]);
 
@@ -1009,6 +1116,19 @@ export const useNoteManagement = (
         setRecentNotes,
         getRecentNotesMeta,
         recordNoteOpen,
+
+        // Note role management (sharing)
+        currentNoteMembers,
+        setCurrentNoteMembers,
+        loadNoteMembers,
+        grantNoteRole,
+        revokeNoteRole,
+
+        // Shared-with-me personal notes
+        sharedNoteMeta,
+        setSharedNoteMeta,
+        sharedNoteMetaTree,
+        getSharedNoteMeta,
 
         // Visibility states
         isTaskNoteVisible,
