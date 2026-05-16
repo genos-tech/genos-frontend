@@ -168,9 +168,15 @@ function groupTaskNotes(notes: TaskNoteMetaTreeNode[]): ProjectGroup[] {
             bucketTasks = pg.looseTasks;
         }
 
-        if (note.parentTaskId == null) {
-            // L2 task — the note's task itself sits one level under the
-            // project (or milestone).
+        // L2 cases:
+        //   (a) the note's task has no parent task at all, or
+        //   (b) the parent IS the milestone's backing task — in which case
+        //       the "parent" folder is the milestone folder itself, so the
+        //       note's task should sit directly underneath the milestone
+        //       (not as L3 inside a duplicate "Task N" folder that points
+        //       at the same task the milestone already represents).
+        const parentIsMilestoneBacking = note.parentTaskIsMilestone === true;
+        if (note.parentTaskId == null || parentIsMilestoneBacking) {
             const tg = findOrCreateTaskGroup(bucketTasks, note.taskId, note.taskTitle ?? "");
             tg.notes.push(note);
         } else {

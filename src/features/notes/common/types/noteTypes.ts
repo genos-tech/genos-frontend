@@ -20,6 +20,7 @@ export interface TaskNoteMetaTreeNode extends BaseNoteTreeNode {
     // Project → Milestone → Task → Subtask grouping in `NoteSidebar`.
     parentTaskId?: number | null;
     parentTaskTitle?: string | null;
+    parentTaskIsMilestone?: boolean | null;
     isMilestone?: boolean;
     milestoneId?: number | null;
     milestoneTitle?: string | null;

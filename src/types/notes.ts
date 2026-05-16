@@ -42,6 +42,7 @@ export type TaskNoteMetaProps = {
     // note back to a "loose task at project level".
     parentTaskId?: number | null;
     parentTaskTitle?: string | null;
+    parentTaskIsMilestone?: boolean | null;
     isMilestone?: boolean;
     milestoneId?: number | null;
     milestoneTitle?: string | null;

@@ -383,6 +383,13 @@ export const useNoteManagement = (
                 tabsApi.openTab(noteToTab(taskNote, myself.teamId));
                 recordNoteOpen(taskNote.noteId, 2);
 
+                // Carry the new Project → Milestone → Task → Subtask
+                // hierarchy fields from the create response (now populated
+                // by the backend) so the sidebar's `groupTaskNotes` can
+                // slot the note into its correct folder immediately. A
+                // missing field is fine — it'll fall back to "loose task at
+                // project level" until the next meta refetch.
+                const newNoteAny = newNote as any;
                 setTaskNoteMeta((prev) => [
                     {
                         noteType: taskNote.noteType,
@@ -392,6 +399,12 @@ export const useNoteManagement = (
                         taskId: taskNote.taskId,
                         title: taskNote.title,
                         tsUpdated: taskNote.tsUpdated,
+                        parentTaskId: newNoteAny.parentTaskId,
+                        parentTaskTitle: newNoteAny.parentTaskTitle,
+                        parentTaskIsMilestone: newNoteAny.parentTaskIsMilestone,
+                        isMilestone: newNoteAny.isMilestone,
+                        milestoneId: newNoteAny.milestoneId,
+                        milestoneTitle: newNoteAny.milestoneTitle,
                     },
                     ...prev,
                 ]);
