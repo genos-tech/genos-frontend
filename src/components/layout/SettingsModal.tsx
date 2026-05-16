@@ -5,6 +5,7 @@ import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
 import KeyboardRoundedIcon from "@mui/icons-material/KeyboardRounded";
 import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
 import PaletteRoundedIcon from "@mui/icons-material/PaletteRounded";
+import PrivacyTipRoundedIcon from "@mui/icons-material/PrivacyTipRounded";
 import SettingsBrightnessRoundedIcon from "@mui/icons-material/SettingsBrightnessRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import {
@@ -22,6 +23,7 @@ import {
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { useAnalyticsPreferences } from "../../hooks/common/useAnalyticsPreferences";
 import { useSpotlightPreferences } from "../../hooks/common/useSpotlightPreferences";
 import { ThemePreference, useThemePreference } from "../../hooks/common/useThemePreference";
 import { NotificationSettingsPanel } from "../../services/notifications/NotificationSettingsPanel";
@@ -65,8 +67,8 @@ const Kbd = ({ children }: { children: React.ReactNode }) => (
 const AppearanceSection = () => {
     const { preference, setPreference } = useThemePreference();
     return (
-        <Sheet variant="outlined" sx={{ p: 2, borderRadius: "lg" }}>
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+        <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
+            <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
                 <PaletteRoundedIcon />
                 <Typography level="title-md">Appearance</Typography>
             </Stack>
@@ -75,7 +77,7 @@ const AppearanceSection = () => {
                 when it changes.
             </Typography>
 
-            <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
+            <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={2}>
                 <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Typography level="title-sm">Theme</Typography>
                     <Typography level="body-xs">
@@ -84,26 +86,26 @@ const AppearanceSection = () => {
                 </Box>
                 <Select
                     size="sm"
+                    sx={{ minWidth: 140 }}
                     value={preference}
                     onChange={(_e, value) => {
                         if (value) setPreference(value as ThemePreference);
                     }}
-                    sx={{ minWidth: 140 }}
                 >
                     <Option value="light">
-                        <Stack direction="row" spacing={1} alignItems="center">
+                        <Stack alignItems="center" direction="row" spacing={1}>
                             <LightModeRoundedIcon sx={{ fontSize: 18 }} />
                             <Typography level="body-sm">Light</Typography>
                         </Stack>
                     </Option>
                     <Option value="dark">
-                        <Stack direction="row" spacing={1} alignItems="center">
+                        <Stack alignItems="center" direction="row" spacing={1}>
                             <DarkModeRoundedIcon sx={{ fontSize: 18 }} />
                             <Typography level="body-sm">Dark</Typography>
                         </Stack>
                     </Option>
                     <Option value="system">
-                        <Stack direction="row" spacing={1} alignItems="center">
+                        <Stack alignItems="center" direction="row" spacing={1}>
                             <SettingsBrightnessRoundedIcon sx={{ fontSize: 18 }} />
                             <Typography level="body-sm">System</Typography>
                         </Stack>
@@ -117,8 +119,8 @@ const AppearanceSection = () => {
 const SpotlightSection = () => {
     const { aiAnswers, webSearch, setAiAnswers, setWebSearch } = useSpotlightPreferences();
     return (
-        <Sheet variant="outlined" sx={{ p: 2, borderRadius: "lg" }}>
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+        <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
+            <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
                 <AutoAwesomeRoundedIcon />
                 <Typography level="title-md">Spotlight</Typography>
             </Stack>
@@ -128,10 +130,10 @@ const SpotlightSection = () => {
             </Typography>
 
             <Stack
-                direction="row"
-                spacing={2}
                 alignItems="center"
+                direction="row"
                 justifyContent="space-between"
+                spacing={2}
                 sx={{ mb: 1.5 }}
             >
                 <Box sx={{ minWidth: 0, flex: 1 }}>
@@ -147,10 +149,10 @@ const SpotlightSection = () => {
             <Divider />
 
             <Stack
-                direction="row"
-                spacing={2}
                 alignItems="center"
+                direction="row"
                 justifyContent="space-between"
+                spacing={2}
                 sx={{ mt: 1.5, opacity: aiAnswers ? 1 : 0.5 }}
             >
                 <Box sx={{ minWidth: 0, flex: 1 }}>
@@ -165,6 +167,32 @@ const SpotlightSection = () => {
                     disabled={!aiAnswers}
                     onChange={(e) => setWebSearch(e.target.checked)}
                 />
+            </Stack>
+        </Sheet>
+    );
+};
+
+const PrivacySection = () => {
+    const { enabled, setEnabled } = useAnalyticsPreferences();
+    return (
+        <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
+            <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
+                <PrivacyTipRoundedIcon />
+                <Typography level="title-md">Privacy & analytics</Typography>
+            </Stack>
+            <Typography level="body-xs" sx={{ mb: 1.5 }}>
+                Helps us understand which features get used so we can focus on the right things.
+            </Typography>
+
+            <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={2}>
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography level="title-sm">Share anonymous usage data</Typography>
+                    <Typography level="body-xs">
+                        Sends your user ID, team, and role plus the pages you visit. No message
+                        content, no clicks tracked. Turn off to opt out completely.
+                    </Typography>
+                </Box>
+                <Switch checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
             </Stack>
         </Sheet>
     );
@@ -228,8 +256,8 @@ const KeyboardShortcutsSection = () => {
     ];
 
     return (
-        <Sheet variant="outlined" sx={{ p: 2, borderRadius: "lg" }}>
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+        <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
+            <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
                 <KeyboardRoundedIcon />
                 <Typography level="title-md">Keyboard shortcuts</Typography>
             </Stack>
@@ -247,19 +275,19 @@ const KeyboardShortcutsSection = () => {
                             {group.rows.map((row, idx) => (
                                 <Box key={row.label}>
                                     <Stack
-                                        direction="row"
-                                        spacing={2}
                                         alignItems="center"
+                                        direction="row"
                                         justifyContent="space-between"
+                                        spacing={2}
                                     >
                                         <Typography level="body-sm">{row.label}</Typography>
-                                        <Stack direction="row" spacing={0.5} alignItems="center">
+                                        <Stack alignItems="center" direction="row" spacing={0.5}>
                                             {row.combo.map((key, i) => (
                                                 <Stack
                                                     key={`${key}-${i}`}
+                                                    alignItems="center"
                                                     direction="row"
                                                     spacing={0.5}
-                                                    alignItems="center"
                                                 >
                                                     <Kbd>{key}</Kbd>
                                                     {i < row.combo.length - 1 && (
@@ -312,7 +340,7 @@ export const SettingsModal = ({ open, onClose }: Props) => {
                     p: 2.5,
                 }}
             >
-                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
+                <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 1 }}>
                     <SettingsRoundedIcon />
                     <Typography level="title-lg">Settings</Typography>
                     <Box sx={{ flex: 1 }} />
@@ -324,6 +352,7 @@ export const SettingsModal = ({ open, onClose }: Props) => {
                 <Stack spacing={2}>
                     <AppearanceSection />
                     <SpotlightSection />
+                    <PrivacySection />
                     <NotificationSettingsPanel />
                     <KeyboardShortcutsSection />
                 </Stack>

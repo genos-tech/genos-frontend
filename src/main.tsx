@@ -9,9 +9,15 @@ import { AuthGuard, GuestGuard } from "./features/admin/authGuard";
 import { JoinTeam } from "./features/admin/components/joinTeamFrom";
 import { SignInForm } from "./features/admin/components/SignInForm";
 import { SignUpForm } from "./features/admin/components/SignUpForm";
+import { analytics } from "./services/analytics";
 
 import { App } from "./App";
 import GenosLandingPage from "./lp/LandingPage";
+
+// Initialize PostHog once, before React mounts. No-ops when
+// VITE_POSTHOG_KEY / VITE_POSTHOG_HOST are unset, so leaving them blank
+// in .env.local is the local-dev kill switch.
+analytics.init();
 
 // Layout for everything that needs access to AuthContext (the sign-in /
 // sign-up flows, the authenticated workspace, join-team, the 404 page).
