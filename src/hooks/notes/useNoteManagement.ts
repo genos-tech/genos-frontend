@@ -386,9 +386,12 @@ export const useNoteManagement = (
                 // Carry the new Project → Milestone → Task → Subtask
                 // hierarchy fields from the create response (now populated
                 // by the backend) so the sidebar's `groupTaskNotes` can
-                // slot the note into its correct folder immediately. A
-                // missing field is fine — it'll fall back to "loose task at
-                // project level" until the next meta refetch.
+                // slot the note into its correct folder immediately —
+                // including the human-readable `taskTitle` / `projectName`
+                // labels (without these the sidebar falls back to
+                // "Task #<id>" / "Project <id>" until the next meta refetch).
+                // `title` (the caller-supplied task title) is the last-
+                // resort fallback used by the in-task "New Note" button.
                 const newNoteAny = newNote as any;
                 setTaskNoteMeta((prev) => [
                     {
@@ -397,6 +400,8 @@ export const useNoteManagement = (
                         parentNoteId: taskNote.parentNoteId,
                         projectId: taskNote.projectId,
                         taskId: taskNote.taskId,
+                        projectName: newNoteAny.projectName,
+                        taskTitle: newNoteAny.taskTitle ?? title,
                         title: taskNote.title,
                         tsUpdated: taskNote.tsUpdated,
                         parentTaskId: newNoteAny.parentTaskId,
