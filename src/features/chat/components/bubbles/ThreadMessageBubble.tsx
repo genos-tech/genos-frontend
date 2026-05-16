@@ -10,6 +10,7 @@ import { EmojiPicker } from "../../../../components/ui/emoji/EmojiPicker";
 import { EmojiReaction } from "../../../../components/ui/emoji/EmojiReaction";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { useBubbleStylePreference } from "../../../../hooks/common/useBubbleStylePreference";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
@@ -18,29 +19,10 @@ import { ReactionProps } from "../../../../types/common";
 import { TaskCommentProps } from "../../../../types/tasks";
 import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
+import { BUBBLE_COLORS, COMPACT_BODY_INDENT, COMPACT_TOOLBAR_OFFSET } from "./bubbleStyleTokens";
 import { BubbleThreadMoreMenu } from "./BubbleThreadMoreMenu";
 import { BubbleUnderBar } from "./BubbleUnderBar";
 import { BubbleUserName } from "./BubbleUserName";
-
-// Color schemes for sent/received bubbles - improved for better text contrast.
-// `sent` palette purple is harmonized with MessageBubble.BUBBLE_COLORS.sent.
-// `focused` is intentionally GREEN — cross-file functional carve-out
-// mirroring MessageBubble.focused and TaskCommentBubble.focused so
-// deep-linked target messages share the same focus tint across surfaces.
-const BUBBLE_COLORS = {
-    sent: {
-        dark: { bg: "#3b0764", border: "#7c3aed", text: "#f3e8ff" },
-        light: { bg: "#f5f3ff", border: "#c4b5fd", text: "#3b0764" },
-    },
-    received: {
-        dark: { bg: "#1f2937", border: "#374151", text: "#f3f4f6" },
-        light: { bg: "#ffffff", border: "#e5e7eb", text: "#111827" },
-    },
-    focused: {
-        dark: { bg: "#14532d", border: "#22c55e", text: "#dcfce7" },
-        light: { bg: "#dcfce7", border: "#22c55e", text: "#14532d" },
-    },
-} as const;
 
 type threadMessageBubbleProps = {
     useTEM: TeamManagementState;
@@ -91,6 +73,9 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
     const navigate = useNavigate();
     const isSent = variant === "sent";
     const dtSent = extractYYYYMMDDHHMM(message.tsSent);
+    const { style } = useBubbleStylePreference();
+    const isCompact = style === "compact";
+    const isSystemUser = message.sender.isSystemUser === true;
 
     // Get bubble colors based on variant and theme
     const bubbleColors = isSent ? BUBBLE_COLORS.sent : BUBBLE_COLORS.received;
@@ -139,7 +124,9 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
 
     // Dynamic positioning for emoji picker
     const bubbleRef = useRef<HTMLDivElement>(null);
+    const toolbarRef = useRef<HTMLDivElement>(null);
     const [pickerBottomPosition, setPickerBottomPosition] = useState<number>(40);
+    const [pickerTopPosition, setPickerTopPosition] = useState<number | string>("auto");
     const [pickerRightPosition, setPickerRightPosition] = useState<number | string>(
         isSent ? 0 : "auto"
     );
@@ -150,32 +137,39 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
         useState<boolean>(false);
 
     useEffect(() => {
-        if (showEmojiPicker && bubbleRef.current) {
-            const rect = bubbleRef.current.getBoundingClientRect();
-            const viewportHeight = window.innerHeight;
-            const pickerHeight = 435;
-
-            if (rect.top > pickerHeight + 20) {
-                setPickerBottomPosition(40);
-            } else if (viewportHeight - rect.bottom > pickerHeight + 20) {
-                setPickerBottomPosition(-pickerHeight - 20);
-            } else {
-                setPickerBottomPosition(40);
-            }
-
-            if (isSent) {
-                setPickerRightPosition(0);
-                setPickerLeftPosition("auto");
-            } else {
-                setPickerLeftPosition(0);
-                setPickerRightPosition("auto");
-            }
-            setEmojiPickerPositionCalculated(true);
-        }
-        if (showEmojiPicker === false) {
+        if (!showEmojiPicker) {
             setEmojiPickerPositionCalculated(false);
+            return;
         }
-    }, [showEmojiPicker, isSent]);
+
+        // Viewport-clamped fixed positioning, used in both bubble and
+        // compact modes. Anchors to the floating toolbar when present
+        // (compact mode), otherwise to the bubble container (bubble
+        // mode). The picker's right edge aligns with the anchor's right
+        // edge, then clamps to viewport so it never falls off-screen.
+        const anchor = toolbarRef.current ?? bubbleRef.current;
+        if (!anchor) return;
+        const rect = anchor.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const viewportWidth = window.innerWidth;
+        const pickerHeight = 435;
+        const pickerWidth = 352;
+
+        if (viewportHeight - rect.bottom > pickerHeight + 20) {
+            setPickerTopPosition(rect.bottom + 10);
+        } else if (rect.top > pickerHeight + 20) {
+            setPickerTopPosition(rect.top - pickerHeight - 10);
+        } else {
+            setPickerTopPosition(20);
+        }
+        setPickerBottomPosition(0);
+
+        const desiredLeft = rect.right - pickerWidth;
+        const leftPos = Math.max(20, Math.min(desiredLeft, viewportWidth - pickerWidth - 20));
+        setPickerLeftPosition(leftPos);
+        setPickerRightPosition("auto");
+        setEmojiPickerPositionCalculated(true);
+    }, [showEmojiPicker]);
 
     useEffect(() => {
         setReactions(message.reactions || []);
@@ -290,9 +284,9 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
     // Thread bubble action buttons - consolidated into a single "More" menu
     const BubbleActions = () => (
         <Stack
+            alignItems="center"
             direction="row"
             spacing={0.5}
-            alignItems="center"
             sx={{
                 opacity: showUnderBarOption ? 1 : 0,
                 transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -319,9 +313,9 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                         reactions={reactions}
                         setReactions={setReactions}
                         setShowEmojiPicker={setShowEmojiPicker}
+                        setUniqueReactionEmojiCount={setUniqueReactionEmojiCount}
                         showUnderBarOption={showUnderBarOption}
                         socket={socket}
-                        setUniqueReactionEmojiCount={setUniqueReactionEmojiCount}
                     />
                 </Box>
             )}
@@ -331,6 +325,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                 accessToken={accessToken}
                 currentMessageIndex={currentMessageIndex}
                 flaggedMessages={useCM.flaggedMessages}
+                isSent={isSent}
                 message={message}
                 myself={myself}
                 setCurrentThreadChat={useCM.setCurrentThreadChat}
@@ -341,10 +336,162 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                 socket={socket}
                 thread={thread}
                 useCM={useCM}
-                isSent={isSent}
             />
         </Stack>
     );
+
+    if (isCompact) {
+        const focusAccent =
+            isFocused === "focused"
+                ? BUBBLE_COLORS.focused[isDark ? "dark" : "light"].border
+                : isFocused === "threadActive"
+                  ? BUBBLE_COLORS.threadActive[isDark ? "dark" : "light"].border
+                  : "transparent";
+
+        const messageBody = message.content.length > 0 && (
+            <Box
+                sx={{
+                    cursor: "pointer",
+                    mt: isSimpleBubble ? 0 : 0.25,
+                }}
+                onClick={handleMessageClick}
+                onDoubleClick={() => {
+                    setTodoFromMessageBubble(message);
+                }}
+            >
+                <BnChatPreview
+                    key={`${thread.chatId}-${thread.threadId}-${message.messageId}-${thread.chatType}-${message.tsUpdated}`}
+                    content={message.content}
+                    isSent={isSent}
+                    myself={myself}
+                    setMyself={setMyself}
+                    socket={socket}
+                    useCM={useCM}
+                    useTEM={useTEM}
+                    useUISM={useUISM}
+                />
+            </Box>
+        );
+
+        return (
+            <Box
+                ref={bubbleRef}
+                sx={{
+                    width: "100%",
+                    position: "relative",
+                    py: 0.5,
+                    pl: 2,
+                    pr: 2,
+                    borderLeft: "3px solid",
+                    borderLeftColor: focusAccent,
+                    borderTop: isSimpleBubble ? "none" : "1px solid",
+                    borderTopColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+                    backgroundColor: showUnderBarOption
+                        ? isDark
+                            ? "rgba(255,255,255,0.03)"
+                            : "rgba(0,0,0,0.025)"
+                        : "transparent",
+                    transition: "background-color 0.15s ease",
+                }}
+                onMouseEnter={() => setShowUnderBarOption(true)}
+                onMouseLeave={() => setShowUnderBarOption(false)}
+            >
+                {emojiPickerPositionCalculated === true && (
+                    <EmojiPicker
+                        pickerBottomPosition={pickerBottomPosition}
+                        pickerLeftPosition={pickerLeftPosition}
+                        pickerRightPosition={pickerRightPosition}
+                        pickerTopPosition={pickerTopPosition}
+                        setSelectedEmoji={setSelectedEmoji}
+                        setShowEmojiPicker={setShowEmojiPicker}
+                        showEmojiPicker={showEmojiPicker}
+                        useFixedPosition={true}
+                    />
+                )}
+
+                {showUnderBarOption === true && (
+                    <Box
+                        ref={toolbarRef}
+                        sx={{
+                            position: "absolute",
+                            top: COMPACT_TOOLBAR_OFFSET.top,
+                            right: COMPACT_TOOLBAR_OFFSET.right,
+                            zIndex: 2,
+                            backgroundColor: isDark ? "#1f2937" : "#ffffff",
+                            border: "1px solid",
+                            borderColor: isDark ? "#374151" : "#e5e7eb",
+                            borderRadius: "8px",
+                            px: 0.5,
+                            boxShadow: isDark
+                                ? "0 2px 8px rgba(0,0,0,0.4)"
+                                : "0 2px 8px rgba(0,0,0,0.1)",
+                        }}
+                    >
+                        <BubbleActions />
+                    </Box>
+                )}
+
+                <Stack alignItems="flex-start" direction="row" spacing={1.5}>
+                    {!isSystemUser &&
+                        (isSimpleBubble ? (
+                            <Box sx={{ flexShrink: 0, width: COMPACT_BODY_INDENT - 12 }} />
+                        ) : (
+                            <Box sx={{ flexShrink: 0 }}>
+                                <UserAvatar
+                                    userId={isSent ? myself.userId : message.sender.userId}
+                                />
+                            </Box>
+                        ))}
+
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                        {!isSimpleBubble && (
+                            <BubbleUserName
+                                chatType={thread.chatType}
+                                dtSent={dtSent}
+                                isSent={isSent}
+                                isSimpleBubble={false}
+                                isThread={true}
+                                sender={message.sender}
+                                taskId={thread.taskId}
+                                taskStatus={null}
+                                tsSent={message.tsSent}
+                                tsUpdated={message.tsUpdated}
+                                userName={message.sender.userName}
+                            />
+                        )}
+
+                        {message.attachment ? (
+                            <Box sx={{ mt: isSimpleBubble ? 0 : 0.5 }}>
+                                <BubbleAttachmentSheet
+                                    fileName={message.attachment.fileName}
+                                    fileSize={message.attachment.size}
+                                    isSent={isSent}
+                                />
+                            </Box>
+                        ) : (
+                            messageBody
+                        )}
+
+                        <BubbleUnderBar
+                            chatName={thread.chatName}
+                            chatType={thread.chatType}
+                            dmPartnerUser={thread.dmPartnerUser}
+                            isThread={true}
+                            message={message}
+                            myself={myself}
+                            numReplies={0}
+                            reactions={reactions}
+                            setReactions={setReactions}
+                            setShowEmojiPicker={setShowEmojiPicker}
+                            setUniqueReactionEmojiCount={setUniqueReactionEmojiCount}
+                            showUnderBarOption={showUnderBarOption}
+                            socket={socket}
+                        />
+                    </Box>
+                </Stack>
+            </Box>
+        );
+    }
 
     return (
         <Box
@@ -370,16 +517,14 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                             pickerBottomPosition={pickerBottomPosition}
                             pickerLeftPosition={pickerLeftPosition}
                             pickerRightPosition={pickerRightPosition}
+                            pickerTopPosition={pickerTopPosition}
                             setSelectedEmoji={setSelectedEmoji}
                             setShowEmojiPicker={setShowEmojiPicker}
                             showEmojiPicker={showEmojiPicker}
+                            useFixedPosition={true}
                         />
                     )}
                     <Sheet
-                        onClick={handleMessageClick}
-                        onDoubleClick={() => {
-                            setTodoFromMessageBubble(message);
-                        }}
                         sx={{
                             p: 1.25,
                             borderRadius: "16px",
@@ -413,8 +558,12 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                     : "0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6)",
                             },
                         }}
+                        onClick={handleMessageClick}
                         onMouseEnter={() => setShowUnderBarOption(true)}
                         onMouseLeave={() => setShowUnderBarOption(false)}
+                        onDoubleClick={() => {
+                            setTodoFromMessageBubble(message);
+                        }}
                     >
                         {/* Subtle highlight for sent messages */}
                         {isSent && !isFocused && (
@@ -436,9 +585,9 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                         <Stack direction="column" sx={{ position: "relative", zIndex: 1 }}>
                             {showUnderBarOption === true && isSimpleBubble === true && (
                                 <Stack
+                                    alignItems="center"
                                     direction="row"
                                     spacing={0}
-                                    alignItems="center"
                                     sx={{ mb: 0.5 }}
                                 >
                                     <BubbleUserName
@@ -459,7 +608,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                             )}
 
                             {isSimpleBubble === false && (
-                                <Stack direction="row" spacing={1.5} alignItems="flex-start">
+                                <Stack alignItems="flex-start" direction="row" spacing={1.5}>
                                     {message.sender.isSystemUser !== true && (
                                         <Box sx={{ flexShrink: 0 }}>
                                             <UserAvatar
@@ -470,7 +619,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                         </Box>
                                     )}
                                     <Box sx={{ flex: 1, minWidth: 0 }}>
-                                        <Stack direction="row" alignItems="center">
+                                        <Stack alignItems="center" direction="row">
                                             <BubbleUserName
                                                 chatType={thread.chatType}
                                                 dtSent={dtSent}
@@ -494,12 +643,12 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                                 <Box sx={{ mt: isSimpleBubble ? 0 : 0.5 }}>
                                     <BnChatPreview
                                         key={`${thread.chatId}-${thread.threadId}-${message.messageId}-${thread.chatType}-${message.tsUpdated}`}
-                                        useCM={useCM}
                                         content={message.content}
                                         isSent={isSent}
                                         myself={myself}
                                         setMyself={setMyself}
                                         socket={socket}
+                                        useCM={useCM}
                                         useTEM={useTEM}
                                         useUISM={useUISM}
                                     />

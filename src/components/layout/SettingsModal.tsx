@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
+import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
 import KeyboardRoundedIcon from "@mui/icons-material/KeyboardRounded";
@@ -8,6 +9,7 @@ import PaletteRoundedIcon from "@mui/icons-material/PaletteRounded";
 import PrivacyTipRoundedIcon from "@mui/icons-material/PrivacyTipRounded";
 import SettingsBrightnessRoundedIcon from "@mui/icons-material/SettingsBrightnessRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
+import ViewStreamRoundedIcon from "@mui/icons-material/ViewStreamRounded";
 import {
     Box,
     Divider,
@@ -24,6 +26,10 @@ import {
 import { useColorScheme } from "@mui/joy/styles";
 
 import { useAnalyticsPreferences } from "../../hooks/common/useAnalyticsPreferences";
+import {
+    BubbleStyle,
+    useBubbleStylePreference,
+} from "../../hooks/common/useBubbleStylePreference";
 import { useSpotlightPreferences } from "../../hooks/common/useSpotlightPreferences";
 import { ThemePreference, useThemePreference } from "../../hooks/common/useThemePreference";
 import { NotificationSettingsPanel } from "../../services/notifications/NotificationSettingsPanel";
@@ -108,6 +114,52 @@ const AppearanceSection = () => {
                         <Stack alignItems="center" direction="row" spacing={1}>
                             <SettingsBrightnessRoundedIcon sx={{ fontSize: 18 }} />
                             <Typography level="body-sm">System</Typography>
+                        </Stack>
+                    </Option>
+                </Select>
+            </Stack>
+        </Sheet>
+    );
+};
+
+const MessageLayoutSection = () => {
+    const { style, setStyle } = useBubbleStylePreference();
+    return (
+        <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
+            <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
+                <ChatBubbleOutlineRoundedIcon />
+                <Typography level="title-md">Message layout</Typography>
+            </Stack>
+            <Typography level="body-xs" sx={{ mb: 1.5 }}>
+                Bubble: flexible-width balloons aligned by author (current). Compact: full-width
+                squared rows with author on the left (Slack-style).
+            </Typography>
+
+            <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={2}>
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography level="title-sm">Style</Typography>
+                    <Typography level="body-xs">
+                        Applies immediately to chat, threads, and task comments.
+                    </Typography>
+                </Box>
+                <Select
+                    size="sm"
+                    sx={{ minWidth: 140 }}
+                    value={style}
+                    onChange={(_e, value) => {
+                        if (value) setStyle(value as BubbleStyle);
+                    }}
+                >
+                    <Option value="bubble">
+                        <Stack alignItems="center" direction="row" spacing={1}>
+                            <ChatBubbleOutlineRoundedIcon sx={{ fontSize: 18 }} />
+                            <Typography level="body-sm">Bubble</Typography>
+                        </Stack>
+                    </Option>
+                    <Option value="compact">
+                        <Stack alignItems="center" direction="row" spacing={1}>
+                            <ViewStreamRoundedIcon sx={{ fontSize: 18 }} />
+                            <Typography level="body-sm">Compact</Typography>
                         </Stack>
                     </Option>
                 </Select>
@@ -351,6 +403,7 @@ export const SettingsModal = ({ open, onClose }: Props) => {
                 <Divider sx={{ mb: 2 }} />
                 <Stack spacing={2}>
                     <AppearanceSection />
+                    <MessageLayoutSection />
                     <SpotlightSection />
                     <PrivacySection />
                     <NotificationSettingsPanel />

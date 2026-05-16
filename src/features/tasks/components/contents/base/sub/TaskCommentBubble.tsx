@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import EditIcon from "@mui/icons-material/Edit";
-import { Box, Card, IconButton, Stack, Tooltip, Typography } from "@mui/joy";
+import { Box, IconButton, Sheet, Stack, Tooltip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -9,6 +9,7 @@ import { UserAvatar } from "../../../../../../components/ui/avatars/UserAvatar";
 import { EmojiPicker } from "../../../../../../components/ui/emoji/EmojiPicker";
 import { ReactionTaskCommentEmojiDisplay } from "../../../../../../components/ui/emoji/ReactionTaskCommentEmojiDisplay";
 import { ChatManagementState } from "../../../../../../hooks/chats/useChatManagement";
+import { useBubbleStylePreference } from "../../../../../../hooks/common/useBubbleStylePreference";
 import { TeamManagementState } from "../../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../../../types/admin";
@@ -20,44 +21,11 @@ import {
     extractYYYYMMDDHHMM,
     getLocalCurrentTimestamp,
 } from "../../../../../../utils/dateUtils";
-
-// Color scheme for task comment bubbles. The `focused` palette is
-// applied when the bubble matches the URL's `comment/:commentId`
-// segment (deep-link target) and mirrors the green focus tint used by
-// `ThreadMessageBubble.BUBBLE_COLORS.focused` so the visual language is
-// consistent across thread bubbles and task comments.
-const COMMENT_COLORS = {
-    dark: {
-        bg: "#2e1065",
-        border: "#6d28d9",
-        text: "#f3e8ff",
-        secondaryText: "rgba(243, 232, 255, 0.6)",
-    },
-    light: {
-        bg: "#ffffff",
-        border: "#e5e7eb",
-        text: "#111827",
-        secondaryText: "rgba(17, 24, 39, 0.55)",
-    },
-    // `focused` is intentionally GREEN — mirrors ThreadMessageBubble.
-    // BUBBLE_COLORS.focused so deep-linked target comments share the
-    // same focus tint across chat threads and task comments. Functional
-    // cross-file carve-out; do not unify with brand purple.
-    focused: {
-        dark: {
-            bg: "#14532d",
-            border: "#22c55e",
-            text: "#dcfce7",
-            secondaryText: "rgba(220, 252, 231, 0.7)",
-        },
-        light: {
-            bg: "#dcfce7",
-            border: "#22c55e",
-            text: "#14532d",
-            secondaryText: "rgba(20, 83, 45, 0.7)",
-        },
-    },
-} as const;
+import {
+    BUBBLE_COLORS,
+    COMPACT_BODY_INDENT,
+    COMPACT_TOOLBAR_OFFSET,
+} from "../../../../../chat/components/bubbles/bubbleStyleTokens";
 
 type TaskCommentBubbleProps = {
     useTEM: TeamManagementState;
@@ -87,7 +55,6 @@ type TaskCommentBubbleProps = {
 
 export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
     const {
-        useTEM,
         socket,
         myself,
         setMyself,
@@ -97,6 +64,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
         setIsInEdit,
         setEditTargetComment,
         useCM,
+        useTEM,
         useUISM,
         isFocused = false,
         onCommentClick,
@@ -105,9 +73,22 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
 
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
-    const baseColors = isDark ? COMMENT_COLORS.dark : COMMENT_COLORS.light;
-    const focusedColors = isDark ? COMMENT_COLORS.focused.dark : COMMENT_COLORS.focused.light;
-    const colors = isFocused ? focusedColors : baseColors;
+    const { style } = useBubbleStylePreference();
+    const isCompact = style === "compact";
+    const isSent = comment.senderId === myself.userId;
+
+    // Palette harmonised with MessageBubble: sent → purple, received →
+    // neutral, focused → green deep-link tint.
+    const variantColors = isSent
+        ? isDark
+            ? BUBBLE_COLORS.sent.dark
+            : BUBBLE_COLORS.sent.light
+        : isDark
+          ? BUBBLE_COLORS.received.dark
+          : BUBBLE_COLORS.received.light;
+    const focusedColors = isDark ? BUBBLE_COLORS.focused.dark : BUBBLE_COLORS.focused.light;
+    const colors = isFocused ? focusedColors : variantColors;
+    const secondaryText = isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.55)";
 
     const isEdited = extractMMDDHHMMSSs(comment.tsSent) !== extractMMDDHHMMSSs(comment.tsUpdated);
 
@@ -135,7 +116,6 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                 (r) => r.emoji === selectedEmoji && r.sender.userId === myself.userId
             );
             if (existingIndex !== -1) {
-                // Emoji already exists, remove it
                 const updatedReactions = reactions.filter((_, idx) => idx !== existingIndex);
                 setReactions(updatedReactions);
                 if (socket) {
@@ -153,7 +133,6 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                     });
                 }
             } else {
-                // Emoji not in reactions, add it
                 setReactions([
                     ...reactions,
                     {
@@ -183,6 +162,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
     }, [selectedEmoji]);
 
     const boxRef = useRef<HTMLDivElement>(null);
+    const toolbarRef = useRef<HTMLDivElement>(null);
     const [pickerTopPosition, setPickerTopPosition] = useState<number | string>("auto");
     const [pickerBottomPosition, setPickerBottomPosition] = useState<number | string>("auto");
     const [pickerRightPosition, setPickerRightPosition] = useState<number | string>("auto");
@@ -191,8 +171,10 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
         useState<boolean>(false);
 
     useEffect(() => {
-        if (showEmojiPicker && boxRef.current) {
-            const rect = boxRef.current.getBoundingClientRect();
+        if (showEmojiPicker) {
+            const anchor = isCompact && toolbarRef.current ? toolbarRef.current : boxRef.current;
+            if (!anchor) return;
+            const rect = anchor.getBoundingClientRect();
             const viewportHeight = window.innerHeight;
             const viewportWidth = window.innerWidth;
             const pickerHeight = 435;
@@ -209,9 +191,6 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                 setPickerBottomPosition("auto");
             }
 
-            // Anchor the picker to the RIGHT edge of the comment bubble:
-            // its right edge should align with rect.right, so its left coordinate
-            // is rect.right - pickerWidth. Then clamp to keep it inside the viewport.
             const desiredLeft = rect.right - pickerWidth;
             const leftPos = Math.max(20, Math.min(desiredLeft, viewportWidth - pickerWidth - 20));
             setPickerLeftPosition(leftPos);
@@ -222,8 +201,197 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
         if (showEmojiPicker === false) {
             setEmojiPickerPositionCalculated(false);
         }
-    }, [showEmojiPicker]);
+    }, [showEmojiPicker, isCompact]);
 
+    if (comment.commentBody[0].content.length === 0) {
+        return null;
+    }
+
+    const editButton = (
+        <Tooltip
+            placement="top"
+            size="sm"
+            sx={{ borderRadius: "8px", fontSize: "0.75rem" }}
+            title="Edit"
+            variant="outlined"
+        >
+            <IconButton
+                size="sm"
+                sx={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: "8px",
+                    transition: "all 0.15s ease",
+                    color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.55)",
+                    background: "transparent",
+                    "&:hover": {
+                        background: isDark ? "rgba(251,191,36,0.15)" : "rgba(245,158,11,0.1)",
+                        color: isDark ? "#fbbf24" : "#f59e0b",
+                    },
+                }}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setIsInEdit(true);
+                    setEditTargetComment(comment);
+                }}
+            >
+                <EditIcon sx={{ fontSize: 16 }} />
+            </IconButton>
+        </Tooltip>
+    );
+
+    const reactionsDisplay = (
+        <Box onClick={(e) => e.stopPropagation()}>
+            <ReactionTaskCommentEmojiDisplay
+                comment={comment}
+                myself={myself}
+                projectId={currentProjectId}
+                projectName={currentProjectName}
+                reactions={reactions}
+                setReactions={setReactions}
+                setShowEmojiPicker={setShowEmojiPicker}
+                showUnderBarOption={showUnderBarOption}
+                socket={socket}
+            />
+        </Box>
+    );
+
+    const commentBody = (
+        <Box
+            sx={{
+                cursor: onCommentClick ? "pointer" : "default",
+            }}
+            onClick={onCommentClick}
+            onDoubleClick={() => {
+                if (setTodoFromMessageBubble) {
+                    setTodoFromMessageBubble({
+                        ...comment,
+                        projectId: currentProjectId ?? null,
+                    });
+                }
+            }}
+        >
+            <BnChatPreview
+                key={`${comment.taskId}-${comment.commentId}-${comment.tsSent}`}
+                content={comment.commentBody}
+                customClassName="task-comment-preview"
+                isSent={isSent}
+                myself={myself}
+                setMyself={setMyself}
+                socket={socket}
+                useCM={useCM}
+                useTEM={useTEM}
+                useUISM={useUISM}
+            />
+        </Box>
+    );
+
+    if (isCompact) {
+        const focusAccent = isFocused
+            ? BUBBLE_COLORS.focused[isDark ? "dark" : "light"].border
+            : "transparent";
+
+        return (
+            <Box
+                ref={boxRef}
+                sx={{
+                    width: "100%",
+                    position: "relative",
+                    py: 0.5,
+                    pl: 2,
+                    pr: 2,
+                    borderLeft: "3px solid",
+                    borderLeftColor: focusAccent,
+                    borderTop: "1px solid",
+                    borderTopColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+                    backgroundColor: showUnderBarOption
+                        ? isDark
+                            ? "rgba(255,255,255,0.03)"
+                            : "rgba(0,0,0,0.025)"
+                        : "transparent",
+                    transition: "background-color 0.15s ease",
+                }}
+                onMouseEnter={() => setShowUnderBarOption(true)}
+                onMouseLeave={() => setShowUnderBarOption(false)}
+            >
+                {emojiPickerPositionCalculated === true && (
+                    <EmojiPicker
+                        pickerBottomPosition={pickerBottomPosition}
+                        pickerLeftPosition={pickerLeftPosition}
+                        pickerRightPosition={pickerRightPosition}
+                        pickerTopPosition={pickerTopPosition}
+                        setSelectedEmoji={setSelectedEmoji}
+                        setShowEmojiPicker={setShowEmojiPicker}
+                        showEmojiPicker={showEmojiPicker}
+                        useFixedPosition={true}
+                    />
+                )}
+
+                {showUnderBarOption === true && (
+                    <Box
+                        ref={toolbarRef}
+                        sx={{
+                            position: "absolute",
+                            top: COMPACT_TOOLBAR_OFFSET.top,
+                            right: COMPACT_TOOLBAR_OFFSET.right,
+                            zIndex: 2,
+                            backgroundColor: isDark ? "#1f2937" : "#ffffff",
+                            border: "1px solid",
+                            borderColor: isDark ? "#374151" : "#e5e7eb",
+                            borderRadius: "8px",
+                            px: 0.5,
+                            boxShadow: isDark
+                                ? "0 2px 8px rgba(0,0,0,0.4)"
+                                : "0 2px 8px rgba(0,0,0,0.1)",
+                        }}
+                    >
+                        {editButton}
+                    </Box>
+                )}
+
+                <Stack alignItems="flex-start" direction="row" spacing={1.5}>
+                    <Box sx={{ flexShrink: 0 }}>
+                        <UserAvatar userId={comment.senderId} />
+                    </Box>
+
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Stack alignItems="center" direction="row" spacing={1}>
+                            <Typography
+                                level="title-sm"
+                                sx={{
+                                    fontWeight: 600,
+                                    fontSize: "0.85rem",
+                                    color: isDark ? "#f1f5f9" : "#0f172a",
+                                    letterSpacing: "-0.01em",
+                                }}
+                            >
+                                {comment.senderName}
+                            </Typography>
+                            <Typography
+                                level="body-xs"
+                                sx={{
+                                    fontWeight: 500,
+                                    fontSize: "0.7rem",
+                                    color: secondaryText,
+                                    letterSpacing: "0.02em",
+                                }}
+                            >
+                                {isEdited
+                                    ? `${extractYYYYMMDDHHMM(comment.tsSent)} Edited`
+                                    : extractYYYYMMDDHHMM(comment.tsSent)}
+                            </Typography>
+                        </Stack>
+
+                        <Box sx={{ mt: 0.25 }}>{commentBody}</Box>
+
+                        <Box sx={{ mt: 0.5 }}>{reactionsDisplay}</Box>
+                    </Box>
+                </Stack>
+            </Box>
+        );
+    }
+
+    // Bubble variant — sent/received palette mirroring MessageBubble.
     return (
         <Box ref={boxRef} sx={{ py: 0.5 }}>
             {emojiPickerPositionCalculated === true && (
@@ -239,46 +407,51 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                 />
             )}
 
-            {comment.commentBody[0].content.length > 0 && (
-                <Box
-                    key={`${comment.commentId}-${comment.tsUpdated}`}
-                    onMouseEnter={() => setShowUnderBarOption(true)}
-                    onMouseLeave={() => setShowUnderBarOption(false)}
-                    onClick={onCommentClick}
-                    onDoubleClick={() => {
-                        if (setTodoFromMessageBubble) {
-                            setTodoFromMessageBubble({
-                                ...comment,
-                                projectId: currentProjectId ?? null,
-                            });
-                        }
-                    }}
-                    sx={{ cursor: onCommentClick ? "pointer" : "default" }}
-                >
-                    <Card
-                        sx={{
-                            borderRadius: "16px",
-                            position: "relative",
-                            overflow: "hidden",
-                            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                            background: colors.bg,
-                            color: colors.text,
-                            border: "1px solid",
-                            borderColor: colors.border,
+            <Box
+                key={`${comment.commentId}-${comment.tsUpdated}`}
+                sx={{ cursor: onCommentClick ? "pointer" : "default" }}
+                onClick={onCommentClick}
+                onMouseEnter={() => setShowUnderBarOption(true)}
+                onMouseLeave={() => setShowUnderBarOption(false)}
+                onDoubleClick={() => {
+                    if (setTodoFromMessageBubble) {
+                        setTodoFromMessageBubble({
+                            ...comment,
+                            projectId: currentProjectId ?? null,
+                        });
+                    }
+                }}
+            >
+                <Sheet
+                    sx={{
+                        p: 1.25,
+                        borderRadius: "16px",
+                        position: "relative",
+                        overflow: "hidden",
+                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                        ...(isSent
+                            ? { borderTopRightRadius: "4px", borderTopLeftRadius: "16px" }
+                            : { borderTopRightRadius: "16px", borderTopLeftRadius: "4px" }),
+                        background: colors.bg,
+                        color: colors.text,
+                        border: "1px solid",
+                        borderColor: colors.border,
+                        boxShadow: isFocused
+                            ? isDark
+                                ? `0 4px 20px rgba(34,197,94,0.2), inset 0 1px 0 rgba(255,255,255,0.05)`
+                                : `0 4px 20px rgba(22,163,74,0.15)`
+                            : isDark
+                              ? "0 2px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.03)"
+                              : "0 2px 8px rgba(0,0,0,0.06)",
+                        "&:hover": {
                             boxShadow: isDark
-                                ? "0 2px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.03)"
-                                : "0 2px 8px rgba(0,0,0,0.06)",
-                            "&:hover": {
-                                boxShadow: isDark
-                                    ? "0 4px 16px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.05)"
-                                    : "0 4px 16px rgba(0,0,0,0.1)",
-                                borderColor: isDark
-                                    ? "rgba(124,58,237,0.4)"
-                                    : "rgba(124,58,237,0.25)",
-                            },
-                        }}
-                    >
-                        {/* Subtle top highlight */}
+                                ? "0 4px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)"
+                                : "0 4px 16px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6)",
+                        },
+                    }}
+                >
+                    {/* Subtle highlight for sent messages */}
+                    {isSent && !isFocused && (
                         <Box
                             sx={{
                                 position: "absolute",
@@ -287,131 +460,71 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                                 right: 0,
                                 height: "1px",
                                 background: isDark
-                                    ? "rgba(255,255,255,0.06)"
-                                    : "rgba(255,255,255,0.8)",
+                                    ? "rgba(255,255,255,0.08)"
+                                    : "rgba(255,255,255,0.5)",
                                 pointerEvents: "none",
                             }}
                         />
+                    )}
 
-                        {/* Header with avatar, name, and timestamp */}
-                        <Stack alignItems="center" direction="row" spacing={1.5}>
+                    <Stack alignItems="flex-start" direction="row" spacing={1.5}>
+                        <Box sx={{ flexShrink: 0 }}>
                             <UserAvatar userId={comment.senderId} />
-                            <Typography
-                                level="title-md"
-                                sx={{
-                                    fontWeight: 600,
-                                    fontSize: "0.9rem",
-                                    color: colors.text,
-                                    letterSpacing: "-0.01em",
-                                }}
-                            >
-                                {comment.senderName}
-                            </Typography>
-                            <Typography
-                                level="body-xs"
-                                sx={{
-                                    fontWeight: 500,
-                                    fontSize: "0.7rem",
-                                    color: colors.secondaryText,
-                                    letterSpacing: "0.02em",
-                                    fontFamily: "inherit",
-                                }}
-                            >
-                                {isEdited
-                                    ? `${extractYYYYMMDDHHMM(comment.tsSent)} Edited`
-                                    : extractYYYYMMDDHHMM(comment.tsSent)}
-                            </Typography>
-                        </Stack>
-
-                        {/* Reactions display */}
-                        <Box
-                            onClick={(e) => e.stopPropagation()}
-                            sx={{
-                                position: "absolute",
-                                bottom: 0,
-                                right: 10,
-                            }}
-                        >
-                            <ReactionTaskCommentEmojiDisplay
-                                comment={comment}
-                                myself={myself}
-                                projectId={currentProjectId}
-                                projectName={currentProjectName}
-                                reactions={reactions}
-                                setReactions={setReactions}
-                                setShowEmojiPicker={setShowEmojiPicker}
-                                showUnderBarOption={showUnderBarOption}
-                                socket={socket}
-                            />
                         </Box>
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Stack alignItems="center" direction="row" spacing={1}>
+                                <Typography
+                                    level="title-sm"
+                                    sx={{
+                                        fontWeight: 600,
+                                        fontSize: "0.85rem",
+                                        color: colors.text,
+                                        letterSpacing: "-0.01em",
+                                    }}
+                                >
+                                    {comment.senderName}
+                                </Typography>
+                                <Typography
+                                    level="body-xs"
+                                    sx={{
+                                        fontWeight: 500,
+                                        fontSize: "0.7rem",
+                                        color: isDark
+                                            ? "rgba(243, 232, 255, 0.6)"
+                                            : isSent
+                                              ? "rgba(59, 7, 100, 0.55)"
+                                              : "rgba(17, 24, 39, 0.55)",
+                                        letterSpacing: "0.02em",
+                                    }}
+                                >
+                                    {isEdited
+                                        ? `${extractYYYYMMDDHHMM(comment.tsSent)} Edited`
+                                        : extractYYYYMMDDHHMM(comment.tsSent)}
+                                </Typography>
+                            </Stack>
 
-                        {/* Edit button */}
-                        <Tooltip
-                            size="sm"
-                            title="Edit"
-                            placement="top"
-                            variant="outlined"
-                            sx={{
-                                borderRadius: "8px",
-                                fontSize: "0.75rem",
-                            }}
-                        >
-                            <IconButton
-                                size="sm"
-                                onClick={(e) => {
-                                    // Don't let the edit button doubly
-                                    // trigger the bubble-level click
-                                    // handler (which would navigate to
-                                    // the deep-link URL).
-                                    e.stopPropagation();
-                                    setIsInEdit(true);
-                                    setEditTargetComment(comment);
-                                }}
-                                sx={{
-                                    position: "absolute",
-                                    top: 8,
-                                    right: 8,
-                                    width: 28,
-                                    height: 28,
-                                    borderRadius: "8px",
-                                    transition: "all 0.15s ease",
-                                    opacity: showUnderBarOption ? 1 : 0,
-                                    color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.5)",
-                                    background: "transparent",
-                                    "&:hover": {
-                                        background: isDark
-                                            ? "rgba(251,191,36,0.15)"
-                                            : "rgba(245,158,11,0.1)",
-                                        color: isDark ? "#fbbf24" : "#f59e0b",
-                                        transform: "scale(1.05)",
-                                    },
-                                    "&:active": {
-                                        transform: "scale(0.95)",
-                                    },
-                                }}
-                            >
-                                <EditIcon sx={{ fontSize: 16 }} />
-                            </IconButton>
-                        </Tooltip>
-
-                        {/* Comment content */}
-                        <Box sx={{ mt: 0.5 }}>
-                            <BnChatPreview
-                                key={`${comment.taskId}-${comment.commentId}-${comment.tsSent}`}
-                                useCM={useCM}
-                                content={comment.commentBody}
-                                customClassName="task-comment-preview"
-                                isSent={true}
-                                myself={myself}
-                                setMyself={setMyself}
-                                socket={socket}
-                                useTEM={useTEM}
-                                useUISM={useUISM}
-                            />
+                            <Box sx={{ mt: 0.5 }}>{commentBody}</Box>
                         </Box>
-                    </Card>
-                </Box>
-            )}
+                    </Stack>
+
+                    {/* Inline edit affordance, top-right of bubble */}
+                    <Box
+                        sx={{
+                            position: "absolute",
+                            top: 8,
+                            right: 8,
+                            opacity: showUnderBarOption ? 1 : 0,
+                            transition: "opacity 0.15s ease",
+                        }}
+                    >
+                        {editButton}
+                    </Box>
+
+                    <Box sx={{ position: "absolute", bottom: 0, right: 10 }}>
+                        {reactionsDisplay}
+                    </Box>
+                </Sheet>
+            </Box>
         </Box>
     );
 };
