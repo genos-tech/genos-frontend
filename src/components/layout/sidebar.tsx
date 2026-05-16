@@ -266,7 +266,7 @@ export const Sidebar = (props: SidebarProps) => {
                             placement="right"
                             size="sm"
                             sx={{ zIndex: 10020 }}
-                            title={isMac() ? "Search · ⌘ K" : "Search · Ctrl + K"}
+                            title={isMac() ? "⌘ + K" : "Ctrl + K"}
                             variant="outlined"
                         >
                             <ListItemButton
