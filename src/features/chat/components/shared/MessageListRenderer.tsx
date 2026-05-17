@@ -195,12 +195,21 @@ export const MessageListRenderer = ({
         ) {
             return "focused";
         }
-        if (
-            useCM.isThreadVisible &&
-            useCM.currentThreadChat &&
-            message.messageId === useCM.currentThreadChat.threadId
-        ) {
-            return "threadActive";
+        if (useCM.isThreadVisible && useCM.currentThreadChat) {
+            // PM threads key on taskId (each PM message represents a task);
+            // DM/GM threads key on the parent message's messageId.
+            if (chat.chatType === 3) {
+                const messageTaskId = (message as MessageProps).taskId;
+                if (
+                    messageTaskId &&
+                    useCM.currentThreadChat.taskId &&
+                    messageTaskId === useCM.currentThreadChat.taskId
+                ) {
+                    return "threadActive";
+                }
+            } else if (message.messageId === useCM.currentThreadChat.threadId) {
+                return "threadActive";
+            }
         }
         return false;
     };
