@@ -2,12 +2,15 @@ import React, { useState } from "react";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
 import LoginRoundedIcon from "@mui/icons-material/LoginRounded";
+import ScienceRoundedIcon from "@mui/icons-material/ScienceRounded";
 import {
     Alert,
     Box,
     Button,
     Checkbox,
+    CircularProgress,
     CssBaseline,
+    Divider,
     FormControl,
     FormLabel,
     GlobalStyles,
@@ -22,10 +25,11 @@ import { CssVarsProvider, useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 
 import { SignInFormStyles } from "../../../components/ui/styles/commonStyle";
-import { purplePalette, purpleTheme } from "../../../theme/purplePalette";
-import { useAuth } from "../../../context/AuthContext";
+import { AUTH_LOCAL_STORAGE_KEYS, useAuth } from "../../../context/AuthContext";
 import { DatabaseUtils } from "../../../db/utils";
+import { purplePalette, purpleTheme } from "../../../theme/purplePalette";
 import { SignInResponse } from "../../../types/admin";
+import { demoSignIn } from "../services/demoSignin";
 import { signIn } from "../services/signin";
 import { AdminHeader } from "./Header";
 
@@ -43,6 +47,7 @@ const SignInContent = () => {
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [rememberEmail, setRememberEmail] = useState<boolean>(false);
     const [openForgotPassword, setOpenForgotPassword] = useState<boolean>(false);
+    const [demoLoading, setDemoLoading] = useState<boolean>(false);
     const { setAccessToken } = useAuth();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -73,6 +78,42 @@ const SignInContent = () => {
             } else {
                 console.error("Failed to get userId from sign-in response:", signInRes);
             }
+        }
+    };
+
+    const _demoSignin = async () => {
+        setDemoLoading(true);
+        setErrorMessage(null);
+        try {
+            // Clear any cached data from a prior session (real user OR
+            // a previous demo). Without this, a stale userId / teamId
+            // or leftover IndexedDB rows could leak into the new demo
+            // session before the new values are written below.
+            AUTH_LOCAL_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
+            await DatabaseUtils.clearTeamScopedStores();
+
+            const res = await demoSignIn(setErrorMessage);
+            if (!res) return;
+
+            setAccessToken(res.access);
+            localStorage.setItem("isSigningIn", "yes");
+            localStorage.setItem("userName", res.username || "");
+            localStorage.setItem("userId", res.user_id || "");
+            localStorage.setItem("tsJoined", res.ts_joined_at || "");
+            localStorage.setItem("isOfflineForced", res.is_offline_forced || "");
+            localStorage.setItem("role", res.role || "");
+            localStorage.setItem("baseCountry", res.base_country || "");
+            localStorage.setItem("customStatus", res.custom_status || "");
+            localStorage.setItem("userEmail", res.email || "");
+            localStorage.setItem("avatarImgPath", res.profile_image_file_name || "");
+            // Demo-specific: pre-set the team so we can skip /jointeam.
+            localStorage.setItem("teamId", res.team_id);
+            localStorage.setItem("teamName", res.team_name);
+            localStorage.setItem("isDemoUser", "yes");
+
+            navigate("/workspace");
+        } finally {
+            setDemoLoading(false);
         }
     };
 
@@ -331,6 +372,62 @@ const SignInContent = () => {
                                 </Button>
                             </Stack>
                         </form>
+
+                        <Divider sx={{ my: 2.5, color: styles.subtitleColor }}>or</Divider>
+
+                        <Stack sx={{ gap: 0.75 }}>
+                            <Button
+                                fullWidth
+                                variant="outlined"
+                                disabled={demoLoading}
+                                onClick={_demoSignin}
+                                startDecorator={
+                                    demoLoading ? (
+                                        <CircularProgress size="sm" />
+                                    ) : (
+                                        <ScienceRoundedIcon />
+                                    )
+                                }
+                                sx={{
+                                    py: 1.5,
+                                    borderRadius: "12px",
+                                    fontWeight: 600,
+                                    fontSize: "15px",
+                                    borderColor: styles.accentColor,
+                                    color: styles.linkColor,
+                                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                    "&:hover": {
+                                        background: `${styles.accentColor}15`,
+                                        borderColor: styles.accentColor,
+                                        transform: "translateY(-2px)",
+                                    },
+                                }}
+                            >
+                                {demoLoading ? "Setting up demo…" : "Try with Demo User"}
+                            </Button>
+                            <Stack sx={{ gap: 0.25, mt: 0.5 }}>
+                                <Typography
+                                    level="body-xs"
+                                    sx={{
+                                        textAlign: "center",
+                                        color: styles.subtitleColor,
+                                    }}
+                                >
+                                    No signup needed — explore the app instantly.
+                                </Typography>
+                                <Typography
+                                    level="body-xs"
+                                    sx={{
+                                        textAlign: "center",
+                                        fontWeight: 600,
+                                        color: styles.accentColor,
+                                    }}
+                                >
+                                    Your demo account is automatically deleted after 24 hours (or
+                                    when you sign out).
+                                </Typography>
+                            </Stack>
+                        </Stack>
                     </Box>
                 </Box>
 

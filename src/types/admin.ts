@@ -39,6 +39,12 @@ export type SignInResponse = {
     ts_joined_at: string;
 };
 
+export type DemoSignInResponse = SignInResponse & {
+    team_id: string;
+    team_name: string;
+    is_demo: boolean;
+};
+
 export type SignUpResponse = {
     access: string;
     refresh: string;

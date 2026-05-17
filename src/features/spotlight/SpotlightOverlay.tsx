@@ -21,6 +21,7 @@
 // `components/layout/ServiceSwitcherOverlay.tsx` for the prior art.
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
@@ -214,7 +215,7 @@ export const SpotlightOverlay = ({
             <Sheet
                 variant="soft"
                 sx={{
-                    width: "min(680px, 92vw)",
+                    width: "min(700px, 92vw)",
                     maxHeight: "70vh",
                     display: "flex",
                     flexDirection: "column",
@@ -251,7 +252,9 @@ export const SpotlightOverlay = ({
                                 ? "Wait for the current answer to finish…"
                                 : !aiAnswersEnabled
                                   ? "Search chats, tasks, notes (AI answers off)"
-                                  : "Search chats, tasks, notes — press Enter to ask Genos"
+                                  : hasConversation
+                                    ? "Ask a follow-up — or click ‘Back to search’ to start over"
+                                    : "Search chats, tasks, notes — press Enter to ask Genos"
                         }
                         value={localInput}
                         sx={{
@@ -632,15 +635,25 @@ const ConversationPanel = memo(
                         </Typography>
                         <Box sx={{ ml: "auto" }}>
                             {(turns.length > 0 || ask.sessionId) && (
-                                <Button
+                                <Tooltip
+                                    title="Clear this conversation and return to the search view"
+                                    placement="bottom"
                                     size="sm"
-                                    variant="solid"
-                                    color="neutral"
-                                    onClick={onNewConversation}
-                                    sx={{ fontSize: "0.875rem", opacity: 0.75, py: 0 }}
+                                    variant="outlined"
                                 >
-                                    New conversation
-                                </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="outlined"
+                                        color="neutral"
+                                        startDecorator={
+                                            <ArrowBackRoundedIcon sx={{ fontSize: 14 }} />
+                                        }
+                                        onClick={onNewConversation}
+                                        sx={{ fontSize: "0.875rem", py: 0.25 }}
+                                    >
+                                        Back to search
+                                    </Button>
+                                </Tooltip>
                             )}
                         </Box>
                     </Box>
@@ -711,6 +724,44 @@ interface TurnViewProps {
     askDisabled?: boolean;
 }
 
+// Matches the citation tokens the prompt (`prompts.py`) instructs the
+// model to emit: one or more colon-separated segments inside square
+// brackets, e.g. "[task:123]", "[chat:pm:1:thread:3]",
+// "[note:personal:50]". The bracketed text must start with a known
+// entity-type prefix so we don't accidentally rewrite a user's
+// literal `[reminder: ship by Friday]`-style aside.
+const CITATION_PATTERN = /\[((?:chat|task|note):[^\]\s]+)\]/g;
+
+/** Replace bare `[entity_id]` citation tokens in the LLM answer with
+ *  the matching source's title (or its friendly subtitle when the
+ *  title is empty). Rendered as italic markdown emphasis so the
+ *  reference is visually distinguishable from surrounding prose but
+ *  doesn't pretend to be a clickable link — the row of source chips
+ *  below the answer is the canonical click target. Tokens that don't
+ *  match a known source are left untouched so users can still see
+ *  what the model intended.
+ *
+ *  We previously rendered citations as anchors, but the required
+ *  `href` placeholder ("#") resolved to "current page + #" in the
+ *  browser status bar on hover, which suggested the link went to
+ *  whatever page the user was on. Without a real navigable href it
+ *  is clearer to drop the link affordance entirely and rely on the
+ *  source-chip row for navigation.
+ */
+function rewriteCitations(answer: string, sourcesById: Map<string, SpotlightResult>): string {
+    if (!answer || sourcesById.size === 0) return answer;
+    return answer.replace(CITATION_PATTERN, (match, entityId: string) => {
+        const source = sourcesById.get(entityId);
+        if (!source) return match;
+        const label = (source.title || "").trim() || entitySubtitle(source);
+        // Markdown emphasis tokens (`*`) inside the label would break
+        // the wrapping italics; neutralise defensively even though
+        // titles in this app are user-authored and rarely contain `*`.
+        const safeLabel = label.replace(/\*/g, "");
+        return `*${safeLabel}*`;
+    });
+}
+
 const TurnView = ({
     askedQuery,
     answer,
@@ -729,6 +780,20 @@ const TurnView = ({
 }: TurnViewProps) => {
     const [copied, setCopied] = useState(false);
     const [showAllSources, setShowAllSources] = useState(false);
+
+    // Look-up table for `rewriteCitations` and the `a` override below.
+    // Rebuilt only when the sources array reference changes, not on
+    // every streaming `answer_delta` tick.
+    const sourcesById = useMemo(() => {
+        const m = new Map<string, SpotlightResult>();
+        for (const s of answerSources) m.set(s.entity_id, s);
+        return m;
+    }, [answerSources]);
+
+    const answerForRender = useMemo(
+        () => rewriteCitations(answer, sourcesById),
+        [answer, sourcesById]
+    );
 
     const handleCopy = useCallback(() => {
         if (!answer) return;
@@ -949,7 +1014,9 @@ const TurnView = ({
                                 },
                             }}
                         >
-                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{answer}</ReactMarkdown>
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {answerForRender}
+                            </ReactMarkdown>
                         </Box>
                     )}
 
