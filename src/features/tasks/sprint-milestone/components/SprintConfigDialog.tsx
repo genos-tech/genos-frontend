@@ -117,21 +117,14 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
         }
         setIsSaving(true);
         try {
-            const saved = await useSM.saveConfig({
-                projectId,
-                durationDays,
-                anchorDate,
-                autoRoll,
-                upcomingHorizon,
-            });
-            if (!saved) {
-                setError("Failed to save sprint config.");
-                return;
-            }
-
+            // Realign BEFORE saveConfig: the backend's POST /sprint/config/
+            // immediately auto-creates new sprints in every new-anchor slot, so
+            // any PATCH after that would collide with those fresh rows.
             const cfg = useSM.sprintConfig;
             const anchorChanged =
                 !cfg || cfg.anchorDate !== anchorDate || cfg.durationDays !== durationDays;
+
+            let realignFailed: string[] = [];
 
             if (anchorChanged) {
                 const today = todayIso();
@@ -156,6 +149,7 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
                     const pending = new Set<number>();
                     for (const i of order) {
                         const s = futures[i];
+                        if (s.startDate === slots[i].start && s.endDate === slots[i].end) continue;
                         const ok = await useSM.updateExistingSprint({
                             sprintId: s.sprintId,
                             startDate: slots[i].start,
@@ -180,17 +174,32 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
                     }
 
                     if (pending.size) {
-                        const failed = [...pending].map((i) => futures[i].name);
-                        await useSM.loadSprintsForProject(projectId);
-                        setError(
-                            `Realigned, but ${failed.length} sprint(s) failed (likely overlap): ${failed.join(", ")}`
-                        );
-                        return;
+                        realignFailed = [...pending].map((i) => futures[i].name);
                     }
                 }
             }
 
+            const saved = await useSM.saveConfig({
+                projectId,
+                durationDays,
+                anchorDate,
+                autoRoll,
+                upcomingHorizon,
+            });
+            if (!saved) {
+                setError("Failed to save sprint config.");
+                return;
+            }
+
             await useSM.loadSprintsForProject(projectId);
+
+            if (realignFailed.length) {
+                setError(
+                    `Saved, but ${realignFailed.length} sprint(s) could not be realigned (likely overlap with the current sprint): ${realignFailed.join(", ")}`
+                );
+                return;
+            }
+
             onClose();
         } finally {
             setIsSaving(false);
