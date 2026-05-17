@@ -351,7 +351,7 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
                 </DialogContent>
                 <DialogActions>
                     {willRealign && (
-                        <Typography level="body-xs" sx={{ color: "warning.700", mr: "auto" }}>
+                        <Typography level="body-xs" sx={{ color: "warning.400", mr: "auto" }}>
                             Will re-date {futuresCount} future sprint
                             {futuresCount === 1 ? "" : "s"}.
                         </Typography>

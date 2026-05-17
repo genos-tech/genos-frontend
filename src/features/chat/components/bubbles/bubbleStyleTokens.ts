@@ -34,3 +34,18 @@ export const BUBBLE_COLORS = {
         light: { bg: "#ede9fe", border: "#a78bfa", text: "#3b0764" },
     },
 } as const;
+
+// Compact-mode focused-row tints. Semi-transparent overlays of the
+// focused/threadActive border colours, sized for a dense list (the
+// non-compact variant uses the fully saturated `BUBBLE_COLORS.*.bg`
+// inside a discrete bubble container — too strong for a full-width row).
+export const COMPACT_FOCUSED_BG = {
+    focused: {
+        dark: "rgba(34,197,94,0.15)",
+        light: "rgba(34,197,94,0.10)",
+    },
+    threadActive: {
+        dark: "rgba(167,139,250,0.18)",
+        light: "rgba(167,139,250,0.12)",
+    },
+} as const;

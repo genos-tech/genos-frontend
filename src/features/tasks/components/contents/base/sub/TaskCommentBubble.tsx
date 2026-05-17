@@ -24,6 +24,7 @@ import {
 import {
     BUBBLE_COLORS,
     COMPACT_BODY_INDENT,
+    COMPACT_FOCUSED_BG,
     COMPACT_TOOLBAR_OFFSET,
 } from "../../../../../chat/components/bubbles/bubbleStyleTokens";
 
@@ -257,33 +258,18 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
     );
 
     const commentBody = (
-        <Box
-            sx={{
-                cursor: onCommentClick ? "pointer" : "default",
-            }}
-            onClick={onCommentClick}
-            onDoubleClick={() => {
-                if (setTodoFromMessageBubble) {
-                    setTodoFromMessageBubble({
-                        ...comment,
-                        projectId: currentProjectId ?? null,
-                    });
-                }
-            }}
-        >
-            <BnChatPreview
-                key={`${comment.taskId}-${comment.commentId}-${comment.tsSent}`}
-                content={comment.commentBody}
-                customClassName="task-comment-preview"
-                isSent={isSent}
-                myself={myself}
-                setMyself={setMyself}
-                socket={socket}
-                useCM={useCM}
-                useTEM={useTEM}
-                useUISM={useUISM}
-            />
-        </Box>
+        <BnChatPreview
+            key={`${comment.taskId}-${comment.commentId}-${comment.tsSent}`}
+            content={comment.commentBody}
+            customClassName="task-comment-preview"
+            isSent={isSent}
+            myself={myself}
+            setMyself={setMyself}
+            socket={socket}
+            useCM={useCM}
+            useTEM={useTEM}
+            useUISM={useUISM}
+        />
     );
 
     if (isCompact) {
@@ -300,16 +286,28 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                     py: 0.5,
                     pl: 2,
                     pr: 2,
+                    cursor: onCommentClick ? "pointer" : "default",
                     borderLeft: "3px solid",
                     borderLeftColor: focusAccent,
                     borderTop: "1px solid",
                     borderTopColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
-                    backgroundColor: showUnderBarOption
-                        ? isDark
-                            ? "rgba(255,255,255,0.03)"
-                            : "rgba(0,0,0,0.025)"
-                        : "transparent",
+                    backgroundColor: isFocused
+                        ? COMPACT_FOCUSED_BG.focused[isDark ? "dark" : "light"]
+                        : showUnderBarOption
+                          ? isDark
+                              ? "rgba(255,255,255,0.03)"
+                              : "rgba(0,0,0,0.025)"
+                          : "transparent",
                     transition: "background-color 0.15s ease",
+                }}
+                onClick={onCommentClick}
+                onDoubleClick={() => {
+                    if (setTodoFromMessageBubble) {
+                        setTodoFromMessageBubble({
+                            ...comment,
+                            projectId: currentProjectId ?? null,
+                        });
+                    }
                 }}
                 onMouseEnter={() => setShowUnderBarOption(true)}
                 onMouseLeave={() => setShowUnderBarOption(false)}
@@ -330,6 +328,8 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                 {showUnderBarOption === true && (
                     <Box
                         ref={toolbarRef}
+                        onClick={(e) => e.stopPropagation()}
+                        onDoubleClick={(e) => e.stopPropagation()}
                         sx={{
                             position: "absolute",
                             top: COMPACT_TOOLBAR_OFFSET.top,

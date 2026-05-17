@@ -170,7 +170,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     const currentTaskId = taskContent?.id;
     const focusedCommentId = useMemo<number | undefined>(() => {
         const parts = location.pathname.split("/").filter(Boolean);
-        if (parts[0] !== "home" || parts[1] !== "tasks") return undefined;
+        if (parts[0] !== "workspace" || parts[1] !== "tasks") return undefined;
         const taskIdx = parts.indexOf("task");
         const commentIdx = parts.indexOf("comment");
         if (taskIdx === -1 || commentIdx === -1) return undefined;
