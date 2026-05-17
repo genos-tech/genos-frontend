@@ -118,7 +118,7 @@ export const ThreadCommentsView = ({
     const chatId = useCM.currentMainChat?.chatId;
     const focusedCommentId = useMemo<number | undefined>(() => {
         const parts = location.pathname.split("/").filter(Boolean);
-        if (parts[0] !== "home" || parts[1] !== "chat" || parts[2] !== "pm") return undefined;
+        if (parts[0] !== "workspace" || parts[1] !== "chat" || parts[2] !== "pm") return undefined;
         const threadIdx = parts.indexOf("thread");
         const commentIdx = parts.indexOf("comment");
         if (threadIdx === -1 || commentIdx === -1) return undefined;

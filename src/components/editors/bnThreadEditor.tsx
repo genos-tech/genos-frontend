@@ -37,6 +37,8 @@ import { useAuth } from "../../context/AuthContext";
 import { addThreadMessage } from "../../features/chat/services/addThreadMessage";
 import { getFirstLine } from "../../features/chat/utils/common";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
+import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useEditorDraft } from "../../hooks/common/useEditorDraft";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
@@ -85,7 +87,6 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
         setCurrentThreadChat,
         setCurrentChat,
         useUISM,
-        numEditorLines,
         setNumEditorLines,
         useCM,
         pendingFiles,
@@ -93,6 +94,9 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
     } = props;
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
+    const urlLinkModal = useUrlLinkModal();
+    const editorBoxRef = useRef<HTMLDivElement>(null);
+    useAnchorClickIntercept(editorBoxRef, urlLinkModal);
     const bnBoxClassName: string = `bn-chat-editor-box-${mode}`;
 
     const teamMembersRef = useRef(useTEM.teamMembers);
@@ -266,17 +270,6 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
 
     const [editorDocLength, setEditorDocLength] = useState<number>(0);
 
-    const editorRef = useRef<HTMLDivElement>(null);
-    useEffect(() => {
-        if (editorRef.current) {
-            const dynamicHeight: number = Math.min(
-                Math.min(Math.max(numEditorLines - 8, 0), 10) * 20 + 200,
-                500
-            );
-            editorRef.current.style.setProperty("--chat-editor-height", `${dynamicHeight}px`);
-        }
-    }, [numEditorLines]);
-
     // Per-thread draft cache: see `useEditorDraft` for the
     // load/save/clear lifecycle. Keyed by chatType + chatId +
     // threadId so each thread keeps its own in-progress reply
@@ -402,7 +395,11 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                 setShowEmojiPicker={setShowEmojiPicker}
                 showEmojiPicker={showEmojiPicker}
             />
-            <Box ref={editorRef} className={bnBoxClassName} sx={{ position: "relative" }}>
+            <Box
+                ref={editorBoxRef}
+                className={bnBoxClassName}
+                sx={{ position: "relative" }}
+            >
                 <FileUploadStatusBadge count={editorUploadCount} />
                 <FileUploadOverlay
                     label="Uploading dropped files…"

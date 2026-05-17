@@ -51,6 +51,8 @@ import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
+import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
 import { useCollaborativeBlockNote } from "../../hooks/common/useCollaborativeBlockNote";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
@@ -111,6 +113,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
     const { mode } = useColorScheme();
     const bnBoxClassName: string = `bn-task-body-box-${mode}`;
     const { accessToken } = useAuth();
+    const urlLinkModal = useUrlLinkModal();
 
     // To avoid rendering issues, it's good practice to define your custom drag
     // handle menu in a separate component, instead of inline within the `sideMenu`
@@ -271,6 +274,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
     const [numEditorLines, setNumEditorLines] = useState<number>(0);
 
     const editorRef = useRef<HTMLDivElement>(null);
+    useAnchorClickIntercept(editorRef, urlLinkModal);
     useEffect(() => {
         if (editorRef.current) {
             const dynamicHeight: number = Math.min(
@@ -336,6 +340,9 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                         }
                     }}
                     onClick={(e) => {
+                        // Anchor clicks → useAnchorClickIntercept on
+                        // editorRef (native capture phase). This handler
+                        // only deals with image clicks.
                         const target = e.target as HTMLElement;
                         if (target.tagName === "IMG") {
                             handleImageClick((target as HTMLImageElement).src);

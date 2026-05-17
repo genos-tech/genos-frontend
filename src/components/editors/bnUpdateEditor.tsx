@@ -35,6 +35,8 @@ import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
+import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
@@ -80,13 +82,17 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
         isInEdit,
         setIsInEdit,
         useUISM,
-        numEditorLines,
         setNumEditorLines,
         useCM,
     } = props;
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
-    const bnBoxClassName: string = `bn-chat-editor-box-${mode}`;
+    const urlLinkModal = useUrlLinkModal();
+    const editorBoxRef = useRef<HTMLDivElement>(null);
+    useAnchorClickIntercept(editorBoxRef, urlLinkModal);
+    const bnBoxClassName: string = `bn-chat-editor-box-${mode}${
+        useCM.isSubChatVisible ? " with-subchat" : ""
+    }`;
 
     // Disable the Audio and Image blocks from the built-in schema
     // This is done by picking out the blocks you want to disable
@@ -197,17 +203,6 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
 
     const [editorDocLength, setEditorDocLength] = useState<number>(message.content.length);
 
-    const editorRef = useRef<HTMLDivElement>(null);
-    useEffect(() => {
-        if (editorRef.current) {
-            const dynamicHeight: number = Math.min(
-                Math.min(Math.max(numEditorLines - 8, 0), 10) * 20 + 200,
-                useCM.isSubChatVisible === true ? 290 : 500
-            );
-            editorRef.current.style.setProperty("--chat-editor-height", `${dynamicHeight}px`);
-        }
-    }, [numEditorLines]);
-
     useEffect(() => {
         if (isInEdit === false) {
             editor.replaceBlocks(editor.document, []);
@@ -265,7 +260,11 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
                 setShowEmojiPicker={setShowEmojiPicker}
                 showEmojiPicker={showEmojiPicker}
             />
-            <Box ref={editorRef} className={bnBoxClassName} sx={{ position: "relative" }}>
+            <Box
+                ref={editorBoxRef}
+                className={bnBoxClassName}
+                sx={{ position: "relative" }}
+            >
                 <FileUploadStatusBadge count={editorUploadCount} />
                 <BlockNoteView
                     className="bn-box"

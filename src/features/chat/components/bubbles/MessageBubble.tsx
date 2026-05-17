@@ -25,7 +25,12 @@ import { loadSpecificTaskByThreadId } from "../../../tasks/services/loadSpecific
 import { loadSpecificThreadMessages } from "../../services/loadSpecificThreadMessages";
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
 import { BubbleMoreMenu } from "./BubbleMoreMenu";
-import { BUBBLE_COLORS, COMPACT_BODY_INDENT, COMPACT_TOOLBAR_OFFSET } from "./bubbleStyleTokens";
+import {
+    BUBBLE_COLORS,
+    COMPACT_BODY_INDENT,
+    COMPACT_FOCUSED_BG,
+    COMPACT_TOOLBAR_OFFSET,
+} from "./bubbleStyleTokens";
 import { BubbleUnderBar } from "./BubbleUnderBar";
 import { BubbleUserName } from "./BubbleUserName";
 
@@ -583,11 +588,8 @@ export const MessageBubble = (props: MessageBubbleProps) => {
             >
                 <Box
                     sx={{
-                        cursor: "pointer",
                         mt: isSimpleBubble ? 0 : 0.25,
                     }}
-                    onClick={handleMessageClick}
-                    onDoubleClick={handleAddMessageToToDo}
                 >
                     <BnChatPreview
                         key={`${chat.chatId}-${message.messageId}-${chat.chatType}-${message.tsUpdated}`}
@@ -613,17 +615,25 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                     py: 0.5,
                     pl: 2,
                     pr: 2,
+                    cursor: "pointer",
                     borderLeft: "3px solid",
                     borderLeftColor: focusAccent,
                     borderTop: isSimpleBubble ? "none" : "1px solid",
                     borderTopColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
-                    backgroundColor: showUnderBarOption
-                        ? isDark
-                            ? "rgba(255,255,255,0.03)"
-                            : "rgba(0,0,0,0.025)"
-                        : "transparent",
+                    backgroundColor:
+                        isFocused === "focused"
+                            ? COMPACT_FOCUSED_BG.focused[isDark ? "dark" : "light"]
+                            : isFocused === "threadActive"
+                              ? COMPACT_FOCUSED_BG.threadActive[isDark ? "dark" : "light"]
+                              : showUnderBarOption
+                                ? isDark
+                                    ? "rgba(255,255,255,0.03)"
+                                    : "rgba(0,0,0,0.025)"
+                                : "transparent",
                     transition: "background-color 0.15s ease",
                 }}
+                onClick={handleMessageClick}
+                onDoubleClick={handleAddMessageToToDo}
                 onMouseEnter={() => setShowUnderBarOption(true)}
                 onMouseLeave={() => setShowUnderBarOption(false)}
             >
@@ -643,6 +653,8 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                 {showUnderBarOption === true && (
                     <Box
                         ref={toolbarRef}
+                        onClick={(e) => e.stopPropagation()}
+                        onDoubleClick={(e) => e.stopPropagation()}
                         sx={{
                             position: "absolute",
                             top: COMPACT_TOOLBAR_OFFSET.top,

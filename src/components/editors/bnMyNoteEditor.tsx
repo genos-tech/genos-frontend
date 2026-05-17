@@ -57,6 +57,8 @@ import {
     isNoteEditableForRole,
 } from "../../features/notes/common/utils/noteRoles";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
+import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
 import { useCollaborativeBlockNote } from "../../hooks/common/useCollaborativeBlockNote";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
@@ -132,6 +134,9 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
 
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
+    const urlLinkModal = useUrlLinkModal();
+    const editorBoxRef = useRef<HTMLDivElement>(null);
+    useAnchorClickIntercept(editorBoxRef, urlLinkModal);
     const bnBoxClassName: string = `bn-note-body-box-${mode}`;
 
     // To avoid rendering issues, it's good practice to define your custom drag
@@ -345,7 +350,7 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
     return (
         <>
             <FileSizeRejectionSnackbar rejection={rejection} onDismiss={dismissRejection} />
-            <Box className={bnBoxClassName} sx={{ position: "relative" }}>
+            <Box ref={editorBoxRef} className={bnBoxClassName} sx={{ position: "relative" }}>
                 {/* Anchored bottom-right because the Comments toggle already
                 lives at top-right of this editor. */}
                 <FileUploadStatusBadge count={editorUploadCount} placement="bottom-right" />
@@ -393,22 +398,22 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                 >
                     <div
                         className="bn-editor-with-sidebar"
+                        onBeforeInput={() => {
+                            userInteractedRef.current = true;
+                        }}
                         onClick={(e) => {
+                            // Anchor clicks → useAnchorClickIntercept on
+                            // editorBoxRef (native capture phase). This
+                            // handler only deals with image clicks.
                             const target = e.target as HTMLElement;
                             if (target.tagName === "IMG") {
                                 handleImageClick((target as HTMLImageElement).src);
                             }
                         }}
-                        onPaste={() => {
+                        onCompositionStart={() => {
                             userInteractedRef.current = true;
                         }}
                         onDrop={() => {
-                            userInteractedRef.current = true;
-                        }}
-                        onBeforeInput={() => {
-                            userInteractedRef.current = true;
-                        }}
-                        onCompositionStart={() => {
                             userInteractedRef.current = true;
                         }}
                         onKeyDown={(event) => {
@@ -428,6 +433,9 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                                     //Auto saving logic here
                                 }
                             }
+                        }}
+                        onPaste={() => {
+                            userInteractedRef.current = true;
                         }}
                     >
                         <div className="bn-editor-section">
@@ -551,11 +559,11 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                                 )}
                                 {isEditable && (
                                     <SuggestionMenuController
+                                        minQueryLength={2}
+                                        triggerCharacter={":"}
                                         getItems={async (query) =>
                                             getEmojiSuggestionItems(editor, query)
                                         }
-                                        minQueryLength={2}
-                                        triggerCharacter={":"}
                                     />
                                 )}
 

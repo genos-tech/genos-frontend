@@ -1,0 +1,375 @@
+import { useEffect, useState } from "react";
+import { Box, Typography } from "@mui/joy";
+import { Socket } from "socket.io-client";
+
+import { ChatService } from "../../../db/services/chat.service";
+import { ChatProvider } from "../../../features/chat/context/ChatContext";
+import { MessagesPane } from "../../../features/chat/MainChatPane";
+import { loadMDMHistory } from "../../../features/chat/services/loadMDMHistory";
+import { loadSpecificThreadMessages } from "../../../features/chat/services/loadSpecificThreadMessages";
+import { loadSpecificThreadMessagesByTaskId } from "../../../features/chat/services/loadSpecificThreadMessagesByTaskId";
+import { popSpecificMessages } from "../../../features/chat/services/popSpecificMessages";
+import { ThreadPane } from "../../../features/chat/ThreadChatPane";
+import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
+import { ProjectManagementState } from "../../../hooks/common/useProjectManagement";
+import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
+import { NoteManagementState } from "../../../hooks/notes/useNoteManagement";
+import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
+import { UserProps } from "../../../types/admin";
+import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../types/chat";
+import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
+import { ChatMainTarget, ChatThreadTarget } from "../../../utils/parseInternalUrl";
+
+type ModalChatViewProps = {
+    target: ChatMainTarget | ChatThreadTarget;
+    accessToken: string | null;
+    myself: UserProps;
+    setMyself: (value: UserProps) => void;
+    socket: Socket | null;
+    useTEM: TeamManagementState;
+    useUISM: UIStateManagementState;
+    useCM: ChatManagementState;
+    useTM: TaskManagementState;
+    usePM: ProjectManagementState;
+    useNM: NoteManagementState;
+};
+
+const NOOP_TODOS_PROPS = {
+    incompleteTodoCount: 0,
+    isExistingTodaysTodo: false,
+    isToDoVisible: false,
+    setIsExistingTodaysTodo: () => {},
+    setIsToDoVisible: () => {},
+    setTodoFromMessageBubble: () => {},
+    setTodos: () => {},
+    todos: [],
+};
+
+// Renders MessagesPane / ThreadPane against modal-local chat + thread
+// state, so the user's existing main-page selection (the real
+// useCM.currentMainChat / useCM.currentThreadChat) is left untouched.
+//
+// Writes (reactions, edits, replies, read-status emit, etc.) still pass
+// through to the real hooks because every setter we don't override is
+// inherited from the spread.
+//
+// Known limitation: the modal is a snapshot at load time. Messages that
+// arrive over the WebSocket while the modal is open update
+// `useCM.currentMainChat.messages` on the underlying page, but the
+// modal's `modalChat.messages` stays frozen. Closing + reopening the
+// modal refreshes it. Accepted for Phase 1 per the planning session.
+export const ModalChatView = (props: ModalChatViewProps) => {
+    const {
+        target,
+        accessToken,
+        myself,
+        setMyself,
+        socket,
+        useTEM,
+        useUISM,
+        useCM,
+        useTM,
+        usePM,
+        useNM,
+    } = props;
+
+    const [modalChat, setModalChat] = useState<ChatProps | null>(null);
+    const [modalThread, setModalThread] = useState<ThreadProps | null>(null);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Local stand-in for ChatProvider's currentThreadTaskId slot. The
+    // ThreadPane subtree (ThreadChatPaneHeader, etc.) reads/writes this
+    // via useChatContext(); we keep it scoped to the modal so we don't
+    // collide with the host page's own ChatProvider value.
+    const [modalThreadTaskId, setModalThreadTaskId] = useState<number>(-1);
+
+    // Pulled out of the deps array so eslint can statically check them.
+    // `targetThreadId` is undefined for `chatMain` targets; tracking
+    // `targetMessageId` here lets the modal re-scroll when the same chat
+    // is reopened with a different /message/:id deep-link.
+    const targetThreadId = target.kind === "chatThread" ? target.threadId : undefined;
+    const targetMessageId = target.messageId;
+
+    // Load chat (and thread, when applicable) whenever the target changes.
+    // A `cancelled` flag protects against the user flicking through a
+    // sequence of links faster than the network can respond — late
+    // resolutions would otherwise paint stale data.
+    useEffect(() => {
+        let cancelled = false;
+        setIsLoading(true);
+        setErrorMessage(null);
+        setModalChat(null);
+        setModalThread(null);
+
+        const summary = useCM.allChats.find(
+            (c) => c.chatId === target.chatId && c.chatType === target.chatType
+        );
+        if (!summary) {
+            setErrorMessage("This chat isn't available.");
+            setIsLoading(false);
+            return () => {
+                cancelled = true;
+            };
+        }
+
+        (async () => {
+            try {
+                // Step 1: pop cached messages. Mirrors useChatRouting.ts
+                // popSpecificMessages → optional MDM backfill flow.
+                let messages: MessageProps[] = await popSpecificMessages(
+                    target.chatId,
+                    target.chatType
+                );
+                if (messages.length === 0 && target.chatType === 4) {
+                    const data = await loadMDMHistory(
+                        myself.teamId,
+                        myself.teamName,
+                        myself.userId,
+                        accessToken,
+                        target.chatId
+                    );
+                    const mdmChat = data?.chat_history?.[0];
+                    if (mdmChat?.messages?.length > 0) {
+                        messages = [...mdmChat.messages].sort(
+                            (a: MessageProps, b: MessageProps) => a.messageId - b.messageId
+                        );
+                        await new ChatService().batchInsertMDMMessages(messages);
+                    }
+                }
+                if (cancelled) return;
+
+                if (messages.length === 0) {
+                    setErrorMessage("No messages to display yet.");
+                    setIsLoading(false);
+                    return;
+                }
+
+                const lastMessage = messages[messages.length - 1];
+                const moveToSpecificIndex =
+                    target.kind === "chatMain" && target.messageId
+                        ? `${target.chatId}-${target.messageId}`
+                        : target.kind === "chatThread"
+                          ? `${target.chatId}-${target.threadId}`
+                          : undefined;
+
+                const newChat: ChatProps = {
+                    chatId: summary.chatId,
+                    chatName: summary.chatName,
+                    chatType: summary.chatType,
+                    dmPartnerUser: summary.dmPartnerUser,
+                    isPrivate: summary.isPrivate,
+                    lastReadMessageId: lastMessage.messageId,
+                    latestMessage: summary.latestMessage,
+                    latestMessageText: summary.latestMessageText,
+                    messages,
+                    moveToSpecificIndex,
+                    profileImagePath: summary.profileImagePath,
+                    project: summary.project,
+                    systemUserId: summary.systemUserId,
+                    TSLastMessage: summary.TSLastMessage,
+                };
+                setModalChat(newChat);
+
+                // Step 2: thread load, only when target is a thread URL.
+                if (target.kind === "chatThread") {
+                    const threadMessages: ThreadMessageProps[] | undefined =
+                        target.chatType === 3
+                            ? await loadSpecificThreadMessagesByTaskId(
+                                  myself,
+                                  target.chatType,
+                                  target.chatId,
+                                  target.threadId,
+                                  accessToken
+                              )
+                            : await loadSpecificThreadMessages(
+                                  myself,
+                                  target.chatType,
+                                  target.chatId,
+                                  target.threadId,
+                                  accessToken
+                              );
+                    if (cancelled) return;
+
+                    if (!threadMessages || threadMessages.length === 0) {
+                        setErrorMessage("This thread is empty or unavailable.");
+                        setIsLoading(false);
+                        return;
+                    }
+
+                    const firstMessage = threadMessages[0];
+                    const useTaskIdAsThreadId = target.chatType === 3;
+                    const threadMoveIndex = target.messageId
+                        ? `${target.chatId}-${target.threadId}-${target.messageId}`
+                        : `${target.chatId}-${target.threadId}-1`;
+
+                    const newThread: ThreadProps = {
+                        chatId: target.chatId,
+                        chatName: summary.chatName,
+                        chatType: target.chatType,
+                        dmPartnerUser: myself,
+                        messages: threadMessages,
+                        moveToSpecificIndex: threadMoveIndex,
+                        project: firstMessage.project,
+                        systemUserId: summary.systemUserId,
+                        taskExist: firstMessage.taskExist,
+                        taskId: firstMessage.taskId || null,
+                        threadId: useTaskIdAsThreadId ? firstMessage.threadId : target.threadId,
+                        TSLastMessage: getLocalCurrentTimestamp(),
+                    };
+                    setModalThread(newThread);
+                }
+                setIsLoading(false);
+            } catch (e) {
+                if (!cancelled) {
+                    console.error("ModalChatView load failed:", e);
+                    setErrorMessage("Failed to load this chat.");
+                    setIsLoading(false);
+                }
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [
+        target.kind,
+        target.chatId,
+        target.chatType,
+        targetThreadId,
+        targetMessageId,
+        accessToken,
+    ]);
+
+    if (errorMessage) {
+        return (
+            <Box
+                sx={{
+                    alignItems: "center",
+                    display: "flex",
+                    height: "100%",
+                    justifyContent: "center",
+                    p: 4,
+                    width: "100%",
+                }}
+            >
+                <Typography level="body-md" sx={{ color: "neutral.500" }}>
+                    {errorMessage}
+                </Typography>
+            </Box>
+        );
+    }
+
+    if (isLoading || !modalChat) {
+        return (
+            <Box
+                sx={{
+                    alignItems: "center",
+                    display: "flex",
+                    height: "100%",
+                    justifyContent: "center",
+                    p: 4,
+                    width: "100%",
+                }}
+            >
+                <Typography level="body-md" sx={{ color: "neutral.500" }}>
+                    Loading…
+                </Typography>
+            </Box>
+        );
+    }
+
+    // `currentWindowHeight` is still required by the MessagesPane /
+    // ThreadPane prop types (ToDoPane consumes it on the chat page),
+    // but since both panes are now flex-driven inside the modal, the
+    // value isn't used for layout. Pass 0 so we don't fake a viewport
+    // height that could mislead consumers.
+    const modalWindowHeight = 0;
+
+    if (target.kind === "chatThread") {
+        if (!modalThread) {
+            return (
+                <Box
+                    sx={{
+                        alignItems: "center",
+                        display: "flex",
+                        height: "100%",
+                        justifyContent: "center",
+                        p: 4,
+                        width: "100%",
+                    }}
+                >
+                    <Typography level="body-md" sx={{ color: "neutral.500" }}>
+                        Loading thread…
+                    </Typography>
+                </Box>
+            );
+        }
+        const useCMOverride = {
+            ...useCM,
+            currentMainChat: modalChat,
+            currentThreadChat: modalThread,
+        };
+        // ThreadPane (and its header) read state via `useChatContext()`,
+        // which throws when no provider is above. Our modal is portaled to
+        // document.body, outside ChatHome's ChatProvider, so we mount our
+        // own with modal-scoped thread-task state.
+        return (
+            <ChatProvider
+                currentThreadTaskId={modalThreadTaskId}
+                myself={myself}
+                setCurrentThreadTaskId={setModalThreadTaskId}
+                setMyself={setMyself}
+                socket={socket}
+                useCM={useCMOverride}
+                useNM={useNM}
+                usePM={usePM}
+                useTEM={useTEM}
+                useTM={useTM}
+                useUISM={useUISM}
+            >
+                <Box sx={{ height: "100%", width: "100%" }}>
+                    <ThreadPane
+                        currentThreadChatId={target.threadId}
+                        currentWindowHeight={modalWindowHeight}
+                        myself={myself}
+                        setMyself={setMyself}
+                        setTodoFromMessageBubble={NOOP_TODOS_PROPS.setTodoFromMessageBubble}
+                        socket={socket}
+                        useCM={useCMOverride}
+                        useNM={useNM}
+                        usePM={usePM}
+                        useTEM={useTEM}
+                        useTM={useTM}
+                        useUISM={useUISM}
+                    />
+                </Box>
+            </ChatProvider>
+        );
+    }
+
+    const useCMOverride = {
+        ...useCM,
+        currentMainChat: modalChat,
+    };
+    return (
+        <Box sx={{ height: "100%", width: "100%" }}>
+            <MessagesPane
+                currentMainChatId={target.chatId}
+                currentWindowHeight={modalWindowHeight}
+                myself={myself}
+                paneSizePCT={100}
+                setMyself={setMyself}
+                socket={socket}
+                useCM={useCMOverride}
+                usePM={usePM}
+                useTEM={useTEM}
+                useTM={useTM}
+                useUISM={useUISM}
+                {...NOOP_TODOS_PROPS}
+            />
+        </Box>
+    );
+};

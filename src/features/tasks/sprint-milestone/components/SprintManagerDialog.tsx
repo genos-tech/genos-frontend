@@ -22,6 +22,7 @@ import {
 
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { Sprint } from "../types";
+import { DeleteSprintModal } from "./DeleteSprintModal";
 
 const STATUS_COLOR: Record<string, string> = {
     Open: "#0044c2",
@@ -62,6 +63,7 @@ const SprintRow = ({
     const [start, setStart] = useState(sprint.startDate);
     const [end, setEnd] = useState(sprint.endDate);
     const [error, setError] = useState<string | null>(null);
+    const [confirmingDelete, setConfirmingDelete] = useState(false);
 
     useEffect(() => {
         setName(sprint.name);
@@ -98,10 +100,7 @@ const SprintRow = ({
         }
     };
 
-    const remove = async () => {
-        if (!confirm(`Delete "${sprint.name}"? This cannot be undone.`)) return;
-        await useSM.removeSprint(sprint.sprintId, projectId);
-    };
+    const remove = () => setConfirmingDelete(true);
 
     return (
         <Box
@@ -194,6 +193,17 @@ const SprintRow = ({
                     {error}
                 </Typography>
             )}
+
+            <DeleteSprintModal
+                open={confirmingDelete}
+                sprintName={sprint.name}
+                milestoneCount={milestonesInSprint.length}
+                onClose={() => setConfirmingDelete(false)}
+                onConfirm={async () => {
+                    await useSM.removeSprint(sprint.sprintId, projectId);
+                    setConfirmingDelete(false);
+                }}
+            />
 
             {milestonesInSprint.length > 0 && (
                 <Box sx={{ mt: 1.25, pl: 1, borderLeft: "2px solid", borderColor: "divider" }}>

@@ -2,6 +2,7 @@ import * as React from "react";
 import { Box, ListDivider, ListItem, Stack } from "@mui/joy";
 import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
+import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../../context/AuthContext";
@@ -74,6 +75,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const { accessToken } = useAuth();
+    const navigate = useNavigate();
 
     const { groupedReactions, updateActivityReadStatus } = useActivityStatus({
         activity,
@@ -199,7 +201,10 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         })();
     };
 
-    // Handle task comment activity
+    // Handle task comment activity — opens the PM chat AND the task's
+    // comment thread (mirrors MessageBubble.replayHandler). ThreadChatPane
+    // defaults to the "comments" tab for PM threads with a valid taskId,
+    // which surfaces ThreadCommentsView with the task's comments.
     const handleTaskCommentActivity = async () => {
         const shouldUseMainChat =
             useCM.isSubChatVisible === false ||
@@ -218,18 +223,62 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                         projectName: activity.projectName || "",
                         projectTags: [],
                     });
-                    if (activity.projectId && activity.taskId) {
-                        loadTask();
-                        useTM.setIsTaskPreviewVisible(true);
-                        useCM.setIsThreadVisible(false);
-                    } else {
-                        useCM.setIsThreadVisible(true);
-                    }
                 }
+
                 useCM.setIsMainChatVisible(true);
-                if (useTM.isCreatingTask.flag === true || useTM.isTaskPreviewVisible) {
-                    useCM.setIsThreadVisible(false);
+                useTM.setIsCreatingTask({ ...useTM.isCreatingTask, flag: false });
+                useTM.setIsTaskPreviewVisible(false);
+
+                if (activity.taskId) {
+                    loadTask();
+                    useTM.setCurrentPreviewTaskId(activity.taskId);
+
+                    const threadMessages: ThreadMessageProps[] = await loadSpecificThreadMessages(
+                        myself,
+                        3,
+                        activity.chatId,
+                        activity.taskId,
+                        accessToken
+                    );
+
+                    if (threadMessages && threadMessages.length > 0) {
+                        const newThread: ThreadProps = {
+                            chatId: activity.chatId,
+                            chatName: activity.chatName,
+                            threadId: activity.taskId,
+                            chatType: 3,
+                            dmPartnerUser: {
+                                teamId: myself.teamId,
+                                teamName: myself.teamName,
+                                userId: activity.dmPartnerUserId,
+                                userName: activity.dmPartnerUserName,
+                                userEmail: activity.dmPartnerUserEmail,
+                                avatarImgPath: "",
+                                tsLastSeen: "",
+                                tsJoined: "",
+                            },
+                            taskId: activity.taskId,
+                            messages: threadMessages,
+                            project: {
+                                projectId: activity.projectId || activity.chatId,
+                                projectName: activity.projectName || "",
+                                projectTags: [],
+                            },
+                            TSLastMessage: getLocalCurrentTimestamp(),
+                            taskExist: threadMessages[0].taskExist,
+                        };
+                        useCM.setCurrentThreadChat(newThread);
+                    }
+
+                    // Deep-link to the specific comment so TaskCommentBubble
+                    // picks up the focused tint. activity.messageId IS the
+                    // commentId for task-comment activities (set from
+                    // response["comment_id"] on the backend).
+                    navigate(
+                        `/workspace/chat/pm/${activity.chatId}/thread/${activity.taskId}/comment/${activity.messageId}`
+                    );
                 }
+                useCM.setIsThreadVisible(true);
             } catch (error) {
                 console.error(error);
             }

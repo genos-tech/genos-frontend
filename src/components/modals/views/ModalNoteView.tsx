@@ -1,0 +1,309 @@
+import { useEffect, useState } from "react";
+import { Box, Typography } from "@mui/joy";
+import { Socket } from "socket.io-client";
+
+import { ChatNoteMain } from "../../../features/notes/chat-notes/components/ChatNoteMain";
+import { loadSpecificNote } from "../../../features/notes/common/services/loadSpecificNote";
+import { MyNoteMain } from "../../../features/notes/my-notes/components/MyNoteMain";
+import { TaskNoteMain } from "../../../features/notes/task-notes/components/TaskNoteMain";
+import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
+import { ProjectManagementState } from "../../../hooks/common/useProjectManagement";
+import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
+import { NoteManagementState } from "../../../hooks/notes/useNoteManagement";
+import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
+import { UserProps } from "../../../types/admin";
+import {
+    ChatNoteMetaProps,
+    ChatNoteProps,
+    MyNoteMetaProps,
+    MyNoteProps,
+    TaskNoteMetaProps,
+    TaskNoteProps,
+} from "../../../types/notes";
+import {
+    ChatNoteTarget,
+    MyNoteTarget,
+    SharedNoteTarget,
+    TaskNoteTarget,
+} from "../../../utils/parseInternalUrl";
+
+type NoteTarget = MyNoteTarget | SharedNoteTarget | TaskNoteTarget | ChatNoteTarget;
+
+type ModalNoteViewProps = {
+    target: NoteTarget;
+    onClose: () => void;
+    accessToken: string | null;
+    myself: UserProps;
+    setMyself: (value: UserProps) => void;
+    socket: Socket | null;
+    useTEM: TeamManagementState;
+    useUISM: UIStateManagementState;
+    useCM: ChatManagementState;
+    useTM: TaskManagementState;
+    usePM: ProjectManagementState;
+    useNM: NoteManagementState;
+};
+
+const CenteredMessage = ({ children }: { children: React.ReactNode }) => (
+    <Box
+        sx={{
+            alignItems: "center",
+            display: "flex",
+            height: "100%",
+            justifyContent: "center",
+            p: 4,
+            width: "100%",
+        }}
+    >
+        <Typography level="body-md" sx={{ color: "neutral.500" }}>
+            {children}
+        </Typography>
+    </Box>
+);
+
+// Renders the matching `*NoteMain` against a modal-local note slot so the
+// host page's `useNM.currentMyNote / currentTaskNote / currentChatNote`
+// stay untouched. Each branch overrides the matching slot plus its
+// setter; the tab strips above the editor still read the real
+// `useNM.tabItems` / `chatNoteMeta` lists — we feed them a synthetic
+// single-entry array so the components don't bail out on the
+// "no tabs / no meta" early-return guards.
+//
+// `setCurrentNoteType` is overridden because the *NoteMain components
+// guard on `useNM.currentNoteType !== 0` before rendering, and we want
+// to force the type to match the URL kind so the breadcrumb / header
+// shows "Shared Notes" vs "My Notes" correctly.
+//
+// Known limitation (same as the chat / task views): the modal is a
+// snapshot at load time. Real-time edits arriving while the modal is
+// open don't refresh the preview; close + reopen to refetch.
+export const ModalNoteView = (props: ModalNoteViewProps) => {
+    const {
+        target,
+        onClose,
+        accessToken,
+        myself,
+        setMyself,
+        socket,
+        useTEM,
+        useUISM,
+        useCM,
+        useTM,
+        usePM,
+        useNM,
+    } = props;
+
+    const [modalNote, setModalNote] = useState<MyNoteProps | ChatNoteProps | TaskNoteProps | null>(
+        null
+    );
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        let cancelled = false;
+        setIsLoading(true);
+        setErrorMessage(null);
+        setModalNote(null);
+
+        // Shared notes live on the personal-note table on the backend,
+        // so we transparently alias kind `sharedNote` to `noteType=1`.
+        // The frontend `currentNoteType` slot still gets set to 4 below
+        // so the UI shows "Shared Notes" styling, not "My Notes".
+        const backendNoteType =
+            target.kind === "myNote" || target.kind === "sharedNote"
+                ? 1
+                : target.kind === "taskNote"
+                  ? 2
+                  : 3;
+
+        (async () => {
+            try {
+                const fetched = await loadSpecificNote(
+                    myself,
+                    backendNoteType,
+                    target.noteId,
+                    accessToken
+                );
+                if (cancelled) return;
+                if (!fetched || fetched.error) {
+                    setErrorMessage("This note isn't available.");
+                    setIsLoading(false);
+                    return;
+                }
+                setModalNote(fetched);
+                setIsLoading(false);
+            } catch (e) {
+                if (!cancelled) {
+                    console.error("ModalNoteView load failed:", e);
+                    setErrorMessage("Failed to load this note.");
+                    setIsLoading(false);
+                }
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [target.kind, target.noteId, accessToken, myself]);
+
+    if (errorMessage) return <CenteredMessage>{errorMessage}</CenteredMessage>;
+    if (isLoading || !modalNote) return <CenteredMessage>Loading…</CenteredMessage>;
+
+    const wrapper = (children: React.ReactNode) => (
+        <Box sx={{ height: "100%", overflow: "auto", p: 2, width: "100%" }}>{children}</Box>
+    );
+
+    // --- My / Shared note branch ---
+    if (target.kind === "myNote" || target.kind === "sharedNote") {
+        const note = modalNote as MyNoteProps;
+        const internalNoteType = target.kind === "sharedNote" ? 4 : 1;
+        // Synthetic single-entry tab list so MyNoteMain's
+        // `tabItems.length === 0` early-return (which would otherwise
+        // show its EmptyState for users with no my-notes open) doesn't
+        // fire. The strip still renders against the real tabsApi, but
+        // a click on the placeholder safely no-ops because the lookup
+        // misses in the real tabs list.
+        const synthTab = {
+            id: `modal-my-${note.noteId}`,
+            kind: "my",
+            noteId: note.noteId,
+            noteType: internalNoteType,
+            title: note.title,
+        };
+        const synthMeta: MyNoteMetaProps = {
+            noteId: note.noteId,
+            noteType: note.noteType,
+            parentNoteId: note.parentNoteId,
+            title: note.title,
+            tsUpdated: note.tsUpdated,
+        };
+        const useNMOverride: NoteManagementState = {
+            ...useNM,
+            currentMyNote: note,
+            currentNoteType: internalNoteType,
+            myNoteMeta: useNM.myNoteMeta.length > 0 ? useNM.myNoteMeta : [synthMeta],
+            selectedTabIndex: 0,
+            setCurrentMyNote: (next) => {
+                if (next) setModalNote(next);
+            },
+            tabItems: [synthTab],
+        };
+        return wrapper(
+            <MyNoteMain
+                isInTaskPage={false}
+                myself={myself}
+                setMyself={setMyself}
+                socket={socket}
+                useCM={useCM}
+                useNM={useNMOverride}
+                useTEM={useTEM}
+                useUISM={useUISM}
+            />
+        );
+    }
+
+    // --- Task note branch ---
+    if (target.kind === "taskNote") {
+        const note = modalNote as TaskNoteProps;
+        const synthMeta: TaskNoteMetaProps = {
+            noteId: note.noteId,
+            noteType: note.noteType,
+            parentNoteId: note.parentNoteId,
+            projectId: note.projectId,
+            taskId: note.taskId,
+            title: note.title,
+            tsUpdated: note.tsUpdated,
+        };
+        const synthTab = {
+            id: `modal-task-${note.noteId}`,
+            kind: "task",
+            noteId: note.noteId,
+            noteType: 2,
+            projectId: note.projectId,
+            taskId: note.taskId,
+            title: note.title,
+        };
+        const useNMOverride: NoteManagementState = {
+            ...useNM,
+            currentNoteType: 2,
+            currentTaskNote: note,
+            selectedTabIndex: 0,
+            setCurrentTaskNote: (next) => {
+                if (next) setModalNote(next);
+            },
+            // TaskNoteMain calls `useNM.setIsTaskNoteVisible(false)` when
+            // its close button is clicked — route that through to the
+            // modal so the X inside the note also closes the dialog.
+            setIsTaskNoteVisible: (visible: boolean) => {
+                if (!visible) onClose();
+            },
+            tabItems: [synthTab],
+            taskNoteMeta: useNM.taskNoteMeta.length > 0 ? useNM.taskNoteMeta : [synthMeta],
+        };
+        return wrapper(
+            <TaskNoteMain
+                isInTaskPage={false}
+                myself={myself}
+                setMyself={setMyself}
+                socket={socket}
+                useCM={useCM}
+                useNM={useNMOverride}
+                useTEM={useTEM}
+                useTM={useTM}
+                useUISM={useUISM}
+            />
+        );
+    }
+
+    // --- Chat note branch ---
+    const note = modalNote as ChatNoteProps;
+    const synthMeta: ChatNoteMetaProps = {
+        chatId: note.chatId,
+        chatType: note.chatType,
+        isThread: note.isThread,
+        noteId: note.noteId,
+        noteType: 3,
+        parentNoteId: note.parentNoteId,
+        threadId: note.threadId,
+        title: note.title,
+        tsUpdated: note.tsUpdated,
+    };
+    const synthTab = {
+        chatId: note.chatId,
+        chatType: note.chatType,
+        id: `modal-chat-${note.noteId}`,
+        isThread: note.isThread,
+        kind: "chat",
+        noteId: note.noteId,
+        noteType: 3,
+        threadId: note.threadId,
+        title: note.title,
+    };
+    const useNMOverride: NoteManagementState = {
+        ...useNM,
+        chatNoteMeta: useNM.chatNoteMeta.length > 0 ? useNM.chatNoteMeta : [synthMeta],
+        currentChatNote: note,
+        currentNoteType: 3,
+        selectedTabIndex: 0,
+        setCurrentChatNote: (next) => {
+            if (next) setModalNote(next);
+        },
+        tabItems: [synthTab],
+    };
+    return wrapper(
+        <ChatNoteMain
+            isInChatPage={false}
+            isInTaskPage={false}
+            myself={myself}
+            setMyself={setMyself}
+            socket={socket}
+            useCM={useCM}
+            useNM={useNMOverride}
+            usePM={usePM}
+            useTEM={useTEM}
+            useTM={useTM}
+            useUISM={useUISM}
+        />
+    );
+};

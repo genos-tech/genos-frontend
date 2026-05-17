@@ -32,6 +32,8 @@ import { Socket } from "socket.io-client";
 
 import { taskThreadMessageForCommentAddedTemplate } from "../../features/tasks/utils/TaskMessageTemplate";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
+import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useEditorDraft } from "../../hooks/common/useEditorDraft";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
@@ -82,6 +84,9 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         useTM,
     } = props;
     const { mode } = useColorScheme();
+    const urlLinkModal = useUrlLinkModal();
+    const editorBoxRef = useRef<HTMLDivElement>(null);
+    useAnchorClickIntercept(editorBoxRef, urlLinkModal);
     const bnBoxClassName: string = `bn-task-comment-box-${mode}`;
 
     // Disable the Audio and Image blocks from the built-in schema
@@ -179,19 +184,11 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     const [editorDocLength, setEditorDocLength] = useState<number>(0);
     const [numEditorLines, setNumEditorLines] = useState<number>(0);
 
-    const editorRef = useRef<HTMLDivElement>(null);
+    // Mirror the local line count back up to the task page so the
+    // parent's sticky-comment chip can react. Height is no longer
+    // computed here — the editor auto-sizes inside its CSS min/max
+    // bounds and the comment list flexes above it.
     useEffect(() => {
-        if (editorRef.current) {
-            const dynamicHeight: number = Math.min(
-                Math.max(numEditorLines - 8, 0) * 20 + 200,
-                800
-            );
-            editorRef.current.style.setProperty(
-                "--task-comment-editor-height",
-                `${dynamicHeight}px`
-            );
-        }
-
         if (numEditorLines !== taskCommentLines) {
             setTaskCommentLines(numEditorLines);
         }
@@ -338,16 +335,20 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     return (
         <Box ref={boxRef}>
             <EmojiPicker
-                pickerTopPosition={pickerTopPosition}
-                pickerLeftPosition={pickerLeftPosition}
                 pickerBottomPosition="auto"
+                pickerLeftPosition={pickerLeftPosition}
                 pickerRightPosition="auto"
-                useFixedPosition={true}
+                pickerTopPosition={pickerTopPosition}
                 setSelectedEmoji={setSelectedEmoji}
                 setShowEmojiPicker={setShowEmojiPicker}
                 showEmojiPicker={showEmojiPicker}
+                useFixedPosition={true}
             />
-            <Box ref={editorRef} className={bnBoxClassName} sx={{ position: "relative" }}>
+            <Box
+                ref={editorBoxRef}
+                className={bnBoxClassName}
+                sx={{ position: "relative" }}
+            >
                 <BlockNoteView
                     className="bn-box"
                     editor={editor}
