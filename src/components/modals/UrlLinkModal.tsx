@@ -11,6 +11,7 @@ import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
 import { ModalTarget } from "../../utils/parseInternalUrl";
 import { ModalChatView } from "./views/ModalChatView";
+import { ModalNoteView } from "./views/ModalNoteView";
 import { ModalTaskView } from "./views/ModalTaskView";
 
 type UrlLinkModalProps = {
@@ -44,9 +45,14 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
         if (target.kind === "task") {
             return <ModalTaskView target={target} onClose={onClose} {...rest} />;
         }
-        // Phase 3 kinds fall through to react-router navigation in the
-        // dispatcher (useUrlLinkModalState), so we should never receive
-        // them here. Render null defensively.
+        if (
+            target.kind === "myNote" ||
+            target.kind === "sharedNote" ||
+            target.kind === "taskNote" ||
+            target.kind === "chatNote"
+        ) {
+            return <ModalNoteView target={target} onClose={onClose} {...rest} />;
+        }
         return null;
     };
 

@@ -10,8 +10,12 @@ import { ModalTarget, parseInternalUrl } from "../../utils/parseInternalUrl";
 // once the view exists.
 const SUPPORTED_KINDS: ReadonlySet<ModalTarget["kind"]> = new Set([
     "chatMain",
+    "chatNote",
     "chatThread",
+    "myNote",
+    "sharedNote",
     "task",
+    "taskNote",
 ]);
 
 export type UrlLinkModalState = {
