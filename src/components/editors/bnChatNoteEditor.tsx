@@ -386,7 +386,7 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
                         onBeforeInput={() => {
                             userInteractedRef.current = true;
                         }}
-                        onClick={(e) => {
+                        onClickCapture={(e) => {
                             if (interceptAnchorClick(e, urlLinkModal)) return;
                             const target = e.target as HTMLElement;
                             if (target.tagName === "IMG") {

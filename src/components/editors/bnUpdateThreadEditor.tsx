@@ -281,7 +281,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
             <Box
                 className={bnBoxClassName}
                 sx={{ position: "relative" }}
-                onClick={(e) => interceptAnchorClick(e, urlLinkModal)}
+                onClickCapture={(e) => interceptAnchorClick(e, urlLinkModal)}
             >
                 <FileUploadStatusBadge count={editorUploadCount} />
                 <BlockNoteView

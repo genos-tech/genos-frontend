@@ -338,7 +338,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                             }
                         }
                     }}
-                    onClick={(e) => {
+                    onClickCapture={(e) => {
                         if (interceptAnchorClick(e, urlLinkModal)) return;
                         const target = e.target as HTMLElement;
                         if (target.tagName === "IMG") {

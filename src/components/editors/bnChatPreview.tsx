@@ -147,7 +147,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
                 slashMenu={false}
                 tableHandles={false}
                 data-changing-font-demo // custom font
-                onClick={handleEditorClick}
+                onClickCapture={handleEditorClick}
             ></BlockNoteView>
 
             <Modal open={opened} sx={{ zIndex: 10010 }} onClose={() => setOpened(false)}>

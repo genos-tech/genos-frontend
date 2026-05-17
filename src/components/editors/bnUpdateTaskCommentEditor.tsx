@@ -300,7 +300,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
             <Box
                 className={bnBoxClassName}
                 sx={{ position: "relative" }}
-                onClick={(e) => interceptAnchorClick(e, urlLinkModal)}
+                onClickCapture={(e) => interceptAnchorClick(e, urlLinkModal)}
             >
                 <BlockNoteView
                     className="bn-box"
