@@ -18,6 +18,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
@@ -85,6 +86,11 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
     const [opened, setOpened] = useState(false);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
+    // Global URL-link modal opener. Null when the provider isn't mounted
+    // (e.g. signin / signup), in which case anchor clicks fall through
+    // to the browser's default — same as before this feature shipped.
+    const urlLinkModal = useUrlLinkModal();
+
     // Custom click handler
     const handleImageClick = (src: string) => {
         setSelectedImage(src);
@@ -100,6 +106,18 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
 
     const handleEditorClick = (e: React.MouseEvent<HTMLDivElement>) => {
         const target = e.target as HTMLElement;
+
+        // Anchor (BlockNote link) clicks: intercept and route through the
+        // URL-link modal. Modifier / non-left-button clicks bail out so
+        // the browser's "open in new tab" default still works.
+        const anchor = target.closest("a") as HTMLAnchorElement | null;
+        if (anchor?.href && urlLinkModal) {
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+            e.preventDefault();
+            e.stopPropagation();
+            urlLinkModal.openModalByHref(anchor.href);
+            return;
+        }
 
         // Handle image clicks
         if (target.tagName === "IMG") {
