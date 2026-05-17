@@ -84,6 +84,15 @@ const toInt = (s: string | undefined): number | undefined => {
     return Number.isFinite(n) && n > 0 ? n : undefined;
 };
 
+// Like `toInt` but accepts 0. Chat-note URLs use `/thread/0/` as a
+// sentinel for "not in a thread" (the note lives on the parent chat,
+// not on a thread within it), so we can't reject zero outright.
+const toIntAllowZero = (s: string | undefined): number | undefined => {
+    if (s === undefined || s === null || s === "") return undefined;
+    const n = Number(s);
+    return Number.isFinite(n) && n >= 0 ? n : undefined;
+};
+
 const segmentAfter = (parts: string[], key: string): string | undefined => {
     const i = parts.indexOf(key);
     return i !== -1 ? parts[i + 1] : undefined;
@@ -148,9 +157,14 @@ export const parseInternalUrl = (href: string): UrlClassification => {
         return route;
     }
 
-    // /workspace/notes/...   (Phase 3 — parser is ready; modal dispatch
-    // returns "route" until each kind ships, so unknown-kind targets
-    // gracefully fall back to react-router navigation.)
+    // /workspace/notes/...
+    //
+    // Notes URLs use positional indexing rather than `segmentAfter`
+    // because the path repeats the literal "task" segment
+    // (`/notes/task/project/N/task/M/note/K`), and `parts.indexOf("task")`
+    // returns the FIRST occurrence — which is the `notes/task/...` segment,
+    // not the `task/M` one we want for `taskId`. Positional fixed-shape
+    // lookups are unambiguous and match the URL spec one-to-one.
     if (parts[1] === "notes") {
         if (parts[2] === "my") {
             const noteId = toInt(parts[3]);
@@ -160,20 +174,32 @@ export const parseInternalUrl = (href: string): UrlClassification => {
             const noteId = toInt(parts[3]);
             if (noteId) return { kind: "sharedNote", noteId };
         }
-        if (parts[2] === "task" && parts[3] === "project") {
+        // /workspace/notes/task/project/:projectId/task/:taskId/note/:noteId
+        if (
+            parts[2] === "task" &&
+            parts[3] === "project" &&
+            parts[5] === "task" &&
+            parts[7] === "note"
+        ) {
             const projectId = toInt(parts[4]);
-            const taskId = toInt(segmentAfter(parts, "task"));
-            const noteId = toInt(segmentAfter(parts, "note"));
+            const taskId = toInt(parts[6]);
+            const noteId = toInt(parts[8]);
             if (projectId && taskId && noteId) {
                 return { kind: "taskNote", noteId, projectId, taskId };
             }
         }
-        if (parts[2] === "chat") {
+        // /workspace/notes/chat/{dm|gm|pm|mdm}/:chatId/thread/:threadId/note/:noteId
+        //
+        // `threadId === 0` is a valid sentinel for "not in a thread" —
+        // chat notes can live directly on a chat without a thread.
+        // `toIntAllowZero` accepts that; `toInt` would have rejected it
+        // and dropped the target back to a route navigation.
+        if (parts[2] === "chat" && parts[5] === "thread" && parts[7] === "note") {
             const chatType = CHAT_TYPE_MAP[parts[3] ?? ""];
             const chatId = toInt(parts[4]);
-            const threadId = toInt(segmentAfter(parts, "thread"));
-            const noteId = toInt(segmentAfter(parts, "note"));
-            if (chatType && chatId && threadId && noteId) {
+            const threadId = toIntAllowZero(parts[6]);
+            const noteId = toInt(parts[8]);
+            if (chatType && chatId && threadId !== undefined && noteId) {
                 return { chatId, chatType, kind: "chatNote", noteId, threadId };
             }
         }

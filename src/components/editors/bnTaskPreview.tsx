@@ -51,6 +51,7 @@ import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useCollaborativeBlockNote } from "../../hooks/common/useCollaborativeBlockNote";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
@@ -58,6 +59,7 @@ import { UserProps } from "../../types/admin";
 import { getUserColor } from "../../utils/collabUtils";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
+import { interceptAnchorClick } from "../../utils/interceptAnchorClick";
 import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
 import { FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
 import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
@@ -111,6 +113,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
     const { mode } = useColorScheme();
     const bnBoxClassName: string = `bn-task-body-box-${mode}`;
     const { accessToken } = useAuth();
+    const urlLinkModal = useUrlLinkModal();
 
     // To avoid rendering issues, it's good practice to define your custom drag
     // handle menu in a separate component, instead of inline within the `sideMenu`
@@ -336,6 +339,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                         }
                     }}
                     onClick={(e) => {
+                        if (interceptAnchorClick(e, urlLinkModal)) return;
                         const target = e.target as HTMLElement;
                         if (target.tagName === "IMG") {
                             handleImageClick((target as HTMLImageElement).src);

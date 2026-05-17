@@ -35,10 +35,12 @@ import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { ChatProps, ThreadMessageProps, ThreadProps } from "../../types/chat";
+import { interceptAnchorClick } from "../../utils/interceptAnchorClick";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
 import { FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
@@ -87,6 +89,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
     } = props;
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
+    const urlLinkModal = useUrlLinkModal();
     const bnBoxClassName: string = `bn-chat-editor-box-${mode}`;
 
     // Disable the Audio and Image blocks from the built-in schema
@@ -275,7 +278,11 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                 setShowEmojiPicker={setShowEmojiPicker}
                 showEmojiPicker={showEmojiPicker}
             />
-            <Box className={bnBoxClassName} sx={{ position: "relative" }}>
+            <Box
+                className={bnBoxClassName}
+                sx={{ position: "relative" }}
+                onClick={(e) => interceptAnchorClick(e, urlLinkModal)}
+            >
                 <FileUploadStatusBadge count={editorUploadCount} />
                 <BlockNoteView
                     className="bn-box"

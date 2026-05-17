@@ -57,6 +57,7 @@ import {
     isNoteEditableForRole,
 } from "../../features/notes/common/utils/noteRoles";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useCollaborativeBlockNote } from "../../hooks/common/useCollaborativeBlockNote";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
@@ -65,6 +66,7 @@ import { ChatNoteProps, NoteRoleMember } from "../../types/notes";
 import { getUserColor } from "../../utils/collabUtils";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
+import { interceptAnchorClick } from "../../utils/interceptAnchorClick";
 import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
 import { FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
 import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
@@ -127,6 +129,7 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
 
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
+    const urlLinkModal = useUrlLinkModal();
     const bnBoxClassName: string = `bn-note-body-box-${mode}`;
 
     // To avoid rendering issues, it's good practice to define your custom drag
@@ -380,22 +383,20 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
                 >
                     <div
                         className="bn-editor-with-sidebar"
+                        onBeforeInput={() => {
+                            userInteractedRef.current = true;
+                        }}
                         onClick={(e) => {
+                            if (interceptAnchorClick(e, urlLinkModal)) return;
                             const target = e.target as HTMLElement;
                             if (target.tagName === "IMG") {
                                 handleImageClick((target as HTMLImageElement).src);
                             }
                         }}
-                        onPaste={() => {
+                        onCompositionStart={() => {
                             userInteractedRef.current = true;
                         }}
                         onDrop={() => {
-                            userInteractedRef.current = true;
-                        }}
-                        onBeforeInput={() => {
-                            userInteractedRef.current = true;
-                        }}
-                        onCompositionStart={() => {
                             userInteractedRef.current = true;
                         }}
                         onKeyDown={(event) => {
@@ -412,6 +413,9 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
                                     //Auto saving logic here
                                 }
                             }
+                        }}
+                        onPaste={() => {
+                            userInteractedRef.current = true;
                         }}
                     >
                         <div className="bn-editor-section">
@@ -535,11 +539,11 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
                                 )}
                                 {isEditable && (
                                     <SuggestionMenuController
+                                        minQueryLength={2}
+                                        triggerCharacter={":"}
                                         getItems={async (query) =>
                                             getEmojiSuggestionItems(editor, query)
                                         }
-                                        minQueryLength={2}
-                                        triggerCharacter={":"}
                                     />
                                 )}
 

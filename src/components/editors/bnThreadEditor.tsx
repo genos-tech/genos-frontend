@@ -37,12 +37,14 @@ import { useAuth } from "../../context/AuthContext";
 import { addThreadMessage } from "../../features/chat/services/addThreadMessage";
 import { getFirstLine } from "../../features/chat/utils/common";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useEditorDraft } from "../../hooks/common/useEditorDraft";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { ChatProps, ThreadMessageProps, ThreadProps } from "../../types/chat";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
+import { interceptAnchorClick } from "../../utils/interceptAnchorClick";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
 import { FileUploadOverlay, FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
@@ -92,6 +94,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
     } = props;
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
+    const urlLinkModal = useUrlLinkModal();
     const bnBoxClassName: string = `bn-chat-editor-box-${mode}`;
 
     const teamMembersRef = useRef(useTEM.teamMembers);
@@ -390,7 +393,11 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                 setShowEmojiPicker={setShowEmojiPicker}
                 showEmojiPicker={showEmojiPicker}
             />
-            <Box className={bnBoxClassName} sx={{ position: "relative" }}>
+            <Box
+                className={bnBoxClassName}
+                sx={{ position: "relative" }}
+                onClick={(e) => interceptAnchorClick(e, urlLinkModal)}
+            >
                 <FileUploadStatusBadge count={editorUploadCount} />
                 <FileUploadOverlay
                     label="Uploading dropped files…"

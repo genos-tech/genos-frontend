@@ -32,6 +32,7 @@ import { Socket } from "socket.io-client";
 
 import { taskThreadMessageForCommentAddedTemplate } from "../../features/tasks/utils/TaskMessageTemplate";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useEditorDraft } from "../../hooks/common/useEditorDraft";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
@@ -39,6 +40,7 @@ import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
 import { TaskCommentProps, TaskProps } from "../../types/tasks";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
+import { interceptAnchorClick } from "../../utils/interceptAnchorClick";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
@@ -82,6 +84,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         useTM,
     } = props;
     const { mode } = useColorScheme();
+    const urlLinkModal = useUrlLinkModal();
     const bnBoxClassName: string = `bn-task-comment-box-${mode}`;
 
     // Disable the Audio and Image blocks from the built-in schema
@@ -339,7 +342,11 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                 showEmojiPicker={showEmojiPicker}
                 useFixedPosition={true}
             />
-            <Box className={bnBoxClassName} sx={{ position: "relative" }}>
+            <Box
+                className={bnBoxClassName}
+                sx={{ position: "relative" }}
+                onClick={(e) => interceptAnchorClick(e, urlLinkModal)}
+            >
                 <BlockNoteView
                     className="bn-box"
                     editor={editor}
