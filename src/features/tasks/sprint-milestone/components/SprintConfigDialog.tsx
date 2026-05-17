@@ -128,13 +128,21 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
 
             if (anchorChanged) {
                 const today = todayIso();
-                const futures = (useSM.projectSprints[projectId] ?? [])
+                const allSprints = useSM.projectSprints[projectId] ?? [];
+                // First realigned slot must clear today AND the current sprint's end —
+                // otherwise Sprint 2's new PATCH overlaps the in-progress Sprint 1 and
+                // the rest cascade-fail behind it.
+                const lowerBound = allSprints
+                    .filter((s) => s.startDate <= today)
+                    .reduce((max, s) => (s.endDate > max ? s.endDate : max), today);
+                const futures = allSprints
                     .filter((s) => s.startDate > today)
                     .sort((a, b) => a.sequenceNumber - b.sequenceNumber);
 
                 if (futures.length > 0) {
                     let firstSlot = anchorDate;
-                    while (firstSlot <= today) firstSlot = addDaysIso(firstSlot, durationDays);
+                    while (firstSlot <= lowerBound)
+                        firstSlot = addDaysIso(firstSlot, durationDays);
 
                     const slots = futures.map((_, i) => ({
                         start: addDaysIso(firstSlot, i * durationDays),
