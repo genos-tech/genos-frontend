@@ -8,7 +8,11 @@ import { ModalTarget, parseInternalUrl } from "../../utils/parseInternalUrl";
 // behave sensibly — the parser already recognises future kinds (task,
 // myNote, etc.) so adding a kind to the modal is a one-line change here
 // once the view exists.
-const SUPPORTED_KINDS: ReadonlySet<ModalTarget["kind"]> = new Set(["chatMain", "chatThread"]);
+const SUPPORTED_KINDS: ReadonlySet<ModalTarget["kind"]> = new Set([
+    "chatMain",
+    "chatThread",
+    "task",
+]);
 
 export type UrlLinkModalState = {
     target: ModalTarget | null;

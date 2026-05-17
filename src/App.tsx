@@ -521,6 +521,7 @@ export const App = () => {
                                                     useCM={useCM}
                                                     useNM={useNM}
                                                     usePM={usePM}
+                                                    useSM={useSM}
                                                     useTEM={useTEM}
                                                     useTM={useTM}
                                                     useUISM={useUISM}

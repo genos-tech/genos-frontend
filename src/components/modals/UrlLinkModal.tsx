@@ -6,10 +6,12 @@ import { ProjectManagementState } from "../../hooks/common/useProjectManagement"
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
+import { SprintMilestoneManagementState } from "../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
 import { ModalTarget } from "../../utils/parseInternalUrl";
 import { ModalChatView } from "./views/ModalChatView";
+import { ModalTaskView } from "./views/ModalTaskView";
 
 type UrlLinkModalProps = {
     target: ModalTarget | null;
@@ -24,6 +26,7 @@ type UrlLinkModalProps = {
     useTM: TaskManagementState;
     usePM: ProjectManagementState;
     useNM: NoteManagementState;
+    useSM?: SprintMilestoneManagementState;
 };
 
 // Global preview modal for internal links clicked inside chat messages.
@@ -38,9 +41,12 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
         if (target.kind === "chatMain" || target.kind === "chatThread") {
             return <ModalChatView target={target} {...rest} />;
         }
-        // Phase 2 / 3 kinds fall through to react-router navigation in
-        // the dispatcher (useUrlLinkModalState), so we should never
-        // receive them here. Render null defensively.
+        if (target.kind === "task") {
+            return <ModalTaskView target={target} onClose={onClose} {...rest} />;
+        }
+        // Phase 3 kinds fall through to react-router navigation in the
+        // dispatcher (useUrlLinkModalState), so we should never receive
+        // them here. Render null defensively.
         return null;
     };
 
@@ -85,14 +91,14 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
             >
                 <ModalClose
                     sx={{
+                        "&:hover": {
+                            backgroundColor: "rgba(255, 255, 255, 0.85)",
+                        },
                         backdropFilter: "blur(6px)",
                         backgroundColor: "rgba(255, 255, 255, 0.6)",
                         right: 12,
                         top: 12,
                         zIndex: 2,
-                        "&:hover": {
-                            backgroundColor: "rgba(255, 255, 255, 0.85)",
-                        },
                     }}
                 />
                 {renderBody()}
