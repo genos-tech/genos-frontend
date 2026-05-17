@@ -1,10 +1,23 @@
 import { styled } from "@mui/joy";
 
+type PulseDotProps = {
+    color?: string;
+    /**
+     * Pixel size of the dot (width = height). Defaults to 10px to
+     * preserve the original inline-next-to-text usage. Callers that
+     * render the dot as a status indicator on a sized avatar should
+     * pass a size proportional to the avatar's pixel size.
+     */
+    size?: number;
+};
+
 // Pulsing status dot
-export const PulseDot = styled("span")(({ color = "#ccc" }) => ({
+export const PulseDot = styled("span", {
+    shouldForwardProp: (prop) => prop !== "size",
+})<PulseDotProps>(({ color = "#ccc", size = 10 }) => ({
     position: "relative",
-    width: "10px",
-    height: "10px",
+    width: `${size}px`,
+    height: `${size}px`,
     borderRadius: "50%",
     backgroundColor: color,
     display: "inline-block",

@@ -146,6 +146,7 @@ export const Sidebar = (props: SidebarProps) => {
                     "lastOpenChatNoteId",
                     "lastOpenTaskNoteId",
                     "currentMainChatId",
+                    "isDemoUser",
                 ];
                 keysToRemove.forEach((key) => localStorage.setItem(key, ""));
                 localStorage.setItem("isOfflineForced", "false");
