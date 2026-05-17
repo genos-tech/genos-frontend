@@ -96,15 +96,28 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
                 })}
             >
                 <ModalClose
-                    sx={{
-                        "&:hover": {
-                            backgroundColor: "rgba(255, 255, 255, 0.85)",
-                        },
-                        backdropFilter: "blur(6px)",
-                        backgroundColor: "rgba(255, 255, 255, 0.6)",
-                        right: 12,
-                        top: 12,
-                        zIndex: 2,
+                    sx={(theme) => {
+                        const isDark = theme.palette.mode === "dark";
+                        // Hardcoded white-on-white made the ✕ icon disappear
+                        // in dark mode (Joy's default icon colour is light
+                        // there). Pick a translucent background that
+                        // contrasts with the icon for each mode.
+                        return {
+                            right: 12,
+                            top: 12,
+                            zIndex: 2,
+                            backdropFilter: "blur(6px)",
+                            backgroundColor: isDark
+                                ? "rgba(15, 15, 22, 0.6)"
+                                : "rgba(255, 255, 255, 0.6)",
+                            color: isDark ? "rgba(255, 255, 255, 0.92)" : "rgba(15, 23, 42, 0.78)",
+                            "&:hover": {
+                                backgroundColor: isDark
+                                    ? "rgba(15, 15, 22, 0.85)"
+                                    : "rgba(255, 255, 255, 0.85)",
+                                color: isDark ? "rgba(255, 255, 255, 1)" : "rgba(15, 23, 42, 1)",
+                            },
+                        };
                     }}
                 />
                 {renderBody()}
