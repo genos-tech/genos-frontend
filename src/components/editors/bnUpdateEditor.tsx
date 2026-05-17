@@ -1,7 +1,7 @@
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { codeBlockOptions } from "@blocknote/code-block";
 import {
     BlockNoteSchema,
@@ -80,13 +80,14 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
         isInEdit,
         setIsInEdit,
         useUISM,
-        numEditorLines,
         setNumEditorLines,
         useCM,
     } = props;
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
-    const bnBoxClassName: string = `bn-chat-editor-box-${mode}`;
+    const bnBoxClassName: string = `bn-chat-editor-box-${mode}${
+        useCM.isSubChatVisible ? " with-subchat" : ""
+    }`;
 
     // Disable the Audio and Image blocks from the built-in schema
     // This is done by picking out the blocks you want to disable
@@ -197,17 +198,6 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
 
     const [editorDocLength, setEditorDocLength] = useState<number>(message.content.length);
 
-    const editorRef = useRef<HTMLDivElement>(null);
-    useEffect(() => {
-        if (editorRef.current) {
-            const dynamicHeight: number = Math.min(
-                Math.min(Math.max(numEditorLines - 8, 0), 10) * 20 + 200,
-                useCM.isSubChatVisible === true ? 290 : 500
-            );
-            editorRef.current.style.setProperty("--chat-editor-height", `${dynamicHeight}px`);
-        }
-    }, [numEditorLines]);
-
     useEffect(() => {
         if (isInEdit === false) {
             editor.replaceBlocks(editor.document, []);
@@ -265,7 +255,7 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
                 setShowEmojiPicker={setShowEmojiPicker}
                 showEmojiPicker={showEmojiPicker}
             />
-            <Box ref={editorRef} className={bnBoxClassName} sx={{ position: "relative" }}>
+            <Box className={bnBoxClassName} sx={{ position: "relative" }}>
                 <FileUploadStatusBadge count={editorUploadCount} />
                 <BlockNoteView
                     className="bn-box"

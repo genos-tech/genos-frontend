@@ -10,10 +10,6 @@ import { MessageListRenderer } from "./components/shared/MessageListRenderer";
 import { useMessageManagement } from "./hooks/useMessageManagement";
 import { useReadStatusManagement } from "./hooks/useReadStatusManagement";
 import { useScrollManagement } from "./hooks/useScrollManagement";
-import {
-    calculateVirtuosoHight,
-    calculateVirtuosoSubHight,
-} from "./services/calculateVirtuosoHight";
 import { createFileDropHandler } from "./services/handleFileDrop";
 
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
@@ -64,7 +60,6 @@ export const MessagesPane = (props: MessagesPaneProps) => {
         isExistingTodaysTodo,
         isToDoVisible,
         myself,
-        paneSizePCT,
         usePM,
         setIsExistingTodaysTodo,
         setIsToDoVisible,
@@ -143,33 +138,41 @@ export const MessagesPane = (props: MessagesPaneProps) => {
         }, 300);
     }, [useCM.currentMainChat]);
 
-    const virtuosoHeight =
-        useCM.currentMainChat?.chatType === 3
-            ? 0.95 * window.innerHeight
-            : useCM.isSubChatVisible
-              ? calculateVirtuosoSubHight(
-                    currentWindowHeight,
-                    paneSizePCT,
-                    messageManagement.numEditorLines
-                )
-              : calculateVirtuosoHight(currentWindowHeight, messageManagement.numEditorLines);
-
+    // Layout: flex column. The MessageListRenderer fills the available
+    // space via `fillContainer` (Virtuoso uses flex: 1, minHeight: 0),
+    // and ChatEditorSection sits naturally at the bottom with its own
+    // min-height / max-height caps applied in App.css. This replaces
+    // the old `calculateVirtuosoHight()` pixel math, which broke on
+    // window resize (especially inside the URL-link modal).
     return (
         <div
             style={{
                 width: "100%",
                 height: "100%",
+                display: "flex",
+                flexDirection: "column",
             }}
             onDragOver={(e) => e.preventDefault()}
             onDrop={handleDrop}
         >
-            <Sheet sx={{ backgroundColor: "background.surface" }}>
+            <Sheet
+                sx={{
+                    backgroundColor: "background.surface",
+                    display: "flex",
+                    flex: 1,
+                    flexDirection: "column",
+                    minHeight: 0,
+                }}
+            >
                 <Box
                     sx={{
-                        height: "100%",
-                        width: "100%",
                         borderColor: mode === "dark" ? "black" : "white",
                         borderRight: mode === "dark" ? "1px black inset" : "1px lightgrey inset",
+                        display: "flex",
+                        flex: 1,
+                        flexDirection: "column",
+                        minHeight: 0,
+                        width: "100%",
                     }}
                 >
                     <ErrorSnackbar
@@ -181,16 +184,16 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                     {useCM.currentMainChat && (
                         <MainChatPaneHeader
                             chat={useCM.currentMainChat}
-                            useCM={useCM}
                             incompleteTodoCount={incompleteTodoCount}
                             isToDoVisible={isToDoVisible}
                             myself={myself}
                             setIsToDoVisible={setIsToDoVisible}
                             setMyself={setMyself}
                             socket={socket}
+                            useCM={useCM}
                             useTEM={useTEM}
-                            useUISM={useUISM}
                             useTM={useTM}
+                            useUISM={useUISM}
                         />
                     )}
 
@@ -199,7 +202,6 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                         useCM.currentMainChat?.chatType === 1 &&
                         useCM.currentMainChat?.dmPartnerUser.userId === myself.userId && (
                             <ToDoPane
-                                useCM={useCM}
                                 currentWindowHeight={currentWindowHeight}
                                 isExistingTodaysTodo={isExistingTodaysTodo}
                                 myself={myself}
@@ -207,8 +209,9 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                                 setMyself={setMyself}
                                 setTodos={setTodos}
                                 socket={socket}
-                                useTEM={useTEM}
                                 todos={todos}
+                                useCM={useCM}
+                                useTEM={useTEM}
                                 useUISM={useUISM}
                             />
                         )}
@@ -221,52 +224,53 @@ export const MessagesPane = (props: MessagesPaneProps) => {
                         <>
                             <MessageListRenderer
                                 chat={useCM.currentMainChat as ChatProps | ThreadProps}
-                                useCM={useCM}
                                 currentChatId={currentMainChatId}
-                                height={virtuosoHeight}
+                                height={0}
                                 indexMap={messageManagement.indexMap}
                                 isScrolling={scrollManagement.isScrolling}
                                 isThread={false}
                                 messages={messageManagement.messages}
                                 myself={myself}
-                                usePM={usePM}
                                 setEditTargetMessage={messageManagement.setEditTargetMessage}
                                 setErrorMessage={messageManagement.setErrorMessage}
                                 setErrorOpen={messageManagement.setErrorOpen}
                                 setIsInEdit={messageManagement.setIsInEdit}
                                 setIsScrolling={scrollManagement.setIsScrolling}
                                 setMyself={setMyself}
+                                setTodoFromMessageBubble={setTodoFromMessageBubble}
                                 setVisibleRange={scrollManagement.setVisibleRange}
                                 socket={socket}
+                                useCM={useCM}
+                                usePM={usePM}
                                 useTEM={useTEM}
+                                useTM={useTM}
                                 useUISM={useUISM}
                                 visibleRange={scrollManagement.visibleRange}
                                 virtuosoRef={
                                     scrollManagement.virtuosoRef as React.RefObject<VirtuosoHandle>
                                 }
-                                useTM={useTM}
-                                setTodoFromMessageBubble={setTodoFromMessageBubble}
+                                fillContainer
                             />
 
                             {useCM.currentMainChat?.chatType !== 3 && (
                                 <ChatEditorSection
                                     chat={useCM.currentMainChat as ChatProps | ThreadProps}
-                                    useCM={useCM}
+                                    clearPendingFiles={clearPendingFiles}
                                     editTargetMessage={messageManagement.editTargetMessage}
                                     isInEdit={messageManagement.isInEdit}
                                     isThread={false}
                                     myself={myself}
                                     numEditorLines={messageManagement.numEditorLines}
+                                    pendingFiles={pendingFiles}
                                     setCurrentThreadChat={undefined}
                                     setIsInEdit={messageManagement.setIsInEdit}
                                     setMyself={setMyself}
                                     setNumEditorLines={messageManagement.setNumEditorLines}
                                     socket={socket}
-                                    useTEM={useTEM}
                                     thread={undefined}
+                                    useCM={useCM}
+                                    useTEM={useTEM}
                                     useUISM={useUISM}
-                                    pendingFiles={pendingFiles}
-                                    clearPendingFiles={clearPendingFiles}
                                     setCurrentChat={
                                         useCM.setCurrentMainChat as (
                                             chat: ChatProps | ThreadProps

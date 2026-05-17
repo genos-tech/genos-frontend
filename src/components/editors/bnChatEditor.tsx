@@ -85,14 +85,18 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
         chat,
         setCurrentChat,
         useUISM,
-        numEditorLines,
         setNumEditorLines,
         pendingFiles,
         clearPendingFiles,
     } = props;
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
-    const bnBoxClassName: string = `bn-chat-editor-box-${mode}`;
+    // The `with-subchat` modifier tightens the editor's max-height in
+    // App.css when the split sub-chat pane is open, so the two stacked
+    // editors don't collectively eat the message-list area.
+    const bnBoxClassName: string = `bn-chat-editor-box-${mode}${
+        useCM.isSubChatVisible ? " with-subchat" : ""
+    }`;
 
     const teamMembersRef = useRef(useTEM.teamMembers);
     const teamMemberProfilesRef = useRef(useTEM.teamMemberProfiles);
@@ -282,17 +286,6 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
 
     const [editorDocLength, setEditorDocLength] = useState<number>(0);
 
-    const editorRef = useRef<HTMLDivElement>(null);
-    useEffect(() => {
-        if (editorRef.current) {
-            const dynamicHeight: number = Math.min(
-                Math.min(Math.max(numEditorLines - 8, 0), 10) * 20 + 200,
-                useCM.isSubChatVisible === true ? 290 : 500
-            );
-            editorRef.current.style.setProperty("--chat-editor-height", `${dynamicHeight}px`);
-        }
-    }, [numEditorLines]);
-
     // Restore (or clear) the editor when the user navigates between
     // chats, and persist unsent typing as a per-chat draft. See
     // `useEditorDraft` for the load/save/clear lifecycle.
@@ -455,7 +448,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                 setShowEmojiPicker={setShowEmojiPicker}
                 showEmojiPicker={showEmojiPicker}
             />
-            <Box ref={editorRef} className={bnBoxClassName} sx={{ position: "relative" }}>
+            <Box className={bnBoxClassName} sx={{ position: "relative" }}>
                 <FileUploadStatusBadge count={editorUploadCount} />
                 <FileUploadOverlay
                     label="Uploading dropped files…"

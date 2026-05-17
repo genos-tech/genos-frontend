@@ -281,10 +281,12 @@ export const ModalChatView = (props: ModalChatViewProps) => {
         );
     }
 
-    // Modal-sized window dimensions for the virtuoso height formula.
-    // Trades a few px of vertical space for not having to wire the
-    // dialog's exact pixel height through to MessagesPane.
-    const modalWindowHeight = Math.floor(window.innerHeight * 0.85);
+    // `currentWindowHeight` is still required by the MessagesPane /
+    // ThreadPane prop types (ToDoPane consumes it on the chat page),
+    // but since both panes are now flex-driven inside the modal, the
+    // value isn't used for layout. Pass 0 so we don't fake a viewport
+    // height that could mislead consumers.
+    const modalWindowHeight = 0;
 
     if (target.kind === "chatThread") {
         if (!modalThread) {

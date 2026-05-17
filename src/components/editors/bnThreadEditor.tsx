@@ -85,7 +85,6 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
         setCurrentThreadChat,
         setCurrentChat,
         useUISM,
-        numEditorLines,
         setNumEditorLines,
         useCM,
         pendingFiles,
@@ -266,17 +265,6 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
 
     const [editorDocLength, setEditorDocLength] = useState<number>(0);
 
-    const editorRef = useRef<HTMLDivElement>(null);
-    useEffect(() => {
-        if (editorRef.current) {
-            const dynamicHeight: number = Math.min(
-                Math.min(Math.max(numEditorLines - 8, 0), 10) * 20 + 200,
-                500
-            );
-            editorRef.current.style.setProperty("--chat-editor-height", `${dynamicHeight}px`);
-        }
-    }, [numEditorLines]);
-
     // Per-thread draft cache: see `useEditorDraft` for the
     // load/save/clear lifecycle. Keyed by chatType + chatId +
     // threadId so each thread keeps its own in-progress reply
@@ -402,7 +390,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                 setShowEmojiPicker={setShowEmojiPicker}
                 showEmojiPicker={showEmojiPicker}
             />
-            <Box ref={editorRef} className={bnBoxClassName} sx={{ position: "relative" }}>
+            <Box className={bnBoxClassName} sx={{ position: "relative" }}>
                 <FileUploadStatusBadge count={editorUploadCount} />
                 <FileUploadOverlay
                     label="Uploading dropped files…"

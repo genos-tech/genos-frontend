@@ -180,19 +180,9 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
     const [editorDocLength, setEditorDocLength] = useState<number>(0);
     const [numEditorLines, setNumEditorLines] = useState<number>(0);
 
-    const editorRef = useRef<HTMLDivElement>(null);
+    // Mirror the local line count back up to the task page. Editor
+    // height is now controlled by App.css min/max-height bounds.
     useEffect(() => {
-        if (editorRef.current) {
-            const dynamicHeight: number = Math.min(
-                Math.max(numEditorLines - 8, 0) * 20 + 200,
-                800
-            );
-            editorRef.current.style.setProperty(
-                "--task-comment-editor-height",
-                `${dynamicHeight}px`
-            );
-        }
-
         if (numEditorLines !== taskCommentLines) {
             setTaskCommentLines(numEditorLines);
         }
@@ -295,16 +285,16 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
     return (
         <Box ref={boxRef}>
             <EmojiPicker
-                pickerTopPosition={pickerTopPosition}
-                pickerLeftPosition={pickerLeftPosition}
                 pickerBottomPosition="auto"
+                pickerLeftPosition={pickerLeftPosition}
                 pickerRightPosition="auto"
-                useFixedPosition={true}
+                pickerTopPosition={pickerTopPosition}
                 setSelectedEmoji={setSelectedEmoji}
                 setShowEmojiPicker={setShowEmojiPicker}
                 showEmojiPicker={showEmojiPicker}
+                useFixedPosition={true}
             />
-            <Box ref={editorRef} className={bnBoxClassName} sx={{ position: "relative" }}>
+            <Box className={bnBoxClassName} sx={{ position: "relative" }}>
                 <BlockNoteView
                     className="bn-box"
                     editor={editor}

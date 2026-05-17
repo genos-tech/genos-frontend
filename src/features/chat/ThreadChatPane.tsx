@@ -13,7 +13,6 @@ import { ThreadTabId, ThreadTabStrip } from "./components/shared/ThreadTabStrip"
 import { useMessageManagement } from "./hooks/useMessageManagement";
 import { useReadStatusManagement } from "./hooks/useReadStatusManagement";
 import { useScrollManagement } from "./hooks/useScrollManagement";
-import { calculateVirtuosoHight } from "./services/calculateVirtuosoHight";
 import { createFileDropHandler } from "./services/handleFileDrop";
 
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
@@ -47,7 +46,6 @@ export const ThreadPane = (props: MessagesPaneProps) => {
     const {
         useTEM,
         usePM,
-        currentWindowHeight,
         myself,
         setMyself,
         socket,
@@ -146,11 +144,6 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         );
     }, [scrollManagement.visibleRange]);
 
-    const virtuosoHeight = calculateVirtuosoHight(
-        currentWindowHeight,
-        messageManagement.numEditorLines
-    );
-
     return (
         <div
             style={{
@@ -162,10 +155,11 @@ export const ThreadPane = (props: MessagesPaneProps) => {
         >
             <Sheet
                 sx={{
-                    height: { xs: "calc(100dvh - var(--Header-height))", md: "100dvh" },
+                    backgroundColor: "background.body",
                     display: "flex",
                     flexDirection: "column",
-                    backgroundColor: "background.body",
+                    height: "100%",
+                    minHeight: 0,
                 }}
             >
                 <ErrorSnackbar
@@ -174,7 +168,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                     setErrorOpen={messageManagement.setErrorOpen}
                 />
 
-                <ThreadChatPaneHeader useCM={useCM} useNM={useNM} myself={myself} useTM={useTM} />
+                <ThreadChatPaneHeader myself={myself} useCM={useCM} useNM={useNM} useTM={useTM} />
 
                 {showThreadTabStrip && (
                     <ThreadTabStrip value={threadTabValue} onChange={setThreadTabValue} />
@@ -183,15 +177,15 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                 {threadTabValue === "comments" && showThreadTabStrip && threadTaskId != null ? (
                     // Comments view (PM thread + task): own scroller + editor.
                     <ThreadCommentsView
-                        socket={socket}
                         myself={myself}
                         setMyself={setMyself}
-                        useTM={useTM}
-                        useTEM={useTEM}
-                        useCM={useCM}
-                        useUISM={useUISM}
-                        threadTaskId={threadTaskId}
                         setTodoFromMessageBubble={setTodoFromMessageBubble}
+                        socket={socket}
+                        threadTaskId={threadTaskId}
+                        useCM={useCM}
+                        useTEM={useTEM}
+                        useTM={useTM}
+                        useUISM={useUISM}
                     />
                 ) : isPmThread ? (
                     // Activities (or PM thread without task): read-only
@@ -203,92 +197,93 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                     // to fill the freed bottom space.
                     <MessageListRenderer
                         chat={useCM.currentThreadChat as ThreadProps}
-                        useCM={useCM}
                         currentChatId={currentThreadChatId}
-                        height={virtuosoHeight}
+                        height={0}
                         indexMap={messageManagement.indexMap}
                         isScrolling={scrollManagement.isScrolling}
                         isThread={true}
                         messages={messageManagement.messages}
                         myself={myself}
-                        usePM={usePM}
                         setEditTargetMessage={messageManagement.setEditTargetMessage}
                         setErrorMessage={messageManagement.setErrorMessage}
                         setErrorOpen={messageManagement.setErrorOpen}
                         setIsInEdit={messageManagement.setIsInEdit}
                         setIsScrolling={scrollManagement.setIsScrolling}
                         setMyself={setMyself}
+                        setTodoFromMessageBubble={setTodoFromMessageBubble}
                         setVisibleRange={scrollManagement.setVisibleRange}
                         socket={socket}
+                        useCM={useCM}
+                        usePM={usePM}
                         useTEM={useTEM}
+                        useTM={useTM}
                         useUISM={useUISM}
+                        visibleRange={scrollManagement.visibleRange}
                         virtuosoRef={
                             scrollManagement.virtuosoRef as React.RefObject<VirtuosoHandle>
                         }
-                        visibleRange={scrollManagement.visibleRange}
-                        useTM={useTM}
                         fillContainer
-                        setTodoFromMessageBubble={setTodoFromMessageBubble}
                     />
                 ) : (
-                    // Non-PM thread (DM / group chat reply). Keeps the
-                    // original list + editor pair so users can still
-                    // post replies with the existing fixed-height
-                    // calculation.
+                    // Non-PM thread (DM / group chat reply). Virtuoso
+                    // fills the available space via `fillContainer`;
+                    // editor sticks to the bottom with its own
+                    // min/max-height caps from App.css.
                     <>
                         <MessageListRenderer
                             chat={useCM.currentThreadChat as ThreadProps}
-                            useCM={useCM}
                             currentChatId={currentThreadChatId}
-                            height={virtuosoHeight}
+                            height={0}
                             indexMap={messageManagement.indexMap}
                             isScrolling={scrollManagement.isScrolling}
                             isThread={true}
                             messages={messageManagement.messages}
                             myself={myself}
-                            usePM={usePM}
                             setEditTargetMessage={messageManagement.setEditTargetMessage}
                             setErrorMessage={messageManagement.setErrorMessage}
                             setErrorOpen={messageManagement.setErrorOpen}
                             setIsInEdit={messageManagement.setIsInEdit}
                             setIsScrolling={scrollManagement.setIsScrolling}
                             setMyself={setMyself}
+                            setTodoFromMessageBubble={setTodoFromMessageBubble}
                             setVisibleRange={scrollManagement.setVisibleRange}
                             socket={socket}
+                            useCM={useCM}
+                            usePM={usePM}
                             useTEM={useTEM}
+                            useTM={useTM}
                             useUISM={useUISM}
+                            visibleRange={scrollManagement.visibleRange}
                             virtuosoRef={
                                 scrollManagement.virtuosoRef as React.RefObject<VirtuosoHandle>
                             }
-                            visibleRange={scrollManagement.visibleRange}
-                            useTM={useTM}
-                            setTodoFromMessageBubble={setTodoFromMessageBubble}
+                            fillContainer
                         />
 
                         <ChatEditorSection
                             chat={useCM.currentThreadChat as ThreadProps}
-                            useCM={useCM}
+                            clearPendingFiles={clearPendingFiles}
                             editTargetMessage={messageManagement.editTargetMessage}
                             isInEdit={messageManagement.isInEdit}
                             isThread={true}
                             myself={myself}
                             numEditorLines={messageManagement.numEditorLines}
-                            setCurrentThreadChat={
-                                useCM.setCurrentThreadChat as (chat: ThreadProps) => void
-                            }
+                            pendingFiles={pendingFiles}
                             setIsInEdit={messageManagement.setIsInEdit}
                             setMyself={setMyself}
                             setNumEditorLines={messageManagement.setNumEditorLines}
                             socket={socket}
-                            useTEM={useTEM}
                             thread={useCM.currentThreadChat as ThreadProps}
+                            useCM={useCM}
+                            useTEM={useTEM}
                             useUISM={useUISM}
-                            pendingFiles={pendingFiles}
-                            clearPendingFiles={clearPendingFiles}
                             setCurrentChat={
                                 useCM.setCurrentThreadChat as (
                                     chat: ChatProps | ThreadProps
                                 ) => void
+                            }
+                            setCurrentThreadChat={
+                                useCM.setCurrentThreadChat as (chat: ThreadProps) => void
                             }
                         />
                     </>

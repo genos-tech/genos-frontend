@@ -1,7 +1,7 @@
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { codeBlockOptions } from "@blocknote/code-block";
 import {
     BlockNoteSchema,
@@ -82,7 +82,6 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
         setIsInEdit,
         setCurrentChat,
         useUISM,
-        numEditorLines,
         setNumEditorLines,
         useCM,
     } = props;
@@ -199,17 +198,6 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
 
     const [editorDocLength, setEditorDocLength] = useState<number>(message.content.length);
 
-    const editorRef = useRef<HTMLDivElement>(null);
-    useEffect(() => {
-        if (editorRef.current) {
-            const dynamicHeight: number = Math.min(
-                Math.min(Math.max(numEditorLines - 8, 0), 10) * 20 + 200,
-                500
-            );
-            editorRef.current.style.setProperty("--chat-editor-height", `${dynamicHeight}px`);
-        }
-    }, [numEditorLines]);
-
     const countLines = (nodes: any[]): number => {
         let count = 0;
         for (const node of nodes) {
@@ -287,7 +275,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                 setShowEmojiPicker={setShowEmojiPicker}
                 showEmojiPicker={showEmojiPicker}
             />
-            <Box ref={editorRef} className={bnBoxClassName} sx={{ position: "relative" }}>
+            <Box className={bnBoxClassName} sx={{ position: "relative" }}>
                 <FileUploadStatusBadge count={editorUploadCount} />
                 <BlockNoteView
                     className="bn-box"

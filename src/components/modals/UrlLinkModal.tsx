@@ -44,19 +44,57 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
         return null;
     };
 
+    // Backdrop matches Joy's default modal scrim but a touch deeper so
+    // the dialog reads as floating over the chat. The dialog itself
+    // borrows the bubble-style soft shadow + 20px corner radius from
+    // elsewhere in the app so the preview doesn't look like a foreign
+    // OS dialog.
     return (
-        <Modal open={target !== null} sx={{ zIndex: 10020 }} onClose={onClose}>
+        <Modal
+            open={target !== null}
+            sx={{ zIndex: 10020 }}
+            slotProps={{
+                backdrop: {
+                    sx: {
+                        backdropFilter: "blur(2px)",
+                        backgroundColor: "rgba(0, 0, 0, 0.45)",
+                    },
+                },
+            }}
+            onClose={onClose}
+        >
             <ModalDialog
-                sx={{
+                sx={(theme) => ({
+                    border: "1px solid",
+                    borderColor:
+                        theme.palette.mode === "dark"
+                            ? "rgba(255, 255, 255, 0.08)"
+                            : "rgba(0, 0, 0, 0.06)",
+                    borderRadius: "20px",
+                    boxShadow:
+                        theme.palette.mode === "dark"
+                            ? "0 24px 60px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.35)"
+                            : "0 24px 60px rgba(15, 23, 42, 0.22), 0 2px 8px rgba(15, 23, 42, 0.08)",
                     display: "flex",
                     flexDirection: "column",
                     height: "min(900px, 88vh)",
                     overflow: "hidden",
                     p: 0,
                     width: "min(1200px, 92vw)",
-                }}
+                })}
             >
-                <ModalClose sx={{ right: 8, top: 8, zIndex: 1 }} />
+                <ModalClose
+                    sx={{
+                        backdropFilter: "blur(6px)",
+                        backgroundColor: "rgba(255, 255, 255, 0.6)",
+                        right: 12,
+                        top: 12,
+                        zIndex: 2,
+                        "&:hover": {
+                            backgroundColor: "rgba(255, 255, 255, 0.85)",
+                        },
+                    }}
+                />
                 {renderBody()}
             </ModalDialog>
         </Modal>
