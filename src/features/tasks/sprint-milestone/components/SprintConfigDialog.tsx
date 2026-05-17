@@ -21,6 +21,7 @@ import {
 } from "@mui/joy";
 
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
+import { Sprint } from "../types";
 
 type Props = {
     open: boolean;
@@ -62,6 +63,40 @@ const addDaysIso = (iso: string, days: number) => {
     return d.toISOString().slice(0, 10);
 };
 
+type RealignmentPlanItem = {
+    sprintId: number;
+    name: string;
+    oldStart: string;
+    oldEnd: string;
+    newStart: string;
+    newEnd: string;
+};
+
+const computeRealignmentPlan = (
+    allSprints: Sprint[],
+    anchorDate: string,
+    durationDays: number,
+    today: string
+): RealignmentPlanItem[] => {
+    const lowerBound = allSprints
+        .filter((s) => s.startDate <= today)
+        .reduce((max, s) => (s.endDate > max ? s.endDate : max), today);
+    const futures = allSprints
+        .filter((s) => s.startDate > today)
+        .sort((a, b) => a.sequenceNumber - b.sequenceNumber);
+    if (futures.length === 0) return [];
+    let firstSlot = anchorDate;
+    while (firstSlot <= lowerBound) firstSlot = addDaysIso(firstSlot, durationDays);
+    return futures.map((s, i) => ({
+        sprintId: s.sprintId,
+        name: s.name,
+        oldStart: s.startDate,
+        oldEnd: s.endDate,
+        newStart: addDaysIso(firstSlot, i * durationDays),
+        newEnd: addDaysIso(firstSlot, i * durationDays + durationDays - 1),
+    }));
+};
+
 export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) => {
     const [durationDays, setDurationDays] = useState<number>(14);
     const [anchorDate, setAnchorDate] = useState<string>(todayIso());
@@ -97,17 +132,19 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
 
     const selectedWeekday = useMemo(() => weekdayOf(anchorDate), [anchorDate]);
 
-    const futuresCount = useMemo(() => {
-        const today = todayIso();
-        return (useSM.projectSprints[projectId] ?? []).filter((s) => s.startDate > today).length;
-    }, [useSM.projectSprints, projectId]);
-
-    const willRealign = useMemo(() => {
-        if (futuresCount === 0) return false;
+    const realignmentPlan = useMemo(() => {
         const cfg = useSM.sprintConfig;
-        if (!cfg) return false;
-        return cfg.anchorDate !== anchorDate || cfg.durationDays !== durationDays;
-    }, [futuresCount, useSM.sprintConfig, anchorDate, durationDays]);
+        if (!cfg) return [];
+        if (cfg.anchorDate === anchorDate && cfg.durationDays === durationDays) return [];
+        return computeRealignmentPlan(
+            useSM.projectSprints[projectId] ?? [],
+            anchorDate,
+            durationDays,
+            todayIso()
+        ).filter((p) => p.oldStart !== p.newStart || p.oldEnd !== p.newEnd);
+    }, [useSM.sprintConfig, useSM.projectSprints, projectId, anchorDate, durationDays]);
+
+    const willRealign = realignmentPlan.length > 0;
 
     const handleSave = async () => {
         setError(null);
@@ -127,41 +164,27 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
             let realignFailed: string[] = [];
 
             if (anchorChanged) {
-                const today = todayIso();
-                const allSprints = useSM.projectSprints[projectId] ?? [];
-                // First realigned slot must clear today AND the current sprint's end —
-                // otherwise Sprint 2's new PATCH overlaps the in-progress Sprint 1 and
-                // the rest cascade-fail behind it.
-                const lowerBound = allSprints
-                    .filter((s) => s.startDate <= today)
-                    .reduce((max, s) => (s.endDate > max ? s.endDate : max), today);
-                const futures = allSprints
-                    .filter((s) => s.startDate > today)
-                    .sort((a, b) => a.sequenceNumber - b.sequenceNumber);
+                // Recompute from current form values (don't rely on the memoized
+                // plan in case the closure is stale).
+                const plan = computeRealignmentPlan(
+                    useSM.projectSprints[projectId] ?? [],
+                    anchorDate,
+                    durationDays,
+                    todayIso()
+                );
 
-                if (futures.length > 0) {
-                    let firstSlot = anchorDate;
-                    while (firstSlot <= lowerBound)
-                        firstSlot = addDaysIso(firstSlot, durationDays);
-
-                    const slots = futures.map((_, i) => ({
-                        start: addDaysIso(firstSlot, i * durationDays),
-                        end: addDaysIso(firstSlot, i * durationDays + durationDays - 1),
-                    }));
-
-                    const shiftingForward = slots[0].start > futures[0].startDate;
-                    const order = shiftingForward
-                        ? [...futures.keys()].reverse()
-                        : [...futures.keys()];
+                if (plan.length > 0) {
+                    const shiftingForward = plan[0].newStart > plan[0].oldStart;
+                    const order = shiftingForward ? [...plan.keys()].reverse() : [...plan.keys()];
 
                     const pending = new Set<number>();
                     for (const i of order) {
-                        const s = futures[i];
-                        if (s.startDate === slots[i].start && s.endDate === slots[i].end) continue;
+                        const p = plan[i];
+                        if (p.oldStart === p.newStart && p.oldEnd === p.newEnd) continue;
                         const ok = await useSM.updateExistingSprint({
-                            sprintId: s.sprintId,
-                            startDate: slots[i].start,
-                            endDate: slots[i].end,
+                            sprintId: p.sprintId,
+                            startDate: p.newStart,
+                            endDate: p.newEnd,
                         });
                         if (!ok) pending.add(i);
                     }
@@ -171,18 +194,18 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
                             ? [...pending].sort((a, b) => a - b)
                             : [...pending].sort((a, b) => b - a);
                         for (const i of retryOrder) {
-                            const s = futures[i];
+                            const p = plan[i];
                             const ok = await useSM.updateExistingSprint({
-                                sprintId: s.sprintId,
-                                startDate: slots[i].start,
-                                endDate: slots[i].end,
+                                sprintId: p.sprintId,
+                                startDate: p.newStart,
+                                endDate: p.newEnd,
                             });
                             if (ok) pending.delete(i);
                         }
                     }
 
                     if (pending.size) {
-                        realignFailed = [...pending].map((i) => futures[i].name);
+                        realignFailed = [...pending].map((i) => plan[i].name);
                     }
                 }
             }
@@ -216,10 +239,10 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
 
     return (
         <Modal open={open} onClose={onClose}>
-            <ModalDialog sx={{ minWidth: 460 }}>
+            <ModalDialog sx={{ minWidth: 460, maxHeight: "85vh" }}>
                 <DialogTitle>Sprint settings</DialogTitle>
                 <Divider />
-                <DialogContent>
+                <DialogContent sx={{ overflowY: "auto" }}>
                     <Stack spacing={2.5} sx={{ pt: 1 }}>
                         <Typography level="body-sm">
                             Configure the sprint cadence for this project. Auto-rolled sprints are
@@ -341,6 +364,63 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
                             </FormHelperText>
                         </FormControl>
 
+                        {realignmentPlan.length > 0 && (
+                            <Box
+                                sx={{
+                                    p: 1.5,
+                                    borderRadius: 8,
+                                    border: "1px solid",
+                                    borderColor: "warning.outlinedBorder",
+                                    bgcolor: "warning.softBg",
+                                }}
+                            >
+                                <Typography level="title-sm" sx={{ color: "warning.700", mb: 1 }}>
+                                    These {realignmentPlan.length} sprint
+                                    {realignmentPlan.length === 1 ? "" : "s"} will be updated on
+                                    save
+                                </Typography>
+                                <Stack spacing={0.5}>
+                                    {realignmentPlan.map((p) => (
+                                        <Stack
+                                            key={p.sprintId}
+                                            direction="row"
+                                            spacing={1}
+                                            alignItems="center"
+                                            sx={{ flexWrap: "wrap" }}
+                                        >
+                                            <Typography
+                                                level="body-xs"
+                                                sx={{ minWidth: 110, fontWeight: 600 }}
+                                            >
+                                                {p.name}
+                                            </Typography>
+                                            <Typography
+                                                level="body-xs"
+                                                sx={{ color: "neutral.500" }}
+                                            >
+                                                {p.oldStart} → {p.oldEnd}
+                                            </Typography>
+                                            <Typography
+                                                level="body-xs"
+                                                sx={{ color: "neutral.400" }}
+                                            >
+                                                ⇒
+                                            </Typography>
+                                            <Typography
+                                                level="body-xs"
+                                                sx={{
+                                                    fontWeight: 600,
+                                                    color: "warning.700",
+                                                }}
+                                            >
+                                                {p.newStart} → {p.newEnd}
+                                            </Typography>
+                                        </Stack>
+                                    ))}
+                                </Stack>
+                            </Box>
+                        )}
+
                         {error && (
                             <Box
                                 sx={{
@@ -360,8 +440,8 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
                 <DialogActions>
                     {willRealign && (
                         <Typography level="body-xs" sx={{ color: "warning.400", mr: "auto" }}>
-                            Will re-date {futuresCount} future sprint
-                            {futuresCount === 1 ? "" : "s"}.
+                            Will re-date {realignmentPlan.length} future sprint
+                            {realignmentPlan.length === 1 ? "" : "s"}.
                         </Typography>
                     )}
                     <Button variant="plain" color="neutral" onClick={onClose} disabled={isSaving}>
