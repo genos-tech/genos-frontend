@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
+import CancelIcon from "@mui/icons-material/Cancel";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import FolderOpenRoundedIcon from "@mui/icons-material/FolderOpenRounded";
@@ -38,6 +39,7 @@ import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
+import { TaskHeaderStyles } from "../../../../components/ui/styles/commonStyle";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -78,6 +80,7 @@ type TaskHomeContentProps = {
     useCM: ChatManagementState;
     useUISM: UIStateManagementState;
     socket: Socket | null;
+    onCloseTaskHome: () => void;
 };
 
 const sprintBucketOf = (s: Sprint, todayIso: string): "past" | "current" | "upcoming" => {
@@ -175,9 +178,11 @@ export const TaskHomeContent = ({
     useCM,
     useUISM,
     socket,
+    onCloseTaskHome,
 }: TaskHomeContentProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const headerStyles = isDark ? TaskHeaderStyles.dark : TaskHeaderStyles.light;
     const [sprintConfigOpen, setSprintConfigOpen] = useState(false);
     const [sprintManagerOpen, setSprintManagerOpen] = useState(false);
 
@@ -795,9 +800,48 @@ export const TaskHomeContent = ({
                                 Task Stats
                             </Typography>
                         </Stack>
-                        <Typography level="body-sm" sx={{ color: textMuted }}>
-                            {projectCount} projects
-                        </Typography>
+                        <Stack alignItems="center" direction="row" spacing={1.5}>
+                            <Typography level="body-sm" sx={{ color: textMuted }}>
+                                {projectCount} projects
+                            </Typography>
+                            {(useTM.isTaskPreviewVisible === true ||
+                                useTM.isCreatingTask.flag === true) && (
+                                <Tooltip
+                                    size="sm"
+                                    title="Close Panel"
+                                    variant="outlined"
+                                    sx={{
+                                        background: headerStyles.menuBg,
+                                        border: `1px solid ${headerStyles.menuBorder}`,
+                                        borderRadius: "8px",
+                                    }}
+                                >
+                                    <IconButton
+                                        size="sm"
+                                        sx={{
+                                            background: headerStyles.dangerBg,
+                                            border: `1px solid ${headerStyles.dangerBorder}`,
+                                            borderRadius: "10px",
+                                            width: "36px",
+                                            height: "36px",
+                                            transition: "all 0.2s ease",
+                                            "&:hover": {
+                                                background: headerStyles.dangerHover,
+                                                transform: "translateY(-1px)",
+                                            },
+                                        }}
+                                        onClick={onCloseTaskHome}
+                                    >
+                                        <CancelIcon
+                                            sx={{
+                                                fontSize: "20px",
+                                                color: isDark ? "#f87171" : "#dc2626",
+                                            }}
+                                        />
+                                    </IconButton>
+                                </Tooltip>
+                            )}
+                        </Stack>
                     </Stack>
 
                     {/* ════════ Section A: Sprint Summary Header ════════ */}

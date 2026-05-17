@@ -88,6 +88,7 @@ export const TaskHomeLayout = ({
                     useTEM={useTEM}
                     useTM={useTM}
                     useUISM={useUISM}
+                    onCloseTaskHome={onCloseTaskHome}
                 />
             )}
             {(useTM.isTaskTableVisible || useTM.isSprintBoardVisible) && (

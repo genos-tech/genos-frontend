@@ -19,6 +19,7 @@ type TaskDashboardProps = {
     useCM: ChatManagementState;
     useUISM: UIStateManagementState;
     socket: Socket | null;
+    onCloseTaskHome: () => void;
 };
 
 export const TaskDashboard = ({
@@ -31,6 +32,7 @@ export const TaskDashboard = ({
     useCM,
     useUISM,
     socket,
+    onCloseTaskHome,
 }: TaskDashboardProps) => {
     return (
         <TaskHomeContent
@@ -43,6 +45,7 @@ export const TaskDashboard = ({
             useCM={useCM}
             useUISM={useUISM}
             socket={socket}
+            onCloseTaskHome={onCloseTaskHome}
         />
     );
 };
