@@ -15,6 +15,7 @@ import {
     ModalDialog,
     Option,
     Select,
+    Sheet,
     Stack,
     Switch,
     Typography,
@@ -365,16 +366,12 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
                         </FormControl>
 
                         {realignmentPlan.length > 0 && (
-                            <Box
-                                sx={{
-                                    p: 1.5,
-                                    borderRadius: 8,
-                                    border: "1px solid",
-                                    borderColor: "warning.outlinedBorder",
-                                    bgcolor: "warning.softBg",
-                                }}
+                            <Sheet
+                                variant="soft"
+                                color="warning"
+                                sx={{ p: 1.5, borderRadius: 8 }}
                             >
-                                <Typography level="title-sm" sx={{ color: "warning.700", mb: 1 }}>
+                                <Typography level="title-sm" sx={{ color: "inherit", mb: 1 }}>
                                     These {realignmentPlan.length} sprint
                                     {realignmentPlan.length === 1 ? "" : "s"} will be updated on
                                     save
@@ -390,35 +387,36 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
                                         >
                                             <Typography
                                                 level="body-xs"
-                                                sx={{ minWidth: 110, fontWeight: 600 }}
+                                                sx={{
+                                                    minWidth: 110,
+                                                    fontWeight: 600,
+                                                    color: "inherit",
+                                                }}
                                             >
                                                 {p.name}
                                             </Typography>
                                             <Typography
                                                 level="body-xs"
-                                                sx={{ color: "neutral.500" }}
+                                                sx={{ color: "inherit", opacity: 0.65 }}
                                             >
                                                 {p.oldStart} → {p.oldEnd}
                                             </Typography>
                                             <Typography
                                                 level="body-xs"
-                                                sx={{ color: "neutral.400" }}
+                                                sx={{ color: "inherit", opacity: 0.5 }}
                                             >
                                                 ⇒
                                             </Typography>
                                             <Typography
                                                 level="body-xs"
-                                                sx={{
-                                                    fontWeight: 600,
-                                                    color: "warning.700",
-                                                }}
+                                                sx={{ fontWeight: 700, color: "inherit" }}
                                             >
                                                 {p.newStart} → {p.newEnd}
                                             </Typography>
                                         </Stack>
                                     ))}
                                 </Stack>
-                            </Box>
+                            </Sheet>
                         )}
 
                         {error && (
@@ -439,7 +437,10 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
                 </DialogContent>
                 <DialogActions>
                     {willRealign && (
-                        <Typography level="body-xs" sx={{ color: "warning.400", mr: "auto" }}>
+                        <Typography
+                            level="body-xs"
+                            sx={{ color: "warning.plainColor", mr: "auto" }}
+                        >
                             Will re-date {realignmentPlan.length} future sprint
                             {realignmentPlan.length === 1 ? "" : "s"}.
                         </Typography>
