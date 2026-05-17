@@ -1,7 +1,7 @@
 import { PartialBlock } from "@blocknote/core";
 import CheckIcon from "@mui/icons-material/Check";
 import NoteAltIcon from "@mui/icons-material/NoteAlt";
-import { Box, Button, FormControl, Input } from "@mui/joy";
+import { Box, Chip, FormControl, Input } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { BnMyNoteEditor } from "../../../../components/editors/bnMyNoteEditor";
@@ -103,14 +103,24 @@ export const NoteEditor = ({
                         zIndex: 100,
                     }}
                 >
-                    <Button
-                        color="neutral"
+                    <Chip
                         size="sm"
-                        startDecorator={<CheckIcon sx={{ fontSize: "15px" }} />}
-                        variant="outlined"
+                        variant="soft"
+                        color="neutral"
+                        startDecorator={<CheckIcon sx={{ fontSize: 14 }} />}
+                        sx={{
+                            fontWeight: 500,
+                            fontSize: "13px",
+                            "--Chip-paddingInline": "10px",
+                            animation: "fadeIn 0.3s ease-in-out",
+                            "@keyframes fadeIn": {
+                                from: { opacity: 0, transform: "scale(0.95)" },
+                                to: { opacity: 1, transform: "scale(1)" },
+                            },
+                        }}
                     >
                         Saved
-                    </Button>
+                    </Chip>
                 </Box>
             )}
 

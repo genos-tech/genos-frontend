@@ -26,6 +26,8 @@ import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 import { Socket } from "socket.io-client";
 
+import { useInitialTabIndex } from "./utils/useInitialTabIndex";
+
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { TaskHeaderStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
@@ -137,8 +139,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     const [reporter, setReporter] = useState<UserProps>(
         useTM.currentPreviewTask?.reporter || myself
     );
-    const [tabIndex, setTabIndex] = useState(0);
-
     // For task comments
     const [isInEdit, setIsInEdit] = useState<boolean>(false);
     const [editTargetComment, setEditTargetComment] = useState<TaskCommentProps>();
@@ -148,18 +148,17 @@ export const TaskPreview = (props: TaskPreviewProps) => {
 
     const previewTaskKind = getTaskKind(useTM.currentPreviewTask, useTM.allTasks);
 
+    // Tab index is initialized once per opened task based on the first
+    // comments+notes loads (attachments arrive synchronously with the
+    // task). Subsequent comment / note / attachment changes don't move
+    // the user — only the user's tab click does (TaskTabBlock onChange).
+    const { tabIndex, setTabIndex, markCommentsLoaded, markNotesLoaded, reportFileCount } =
+        useInitialTabIndex(taskEditState.currentTaskId);
+
     // Set the current preview task when the component is mounted
     useEffect(() => {
         taskEditState.setTmpCurrentTaskContent(useTM.currentPreviewTask || ({} as TaskProps));
     }, []);
-
-    const setTabIndexBasedOnContent = (
-        commentCount: number,
-        noteCount: number,
-        uploadedFileCount: number
-    ) => {
-        setTabIndex(commentCount > 0 ? 0 : noteCount > 0 ? 1 : uploadedFileCount > 0 ? 2 : 0);
-    };
 
     // Use the custom hook to get the sendUpdatedTask function
     const sendUpdatedTask = useSendUpdatedTask({
@@ -283,13 +282,12 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 setAssignee(taskEditState.tmpCurrentTaskContent.assignee ?? myself);
                 setReporter(taskEditState.tmpCurrentTaskContent.reporter ?? myself);
             })();
-            setTabIndexBasedOnContent(
-                taskComments.length,
-                taskNotes.length,
-                taskEditState.uploadedFiles.length
-            );
         }
     }, [taskEditState.uploadedFiles]);
+
+    useEffect(() => {
+        reportFileCount(taskEditState.uploadedFiles.length);
+    }, [taskEditState.uploadedFiles.length, reportFileCount]);
 
     useEffect(() => {
         if (useTM.isTaskUpdated === false) {
@@ -321,18 +319,12 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                     Number(useTM.currentPreviewTask.id),
                     accessToken
                 );
-                if (loadedTaskNotes.length > 0) {
-                    setTaskNotes(loadedTaskNotes);
-                    setTabIndexBasedOnContent(
-                        taskComments.length,
-                        loadedTaskNotes.length,
-                        taskEditState.uploadedFiles.length
-                    );
-                } else {
-                    setTaskNotes([]);
-                }
+                const notes = loadedTaskNotes ?? [];
+                setTaskNotes(notes);
+                markNotesLoaded(notes.length);
             } else {
                 setTaskNotes([]);
+                markNotesLoaded(0);
             }
         })();
     }, [taskEditState.currentTaskId, useNM.taskNoteMeta]);
@@ -349,6 +341,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         const previewTaskId = Number(useTM.currentPreviewTask?.id);
         if (!Number.isFinite(previewTaskId) || previewTaskId <= 0) {
             setTaskComments([]);
+            markCommentsLoaded(0);
             return;
         }
         (async () => {
@@ -357,16 +350,9 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                 previewTaskId,
                 accessToken
             );
-            if (loadedTaskComments.length > 0) {
-                setTaskComments(loadedTaskComments);
-                setTabIndexBasedOnContent(
-                    loadedTaskComments.length,
-                    taskNotes.length,
-                    taskEditState.uploadedFiles.length
-                );
-            } else {
-                setTaskComments([]);
-            }
+            const comments = loadedTaskComments ?? [];
+            setTaskComments(comments);
+            markCommentsLoaded(comments.length);
         })();
     }, [useTM.isTaskCommentUpdated, taskEditState.currentTaskId]);
 
@@ -469,19 +455,15 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         }, 100);
     }, [useTM.currentPreviewTaskId]);
 
-    useEffect(() => {
-        const sheet = sheetRef.current;
-        if (sheet && taskCommentLines > 1) {
-            sheet.scrollTop = sheet.scrollHeight;
-        }
-    }, [taskCommentLines]);
-
-    useEffect(() => {
-        const sheet = sheetRef.current;
-        if (sheet) {
-            sheet.scrollTop = sheet.scrollHeight;
-        }
-    }, [tabIndex]);
+    // NOTE: two earlier effects that scrolled `sheetRef` to its bottom
+    // (on every `taskCommentLines` change and on every `tabIndex`
+    // change) were removed. They forced the outer task-preview sheet to
+    // jump to its bottom on every newline while composing a multi-line
+    // comment AND on any tab-index state cascade (e.g. the post-send
+    // refetch path through `setTabIndexBasedOnContent`), which produced
+    // the "page moves a lot" feel users reported on send. The Virtuoso
+    // list now uses `followOutput="auto"` to handle its own
+    // scroll-to-newest, so we don't need a parallel outer-sheet scroll.
 
     // Milestone preview takes over when `currentPreviewKind` is set to
     // 'milestone'. We bail out early so the task-edit machinery below
@@ -1008,13 +990,12 @@ const MilestonePreviewInner = ({
     const [reporter, setReporter] = useState<UserProps>(myself);
     const [uploadedFiles, setUploadedFiles] = useState<TaskProps["attachments"]>([]);
 
-    const setTabIndexBasedOnContent = (
-        commentCount: number,
-        noteCount: number,
-        uploadedFileCount: number
-    ) => {
-        setTabIndex(commentCount > 0 ? 0 : noteCount > 0 ? 1 : uploadedFileCount > 0 ? 2 : 0);
-    };
+    // Same one-shot tab-index init the regular-task branch uses, keyed
+    // off the milestone's backing taskId so opening / re-opening a
+    // milestone initializes once and subsequent comment / note /
+    // attachment edits don't relocate the user's tab.
+    const { tabIndex, setTabIndex, markCommentsLoaded, markNotesLoaded, reportFileCount } =
+        useInitialTabIndex(milestone?.taskId);
 
     // Reset the title / body drafts ONLY when the milestone identity
     // itself changes (i.e. the user switched to a different milestone).
@@ -1064,11 +1045,6 @@ const MilestonePreviewInner = ({
             )
         );
         setUploadedFiles(backingTask?.attachments ?? []);
-        setTabIndexBasedOnContent(
-            taskComments.length,
-            taskNotes.length,
-            (backingTask?.attachments ?? []).length
-        );
     }, [
         milestone?.milestoneId,
         milestone?.tsUpdatedAt,
@@ -1087,7 +1063,6 @@ const MilestonePreviewInner = ({
     const [taskNotes, setTaskNotes] = useState<TaskNoteProps[]>([]);
     const taskCommentLines = useTM.taskCommentLines;
     const setTaskCommentLines = useTM.setTaskCommentLines;
-    const [tabIndex, setTabIndex] = useState(0);
     const [isInEdit, setIsInEdit] = useState(false);
     const [editTargetComment, setEditTargetComment] = useState<TaskCommentProps>();
     const [isAttachmentDeleted, setIsAttachmentDeleted] = useState(false);
@@ -1097,12 +1072,14 @@ const MilestonePreviewInner = ({
         const taskId = milestone?.taskId;
         if (taskId == null) {
             setTaskComments([]);
+            markCommentsLoaded(0);
             return;
         }
         (async () => {
             const loaded = await loadTaskComments(myself, taskId, accessToken);
-            setTaskComments(loaded?.length ? loaded : []);
-            setTabIndexBasedOnContent(loaded?.length ?? 0, taskNotes.length, uploadedFiles.length);
+            const comments = loaded ?? [];
+            setTaskComments(comments);
+            markCommentsLoaded(comments.length);
         })();
     }, [milestone?.taskId, useTM.isTaskCommentUpdated]);
 
@@ -1111,18 +1088,20 @@ const MilestonePreviewInner = ({
         const projectId = milestone?.projectId;
         if (taskId == null || projectId == null) {
             setTaskNotes([]);
+            markNotesLoaded(0);
             return;
         }
         (async () => {
             const loaded = await loadTaskNotes(myself, projectId, taskId, accessToken);
-            setTaskNotes(loaded?.length ? loaded : []);
-            setTabIndexBasedOnContent(
-                taskComments.length,
-                loaded?.length ?? 0,
-                uploadedFiles.length
-            );
+            const notes = loaded ?? [];
+            setTaskNotes(notes);
+            markNotesLoaded(notes.length);
         })();
     }, [milestone?.taskId, milestone?.projectId, useNM.taskNoteMeta]);
+
+    useEffect(() => {
+        reportFileCount((uploadedFiles ?? []).length);
+    }, [uploadedFiles, reportFileCount]);
 
     // Mirror the regular-task hoist for activities so milestone previews
     // get the same snappy Activity-tab switching (see comment above the
@@ -1447,18 +1426,6 @@ const MilestonePreviewInner = ({
         setTaskUpdated(false);
     }, [taskUpdated]);
 
-    useEffect(() => {
-        setTabIndex(
-            taskComments.length > 0
-                ? 0
-                : taskNotes.length > 0
-                  ? 1
-                  : uploadedFiles.length > 0
-                    ? 2
-                    : 0
-        );
-    }, [taskComments.length, taskNotes.length, uploadedFiles.length]);
-
     // Auto-close the preview after 3s when the milestone can't be
     // resolved (e.g. landed on a stale URL after a hard refresh while
     // the store is still hydrating). Lives in a `useEffect` rather than
@@ -1502,7 +1469,15 @@ const MilestonePreviewInner = ({
                     : "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(252,252,255,1) 100%)",
                 border: "1px solid",
                 borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
+                boxShadow: isDark
+                    ? "0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03)"
+                    : "0 8px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8)",
                 position: "relative",
+                animation: "slideIn 0.3s ease-out",
+                "@keyframes slideIn": {
+                    from: { opacity: 0, transform: "translateY(8px)" },
+                    to: { opacity: 1, transform: "translateY(0)" },
+                },
             }}
         >
             <Box

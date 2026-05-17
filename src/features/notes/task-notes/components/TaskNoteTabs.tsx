@@ -8,7 +8,7 @@ import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import NoteAltIcon from "@mui/icons-material/NoteAlt";
 import {
     Box,
-    Button,
+    Chip,
     FormControl,
     IconButton,
     Input,
@@ -436,20 +436,24 @@ export const TaskNoteTabs = ({
                                 zIndex: 100,
                             }}
                         >
-                            <Button
-                                color="neutral"
+                            <Chip
                                 size="sm"
-                                variant="outlined"
-                                startDecorator={
-                                    <CheckIcon
-                                        sx={{
-                                            fontSize: "15px",
-                                        }}
-                                    />
-                                }
+                                variant="soft"
+                                color="neutral"
+                                startDecorator={<CheckIcon sx={{ fontSize: 14 }} />}
+                                sx={{
+                                    fontWeight: 500,
+                                    fontSize: "13px",
+                                    "--Chip-paddingInline": "10px",
+                                    animation: "fadeIn 0.3s ease-in-out",
+                                    "@keyframes fadeIn": {
+                                        from: { opacity: 0, transform: "scale(0.95)" },
+                                        to: { opacity: 1, transform: "scale(1)" },
+                                    },
+                                }}
                             >
                                 Saved
-                            </Button>
+                            </Chip>
                         </Box>
                     )}
                     <BnTaskNoteEditor

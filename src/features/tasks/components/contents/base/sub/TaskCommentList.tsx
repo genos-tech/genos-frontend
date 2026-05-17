@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import CommentRoundedIcon from "@mui/icons-material/CommentRounded";
 import { Box, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -13,10 +13,7 @@ import { TaskManagementState } from "../../../../../../hooks/tasks/useTaskManage
 import { UserProps } from "../../../../../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../../../../../types/chat";
 import { TaskCommentProps } from "../../../../../../types/tasks";
-import {
-    useScrollToBottomOnNewTaskComment,
-    useScrollToTaskCommentByCommentId,
-} from "../../../../hooks/taskCommentHooks";
+import { useScrollToTaskCommentByCommentId } from "../../../../hooks/taskCommentHooks";
 import { TaskCommentBubble } from "./TaskCommentBubble";
 
 type TaskCommentListProps = {
@@ -59,22 +56,6 @@ type TaskCommentListProps = {
     ) => void;
 };
 
-const countLines = (nodes: any[]): number => {
-    let count = 0;
-    for (const node of nodes) {
-        count += 1;
-        if (node.children?.length) {
-            count += countLines(node.children);
-        }
-        if (node.content?.[0]) {
-            if (node.content[0].text) {
-                count += node.content[0].text.split("\n").length;
-            }
-        }
-    }
-    return count;
-};
-
 /**
  * Virtuoso-driven comment list extracted from `TaskTabBlock` so the
  * chat thread's new "Comments" tab can mount the same UI without
@@ -95,7 +76,6 @@ export const TaskCommentList = ({
     useTEM,
     useUISM,
     useCM,
-    useTM,
     currentProjectId,
     currentProjectName,
     maxHeight = 800,
@@ -108,17 +88,20 @@ export const TaskCommentList = ({
     const isDark = mode === "dark";
     const navigate = useNavigate();
 
-    const totalCommentLines = taskComments.reduce(
-        (sum, taskComment) => sum + (countLines(taskComment.commentBody) ?? 0),
-        0
-    );
+    // Virtuoso reports its rendered content size; we cap it at
+    // `maxHeight`. This lets the list grow naturally with new comments
+    // (no precomputed heuristic) up to the parent's height budget.
+    // Initial value matches `maxHeight` so the first render has room
+    // for Virtuoso to measure all items before reporting back.
+    const [contentHeight, setContentHeight] = useState(maxHeight);
 
     const virtuosoRef = useRef<VirtuosoHandle | null>(null);
-    useScrollToBottomOnNewTaskComment(
-        virtuosoRef as React.RefObject<VirtuosoHandle>,
-        taskComments,
-        useTM.isTaskCommentUpdated.scrollToBottom
-    );
+    // Auto-scroll to bottom on new comments via Virtuoso's native
+    // `followOutput`. This coordinates the height-grow and scroll into
+    // a single motion (no separate 300 ms timeout that produced a
+    // visible two-step jump). Virtuoso only follows when the user is
+    // already at the bottom, so reading an older comment isn't
+    // interrupted by an incoming message.
     useScrollToTaskCommentByCommentId(
         virtuosoRef as React.RefObject<VirtuosoHandle>,
         taskComments,
@@ -191,6 +174,7 @@ export const TaskCommentList = ({
                     atBottomThreshold={128}
                     atTopThreshold={64}
                     className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                    followOutput="auto"
                     initialTopMostItemIndex={taskComments.length - 1}
                     totalCount={taskComments.length}
                     itemContent={(index) => {
@@ -228,6 +212,7 @@ export const TaskCommentList = ({
                 atBottomThreshold={128}
                 atTopThreshold={64}
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+                followOutput="auto"
                 initialTopMostItemIndex={taskComments.length - 1}
                 totalCount={taskComments.length}
                 itemContent={(index) => {
@@ -252,9 +237,8 @@ export const TaskCommentList = ({
                         />
                     );
                 }}
-                style={{
-                    height: Math.min(taskComments.length * 60 + totalCommentLines * 18, maxHeight),
-                }}
+                totalListHeightChanged={setContentHeight}
+                style={{ height: Math.min(contentHeight, maxHeight) }}
             />
         </Box>
     );

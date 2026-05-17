@@ -572,6 +572,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
             <Tooltip
                 placement="right"
                 variant="outlined"
+                enterDelay={1000}
                 title={
                     <>
                         {chat.chatType === 3 ? "Click to open task" : null}
@@ -765,6 +766,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                     <Tooltip
                         placement="right"
                         variant="outlined"
+                        enterDelay={1000}
                         title={
                             <>
                                 {chat.chatType === 3 ? "Click to open task" : null}
