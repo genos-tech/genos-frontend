@@ -35,13 +35,38 @@ const DURATION_PRESETS = [
     { label: "4 weeks", value: 28 },
 ];
 
+const WEEKDAYS = [
+    { label: "Sunday", value: 0 },
+    { label: "Monday", value: 1 },
+    { label: "Tuesday", value: 2 },
+    { label: "Wednesday", value: 3 },
+    { label: "Thursday", value: 4 },
+    { label: "Friday", value: 5 },
+    { label: "Saturday", value: 6 },
+];
+
 const todayIso = () => new Date().toISOString().slice(0, 10);
+
+const weekdayOf = (iso: string) => new Date(`${iso}T00:00:00`).getDay();
+
+const nextOnOrAfter = (fromIso: string, dow: number) => {
+    const d = new Date(`${fromIso}T00:00:00`);
+    d.setDate(d.getDate() + ((dow - d.getDay() + 7) % 7));
+    return d.toISOString().slice(0, 10);
+};
+
+const addDaysIso = (iso: string, days: number) => {
+    const d = new Date(`${iso}T00:00:00`);
+    d.setDate(d.getDate() + days);
+    return d.toISOString().slice(0, 10);
+};
 
 export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) => {
     const [durationDays, setDurationDays] = useState<number>(14);
     const [anchorDate, setAnchorDate] = useState<string>(todayIso());
     const [autoRoll, setAutoRoll] = useState<boolean>(true);
     const [upcomingHorizon, setUpcomingHorizon] = useState<number>(6);
+    const [realign, setRealign] = useState<boolean>(false);
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -60,6 +85,7 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
             setAutoRoll(true);
             setUpcomingHorizon(6);
         }
+        setRealign(false);
         setError(null);
     }, [open, useSM.sprintConfig]);
 
@@ -67,6 +93,8 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
         () => DURATION_PRESETS.some((p) => p.value === durationDays),
         [durationDays]
     );
+
+    const selectedWeekday = useMemo(() => weekdayOf(anchorDate), [anchorDate]);
 
     const handleSave = async () => {
         setError(null);
@@ -83,12 +111,44 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
                 autoRoll,
                 upcomingHorizon,
             });
-            if (saved) {
-                await useSM.loadSprintsForProject(projectId);
-                onClose();
-            } else {
+            if (!saved) {
                 setError("Failed to save sprint config.");
+                return;
             }
+
+            if (realign) {
+                const today = todayIso();
+                const futures = (useSM.projectSprints[projectId] ?? [])
+                    .filter((s) => s.startDate > today)
+                    .sort((a, b) => a.sequenceNumber - b.sequenceNumber);
+
+                let cursor = anchorDate;
+                while (cursor <= today) cursor = addDaysIso(cursor, durationDays);
+
+                const failed: string[] = [];
+                for (const s of futures) {
+                    const newStart = cursor;
+                    const newEnd = addDaysIso(cursor, durationDays - 1);
+                    const res = await useSM.updateExistingSprint({
+                        sprintId: s.sprintId,
+                        startDate: newStart,
+                        endDate: newEnd,
+                    });
+                    if (!res) failed.push(s.name);
+                    cursor = addDaysIso(cursor, durationDays);
+                }
+
+                if (failed.length) {
+                    await useSM.loadSprintsForProject(projectId);
+                    setError(
+                        `Realigned, but ${failed.length} sprint(s) failed (likely overlap): ${failed.join(", ")}`
+                    );
+                    return;
+                }
+            }
+
+            await useSM.loadSprintsForProject(projectId);
+            onClose();
         } finally {
             setIsSaving(false);
         }
@@ -141,6 +201,31 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
                         </FormControl>
 
                         <FormControl>
+                            <FormLabel>Start day of week (optional)</FormLabel>
+                            <Select
+                                size="sm"
+                                value={String(selectedWeekday)}
+                                onChange={(_, v) => {
+                                    if (v == null) return;
+                                    setAnchorDate(nextOnOrAfter(todayIso(), parseInt(v, 10)));
+                                }}
+                                sx={{ minWidth: 160 }}
+                            >
+                                {WEEKDAYS.map((w) => (
+                                    <Option key={w.value} value={String(w.value)}>
+                                        {w.label}
+                                    </Option>
+                                ))}
+                            </Select>
+                            <FormHelperText>
+                                Snaps the anchor date to the next {WEEKDAYS[selectedWeekday].label}
+                                .
+                                {durationDays % 7 !== 0 &&
+                                    " Note: sprint length isn't a multiple of 7, so later sprints won't keep this weekday."}
+                            </FormHelperText>
+                        </FormControl>
+
+                        <FormControl>
                             <FormLabel>Sprint start (anchor date)</FormLabel>
                             <Input
                                 type="date"
@@ -166,6 +251,25 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
                                         : "Disabled — sprints must be created manually"}
                                 </Typography>
                             </Stack>
+                        </FormControl>
+
+                        <FormControl>
+                            <FormLabel>Realign existing future sprints</FormLabel>
+                            <Stack direction="row" spacing={1.5} alignItems="center">
+                                <Switch
+                                    checked={realign}
+                                    onChange={(e) => setRealign(e.target.checked)}
+                                />
+                                <Typography level="body-sm">
+                                    {realign
+                                        ? "Upcoming sprints will be re-dated to match the new anchor"
+                                        : "Existing future sprints keep their current dates"}
+                                </Typography>
+                            </Stack>
+                            <FormHelperText>
+                                Only sprints that haven't started yet. Past and current sprints are
+                                never modified.
+                            </FormHelperText>
                         </FormControl>
 
                         <FormControl>
