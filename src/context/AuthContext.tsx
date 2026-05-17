@@ -16,7 +16,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // signin screen. Mirrors the list in `sidebar.tsx`'s logout handler
 // so a forced sign-out from a missing/expired refresh cookie leaves
 // the same clean slate as a manual logout.
-const AUTH_LOCAL_STORAGE_KEYS = [
+export const AUTH_LOCAL_STORAGE_KEYS = [
     "isSigningIn",
     "userEmail",
     "userName",
@@ -41,6 +41,7 @@ const AUTH_LOCAL_STORAGE_KEYS = [
     "lastOpenChatNoteId",
     "lastOpenTaskNoteId",
     "currentMainChatId",
+    "isDemoUser",
 ];
 
 // Outcome of a single refresh attempt. We need to distinguish three
