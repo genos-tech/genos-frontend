@@ -3,6 +3,7 @@
 // button — clicking calls `onSelect(result)` which the parent uses to
 // navigate.
 
+import { memo } from "react";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
@@ -225,7 +226,7 @@ function windowAroundMatch(text: string, query: string, extraTerms?: string[]): 
     return prefix + text.slice(start, end).trim() + suffix;
 }
 
-export const SpotlightResultItem = ({ result, query, isHighlighted, onSelect }: Props) => {
+const SpotlightResultItemInner = ({ result, query, isHighlighted, onSelect }: Props) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
@@ -365,3 +366,13 @@ export const SpotlightResultItem = ({ result, query, isHighlighted, onSelect }: 
         </Box>
     );
 };
+
+SpotlightResultItemInner.displayName = "SpotlightResultItem";
+
+// Memo: every keystroke updates the parent's `query` (post-debounce-removal),
+// which means the parent re-renders. Without memo, all 20 rows would re-run
+// the snippet-windowing regex and the highlight tokeniser on every keystroke.
+// Combined with `useDeferredValue(query)` in the parent, this means the
+// highlight work runs at low priority *and* only when its inputs actually
+// change.
+export const SpotlightResultItem = memo(SpotlightResultItemInner);

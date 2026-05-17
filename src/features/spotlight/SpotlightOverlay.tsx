@@ -20,7 +20,7 @@
 // `<Sheet>` at zIndex 13000+ to sit above all other surfaces. See
 // `components/layout/ServiceSwitcherOverlay.tsx` for the prior art.
 
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
@@ -145,20 +145,23 @@ export const SpotlightOverlay = ({
         return m;
     }, [results]);
 
-    // ---- Input performance: decouple display state from search state. ----
+    // ---- Input performance: decouple display from heavy renders. ----
     //
-    // `localInput` is updated on EVERY keystroke (instant, local to this
-    // component). `onQueryChange` (which triggers the backend search and
-    // re-renders the entire hook tree) is only called after a 400 ms
-    // debounce. This means typing no longer re-renders `ConversationPanel`
-    // or the results list — those only update when search results arrive.
+    // `localInput` updates on EVERY keystroke (instant, local). It drives
+    // only the input's `value` and the Ask-button-enabled check; it never
+    // re-enters the hook tree.
     //
-    // The sync effect is safe: when `query` is cleared from outside (e.g.
-    // after `onAsk` fires `setQuery("")`, or on overlay close), `localInput`
-    // follows. When the debounce fires and `query` catches up to `localInput`,
-    // `setLocalInput(query)` is a no-op because the values match.
+    // `onQueryChange(val)` fires immediately on every keystroke too, so
+    // the hook can schedule its own debounced fetch (250 ms — see
+    // `useSpotlight`). We used to add a 400 ms debounce here on top of
+    // the hook's debounce, which floored typing-to-results at ~650 ms.
+    // Dropping it cuts the floor to ~250 ms.
+    //
+    // To keep the results list smooth while `query` updates per
+    // keystroke, the list reads a *deferred* copy of `query` (further
+    // below). React schedules the highlight regex re-runs at low
+    // priority so the input itself never stutters.
     const [localInput, setLocalInput] = useState(query);
-    const searchTimerRef = useRef<number | null>(null);
 
     useEffect(() => {
         setLocalInput(query);
@@ -167,10 +170,7 @@ export const SpotlightOverlay = ({
     const handleInputChange = useCallback(
         (val: string) => {
             setLocalInput(val);
-            if (searchTimerRef.current !== null) window.clearTimeout(searchTimerRef.current);
-            searchTimerRef.current = window.setTimeout(() => {
-                onQueryChange(val);
-            }, 400);
+            onQueryChange(val);
         },
         [onQueryChange]
     );
@@ -181,6 +181,25 @@ export const SpotlightOverlay = ({
     useEffect(() => {
         setSelectedIndex(-1);
     }, [localInput]);
+
+    // Stable click handler shared by every result row. Without this each
+    // row would receive a fresh inline arrow on every keystroke and
+    // memoised `SpotlightResultItem` would re-render anyway.
+    const handleRowSelect = useCallback(
+        (selected: SpotlightResult) => {
+            setSelectedIndex(-1);
+            onSelect(selected);
+        },
+        [onSelect]
+    );
+
+    // React schedules updates that depend on `deferredQuery` at low
+    // priority. The input value (`localInput`) and Ask-button-enabled
+    // gate use the fresh `query`/`localInput`, so typing always feels
+    // instant; only the highlight-regex work in each result row catches
+    // up afterward. Without this, a long results list could stutter the
+    // input on every keystroke even after we dropped the outer debounce.
+    const deferredQuery = useDeferredValue(query);
 
     // Three reasons Ask can be disabled — kept as separate flags so the
     // placeholder/tooltip can explain *why* without re-deriving them.
@@ -446,15 +465,12 @@ export const SpotlightOverlay = ({
                                 <SpotlightResultItem
                                     key={`${r.entity_type}:${r.entity_id}`}
                                     result={r}
-                                    query={query}
+                                    query={deferredQuery}
                                     isHighlighted={
                                         resultIndexOf.get(`${r.entity_type}:${r.entity_id}`) ===
                                         selectedIndex
                                     }
-                                    onSelect={(selected) => {
-                                        setSelectedIndex(-1);
-                                        onSelect(selected);
-                                    }}
+                                    onSelect={handleRowSelect}
                                 />
                             ))}
                         </Box>
@@ -675,7 +691,7 @@ const ConversationPanel = memo(
                         isCurrent={false}
                         isDark={isDark}
                         onSelect={onSelect}
-                        onRetry={() => onAsk(turn.askedQuery)}
+                        onAsk={onAsk}
                         askDisabled={askDisabled}
                         ts={ts}
                     />
@@ -695,7 +711,7 @@ const ConversationPanel = memo(
                         onSelect={onSelect}
                         onApprove={onApprove}
                         onReject={onReject}
-                        onRetry={() => onAsk(ask.askedQuery)}
+                        onAsk={onAsk}
                         askDisabled={askDisabled}
                         ts={ts}
                     />
@@ -727,7 +743,12 @@ interface TurnViewProps {
     onSelect: (r: SpotlightResult) => void;
     onApprove?: () => void;
     onReject?: () => void;
-    onRetry?: () => void;
+    // Pass `onAsk` rather than a pre-bound `onRetry` so the prop reference
+    // stays stable across renders of `ConversationPanel`. The retry click
+    // handler is composed inside `TurnView` from `onAsk` + `askedQuery`,
+    // so memoised past turns aren't invalidated when the current turn
+    // streams in a new `answer_delta`.
+    onAsk?: (overrideQuery?: string) => void;
     askDisabled?: boolean;
     ts: SpotlightMessages;
 }
@@ -774,7 +795,7 @@ function rewriteCitations(
     });
 }
 
-const TurnView = ({
+const TurnViewInner = ({
     askedQuery,
     answer,
     answerSources,
@@ -787,12 +808,19 @@ const TurnView = ({
     onSelect,
     onApprove,
     onReject,
-    onRetry,
+    onAsk,
     askDisabled,
     ts,
 }: TurnViewProps) => {
     const [copied, setCopied] = useState(false);
     const [showAllSources, setShowAllSources] = useState(false);
+
+    // Compose the retry handler from the stable `onAsk` + this turn's
+    // own `askedQuery` so past turns can stay memoised across streaming
+    // updates of the current turn.
+    const onRetry = useCallback(() => {
+        if (onAsk) onAsk(askedQuery);
+    }, [onAsk, askedQuery]);
 
     // Look-up table for `rewriteCitations` and the `a` override below.
     // Rebuilt only when the sources array reference changes, not on
@@ -1171,6 +1199,16 @@ const TurnView = ({
         </Box>
     );
 };
+
+TurnViewInner.displayName = "TurnView";
+
+// Memo: prevents past turns from re-rendering on every `answer_delta`
+// of the current turn. Without it, a 5-turn conversation would re-run
+// `rewriteCitations` + ReactMarkdown for every prior turn on every
+// token of the in-flight answer. With stable props (immutable past-turn
+// snapshots) memo skips them entirely; only the current `TurnView`
+// re-renders per delta.
+const TurnView = memo(TurnViewInner);
 
 // ──────────────────────────────────────────────────────────────────
 // ToolProgressList — Phase 3 agent activity strip
