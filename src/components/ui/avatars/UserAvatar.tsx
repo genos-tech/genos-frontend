@@ -101,6 +101,29 @@ const UserAvatarInner = (props: UserAvatarProps) => {
     // reference flipping every minute when nothing changed for *this*
     // user) does not produce DOM updates. Keys are the primitive slices
     // we render, so the memo only invalidates on real changes.
+    // Status dot scales with avatar size so it stays proportional on
+    // tiny chat-list thumbnails (24px) all the way up to large profile
+    // cards (64px+). Floor at 6px so it never disappears.
+    const dotSize = Math.max(6, Math.round(_size * 0.3));
+    // The avatar is a circle inscribed in a square bounding box. Pinning
+    // the dot at `right: 0; bottom: 0` puts it at the *square's* corner,
+    // which is `radius * (sqrt(2) - 1) ≈ 0.41 * radius` outside the
+    // visible circle. That gap is invisible on a 32px avatar (the dot
+    // bridges it) but on a 64px+ avatar the dot ends up floating in the
+    // empty corner. Inset proportionally so the dot's centre lands on
+    // (or just inside) the circle's bottom-right edge at every size.
+    const dotInset = Math.max(0, Math.round((_size - 32) * 0.18));
+    // Joy's Avatar at `size="sm"` (its 32px preset) doesn't fully fill
+    // its bounding box: the component's built-in baseline leaves ~6px
+    // empty below the visible circle and ~1px to the right. Below the
+    // "sm" threshold the avatar is compressed enough by sx that the gap
+    // closes (size=26 lands perfectly without correction). Ramping the
+    // correction in smoothly across 26..32 matches both ends; capping
+    // at the size=32 values keeps the dot near the visible circle for
+    // larger avatars rather than over-correcting it inward.
+    const avatarBaselineBottom = Math.max(0, Math.min(6, _size - 26));
+    const avatarBaselineRight = Math.max(0, Math.min(1, _size - 31));
+
     const avatarJsx = useMemo(
         () => (
             <Stack direction="row" spacing={1}>
@@ -114,8 +137,19 @@ const UserAvatarInner = (props: UserAvatarProps) => {
                     <Avatar size="sm" src={src} sx={{ height: _size, width: _size }}>
                         {initial}
                     </Avatar>
-                    <Box bottom={0} height={17} position="absolute" right={0} width={12}>
-                        <PulseDot color={isOnline ? "#4caf50" : "#999"} />
+                    <Box
+                        bottom={dotInset + avatarBaselineBottom}
+                        height={dotSize}
+                        position="absolute"
+                        right={dotInset + avatarBaselineRight}
+                        width={dotSize}
+                        // PulseDot ships with `marginLeft: 4px` for the inline-
+                        // beside-text usage; zero it out here so the dot fills
+                        // the wrapper exactly and lands at the avatar's bottom-
+                        // right corner regardless of avatar size.
+                        sx={{ "& > span": { marginLeft: 0 } }}
+                    >
+                        <PulseDot color={isOnline ? "#4caf50" : "#999"} size={dotSize} />
                     </Box>
                 </Box>
                 {showNameAndEmail === true && (
@@ -131,6 +165,10 @@ const UserAvatarInner = (props: UserAvatarProps) => {
         ),
         [
             _size,
+            dotSize,
+            dotInset,
+            avatarBaselineBottom,
+            avatarBaselineRight,
             clickable,
             src,
             initial,
