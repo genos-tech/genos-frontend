@@ -1,7 +1,7 @@
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { codeBlockOptions } from "@blocknote/code-block";
 import {
     BlockNoteSchema,
@@ -35,12 +35,12 @@ import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { ChatProps, ThreadMessageProps, ThreadProps } from "../../types/chat";
-import { interceptAnchorClick } from "../../utils/interceptAnchorClick";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
 import { FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
@@ -90,6 +90,8 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
     const urlLinkModal = useUrlLinkModal();
+    const editorBoxRef = useRef<HTMLDivElement>(null);
+    useAnchorClickIntercept(editorBoxRef, urlLinkModal);
     const bnBoxClassName: string = `bn-chat-editor-box-${mode}`;
 
     // Disable the Audio and Image blocks from the built-in schema
@@ -279,9 +281,9 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                 showEmojiPicker={showEmojiPicker}
             />
             <Box
+                ref={editorBoxRef}
                 className={bnBoxClassName}
                 sx={{ position: "relative" }}
-                onClickCapture={(e) => interceptAnchorClick(e, urlLinkModal)}
             >
                 <FileUploadStatusBadge count={editorUploadCount} />
                 <BlockNoteView

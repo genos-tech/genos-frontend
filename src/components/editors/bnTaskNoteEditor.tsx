@@ -58,6 +58,7 @@ import {
 } from "../../features/notes/common/utils/noteRoles";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
+import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
 import { useCollaborativeBlockNote } from "../../hooks/common/useCollaborativeBlockNote";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
@@ -66,7 +67,6 @@ import { NoteRoleMember, TaskNoteProps } from "../../types/notes";
 import { getUserColor } from "../../utils/collabUtils";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
-import { interceptAnchorClick } from "../../utils/interceptAnchorClick";
 import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
 import { FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
 import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
@@ -130,6 +130,8 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
     const urlLinkModal = useUrlLinkModal();
+    const editorBoxRef = useRef<HTMLDivElement>(null);
+    useAnchorClickIntercept(editorBoxRef, urlLinkModal);
     const bnBoxClassName: string = `bn-note-body-box-${mode}`;
 
     // To avoid rendering issues, it's good practice to define your custom drag
@@ -327,7 +329,7 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
     return (
         <>
             <FileSizeRejectionSnackbar rejection={rejection} onDismiss={dismissRejection} />
-            <Box className={bnBoxClassName} sx={{ position: "relative" }}>
+            <Box ref={editorBoxRef} className={bnBoxClassName} sx={{ position: "relative" }}>
                 {/* Anchored bottom-right because the Comments toggle already
                 lives at top-right of this editor. */}
                 <FileUploadStatusBadge count={editorUploadCount} placement="bottom-right" />
@@ -376,8 +378,10 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                         onBeforeInput={() => {
                             userInteractedRef.current = true;
                         }}
-                        onClickCapture={(e) => {
-                            if (interceptAnchorClick(e, urlLinkModal)) return;
+                        onClick={(e) => {
+                            // Anchor clicks → useAnchorClickIntercept on
+                            // editorBoxRef (native capture phase). This
+                            // handler only deals with image clicks.
                             const target = e.target as HTMLElement;
                             if (target.tagName === "IMG") {
                                 handleImageClick((target as HTMLImageElement).src);

@@ -38,6 +38,7 @@ import { addChat } from "../../features/chat/services/addChat";
 import { addMessage } from "../../features/chat/services/addMessage";
 import { getFirstLine } from "../../features/chat/utils/common";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useEditorDraft } from "../../hooks/common/useEditorDraft";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
@@ -45,7 +46,6 @@ import { UIStateManagementState } from "../../hooks/common/useUIStateManagement"
 import { UserProps } from "../../types/admin";
 import { AllChatProps, ChatProps, MessageProps } from "../../types/chat";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
-import { interceptAnchorClick } from "../../utils/interceptAnchorClick";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
 import { FileUploadOverlay, FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
@@ -94,6 +94,8 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
     const urlLinkModal = useUrlLinkModal();
+    const editorBoxRef = useRef<HTMLDivElement>(null);
+    useAnchorClickIntercept(editorBoxRef, urlLinkModal);
     // The `with-subchat` modifier tightens the editor's max-height in
     // App.css when the split sub-chat pane is open, so the two stacked
     // editors don't collectively eat the message-list area.
@@ -452,9 +454,9 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                 showEmojiPicker={showEmojiPicker}
             />
             <Box
+                ref={editorBoxRef}
                 className={bnBoxClassName}
                 sx={{ position: "relative" }}
-                onClickCapture={(e) => interceptAnchorClick(e, urlLinkModal)}
             >
                 <FileUploadStatusBadge count={editorUploadCount} />
                 <FileUploadOverlay

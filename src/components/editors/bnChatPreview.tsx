@@ -1,7 +1,7 @@
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { codeBlockOptions } from "@blocknote/code-block";
 import {
     BlockNoteSchema,
@@ -19,12 +19,12 @@ import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
+import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
-import { interceptAnchorClick } from "../../utils/interceptAnchorClick";
 import { CreateMentionSpec } from "./Mention";
 
 type BnChatPreviewProps = {
@@ -91,6 +91,10 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
     // (e.g. signin / signup), in which case anchor clicks fall through
     // to the browser's default — same as before this feature shipped.
     const urlLinkModal = useUrlLinkModal();
+    // Native capture-phase anchor interceptor — see the hook for why we
+    // use a direct DOM listener instead of React's onClickCapture.
+    const editorBoxRef = useRef<HTMLDivElement>(null);
+    useAnchorClickIntercept(editorBoxRef, urlLinkModal);
 
     // Custom click handler
     const handleImageClick = (src: string) => {
@@ -106,11 +110,9 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
     };
 
     const handleEditorClick = (e: React.MouseEvent<HTMLDivElement>) => {
-        // Anchor (BlockNote link) clicks: route through the URL-link
-        // modal. Modifier / non-left-button clicks bail to the browser
-        // default — see `interceptAnchorClick` for the contract.
-        if (interceptAnchorClick(e, urlLinkModal)) return;
-
+        // Anchor clicks are intercepted by `useAnchorClickIntercept`
+        // above (native capture-phase listener). This handler only
+        // deals with image + file clicks.
         const target = e.target as HTMLElement;
 
         // Handle image clicks
@@ -135,7 +137,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
     };
 
     return (
-        <Box className={bnBoxClassName} sx={{ px: "10px" }}>
+        <Box ref={editorBoxRef} className={bnBoxClassName} sx={{ px: "10px" }}>
             <BlockNoteView
                 className="bn-box"
                 editable={false}
@@ -147,7 +149,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
                 slashMenu={false}
                 tableHandles={false}
                 data-changing-font-demo // custom font
-                onClickCapture={handleEditorClick}
+                onClick={handleEditorClick}
             ></BlockNoteView>
 
             <Modal open={opened} sx={{ zIndex: 10010 }} onClose={() => setOpened(false)}>

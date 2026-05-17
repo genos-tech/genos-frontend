@@ -31,6 +31,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
@@ -38,7 +39,6 @@ import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../types/admin";
 import { TaskCommentProps } from "../../types/tasks";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
-import { interceptAnchorClick } from "../../utils/interceptAnchorClick";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
@@ -94,6 +94,8 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
     } = props;
     const { mode } = useColorScheme();
     const urlLinkModal = useUrlLinkModal();
+    const editorBoxRef = useRef<HTMLDivElement>(null);
+    useAnchorClickIntercept(editorBoxRef, urlLinkModal);
     const bnBoxClassName: string = `bn-task-comment-box-${mode}`;
 
     // Disable the Audio and Image blocks from the built-in schema
@@ -298,9 +300,9 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                 useFixedPosition={true}
             />
             <Box
+                ref={editorBoxRef}
                 className={bnBoxClassName}
                 sx={{ position: "relative" }}
-                onClickCapture={(e) => interceptAnchorClick(e, urlLinkModal)}
             >
                 <BlockNoteView
                     className="bn-box"
