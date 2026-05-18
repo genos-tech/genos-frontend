@@ -1,6 +1,6 @@
 import "./App.css";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Box } from "@mui/joy";
 import CssBaseline from "@mui/joy/CssBaseline";
 import { CssVarsProvider } from "@mui/joy/styles";
@@ -14,13 +14,10 @@ import { TooSmallScreen } from "./components/layout/TooSmallScreen";
 import { UrlLinkModal } from "./components/modals/UrlLinkModal";
 import { AvatarContextProvider } from "./components/ui/avatars/AvatarContext";
 import { InitialLoad } from "./components/ui/misc/InitialLoad";
-import { ChatHome } from "./features/chat/chatHome";
-import { InboxHome } from "./features/inbox/inboxHome";
-import { NoteHome } from "./features/notes/NoteHome";
+import { RouteLoadingFallback } from "./components/ui/misc/RouteLoadingFallback";
 import { SpotlightOverlay } from "./features/spotlight/SpotlightOverlay";
 import { CHAT_TYPE_CODE, SpotlightResult } from "./features/spotlight/types";
 import { useSpotlight } from "./features/spotlight/useSpotlight";
-import { TaskHome } from "./features/tasks/taskHome";
 import { UrlLinkModalProvider } from "./hooks/common/UrlLinkModalContext";
 import { useAnalyticsIdentity } from "./hooks/common/useAnalyticsIdentity";
 import { useAnalyticsPageviews } from "./hooks/common/useAnalyticsPageviews";
@@ -46,6 +43,25 @@ import { NotificationIntent } from "./services/notifications/types";
 
 import { I18nProvider } from "./i18n";
 import { purpleTheme } from "./theme/purplePalette";
+
+// Feature roots are code-split: BlockNote/Yjs (notes), the rich-text editor
+// in the chat preview, react-beautiful-dnd + the task table/board, and the
+// inbox view each pull in tens of kilobytes of dependencies that we'd
+// otherwise ship in the main bundle. With `lazy` + `Suspense` the chunks
+// load on-demand when the user navigates to that route — initial paint
+// for the workspace shell stays small.
+const ChatHome = lazy(() =>
+    import("./features/chat/chatHome").then((m) => ({ default: m.ChatHome }))
+);
+const InboxHome = lazy(() =>
+    import("./features/inbox/inboxHome").then((m) => ({ default: m.InboxHome }))
+);
+const NoteHome = lazy(() =>
+    import("./features/notes/NoteHome").then((m) => ({ default: m.NoteHome }))
+);
+const TaskHome = lazy(() =>
+    import("./features/tasks/taskHome").then((m) => ({ default: m.TaskHome }))
+);
 
 const API_DOWN_THRESHOLD = 3;
 
@@ -498,34 +514,50 @@ export const App = () => {
                                                             <Route
                                                                 path="inbox/*"
                                                                 element={
-                                                                    <InboxHome
-                                                                        myself={myself}
-                                                                        setMyself={setMyself}
-                                                                        socket={socketInstance}
-                                                                        useCM={useCM}
-                                                                        useIM={useIM}
-                                                                        useTEM={useTEM}
-                                                                        useUISM={useUISM}
-                                                                    />
+                                                                    <Suspense
+                                                                        fallback={
+                                                                            <RouteLoadingFallback />
+                                                                        }
+                                                                    >
+                                                                        <InboxHome
+                                                                            myself={myself}
+                                                                            setMyself={setMyself}
+                                                                            socket={socketInstance}
+                                                                            useCM={useCM}
+                                                                            useIM={useIM}
+                                                                            useTEM={useTEM}
+                                                                            useUISM={useUISM}
+                                                                        />
+                                                                    </Suspense>
                                                                 }
                                                             />
                                                             <Route
                                                                 path="chat/*"
                                                                 element={
                                                                     <FeatureErrorBoundary feature="Chat">
-                                                                        <ChatHome
-                                                                            myself={myself}
-                                                                            setMyself={setMyself}
-                                                                            socket={socketInstance}
-                                                                            useCM={useCM}
-                                                                            useIM={useIM}
-                                                                            useNM={useNM}
-                                                                            usePM={usePM}
-                                                                            useSM={useSM}
-                                                                            useTEM={useTEM}
-                                                                            useTM={useTM}
-                                                                            useUISM={useUISM}
-                                                                        />
+                                                                        <Suspense
+                                                                            fallback={
+                                                                                <RouteLoadingFallback />
+                                                                            }
+                                                                        >
+                                                                            <ChatHome
+                                                                                myself={myself}
+                                                                                setMyself={
+                                                                                    setMyself
+                                                                                }
+                                                                                socket={
+                                                                                    socketInstance
+                                                                                }
+                                                                                useCM={useCM}
+                                                                                useIM={useIM}
+                                                                                useNM={useNM}
+                                                                                usePM={usePM}
+                                                                                useSM={useSM}
+                                                                                useTEM={useTEM}
+                                                                                useTM={useTM}
+                                                                                useUISM={useUISM}
+                                                                            />
+                                                                        </Suspense>
                                                                     </FeatureErrorBoundary>
                                                                 }
                                                             />
@@ -533,19 +565,29 @@ export const App = () => {
                                                                 path="tasks/*"
                                                                 element={
                                                                     <FeatureErrorBoundary feature="Tasks">
-                                                                        <TaskHome
-                                                                            myself={myself}
-                                                                            setMyself={setMyself}
-                                                                            socket={socketInstance}
-                                                                            useCM={useCM}
-                                                                            useIM={useIM}
-                                                                            useNM={useNM}
-                                                                            usePM={usePM}
-                                                                            useSM={useSM}
-                                                                            useTEM={useTEM}
-                                                                            useTM={useTM}
-                                                                            useUISM={useUISM}
-                                                                        />
+                                                                        <Suspense
+                                                                            fallback={
+                                                                                <RouteLoadingFallback />
+                                                                            }
+                                                                        >
+                                                                            <TaskHome
+                                                                                myself={myself}
+                                                                                setMyself={
+                                                                                    setMyself
+                                                                                }
+                                                                                socket={
+                                                                                    socketInstance
+                                                                                }
+                                                                                useCM={useCM}
+                                                                                useIM={useIM}
+                                                                                useNM={useNM}
+                                                                                usePM={usePM}
+                                                                                useSM={useSM}
+                                                                                useTEM={useTEM}
+                                                                                useTM={useTM}
+                                                                                useUISM={useUISM}
+                                                                            />
+                                                                        </Suspense>
                                                                     </FeatureErrorBoundary>
                                                                 }
                                                             />
@@ -553,19 +595,29 @@ export const App = () => {
                                                                 path="notes/*"
                                                                 element={
                                                                     <FeatureErrorBoundary feature="Notes">
-                                                                        <NoteHome
-                                                                            myself={myself}
-                                                                            setMyself={setMyself}
-                                                                            socket={socketInstance}
-                                                                            useCM={useCM}
-                                                                            useIM={useIM}
-                                                                            useNM={useNM}
-                                                                            usePM={usePM}
-                                                                            useSM={useSM}
-                                                                            useTEM={useTEM}
-                                                                            useTM={useTM}
-                                                                            useUISM={useUISM}
-                                                                        />
+                                                                        <Suspense
+                                                                            fallback={
+                                                                                <RouteLoadingFallback />
+                                                                            }
+                                                                        >
+                                                                            <NoteHome
+                                                                                myself={myself}
+                                                                                setMyself={
+                                                                                    setMyself
+                                                                                }
+                                                                                socket={
+                                                                                    socketInstance
+                                                                                }
+                                                                                useCM={useCM}
+                                                                                useIM={useIM}
+                                                                                useNM={useNM}
+                                                                                usePM={usePM}
+                                                                                useSM={useSM}
+                                                                                useTEM={useTEM}
+                                                                                useTM={useTM}
+                                                                                useUISM={useUISM}
+                                                                            />
+                                                                        </Suspense>
                                                                     </FeatureErrorBoundary>
                                                                 }
                                                             />
