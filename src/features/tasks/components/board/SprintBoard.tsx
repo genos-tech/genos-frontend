@@ -1,7 +1,16 @@
 import React, { useCallback, useEffect, useState } from "react";
+import {
+    closestCenter,
+    DndContext,
+    DragEndEvent,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+} from "@dnd-kit/core";
+import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { useColorScheme } from "@mui/joy/styles";
 import { createTheme, THEME_ID, ThemeProvider } from "@mui/material/styles";
-import { DragDropContext, DropResult } from "react-beautiful-dnd";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -177,51 +186,81 @@ export const SprintBoard = (props: SprintBoardProps) => {
         setBoardTasks(organized);
     }, [filteredTasks, useTM.tableMilestoneFilterId]);
 
-    // Handle drag end
-    const handleDragEnd = async (result: DropResult) => {
-        const { source, destination, draggableId } = result;
+    // PointerSensor with a tiny activation distance so a click-without-drag
+    // still reaches `onClick` on the card (matches rbd's default behaviour).
+    // Keyboard accessibility is handled by @dnd-kit's KeyboardSensor — the
+    // sortable plugin's coordinate getter sequences cells correctly.
+    const sensors = useSensors(
+        useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    );
 
-        // Dropped outside a droppable area
-        if (!destination) return;
+    // Map an `over.id` (either a card id or a `column-${id}` droppable id)
+    // back to the column id it sits under, plus the index within that
+    // column. Cards live inside columns via SortableContext; the column
+    // wrapper itself is also a Droppable so empty columns still accept
+    // drops.
+    const resolveOverColumn = useCallback(
+        (overId: string): { columnId: string; index: number } | null => {
+            if (overId.startsWith("column-")) {
+                const columnId = overId.slice("column-".length);
+                if (!(columnId in boardTasks)) return null;
+                return { columnId, index: boardTasks[columnId].length };
+            }
+            for (const columnId of Object.keys(boardTasks)) {
+                const idx = boardTasks[columnId].findIndex((t) => String(t.id) === overId);
+                if (idx !== -1) return { columnId, index: idx };
+            }
+            return null;
+        },
+        [boardTasks]
+    );
 
-        // Dropped in the same position
-        if (source.droppableId === destination.droppableId && source.index === destination.index) {
-            return;
-        }
+    const findActiveTaskColumn = useCallback(
+        (activeId: string): { columnId: string; index: number } | null => {
+            for (const columnId of Object.keys(boardTasks)) {
+                const idx = boardTasks[columnId].findIndex((t) => String(t.id) === activeId);
+                if (idx !== -1) return { columnId, index: idx };
+            }
+            return null;
+        },
+        [boardTasks]
+    );
 
-        const sourceColumn = source.droppableId;
-        const destColumn = destination.droppableId;
+    // Handle drag end (dnd-kit). No `source.index` / `destination.index`
+    // — we derive both from the items array via `arrayMove`-style splice.
+    const handleDragEnd = async (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (!over) return;
+        const activeId = String(active.id);
+        const overId = String(over.id);
+        if (activeId === overId) return;
 
-        // Handle reordering within the same column
+        const from = findActiveTaskColumn(activeId);
+        const to = resolveOverColumn(overId);
+        if (!from || !to) return;
+
+        const sourceColumn = from.columnId;
+        const destColumn = to.columnId;
+
         if (sourceColumn === destColumn) {
+            // Reorder within the same column
+            if (from.index === to.index) return;
             const columnTasks = [...boardTasks[sourceColumn]];
-            const [movedTask] = columnTasks.splice(source.index, 1);
-            columnTasks.splice(destination.index, 0, movedTask);
-
-            setBoardTasks({
-                ...boardTasks,
-                [sourceColumn]: columnTasks,
-            });
+            const [movedTask] = columnTasks.splice(from.index, 1);
+            columnTasks.splice(to.index, 0, movedTask);
+            setBoardTasks({ ...boardTasks, [sourceColumn]: columnTasks });
             return;
         }
 
-        // Handle moving between different columns
+        // Cross-column move: update status, mirror into allTasks, persist.
         const sourceTasks = [...boardTasks[sourceColumn]];
         const destTasks = [...boardTasks[destColumn]];
-
-        // Remove task from source
-        const [movedTask] = sourceTasks.splice(source.index, 1);
-
-        // Get the new status for the destination column
+        const [movedTask] = sourceTasks.splice(from.index, 1);
         const newStatus = COLUMNS.find((col) => col.id === destColumn)?.status || movedTask.status;
-
-        // Update the moved task with new status
         const updatedMovedTask = { ...movedTask, status: newStatus };
+        destTasks.splice(to.index, 0, updatedMovedTask);
 
-        // Add task to destination
-        destTasks.splice(destination.index, 0, updatedMovedTask);
-
-        // Update local state immediately for responsiveness
         const newBoardTasks = {
             ...boardTasks,
             [sourceColumn]: sourceTasks,
@@ -229,8 +268,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
         };
         setBoardTasks(newBoardTasks);
 
-        // If moved to a different column, update the task status on the server
-        if (sourceColumn !== destColumn && newStatus && accessToken) {
+        if (newStatus && accessToken) {
             try {
                 await updateTaskFromTable(
                     updatedMovedTask,
@@ -240,16 +278,14 @@ export const SprintBoard = (props: SprintBoardProps) => {
                     teamMembers
                 );
 
-                // Update allTasks in useTM
                 const updatedAllTasks = useTM.allTasks.map((task: TaskTableProps) =>
-                    task.id === draggableId ? { ...task, status: newStatus } : task
+                    String(task.id) === activeId ? { ...task, status: newStatus } : task
                 );
                 useTM.setAllTasks(updatedAllTasks);
             } catch (error) {
-                // Revert on error
-                setBoardTasks(newBoardTasks); // Use newBoardTasks instead of stale boardTasks
+                console.error("[SprintBoard] Failed to update task status:", error);
             }
-        } else if (sourceColumn !== destColumn) {
+        } else {
             console.warn(
                 `[SprintBoard] Cannot update task: newStatus=${newStatus}, accessToken=${!!accessToken}`
             );
@@ -293,7 +329,11 @@ export const SprintBoard = (props: SprintBoardProps) => {
                     useTM={useTM}
                     hideStatusFilter
                 />
-                <DragDropContext onDragEnd={handleDragEnd}>
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                >
                     <div style={getBoardContainerStyles(mode)}>
                         {COLUMNS.map((column) => (
                             <SprintBoardColumn
@@ -309,7 +349,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
                             />
                         ))}
                     </div>
-                </DragDropContext>
+                </DndContext>
             </div>
         </ThemeProvider>
     );

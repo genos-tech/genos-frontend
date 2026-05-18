@@ -45,11 +45,11 @@ import { I18nProvider } from "./i18n";
 import { purpleTheme } from "./theme/purplePalette";
 
 // Feature roots are code-split: BlockNote/Yjs (notes), the rich-text editor
-// in the chat preview, react-beautiful-dnd + the task table/board, and the
-// inbox view each pull in tens of kilobytes of dependencies that we'd
-// otherwise ship in the main bundle. With `lazy` + `Suspense` the chunks
-// load on-demand when the user navigates to that route — initial paint
-// for the workspace shell stays small.
+// in the chat preview, @dnd-kit + the task table/board, and the inbox view
+// each pull in tens of kilobytes of dependencies that we'd otherwise ship
+// in the main bundle. With `lazy` + `Suspense` the chunks load on-demand
+// when the user navigates to that route — initial paint for the workspace
+// shell stays small.
 const ChatHome = lazy(() =>
     import("./features/chat/chatHome").then((m) => ({ default: m.ChatHome }))
 );

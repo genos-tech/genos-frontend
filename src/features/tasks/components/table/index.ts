@@ -1,4 +1,5 @@
-// New react-beautiful-dnd based draggable table
+// @dnd-kit based draggable task table (migrated from react-beautiful-dnd
+// in Phase 5.5; the file names are kept to avoid churning import sites).
 export { DraggableTaskTable } from "./DraggableTaskTable";
 export { DraggableTaskRow } from "./DraggableTaskRow";
 

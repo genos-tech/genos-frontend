@@ -43,6 +43,12 @@ export default defineConfig({
                     if (id.includes("emoji-mart") || id.includes("@emoji-mart")) {
                         return "vendor-emoji";
                     }
+                    // @dnd-kit packages travel together (core ↔ sortable ↔
+                    // utilities). Bundling them here keeps the task table /
+                    // sprint board feature chunks lean.
+                    if (id.includes("@dnd-kit")) {
+                        return "vendor-dnd";
+                    }
                     if (id.includes("@mui/icons-material")) {
                         return "vendor-mui-icons";
                     }
