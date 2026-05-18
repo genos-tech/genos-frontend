@@ -6,6 +6,7 @@ import CssBaseline from "@mui/joy/CssBaseline";
 import { CssVarsProvider } from "@mui/joy/styles";
 import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 
+import { FeatureErrorBoundary } from "./components/FeatureErrorBoundary";
 import { ConnectionStatusSnackbar } from "./components/layout/ConnectionStatusSnackbar";
 import { ServiceSwitcherOverlay } from "./components/layout/ServiceSwitcherOverlay";
 import { Sidebar } from "./components/layout/sidebar";
@@ -37,13 +38,13 @@ import { useThreadTaskHandling } from "./hooks/common/useThreadTaskHandling";
 import { useUrlLinkModalState } from "./hooks/common/useUrlLinkModalState";
 import { useWebSocket } from "./hooks/common/useWebSocket";
 import { useWindowSize } from "./hooks/common/useWindowSize";
-import { I18nProvider } from "./i18n";
 import { registerApiHealthListener, unregisterApiHealthListener } from "./services/api";
 import { NotificationsProvider } from "./services/notifications/NotificationsContext";
 import { NotificationToastHost } from "./services/notifications/NotificationToastHost";
 import { PermissionBanner } from "./services/notifications/PermissionBanner";
 import { NotificationIntent } from "./services/notifications/types";
 
+import { I18nProvider } from "./i18n";
 import { purpleTheme } from "./theme/purplePalette";
 
 const API_DOWN_THRESHOLD = 3;
@@ -381,56 +382,56 @@ export const App = () => {
         <CssVarsProvider theme={purpleTheme} disableTransitionOnChange>
             <CssBaseline />
             <I18nProvider>
-            <ThemePreferenceProvider>
-                <BubbleStylePreferenceProvider>
-                    <SpotlightPreferencesProvider>
-                        <AnalyticsPreferencesProvider>
-                            <NotificationsProvider value={useNotif}>
-                                <NotificationToastHost
-                                    subscribeToasts={useNotif.subscribeToasts}
-                                    onOpenIntent={openIntent}
-                                />
-                                <ServiceSwitcherOverlay
-                                    mruOrder={serviceSwitcherMruOrder}
-                                    previewIndex={serviceSwitcherPreviewIndex}
-                                />
-                                <SpotlightOverlay
-                                    aiAnswersEnabled={spotlight.aiAnswersEnabled}
-                                    ask={spotlight.ask}
-                                    dailyUsage={spotlight.dailyUsage}
-                                    error={spotlight.error}
-                                    isLoading={spotlight.isLoading}
-                                    isOpen={spotlight.isOpen}
-                                    query={spotlight.query}
-                                    results={spotlight.results}
-                                    turns={spotlight.turns}
-                                    onApprove={spotlight.onApprove}
-                                    onAsk={spotlight.onAsk}
-                                    onCancel={spotlight.onCancel}
-                                    onClose={spotlight.close}
-                                    onNewConversation={spotlight.onNewConversation}
-                                    onQueryChange={spotlight.setQuery}
-                                    onReject={spotlight.onReject}
-                                    onSelect={handleSpotlightSelect}
-                                />
-                                <ConnectionStatusSnackbar
-                                    showApiDown={showApiDown}
-                                    showWsDisconnected={showWsDisconnected}
-                                />
-                                {useUISM.isLoading ? (
-                                    <InitialLoad
-                                        myself={myself}
-                                        setCurrentMainChat={useCM.setCurrentMainChat}
-                                        setIsLoading={useUISM.setIsLoading}
+                <ThemePreferenceProvider>
+                    <BubbleStylePreferenceProvider>
+                        <SpotlightPreferencesProvider>
+                            <AnalyticsPreferencesProvider>
+                                <NotificationsProvider value={useNotif}>
+                                    <NotificationToastHost
+                                        subscribeToasts={useNotif.subscribeToasts}
+                                        onOpenIntent={openIntent}
                                     />
-                                ) : (
-                                    <div className="main-container">
-                                        <PermissionBanner
-                                            masterEnabled={useNotif.preferences.masterEnabled}
-                                            permission={useNotif.permission}
-                                            requestPermission={useNotif.requestPermission}
+                                    <ServiceSwitcherOverlay
+                                        mruOrder={serviceSwitcherMruOrder}
+                                        previewIndex={serviceSwitcherPreviewIndex}
+                                    />
+                                    <SpotlightOverlay
+                                        aiAnswersEnabled={spotlight.aiAnswersEnabled}
+                                        ask={spotlight.ask}
+                                        dailyUsage={spotlight.dailyUsage}
+                                        error={spotlight.error}
+                                        isLoading={spotlight.isLoading}
+                                        isOpen={spotlight.isOpen}
+                                        query={spotlight.query}
+                                        results={spotlight.results}
+                                        turns={spotlight.turns}
+                                        onApprove={spotlight.onApprove}
+                                        onAsk={spotlight.onAsk}
+                                        onCancel={spotlight.onCancel}
+                                        onClose={spotlight.close}
+                                        onNewConversation={spotlight.onNewConversation}
+                                        onQueryChange={spotlight.setQuery}
+                                        onReject={spotlight.onReject}
+                                        onSelect={handleSpotlightSelect}
+                                    />
+                                    <ConnectionStatusSnackbar
+                                        showApiDown={showApiDown}
+                                        showWsDisconnected={showWsDisconnected}
+                                    />
+                                    {useUISM.isLoading ? (
+                                        <InitialLoad
+                                            myself={myself}
+                                            setCurrentMainChat={useCM.setCurrentMainChat}
+                                            setIsLoading={useUISM.setIsLoading}
                                         />
-                                        {/* Sidebar lives here (outside <Routes>) so it
+                                    ) : (
+                                        <div className="main-container">
+                                            <PermissionBanner
+                                                masterEnabled={useNotif.preferences.masterEnabled}
+                                                permission={useNotif.permission}
+                                                requestPermission={useNotif.requestPermission}
+                                            />
+                                            {/* Sidebar lives here (outside <Routes>) so it
                                 is mounted once for the whole authenticated
                                 shell. Switching services only swaps the
                                 routed content next to it instead of
@@ -443,142 +444,149 @@ export const App = () => {
                                 profile by `userId` from a single source
                                 of truth instead of taking a fan-out of
                                 props at every callsite. */}
-                                        <AvatarContextProvider
-                                            value={{
-                                                myself,
-                                                setMyself,
-                                                teamMemberProfiles: useTEM.teamMemberProfiles,
-                                                setTeamMemberProfiles:
-                                                    useTEM.setTeamMemberProfiles,
-                                                socket: socketInstance,
-                                                useCM,
-                                                useUISM,
-                                            }}
-                                        >
-                                            <UrlLinkModalProvider
+                                            <AvatarContextProvider
                                                 value={{
-                                                    openModalByHref: urlLinkModal.openModalByHref,
+                                                    myself,
+                                                    setMyself,
+                                                    teamMemberProfiles: useTEM.teamMemberProfiles,
+                                                    setTeamMemberProfiles:
+                                                        useTEM.setTeamMemberProfiles,
+                                                    socket: socketInstance,
+                                                    useCM,
+                                                    useUISM,
                                                 }}
                                             >
-                                                <UrlLinkModal
-                                                    accessToken={accessToken}
-                                                    myself={myself}
-                                                    setMyself={setMyself}
-                                                    socket={socketInstance}
-                                                    target={urlLinkModal.target}
-                                                    useCM={useCM}
-                                                    useNM={useNM}
-                                                    usePM={usePM}
-                                                    useSM={useSM}
-                                                    useTEM={useTEM}
-                                                    useTM={useTM}
-                                                    useUISM={useUISM}
-                                                    onClose={urlLinkModal.closeModal}
-                                                />
-                                                <Box
-                                                    sx={{
-                                                        display: "flex",
-                                                        minHeight: "100dvh",
-                                                        width: "100vw",
+                                                <UrlLinkModalProvider
+                                                    value={{
+                                                        openModalByHref:
+                                                            urlLinkModal.openModalByHref,
                                                     }}
                                                 >
-                                                    <Sidebar
+                                                    <UrlLinkModal
+                                                        accessToken={accessToken}
                                                         myself={myself}
                                                         setMyself={setMyself}
                                                         socket={socketInstance}
+                                                        target={urlLinkModal.target}
                                                         useCM={useCM}
-                                                        useIM={useIM}
+                                                        useNM={useNM}
+                                                        usePM={usePM}
+                                                        useSM={useSM}
                                                         useTEM={useTEM}
+                                                        useTM={useTM}
                                                         useUISM={useUISM}
-                                                        onOpenSpotlight={spotlight.open}
+                                                        onClose={urlLinkModal.closeModal}
                                                     />
-                                                    <Routes>
-                                                        <Route
-                                                            path="inbox/*"
-                                                            element={
-                                                                <InboxHome
-                                                                    myself={myself}
-                                                                    setMyself={setMyself}
-                                                                    socket={socketInstance}
-                                                                    useCM={useCM}
-                                                                    useIM={useIM}
-                                                                    useTEM={useTEM}
-                                                                    useUISM={useUISM}
-                                                                />
-                                                            }
+                                                    <Box
+                                                        sx={{
+                                                            display: "flex",
+                                                            minHeight: "100dvh",
+                                                            width: "100vw",
+                                                        }}
+                                                    >
+                                                        <Sidebar
+                                                            myself={myself}
+                                                            setMyself={setMyself}
+                                                            socket={socketInstance}
+                                                            useCM={useCM}
+                                                            useIM={useIM}
+                                                            useTEM={useTEM}
+                                                            useUISM={useUISM}
+                                                            onOpenSpotlight={spotlight.open}
                                                         />
-                                                        <Route
-                                                            path="chat/*"
-                                                            element={
-                                                                <ChatHome
-                                                                    myself={myself}
-                                                                    setMyself={setMyself}
-                                                                    socket={socketInstance}
-                                                                    useCM={useCM}
-                                                                    useIM={useIM}
-                                                                    useNM={useNM}
-                                                                    usePM={usePM}
-                                                                    useSM={useSM}
-                                                                    useTEM={useTEM}
-                                                                    useTM={useTM}
-                                                                    useUISM={useUISM}
-                                                                />
-                                                            }
-                                                        />
-                                                        <Route
-                                                            path="tasks/*"
-                                                            element={
-                                                                <TaskHome
-                                                                    myself={myself}
-                                                                    setMyself={setMyself}
-                                                                    socket={socketInstance}
-                                                                    useCM={useCM}
-                                                                    useIM={useIM}
-                                                                    useNM={useNM}
-                                                                    usePM={usePM}
-                                                                    useSM={useSM}
-                                                                    useTEM={useTEM}
-                                                                    useTM={useTM}
-                                                                    useUISM={useUISM}
-                                                                />
-                                                            }
-                                                        />
-                                                        <Route
-                                                            path="notes/*"
-                                                            element={
-                                                                <NoteHome
-                                                                    myself={myself}
-                                                                    setMyself={setMyself}
-                                                                    socket={socketInstance}
-                                                                    useCM={useCM}
-                                                                    useIM={useIM}
-                                                                    useNM={useNM}
-                                                                    usePM={usePM}
-                                                                    useSM={useSM}
-                                                                    useTEM={useTEM}
-                                                                    useTM={useTM}
-                                                                    useUISM={useUISM}
-                                                                />
-                                                            }
-                                                        />
-                                                        {/* Default redirect to inbox */}
-                                                        <Route
-                                                            path=""
-                                                            element={
-                                                                <Navigate to="inbox" replace />
-                                                            }
-                                                        />
-                                                    </Routes>
-                                                </Box>
-                                            </UrlLinkModalProvider>
-                                        </AvatarContextProvider>
-                                    </div>
-                                )}
-                            </NotificationsProvider>
-                        </AnalyticsPreferencesProvider>
-                    </SpotlightPreferencesProvider>
-                </BubbleStylePreferenceProvider>
-            </ThemePreferenceProvider>
+                                                        <Routes>
+                                                            <Route
+                                                                path="inbox/*"
+                                                                element={
+                                                                    <InboxHome
+                                                                        myself={myself}
+                                                                        setMyself={setMyself}
+                                                                        socket={socketInstance}
+                                                                        useCM={useCM}
+                                                                        useIM={useIM}
+                                                                        useTEM={useTEM}
+                                                                        useUISM={useUISM}
+                                                                    />
+                                                                }
+                                                            />
+                                                            <Route
+                                                                path="chat/*"
+                                                                element={
+                                                                    <FeatureErrorBoundary feature="Chat">
+                                                                        <ChatHome
+                                                                            myself={myself}
+                                                                            setMyself={setMyself}
+                                                                            socket={socketInstance}
+                                                                            useCM={useCM}
+                                                                            useIM={useIM}
+                                                                            useNM={useNM}
+                                                                            usePM={usePM}
+                                                                            useSM={useSM}
+                                                                            useTEM={useTEM}
+                                                                            useTM={useTM}
+                                                                            useUISM={useUISM}
+                                                                        />
+                                                                    </FeatureErrorBoundary>
+                                                                }
+                                                            />
+                                                            <Route
+                                                                path="tasks/*"
+                                                                element={
+                                                                    <FeatureErrorBoundary feature="Tasks">
+                                                                        <TaskHome
+                                                                            myself={myself}
+                                                                            setMyself={setMyself}
+                                                                            socket={socketInstance}
+                                                                            useCM={useCM}
+                                                                            useIM={useIM}
+                                                                            useNM={useNM}
+                                                                            usePM={usePM}
+                                                                            useSM={useSM}
+                                                                            useTEM={useTEM}
+                                                                            useTM={useTM}
+                                                                            useUISM={useUISM}
+                                                                        />
+                                                                    </FeatureErrorBoundary>
+                                                                }
+                                                            />
+                                                            <Route
+                                                                path="notes/*"
+                                                                element={
+                                                                    <FeatureErrorBoundary feature="Notes">
+                                                                        <NoteHome
+                                                                            myself={myself}
+                                                                            setMyself={setMyself}
+                                                                            socket={socketInstance}
+                                                                            useCM={useCM}
+                                                                            useIM={useIM}
+                                                                            useNM={useNM}
+                                                                            usePM={usePM}
+                                                                            useSM={useSM}
+                                                                            useTEM={useTEM}
+                                                                            useTM={useTM}
+                                                                            useUISM={useUISM}
+                                                                        />
+                                                                    </FeatureErrorBoundary>
+                                                                }
+                                                            />
+                                                            {/* Default redirect to inbox */}
+                                                            <Route
+                                                                path=""
+                                                                element={
+                                                                    <Navigate to="inbox" replace />
+                                                                }
+                                                            />
+                                                        </Routes>
+                                                    </Box>
+                                                </UrlLinkModalProvider>
+                                            </AvatarContextProvider>
+                                        </div>
+                                    )}
+                                </NotificationsProvider>
+                            </AnalyticsPreferencesProvider>
+                        </SpotlightPreferencesProvider>
+                    </BubbleStylePreferenceProvider>
+                </ThemePreferenceProvider>
             </I18nProvider>
         </CssVarsProvider>
     );

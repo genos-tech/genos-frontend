@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
@@ -197,7 +197,7 @@ type DraggableTaskRowProps = {
     sprintNamesById?: Map<number, string>;
 };
 
-export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
+const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
     const {
         task,
         index,
@@ -1505,3 +1505,37 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
         </Draggable>
     );
 };
+
+// Memoized export. The comparator covers every prop that affects this
+// row's visible output. State-manager objects (`useTM`, `useTEM`, `useCM`,
+// `useUISM`) and callbacks (`onRowUpdate`, `onRowDoubleClick`,
+// `toggleExpand`, `setMyself`) are intentionally excluded — they're
+// recreated on every parent render but only their stable setter methods
+// are invoked from this component's handlers, never read at render time.
+//
+// The four useTM fields that DO affect rendering — they drive the
+// "this row is selected" highlight — are compared explicitly so the row
+// re-renders when the preview pane opens/closes against a different
+// task/milestone.
+//
+// `task` is compared by reference: useTaskManagement replaces a task via
+// `next[existingIdx] = nextRow` with a fresh object, so any real content
+// change produces a new reference. `columnsWithWidths` is memoized in
+// DraggableTaskTable for the same reason.
+const areEqual = (prev: DraggableTaskRowProps, next: DraggableTaskRowProps): boolean =>
+    prev.task === next.task &&
+    prev.index === next.index &&
+    prev.columns === next.columns &&
+    prev.mode === next.mode &&
+    prev.depth === next.depth &&
+    prev.myself.userId === next.myself.userId &&
+    prev.teamMembers === next.teamMembers &&
+    prev.expandedRows === next.expandedRows &&
+    prev.childrenByParent === next.childrenByParent &&
+    prev.sprintNamesById === next.sprintNamesById &&
+    prev.useTM.isTaskPreviewVisible === next.useTM.isTaskPreviewVisible &&
+    prev.useTM.currentPreviewKind === next.useTM.currentPreviewKind &&
+    prev.useTM.currentPreviewTaskId === next.useTM.currentPreviewTaskId &&
+    prev.useTM.currentPreviewMilestoneId === next.useTM.currentPreviewMilestoneId;
+
+export const DraggableTaskRow = memo(DraggableTaskRowImpl, areEqual);

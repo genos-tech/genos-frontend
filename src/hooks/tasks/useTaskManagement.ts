@@ -39,13 +39,21 @@ export interface TaskManagementState {
         // milestones).
         milestoneId: number | null;
     };
-    setIsCreatingTask: (creating: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-        creationKind: "task" | "milestone";
-        milestoneId: number | null;
-    }) => void;
+    // Widened to `Dispatch<SetStateAction<...>>` so callers can patch a
+    // single field via functional updates (`(prev) => ({ ...prev, flag: false })`)
+    // without reading `useTM.isCreatingTask` at render time. That older
+    // read-then-capture pattern produced a stale-closure trap once
+    // `React.memo` was added to message bubbles / task rows that own
+    // those click handlers.
+    setIsCreatingTask: Dispatch<
+        SetStateAction<{
+            flag: boolean;
+            parentTaskId: number | null;
+            rootTaskId: number | null;
+            creationKind: "task" | "milestone";
+            milestoneId: number | null;
+        }>
+    >;
 
     // Project state
     tsLastLoadProjectTasks: number | undefined;

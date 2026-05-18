@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { Box, Sheet, Stack, Tooltip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
@@ -57,7 +57,7 @@ type MessageBubbleProps = {
     ) => void;
 };
 
-export const MessageBubble = (props: MessageBubbleProps) => {
+const MessageBubbleImpl = (props: MessageBubbleProps) => {
     const {
         chat,
         isFocused,
@@ -112,7 +112,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
             useCM.setIsMainChatVisible(true);
             useCM.setIsThreadVisible(false);
             useTM.setIsTaskPreviewVisible(true);
-            useTM.setIsCreatingTask({ ...useTM.isCreatingTask, flag: false });
+            useTM.setIsCreatingTask((prev) => ({ ...prev, flag: false }));
             useTM.setCurrentPreviewTaskId(message.taskId);
 
             if (message.project && message.project.projectId) {
@@ -179,7 +179,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         useCM.setIsMainChatVisible(true);
         useCM.setIsThreadVisible(true);
         // useTM.setIsTaskPreviewVisible(false);
-        useTM.setIsCreatingTask({ ...useTM.isCreatingTask, flag: false });
+        useTM.setIsCreatingTask((prev) => ({ ...prev, flag: false }));
 
         if (message.taskId) {
             useTM.setCurrentPreviewTaskId(message.taskId);
@@ -959,10 +959,10 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                                                 useCM.setIsMainChatVisible(true);
                                                 useCM.setIsThreadVisible(false);
                                                 // useTM.setIsTaskPreviewVisible(true);
-                                                useTM.setIsCreatingTask({
-                                                    ...useTM.isCreatingTask,
+                                                useTM.setIsCreatingTask((prev) => ({
+                                                    ...prev,
                                                     flag: false,
-                                                });
+                                                }));
                                                 useTM.setCurrentPreviewTaskId(message.taskId);
                                             }
                                         }}
@@ -1006,3 +1006,37 @@ export const MessageBubble = (props: MessageBubbleProps) => {
         </Box>
     );
 };
+
+// Memoized export. The custom comparator compares only the props that
+// actually affect the rendered output of this bubble. Excluded on purpose:
+//
+//   - State-manager objects (`useUISM`, `useCM`, `useTM`, `usePM`, `useTEM`):
+//     they're recreated on every parent render, but only their setter
+//     methods are read inside this component, and those setters are
+//     stable (useState setters). All previous read-then-capture sites
+//     (e.g. `...useTM.isCreatingTask`, `useCM.currentThreadChat`) have
+//     been converted to functional updates in the relevant handlers, so
+//     skipping a render no longer risks a stale-closure trap.
+//
+//   - `socket`: stable for the lifetime of the connection (managed by
+//     SocketProvider, now in useState).
+//
+//   - Callbacks (`setMyself`, `setIsInEdit`, `setEditTargetMessage`,
+//     `setTodoFromMessageBubble`): all useState setters from chatHome,
+//     stable across renders.
+//
+// `message` and `chat` are compared by reference — they're cloned via
+// `{...prev, ...next}` everywhere they're mutated in chat state, so any
+// real content change produces a new reference. Primitives (`variant`,
+// `isFocused`, `isScrolling`, `isSimpleBubble`) and `myself.userId` cover
+// the remaining render-affecting state.
+const areEqual = (prev: MessageBubbleProps, next: MessageBubbleProps): boolean =>
+    prev.message === next.message &&
+    prev.chat === next.chat &&
+    prev.variant === next.variant &&
+    prev.isFocused === next.isFocused &&
+    prev.isScrolling === next.isScrolling &&
+    prev.isSimpleBubble === next.isSimpleBubble &&
+    prev.myself.userId === next.myself.userId;
+
+export const MessageBubble = memo(MessageBubbleImpl, areEqual);

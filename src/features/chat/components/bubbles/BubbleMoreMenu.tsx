@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
@@ -31,7 +31,7 @@ type BubbleMoreMenuProps = {
     replyHandler: (e?: React.MouseEvent) => void;
     setCurrentChat: (chat: ChatProps) => void;
     setEditTargetMessage: (value: MessageProps) => void;
-    setFlaggedMessages: (messages: FlaggedMessageProps[]) => void;
+    setFlaggedMessages: Dispatch<SetStateAction<FlaggedMessageProps[]>>;
     setIsInEdit: (value: boolean) => void;
     socket: Socket | null;
     useCM: ChatManagementState;
@@ -100,8 +100,11 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
                 tsSent: message.tsSent,
             } as FlaggedMessageProps);
 
-            setFlaggedMessages([
-                ...flaggedMessages,
+            // Functional updater reads the latest list at call time — required
+            // for the parent bubble's React.memo to remain safe (we no longer
+            // close over `flaggedMessages` at render time).
+            setFlaggedMessages((prev) => [
+                ...prev,
                 {
                     flaggedMessageId: `${chat.chatType}-${chat.chatId}-${0}-${message.messageId}`,
                     chatType: chat.chatType,
@@ -123,8 +126,9 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
                 `${chat.chatType}-${chat.chatId}-${0}-${message.messageId}`
             );
 
-            setFlaggedMessages(
-                flaggedMessages.filter(
+            // Functional updater — see the spread case above for why.
+            setFlaggedMessages((prev) =>
+                prev.filter(
                     (_message) =>
                         _message.flaggedMessageId !==
                         `${chat.chatType}-${chat.chatId}-${0}-${message.messageId}`
@@ -196,13 +200,17 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
         },
         {
             id: "reply",
-            label: isProjectChat ? t.chat.messageActions.addCommentToTask : t.chat.messageActions.replyInThread,
+            label: isProjectChat
+                ? t.chat.messageActions.addCommentToTask
+                : t.chat.messageActions.replyInThread,
             icon: <ReplyRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleReplyClick,
         },
         {
             id: "flag",
-            label: isFlagged ? t.chat.messageActions.removeFlag : t.chat.messageActions.flagForLater,
+            label: isFlagged
+                ? t.chat.messageActions.removeFlag
+                : t.chat.messageActions.flagForLater,
             icon: <FlagRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleFlagClick,
             active: isFlagged,

@@ -226,7 +226,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                 }
 
                 useCM.setIsMainChatVisible(true);
-                useTM.setIsCreatingTask({ ...useTM.isCreatingTask, flag: false });
+                useTM.setIsCreatingTask((prev) => ({ ...prev, flag: false }));
                 useTM.setIsTaskPreviewVisible(false);
 
                 if (activity.taskId) {

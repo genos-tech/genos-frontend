@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from "react";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
@@ -27,7 +27,7 @@ type BubbleThreadMoreMenuProps = {
     myself: UserProps;
     setCurrentThreadChat: (chat: ThreadProps) => void;
     setEditTargetMessage: (value: ThreadMessageProps) => void;
-    setFlaggedMessages: (messages: FlaggedMessageProps[]) => void;
+    setFlaggedMessages: Dispatch<SetStateAction<FlaggedMessageProps[]>>;
     setIsInEdit: (value: boolean) => void;
     setTargetMessageIndex: (value: number) => void;
     socket: Socket | null;
@@ -220,8 +220,9 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
                 tsSent: message.tsSent,
             } as FlaggedMessageProps);
 
-            setFlaggedMessages([
-                ...flaggedMessages,
+            // Functional updater — see BubbleMoreMenu for the rationale.
+            setFlaggedMessages((prev) => [
+                ...prev,
                 {
                     flaggedMessageId: `${thread.chatType}-${thread.chatId}-${thread.threadId}-${message.messageId}`,
                     chatName: thread.chatName,
@@ -243,8 +244,8 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
                 `${thread.chatType}-${thread.chatId}-${thread.threadId}-${message.messageId}`
             );
 
-            setFlaggedMessages(
-                flaggedMessages.filter(
+            setFlaggedMessages((prev) =>
+                prev.filter(
                     (_message) =>
                         _message.flaggedMessageId !==
                         `${thread.chatType}-${thread.chatId}-${thread.threadId}-${message.messageId}`
@@ -319,7 +320,9 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
         },
         {
             id: "flag",
-            label: isFlagged ? t.chat.messageActions.removeFlag : t.chat.messageActions.flagForLater,
+            label: isFlagged
+                ? t.chat.messageActions.removeFlag
+                : t.chat.messageActions.flagForLater,
             icon: <FlagRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleFlagClick,
             color: isFlagged

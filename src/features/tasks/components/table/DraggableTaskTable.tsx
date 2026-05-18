@@ -1157,11 +1157,16 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         [hasMilestoneInDisplay, t]
     );
 
-    // Create columns with dynamic widths for passing to rows
-    const columnsWithWidths: ColumnDef[] = visibleColumns.map((col) => ({
-        ...col,
-        width: getColumnWidth(col.field),
-    }));
+    // Create columns with dynamic widths for passing to rows. Memoized so
+    // that React.memo on DraggableTaskRow isn't defeated by a fresh array
+    // identity on every parent render — `columnWidths` only changes when
+    // the user actually drag-resizes a column, so most renders skip the
+    // recompute.
+    const columnsWithWidths = useMemo<ColumnDef[]>(
+        () => visibleColumns.map((col) => ({ ...col, width: getColumnWidth(col.field) })),
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [visibleColumns, columnWidths]
+    );
 
     // Calculate total table width (drag handle + all columns)
     const dragHandleWidth = 28;
