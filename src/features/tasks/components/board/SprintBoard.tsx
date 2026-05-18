@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { DragDropContext, DropResult } from "@hello-pangea/dnd";
 import { useColorScheme } from "@mui/joy/styles";
 import { createTheme, THEME_ID, ThemeProvider } from "@mui/material/styles";
-import { DragDropContext, DropResult } from "@hello-pangea/dnd";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -13,6 +13,7 @@ import { TagListProps, TaskTableProps } from "../../../../types/tasks";
 import { loadProjectTags } from "../../services/loadProjectTags";
 import { updateTaskFromTable } from "../../services/updateTaskFromTable";
 import { FilterProps } from "../../types/TaskTableTypes";
+import { statuses } from "../../utils/taskMeta";
 import { TaskFilterMenu } from "../table/TaskFilterMenu";
 import { ColumnConfig, SprintBoardColumn } from "./SprintBoardColumn";
 
@@ -177,14 +178,34 @@ export const SprintBoard = (props: SprintBoardProps) => {
         setBoardTasks(organized);
     }, [filteredTasks, useTM.tableMilestoneFilterId]);
 
-    // Handle drag end
+    // Sync the dragged task's new status onto the open preview pane so
+    // the user immediately sees the change there. Mirrors the manual
+    // update DraggableTaskTable.handleRowUpdate does — looks up the
+    // status object by label since `currentPreviewTask.status` is a
+    // structured object (not a string).
+    const syncPreviewStatus = useCallback(
+        (taskId: string, newStatus: string) => {
+            const preview = useTM.currentPreviewTask;
+            if (!preview || String(preview.id) !== taskId) return;
+            const statusObj = statuses.find((s) => s.status === newStatus) ?? preview.status;
+            useTM.setCurrentPreviewTask({
+                ...preview,
+                status: statusObj,
+            });
+        },
+        [useTM]
+    );
+
+    // Handle drag end. Two modes: task vs milestone — milestones are
+    // persisted via the milestone API (`useSM.updateExistingMilestone`),
+    // not the task API, since the authoritative status lives on
+    // MilestoneMaster. Without that branch the backing task gets
+    // updated but the milestone record drifts and the next reload
+    // resets the card back to its old status.
     const handleDragEnd = async (result: DropResult) => {
         const { source, destination, draggableId } = result;
 
-        // Dropped outside a droppable area
         if (!destination) return;
-
-        // Dropped in the same position
         if (source.droppableId === destination.droppableId && source.index === destination.index) {
             return;
         }
@@ -192,67 +213,115 @@ export const SprintBoard = (props: SprintBoardProps) => {
         const sourceColumn = source.droppableId;
         const destColumn = destination.droppableId;
 
-        // Handle reordering within the same column
         if (sourceColumn === destColumn) {
             const columnTasks = [...boardTasks[sourceColumn]];
             const [movedTask] = columnTasks.splice(source.index, 1);
             columnTasks.splice(destination.index, 0, movedTask);
-
-            setBoardTasks({
-                ...boardTasks,
-                [sourceColumn]: columnTasks,
-            });
+            setBoardTasks({ ...boardTasks, [sourceColumn]: columnTasks });
             return;
         }
 
-        // Handle moving between different columns
+        // Cross-column move: snapshot the original layout so we can roll
+        // back on error.
+        const previousBoardTasks = boardTasks;
         const sourceTasks = [...boardTasks[sourceColumn]];
         const destTasks = [...boardTasks[destColumn]];
-
-        // Remove task from source
         const [movedTask] = sourceTasks.splice(source.index, 1);
-
-        // Get the new status for the destination column
         const newStatus = COLUMNS.find((col) => col.id === destColumn)?.status || movedTask.status;
-
-        // Update the moved task with new status
         const updatedMovedTask = { ...movedTask, status: newStatus };
-
-        // Add task to destination
         destTasks.splice(destination.index, 0, updatedMovedTask);
 
-        // Update local state immediately for responsiveness
-        const newBoardTasks = {
+        setBoardTasks({
             ...boardTasks,
             [sourceColumn]: sourceTasks,
             [destColumn]: destTasks,
-        };
-        setBoardTasks(newBoardTasks);
+        });
 
-        // If moved to a different column, update the task status on the server
-        if (sourceColumn !== destColumn && newStatus && accessToken) {
-            try {
-                await updateTaskFromTable(
-                    updatedMovedTask,
-                    myself,
-                    socket || null,
-                    accessToken,
-                    teamMembers
-                );
-
-                // Update allTasks in useTM
-                const updatedAllTasks = useTM.allTasks.map((task: TaskTableProps) =>
-                    task.id === draggableId ? { ...task, status: newStatus } : task
-                );
-                useTM.setAllTasks(updatedAllTasks);
-            } catch (error) {
-                // Revert on error
-                setBoardTasks(newBoardTasks); // Use newBoardTasks instead of stale boardTasks
-            }
-        } else if (sourceColumn !== destColumn) {
+        if (!newStatus || !accessToken) {
             console.warn(
-                `[SprintBoard] Cannot update task: newStatus=${newStatus}, accessToken=${!!accessToken}`
+                `[SprintBoard] Cannot persist status: newStatus=${newStatus}, accessToken=${!!accessToken}`
             );
+            return;
+        }
+
+        // Functional setter + String() id coercion. The legacy
+        // `task.id === draggableId` comparison silently failed when
+        // `task.id` was a number (which it sometimes is post-fetch) —
+        // allTasks stayed at the old status, the filter pipeline
+        // re-classified the card back into the source column on the
+        // next render, and the user saw "the card returns to Open".
+        const idStr = String(draggableId);
+
+        try {
+            if (movedTask.isMilestone === true && movedTask.milestoneId != null) {
+                const projectId = Number(movedTask.projectId);
+                if (!Number.isFinite(projectId) || projectId <= 0) return;
+                const updated = await useSM.updateExistingMilestone(
+                    { milestoneId: movedTask.milestoneId, status: newStatus },
+                    projectId
+                );
+                if (!updated) return;
+
+                // Mirror the milestone shape onto the row format (same
+                // mapping as DraggableTaskTable.handleRowUpdate). This
+                // keeps useTM.allTasks in sync so the filter pipeline
+                // doesn't bounce the card back to its old column.
+                const firstAssignee = updated.assignees?.[0];
+                const hasAssignee = firstAssignee?.userId != null;
+                const tags = (updated.tags as TagListProps[] | null) ?? [];
+                const concatTags =
+                    tags.length > 0 ? "/" + tags.map((tg) => tg.tagName).join("/") + "/" : null;
+                const mirrored: TaskTableProps = {
+                    ...updatedMovedTask,
+                    title: updated.title ?? updatedMovedTask.title,
+                    status: (updated.status as string) ?? newStatus,
+                    priority: updated.priority ?? updatedMovedTask.priority,
+                    effortLevel: updated.effortLevel ?? updatedMovedTask.effortLevel,
+                    tags,
+                    concatTags,
+                    updatedAt: updated.tsUpdatedAt ?? updatedMovedTask.updatedAt,
+                    assigneeId: hasAssignee ? String(firstAssignee.userId) : null,
+                    assigneeName: hasAssignee
+                        ? firstAssignee.username || firstAssignee.email || ""
+                        : null,
+                    assigneeEmail: hasAssignee ? firstAssignee.email || "" : null,
+                    assigneeImgPath: hasAssignee ? firstAssignee.profileImageUrl || "" : null,
+                    milestoneId: updated.milestoneId,
+                    sprintId: updated.sprintId ?? updatedMovedTask.sprintId,
+                    isMilestone: true,
+                };
+                useTM.setAllTasks((prev) =>
+                    prev.map((task: TaskTableProps) =>
+                        String(task.id) === idStr ? mirrored : task
+                    )
+                );
+                // Milestone preview reads from useSM.projectMilestones,
+                // which updateExistingMilestone already refreshes — no
+                // extra wiring needed for the preview status here.
+                return;
+            }
+
+            await updateTaskFromTable(
+                updatedMovedTask,
+                myself,
+                socket || null,
+                accessToken,
+                teamMembers
+            );
+
+            useTM.setAllTasks((prev) =>
+                prev.map((task: TaskTableProps) =>
+                    String(task.id) === idStr ? { ...task, status: newStatus } : task
+                )
+            );
+
+            // Task preview shows TaskProps — update its status if it's
+            // the dragged task. Milestone preview path is covered by the
+            // updateExistingMilestone return-and-refresh flow above.
+            syncPreviewStatus(idStr, newStatus);
+        } catch (error) {
+            console.error("[SprintBoard] Failed to update status:", error);
+            setBoardTasks(previousBoardTasks);
         }
     };
 

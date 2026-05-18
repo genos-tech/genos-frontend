@@ -8,7 +8,6 @@ import { Box, CircularProgress, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { createTheme, THEME_ID, ThemeProvider } from "@mui/material/styles";
 import dayjs from "dayjs";
-import { Virtuoso } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -355,14 +354,7 @@ const getTableContainerStyles = (mode: "light" | "dark" | undefined): React.CSSP
     width: "100%",
     flex: 1,
     minHeight: 0, // Important: allows flex item to shrink below content size
-    // Only horizontal scroll on the outer container; vertical scrolling is
-    // owned by the virtualized Virtuoso inside, which manages visibility
-    // against its own scrollport. Mixing the two would either double-
-    // scrollbar or break Virtuoso's viewport measurements.
-    overflowX: "auto",
-    overflowY: "hidden",
-    display: "flex",
-    flexDirection: "column",
+    overflow: "auto",
     borderRadius: "10px",
     border:
         mode === "dark" ? "1px solid rgba(255, 255, 255, 0.1)" : "1px solid rgba(0, 0, 0, 0.1)",
@@ -1357,34 +1349,40 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                         ))}
                     </div>
 
-                    {/* Draggable Table Body — virtualized via react-virtuoso
-                        so only the visible rows are in the DOM at any time.
-                        @hello-pangea/dnd integrates via `mode="virtual"` +
-                        `renderClone` (the dragged row needs a stable DOM
-                        anchor since the original may be unmounted by the
-                        virtualizer as the user scrolls). The empty state
-                        below renders in this slot instead when there are
-                        no rows — gating here keeps Virtuoso's `flex: 1`
-                        from swallowing the empty state's vertical space. */}
-                    {displayRows.length > 0 && (
-                        <DragDropContext onDragEnd={handleDragEnd}>
-                            <Droppable
-                                direction="vertical"
-                                droppableId="task-table"
-                                ignoreContainerClipping={false}
-                                isCombineEnabled={true}
-                                isDropDisabled={false}
-                                mode="virtual"
-                                renderClone={(provided, snapshot, rubric) => {
-                                    const task = displayRows[rubric.source.index];
-                                    if (!task) return <div ref={provided.innerRef} />;
-                                    return (
+                    {/* Draggable Table Body */}
+                    <DragDropContext onDragEnd={handleDragEnd}>
+                        <Droppable
+                            direction="vertical"
+                            droppableId="task-table"
+                            ignoreContainerClipping={false}
+                            isCombineEnabled={true}
+                            isDropDisabled={false}
+                        >
+                            {(provided, snapshot) => (
+                                <div
+                                    ref={provided.innerRef}
+                                    {...provided.droppableProps}
+                                    style={{
+                                        minHeight: 100,
+                                        minWidth: totalTableWidth,
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        backgroundColor: snapshot.isDraggingOver
+                                            ? mode === "dark"
+                                                ? "rgba(59, 130, 246, 0.08)"
+                                                : "rgba(59, 130, 246, 0.04)"
+                                            : "transparent",
+                                        transition: "background-color 0.25s ease",
+                                    }}
+                                >
+                                    {displayRows.map((task, index) => (
                                         <DraggableTaskRow
+                                            key={task.id}
                                             childrenByParent={childrenByParent}
                                             columns={columnsWithWidths}
                                             depth={depthMap.get(String(task.id)) ?? 0}
                                             expandedRows={expandedRows}
-                                            index={rubric.source.index}
+                                            index={index}
                                             mode={mode}
                                             myself={myself}
                                             setMyself={setMyself}
@@ -1400,62 +1398,12 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                             onRowDoubleClick={handleRowDoubleClick}
                                             onRowUpdate={handleRowUpdate}
                                         />
-                                    );
-                                }}
-                            >
-                                {(provided, snapshot) => (
-                                    <Virtuoso
-                                        data={displayRows}
-                                        scrollerRef={(ref) => {
-                                            if (ref instanceof HTMLElement) {
-                                                provided.innerRef(ref);
-                                            }
-                                        }}
-                                        style={{
-                                            // Fill the column area beneath the
-                                            // sticky table header. `minHeight: 0`
-                                            // is the standard flex idiom to let
-                                            // a flex child shrink/grow inside a
-                                            // height-constrained parent.
-                                            flex: 1,
-                                            minHeight: 0,
-                                            minWidth: totalTableWidth,
-                                            backgroundColor: snapshot.isDraggingOver
-                                                ? mode === "dark"
-                                                    ? "rgba(59, 130, 246, 0.08)"
-                                                    : "rgba(59, 130, 246, 0.04)"
-                                                : "transparent",
-                                            transition: "background-color 0.25s ease",
-                                        }}
-                                        itemContent={(index, task) => (
-                                            <DraggableTaskRow
-                                                childrenByParent={childrenByParent}
-                                                columns={columnsWithWidths}
-                                                depth={depthMap.get(String(task.id)) ?? 0}
-                                                expandedRows={expandedRows}
-                                                index={index}
-                                                mode={mode}
-                                                myself={myself}
-                                                setMyself={setMyself}
-                                                socket={socket}
-                                                sprintNamesById={sprintNamesById}
-                                                task={task}
-                                                teamMembers={teamMembers}
-                                                toggleExpand={toggleExpand}
-                                                useCM={useCM}
-                                                useTEM={useTEM}
-                                                useTM={useTM}
-                                                useUISM={useUISM}
-                                                onRowDoubleClick={handleRowDoubleClick}
-                                                onRowUpdate={handleRowUpdate}
-                                            />
-                                        )}
-                                        computeItemKey={(_index, task) => String(task.id)}
-                                    />
-                                )}
-                            </Droppable>
-                        </DragDropContext>
-                    )}
+                                    ))}
+                                    {provided.placeholder}
+                                </div>
+                            )}
+                        </Droppable>
+                    </DragDropContext>
 
                     {/* Empty state: show a spinner while we are still fetching tasks
                         (initial mount, team switch, or project switch). Once the load
