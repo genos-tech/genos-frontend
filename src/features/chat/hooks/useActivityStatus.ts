@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 
+import { activityChannel } from "../../../db/workers/channels";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { UserProps } from "../../../types/admin";
 import { ActivityMessageProps } from "../../../types/chat";
 import { GroupedReactionProps, ReactionProps } from "../../../types/common";
-import UpdateActivityReadStatusWorker from "../../../db/workers/updateActivityReadStatusWorker.ts?worker";
 
 interface UseActivityStatusProps {
     activity: ActivityMessageProps;
@@ -46,27 +46,25 @@ export const useActivityStatus = ({
     };
 
     const updateActivityReadStatus = () => {
-        if (accessToken && activity.activityId) {
-            const updateActivityReadStatusWorker = new UpdateActivityReadStatusWorker();
-            updateActivityReadStatusWorker.postMessage({
-                accessToken: accessToken,
-                myself: myself,
+        if (!accessToken || !activity.activityId) return;
+        activityChannel
+            .request("updateActivityReadStatus", {
+                accessToken,
+                myself,
                 activityId: activity.activityId,
                 isRead: true,
-                activityMessages: activityMessages,
-            });
-            updateActivityReadStatusWorker.onmessage = (event) => {
-                const data = event.data;
-                if (data.error) {
-                    console.error("Worker failed:", data.error);
-                } else {
+                activityMessages,
+            })
+            .then((data) => {
+                if (Array.isArray(data)) {
                     useCM.setActivityMessages(data);
+                } else if (data && "error" in data) {
+                    console.error("updateActivityReadStatus failed:", data.error);
                 }
-            };
-            return () => {
-                updateActivityReadStatusWorker.terminate();
-            };
-        }
+            })
+            .catch((err) => {
+                console.error("updateActivityReadStatus error:", err);
+            });
     };
 
     useEffect(() => {

@@ -1,10 +1,10 @@
 import { useState } from "react";
 
 import { useAuth } from "../../../context/AuthContext";
+import { chatChannel } from "../../../db/workers/channels";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps, ThreadProps } from "../../../types/chat";
-import UpdateReadStatusWorker from "../../../db/workers/updateReadStatusWorker.ts?worker";
 import { addChat } from "../services/addChat";
 
 interface UseReadStatusManagementProps {
@@ -25,40 +25,35 @@ export const useReadStatusManagement = ({
     const [indexLastReadStatusUpdated, setIndexLastReadStatusUpdated] = useState<number>(-1);
 
     const updateReadStatus = (indexForLastReadMessageId: number) => {
-        if (accessToken && currentChat.messages[indexForLastReadMessageId]) {
-            const updateReadStatusWorker = new UpdateReadStatusWorker();
-            const lastReadMessageId: number =
-                currentChat.messages[indexForLastReadMessageId].messageId;
+        if (!accessToken || !currentChat.messages[indexForLastReadMessageId]) {
+            return;
+        }
+        const lastReadMessageId: number =
+            currentChat.messages[indexForLastReadMessageId].messageId;
 
-            updateReadStatusWorker.postMessage({
-                accessToken: accessToken,
-                myself: myself,
+        chatChannel
+            .request("updateReadStatus", {
+                accessToken,
+                myself,
                 chatType: currentChat.chatType,
                 chatId: currentChat.chatId,
-                isThread: isThread,
+                isThread,
                 threadId: isThread ? (currentChat as ThreadProps).threadId : 0,
-                lastReadMessageId: lastReadMessageId,
-            });
-
-            updateReadStatusWorker.onmessage = async (event) => {
-                if (event.data === "done") {
-                    if ((currentChat as ChatProps).lastReadMessageId < lastReadMessageId) {
-                        const updatedChat = {
-                            ...currentChat,
-                            lastReadMessageId: lastReadMessageId,
-                        };
-                        addChat(updatedChat as AllChatProps, updatedChat.chatType);
-                        await useCM.funcSetAllChats();
-                    }
-                } else {
-                    console.error("Failed to update read status");
+                lastReadMessageId,
+            })
+            .then(async () => {
+                if ((currentChat as ChatProps).lastReadMessageId < lastReadMessageId) {
+                    const updatedChat = {
+                        ...currentChat,
+                        lastReadMessageId,
+                    };
+                    await addChat(updatedChat as AllChatProps, updatedChat.chatType);
+                    await useCM.funcSetAllChats();
                 }
-            };
-
-            return () => {
-                updateReadStatusWorker.terminate();
-            };
-        }
+            })
+            .catch((err) => {
+                console.error("Failed to update read status", err);
+            });
     };
 
     const handleReadStatusUpdate = (targetIndex: number) => {

@@ -1,10 +1,9 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback } from "react";
 
 import { useAuth } from "../../../context/AuthContext";
-import MarkAllChatActivityAsReadWorker from "../../../db/workers/markAllChatActivityAsReadWorker.ts?worker";
+import { chatChannel } from "../../../db/workers/channels";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { UserProps } from "../../../types/admin";
-import { ActivityMessageProps } from "../../../types/chat";
 
 interface UseMarkAllChatActivityReadProps {
     myself: UserProps;
@@ -16,27 +15,19 @@ interface UseMarkAllChatActivityReadResult {
 }
 
 /**
- * Owns a single worker per `markAllAsRead` call: spawns the worker, waits for
- * the bulk PUT + IDB upsert to finish, then writes the returned activity list
- * into `useCM.activityMessages` so the UI re-renders without an extra fetch.
+ * Fires a "markAllChatActivityAsRead" request over the shared chat worker
+ * channel: the worker performs the bulk PUT + IDB upsert and returns the
+ * updated activity list, which we write back into `useCM.activityMessages`.
  *
- * Tracks every spawned worker in a ref so the parent component unmounting
- * mid-flight doesn't leak (or fire onmessage into a torn-down React tree).
+ * The channel is a long-lived singleton so no per-call setup/teardown is
+ * required here; ignoring the promise on unmount is safe because the
+ * channel handles its own lifecycle.
  */
 export const useMarkAllChatActivityRead = ({
     myself,
     useCM,
 }: UseMarkAllChatActivityReadProps): UseMarkAllChatActivityReadResult => {
     const { accessToken } = useAuth();
-    const workersRef = useRef<Set<Worker>>(new Set());
-
-    useEffect(() => {
-        const workers = workersRef.current;
-        return () => {
-            workers.forEach((w) => w.terminate());
-            workers.clear();
-        };
-    }, []);
 
     const markAllAsRead = useCallback(
         (chatType: number, chatId: number) => {
@@ -44,34 +35,24 @@ export const useMarkAllChatActivityRead = ({
                 console.error("Cannot mark all as read: missing access token.");
                 return;
             }
-
-            const worker = new MarkAllChatActivityAsReadWorker();
-            workersRef.current.add(worker);
-
-            worker.postMessage({
-                accessToken,
-                myself,
-                chatType,
-                chatId,
-                activityMessages: useCM.activityMessages,
-            });
-
-            worker.onmessage = (event) => {
-                const data = event.data as ActivityMessageProps[] | { error: string };
-                if (Array.isArray(data)) {
-                    useCM.setActivityMessages(data);
-                } else if (data?.error) {
-                    console.error("markAllChatActivityAsRead worker failed:", data.error);
-                }
-                workersRef.current.delete(worker);
-                worker.terminate();
-            };
-
-            worker.onerror = (err) => {
-                console.error("markAllChatActivityAsRead worker error:", err);
-                workersRef.current.delete(worker);
-                worker.terminate();
-            };
+            chatChannel
+                .request("markAllChatActivityAsRead", {
+                    accessToken,
+                    myself,
+                    chatType,
+                    chatId,
+                    activityMessages: useCM.activityMessages,
+                })
+                .then((data) => {
+                    if (Array.isArray(data)) {
+                        useCM.setActivityMessages(data);
+                    } else if (data && "error" in data) {
+                        console.error("markAllChatActivityAsRead failed:", data.error);
+                    }
+                })
+                .catch((err) => {
+                    console.error("markAllChatActivityAsRead error:", err);
+                });
         },
         [accessToken, myself, useCM]
     );
