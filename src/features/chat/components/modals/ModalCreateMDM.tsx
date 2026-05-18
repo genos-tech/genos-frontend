@@ -24,6 +24,7 @@ import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { createMDMChatGroup } from "../../services/createMDMChatGroup";
 import { popTeamMembers } from "../../services/popTeamMembers";
@@ -55,6 +56,7 @@ export const ModalCreateMDM: React.FC<Props> = ({
     setMyself,
 }) => {
     const { accessToken } = useAuth();
+    const { t } = useTranslation();
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedMembers, setSelectedMembers] = useState<UserProps[]>([]);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -109,7 +111,7 @@ export const ModalCreateMDM: React.FC<Props> = ({
 
     const handleCreateMDM = async () => {
         if (selectedMembers.length < 2) {
-            setErrorMessage("Please select at least 2 members for a multi-user DM.");
+            setErrorMessage(t.chat.modals.createMDM.errorMinimumMembers);
             return;
         }
 
@@ -130,7 +132,7 @@ export const ModalCreateMDM: React.FC<Props> = ({
             );
         } catch (error) {
             console.error("Failed to create MDM:", error);
-            setErrorMessage("Failed to create multi-user DM. Please try again.");
+            setErrorMessage(t.chat.modals.createMDM.errorCreate);
         } finally {
             setIsLoading(false);
         }
@@ -187,13 +189,13 @@ export const ModalCreateMDM: React.FC<Props> = ({
                             fontWeight: 600,
                         }}
                     >
-                        New Multi-user DM
+                        {t.chat.modals.createMDM.title}
                     </Typography>
                 </Box>
 
                 {/* Description */}
                 <Typography level="body-sm" sx={{ mb: 2, color: "rgba(255, 255, 255, 0.6)" }}>
-                    Start a conversation with multiple people without creating a group.
+                    {t.chat.modals.createMDM.description}
                 </Typography>
 
                 {/* Selected Members Chips */}
@@ -235,7 +237,7 @@ export const ModalCreateMDM: React.FC<Props> = ({
 
                 {/* Search Input */}
                 <Input
-                    placeholder="Search team members..."
+                    placeholder={t.chat.modals.createMDM.searchPlaceholder}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     startDecorator={
@@ -276,8 +278,8 @@ export const ModalCreateMDM: React.FC<Props> = ({
                             }}
                         >
                             {searchQuery
-                                ? "No members found matching your search."
-                                : "No team members available."}
+                                ? t.chat.modals.createMDM.noMembersMatchingSearch
+                                : t.chat.modals.createMDM.noMembersAvailable}
                         </Typography>
                     ) : (
                         filteredMembers.map((member) => {
@@ -367,9 +369,8 @@ export const ModalCreateMDM: React.FC<Props> = ({
                                 : "rgba(255, 255, 255, 0.4)",
                     }}
                 >
-                    {selectedMembers.length} member{selectedMembers.length !== 1 ? "s" : ""}{" "}
-                    selected
-                    {selectedMembers.length < 2 && " (minimum 2 required)"}
+                    {fmt(t.chat.modals.createMDM.membersSelected, { count: selectedMembers.length })}
+                    {selectedMembers.length < 2 && t.chat.modals.createMDM.minRequiredSuffix}
                 </Typography>
 
                 {/* Error Alert */}
@@ -402,7 +403,7 @@ export const ModalCreateMDM: React.FC<Props> = ({
                             },
                         }}
                     >
-                        Cancel
+                        {t.chat.modals.createMDM.cancel}
                     </Button>
                     <Button
                         disabled={selectedMembers.length < 2 || isLoading}
@@ -425,7 +426,7 @@ export const ModalCreateMDM: React.FC<Props> = ({
                             },
                         }}
                     >
-                        Start Conversation
+                        {t.chat.modals.createMDM.startConversation}
                     </Button>
                 </Stack>
             </ModalDialog>

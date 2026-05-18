@@ -1,5 +1,7 @@
 import { useState } from "react";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+
+import { fmt, useTranslation } from "../../../../i18n";
 import {
     Alert,
     Button,
@@ -29,29 +31,31 @@ export const DeleteSprintModal = ({
     onClose,
 }: Props) => {
     const [busy, setBusy] = useState(false);
+    const { t } = useTranslation();
 
     return (
         <Modal open={open} onClose={() => !busy && onClose()}>
             <ModalDialog sx={{ minWidth: 420 }}>
-                <DialogTitle>Delete sprint?</DialogTitle>
+                <DialogTitle>{t.tasks.deleteSprint.title}</DialogTitle>
                 <Divider />
                 <DialogContent>
                     <Stack spacing={1.5} sx={{ pt: 1 }}>
                         <Typography level="body-sm">
-                            <b>{sprintName}</b> will be permanently removed.
+                            <b>{sprintName}</b>
+                            {t.tasks.deleteSprint.bodyPrefix}
                         </Typography>
                         {milestoneCount > 0 && (
                             <Alert color="warning" startDecorator={<WarningAmberIcon />}>
-                                {milestoneCount} milestone
-                                {milestoneCount === 1 ? "" : "s"} will be moved to Backlog (No
-                                sprint).
+                                {fmt(t.tasks.deleteSprint.milestoneMove, {
+                                    count: milestoneCount,
+                                })}
                             </Alert>
                         )}
                     </Stack>
                 </DialogContent>
                 <DialogActions>
                     <Button variant="plain" color="neutral" onClick={onClose} disabled={busy}>
-                        Cancel
+                        {t.tasks.deleteSprint.cancelButton}
                     </Button>
                     <Button
                         color="danger"
@@ -65,7 +69,7 @@ export const DeleteSprintModal = ({
                             }
                         }}
                     >
-                        Delete
+                        {t.tasks.deleteSprint.deleteButton}
                     </Button>
                 </DialogActions>
             </ModalDialog>

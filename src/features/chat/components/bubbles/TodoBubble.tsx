@@ -12,6 +12,7 @@ import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { ToDoFactProps } from "../../../../types/chat";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
@@ -54,6 +55,7 @@ export const TodoBubble = (props: TodoBubbleProps) => {
     } = props;
 
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const { accessToken } = useAuth();
 
@@ -298,7 +300,7 @@ export const TodoBubble = (props: TodoBubbleProps) => {
                             }}
                         >
                             <DoneAllIcon sx={{ fontSize: 14 }} />
-                            {bodyEdited ? "Save" : "Saved"}
+                            {bodyEdited ? t.chat.todoPane.save : t.chat.todoPane.saved}
                         </Box>
                     </Stack>
 

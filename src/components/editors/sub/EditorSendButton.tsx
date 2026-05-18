@@ -1,6 +1,7 @@
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import { Box, Button, Tooltip, Typography } from "@mui/joy";
 
+import { useTranslation } from "../../../i18n";
 import { isMac } from "../../../utils/platform";
 
 type EditorSendButtonProps = {
@@ -26,6 +27,7 @@ type EditorSendButtonProps = {
  *   the button is disabled (Joy disables pointer events by default).
  */
 export const EditorSendButton = ({ disabled, onSend }: EditorSendButtonProps) => {
+    const { t } = useTranslation();
     const modKey = isMac() ? "⌘" : "Ctrl";
 
     return (
@@ -43,7 +45,7 @@ export const EditorSendButton = ({ disabled, onSend }: EditorSendButtonProps) =>
                     }}
                 >
                     <Typography level="body-xs" sx={{ color: "inherit", fontWeight: 600 }}>
-                        Send
+                        {t.common.editor.send}
                     </Typography>
                     <Box
                         component="span"
@@ -81,7 +83,7 @@ export const EditorSendButton = ({ disabled, onSend }: EditorSendButtonProps) =>
                 }}
             >
                 <Button
-                    aria-label="Send message"
+                    aria-label={t.common.editor.sendAriaLabel}
                     color="success"
                     disabled={disabled}
                     endDecorator={<SendRoundedIcon sx={{ fontSize: 15 }} />}
@@ -124,7 +126,7 @@ export const EditorSendButton = ({ disabled, onSend }: EditorSendButtonProps) =>
                         },
                     }}
                 >
-                    Send
+                    {t.common.editor.send}
                 </Button>
             </Box>
         </Tooltip>

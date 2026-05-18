@@ -17,6 +17,7 @@ import { ProjectManagementState } from "../../../../hooks/common/useProjectManag
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { SearchTeamTasksResponse } from "../../../../types/tasks";
 import { isMac } from "../../../../utils/platform";
@@ -54,6 +55,7 @@ export const TaskHeader = ({
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const styles = isDark ? TaskHeaderStyles.dark : TaskHeaderStyles.light;
+    const { t } = useTranslation();
 
     // =======================================================================
     const [openSearch, setOpenSearch] = useState(false);
@@ -176,7 +178,11 @@ export const TaskHeader = ({
                         {usePM.currentProject?.projectName}
                     </Typography>
                     {usePM.currentProject?.isPrivate === true && (
-                        <Tooltip size="sm" title="Private Project" variant="outlined">
+                        <Tooltip
+                            size="sm"
+                            title={t.tasks.header.privateProject}
+                            variant="outlined"
+                        >
                             <LockOutlineIcon
                                 sx={{
                                     fontSize: "18px",
@@ -260,7 +266,7 @@ export const TaskHeader = ({
                         onClick={useTM.handleCreateTask}
                     >
                         <AddIcon sx={{ fontSize: "18px" }} />
-                        Task
+                        {t.tasks.header.taskButton}
                     </IconButton>
                 </Tooltip>
 
@@ -268,7 +274,7 @@ export const TaskHeader = ({
                 {usePM.currentProject?.projectId && (
                     <Tooltip
                         size="sm"
-                        title="Refresh Tasks"
+                        title={t.tasks.header.refreshTasks}
                         variant="outlined"
                         sx={{
                             background: styles.menuBg,
@@ -308,19 +314,19 @@ export const TaskHeader = ({
                     const items: MoreMenuItem[] = [
                         {
                             id: "newTag",
-                            label: "New Tag",
+                            label: t.tasks.header.newTagMenuItem,
                             icon: <LocalOfferIcon sx={{ fontSize: 18 }} />,
                             onClick: onCreateTag,
                         },
                         {
                             id: "newProject",
-                            label: "New Project",
+                            label: t.tasks.header.newProjectMenuItem,
                             icon: <AddIcon sx={{ fontSize: 18 }} />,
                             onClick: onCreateProject,
                         },
                         {
                             id: "deleteProject",
-                            label: "Delete Project",
+                            label: t.tasks.header.deleteProjectMenuItem,
                             icon: <DeleteIcon sx={{ fontSize: 18 }} />,
                             danger: true,
                             onClick: onDeleteProject,
@@ -345,7 +351,7 @@ export const TaskHeader = ({
                 {(useTM.isTaskPreviewVisible === true || useTM.isCreatingTask.flag === true) && (
                     <Tooltip
                         size="sm"
-                        title="Close Panel"
+                        title={t.tasks.header.closePanel}
                         variant="outlined"
                         sx={{
                             background: styles.menuBg,

@@ -44,6 +44,8 @@ import { useColorScheme } from "@mui/joy/styles";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { fmt, useTranslation } from "../../i18n";
+import type { Messages } from "../../i18n";
 import type { AgentUsage, PendingApprovalPayload } from "../../services/agentApi";
 import { purplePalette } from "../../theme/purplePalette";
 import {
@@ -54,6 +56,8 @@ import {
 } from "./SpotlightResultItem";
 import type { SpotlightResult } from "./types";
 import type { AskState, CompletedTurn, ToolEvent } from "./useSpotlight";
+
+type SpotlightMessages = Messages["spotlight"];
 
 interface Props {
     isOpen: boolean;
@@ -114,6 +118,7 @@ export const SpotlightOverlay = ({
     aiAnswersEnabled,
 }: Props) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -249,12 +254,12 @@ export const SpotlightOverlay = ({
                         component="input"
                         placeholder={
                             askBusy
-                                ? "Wait for the current answer to finish…"
+                                ? t.spotlight.placeholder.askBusy
                                 : !aiAnswersEnabled
-                                  ? "Search chats, tasks, notes (AI answers off)"
+                                  ? t.spotlight.placeholder.aiOff
                                   : hasConversation
-                                    ? "Ask a follow-up — or click ‘Back to search’ to start over"
-                                    : "Search chats, tasks, notes — press Enter to ask Genos"
+                                    ? t.spotlight.placeholder.followUp
+                                    : t.spotlight.placeholder.default
                         }
                         value={localInput}
                         sx={{
@@ -324,7 +329,10 @@ export const SpotlightOverlay = ({
                                           : undefined,
                             }}
                         >
-                            {dailyUsage.used} / {dailyUsage.limit} asks today
+                            {fmt(t.spotlight.usage.asksToday, {
+                                used: dailyUsage.used,
+                                limit: dailyUsage.limit ?? 0,
+                            })}
                         </Typography>
                     )}
                     {ask.isStreaming && (
@@ -335,11 +343,11 @@ export const SpotlightOverlay = ({
                             onClick={onCancel}
                             sx={{ fontSize: "0.875rem", whiteSpace: "nowrap" }}
                         >
-                            Cancel
+                            {t.spotlight.actions.cancel}
                         </Button>
                     )}
                     <Tooltip
-                        title={!aiAnswersEnabled ? "Enable AI answers in Settings" : ""}
+                        title={!aiAnswersEnabled ? t.spotlight.errors.enableAiHint : ""}
                         // Empty title disables the tooltip in MUI Joy.
                         placement="bottom"
                         size="sm"
@@ -357,7 +365,7 @@ export const SpotlightOverlay = ({
                                 variant="solid"
                                 onClick={() => onAsk()}
                             >
-                                Ask
+                                {t.spotlight.actions.ask}
                             </Button>
                         </Box>
                     </Tooltip>
@@ -376,6 +384,7 @@ export const SpotlightOverlay = ({
                     onNewConversation={onNewConversation}
                     onAsk={onAsk}
                     askDisabled={askDisabled}
+                    ts={t.spotlight}
                 />
 
                 {/* Results / states — hidden once a conversation is in
@@ -393,10 +402,7 @@ export const SpotlightOverlay = ({
                     }}
                 >
                     {!hasQuery && (
-                        <EmptyHint
-                            text="Start typing to search across chats, tasks, and notes."
-                            isDark={isDark}
-                        />
+                        <EmptyHint text={t.spotlight.empty.initial} isDark={isDark} />
                     )}
 
                     {hasQuery && isLoading && !hasResults && (
@@ -417,7 +423,7 @@ export const SpotlightOverlay = ({
                                     color: isDark ? DARK_TEXT_MEDIUM : undefined,
                                 }}
                             >
-                                Searching…
+                                {t.spotlight.states.searching}
                             </Typography>
                         </Box>
                     )}
@@ -425,10 +431,7 @@ export const SpotlightOverlay = ({
                     {hasQuery && error && <EmptyHint text={error} tone="error" isDark={isDark} />}
 
                     {hasQuery && !isLoading && !error && !hasResults && (
-                        <EmptyHint
-                            text="No matches yet — try different keywords."
-                            isDark={isDark}
-                        />
+                        <EmptyHint text={t.spotlight.empty.noMatches} isDark={isDark} />
                     )}
 
                     {hasResults && (
@@ -503,6 +506,7 @@ interface ConversationPanelProps {
     onNewConversation: () => void;
     onAsk: (overrideQuery?: string) => void;
     askDisabled: boolean;
+    ts: SpotlightMessages;
 }
 
 const hasAskContent = (ask: AskState): boolean =>
@@ -528,6 +532,7 @@ const ConversationPanel = memo(
         onNewConversation,
         onAsk,
         askDisabled,
+        ts,
     }: ConversationPanelProps) => {
         const scrollRef = useRef<HTMLDivElement | null>(null);
         // True when the user has scrolled away from the bottom. We pause
@@ -628,15 +633,15 @@ const ConversationPanel = memo(
                                 textTransform: "uppercase",
                             }}
                         >
-                            AI conversation
+                            {ts.conversation.header}
                             {turns.length > 0
-                                ? ` · ${turns.length} turn${turns.length === 1 ? "" : "s"}`
+                                ? ` · ${fmt(ts.conversation.turnCount, { count: turns.length })}`
                                 : ""}
                         </Typography>
                         <Box sx={{ ml: "auto" }}>
                             {(turns.length > 0 || ask.sessionId) && (
                                 <Tooltip
-                                    title="Clear this conversation and return to the search view"
+                                    title={ts.conversation.backToSearchTooltip}
                                     placement="bottom"
                                     size="sm"
                                     variant="outlined"
@@ -651,7 +656,7 @@ const ConversationPanel = memo(
                                         onClick={onNewConversation}
                                         sx={{ fontSize: "0.875rem", py: 0.25 }}
                                     >
-                                        Back to search
+                                        {ts.actions.backToSearch}
                                     </Button>
                                 </Tooltip>
                             )}
@@ -659,19 +664,20 @@ const ConversationPanel = memo(
                     </Box>
                 )}
 
-                {turns.map((t) => (
+                {turns.map((turn) => (
                     <TurnView
-                        key={t.id}
-                        askedQuery={t.askedQuery}
-                        answer={t.answer}
-                        answerSources={t.answerSources}
-                        toolEvents={t.toolEvents}
-                        askError={t.askError}
+                        key={turn.id}
+                        askedQuery={turn.askedQuery}
+                        answer={turn.answer}
+                        answerSources={turn.answerSources}
+                        toolEvents={turn.toolEvents}
+                        askError={turn.askError}
                         isCurrent={false}
                         isDark={isDark}
                         onSelect={onSelect}
-                        onRetry={() => onAsk(t.askedQuery)}
+                        onRetry={() => onAsk(turn.askedQuery)}
                         askDisabled={askDisabled}
+                        ts={ts}
                     />
                 ))}
 
@@ -691,6 +697,7 @@ const ConversationPanel = memo(
                         onReject={onReject}
                         onRetry={() => onAsk(ask.askedQuery)}
                         askDisabled={askDisabled}
+                        ts={ts}
                     />
                 )}
             </Box>
@@ -722,6 +729,7 @@ interface TurnViewProps {
     onReject?: () => void;
     onRetry?: () => void;
     askDisabled?: boolean;
+    ts: SpotlightMessages;
 }
 
 // Matches the citation tokens the prompt (`prompts.py`) instructs the
@@ -748,12 +756,16 @@ const CITATION_PATTERN = /\[((?:chat|task|note):[^\]\s]+)\]/g;
  *  is clearer to drop the link affordance entirely and rely on the
  *  source-chip row for navigation.
  */
-function rewriteCitations(answer: string, sourcesById: Map<string, SpotlightResult>): string {
+function rewriteCitations(
+    answer: string,
+    sourcesById: Map<string, SpotlightResult>,
+    ts: SpotlightMessages
+): string {
     if (!answer || sourcesById.size === 0) return answer;
     return answer.replace(CITATION_PATTERN, (match, entityId: string) => {
         const source = sourcesById.get(entityId);
         if (!source) return match;
-        const label = (source.title || "").trim() || entitySubtitle(source);
+        const label = (source.title || "").trim() || entitySubtitle(source, ts);
         // Markdown emphasis tokens (`*`) inside the label would break
         // the wrapping italics; neutralise defensively even though
         // titles in this app are user-authored and rarely contain `*`.
@@ -777,6 +789,7 @@ const TurnView = ({
     onReject,
     onRetry,
     askDisabled,
+    ts,
 }: TurnViewProps) => {
     const [copied, setCopied] = useState(false);
     const [showAllSources, setShowAllSources] = useState(false);
@@ -791,8 +804,8 @@ const TurnView = ({
     }, [answerSources]);
 
     const answerForRender = useMemo(
-        () => rewriteCitations(answer, sourcesById),
-        [answer, sourcesById]
+        () => rewriteCitations(answer, sourcesById, ts),
+        [answer, sourcesById, ts]
     );
 
     const handleCopy = useCallback(() => {
@@ -849,7 +862,7 @@ const TurnView = ({
                             mt: "2px",
                         }}
                     >
-                        Q
+                        {ts.conversation.turnLabelQ}
                     </Typography>
                     <Typography
                         level="body-md"
@@ -877,7 +890,7 @@ const TurnView = ({
                         color: "primary.500",
                     }}
                 >
-                    A
+                    {ts.conversation.turnLabelA}
                 </Typography>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                     {isCurrent && isStreaming && !pendingApproval && (
@@ -893,7 +906,7 @@ const TurnView = ({
                                     color: isDark ? DARK_TEXT_MEDIUM : undefined,
                                 }}
                             >
-                                streaming…
+                                {ts.states.streaming}
                             </Typography>
                         </Box>
                     )}
@@ -907,7 +920,7 @@ const TurnView = ({
                                 mb: 0.5,
                             }}
                         >
-                            awaiting your approval
+                            {ts.states.awaitingApproval}
                         </Typography>
                     )}
 
@@ -921,6 +934,7 @@ const TurnView = ({
                             isDark={isDark}
                             onApprove={onApprove}
                             onReject={onReject}
+                            ts={ts}
                         />
                     )}
 
@@ -1028,7 +1042,7 @@ const TurnView = ({
                                 color: isDark ? DARK_TEXT_MEDIUM : undefined,
                             }}
                         >
-                            Thinking…
+                            {ts.states.thinking}
                         </Typography>
                     )}
 
@@ -1072,7 +1086,7 @@ const TurnView = ({
                                             onClick={() => onSelect(s)}
                                         >
                                             <HighlightedText
-                                                text={_chipLabel(s)}
+                                                text={_chipLabel(s, ts)}
                                                 query={askedQuery}
                                                 extraTerms={s.matched_terms}
                                             />
@@ -1091,7 +1105,7 @@ const TurnView = ({
                                                 fontSize: "0.875rem",
                                             }}
                                         >
-                                            +{hiddenCount} more
+                                            {fmt(ts.actions.moreCount, { count: hiddenCount })}
                                         </Button>
                                     )}
                                     {showAllSources && answerSources.length > CHIPS_INITIAL && (
@@ -1108,7 +1122,7 @@ const TurnView = ({
                                                 opacity: 0.65,
                                             }}
                                         >
-                                            Show less
+                                            {ts.actions.showLess}
                                         </Button>
                                     )}
                                 </Box>
@@ -1129,7 +1143,7 @@ const TurnView = ({
                             variant="plain"
                             color={copied ? "success" : "neutral"}
                             onClick={handleCopy}
-                            title="Copy answer"
+                            title={ts.actions.copyAnswer}
                             sx={{ minWidth: 0, p: "3px" }}
                         >
                             {copied ? (
@@ -1146,7 +1160,7 @@ const TurnView = ({
                             color="neutral"
                             disabled={askDisabled}
                             onClick={onRetry}
-                            title="Ask again"
+                            title={ts.actions.retry}
                             sx={{ minWidth: 0, p: "3px" }}
                         >
                             <ReplayRoundedIcon sx={{ fontSize: 14 }} />
@@ -1258,29 +1272,31 @@ function _titleSnippet(title: string | null, maxLen = 32): string {
     return t.length > maxLen ? t.slice(0, maxLen) + "…" : t;
 }
 
-function _chipLabel(s: SpotlightResult): string {
+function _chipLabel(s: SpotlightResult, ts: SpotlightMessages): string {
     const title = _titleSnippet(s.title);
     const sep = title ? `: ${title}` : "";
 
     // Reuse the same vocabulary the result rows use so the agent's
     // source citations don't drift from the search-result subtitles.
     // `entitySubtitle` returns e.g. "Direct message" / "Task" / "Chat
-    // note"; `badgeFor` returns "Thread" / "Comment" / null when the
-    // matched chunk was a thread reply / task comment.
-    const subtitle = entitySubtitle(s);
+    // note"; `badgeFor` returns "thread" / "comment" / null when the
+    // matched chunk was a thread reply / task comment. The full-string
+    // templates in `ts.chip.*` keep composed labels translatable rather
+    // than concatenating translated pieces.
+    const subtitle = entitySubtitle(s, ts);
     const badge = badgeFor(s);
 
     if (s.entity_type === "task" && s.task_id) {
-        const label = badge === "Comment" ? `${subtitle} comment` : subtitle;
-        return `${label} (#${s.task_id})${sep}`;
+        const template = badge === "comment" ? ts.chip.taskComment : ts.chip.taskPlain;
+        return fmt(template, { subtitle, id: s.task_id, sep });
     }
     if (s.entity_type === "chat" && s.chat_id) {
-        const label = badge === "Thread" ? `${subtitle} thread` : subtitle;
-        return `${label} (#${s.chat_id})${sep}`;
+        const template = badge === "thread" ? ts.chip.chatThread : ts.chip.chatPlain;
+        return fmt(template, { subtitle, id: s.chat_id, sep });
     }
     if (s.entity_type === "note" && s.note_id) {
-        const label = badge === "Thread" ? `${subtitle} (thread)` : subtitle;
-        return `${label} (#${s.note_id})${sep}`;
+        const template = badge === "thread" ? ts.chip.noteThread : ts.chip.notePlain;
+        return fmt(template, { subtitle, id: s.note_id, sep });
     }
     // Fallback to raw entity_id if specific ids are absent.
     return title ? `${s.entity_id}: ${title}` : s.entity_id;
@@ -1321,9 +1337,10 @@ interface ApprovalCardProps {
     isDark: boolean;
     onApprove: () => void;
     onReject: () => void;
+    ts: SpotlightMessages;
 }
 
-const ApprovalCard = ({ pending, isDark, onApprove, onReject }: ApprovalCardProps) => {
+const ApprovalCard = ({ pending, isDark, onApprove, onReject, ts }: ApprovalCardProps) => {
     const argEntries = Object.entries(pending.arguments || {});
     const palette = isDark ? purplePalette.dark : purplePalette.light;
     return (
@@ -1349,7 +1366,7 @@ const ApprovalCard = ({ pending, isDark, onApprove, onReject }: ApprovalCardProp
                     mb: 0.5,
                 }}
             >
-                Approval required: {pending.tool_name}
+                {fmt(ts.approval.titleWithTool, { toolName: pending.tool_name })}
             </Typography>
             {argEntries.length > 0 && (
                 <Box
@@ -1383,7 +1400,7 @@ const ApprovalCard = ({ pending, isDark, onApprove, onReject }: ApprovalCardProp
                     onClick={onApprove}
                     sx={{ fontSize: "0.9375rem" }}
                 >
-                    Approve
+                    {ts.actions.approve}
                 </Button>
                 <Button
                     size="sm"
@@ -1392,7 +1409,7 @@ const ApprovalCard = ({ pending, isDark, onApprove, onReject }: ApprovalCardProp
                     onClick={onReject}
                     sx={{ fontSize: "0.9375rem" }}
                 >
-                    Reject
+                    {ts.actions.reject}
                 </Button>
             </Box>
         </Box>

@@ -17,6 +17,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
 import { popTeamMembers } from "../../../chat/services/popTeamMembers";
@@ -32,7 +33,14 @@ const materialTheme = createTheme({ cssVariables: true });
 // Column definitions for the table
 export type ColumnDef = {
     field: string;
+    // `headerName` is the resolved label that gets rendered. It's filled
+    // in at render time from `headerLabelKey` (or stays empty for the
+    // expand column). Kept on the type so downstream consumers can read
+    // the rendered label without re-resolving from the i18n catalog.
     headerName: string;
+    // Key into `t.tasks.table.columns` used to localize the header. The
+    // expand column has no label so it omits the key.
+    headerLabelKey?: keyof (typeof import("../../../../i18n/locales/en/tasks").tasks)["table"]["columns"];
     width: number;
     minWidth?: number;
     maxWidth?: number;
@@ -44,10 +52,18 @@ export type ColumnDef = {
 
 export const defaultColumns: ColumnDef[] = [
     { field: "__expand", headerName: "", width: 32, align: "center", resizable: false },
-    { field: "id", headerName: "ID", width: 80, align: "center", resizable: false },
+    {
+        field: "id",
+        headerName: "ID",
+        headerLabelKey: "id",
+        width: 80,
+        align: "center",
+        resizable: false,
+    },
     {
         field: "status",
         headerName: "Status",
+        headerLabelKey: "status",
         width: 105,
         minWidth: 80,
         align: "center",
@@ -57,6 +73,7 @@ export const defaultColumns: ColumnDef[] = [
     {
         field: "tags",
         headerName: "Tags",
+        headerLabelKey: "tags",
         width: 110,
         minWidth: 80,
         align: "center",
@@ -65,6 +82,7 @@ export const defaultColumns: ColumnDef[] = [
     {
         field: "title",
         headerName: "Title",
+        headerLabelKey: "title",
         width: 300,
         minWidth: 150,
         maxWidth: 800,
@@ -75,6 +93,7 @@ export const defaultColumns: ColumnDef[] = [
     {
         field: "assigneeId",
         headerName: "Assignee",
+        headerLabelKey: "assignee",
         width: 150,
         minWidth: 150,
         maxWidth: 400,
@@ -85,6 +104,7 @@ export const defaultColumns: ColumnDef[] = [
     {
         field: "priority",
         headerName: "Priority",
+        headerLabelKey: "priority",
         width: 100,
         minWidth: 80,
         align: "center",
@@ -94,6 +114,7 @@ export const defaultColumns: ColumnDef[] = [
     {
         field: "effortLevel",
         headerName: "Effort Level",
+        headerLabelKey: "effortLevel",
         width: 100,
         minWidth: 80,
         align: "center",
@@ -103,6 +124,7 @@ export const defaultColumns: ColumnDef[] = [
     {
         field: "daysLeft",
         headerName: "Days Left",
+        headerLabelKey: "daysLeft",
         width: 100,
         minWidth: 80,
         align: "center",
@@ -111,6 +133,7 @@ export const defaultColumns: ColumnDef[] = [
     {
         field: "dueDate",
         headerName: "Due Date",
+        headerLabelKey: "dueDate",
         width: 110,
         minWidth: 80,
         align: "center",
@@ -124,6 +147,7 @@ export const defaultColumns: ColumnDef[] = [
         // through SprintMilestonePicker in the task preview pane.
         field: "sprint",
         headerName: "Sprint",
+        headerLabelKey: "sprint",
         width: 130,
         minWidth: 90,
         maxWidth: 240,
@@ -133,6 +157,7 @@ export const defaultColumns: ColumnDef[] = [
     {
         field: "updatedAt",
         headerName: "Last Updated",
+        headerLabelKey: "updatedAt",
         width: 180,
         minWidth: 120,
         align: "center",
@@ -141,6 +166,7 @@ export const defaultColumns: ColumnDef[] = [
     {
         field: "createdDate",
         headerName: "Created Date",
+        headerLabelKey: "createdDate",
         width: 120,
         minWidth: 100,
         align: "center",
@@ -277,10 +303,13 @@ const cmpValues = (a: number | string | null, b: number | string | null): number
     return String(a).localeCompare(String(b));
 };
 
-// Status options for dropdown
+// Status options for dropdown. `label` doubles as a fallback for the
+// rendered display string; the actual UI looks up the label by
+// `t.tasks.filters[labelKey]` at render time (see DraggableTaskRow).
 export const statusOptions = [
     {
         label: "Open",
+        labelKey: "open" as const,
         value: "Open",
         color: "#0044c2",
         textColor: "white",
@@ -288,6 +317,7 @@ export const statusOptions = [
     },
     {
         label: "WIP",
+        labelKey: "wip" as const,
         value: "WIP",
         color: "#ff8c00",
         textColor: "white",
@@ -295,6 +325,7 @@ export const statusOptions = [
     },
     {
         label: "Pending",
+        labelKey: "pending" as const,
         value: "Pending",
         color: "#b900ff",
         textColor: "white",
@@ -302,6 +333,7 @@ export const statusOptions = [
     },
     {
         label: "Closed",
+        labelKey: "closed" as const,
         value: "Closed",
         color: "#1dc200",
         textColor: "white",
@@ -309,6 +341,7 @@ export const statusOptions = [
     },
     {
         label: "Deleted",
+        labelKey: "deleted" as const,
         value: "Deleted",
         color: "#ff2323",
         textColor: "white",
@@ -409,6 +442,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
     } = props;
     const { mode: colorMode } = useColorScheme();
     const { accessToken } = useAuth();
+    const { t } = useTranslation();
     const isDark = colorMode === "dark";
     // Normalize mode to only "light" | "dark" | undefined (treat "system" as undefined)
     const mode: "light" | "dark" | undefined =
@@ -627,6 +661,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
             if (loadedProjectTags.length > 0) {
                 const allTagFilter: FilterProps = {
                     label: "All",
+                    labelKey: "all",
                     filterModel: { items: [] },
                     lightModeColor: "#6b7280",
                     darkModeColor: "#9ca3af",
@@ -1084,12 +1119,22 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
 
     const visibleColumns = useMemo(
         () =>
-            defaultColumns.filter((col) => {
-                if (col.hidden) return false;
-                if (col.field === "sprint" && !hasMilestoneInDisplay) return false;
-                return true;
-            }),
-        [hasMilestoneInDisplay]
+            defaultColumns
+                .filter((col) => {
+                    if (col.hidden) return false;
+                    if (col.field === "sprint" && !hasMilestoneInDisplay) return false;
+                    return true;
+                })
+                .map((col) => ({
+                    ...col,
+                    // Resolve the translated label for this header at render
+                    // time. Columns without a labelKey (only `__expand`) keep
+                    // their empty headerName.
+                    headerName: col.headerLabelKey
+                        ? t.tasks.table.columns[col.headerLabelKey]
+                        : col.headerName,
+                })),
+        [hasMilestoneInDisplay, t]
     );
 
     // Create columns with dynamic widths for passing to rows
@@ -1212,7 +1257,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                 {/* Resize handle */}
                                 {column.resizable !== false && (
                                     <div
-                                        title="Drag to resize column"
+                                        title={t.tasks.table.dragToResizeColumn}
                                         style={getResizeHandleStyles(
                                             resizingColumn === column.field,
                                             mode

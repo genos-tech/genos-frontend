@@ -9,8 +9,12 @@ import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded
 import { Box, Chip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { useTranslation } from "../../i18n";
+import type { Messages } from "../../i18n";
 import { purplePalette } from "../../theme/purplePalette";
 import type { SpotlightResult } from "./types";
+
+type SpotlightMessages = Messages["spotlight"];
 
 interface Props {
     result: SpotlightResult;
@@ -41,33 +45,35 @@ const DARK_TEXT_SOFT = "#a89bbf";
 // Friendly label shown next to the icon for context (e.g. "DM",
 // "Group chat", "Personal note"). Exported so the agent's source-chip
 // renderer (`_chipLabel` in SpotlightOverlay) reuses the same wording
-// — keeps the two surfaces from drifting.
-export const entitySubtitle = (r: SpotlightResult): string => {
+// — keeps the two surfaces from drifting. Accepts the translation
+// dictionary so the labels stay locale-aware without turning this pure
+// helper into a hook.
+export const entitySubtitle = (r: SpotlightResult, ts: SpotlightMessages): string => {
     if (r.entity_type === "chat") {
         switch (r.chat_type) {
             case "dm":
-                return "Direct message";
+                return ts.entitySubtitle.dm;
             case "gm":
-                return "Group chat";
+                return ts.entitySubtitle.gm;
             case "mdm":
-                return "Multi-DM";
+                return ts.entitySubtitle.mdm;
             case "pm":
-                return "Project chat";
+                return ts.entitySubtitle.pm;
             default:
-                return "Chat";
+                return ts.entitySubtitle.chatFallback;
         }
     }
-    if (r.entity_type === "task") return "Task";
+    if (r.entity_type === "task") return ts.entitySubtitle.task;
     if (r.entity_type === "note") {
         switch (r.note_type) {
             case "personal":
-                return "Personal note";
+                return ts.entitySubtitle.notePersonal;
             case "task":
-                return "Task note";
+                return ts.entitySubtitle.noteTask;
             case "chat":
-                return "Chat note";
+                return ts.entitySubtitle.noteChat;
             default:
-                return "Note";
+                return ts.entitySubtitle.noteFallback;
         }
     }
     return "";
@@ -76,6 +82,10 @@ export const entitySubtitle = (r: SpotlightResult): string => {
 // Short uppercase tag rendered next to the subtitle when the matched
 // chunk wasn't a top-level message/title. Returns null when the hit
 // is "plain" (main-channel chat, task title/body, non-thread note).
+//
+// Returns a stable key ("thread" / "comment") rather than a display
+// string so callers can branch on it and resolve the translation
+// separately via `badgeLabel`.
 //
 // Signal sources:
 //   - Chat thread reply: `entity_type=chat` AND `thread_id` set.
@@ -88,15 +98,22 @@ export const entitySubtitle = (r: SpotlightResult): string => {
 //     `_group_by_entity` in backend `search.py`).
 //   - Chat note attached to a thread: `entity_type=note`,
 //     `note_type=chat` AND `thread_id` set on the chunk.
-export const badgeFor = (r: SpotlightResult): string | null => {
-    if (r.entity_type === "chat" && r.thread_id) return "Thread";
+export type BadgeKey = "thread" | "comment";
+
+export const badgeFor = (r: SpotlightResult): BadgeKey | null => {
+    if (r.entity_type === "chat" && r.thread_id) return "thread";
     if (r.entity_type === "task" && r.matched_chunk_types[0] === "task_comment") {
-        return "Comment";
+        return "comment";
     }
     if (r.entity_type === "note" && r.note_type === "chat" && r.thread_id) {
-        return "Thread";
+        return "thread";
     }
     return null;
+};
+
+// Resolves a badge key to its localized display label.
+export const badgeLabel = (key: BadgeKey, ts: SpotlightMessages): string => {
+    return key === "thread" ? ts.badges.thread : ts.badges.comment;
 };
 
 // Bolds substrings of `text` that match any token built from
@@ -210,6 +227,7 @@ function windowAroundMatch(text: string, query: string, extraTerms?: string[]): 
 
 export const SpotlightResultItem = ({ result, query, isHighlighted, onSelect }: Props) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const palette = isDark ? purplePalette.dark : purplePalette.light;
     const Icon = ENTITY_ICON[result.entity_type] ?? QuestionAnswerRoundedIcon;
@@ -279,7 +297,7 @@ export const SpotlightResultItem = ({ result, query, isHighlighted, onSelect }: 
                                 extraTerms={result.matched_terms}
                             />
                         ) : (
-                            "(untitled)"
+                            t.spotlight.states.untitled
                         )}
                     </Typography>
                     <Typography
@@ -290,7 +308,7 @@ export const SpotlightResultItem = ({ result, query, isHighlighted, onSelect }: 
                             flexShrink: 0,
                         }}
                     >
-                        {entitySubtitle(result)}
+                        {entitySubtitle(result, t.spotlight)}
                     </Typography>
                     {(() => {
                         const badge = badgeFor(result);
@@ -317,7 +335,7 @@ export const SpotlightResultItem = ({ result, query, isHighlighted, onSelect }: 
                                     "--Chip-paddingInline": "6px",
                                 }}
                             >
-                                {badge}
+                                {badgeLabel(badge, t.spotlight)}
                             </Chip>
                         );
                     })()}

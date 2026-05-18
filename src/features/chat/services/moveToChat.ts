@@ -2,6 +2,7 @@ import { Socket } from "socket.io-client";
 
 import { ChatService } from "../../../db/services/chat.service";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
+import { getMessages } from "../../../i18n";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps, MessageProps } from "../../../types/chat";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
@@ -65,13 +66,16 @@ export const moveToGMChat = async (
     }
 };
 
-const joinedMessage = [
-    {
-        type: "paragraph",
-        content: [{ type: "text", text: "Has joined", styles: {} }],
-    },
-    { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] },
-];
+const getJoinedMessage = () => {
+    const msgs = getMessages();
+    return [
+        {
+            type: "paragraph",
+            content: [{ type: "text", text: msgs.chat.system.hasJoined, styles: {} }],
+        },
+        { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] },
+    ];
+};
 
 export const moveToSelectedChat = async (
     myself: UserProps,
@@ -85,6 +89,8 @@ export const moveToSelectedChat = async (
     useCM: ChatManagementState,
     setOpenSearchBox: (value: boolean) => void
 ) => {
+    const msgs = getMessages();
+    const joinedMessage = getJoinedMessage();
     try {
         // Check if the chat is known / already joined.
         const isKnownChat: boolean = await checkKnownChat(chatId, chatType);
@@ -115,7 +121,7 @@ export const moveToSelectedChat = async (
                             chatId: chatId,
                             messageId: 1,
                             content: joinedMessage,
-                            contentText: "Has joined",
+                            contentText: msgs.chat.system.hasJoined,
                             sender: myself,
                             tsSent: getLocalCurrentTimestamp(),
                             tsUpdated: getLocalCurrentTimestamp(),
@@ -130,7 +136,7 @@ export const moveToSelectedChat = async (
                             dmPartnerUser: dmPartnerUser,
                             lastReadMessageId: -1,
                             latestMessage: message,
-                            latestMessageText: "Has joined",
+                            latestMessageText: msgs.chat.system.hasJoined,
                             TSLastMessage: getLocalCurrentTimestamp(),
                             isPrivate: false,
                         };

@@ -10,6 +10,7 @@ import { alpha } from "@mui/system";
 
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../i18n";
 import { SearchTeamTasksResponse } from "../../../../types/tasks";
 import { Toggler } from "./common";
 
@@ -23,6 +24,7 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
     const { recentTasks, usePM, useTM } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const { t } = useTranslation();
 
     // Group tasks by projectName and sort by tsUpdated descending
     const groupedTasks = useMemo(() => {
@@ -118,7 +120,7 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                                     color: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.8)",
                                 }}
                             >
-                                Recents
+                                {t.tasks.sidebar.recents}
                             </Typography>
                         </ListItemContent>
                         <KeyboardArrowDownIcon

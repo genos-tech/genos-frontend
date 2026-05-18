@@ -7,6 +7,7 @@ import { keyframes } from "@emotion/react";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
+import { getMessages, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 
 const fadeIn = keyframes`
@@ -33,9 +34,11 @@ type Props = {
 };
 export const ModalJoinGM: React.FC<Props> = ({ socket, myself, openJoinGM, setOpenJoinGM }) => {
     const { accessToken } = useAuth();
+    const { t } = useTranslation();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     async function joinGM(): Promise<void> {
+        const msgs = getMessages();
         try {
             if (socket !== null) {
                 socket.emit(
@@ -55,7 +58,7 @@ export const ModalJoinGM: React.FC<Props> = ({ socket, myself, openJoinGM, setOp
                                 },
                                 content: [
                                     {
-                                        text: "Has sent a request to join the GM: ",
+                                        text: msgs.chat.modals.joinGM.joinRequestPrefix,
                                         type: "text",
                                         styles: {},
                                     },
@@ -65,7 +68,7 @@ export const ModalJoinGM: React.FC<Props> = ({ socket, myself, openJoinGM, setOp
                                         styles: { bold: true, textColor: "pink" },
                                     },
                                     {
-                                        text: ".",
+                                        text: msgs.chat.modals.joinGM.joinRequestSuffix,
                                         type: "text",
                                         styles: {},
                                     },
@@ -99,13 +102,13 @@ export const ModalJoinGM: React.FC<Props> = ({ socket, myself, openJoinGM, setOp
                             }),
                         });
                         if (!sendInboxMessageResponse.ok) {
-                            throw new Error("Failed to send a inbox message");
+                            throw new Error(msgs.chat.modals.joinGM.sendInboxError);
                         }
                     }
                 );
                 setOpenJoinGM(disableOpenJoinGMParams);
             } else {
-                const err_msg: string = "Socket not found.";
+                const err_msg: string = msgs.chat.modals.joinGM.socketNotFound;
                 console.error(err_msg);
                 setErrorMessage(err_msg);
                 throw new Error(err_msg);
@@ -169,7 +172,7 @@ export const ModalJoinGM: React.FC<Props> = ({ socket, myself, openJoinGM, setOp
                         level="body-sm"
                         sx={{ color: "rgba(255, 255, 255, 0.5)", textTransform: "uppercase", letterSpacing: "0.1em" }}
                     >
-                        Private Group
+                        {t.chat.modals.joinGM.privateGroupLabel}
                     </Typography>
                 </Box>
 
@@ -181,7 +184,7 @@ export const ModalJoinGM: React.FC<Props> = ({ socket, myself, openJoinGM, setOp
                         mb: 0.5,
                     }}
                 >
-                    Request to Join
+                    {t.chat.modals.joinGM.requestToJoin}
                 </Typography>
 
                 <Typography
@@ -228,7 +231,7 @@ export const ModalJoinGM: React.FC<Props> = ({ socket, myself, openJoinGM, setOp
                             },
                         }}
                     >
-                        Cancel
+                        {t.chat.modals.joinGM.cancel}
                     </Button>
                     <Button
                         onClick={handleJoinGM}
@@ -246,7 +249,7 @@ export const ModalJoinGM: React.FC<Props> = ({ socket, myself, openJoinGM, setOp
                             },
                         }}
                     >
-                        Send Request
+                        {t.chat.modals.joinGM.sendRequest}
                     </Button>
                 </Stack>
             </ModalDialog>

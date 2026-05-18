@@ -12,6 +12,7 @@ import { BnChatPreview } from "../../../components/editors/bnChatPreview";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
+import { fmt, getMessages, useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
 import { UserProps } from "../../../types/admin";
 import { InboxItemProps } from "../../../types/common";
@@ -21,10 +22,12 @@ import { extractYYYYMMDDHHMM } from "../../../utils/dateUtils";
 // NOT mapped to the unified purple palette — each request type needs a
 // distinct hue (Team=blue, Project=green, GM=pink) so the user can tell
 // request types apart at a glance in a dense inbox.
+type RequestLabelKey = "teamRequest" | "projectRequest" | "gmRequest";
+
 const ITEM_TYPE_CONFIG: Record<
     number,
     {
-        label: string;
+        labelKey: RequestLabelKey;
         icon: React.ReactNode;
         approveEvent: string;
         rejectEvent: string;
@@ -32,21 +35,21 @@ const ITEM_TYPE_CONFIG: Record<
     }
 > = {
     1: {
-        label: "Team Request",
+        labelKey: "teamRequest",
         icon: <GroupsRoundedIcon sx={{ fontSize: 14 }} />,
         approveEvent: "approve_join_team_request",
         rejectEvent: "reject_join_team_request",
         colorScheme: { dark: "#60a5fa", light: "#3b82f6" },
     },
     2: {
-        label: "Project Request",
+        labelKey: "projectRequest",
         icon: <FolderRoundedIcon sx={{ fontSize: 14 }} />,
         approveEvent: "approve_join_project_request",
         rejectEvent: "reject_join_project_request",
         colorScheme: { dark: "#4ade80", light: "#22c55e" },
     },
     3: {
-        label: "GM Request",
+        labelKey: "gmRequest",
         icon: <ChatRoundedIcon sx={{ fontSize: 14 }} />,
         approveEvent: "approve_join_gm_request",
         rejectEvent: "reject_join_gm_request",
@@ -67,6 +70,7 @@ type InboxBubbleProps = {
 export const InboxBubble = (props: InboxBubbleProps) => {
     const { useTEM, socket, myself, setMyself, inboxItem, useUISM, useCM } = props;
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const palette = isDark ? purplePalette.dark : purplePalette.light;
     const [localStatus, setLocalStatus] = useState<"approved" | "rejected" | null>(null);
@@ -170,7 +174,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                                 },
                             }}
                         >
-                            {config.label}
+                            {t.inbox.requestTypes[config.labelKey]}
                         </Chip>
                     )}
 
@@ -246,7 +250,9 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                                     },
                                 }}
                             >
-                                {resolvedStatus === "rejected" ? "Rejected" : "Approved"}
+                                {resolvedStatus === "rejected"
+                                    ? t.inbox.bubble.rejected
+                                    : t.inbox.bubble.approved}
                             </Button>
                         ) : (
                             <>
@@ -277,7 +283,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                                         },
                                     }}
                                 >
-                                    Reject
+                                    {t.inbox.bubble.reject}
                                 </Button>
                                 <Button
                                     size="sm"
@@ -307,7 +313,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                                         },
                                     }}
                                 >
-                                    Approve
+                                    {t.inbox.bubble.approve}
                                 </Button>
                             </>
                         )}
@@ -320,9 +326,10 @@ export const InboxBubble = (props: InboxBubbleProps) => {
 
 // Export helper for generating approval notification body
 export const getItemBody = (requestType: number, targetName: string) => {
+    const messages = getMessages();
     const requestNameLookUp: Record<number, string> = {
-        1: "team",
-        2: "project",
+        1: messages.inbox.requestTargets.team,
+        2: messages.inbox.requestTargets.project,
     };
 
     return [
@@ -335,7 +342,9 @@ export const getItemBody = (requestType: number, targetName: string) => {
             },
             content: [
                 {
-                    text: `Request has been approved to join the ${requestNameLookUp[requestType]}: `,
+                    text: fmt(messages.inbox.notification.approvalBody, {
+                        target: requestNameLookUp[requestType],
+                    }),
                     type: "text",
                     styles: {},
                 },

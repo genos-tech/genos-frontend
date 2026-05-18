@@ -4,6 +4,7 @@ import AutocompleteOption from "@mui/joy/AutocompleteOption";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 
+import { useTranslation } from "../../../../i18n";
 import { TaskProps } from "../../../../types/tasks";
 import { effortLevels } from "../../utils/taskMeta";
 
@@ -16,6 +17,7 @@ export const ACTaskEffortLevel = (props: ACTaskEffortLevelProps) => {
     const { taskContent, setTaskContent, setTaskUpdated } = props;
 
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
 
     return (
         <Autocomplete
@@ -24,7 +26,7 @@ export const ACTaskEffortLevel = (props: ACTaskEffortLevelProps) => {
             isOptionEqualToValue={(option, value) => option.level === value.level}
             openOnFocus={true}
             options={effortLevels}
-            placeholder="Effort Level"
+            placeholder={t.tasks.autocomplete.effortLevelPlaceholder}
             size="sm"
             sx={{ width: "100%" }}
             renderOption={(props, option) => (

@@ -22,6 +22,7 @@ import {
 } from "@mui/joy";
 
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
+import { fmt, useTranslation } from "../../../../i18n";
 import { Sprint } from "../types";
 
 type Props = {
@@ -32,20 +33,20 @@ type Props = {
 };
 
 const DURATION_PRESETS = [
-    { label: "1 week", value: 7 },
-    { label: "2 weeks", value: 14 },
-    { label: "3 weeks", value: 21 },
-    { label: "4 weeks", value: 28 },
+    { labelKey: "oneWeek" as const, value: 7 },
+    { labelKey: "twoWeeks" as const, value: 14 },
+    { labelKey: "threeWeeks" as const, value: 21 },
+    { labelKey: "fourWeeks" as const, value: 28 },
 ];
 
 const WEEKDAYS = [
-    { label: "Sunday", value: 0 },
-    { label: "Monday", value: 1 },
-    { label: "Tuesday", value: 2 },
-    { label: "Wednesday", value: 3 },
-    { label: "Thursday", value: 4 },
-    { label: "Friday", value: 5 },
-    { label: "Saturday", value: 6 },
+    { labelKey: "sunday" as const, value: 0 },
+    { labelKey: "monday" as const, value: 1 },
+    { labelKey: "tuesday" as const, value: 2 },
+    { labelKey: "wednesday" as const, value: 3 },
+    { labelKey: "thursday" as const, value: 4 },
+    { labelKey: "friday" as const, value: 5 },
+    { labelKey: "saturday" as const, value: 6 },
 ];
 
 const todayIso = () => new Date().toISOString().slice(0, 10);
@@ -99,6 +100,7 @@ const computeRealignmentPlan = (
 };
 
 export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) => {
+    const { t } = useTranslation();
     const [durationDays, setDurationDays] = useState<number>(14);
     const [anchorDate, setAnchorDate] = useState<string>(todayIso());
     const [autoRoll, setAutoRoll] = useState<boolean>(true);
@@ -150,7 +152,7 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
     const handleSave = async () => {
         setError(null);
         if (!projectId || durationDays <= 0 || !anchorDate) {
-            setError("Duration and start date are required.");
+            setError(t.tasks.sprint.durationRequired);
             return;
         }
         setIsSaving(true);
@@ -219,7 +221,7 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
                 upcomingHorizon,
             });
             if (!saved) {
-                setError("Failed to save sprint config.");
+                setError(t.tasks.sprint.saveConfigFailed);
                 return;
             }
 
@@ -227,7 +229,10 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
 
             if (realignFailed.length) {
                 setError(
-                    `Saved, but ${realignFailed.length} sprint(s) could not be realigned (likely overlap with the current sprint): ${realignFailed.join(", ")}`
+                    fmt(t.tasks.sprint.realignPartialFailure, {
+                        count: realignFailed.length,
+                        names: realignFailed.join(", "),
+                    })
                 );
                 return;
             }
@@ -241,17 +246,14 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
     return (
         <Modal open={open} onClose={onClose}>
             <ModalDialog sx={{ minWidth: 460, maxHeight: "85vh" }}>
-                <DialogTitle>Sprint settings</DialogTitle>
+                <DialogTitle>{t.tasks.sprint.configDialogTitle}</DialogTitle>
                 <Divider />
                 <DialogContent sx={{ overflowY: "auto" }}>
                     <Stack spacing={2.5} sx={{ pt: 1 }}>
-                        <Typography level="body-sm">
-                            Configure the sprint cadence for this project. Auto-rolled sprints are
-                            generated forward from the start date.
-                        </Typography>
+                        <Typography level="body-sm">{t.tasks.sprint.configIntro}</Typography>
 
                         <FormControl>
-                            <FormLabel>Sprint length</FormLabel>
+                            <FormLabel>{t.tasks.sprint.sprintLength}</FormLabel>
                             <Stack direction="row" spacing={1} alignItems="center">
                                 <Select
                                     size="sm"
@@ -265,10 +267,10 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
                                 >
                                     {DURATION_PRESETS.map((p) => (
                                         <Option key={p.value} value={String(p.value)}>
-                                            {p.label}
+                                            {t.tasks.sprint.durations[p.labelKey]}
                                         </Option>
                                     ))}
-                                    <Option value="custom">Custom…</Option>
+                                    <Option value="custom">{t.tasks.sprint.customOption}</Option>
                                 </Select>
                                 <Input
                                     type="number"
@@ -278,14 +280,18 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
                                         const n = parseInt(e.target.value, 10);
                                         if (!Number.isNaN(n) && n > 0) setDurationDays(n);
                                     }}
-                                    endDecorator={<Typography level="body-xs">days</Typography>}
+                                    endDecorator={
+                                        <Typography level="body-xs">
+                                            {t.tasks.sprint.days}
+                                        </Typography>
+                                    }
                                     sx={{ width: 140 }}
                                 />
                             </Stack>
                         </FormControl>
 
                         <FormControl>
-                            <FormLabel>Sprint starts on</FormLabel>
+                            <FormLabel>{t.tasks.sprint.sprintStartsOn}</FormLabel>
                             <Stack direction="row" spacing={1.5} alignItems="center">
                                 <Select
                                     size="sm"
@@ -299,12 +305,13 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
                                 >
                                     {WEEKDAYS.map((w) => (
                                         <Option key={w.value} value={String(w.value)}>
-                                            {w.label}
+                                            {t.tasks.sprint.weekdays[w.labelKey]}
                                         </Option>
                                     ))}
                                 </Select>
                                 <Typography level="body-xs" sx={{ color: "neutral.500" }}>
-                                    Starts on {anchorDate}
+                                    {t.tasks.sprint.startsOnLabel}
+                                    {anchorDate}
                                 </Typography>
                             </Stack>
                             {showDateOverride ? (
@@ -323,18 +330,17 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
                                     onClick={() => setShowDateOverride(true)}
                                     sx={{ mt: 0.5, alignSelf: "flex-start" }}
                                 >
-                                    Pick a specific date →
+                                    {t.tasks.sprint.pickSpecificDate}
                                 </Link>
                             )}
                             <FormHelperText>
-                                Future sprints are generated forward from this date.
-                                {durationDays % 7 !== 0 &&
-                                    " Sprint length isn't a multiple of 7, so later sprints won't keep this weekday."}
+                                {t.tasks.sprint.futureGeneratedHelper}
+                                {durationDays % 7 !== 0 && t.tasks.sprint.weekdayWarning}
                             </FormHelperText>
                         </FormControl>
 
                         <FormControl>
-                            <FormLabel>Auto-roll sprints</FormLabel>
+                            <FormLabel>{t.tasks.sprint.autoRollSprints}</FormLabel>
                             <Stack direction="row" spacing={1.5} alignItems="center">
                                 <Switch
                                     checked={autoRoll}
@@ -342,14 +348,14 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
                                 />
                                 <Typography level="body-sm">
                                     {autoRoll
-                                        ? "Generate upcoming sprints automatically"
-                                        : "Disabled — sprints must be created manually"}
+                                        ? t.tasks.sprint.autoRollEnabled
+                                        : t.tasks.sprint.autoRollDisabled}
                                 </Typography>
                             </Stack>
                         </FormControl>
 
                         <FormControl>
-                            <FormLabel>Upcoming sprints to keep</FormLabel>
+                            <FormLabel>{t.tasks.sprint.upcomingSprintsToKeep}</FormLabel>
                             <Input
                                 type="number"
                                 size="sm"
@@ -360,9 +366,7 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
                                 }}
                                 sx={{ width: 140 }}
                             />
-                            <FormHelperText>
-                                How many future sprints to pre-generate at any time.
-                            </FormHelperText>
+                            <FormHelperText>{t.tasks.sprint.upcomingHelper}</FormHelperText>
                         </FormControl>
 
                         {realignmentPlan.length > 0 && (
@@ -372,9 +376,10 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
                                 sx={{ p: 1.5, borderRadius: 8 }}
                             >
                                 <Typography level="title-sm" sx={{ color: "inherit", mb: 1 }}>
-                                    These {realignmentPlan.length} sprint
-                                    {realignmentPlan.length === 1 ? "" : "s"} will be updated on
-                                    save
+                                    {fmt(t.tasks.sprint.realignWarningTitle, {
+                                        count: realignmentPlan.length,
+                                        plural: realignmentPlan.length === 1 ? "" : "s",
+                                    })}
                                 </Typography>
                                 <Stack spacing={0.5}>
                                     {realignmentPlan.map((p) => (
@@ -441,15 +446,17 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
                             level="body-xs"
                             sx={{ color: "warning.plainColor", mr: "auto" }}
                         >
-                            Will re-date {realignmentPlan.length} future sprint
-                            {realignmentPlan.length === 1 ? "" : "s"}.
+                            {fmt(t.tasks.sprint.willRealign, {
+                                count: realignmentPlan.length,
+                                plural: realignmentPlan.length === 1 ? "" : "s",
+                            })}
                         </Typography>
                     )}
                     <Button variant="plain" color="neutral" onClick={onClose} disabled={isSaving}>
-                        Cancel
+                        {t.tasks.sprint.cancelButton}
                     </Button>
                     <Button onClick={handleSave} loading={isSaving}>
-                        Save
+                        {t.tasks.sprint.saveButton}
                     </Button>
                 </DialogActions>
             </ModalDialog>

@@ -4,6 +4,7 @@ import { Box, Button, Typography } from "@mui/joy";
 import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../../context/AuthContext";
+import { useTranslation } from "../../../i18n";
 import { loadInitialData } from "../../../services/loadInitialData";
 import { UserProps } from "../../../types/admin";
 import { ChatProps } from "../../../types/chat";
@@ -43,6 +44,7 @@ const dotPulse = keyframes`
 export const InitialLoad = (props: InitialLoadProps) => {
     const { myself, setIsLoading, setCurrentMainChat } = props;
     const { accessToken } = useAuth();
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [showSignIn, setShowSignIn] = useState(false);
 
@@ -169,7 +171,7 @@ export const InitialLoad = (props: InitialLoadProps) => {
                         animation: `${shimmer} 2s linear infinite`,
                     }}
                 >
-                    Loading
+                    {t.common.initialLoad.loading}
                 </Typography>
 
                 {/* Subtle subtitle */}
@@ -182,7 +184,7 @@ export const InitialLoad = (props: InitialLoadProps) => {
                         letterSpacing: "0.1em",
                     }}
                 >
-                    Preparing your workspace
+                    {t.common.initialLoad.preparingWorkspace}
                 </Typography>
             </Box>
 
@@ -216,7 +218,7 @@ export const InitialLoad = (props: InitialLoadProps) => {
                             textAlign: "center",
                         }}
                     >
-                        Taking longer than expected?
+                        {t.common.initialLoad.takingLonger}
                     </Typography>
                     <Typography
                         sx={{
@@ -225,7 +227,7 @@ export const InitialLoad = (props: InitialLoadProps) => {
                             mb: 1,
                         }}
                     >
-                        Your session may have expired
+                        {t.common.initialLoad.sessionExpired}
                     </Typography>
                     <Button
                         variant="outlined"
@@ -250,7 +252,7 @@ export const InitialLoad = (props: InitialLoadProps) => {
                             },
                         }}
                     >
-                        Sign In Again
+                        {t.common.initialLoad.signInAgain}
                     </Button>
                 </Box>
             )}

@@ -1,5 +1,6 @@
 import axios from "axios";
 
+import { getMessages } from "../../../i18n";
 import { authApi } from "../../../services/api";
 
 export const createTeam = async (
@@ -8,6 +9,7 @@ export const createTeam = async (
     userId: string,
     setErrorMessage?: (value: string) => void
 ) => {
+    const m = getMessages().admin.auth.errors;
     try {
         const api = authApi(accessToken);
         if (api) {
@@ -20,7 +22,7 @@ export const createTeam = async (
         } else {
             console.error("Unauthorized. Auth toke is not found.");
             if (setErrorMessage) {
-                setErrorMessage("Unauthorized. Auth toke is not found.");
+                setErrorMessage(m.tokenMissing);
             }
         }
     } catch (error: unknown) {
@@ -28,12 +30,12 @@ export const createTeam = async (
             if (error.response?.status === 400) {
                 console.error("HTTP 400 error:", error.response?.data);
                 if (setErrorMessage) {
-                    setErrorMessage("Please try with different team name.");
+                    setErrorMessage(m.duplicateTeamName);
                 }
             } else if (error.response?.status === 401) {
                 console.error("HTTP 401 error:", error.response?.data);
                 if (setErrorMessage) {
-                    setErrorMessage("Unauthorized. Please log in again.");
+                    setErrorMessage(m.unauthorized);
                 }
             } else {
                 console.error("API error:", error.response?.status, error.response?.data);

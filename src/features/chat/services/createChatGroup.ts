@@ -1,6 +1,7 @@
 import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
+import { getMessages } from "../../../i18n";
 import { authApi } from "../../../services/api";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps, CreateGMResponse, MessageProps } from "../../../types/chat";
@@ -12,12 +13,11 @@ import { defaultDmPartner } from "./constants";
 import { createGMChat } from "./createGMChat";
 import { popSpecificMessages } from "./popSpecificMessages";
 
-const gmCreatedMessage = "Has created this group";
-
-const createGroupMessage = [
+const getGmCreatedMessage = () => getMessages().chat.system.hasCreatedGroup;
+const getCreateGroupMessage = () => [
     {
         type: "paragraph",
-        content: [{ type: "text", text: gmCreatedMessage, styles: {} }],
+        content: [{ type: "text", text: getGmCreatedMessage(), styles: {} }],
     },
     { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] },
 ];
@@ -54,6 +54,8 @@ const addGMChatAndMessage = async (
     isPrivate: boolean,
     useCM: ChatManagementState
 ) => {
+    const gmCreatedMessage = getGmCreatedMessage();
+    const createGroupMessage = getCreateGroupMessage();
     const newMessage: MessageProps = {
         chatType: 3,
         messageIdWithChatId: `${data.chatId}-1`,
@@ -114,6 +116,8 @@ export const createChatGroup = async (
     isPrivate: boolean,
     selectedMemberIds: string[] = []
 ) => {
+    const gmCreatedMessage = getGmCreatedMessage();
+    const createGroupMessage = getCreateGroupMessage();
     const data: CreateGMResponse = await createGMChat(
         accessToken,
         myself,

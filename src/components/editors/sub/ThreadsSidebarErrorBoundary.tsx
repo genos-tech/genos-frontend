@@ -1,5 +1,7 @@
 import { Component, type ReactNode } from "react";
 
+import { getMessages } from "../../../i18n";
+
 type Props = { children: ReactNode };
 type State = { hasError: boolean; retryCount: number };
 
@@ -27,7 +29,11 @@ export class ThreadsSidebarErrorBoundary extends Component<Props, State> {
     render() {
         if (this.state.hasError) {
             if (this.state.retryCount >= MAX_RETRIES) {
-                return <div style={{ padding: 12, color: "#888" }}>Could not load comments.</div>;
+                return (
+                    <div style={{ padding: 12, color: "#888" }}>
+                        {getMessages().common.editor.couldNotLoadComments}
+                    </div>
+                );
             }
             return null;
         }

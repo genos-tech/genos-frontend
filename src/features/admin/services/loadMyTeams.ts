@@ -1,5 +1,6 @@
 import axios from "axios";
 
+import { getMessages } from "../../../i18n";
 import { authApi } from "../../../services/api";
 
 export const loadMyTeams = async (
@@ -16,7 +17,7 @@ export const loadMyTeams = async (
         } else {
             console.error("Unauthorized. Auth toke is not found.");
             if (setErrorMessage) {
-                setErrorMessage("Unauthorized. Auth toke is not found.");
+                setErrorMessage(getMessages().admin.auth.errors.tokenMissing);
             }
         }
     } catch (error: unknown) {

@@ -1,3 +1,4 @@
+import { getMessages } from "../../../i18n";
 import { UserProps } from "../../../types/admin";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
@@ -44,7 +45,7 @@ export const createEmptyTask = async (props: createEmptyTaskProps) => {
         const taskCreateData = await taskCreateResponse.json();
 
         if (!taskCreateResponse.ok) {
-            throw new Error("Failed to create a task");
+            throw new Error(getMessages().tasks.errors.createTaskFailed);
         } else {
             setInitialEmptyTaskId(taskCreateData.task.task_id);
         }

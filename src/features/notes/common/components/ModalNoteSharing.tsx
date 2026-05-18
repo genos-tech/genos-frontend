@@ -22,6 +22,7 @@ import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithSt
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { NoteRoleMember } from "../../../../types/notes";
 import { getMyNoteRoleId, NOTE_ROLE_OWNER } from "../utils/noteRoles";
@@ -48,12 +49,6 @@ const ROLE_OWNER = NOTE_ROLE_OWNER;
 const ROLE_EDITOR = 2;
 const ROLE_VIEWER = 3;
 
-const ROLE_LABEL: Record<number, string> = {
-    1: "Owner",
-    2: "Editor",
-    3: "Viewer",
-};
-
 export const ModalNoteSharing = ({
     open,
     onClose,
@@ -70,6 +65,13 @@ export const ModalNoteSharing = ({
 }: ModalNoteSharingProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const { t } = useTranslation();
+
+    const ROLE_LABEL: Record<number, string> = {
+        1: t.notes.sharing.roles.owner,
+        2: t.notes.sharing.roles.editor,
+        3: t.notes.sharing.roles.viewer,
+    };
 
     const [search, setSearch] = useState("");
     const [savingUserId, setSavingUserId] = useState<string | null>(null);
@@ -148,7 +150,9 @@ export const ModalNoteSharing = ({
                     sx={{ mb: 1 }}
                 >
                     <Typography level="title-md" sx={{ fontWeight: 700 }}>
-                        Share "{noteTitle || "Untitled"}"
+                        {fmt(t.notes.sharing.title, {
+                            title: noteTitle || t.notes.defaults.untitled,
+                        })}
                     </Typography>
                     <ModalClose variant="plain" sx={{ position: "static" }} />
                 </Stack>
@@ -161,8 +165,8 @@ export const ModalNoteSharing = ({
                     }}
                 >
                     {isOwner
-                        ? "Add teammates by name and choose their role. Editors can change the note; viewers can only read it."
-                        : "You can see who has access but only the owner can add or remove members."}
+                        ? t.notes.sharing.ownerDescription
+                        : t.notes.sharing.viewerDescription}
                 </Typography>
 
                 {/* Current members */}
@@ -176,7 +180,7 @@ export const ModalNoteSharing = ({
                                     color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
                                 }}
                             >
-                                No one has explicit access yet.
+                                {t.notes.sharing.noAccessYet}
                             </Typography>
                         </Box>
                     ) : (
@@ -245,7 +249,7 @@ export const ModalNoteSharing = ({
                                                     variant="soft"
                                                     sx={{ fontSize: 10, flexShrink: 0 }}
                                                 >
-                                                    you
+                                                    {t.notes.sharing.you}
                                                 </Chip>
                                             )}
                                         </Box>
@@ -283,7 +287,7 @@ export const ModalNoteSharing = ({
                                             color="danger"
                                             disabled={disableEdit || m.roleId === ROLE_OWNER}
                                             onClick={() => handleRevoke(m.userId)}
-                                            title="Remove access"
+                                            title={t.notes.sharing.removeAccess}
                                         >
                                             <CloseRoundedIcon sx={{ fontSize: 18 }} />
                                         </IconButton>
@@ -308,12 +312,12 @@ export const ModalNoteSharing = ({
                                 color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.6)",
                             }}
                         >
-                            Add teammate
+                            {t.notes.sharing.addTeammate}
                         </Typography>
 
                         <Input
                             size="sm"
-                            placeholder="Search by name or email"
+                            placeholder={t.notes.sharing.searchPlaceholder}
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             sx={{ mb: 1 }}
@@ -332,8 +336,8 @@ export const ModalNoteSharing = ({
                                     }}
                                 >
                                     {search
-                                        ? "No matching teammates."
-                                        : "No more teammates to add."}
+                                        ? t.notes.sharing.noMatchingTeammates
+                                        : t.notes.sharing.noMoreToAdd}
                                 </Typography>
                             ) : (
                                 <Stack spacing={0.5}>
@@ -399,7 +403,7 @@ export const ModalNoteSharing = ({
                                                 loading={savingUserId === u.userId}
                                                 onClick={() => handleGrant(u.userId, ROLE_VIEWER)}
                                             >
-                                                Invite
+                                                {t.notes.sharing.invite}
                                             </Button>
                                         </Stack>
                                     ))}
@@ -418,7 +422,7 @@ export const ModalNoteSharing = ({
                     }}
                 >
                     <Button variant="plain" onClick={onClose}>
-                        Done
+                        {t.notes.sharing.done}
                     </Button>
                 </Box>
             </Sheet>

@@ -13,6 +13,7 @@ import { FlaggedService } from "../../../../db/services/flagged.service";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps, FlaggedMessageProps, MessageProps } from "../../../../types/chat";
 import { addFlaggedMessage } from "../../services/addFlaggedMessage";
@@ -66,6 +67,7 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
         isSent,
     } = props;
 
+    const { t } = useTranslation();
     const [openDeleteMessage, setOpenDeleteMessage] = useState(false);
     const [isFlagged, setIsFlagged] = useState(message.isFlagged || false);
 
@@ -187,40 +189,40 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
     const items: MoreMenuItem[] = [
         {
             id: "openTask",
-            label: "Open task",
+            label: t.chat.messageActions.openTask,
             icon: <OpenInNewRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleOpenTaskClick,
             visible: isProjectChat && isSystemMessage && message.taskId !== null,
         },
         {
             id: "reply",
-            label: isProjectChat ? "Add comment to task" : "Reply in thread",
+            label: isProjectChat ? t.chat.messageActions.addCommentToTask : t.chat.messageActions.replyInThread,
             icon: <ReplyRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleReplyClick,
         },
         {
             id: "flag",
-            label: isFlagged ? "Remove flag" : "Flag for later",
+            label: isFlagged ? t.chat.messageActions.removeFlag : t.chat.messageActions.flagForLater,
             icon: <FlagRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleFlagClick,
             active: isFlagged,
         },
         {
             id: "copyLink",
-            label: "Copy message link",
+            label: t.chat.messageActions.copyMessageLink,
             icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleCopyLinkClick,
         },
         {
             id: "edit",
-            label: "Edit message",
+            label: t.chat.messageActions.editMessage,
             icon: <EditRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleEditClick,
             visible: isOwnMessage,
         },
         {
             id: "delete",
-            label: "Delete message",
+            label: t.chat.messageActions.deleteMessage,
             icon: <DeleteOutlineRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleDeleteClick,
             visible: canDelete,

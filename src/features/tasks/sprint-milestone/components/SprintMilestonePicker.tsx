@@ -13,6 +13,7 @@ import {
 } from "@mui/joy";
 
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
+import { useTranslation } from "../../../../i18n";
 import { Milestone, Sprint } from "../types";
 import { compareMilestones } from "../utils/sortMilestones";
 
@@ -51,19 +52,19 @@ type Props = {
     size?: "sm" | "md";
 };
 
-const NO_SPRINT: SprintOption = {
+const makeNoSprint = (label: string): SprintOption => ({
     kind: "sprint",
     id: null,
-    label: "No sprint",
+    label,
     sprint: null,
-};
+});
 
-const NO_MILESTONE: MilestoneOption = {
+const makeNoMilestone = (label: string): MilestoneOption => ({
     kind: "milestone",
     id: null,
-    label: "No milestone",
+    label,
     milestone: null,
-};
+});
 
 const SPRINT_STATUS_COLOR: Record<string, "primary" | "warning" | "success" | "neutral"> = {
     upcoming: "neutral",
@@ -129,6 +130,9 @@ export const SprintMilestonePicker = ({
     disabled,
     size = "sm",
 }: Props) => {
+    const { t } = useTranslation();
+    const NO_SPRINT = useMemo(() => makeNoSprint(t.tasks.picker.noSprintLabel), [t]);
+    const NO_MILESTONE = useMemo(() => makeNoMilestone(t.tasks.picker.noMilestoneLabel), [t]);
     const sprints: Sprint[] = useMemo(
         () => (projectId ? (useSM.projectSprints[projectId] ?? []) : []),
         [projectId, useSM.projectSprints]
@@ -148,7 +152,7 @@ export const SprintMilestonePicker = ({
                 sprint: s,
             })),
         ];
-    }, [sprints]);
+    }, [sprints, NO_SPRINT]);
 
     // Milestone options always show every milestone in the project so a
     // sprint change doesn't make the currently-selected milestone vanish
@@ -171,7 +175,7 @@ export const SprintMilestonePicker = ({
                 milestone: m,
             })),
         ];
-    }, [milestones]);
+    }, [milestones, NO_MILESTONE]);
 
     const selectedSprint = sprintOptions.find((o) => o.id === (sprintId ?? null)) ?? NO_SPRINT;
     const selectedMilestone =
@@ -272,8 +276,8 @@ export const SprintMilestonePicker = ({
                         const linkedSprintName =
                             m?.sprintId != null
                                 ? (sprints.find((s) => s.sprintId === m.sprintId)?.name ??
-                                  "Sprint")
-                                : "No sprint";
+                                  t.tasks.picker.sprintFallback)
+                                : t.tasks.picker.noSprintLabel;
                         const total = m?.tasksTotal ?? 0;
                         const closed = m?.tasksClosed ?? 0;
                         const pct = total > 0 ? Math.round((closed / total) * 100) : 0;
@@ -316,7 +320,8 @@ export const SprintMilestonePicker = ({
                                                 {linkedSprintName}
                                             </Chip>
                                             <Typography level="body-xs" sx={{ opacity: 0.7 }}>
-                                                {closed}/{total} tasks
+                                                {closed}/{total}
+                                                {t.tasks.picker.tasksSuffix}
                                             </Typography>
                                             <Box sx={{ flex: 1, minWidth: 60 }}>
                                                 <LinearProgress

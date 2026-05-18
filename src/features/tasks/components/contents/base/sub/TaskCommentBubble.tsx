@@ -12,6 +12,7 @@ import { ChatManagementState } from "../../../../../../hooks/chats/useChatManage
 import { useBubbleStylePreference } from "../../../../../../hooks/common/useBubbleStylePreference";
 import { TeamManagementState } from "../../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";
+import { useTranslation } from "../../../../../../i18n";
 import { UserProps } from "../../../../../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../../../../../types/chat";
 import { ReactionProps } from "../../../../../../types/common";
@@ -74,6 +75,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
 
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const { t } = useTranslation();
     const { style } = useBubbleStylePreference();
     const isCompact = style === "compact";
     const isSent = comment.senderId === myself.userId;
@@ -213,7 +215,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
             placement="top"
             size="sm"
             sx={{ borderRadius: "8px", fontSize: "0.75rem" }}
-            title="Edit"
+            title={t.tasks.comment.editTooltip}
             variant="outlined"
         >
             <IconButton

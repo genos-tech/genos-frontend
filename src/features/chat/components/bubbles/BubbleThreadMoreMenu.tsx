@@ -11,6 +11,7 @@ import { Socket } from "socket.io-client";
 
 import { FlaggedService } from "../../../../db/services/flagged.service";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { FlaggedMessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
 import { addFlaggedMessage } from "../../services/addFlaggedMessage";
@@ -67,6 +68,7 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
 
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [openDeleteMessage, setOpenDeleteMessage] = useState(false);
     const [isFlagged, setIsFlagged] = useState(message.isFlagged || false);
@@ -308,7 +310,7 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
     const menuItems: MenuItemConfig[] = [
         {
             id: "copyLink",
-            label: "Copy message link",
+            label: t.chat.messageActions.copyMessageLink,
             icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleCopyLinkClick,
             color: { light: "#059669", dark: "#34d399" },
@@ -317,7 +319,7 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
         },
         {
             id: "flag",
-            label: isFlagged ? "Remove flag" : "Flag for later",
+            label: isFlagged ? t.chat.messageActions.removeFlag : t.chat.messageActions.flagForLater,
             icon: <FlagRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleFlagClick,
             color: isFlagged
@@ -331,7 +333,7 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
         },
         {
             id: "edit",
-            label: "Edit message",
+            label: t.chat.messageActions.editMessage,
             icon: <EditRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleEditClick,
             color: { light: "#0891b2", dark: "#22d3ee" },
@@ -340,7 +342,7 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
         },
         {
             id: "delete",
-            label: "Delete message",
+            label: t.chat.messageActions.deleteMessage,
             icon: <DeleteOutlineRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleDeleteClick,
             color: { light: "#c026a8", dark: "#e879c3" },

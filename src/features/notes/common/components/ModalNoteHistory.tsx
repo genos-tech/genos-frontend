@@ -19,6 +19,7 @@ import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { fmt, Messages, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { NoteVersionDetail } from "../../../../types/notes";
 import { loadNoteVersion } from "../services/loadNoteVersion";
@@ -36,19 +37,19 @@ interface ModalNoteHistoryProps {
     useUISM: UIStateManagementState;
 }
 
-const relTime = (iso: string): string => {
-    const t = new Date(iso).getTime();
-    if (!t) return "";
-    const diff = Date.now() - t;
+const relTime = (iso: string, t: Messages): string => {
+    const ts = new Date(iso).getTime();
+    if (!ts) return "";
+    const diff = Date.now() - ts;
     const sec = Math.floor(diff / 1000);
-    if (sec < 45) return "just now";
-    if (sec < 90) return "1 minute ago";
+    if (sec < 45) return t.notes.history.relTime.justNow;
+    if (sec < 90) return t.notes.history.relTime.oneMinute;
     const min = Math.floor(sec / 60);
-    if (min < 60) return `${min} minutes ago`;
+    if (min < 60) return fmt(t.notes.history.relTime.minutes, { n: min });
     const hr = Math.floor(min / 60);
-    if (hr < 24) return `${hr} hours ago`;
+    if (hr < 24) return fmt(t.notes.history.relTime.hours, { n: hr });
     const day = Math.floor(hr / 24);
-    if (day < 7) return `${day} days ago`;
+    if (day < 7) return fmt(t.notes.history.relTime.days, { n: day });
     return new Date(iso).toLocaleString(undefined, {
         month: "short",
         day: "numeric",
@@ -104,6 +105,7 @@ export const ModalNoteHistory = ({
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const { accessToken } = useAuth();
+    const { t } = useTranslation();
 
     const versions = useNM.currentNoteVersions;
     const headVersionNo = versions[0]?.versionNo ?? null;
@@ -198,7 +200,7 @@ export const ModalNoteHistory = ({
                 >
                     <Box>
                         <Typography level="title-md" sx={{ fontWeight: 700 }}>
-                            Version history
+                            {t.notes.history.title}
                         </Typography>
                         <Typography
                             level="body-xs"
@@ -208,8 +210,8 @@ export const ModalNoteHistory = ({
                             }}
                         >
                             {canRestore
-                                ? "Pick a version to preview it. Restore writes a new version so the history is preserved."
-                                : "Read-only view — only the note's owner or editors can restore a past version."}
+                                ? t.notes.history.ownerDescription
+                                : t.notes.history.viewerDescription}
                         </Typography>
                     </Box>
                     <ModalClose variant="plain" sx={{ position: "static" }} />
@@ -236,7 +238,7 @@ export const ModalNoteHistory = ({
                                 level="body-xs"
                                 sx={{ p: 2, fontStyle: "italic", opacity: 0.6 }}
                             >
-                                No history yet. Versions will appear here after the next save.
+                                {t.notes.history.emptyList}
                             </Typography>
                         ) : (
                             <Stack spacing={0} sx={{ p: 1 }}>
@@ -329,7 +331,8 @@ export const ModalNoteHistory = ({
                                                         }}
                                                     >
                                                         v{v.versionNo} ·{" "}
-                                                        {v.editor?.userName ?? "Unknown"}
+                                                        {v.editor?.userName ??
+                                                            t.notes.history.unknownEditor}
                                                     </Typography>
                                                     {isHead && (
                                                         <Chip
@@ -338,7 +341,7 @@ export const ModalNoteHistory = ({
                                                             color="primary"
                                                             sx={{ fontSize: 10 }}
                                                         >
-                                                            current
+                                                            {t.notes.history.currentChip}
                                                         </Chip>
                                                     )}
                                                 </Stack>
@@ -350,7 +353,7 @@ export const ModalNoteHistory = ({
                                                             : "rgba(0,0,0,0.55)",
                                                     }}
                                                 >
-                                                    {relTime(v.tsUpdatedAt)}
+                                                    {relTime(v.tsUpdatedAt, t)}
                                                 </Typography>
                                                 {v.restoredFromVersionNo != null && (
                                                     <Typography
@@ -362,7 +365,9 @@ export const ModalNoteHistory = ({
                                                             fontStyle: "italic",
                                                         }}
                                                     >
-                                                        restored from v{v.restoredFromVersionNo}
+                                                        {fmt(t.notes.history.restoredFrom, {
+                                                            version: v.restoredFromVersionNo,
+                                                        })}
                                                     </Typography>
                                                 )}
                                             </Box>
@@ -390,13 +395,13 @@ export const ModalNoteHistory = ({
                         )}
                         {!loadingDetail && !detail && (
                             <Typography level="body-sm" sx={{ fontStyle: "italic", opacity: 0.6 }}>
-                                Select a version on the left to preview it.
+                                {t.notes.history.selectVersionPrompt}
                             </Typography>
                         )}
                         {!loadingDetail && detail && (
                             <Stack spacing={1.5}>
                                 <Typography level="h4" sx={{ fontWeight: 700 }}>
-                                    {detail.title || "Untitled"}
+                                    {detail.title || t.notes.defaults.untitled}
                                 </Typography>
                                 <Typography
                                     level="body-xs"
@@ -406,7 +411,9 @@ export const ModalNoteHistory = ({
                                             : "rgba(0,0,0,0.55)",
                                     }}
                                 >
-                                    Snapshot from {new Date(detail.tsUpdatedAt).toLocaleString()}
+                                    {fmt(t.notes.history.snapshotFrom, {
+                                        time: new Date(detail.tsUpdatedAt).toLocaleString(),
+                                    })}
                                 </Typography>
                                 <Divider sx={{ opacity: isDark ? 0.08 : 0.12 }} />
                                 <Typography
@@ -425,7 +432,7 @@ export const ModalNoteHistory = ({
                                             component="span"
                                             sx={{ fontStyle: "italic", opacity: 0.5 }}
                                         >
-                                            (empty body)
+                                            {t.notes.history.emptyBody}
                                         </Box>
                                     )}
                                 </Typography>
@@ -450,14 +457,14 @@ export const ModalNoteHistory = ({
                         }}
                     >
                         {isHeadSelected
-                            ? "This is the current version."
+                            ? t.notes.history.currentVersionFooter
                             : canRestore
-                              ? "Restoring writes a new version on top of the live note."
-                              : "You don't have permission to restore."}
+                              ? t.notes.history.restoreCanFooter
+                              : t.notes.history.restoreCannotFooter}
                     </Typography>
                     <Stack direction="row" spacing={1}>
                         <Button variant="plain" onClick={onClose}>
-                            Close
+                            {t.notes.history.closeButton}
                         </Button>
                         <Button
                             variant="solid"
@@ -467,7 +474,7 @@ export const ModalNoteHistory = ({
                             loading={restoring}
                             onClick={handleRestore}
                         >
-                            Restore this version
+                            {t.notes.history.restoreButton}
                         </Button>
                     </Stack>
                 </Stack>

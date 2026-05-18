@@ -4,6 +4,7 @@ import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import { Alert, Box, Button, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
 import { keyframes } from "@emotion/react";
 
+import { useTranslation } from "../../../../i18n";
 import { TaskProps } from "../../../../types/tasks";
 
 const fadeIn = keyframes`
@@ -35,6 +36,7 @@ export const ModalDeleteTask: React.FC<Props> = ({
     setTaskStatusUpdated,
 }) => {
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const { t } = useTranslation();
 
     const handleDeleteTask = () => {
         if (setTaskUpdated) {
@@ -114,7 +116,7 @@ export const ModalDeleteTask: React.FC<Props> = ({
                         mb: 1,
                     }}
                 >
-                    Delete Task?
+                    {t.tasks.modals.deleteTask.title}
                 </Typography>
 
                 {/* Task Name */}
@@ -140,7 +142,7 @@ export const ModalDeleteTask: React.FC<Props> = ({
                         mb: 2.5,
                     }}
                 >
-                    This action cannot be undone
+                    {t.tasks.modals.deleteTask.body}
                 </Typography>
 
                 {/* Error Alert */}
@@ -175,7 +177,7 @@ export const ModalDeleteTask: React.FC<Props> = ({
                             },
                         }}
                     >
-                        Cancel
+                        {t.tasks.modals.deleteTask.cancelButton}
                     </Button>
                     <Button
                         onClick={handleDeleteTask}
@@ -192,7 +194,7 @@ export const ModalDeleteTask: React.FC<Props> = ({
                             },
                         }}
                     >
-                        Delete Task
+                        {t.tasks.modals.deleteTask.confirmButton}
                     </Button>
                 </Stack>
             </ModalDialog>

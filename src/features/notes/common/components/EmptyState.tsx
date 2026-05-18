@@ -1,11 +1,14 @@
 import AddIcon from "@mui/icons-material/Add";
 import { Box, IconButton } from "@mui/joy";
 
+import { useTranslation } from "../../../../i18n";
+
 interface EmptyStateProps {
     onCreateNewNote: () => void;
 }
 
 export const EmptyState = ({ onCreateNewNote }: EmptyStateProps) => {
+    const { t } = useTranslation();
     return (
         <Box
             sx={{
@@ -27,7 +30,7 @@ export const EmptyState = ({ onCreateNewNote }: EmptyStateProps) => {
                 onClick={onCreateNewNote}
             >
                 <AddIcon />
-                New Note
+                {t.notes.header.newNote}
             </IconButton>
         </Box>
     );

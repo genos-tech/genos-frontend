@@ -12,6 +12,7 @@ import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../i18n";
 import { UserProps } from "../../../types/admin";
 import {
     ChatNoteMetaProps,
@@ -94,6 +95,7 @@ export const ModalNoteView = (props: ModalNoteViewProps) => {
         useNM,
     } = props;
 
+    const { t } = useTranslation();
     const [modalNote, setModalNote] = useState<MyNoteProps | ChatNoteProps | TaskNoteProps | null>(
         null
     );
@@ -127,7 +129,7 @@ export const ModalNoteView = (props: ModalNoteViewProps) => {
                 );
                 if (cancelled) return;
                 if (!fetched || fetched.error) {
-                    setErrorMessage("This note isn't available.");
+                    setErrorMessage(t.common.modalView.noteUnavailable);
                     setIsLoading(false);
                     return;
                 }
@@ -136,7 +138,7 @@ export const ModalNoteView = (props: ModalNoteViewProps) => {
             } catch (e) {
                 if (!cancelled) {
                     console.error("ModalNoteView load failed:", e);
-                    setErrorMessage("Failed to load this note.");
+                    setErrorMessage(t.common.modalView.noteLoadFailed);
                     setIsLoading(false);
                 }
             }
@@ -148,7 +150,8 @@ export const ModalNoteView = (props: ModalNoteViewProps) => {
     }, [target.kind, target.noteId, accessToken, myself]);
 
     if (errorMessage) return <CenteredMessage>{errorMessage}</CenteredMessage>;
-    if (isLoading || !modalNote) return <CenteredMessage>Loading…</CenteredMessage>;
+    if (isLoading || !modalNote)
+        return <CenteredMessage>{t.common.modalView.loadingNote}</CenteredMessage>;
 
     const wrapper = (children: React.ReactNode) => (
         <Box sx={{ height: "100%", overflow: "auto", p: 2, width: "100%" }}>{children}</Box>

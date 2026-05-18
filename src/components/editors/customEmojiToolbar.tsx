@@ -4,6 +4,8 @@ import { useComponentsContext } from "@blocknote/react";
 import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { useTranslation } from "../../i18n";
+
 type CustomEmojiToolbarProps = {
     setShowEmojiPicker: (value: boolean) => void;
 };
@@ -12,12 +14,13 @@ type CustomEmojiToolbarProps = {
 export const CustomEmojiToolbar = (props: CustomEmojiToolbarProps) => {
     const { setShowEmojiPicker } = props;
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const Components = useComponentsContext()!;
 
     return (
         <Components.FormattingToolbar.Button
-            mainTooltip={"Emoji"}
-            secondaryTooltip=":+typing"
+            mainTooltip={t.common.editor.emoji}
+            secondaryTooltip={t.common.editor.emojiTypingHint}
             onClick={() => setShowEmojiPicker(true)}
         >
             <SentimentSatisfiedAltIcon

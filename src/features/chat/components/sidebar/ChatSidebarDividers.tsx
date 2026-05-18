@@ -7,6 +7,9 @@ import ViewListRoundedIcon from "@mui/icons-material/ViewListRounded";
 import { Box, IconButton, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { useTranslation } from "../../../../i18n";
+import type { Messages } from "../../../../i18n";
+
 // Shared divider base component
 const DividerBase = ({
     children,
@@ -47,7 +50,8 @@ const DividerBase = ({
 };
 
 export const PinnedDivider = () => {
-    return <DividerBase>Pinned Messages</DividerBase>;
+    const { t } = useTranslation();
+    return <DividerBase>{t.chat.sidebar.dividerPinned}</DividerBase>;
 };
 
 type GMDividerProps = {
@@ -57,6 +61,7 @@ type GMDividerProps = {
 export const GMDivider = (props: GMDividerProps) => {
     const { setOpenCreateGM } = props;
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
 
     return (
@@ -79,7 +84,7 @@ export const GMDivider = (props: GMDividerProps) => {
                         letterSpacing: "0.02em",
                     }}
                 >
-                    Group Messages
+                    {t.chat.sidebar.dividerGroupMessages}
                 </Typography>
                 <IconButton
                     size="sm"
@@ -106,20 +111,23 @@ export const GMDivider = (props: GMDividerProps) => {
 };
 
 export const DMDivider = () => {
-    return <DividerBase>Direct Messages</DividerBase>;
+    const { t } = useTranslation();
+    return <DividerBase>{t.chat.sidebar.dividerDirectMessages}</DividerBase>;
 };
 
 export const PMDivider = () => {
-    return <DividerBase>Project Updates</DividerBase>;
+    const { t } = useTranslation();
+    return <DividerBase>{t.chat.sidebar.dividerProjectUpdates}</DividerBase>;
 };
 
 // Activity filter configuration
-const ACTIVITY_FILTERS = [
-    { id: 0, label: "All", icon: ViewListRoundedIcon },
-    { id: 3, label: "Mentions", icon: AlternateEmailRoundedIcon },
-    { id: 1, label: "Threads", icon: ChatBubbleOutlineRoundedIcon },
-    { id: 4, label: "Reactions", icon: EmojiEmotionsRoundedIcon },
-    { id: 2, label: "Tasks", icon: TaskAltRoundedIcon },
+type ActivityFilterKey = keyof Messages["chat"]["sidebar"];
+const ACTIVITY_FILTERS: Array<{ id: number; labelKey: ActivityFilterKey; icon: React.ElementType }> = [
+    { id: 0, labelKey: "activityFilterAll", icon: ViewListRoundedIcon },
+    { id: 3, labelKey: "activityFilterMentions", icon: AlternateEmailRoundedIcon },
+    { id: 1, labelKey: "activityFilterThreads", icon: ChatBubbleOutlineRoundedIcon },
+    { id: 4, labelKey: "activityFilterReactions", icon: EmojiEmotionsRoundedIcon },
+    { id: 2, labelKey: "activityFilterTasks", icon: TaskAltRoundedIcon },
 ];
 
 type ActivityDividerProps = {
@@ -130,6 +138,7 @@ type ActivityDividerProps = {
 export const ActivityDivider = (props: ActivityDividerProps) => {
     const { currentActivityMessageType, setCurrentActivityMessageType } = props;
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
 
     return (
@@ -227,7 +236,7 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                                     transition: "all 0.2s ease",
                                 }}
                             >
-                                {filter.label}
+                                {t.chat.sidebar[filter.labelKey]}
                             </Typography>
                         </Box>
                     );

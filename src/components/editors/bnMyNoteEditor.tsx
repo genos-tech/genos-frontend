@@ -62,6 +62,7 @@ import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickInterc
 import { useCollaborativeBlockNote } from "../../hooks/common/useCollaborativeBlockNote";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
+import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { MyNoteProps, NoteRoleMember } from "../../types/notes";
 import { getUserColor } from "../../utils/collabUtils";
@@ -134,6 +135,7 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
 
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
+    const { t } = useTranslation();
     const urlLinkModal = useUrlLinkModal();
     const editorBoxRef = useRef<HTMLDivElement>(null);
     useAnchorClickIntercept(editorBoxRef, urlLinkModal);
@@ -144,10 +146,10 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
     // prop of `SideMenuController`.
     const CustomDragHandleMenu = () => (
         <DragHandleMenu>
-            <RemoveBlockItem>Delete</RemoveBlockItem>
-            <BlockColorsItem>Colors</BlockColorsItem>
+            <RemoveBlockItem>{t.common.editor.delete}</RemoveBlockItem>
+            <BlockColorsItem>{t.common.editor.colors}</BlockColorsItem>
             {/* Item which resets the hovered block's type. */}
-            <ResetBlockTypeItem>Reset Type</ResetBlockTypeItem>
+            <ResetBlockTypeItem>{t.common.editor.resetType}</ResetBlockTypeItem>
         </DragHandleMenu>
     );
 
@@ -212,7 +214,9 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
             const uploadNoteAttachmentData = await uploadNoteAttachmentResponse.json();
 
             if (!uploadNoteAttachmentResponse.ok) {
-                throw new Error(uploadNoteAttachmentData.message || "Attachment Upload Failed");
+                throw new Error(
+                    uploadNoteAttachmentData.message || t.common.editor.attachmentUploadFailed
+                );
             }
 
             return `${django_url}${uploadNoteAttachmentData.noteAttachmentUrl}`;
@@ -589,7 +593,7 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                         {selectedImage ? (
                             <Box>
                                 <img
-                                    alt="preview"
+                                    alt={t.common.editor.imagePreviewAlt}
                                     src={selectedImage}
                                     style={{
                                         maxWidth: "80vw",
@@ -602,7 +606,7 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                                     placement="top"
                                     size="sm"
                                     sx={{ zIndex: 10010 }}
-                                    title="Download"
+                                    title={t.common.editor.download}
                                     variant="outlined"
                                 >
                                     <IconButton

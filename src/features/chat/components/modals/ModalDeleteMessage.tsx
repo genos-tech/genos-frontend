@@ -7,6 +7,7 @@ import { Socket } from "socket.io-client";
 
 import { ChatService } from "../../../../db/services/chat.service";
 import { FlaggedService } from "../../../../db/services/flagged.service";
+import { useTranslation } from "../../../../i18n";
 import {
     ChatProps,
     FlaggedMessageProps,
@@ -59,6 +60,7 @@ export const ModalDeleteMessage: React.FC<Props> = ({
 }) => {
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const chatService = new ChatService();
+    const { t } = useTranslation();
 
     const cleanupFlaggedMessage = async (chatType: number, chatId: number, threadId: number, messageId: number) => {
         if (!flaggedMessages || !setFlaggedMessages) return;
@@ -83,7 +85,7 @@ export const ModalDeleteMessage: React.FC<Props> = ({
                 console.error(
                     "socket or currentThreadChat or setCurrentThreadChat is not defined"
                 );
-                setErrorMessage("Failed to delete message from thread");
+                setErrorMessage(t.chat.modals.deleteMessage.errorDeleteFromThread);
                 return;
             }
 
@@ -134,7 +136,7 @@ export const ModalDeleteMessage: React.FC<Props> = ({
         } else {
             if (!socket || !currentChat || !setCurrentChat) {
                 console.error("socket or currentChat or setCurrentChat is not defined");
-                setErrorMessage("Failed to delete message from chat");
+                setErrorMessage(t.chat.modals.deleteMessage.errorDeleteFromChat);
                 return;
             }
 
@@ -238,7 +240,7 @@ export const ModalDeleteMessage: React.FC<Props> = ({
                         mb: 1,
                     }}
                 >
-                    Delete Message?
+                    {t.chat.modals.deleteMessage.title}
                 </Typography>
 
                 {/* Description */}
@@ -249,7 +251,7 @@ export const ModalDeleteMessage: React.FC<Props> = ({
                         mb: 2.5,
                     }}
                 >
-                    This action cannot be undone
+                    {t.chat.modals.deleteMessage.description}
                 </Typography>
 
                 {/* Error Alert */}
@@ -283,7 +285,7 @@ export const ModalDeleteMessage: React.FC<Props> = ({
                             },
                         }}
                     >
-                        Cancel
+                        {t.chat.modals.deleteMessage.cancel}
                     </Button>
                     <Button
                         onClick={handleDeleteMessage}
@@ -300,7 +302,7 @@ export const ModalDeleteMessage: React.FC<Props> = ({
                             },
                         }}
                     >
-                        Delete
+                        {t.chat.modals.deleteMessage.delete}
                     </Button>
                 </Stack>
             </ModalDialog>

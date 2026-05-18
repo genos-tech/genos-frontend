@@ -21,6 +21,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { ModalDeleteChatNote } from "../../chat-notes/modals/ModalDeleteChatNote";
 import { NoteBreadcrumbs } from "../../common/components/NoteBreadcrumbs";
@@ -74,6 +75,7 @@ export const ChatNoteHeader = ({
     const isDark = mode === "dark";
     const styles = isDark ? NoteHeaderActionsStyles.dark : NoteHeaderActionsStyles.light;
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     // Chat type mapping for URL construction
     const CHAT_TYPE_PATH_MAP: Record<number, string> = {
@@ -160,7 +162,7 @@ export const ChatNoteHeader = ({
                     <NoteBreadcrumbs
                         color="warning"
                         icon={<QuestionAnswerRoundedIcon />}
-                        label="Chat Notes"
+                        label={t.notes.header.chatNotesLabel}
                         noteChain={useNM.currentChatNoteChain}
                         onNodeClick={(noteId) => useNM.loadNote(3, noteId, -1)}
                     />
@@ -242,7 +244,7 @@ export const ChatNoteHeader = ({
                 {isInChatPage === false && (
                     <Tooltip
                         size="sm"
-                        title="Open related chat"
+                        title={t.notes.header.openRelatedChat}
                         variant="outlined"
                         sx={{
                             background: styles.menuBg,
@@ -277,7 +279,7 @@ export const ChatNoteHeader = ({
                     const items: MoreMenuItem[] = [
                         {
                             id: "copyNoteLink",
-                            label: "Copy note link",
+                            label: t.notes.header.copyNoteLink,
                             icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
                             visible: !!useNM.currentChatNote,
                             onClick: async () => {
@@ -302,13 +304,13 @@ export const ChatNoteHeader = ({
                         },
                         {
                             id: "childNote",
-                            label: "Child Note",
+                            label: t.notes.header.childNote,
                             icon: <AddIcon sx={{ fontSize: 18 }} />,
                             onClick: onCreateChildNote,
                         },
                         {
                             id: "openInNotes",
-                            label: "Open in Notes",
+                            label: t.notes.header.openInNotes,
                             icon: <LaunchRoundedIcon sx={{ fontSize: 18 }} />,
                             visible: isInChatPage,
                             onClick: () => {
@@ -325,7 +327,7 @@ export const ChatNoteHeader = ({
                         },
                         {
                             id: "deleteNote",
-                            label: "Delete Note",
+                            label: t.notes.header.deleteNote,
                             icon: <DeleteOutlineRoundedIcon sx={{ fontSize: 18 }} />,
                             danger: true,
                             onClick: onDeleteNote,
@@ -346,7 +348,7 @@ export const ChatNoteHeader = ({
                 {(isInChatPage === true || isInTaskPage === true) && (
                     <Tooltip
                         size="sm"
-                        title="Close"
+                        title={t.notes.header.close}
                         variant="outlined"
                         sx={{
                             background: styles.menuBg,

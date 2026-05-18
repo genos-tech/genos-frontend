@@ -13,6 +13,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../i18n";
 import { SearchTeamTasksResponse } from "../../../../types/tasks";
 
 type TaskSidebarSearchBoxProps = {
@@ -35,6 +36,7 @@ export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
     } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const { t } = useTranslation();
 
     function onChangeHandler(value: any) {
         if (value !== null) {
@@ -47,14 +49,14 @@ export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
     return (
         <Autocomplete
             key={`ac-project-tags-${useTM.currentPreviewTaskId}`}
-            aria-label="Search Tasks"
+            aria-label={t.tasks.sidebar.searchAriaLabel}
             getOptionLabel={(option) => option.title}
             groupBy={(option) => option.projectName}
             isOptionEqualToValue={(option, value) => option.taskId === value.taskId}
             loading={loading}
             open={openSearch}
             options={teamTaskSearchOptions}
-            placeholder="Search tasks..."
+            placeholder={t.tasks.sidebar.searchPlaceholder}
             size="sm"
             startDecorator={
                 <SearchRoundedIcon

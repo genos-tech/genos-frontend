@@ -30,6 +30,7 @@ import { useAuth } from "../../../../context/AuthContext";
 import { UserRepository } from "../../../../db/repositories/user";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 import { loadDMIdByUserId } from "../../../chat/services/loadDMIdByUserId";
@@ -68,6 +69,7 @@ export const UserProfile = (props: UserProfileProps) => {
     const { accessToken } = useAuth();
     const navigate = useNavigate();
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const styles = isDark ? ProfileModalStyles.dark : ProfileModalStyles.light;
 
@@ -147,7 +149,7 @@ export const UserProfile = (props: UserProfileProps) => {
         const uploadProfileImageData = await uploadProfileImageResponse.json();
 
         if (!uploadProfileImageResponse.ok) {
-            throw new Error("Failed to upload user profile image.");
+            throw new Error(t.admin.userProfile.uploadFailed);
         } else {
             const newPath = uploadProfileImageData.profile_image_file_name as string;
             localStorage.setItem("avatarImgPath", newPath);
@@ -252,12 +254,14 @@ export const UserProfile = (props: UserProfileProps) => {
                                     }}
                                 >
                                     {isYou === true
-                                        ? "My Profile"
+                                        ? t.admin.userProfile.myProfile
                                         : myself.userId !== profileUser?.userId
                                           ? profileUser?.userName
-                                              ? `${profileUser?.userName}'s Profile`
-                                              : "Profile"
-                                          : "My Profile"}
+                                              ? fmt(t.admin.userProfile.othersProfile, {
+                                                    userName: profileUser.userName,
+                                                })
+                                              : t.admin.userProfile.profileFallback
+                                          : t.admin.userProfile.myProfile}
                                 </Typography>
                             </Box>
                         </Box>
@@ -342,7 +346,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                 <Tooltip
                                                     size="sm"
                                                     sx={{ zIndex: 9000 }}
-                                                    title="Edit Profile Image"
+                                                    title={t.admin.userProfile.editProfileImage}
                                                     variant="outlined"
                                                 >
                                                     <IconButton
@@ -446,7 +450,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                     mb: 0.5,
                                                 }}
                                             >
-                                                Team Name
+                                                {t.admin.userProfile.teamName}
                                             </FormLabel>
                                             <Box
                                                 sx={{
@@ -487,7 +491,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                         mb: 0.5,
                                                     }}
                                                 >
-                                                    Team ID
+                                                    {t.admin.userProfile.teamId}
                                                 </FormLabel>
                                                 <Box
                                                     sx={{
@@ -528,7 +532,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                         mb: 0.5,
                                                     }}
                                                 >
-                                                    User ID
+                                                    {t.admin.userProfile.userId}
                                                 </FormLabel>
                                                 <Box
                                                     sx={{
@@ -573,7 +577,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                         mb: 0.5,
                                                     }}
                                                 >
-                                                    Role
+                                                    {t.admin.userProfile.role}
                                                 </FormLabel>
                                                 <UserProfileRole
                                                     myself={myself}
@@ -592,7 +596,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                         mb: 0.5,
                                                     }}
                                                 >
-                                                    Country
+                                                    {t.admin.userProfile.country}
                                                 </FormLabel>
                                                 <UserProfileBaseCountry
                                                     myself={myself}
@@ -611,7 +615,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                         mb: 0.5,
                                                     }}
                                                 >
-                                                    Joined Date
+                                                    {t.admin.userProfile.joinedDate}
                                                 </FormLabel>
                                                 <Box
                                                     sx={{
@@ -638,7 +642,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                                         profileUser?.tsJoined !== "" &&
                                                         profileUser?.tsJoined !== "N/A"
                                                             ? extractYYYYMMDD(profileUser.tsJoined)
-                                                            : "N/A"}
+                                                            : t.admin.userProfile.notAvailable}
                                                     </Typography>
                                                 </Box>
                                             </FormControl>
@@ -658,8 +662,12 @@ export const UserProfile = (props: UserProfileProps) => {
                             <Tooltip
                                 title={
                                     isYou === true
-                                        ? "DM to myself"
-                                        : `DM to ${profileUser?.userName || "the user"}`
+                                        ? t.admin.userProfile.dmToMyself
+                                        : profileUser?.userName
+                                          ? fmt(t.admin.userProfile.dmToUser, {
+                                                userName: profileUser.userName,
+                                            })
+                                          : t.admin.userProfile.dmToUserFallback
                                 }
                                 variant="outlined"
                                 sx={{ zIndex: 10100 }}
@@ -717,7 +725,7 @@ export const UserProfile = (props: UserProfileProps) => {
                                         })();
                                     }}
                                 >
-                                    Send DM
+                                    {t.admin.userProfile.sendDm}
                                 </Button>
                             </Tooltip>
                         </Box>

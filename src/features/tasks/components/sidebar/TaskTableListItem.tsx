@@ -4,6 +4,7 @@ import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../i18n";
 
 type TaskTableListItemProps = {
     useTM: TaskManagementState;
@@ -14,6 +15,7 @@ export const TaskTableListItem = (props: TaskTableListItemProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const isSelected = useTM.isTaskTableVisible === true;
+    const { t } = useTranslation();
 
     return (
         <ListItem>
@@ -76,7 +78,7 @@ export const TaskTableListItem = (props: TaskTableListItemProps) => {
                             color: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.8)",
                         }}
                     >
-                        Table
+                        {t.tasks.sidebar.table}
                     </Typography>
                 </ListItemContent>
             </ListItemButton>

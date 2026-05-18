@@ -27,6 +27,7 @@ import { useNavigate } from "react-router-dom";
 import { SignInFormStyles } from "../../../components/ui/styles/commonStyle";
 import { AUTH_LOCAL_STORAGE_KEYS, useAuth } from "../../../context/AuthContext";
 import { DatabaseUtils } from "../../../db/utils";
+import { fmt, I18nProvider, useTranslation } from "../../../i18n";
 import { purplePalette, purpleTheme } from "../../../theme/purplePalette";
 import { SignInResponse } from "../../../types/admin";
 import { demoSignIn } from "../services/demoSignin";
@@ -44,6 +45,7 @@ interface SignInFormElement extends HTMLFormElement {
 
 const SignInContent = () => {
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [rememberEmail, setRememberEmail] = useState<boolean>(false);
     const [openForgotPassword, setOpenForgotPassword] = useState<boolean>(false);
@@ -202,10 +204,10 @@ const SignInContent = () => {
                                         letterSpacing: "-0.02em",
                                     }}
                                 >
-                                    Welcome Back
+                                    {t.admin.auth.signIn.title}
                                 </Typography>
                                 <Typography level="body-sm" sx={{ color: styles.subtitleColor }}>
-                                    New member?{" "}
+                                    {t.admin.auth.signIn.newMemberPrompt}{" "}
                                     <Link
                                         href="signup"
                                         level="title-sm"
@@ -218,7 +220,7 @@ const SignInContent = () => {
                                             },
                                         }}
                                     >
-                                        Create an account
+                                        {t.admin.auth.signIn.createAccountLink}
                                     </Link>
                                 </Typography>
                             </Stack>
@@ -266,13 +268,13 @@ const SignInContent = () => {
                                             mb: 0.75,
                                         }}
                                     >
-                                        Email
+                                        {t.admin.auth.signIn.emailLabel}
                                     </FormLabel>
                                     <Input
                                         defaultValue={localStorage.getItem("signInEmail") || ""}
                                         name="email"
                                         type="email"
-                                        placeholder="Enter your email"
+                                        placeholder={t.admin.auth.signIn.emailPlaceholder}
                                         startDecorator={
                                             <EmailRoundedIcon
                                                 sx={{ color: styles.accentColor, fontSize: 20 }}
@@ -293,12 +295,12 @@ const SignInContent = () => {
                                             mb: 0.75,
                                         }}
                                     >
-                                        Password
+                                        {t.admin.auth.signIn.passwordLabel}
                                     </FormLabel>
                                     <Input
                                         name="password"
                                         type="password"
-                                        placeholder="Enter your password"
+                                        placeholder={t.admin.auth.signIn.passwordPlaceholder}
                                         startDecorator={
                                             <LockRoundedIcon
                                                 sx={{ color: styles.accentColor, fontSize: 20 }}
@@ -316,7 +318,7 @@ const SignInContent = () => {
                                     }}
                                 >
                                     <Checkbox
-                                        label="Remember me"
+                                        label={t.admin.auth.signIn.rememberMe}
                                         name="persistent"
                                         size="sm"
                                         sx={{
@@ -344,7 +346,7 @@ const SignInContent = () => {
                                         }}
                                         onClick={() => setOpenForgotPassword(true)}
                                     >
-                                        Forgot password?
+                                        {t.admin.auth.signIn.forgotPassword}
                                     </Link>
                                 </Box>
 
@@ -368,12 +370,14 @@ const SignInContent = () => {
                                         },
                                     }}
                                 >
-                                    Sign In
+                                    {t.admin.auth.signIn.submit}
                                 </Button>
                             </Stack>
                         </form>
 
-                        <Divider sx={{ my: 2.5, color: styles.subtitleColor }}>or</Divider>
+                        <Divider sx={{ my: 2.5, color: styles.subtitleColor }}>
+                            {t.admin.auth.signIn.orDivider}
+                        </Divider>
 
                         <Stack sx={{ gap: 0.75 }}>
                             <Button
@@ -403,7 +407,9 @@ const SignInContent = () => {
                                     },
                                 }}
                             >
-                                {demoLoading ? "Setting up demo…" : "Try with Demo User"}
+                                {demoLoading
+                                    ? t.admin.auth.signIn.demoLoading
+                                    : t.admin.auth.signIn.demoButton}
                             </Button>
                             <Stack sx={{ gap: 0.25, mt: 0.5 }}>
                                 <Typography
@@ -413,7 +419,7 @@ const SignInContent = () => {
                                         color: styles.subtitleColor,
                                     }}
                                 >
-                                    No signup needed — explore the app instantly.
+                                    {t.admin.auth.signIn.demoHint}
                                 </Typography>
                                 <Typography
                                     level="body-xs"
@@ -423,8 +429,7 @@ const SignInContent = () => {
                                         color: styles.accentColor,
                                     }}
                                 >
-                                    Your demo account is automatically deleted after 24 hours (or
-                                    when you sign out).
+                                    {t.admin.auth.signIn.demoWarning}
                                 </Typography>
                             </Stack>
                         </Stack>
@@ -436,7 +441,7 @@ const SignInContent = () => {
                         level="body-xs"
                         sx={{ textAlign: "center", color: styles.subtitleColor }}
                     >
-                        © Genos {new Date().getFullYear()}
+                        {fmt(t.admin.brand.copyright, { year: new Date().getFullYear() })}
                     </Typography>
                 </Box>
             </Box>
@@ -467,10 +472,10 @@ const SignInContent = () => {
                             mb: 1,
                         }}
                     >
-                        Forgot Password?
+                        {t.admin.auth.forgotPassword.title}
                     </Typography>
                     <Typography level="body-md" sx={{ color: styles.subtitleColor, mb: 2 }}>
-                        Please contact the app owner to reset your password.
+                        {t.admin.auth.forgotPassword.body}
                     </Typography>
                     <Typography
                         component="a"
@@ -503,7 +508,7 @@ const SignInContent = () => {
                         }}
                         onClick={() => setOpenForgotPassword(false)}
                     >
-                        Close
+                        {t.admin.auth.forgotPassword.close}
                     </Button>
                 </ModalDialog>
             </Modal>
@@ -523,7 +528,9 @@ export const SignInForm = () => {
                     },
                 }}
             />
-            <SignInContent />
+            <I18nProvider>
+                <SignInContent />
+            </I18nProvider>
         </CssVarsProvider>
     );
 };

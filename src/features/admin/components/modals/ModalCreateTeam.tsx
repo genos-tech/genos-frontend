@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Alert, Button, Input, Modal, ModalDialog, Stack, Typography } from "@mui/joy";
 
 import { useAuth } from "../../../../context/AuthContext";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
@@ -22,6 +23,7 @@ export const ModalCreateTeam: React.FC<Props> = ({
     setIsNewTeamCreated,
 }) => {
     const { accessToken } = useAuth();
+    const { t } = useTranslation();
 
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [teamName, setTeamName] = useState("");
@@ -49,7 +51,7 @@ export const ModalCreateTeam: React.FC<Props> = ({
 
             if (!createTeamResponse.ok) {
                 console.error(createTeamData);
-                throw new Error(createTeamData.hint || "Team Creation Failed");
+                throw new Error(createTeamData.hint || t.admin.createTeamModal.creationFailed);
             } else {
                 setMyself({ ...myself, teamId: createTeamData.teamId });
                 setOpenCreateTeam(false);
@@ -70,9 +72,9 @@ export const ModalCreateTeam: React.FC<Props> = ({
                 onClose={() => setOpenCreateTeam(false)}
             >
                 <ModalDialog>
-                    <Typography level="h4">Create New Team</Typography>
+                    <Typography level="h4">{t.admin.createTeamModal.title}</Typography>
                     <Input
-                        placeholder="Unique team name"
+                        placeholder={t.admin.createTeamModal.teamNamePlaceholder}
                         sx={{ mt: 1 }}
                         value={teamName}
                         onChange={(e) => setTeamName(e.target.value)}
@@ -92,14 +94,14 @@ export const ModalCreateTeam: React.FC<Props> = ({
                             variant="outlined"
                             onClick={() => setOpenCreateTeam(false)}
                         >
-                            Cancel
+                            {t.admin.createTeamModal.cancel}
                         </Button>
                         <Button
                             component="a"
                             disabled={!teamName.trim()}
                             onClick={handleCreateTeam}
                         >
-                            Create
+                            {t.admin.createTeamModal.create}
                         </Button>
                     </Stack>
                 </ModalDialog>

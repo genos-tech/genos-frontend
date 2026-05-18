@@ -26,6 +26,7 @@ import { useNavigate } from "react-router-dom";
 import { io, Socket } from "socket.io-client";
 
 import { JoinTeamFormStyles } from "../../../components/ui/styles/commonStyle";
+import { fmt, I18nProvider, useTranslation } from "../../../i18n";
 import { purplePalette, purpleTheme } from "../../../theme/purplePalette";
 import { useAuth } from "../../../context/AuthContext";
 import { wsJoinTeamHook } from "../../../hooks/common/useWebSocket";
@@ -62,6 +63,7 @@ const base_url = import.meta.env.VITE_API_BASE_URL;
 
 const JoinTeamContent = () => {
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const [searchTeamMessage, setSearchMessage] = useState<string | null>(null);
     const [moveToTeamErrorMessage, setMoveToTeamErrorMessage] = useState<string | null>(null);
     const [searchTeamErrorMessage, setSearchTeamErrorMessage] = useState<string | null>(null);
@@ -122,7 +124,9 @@ const JoinTeamContent = () => {
                     const initMessageBody = [
                         {
                             type: "paragraph",
-                            content: [{ type: "text", text: "Has joined", styles: {} }],
+                            content: [
+                                { type: "text", text: t.admin.joinTeam.hasJoined, styles: {} },
+                            ],
                         },
                         {
                             type: "paragraph",
@@ -159,7 +163,7 @@ const JoinTeamContent = () => {
                 joiningTeamId: targetTeamDetails.teamId,
                 joiningTeamName: targetTeamDetails.teamName,
             });
-            setSearchMessage("Has sent a request to join the team!");
+            setSearchMessage(t.admin.joinTeam.joinRequestSent);
             setFoundTeamDetails(undefined);
         } else {
             console.error("userId is not found in your localStorage");
@@ -195,7 +199,7 @@ const JoinTeamContent = () => {
         );
         if (findTeamRes.exist === true) {
             if (joinedTeams.some((team) => team.teamId === findTeamRes.teamDetails.teamId)) {
-                setSearchTeamErrorMessage("Already joined");
+                setSearchTeamErrorMessage(t.admin.joinTeam.alreadyJoined);
             } else {
                 setFoundTeamDetails(findTeamRes.teamDetails);
             }
@@ -300,7 +304,7 @@ const JoinTeamContent = () => {
                             letterSpacing: "-0.02em",
                         }}
                     >
-                        Team Management
+                        {t.admin.joinTeam.title}
                     </Typography>
 
                     {/* Your Teams Section */}
@@ -348,7 +352,7 @@ const JoinTeamContent = () => {
                                         fontWeight: 600,
                                     }}
                                 >
-                                    Your Teams
+                                    {t.admin.joinTeam.yourTeams}
                                 </Typography>
                             </Stack>
 
@@ -453,7 +457,7 @@ const JoinTeamContent = () => {
                                         fontWeight: 600,
                                     }}
                                 >
-                                    Team Found!
+                                    {t.admin.joinTeam.teamFound}
                                 </Typography>
                             </Stack>
 
@@ -502,7 +506,7 @@ const JoinTeamContent = () => {
                                         },
                                     }}
                                 >
-                                    Search Another
+                                    {t.admin.joinTeam.searchAnother}
                                 </Button>
                                 <Button
                                     startDecorator={<SendRoundedIcon />}
@@ -517,7 +521,7 @@ const JoinTeamContent = () => {
                                         },
                                     }}
                                 >
-                                    Request to Join
+                                    {t.admin.joinTeam.requestToJoin}
                                 </Button>
                             </Stack>
                         </Box>
@@ -556,7 +560,7 @@ const JoinTeamContent = () => {
                                         fontWeight: 600,
                                     }}
                                 >
-                                    Search by Team ID
+                                    {t.admin.joinTeam.searchByTeamId}
                                 </Typography>
                             </Stack>
 
@@ -605,12 +609,12 @@ const JoinTeamContent = () => {
                                             mb: 0.75,
                                         }}
                                     >
-                                        Team ID
+                                        {t.admin.joinTeam.teamIdLabel}
                                     </FormLabel>
                                     <Input
                                         name="teamId"
                                         type="text"
-                                        placeholder="Enter team ID to search"
+                                        placeholder={t.admin.joinTeam.teamIdPlaceholder}
                                         startDecorator={
                                             <SearchRoundedIcon
                                                 sx={{ color: styles.accentColor, fontSize: 20 }}
@@ -637,7 +641,7 @@ const JoinTeamContent = () => {
                                         },
                                     }}
                                 >
-                                    Search Team
+                                    {t.admin.joinTeam.searchTeam}
                                 </Button>
                             </form>
                         </Box>
@@ -675,7 +679,7 @@ const JoinTeamContent = () => {
                                     fontWeight: 600,
                                 }}
                             >
-                                Create New Team
+                                {t.admin.joinTeam.createNewTeam}
                             </Typography>
                         </Stack>
 
@@ -711,12 +715,12 @@ const JoinTeamContent = () => {
                                         mb: 0.75,
                                     }}
                                 >
-                                    Team Name
+                                    {t.admin.joinTeam.teamNameLabel}
                                 </FormLabel>
                                 <Input
                                     name="teamName"
                                     type="text"
-                                    placeholder="Enter your team name"
+                                    placeholder={t.admin.joinTeam.teamNamePlaceholder}
                                     startDecorator={
                                         <GroupsRoundedIcon
                                             sx={{
@@ -752,7 +756,7 @@ const JoinTeamContent = () => {
                                     },
                                 }}
                             >
-                                Create Team
+                                {t.admin.joinTeam.createTeam}
                             </Button>
                         </form>
                     </Box>
@@ -793,7 +797,7 @@ const JoinTeamContent = () => {
                             }}
                         >
                             <ArrowBackRoundedIcon sx={{ fontSize: 16 }} />
-                            Sign Out
+                            {t.admin.joinTeam.signOut}
                         </Link>
                     </Typography>
                 </Box>
@@ -803,7 +807,7 @@ const JoinTeamContent = () => {
                         level="body-xs"
                         sx={{ textAlign: "center", color: styles.subtitleColor }}
                     >
-                        © Genos {new Date().getFullYear()}
+                        {fmt(t.admin.brand.copyright, { year: new Date().getFullYear() })}
                     </Typography>
                 </Box>
             </Box>
@@ -823,7 +827,9 @@ export const JoinTeam = () => {
                     },
                 }}
             />
-            <JoinTeamContent />
+            <I18nProvider>
+                <JoinTeamContent />
+            </I18nProvider>
         </CssVarsProvider>
     );
 };

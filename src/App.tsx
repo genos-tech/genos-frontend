@@ -1,16 +1,15 @@
 import "./App.css";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import CloudOffRoundedIcon from "@mui/icons-material/CloudOffRounded";
-import ScreenRotationRoundedIcon from "@mui/icons-material/ScreenRotationRounded";
-import WifiOffRoundedIcon from "@mui/icons-material/WifiOffRounded";
-import { Box, Snackbar, Stack, Typography } from "@mui/joy";
+import { Box } from "@mui/joy";
 import CssBaseline from "@mui/joy/CssBaseline";
 import { CssVarsProvider } from "@mui/joy/styles";
 import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 
+import { ConnectionStatusSnackbar } from "./components/layout/ConnectionStatusSnackbar";
 import { ServiceSwitcherOverlay } from "./components/layout/ServiceSwitcherOverlay";
 import { Sidebar } from "./components/layout/sidebar";
+import { TooSmallScreen } from "./components/layout/TooSmallScreen";
 import { UrlLinkModal } from "./components/modals/UrlLinkModal";
 import { AvatarContextProvider } from "./components/ui/avatars/AvatarContext";
 import { InitialLoad } from "./components/ui/misc/InitialLoad";
@@ -38,6 +37,7 @@ import { useThreadTaskHandling } from "./hooks/common/useThreadTaskHandling";
 import { useUrlLinkModalState } from "./hooks/common/useUrlLinkModalState";
 import { useWebSocket } from "./hooks/common/useWebSocket";
 import { useWindowSize } from "./hooks/common/useWindowSize";
+import { I18nProvider } from "./i18n";
 import { registerApiHealthListener, unregisterApiHealthListener } from "./services/api";
 import { NotificationsProvider } from "./services/notifications/NotificationsContext";
 import { NotificationToastHost } from "./services/notifications/NotificationToastHost";
@@ -370,27 +370,9 @@ export const App = () => {
         return (
             <CssVarsProvider theme={purpleTheme} disableTransitionOnChange>
                 <CssBaseline />
-                <Box
-                    sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        height: "100dvh",
-                        width: "100vw",
-                        textAlign: "center",
-                        px: 4,
-                        gap: 2,
-                        bgcolor: "background.surface",
-                    }}
-                >
-                    <ScreenRotationRoundedIcon sx={{ fontSize: 56, color: "neutral.400" }} />
-                    <Typography level="h3">Window Size Too Small</Typography>
-                    <Typography level="body-md" sx={{ color: "neutral.500", maxWidth: 360 }}>
-                        This application is designed for desktop use. Please resize your browser
-                        window or switch to a larger screen.
-                    </Typography>
-                </Box>
+                <I18nProvider>
+                    <TooSmallScreen />
+                </I18nProvider>
             </CssVarsProvider>
         );
     }
@@ -398,6 +380,7 @@ export const App = () => {
     return (
         <CssVarsProvider theme={purpleTheme} disableTransitionOnChange>
             <CssBaseline />
+            <I18nProvider>
             <ThemePreferenceProvider>
                 <BubbleStylePreferenceProvider>
                     <SpotlightPreferencesProvider>
@@ -430,45 +413,10 @@ export const App = () => {
                                     onReject={spotlight.onReject}
                                     onSelect={handleSpotlightSelect}
                                 />
-                                <Snackbar
-                                    anchorOrigin={{ vertical: "top", horizontal: "center" }}
-                                    color="danger"
-                                    open={showWsDisconnected || showApiDown}
-                                    sx={{ gap: 1 }}
-                                    variant="soft"
-                                >
-                                    <Stack spacing={0.5}>
-                                        {showWsDisconnected && (
-                                            <Typography
-                                                level="body-sm"
-                                                sx={{
-                                                    fontWeight: 500,
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: 1,
-                                                }}
-                                            >
-                                                <WifiOffRoundedIcon sx={{ fontSize: 16 }} />
-                                                Real-time connection lost. Attempting to
-                                                reconnect...
-                                            </Typography>
-                                        )}
-                                        {showApiDown && (
-                                            <Typography
-                                                level="body-sm"
-                                                sx={{
-                                                    fontWeight: 500,
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: 1,
-                                                }}
-                                            >
-                                                <CloudOffRoundedIcon sx={{ fontSize: 16 }} />
-                                                API server is unreachable.
-                                            </Typography>
-                                        )}
-                                    </Stack>
-                                </Snackbar>
+                                <ConnectionStatusSnackbar
+                                    showApiDown={showApiDown}
+                                    showWsDisconnected={showWsDisconnected}
+                                />
                                 {useUISM.isLoading ? (
                                     <InitialLoad
                                         myself={myself}
@@ -631,6 +579,7 @@ export const App = () => {
                     </SpotlightPreferencesProvider>
                 </BubbleStylePreferenceProvider>
             </ThemePreferenceProvider>
+            </I18nProvider>
         </CssVarsProvider>
     );
 };

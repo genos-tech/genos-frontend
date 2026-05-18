@@ -10,7 +10,17 @@ export const taskTypes: TaskTypesProps = {
 };
 
 export type FilterProps = {
+    // The rendered string. For predefined status / priority / effort
+    // filters this is just an English fallback — the consuming UI
+    // resolves the localized string via `labelKey` instead. For
+    // dynamic (e.g. tag-based) filters the label IS the rendered
+    // string because the tag name is user-supplied and not in the
+    // i18n catalog.
     label: string;
+    // When set, the consumer should look the rendered label up via
+    // `t.tasks.filters[labelKey]`. Omitted for ad-hoc filters whose
+    // label is user-supplied data (project tags, etc.).
+    labelKey?: keyof (typeof import("../../../i18n/locales/en/tasks").tasks)["filters"];
     filterModel: GridFilterModel;
     lightModeColor: string;
     darkModeColor: string;
@@ -19,6 +29,7 @@ export type FilterProps = {
 export const predefinedStatusFilters: FilterProps[] = [
     {
         label: "All",
+        labelKey: "all",
         filterModel: {
             items: [],
         },
@@ -27,6 +38,7 @@ export const predefinedStatusFilters: FilterProps[] = [
     },
     {
         label: "Open",
+        labelKey: "open",
         filterModel: {
             items: [{ field: "status", operator: "equals", value: "Open" }],
         },
@@ -35,6 +47,7 @@ export const predefinedStatusFilters: FilterProps[] = [
     },
     {
         label: "WIP",
+        labelKey: "wip",
         filterModel: {
             items: [{ field: "status", operator: "equals", value: "WIP" }],
         },
@@ -43,6 +56,7 @@ export const predefinedStatusFilters: FilterProps[] = [
     },
     {
         label: "Pending",
+        labelKey: "pending",
         filterModel: {
             items: [{ field: "status", operator: "equals", value: "Pending" }],
         },
@@ -51,6 +65,7 @@ export const predefinedStatusFilters: FilterProps[] = [
     },
     {
         label: "Closed",
+        labelKey: "closed",
         filterModel: {
             items: [{ field: "status", operator: "equals", value: "Closed" }],
         },
@@ -59,6 +74,7 @@ export const predefinedStatusFilters: FilterProps[] = [
     },
     {
         label: "Expired",
+        labelKey: "expired",
         filterModel: {
             items: [{ field: "status", operator: "equals", value: "Expired" }],
         },
@@ -67,6 +83,7 @@ export const predefinedStatusFilters: FilterProps[] = [
     },
     {
         label: "Deleted",
+        labelKey: "deleted",
         filterModel: {
             items: [{ field: "status", operator: "equals", value: "Deleted" }],
         },
@@ -78,6 +95,7 @@ export const predefinedStatusFilters: FilterProps[] = [
 export const predefinedPriorityFilters: FilterProps[] = [
     {
         label: "All",
+        labelKey: "all",
         filterModel: {
             items: [],
         },
@@ -86,6 +104,7 @@ export const predefinedPriorityFilters: FilterProps[] = [
     },
     {
         label: "Minimal",
+        labelKey: "minimal",
         filterModel: {
             items: [{ field: "priority", operator: "equals", value: "Minimal" }],
         },
@@ -94,6 +113,7 @@ export const predefinedPriorityFilters: FilterProps[] = [
     },
     {
         label: "Low",
+        labelKey: "low",
         filterModel: {
             items: [{ field: "priority", operator: "equals", value: "Low" }],
         },
@@ -102,6 +122,7 @@ export const predefinedPriorityFilters: FilterProps[] = [
     },
     {
         label: "Normal",
+        labelKey: "normal",
         filterModel: {
             items: [{ field: "priority", operator: "equals", value: "Normal" }],
         },
@@ -110,6 +131,7 @@ export const predefinedPriorityFilters: FilterProps[] = [
     },
     {
         label: "High",
+        labelKey: "high",
         filterModel: {
             items: [{ field: "priority", operator: "equals", value: "High" }],
         },
@@ -118,6 +140,7 @@ export const predefinedPriorityFilters: FilterProps[] = [
     },
     {
         label: "Critical",
+        labelKey: "critical",
         filterModel: {
             items: [{ field: "priority", operator: "equals", value: "Critical" }],
         },
@@ -129,6 +152,7 @@ export const predefinedPriorityFilters: FilterProps[] = [
 export const predefinedEffortLevelFilters: FilterProps[] = [
     {
         label: "All",
+        labelKey: "all",
         filterModel: {
             items: [],
         },
@@ -137,6 +161,7 @@ export const predefinedEffortLevelFilters: FilterProps[] = [
     },
     {
         label: "Minimal",
+        labelKey: "minimal",
         filterModel: {
             items: [{ field: "effortLevel", operator: "equals", value: "Minimal" }],
         },
@@ -145,6 +170,7 @@ export const predefinedEffortLevelFilters: FilterProps[] = [
     },
     {
         label: "Low",
+        labelKey: "low",
         filterModel: {
             items: [{ field: "effortLevel", operator: "equals", value: "Low" }],
         },
@@ -153,6 +179,7 @@ export const predefinedEffortLevelFilters: FilterProps[] = [
     },
     {
         label: "Moderate",
+        labelKey: "moderate",
         filterModel: {
             items: [{ field: "effortLevel", operator: "equals", value: "Moderate" }],
         },
@@ -161,6 +188,7 @@ export const predefinedEffortLevelFilters: FilterProps[] = [
     },
     {
         label: "High",
+        labelKey: "high",
         filterModel: {
             items: [{ field: "effortLevel", operator: "equals", value: "High" }],
         },
@@ -169,6 +197,7 @@ export const predefinedEffortLevelFilters: FilterProps[] = [
     },
     {
         label: "Extensive",
+        labelKey: "extensive",
         filterModel: {
             items: [{ field: "effortLevel", operator: "equals", value: "Extensive" }],
         },

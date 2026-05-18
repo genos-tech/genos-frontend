@@ -15,6 +15,7 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../i18n";
 import { MuteToggleButton } from "../../../../services/notifications/MuteToggleButton";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../../types/chat";
@@ -52,6 +53,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
     } = props;
 
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const styles = isDark ? ChatPaneHeaderStyles.dark : ChatPaneHeaderStyles.light;
 
@@ -168,7 +170,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                 {unreadActivityCount > 0 && (
                     <Tooltip
                         size="sm"
-                        title={`Mark all in this chat as read`}
+                        title={t.chat.headers.markAllReadAria}
                         variant="outlined"
                         sx={{ borderRadius: "8px" }}
                     >
@@ -177,7 +179,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                             variant="plain"
                             sx={actionButtonStyle}
                             onClick={() => markAllAsRead(chat.chatType, chat.chatId)}
-                            aria-label="Mark all in this chat as read"
+                            aria-label={t.chat.headers.markAllReadAria}
                         >
                             <DoneAllRoundedIcon sx={{ fontSize: 18, color: styles.accentColor }} />
                         </IconButton>
@@ -188,7 +190,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                 {chat.chatType === 3 && (
                     <Tooltip
                         size="sm"
-                        title="Create a new task"
+                        title={t.chat.headers.createNewTaskTooltip}
                         variant="outlined"
                         sx={{ borderRadius: "8px" }}
                     >
@@ -220,7 +222,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                         {isToDoVisible === true ? (
                             <Tooltip
                                 size="sm"
-                                title="Back to Chat"
+                                title={t.chat.headers.backToChat}
                                 variant="outlined"
                                 sx={{ borderRadius: "8px" }}
                             >
@@ -238,7 +240,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                         ) : (
                             <Tooltip
                                 size="sm"
-                                title="To-Do"
+                                title={t.chat.headers.todoTooltip}
                                 variant="outlined"
                                 sx={{ borderRadius: "8px" }}
                             >
@@ -276,7 +278,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                 {useCM.isSubChatVisible && (
                     <Tooltip
                         size="sm"
-                        title="Swap chats"
+                        title={t.chat.headers.swapChats}
                         variant="outlined"
                         sx={{ borderRadius: "8px" }}
                     >
@@ -297,7 +299,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                 {(chat.chatType === 4 || chat.chatType === 1) && (
                     <Tooltip
                         size="sm"
-                        title="Add members"
+                        title={t.chat.headers.addMembers}
                         variant="outlined"
                         sx={{ borderRadius: "8px" }}
                     >
@@ -315,7 +317,7 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                 )}
 
                 {/* Close Button */}
-                <Tooltip size="sm" title="Close" variant="outlined" sx={{ borderRadius: "8px" }}>
+                <Tooltip size="sm" title={t.chat.headers.close} variant="outlined" sx={{ borderRadius: "8px" }}>
                     <IconButton
                         size="sm"
                         variant="plain"

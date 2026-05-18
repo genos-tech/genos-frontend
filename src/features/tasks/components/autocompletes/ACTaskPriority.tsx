@@ -4,6 +4,7 @@ import AutocompleteOption from "@mui/joy/AutocompleteOption";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 
+import { useTranslation } from "../../../../i18n";
 import { TaskProps } from "../../../../types/tasks";
 import { priorities } from "../../utils/taskMeta";
 
@@ -16,6 +17,7 @@ export const ACTaskPriority = (props: ACTaskPriorityProps) => {
     const { taskContent, setTaskContent, setTaskUpdated } = props;
 
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
 
     return (
         <Autocomplete
@@ -24,7 +26,7 @@ export const ACTaskPriority = (props: ACTaskPriorityProps) => {
             isOptionEqualToValue={(option, value) => option.priority === value.priority}
             openOnFocus={true}
             options={priorities}
-            placeholder="Priority"
+            placeholder={t.tasks.autocomplete.priorityPlaceholder}
             size="sm"
             sx={{ width: "100%" }}
             renderOption={(props, option) => (

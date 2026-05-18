@@ -31,6 +31,7 @@ import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, GMProfileProps } from "../../../../types/chat";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
@@ -75,6 +76,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
 
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const styles = isDark ? ProfileModalStyles.dark : ProfileModalStyles.light;
 
@@ -158,7 +160,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
         const uploadProfileImageData = await uploadProfileImageResponse.json();
 
         if (!uploadProfileImageResponse.ok) {
-            throw new Error("Failed to upload user profile image.");
+            throw new Error(t.chat.modals.gmProfile.uploadImageError);
         } else {
             // Await both writes so `funcSetAllChats()` reads the
             // updated IndexedDB row instead of racing the worker
@@ -328,7 +330,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                             <Tooltip
                                                 size="sm"
                                                 sx={{ zIndex: 9000 }}
-                                                title="Edit Profile Image"
+                                                title={t.chat.modals.gmProfile.editProfileImageTooltip}
                                                 variant="outlined"
                                             >
                                                 <IconButton
@@ -379,7 +381,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                             mb: 0.5,
                                                         }}
                                                     >
-                                                        Owner
+                                                        {t.chat.modals.gmProfile.owner}
                                                     </FormLabel>
                                                     <Button
                                                         color="neutral"
@@ -415,7 +417,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                                 ? useTEM.teamMemberProfiles[
                                                                       gmProfile?.ownerUserId
                                                                   ]?.userName
-                                                                : "N/A"}
+                                                                : t.chat.modals.gmProfile.na}
                                                         </Typography>
                                                     </Button>
                                                 </FormControl>
@@ -427,7 +429,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                             ? useTEM.teamMemberProfiles[
                                                                   gmProfile?.ownerUserId
                                                               ]?.userEmail
-                                                            : "N/A"
+                                                            : t.chat.modals.gmProfile.na
                                                     }`}
                                                     startDecorator={
                                                         <EmailRoundedIcon
@@ -450,7 +452,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                         ? useTEM.teamMemberProfiles[
                                                               gmProfile?.ownerUserId
                                                           ]?.userEmail
-                                                        : "N/A"}
+                                                        : t.chat.modals.gmProfile.na}
                                                 </Typography>
                                             </Stack>
 
@@ -472,11 +474,13 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                             mb: 0,
                                                         }}
                                                     >
-                                                        Members ({filteredMembers.length}/
-                                                        {gmProfile?.gmMembers?.length || 0})
+                                                        {fmt(t.chat.modals.gmProfile.membersCount, {
+                                                            filtered: filteredMembers.length,
+                                                            total: gmProfile?.gmMembers?.length || 0,
+                                                        })}
                                                     </FormLabel>
                                                     <Input
-                                                        placeholder="Search members..."
+                                                        placeholder={t.chat.modals.gmProfile.searchMembersPlaceholder}
                                                         value={memberSearchQuery}
                                                         onChange={(e) =>
                                                             setMemberSearchQuery(e.target.value)
@@ -583,8 +587,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                             }}
                                                         >
                                                             <Typography level="body-sm">
-                                                                No members found matching "
-                                                                {memberSearchQuery}"
+                                                                {fmt(t.chat.modals.gmProfile.noMembersFound, { query: memberSearchQuery })}
                                                             </Typography>
                                                         </Box>
                                                     )}
@@ -604,7 +607,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                             mb: 0.5,
                                                         }}
                                                     >
-                                                        Is Private
+                                                        {t.chat.modals.gmProfile.isPrivate}
                                                     </FormLabel>
                                                     <Box
                                                         sx={{
@@ -639,7 +642,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                                       : "#9333ea",
                                                             }}
                                                         >
-                                                            {gmProfile?.isPrivate ? "Yes" : "No"}
+                                                            {gmProfile?.isPrivate ? t.chat.modals.gmProfile.yes : t.chat.modals.gmProfile.no}
                                                         </Typography>
                                                     </Box>
                                                 </FormControl>
@@ -655,7 +658,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                             mb: 0.5,
                                                         }}
                                                     >
-                                                        Created Date
+                                                        {t.chat.modals.gmProfile.createdDate}
                                                     </FormLabel>
                                                     <Box
                                                         sx={{
@@ -680,7 +683,7 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                                 ? extractYYYYMMDD(
                                                                       gmProfile.tsCreatedAt
                                                                   )
-                                                                : "N/A"}
+                                                                : t.chat.modals.gmProfile.na}
                                                         </Typography>
                                                     </Box>
                                                 </FormControl>

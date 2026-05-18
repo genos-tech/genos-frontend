@@ -12,6 +12,7 @@ import {
 } from "@mui/joy";
 
 import { useAuth } from "../../../context/AuthContext";
+import { useTranslation } from "../../../i18n";
 import { UserProps } from "../../../types/admin";
 import { ProjectProps } from "../../../types/tasks";
 
@@ -25,6 +26,7 @@ type TaskInitProps = {
 export default function TaskInit(props: TaskInitProps) {
     const { myself, setCurrentProject } = props;
     const { accessToken } = useAuth();
+    const { t } = useTranslation();
     const [projectName, setProjectName] = useState<string>("");
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -46,7 +48,7 @@ export default function TaskInit(props: TaskInitProps) {
             const createProjectData = await createProjectResponse.json();
 
             if (!createProjectResponse.ok) {
-                throw new Error("Project Creation Failed");
+                throw new Error(t.tasks.init.creationFailed);
             } else {
                 if (createProjectData.project_id) {
                     setCurrentProject({
@@ -85,7 +87,7 @@ export default function TaskInit(props: TaskInitProps) {
                     resize: "horizontal",
                 }}
             >
-                <Typography level="title-lg">Create your first project</Typography>
+                <Typography level="title-lg">{t.tasks.init.heading}</Typography>
                 {errorMessage && <Alert color="danger">{errorMessage}</Alert>}
                 <CardContent
                     sx={{
@@ -96,7 +98,7 @@ export default function TaskInit(props: TaskInitProps) {
                 >
                     <FormControl sx={{ gridColumn: "1/-1" }}>
                         <Input
-                            placeholder="Project Name"
+                            placeholder={t.tasks.init.projectNamePlaceholder}
                             onChange={(e) => {
                                 setProjectName(e.target.value);
                             }}
@@ -111,11 +113,11 @@ export default function TaskInit(props: TaskInitProps) {
                                 if (projectName !== "") {
                                     createProject();
                                 } else {
-                                    setErrorMessage("Project name is empty !!!");
+                                    setErrorMessage(t.tasks.init.emptyProjectName);
                                 }
                             }}
                         >
-                            Create
+                            {t.tasks.init.createButton}
                         </Button>
                     </CardActions>
                 </CardContent>

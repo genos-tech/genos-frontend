@@ -21,6 +21,7 @@ import { ChatManagementState } from "../../../../../hooks/chats/useChatManagemen
 import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { TaskProps } from "../../../../../types/tasks";
 import { loadSpecificChildTasks } from "../../../services/loadSpecificChildTasks";
@@ -48,6 +49,7 @@ type TaskSubTasksBlockProps = {
     emptyText?: string;
 };
 export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
+    const { t } = useTranslation();
     const {
         SectionHeader,
         useTEM,
@@ -59,9 +61,9 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
         useCM,
         useTM,
         forceLoad = false,
-        title = "Sub Tasks",
-        buttonLabel = "Sub Task",
-        emptyText = "No sub tasks yet",
+        title = t.tasks.subTasks.title,
+        buttonLabel = t.tasks.subTasks.buttonLabel,
+        emptyText = t.tasks.subTasks.emptyText,
     } = props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();

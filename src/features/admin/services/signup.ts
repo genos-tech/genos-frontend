@@ -1,5 +1,6 @@
 import axios from "axios";
 
+import { getMessages } from "../../../i18n";
 import { nonAuthApi } from "../../../services/api";
 
 export const signUp = async (
@@ -20,24 +21,25 @@ export const signUp = async (
         });
         return res.data;
     } catch (error: unknown) {
+        const m = getMessages().admin.auth.errors;
         if (axios.isAxiosError(error)) {
             if (!error.response) {
                 console.error("Network error:", error.message);
-                setErrorMessage?.("Network error. Please check your connection and try again.");
+                setErrorMessage?.(m.network);
             } else if (error.response.status === 400) {
                 console.error("HTTP 400 error:", error.response.data);
                 if (isSystemUser) {
-                    setErrorMessage?.("Please try with a different name.");
+                    setErrorMessage?.(m.duplicateName);
                 } else {
-                    setErrorMessage?.("Please try with a different email.");
+                    setErrorMessage?.(m.duplicateEmail);
                 }
             } else {
                 console.error("API error:", error.response.status, error.response.data);
-                setErrorMessage?.("Something went wrong. Please try again later.");
+                setErrorMessage?.(m.generic);
             }
         } else {
             console.error("Unexpected error:", error);
-            setErrorMessage?.("An unexpected error occurred. Please try again.");
+            setErrorMessage?.(m.unexpected);
         }
     }
 };

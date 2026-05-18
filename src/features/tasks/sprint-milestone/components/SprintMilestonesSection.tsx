@@ -9,6 +9,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { Milestone, Sprint } from "../types";
 
@@ -55,6 +56,7 @@ export const SprintMilestonesSection = ({
     textSecondary,
     textMuted,
 }: Props) => {
+    const { t } = useTranslation();
     const milestones: Milestone[] = useMemo(() => {
         if (!projectId) return [];
         const all = useSM.projectMilestones[projectId] ?? [];
@@ -83,8 +85,8 @@ export const SprintMilestonesSection = ({
                     }}
                 >
                     {selectedSprint
-                        ? `Milestones in ${selectedSprint.name}`
-                        : "Milestones (no sprint)"}
+                        ? fmt(t.tasks.milestones.sectionInSprint, { name: selectedSprint.name })
+                        : t.tasks.milestones.sectionNoSprint}
                 </Typography>
                 <Chip size="sm" variant="soft">
                     {milestones.length}
@@ -92,7 +94,7 @@ export const SprintMilestonesSection = ({
             </Stack>
             {milestones.length === 0 ? (
                 <Typography level="body-sm" sx={{ color: textMuted }}>
-                    No milestones in this sprint yet.
+                    {t.tasks.milestones.noMilestones}
                 </Typography>
             ) : (
                 <Stack spacing={1.25}>
@@ -147,7 +149,7 @@ export const SprintMilestonesSection = ({
                                                 textOverflow: "ellipsis",
                                             }}
                                         >
-                                            {m.title || "Untitled milestone"}
+                                            {m.title || t.tasks.milestones.untitled}
                                         </Typography>
                                         <Chip
                                             size="sm"

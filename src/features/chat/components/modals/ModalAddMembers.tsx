@@ -23,6 +23,7 @@ import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 import { addMembersToChat } from "../../services/addMembersToChat";
@@ -57,6 +58,7 @@ export const ModalAddMembers: React.FC<Props> = ({
     setMyself,
 }) => {
     const { accessToken } = useAuth();
+    const { t } = useTranslation();
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedMembers, setSelectedMembers] = useState<UserProps[]>([]);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -130,7 +132,7 @@ export const ModalAddMembers: React.FC<Props> = ({
 
     const handleAddMembers = async () => {
         if (selectedMembers.length === 0) {
-            setErrorMessage("Please select at least 1 member to add.");
+            setErrorMessage(t.chat.modals.addMembers.errorMinimumMembers);
             return;
         }
 
@@ -152,7 +154,7 @@ export const ModalAddMembers: React.FC<Props> = ({
             );
         } catch (error) {
             console.error("Failed to add members:", error);
-            setErrorMessage("Failed to add members. Please try again.");
+            setErrorMessage(t.chat.modals.addMembers.errorAdd);
         } finally {
             setIsLoading(false);
         }
@@ -209,7 +211,7 @@ export const ModalAddMembers: React.FC<Props> = ({
                             fontWeight: 600,
                         }}
                     >
-                        Talk with more members
+                        {t.chat.modals.addMembers.title}
                     </Typography>
                 </Box>
 
@@ -239,7 +241,7 @@ export const ModalAddMembers: React.FC<Props> = ({
                         />
                         <Box>
                             <Typography level="body-sm" sx={{ color: "rgba(255, 255, 255, 0.9)" }}>
-                                Current conversation with:
+                                {t.chat.modals.addMembers.currentConversationWith}
                             </Typography>
                             <Typography level="body-xs" sx={{ color: "rgba(255, 255, 255, 0.6)" }}>
                                 {chat.dmPartnerUser.userName}
@@ -261,7 +263,7 @@ export const ModalAddMembers: React.FC<Props> = ({
                             level="body-sm"
                             sx={{ color: "rgba(255, 255, 255, 0.9)", mb: 0.5 }}
                         >
-                            Current members:
+                            {t.chat.modals.addMembers.currentMembers}
                         </Typography>
                         <Typography level="body-xs" sx={{ color: "rgba(255, 255, 255, 0.6)" }}>
                             {chat.mdmMembers.map((m) => m.userName).join(", ")}
@@ -308,7 +310,7 @@ export const ModalAddMembers: React.FC<Props> = ({
 
                 {/* Search Input */}
                 <Input
-                    placeholder="Search team members..."
+                    placeholder={t.chat.modals.addMembers.searchPlaceholder}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     startDecorator={
@@ -349,8 +351,8 @@ export const ModalAddMembers: React.FC<Props> = ({
                             }}
                         >
                             {searchQuery
-                                ? "No members found matching your search."
-                                : "No team members available to add."}
+                                ? t.chat.modals.addMembers.noMembersMatchingSearch
+                                : t.chat.modals.addMembers.noMembersAvailable}
                         </Typography>
                     ) : (
                         filteredMembers.map((member) => {
@@ -440,8 +442,7 @@ export const ModalAddMembers: React.FC<Props> = ({
                                 : "rgba(255, 255, 255, 0.4)",
                     }}
                 >
-                    {selectedMembers.length} member{selectedMembers.length !== 1 ? "s" : ""}{" "}
-                    selected
+                    {fmt(t.chat.modals.addMembers.membersSelected, { count: selectedMembers.length })}
                 </Typography>
 
                 {/* Error Alert */}
@@ -474,7 +475,7 @@ export const ModalAddMembers: React.FC<Props> = ({
                             },
                         }}
                     >
-                        Cancel
+                        {t.chat.modals.addMembers.cancel}
                     </Button>
                     <Button
                         disabled={selectedMembers.length === 0 || isLoading}
@@ -497,7 +498,7 @@ export const ModalAddMembers: React.FC<Props> = ({
                             },
                         }}
                     >
-                        Add Members
+                        {t.chat.modals.addMembers.addMembers}
                     </Button>
                 </Stack>
             </ModalDialog>

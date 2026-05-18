@@ -5,10 +5,14 @@ import { createReactBlockSpec } from "@blocknote/react";
 import { Menu } from "@mantine/core";
 import { MdCancel, MdCheckCircle, MdError, MdInfo } from "react-icons/md";
 
-// The types of alerts that users can choose from.
+import { useTranslation } from "../../../i18n";
+
+// The types of alerts that users can choose from. The `titleKey` is
+// resolved against `t.common.editor.alert*` at render time so the labels
+// reflect the active locale.
 export const alertTypes = [
     {
-        title: "Warning",
+        titleKey: "alertWarning",
         value: "warning",
         icon: MdError,
         color: "#e69819",
@@ -18,7 +22,7 @@ export const alertTypes = [
         },
     },
     {
-        title: "Error",
+        titleKey: "alertError",
         value: "error",
         icon: MdCancel,
         color: "#d80d0d",
@@ -28,7 +32,7 @@ export const alertTypes = [
         },
     },
     {
-        title: "Info",
+        titleKey: "alertInfo",
         value: "info",
         icon: MdInfo,
         color: "#507aff",
@@ -38,7 +42,7 @@ export const alertTypes = [
         },
     },
     {
-        title: "Success",
+        titleKey: "alertSuccess",
         value: "success",
         icon: MdCheckCircle,
         color: "#0bc10b",
@@ -67,6 +71,7 @@ export const Alert = createReactBlockSpec(
         render: (props) => {
             const alertType = alertTypes.find((a) => a.value === props.block.props.type)!;
             const Icon = alertType.icon;
+            const { t } = useTranslation();
             return (
                 <div className={"alert"} data-alert-type={props.block.props.type}>
                     {/*Icon which opens a menu to choose the Alert type*/}
@@ -82,7 +87,7 @@ export const Alert = createReactBlockSpec(
                         </Menu.Target>
                         {/*Dropdown to change the Alert type*/}
                         <Menu.Dropdown>
-                            <Menu.Label>Alert Type</Menu.Label>
+                            <Menu.Label>{t.common.editor.alertType}</Menu.Label>
                             <Menu.Divider />
                             {alertTypes.map((type) => {
                                 const ItemIcon = type.icon;
@@ -103,7 +108,7 @@ export const Alert = createReactBlockSpec(
                                             })
                                         }
                                     >
-                                        {type.title}
+                                        {t.common.editor[type.titleKey]}
                                     </Menu.Item>
                                 );
                             })}

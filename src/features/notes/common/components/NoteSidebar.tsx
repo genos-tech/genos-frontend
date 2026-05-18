@@ -11,6 +11,7 @@ import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { fmt, Messages, useTranslation } from "../../../../i18n";
 import { AllChatProps } from "../../../../types/chat";
 import {
     ChatNoteMetaProps,
@@ -81,7 +82,7 @@ interface ChatTypeGroup {
 //      L2 is the immediate parent and the note's task becomes an L3
 //      subtask. This is the strict-3-level collapse: chains deeper than
 //      two levels of task nesting flatten under the immediate parent.
-function groupTaskNotes(notes: TaskNoteMetaTreeNode[]): ProjectGroup[] {
+function groupTaskNotes(notes: TaskNoteMetaTreeNode[], t: Messages): ProjectGroup[] {
     const projectMap = new Map<number, ProjectGroup>();
 
     const getProjectGroup = (note: TaskNoteMetaTreeNode): ProjectGroup => {
@@ -89,7 +90,9 @@ function groupTaskNotes(notes: TaskNoteMetaTreeNode[]): ProjectGroup[] {
         if (!pg) {
             pg = {
                 projectId: note.projectId,
-                projectName: note.projectName || `Project ${note.projectId}`,
+                projectName:
+                    note.projectName ||
+                    fmt(t.notes.defaults.projectFallback, { projectId: note.projectId }),
                 milestones: [],
                 looseTasks: [],
             };
@@ -107,7 +110,9 @@ function groupTaskNotes(notes: TaskNoteMetaTreeNode[]): ProjectGroup[] {
         if (!mg) {
             mg = {
                 milestoneId,
-                milestoneTitle: milestoneTitle || `Milestone ${milestoneId}`,
+                milestoneTitle:
+                    milestoneTitle ||
+                    fmt(t.notes.defaults.milestoneFallback, { milestoneId }),
                 directNotes: [],
                 tasks: [],
             };
@@ -121,11 +126,12 @@ function groupTaskNotes(notes: TaskNoteMetaTreeNode[]): ProjectGroup[] {
         taskId: number,
         taskTitle: string
     ): TaskGroup => {
-        let tg = tasks.find((t) => t.taskId === taskId);
+        let tg = tasks.find((tt) => tt.taskId === taskId);
         if (!tg) {
             tg = {
                 taskId,
-                taskTitle: taskTitle || `Task #${taskId}`,
+                taskTitle:
+                    taskTitle || fmt(t.notes.defaults.taskFallback, { taskId }),
                 notes: [],
                 subtasks: [],
             };
@@ -143,7 +149,8 @@ function groupTaskNotes(notes: TaskNoteMetaTreeNode[]): ProjectGroup[] {
         if (!sg) {
             sg = {
                 taskId,
-                taskTitle: taskTitle || `Task #${taskId}`,
+                taskTitle:
+                    taskTitle || fmt(t.notes.defaults.taskFallback, { taskId }),
                 notes: [],
             };
             tg.subtasks.push(sg);
@@ -227,17 +234,21 @@ const projectGroupContainsNote = (pg: ProjectGroup, noteId: number | undefined):
 };
 
 // Utility function to group chat notes by chat type, then by chat name
-function groupChatNotes(notes: ChatNoteMetaTreeNode[], allChats: AllChatProps[]): ChatTypeGroup[] {
+function groupChatNotes(
+    notes: ChatNoteMetaTreeNode[],
+    allChats: AllChatProps[],
+    t: Messages
+): ChatTypeGroup[] {
     const chatTypeMap: Map<number, ChatTypeGroup> = new Map();
 
     for (const note of notes) {
-        const chatTypeName = note.chatTypeName || getChatTypeLabel(note.chatType);
+        const chatTypeName = note.chatTypeName || getChatTypeLabel(note.chatType, t);
         const groupKey = note.chatType === 4 ? 1 : note.chatType;
 
         if (!chatTypeMap.has(groupKey)) {
             chatTypeMap.set(groupKey, {
                 chatType: groupKey,
-                chatTypeName: getChatTypeLabel(groupKey),
+                chatTypeName: getChatTypeLabel(groupKey, t),
                 chats: [],
             });
         }
@@ -267,17 +278,17 @@ function groupChatNotes(notes: ChatNoteMetaTreeNode[], allChats: AllChatProps[])
     return Array.from(chatTypeMap.values());
 }
 
-function getChatTypeLabel(chatType: number): string {
+function getChatTypeLabel(chatType: number, t: Messages): string {
     switch (chatType) {
         case 1:
         case 4:
-            return "DM";
+            return t.notes.chatTypes.dm;
         case 2:
-            return "GM";
+            return t.notes.chatTypes.gm;
         case 3:
-            return "PM";
+            return t.notes.chatTypes.pm;
         default:
-            return "Chat";
+            return t.notes.chatTypes.chat;
     }
 }
 
@@ -290,6 +301,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     const { useNM, allChats = [] } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const { t } = useTranslation();
 
     // Load favorite notes on mount
     useEffect(() => {
@@ -406,14 +418,14 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
 
     // Grouped task notes by project and task
     const groupedTaskNotes = useMemo(
-        () => groupTaskNotes(taskNoteState.tmpMetaTree as TaskNoteMetaTreeNode[]),
-        [taskNoteState.tmpMetaTree]
+        () => groupTaskNotes(taskNoteState.tmpMetaTree as TaskNoteMetaTreeNode[], t),
+        [taskNoteState.tmpMetaTree, t]
     );
 
     // Grouped chat notes by chat type and name
     const groupedChatNotes = useMemo(
-        () => groupChatNotes(chatNoteState.tmpMetaTree as ChatNoteMetaTreeNode[], allChats),
-        [chatNoteState.tmpMetaTree, allChats]
+        () => groupChatNotes(chatNoteState.tmpMetaTree as ChatNoteMetaTreeNode[], allChats, t),
+        [chatNoteState.tmpMetaTree, allChats, t]
     );
 
     // Grouped shared notes by the sharer (ownerName)
@@ -427,7 +439,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             if (!map.has(key)) {
                 map.set(key, {
                     ownerId: note.ownerId,
-                    ownerName: note.ownerName || "Unknown",
+                    ownerName: note.ownerName || t.notes.sidebar.unknownOwner,
                     notes: [],
                 });
             }
@@ -486,7 +498,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                                 key={milestoneKey}
                                 groupKey={milestoneKey}
                                 groupLabel={`🚩 ${milestoneGroup.milestoneTitle}`}
-                                subLabel="Milestone"
+                                subLabel={t.notes.sidebar.milestoneLabel}
                                 defaultExpanded={milestoneGroupContainsNote(
                                     milestoneGroup,
                                     activeNoteId
@@ -580,7 +592,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                             fontStyle: "italic",
                         }}
                     >
-                        No favorites yet. Star notes to add them here.
+                        {t.notes.sidebar.noFavorites}
                     </Typography>
                 </Box>
             );
@@ -591,7 +603,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 {hasPersonalNotes && (
                     <FavoriteNoteSection
                         groupKey="fav-personal"
-                        groupLabel="My Notes"
+                        groupLabel={t.notes.sidebar.myNotes}
                         icon={<WindowRoundedIcon sx={{ fontSize: 14 }} />}
                         defaultExpanded={true}
                     >
@@ -603,7 +615,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 {hasTaskNotes && (
                     <FavoriteNoteSection
                         groupKey="fav-task"
-                        groupLabel="Task Notes"
+                        groupLabel={t.notes.sidebar.taskNotes}
                         icon={<AssignmentRoundedIcon sx={{ fontSize: 14 }} />}
                         defaultExpanded={true}
                     >
@@ -615,7 +627,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 {hasChatNotes && (
                     <FavoriteNoteSection
                         groupKey="fav-chat"
-                        groupLabel="Chat Notes"
+                        groupLabel={t.notes.sidebar.chatNotes}
                         icon={<QuestionAnswerRoundedIcon sx={{ fontSize: 14 }} />}
                         defaultExpanded={true}
                     >
@@ -669,7 +681,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                             fontStyle: "italic",
                         }}
                     >
-                        No recent notes yet.
+                        {t.notes.sidebar.noRecents}
                     </Typography>
                 </Box>
             );
@@ -700,7 +712,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         {
             noteType: 1,
             icon: <WindowRoundedIcon sx={{ fontSize: 18 }} />,
-            title: "My Notes",
+            title: t.notes.sidebar.myNotes,
             state: myNoteState,
             renderTree: renderMyNoteTree,
             isGrouped: false,
@@ -708,7 +720,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         {
             noteType: 2,
             icon: <AssignmentRoundedIcon sx={{ fontSize: 18 }} />,
-            title: "Task Notes",
+            title: t.notes.sidebar.taskNotes,
             state: taskNoteState,
             renderTree: null,
             renderGrouped: renderGroupedTaskNotes,
@@ -717,7 +729,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         {
             noteType: 3,
             icon: <QuestionAnswerRoundedIcon sx={{ fontSize: 18 }} />,
-            title: "Chat Notes",
+            title: t.notes.sidebar.chatNotes,
             state: chatNoteState,
             renderTree: null,
             renderGrouped: renderGroupedChatNotes,
@@ -726,7 +738,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         {
             noteType: 4,
             icon: <ShareRoundedIcon sx={{ fontSize: 18 }} />,
-            title: "Shared Notes",
+            title: t.notes.sidebar.sharedNotes,
             state: sharedNoteState,
             renderTree: null,
             renderGrouped: renderGroupedSharedNotes,
@@ -837,7 +849,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                                             : "rgba(0,0,0,0.8)",
                                     }}
                                 >
-                                    Home
+                                    {t.notes.sidebar.home}
                                 </Typography>
                             </ListItemContent>
                         </ListItemButton>
@@ -848,7 +860,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         icon={<StarRoundedIcon sx={{ fontSize: 18 }} />}
                         useNM={useNM}
                         noteType={5} // Use 5 for favorites (distinct from 0-4)
-                        title="Favorites"
+                        title={t.notes.sidebar.favorites}
                     >
                         {renderFavoriteNotes()}
                     </NoteTypeSection>
@@ -858,7 +870,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         icon={<HistoryRoundedIcon sx={{ fontSize: 18 }} />}
                         useNM={useNM}
                         noteType={6} // Use 6 for recents (distinct from 0-5)
-                        title="Recents"
+                        title={t.notes.sidebar.recents}
                     >
                         {renderRecentNotes()}
                     </NoteTypeSection>
@@ -875,7 +887,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                                 color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
                             }}
                         >
-                            Workspaces
+                            {t.notes.sidebar.workspaces}
                         </Typography>
                     </Box>
 
@@ -918,7 +930,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         fontSize: 10,
                     }}
                 >
-                    Organize your thoughts
+                    {t.notes.sidebar.footerTagline}
                 </Typography>
             </Box>
         </Sheet>

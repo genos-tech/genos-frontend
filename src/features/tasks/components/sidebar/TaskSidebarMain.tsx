@@ -12,6 +12,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { SearchTeamTasksResponse, TagListProps } from "../../../../types/tasks";
 import { loadProjectTags } from "../../services/loadProjectTags";
@@ -60,6 +61,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const { t } = useTranslation();
 
     // =======================================================================
     const [openSearch, setOpenSearch] = useState(false);
@@ -271,7 +273,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                             : "rgba(0,0,0,0.8)",
                                     }}
                                 >
-                                    Home
+                                    {t.tasks.sidebar.home}
                                 </Typography>
                             </ListItemContent>
                         </ListItemButton>
@@ -289,7 +291,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                 color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
                             }}
                         >
-                            Views
+                            {t.tasks.sidebar.viewsHeader}
                         </Typography>
                     </Box>
 
@@ -309,7 +311,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                 color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
                             }}
                         >
-                            Tasks
+                            {t.tasks.sidebar.tasksHeader}
                         </Typography>
                     </Box>
 
@@ -327,7 +329,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                                 color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
                             }}
                         >
-                            Projects
+                            {t.tasks.sidebar.projectsHeader}
                         </Typography>
                     </Box>
 
@@ -364,7 +366,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                         fontSize: 10,
                     }}
                 >
-                    Stay productive
+                    {t.tasks.sidebar.footerTagline}
                 </Typography>
             </Box>
         </Sheet>

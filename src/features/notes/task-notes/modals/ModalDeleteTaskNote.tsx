@@ -7,6 +7,7 @@ import { keyframes } from "@emotion/react";
 import { useAuth } from "../../../../context/AuthContext";
 import { NoteService } from "../../../../db/services/note.service";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { deleteTaskNote } from "../services/deleteTaskNote";
 
@@ -37,6 +38,7 @@ export const ModalDeleteTaskNote: React.FC<Props> = ({
     handleCloseTab,
 }) => {
     const { accessToken } = useAuth();
+    const { t } = useTranslation();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const noteService = new NoteService();
 
@@ -67,7 +69,7 @@ export const ModalDeleteTaskNote: React.FC<Props> = ({
             setOpenDeleteNote(false);
             setErrorMessage(null);
         } else {
-            setErrorMessage("Can't delete because child note(s) exists.");
+            setErrorMessage(t.notes.deleteModal.childExistsError);
         }
     };
 
@@ -127,7 +129,7 @@ export const ModalDeleteTaskNote: React.FC<Props> = ({
                         mb: 1,
                     }}
                 >
-                    Delete Note?
+                    {t.notes.deleteModal.title}
                 </Typography>
 
                 {/* Note Name */}
@@ -153,7 +155,7 @@ export const ModalDeleteTaskNote: React.FC<Props> = ({
                         mb: 2.5,
                     }}
                 >
-                    This action cannot be undone
+                    {t.notes.deleteModal.warning}
                 </Typography>
 
                 {/* Error Alert */}
@@ -191,7 +193,7 @@ export const ModalDeleteTaskNote: React.FC<Props> = ({
                             },
                         }}
                     >
-                        Cancel
+                        {t.notes.deleteModal.cancel}
                     </Button>
                     <Button
                         onClick={handleDeleteNote}
@@ -208,7 +210,7 @@ export const ModalDeleteTaskNote: React.FC<Props> = ({
                             },
                         }}
                     >
-                        Delete Note
+                        {t.notes.deleteModal.confirm}
                     </Button>
                 </Stack>
             </ModalDialog>

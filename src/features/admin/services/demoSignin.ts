@@ -1,5 +1,6 @@
 import axios from "axios";
 
+import { getMessages } from "../../../i18n";
 import { nonAuthApi } from "../../../services/api";
 import { DemoSignInResponse } from "../../../types/admin";
 
@@ -11,22 +12,21 @@ export const demoSignIn = async (
         const res = await api.post<DemoSignInResponse>("/user/demo/");
         return res.data;
     } catch (error: unknown) {
+        const m = getMessages().admin.auth.errors;
         if (axios.isAxiosError(error)) {
             if (!error.response) {
                 console.error("Network error:", error.message);
-                setErrorMessage?.("Network error. Please check your connection and try again.");
+                setErrorMessage?.(m.network);
             } else if (error.response.status === 429) {
                 console.error("Demo signin rate-limited:", error.response.data);
-                setErrorMessage?.(
-                    "Too many demo sign-ins from this network. Please try again later."
-                );
+                setErrorMessage?.(m.demoRateLimited);
             } else {
                 console.error("API error:", error.response.status, error.response.data);
-                setErrorMessage?.("Could not create demo session. Please try again later.");
+                setErrorMessage?.(m.demoFailed);
             }
         } else {
             console.error("Unexpected error:", error);
-            setErrorMessage?.("An unexpected error occurred. Please try again.");
+            setErrorMessage?.(m.unexpected);
         }
     }
 };

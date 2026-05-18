@@ -8,6 +8,7 @@ import { alpha } from "@mui/system";
 import { useAuth } from "../../../../context/AuthContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { ProjectProps } from "../../../../types/tasks";
 import { ColorPickerMenu } from "../contents/base/sub/TagColorPickerMenu";
@@ -27,6 +28,7 @@ type Props = {
 
 export const ModalCreateTag: React.FC<Props> = ({ myself, usePM, useTM }) => {
     const { accessToken } = useAuth();
+    const { t } = useTranslation();
     const [errorTagCreateMessage, setErrorTagCreateMessage] = useState<string | null>(null);
     const [tagName, setTagName] = useState("");
     const { mode } = useColorScheme();
@@ -38,11 +40,11 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, usePM, useTM }) => {
     const handleCreateTag = () => {
         const trimmed = tagName.trim();
         if (!trimmed) {
-            setErrorTagCreateMessage("Tag name cannot be empty.");
+            setErrorTagCreateMessage(t.tasks.modals.createTag.nameEmpty);
             return;
         }
         if (/\s/.test(trimmed)) {
-            setErrorTagCreateMessage("Tag name must not contain spaces.");
+            setErrorTagCreateMessage(t.tasks.modals.createTag.nameNoSpaces);
             return;
         }
         setErrorTagCreateMessage(null);
@@ -70,7 +72,7 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, usePM, useTM }) => {
 
             if (!response.ok) {
                 console.error(data);
-                throw new Error(data.hint || "Tag Creation Failed");
+                throw new Error(data.hint || t.tasks.modals.createTag.creationFailed);
             } else {
                 useTM.setOpenCreateTag(false);
                 setTagName("");
@@ -132,7 +134,7 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, usePM, useTM }) => {
                             fontWeight: 600,
                         }}
                     >
-                        Create New Tag
+                        {t.tasks.modals.createTag.heading}
                     </Typography>
                 </Box>
 
@@ -154,7 +156,7 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, usePM, useTM }) => {
                 {/* Input Row */}
                 <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
                     <Input
-                        placeholder="Enter tag name..."
+                        placeholder={t.tasks.modals.createTag.namePlaceholder}
                         value={tagName}
                         onChange={(e) => setTagName(e.target.value)}
                         onKeyDown={(e) => {
@@ -201,7 +203,7 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, usePM, useTM }) => {
                         }}
                     >
                         <Typography level="body-sm" sx={{ color: "rgba(255, 255, 255, 0.5)" }}>
-                            Preview:
+                            {t.tasks.modals.createTag.previewLabel}
                         </Typography>
                         <Chip
                             variant="outlined"
@@ -237,7 +239,7 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, usePM, useTM }) => {
                             },
                         }}
                     >
-                        Cancel
+                        {t.tasks.modals.createTag.cancelButton}
                     </Button>
                     <Button
                         disabled={!tagName.trim()}
@@ -259,7 +261,7 @@ export const ModalCreateTag: React.FC<Props> = ({ myself, usePM, useTM }) => {
                             },
                         }}
                     >
-                        Create Tag
+                        {t.tasks.modals.createTag.createButton}
                     </Button>
                 </Stack>
             </ModalDialog>

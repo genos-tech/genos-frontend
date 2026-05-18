@@ -32,6 +32,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import axios, { CanceledError } from "axios";
 
 import { useSpotlightPreferences } from "../../hooks/common/useSpotlightPreferences";
+import { useTranslation } from "../../i18n";
 import {
     askAgentStream,
     decideAgent,
@@ -147,6 +148,7 @@ const EMPTY_ASK_STATE: AskState = {
 };
 
 export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpotlightReturn => {
+    const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const [query, setQuery] = useState("");
     const [results, setResults] = useState<SpotlightResult[]>([]);
@@ -315,7 +317,7 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
             return;
         }
         if (!teamId) {
-            setError("No team selected.");
+            setError(t.spotlight.errors.noTeam);
             return;
         }
 
@@ -345,7 +347,7 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
                 if (err instanceof CanceledError) return;
                 if (axios.isCancel(err)) return;
                 console.error("[Spotlight] search failed", err);
-                setError("Search failed. Please try again.");
+                setError(t.spotlight.errors.searchFailed);
             } finally {
                 if (!controller.signal.aborted) setIsLoading(false);
             }
@@ -355,7 +357,7 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
             window.clearTimeout(timer);
             controller.abort();
         };
-    }, [query, isOpen, teamId, accessToken]);
+    }, [query, isOpen, teamId, accessToken, t]);
 
     const open = useCallback(() => setIsOpen(true), []);
     const close = useCallback(() => setIsOpen(false), []);
@@ -572,7 +574,7 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
                     sessionId: ask.sessionId,
                     turnId: ask.turnId + 1,
                     askedQuery: trimmed,
-                    askError: "No team selected.",
+                    askError: t.spotlight.errors.noTeam,
                 });
                 return;
             }
@@ -636,6 +638,7 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
             ask.sessionId,
             aiAnswers,
             webSearch,
+            t,
         ]
     );
 

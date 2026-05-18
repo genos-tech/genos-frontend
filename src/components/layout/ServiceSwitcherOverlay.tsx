@@ -6,6 +6,7 @@ import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded
 import { Box, Sheet, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { useTranslation } from "../../i18n";
 import { purplePalette } from "../../theme/purplePalette";
 import { isMac } from "../../utils/platform";
 
@@ -13,11 +14,14 @@ import { isMac } from "../../utils/platform";
 // by the same `id` used in `SERVICES_BY_ID` (hooks/common/useGlobalServiceShortcut.ts)
 // and `NAV_ITEMS` (components/layout/sidebar.tsx). All three lists must stay
 // in sync — order and ids must match.
-const OVERLAY_SERVICES: Array<{ label: string; icon: typeof AllInboxRoundedIcon }> = [
-    { label: "Inbox", icon: AllInboxRoundedIcon },
-    { label: "Chats", icon: QuestionAnswerRoundedIcon },
-    { label: "Tasks", icon: AssignmentRoundedIcon },
-    { label: "Notes", icon: NoteAltRoundedIcon },
+const OVERLAY_SERVICES: Array<{
+    labelKey: "inbox" | "chats" | "tasks" | "notes";
+    icon: typeof AllInboxRoundedIcon;
+}> = [
+    { labelKey: "inbox", icon: AllInboxRoundedIcon },
+    { labelKey: "chats", icon: QuestionAnswerRoundedIcon },
+    { labelKey: "tasks", icon: AssignmentRoundedIcon },
+    { labelKey: "notes", icon: NoteAltRoundedIcon },
 ];
 
 type ServiceSwitcherOverlayProps = {
@@ -44,6 +48,7 @@ export const ServiceSwitcherOverlay = ({
     mruOrder,
 }: ServiceSwitcherOverlayProps) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const palette = isDark ? purplePalette.dark : purplePalette.light;
 
@@ -51,9 +56,8 @@ export const ServiceSwitcherOverlay = ({
     // platform "switcher" modifier (Cmd on mac, Alt elsewhere) and tap Ctrl
     // to advance the highlight.
     const shortcutHint = useMemo(() => {
-        const holdKey = isMac() ? "⌘" : "Alt";
-        return `Hold ${holdKey}  ·  Tap Ctrl to cycle  ·  Release ${holdKey} to switch`;
-    }, []);
+        return isMac() ? t.layout.serviceSwitcher.hintMac : t.layout.serviceSwitcher.hintOther;
+    }, [t.layout.serviceSwitcher.hintMac, t.layout.serviceSwitcher.hintOther]);
 
     if (previewIndex === null) return null;
 
@@ -166,7 +170,7 @@ export const ServiceSwitcherOverlay = ({
                                               : "rgba(0,0,0,0.6)",
                                     }}
                                 >
-                                    {service.label}
+                                    {t.layout.serviceSwitcher[service.labelKey]}
                                 </Typography>
                             </Box>
                         );

@@ -22,6 +22,7 @@ import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
+import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
@@ -42,6 +43,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
     const { useTEM, myself, setMyself, socket, content, isSent, customClassName, useUISM, useCM } =
         props;
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const _bnBoxClassName: string = isSent
         ? `bn-message-bubble-box-${mode}-me`
         : `bn-message-bubble-box-${mode}`;
@@ -157,7 +159,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
                     {selectedImage ? (
                         <Box>
                             <img
-                                alt="preview"
+                                alt={t.common.editor.imagePreviewAlt}
                                 src={selectedImage}
                                 style={{
                                     maxWidth: "80vw",
@@ -170,7 +172,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
                                 placement="top"
                                 size="sm"
                                 sx={{ zIndex: 10010 }}
-                                title="Download"
+                                title={t.common.editor.download}
                                 variant="outlined"
                             >
                                 <IconButton

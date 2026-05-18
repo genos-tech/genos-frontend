@@ -2,6 +2,7 @@ import axios from "axios";
 import { Socket } from "socket.io-client";
 
 import { cacheFullTask } from "../../../db/services/task-full.service";
+import { getMessages } from "../../../i18n";
 import { authApi } from "../../../services/api";
 import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
@@ -18,10 +19,11 @@ export const sendUpdatedSpecificTask = async (
     accessToken: string | null,
     setErrorMessage?: (value: string) => void
 ) => {
+    const errMsgs = getMessages().tasks.errors;
     try {
         if (!updatedTask.project?.projectName) {
             if (setErrorMessage) {
-                setErrorMessage("Project ID is not specified.");
+                setErrorMessage(errMsgs.projectIdNotSpecified);
             }
             return [];
         }
@@ -183,7 +185,7 @@ export const sendUpdatedSpecificTask = async (
         } else {
             console.error("Unauthorized. Auth toke is not found.");
             if (setErrorMessage) {
-                setErrorMessage("Unauthorized. Auth toke is not found.");
+                setErrorMessage(errMsgs.unauthorizedNoToken);
             }
         }
     } catch (error: unknown) {
@@ -191,12 +193,12 @@ export const sendUpdatedSpecificTask = async (
             if (error.response?.status === 400) {
                 console.error("HTTP 400 error:", error.response?.data);
                 if (setErrorMessage) {
-                    setErrorMessage("Message Id already exists.");
+                    setErrorMessage(errMsgs.messageIdExists);
                 }
             } else if (error.response?.status === 401) {
                 console.error("HTTP 401 error:", error.response?.data);
                 if (setErrorMessage) {
-                    setErrorMessage("Unauthorized. Please log in again.");
+                    setErrorMessage(errMsgs.unauthorizedPleaseLogin);
                 }
             } else {
                 console.error("API error:", error.response?.status, error.response?.data);

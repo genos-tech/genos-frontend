@@ -1,5 +1,6 @@
 import { Autocomplete, Avatar, Chip, Stack } from "@mui/joy";
 
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
@@ -18,16 +19,18 @@ export const MilestoneAssigneesPicker = ({
     teamMembers,
     selected,
     onChange,
-    placeholder = "Add assignees",
+    placeholder,
     disabled,
 }: Props) => {
+    const { t } = useTranslation();
+    const resolvedPlaceholder = placeholder ?? t.tasks.picker.addAssignees;
     return (
         <Autocomplete
             multiple
             size="sm"
             value={selected}
             options={teamMembers}
-            placeholder={placeholder}
+            placeholder={resolvedPlaceholder}
             disabled={disabled}
             isOptionEqualToValue={(o, v) => o.userId === v.userId}
             getOptionLabel={(o) => o.userName || o.userEmail || String(o.userId)}

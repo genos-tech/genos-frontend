@@ -4,6 +4,9 @@ import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import { Box, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { useTranslation } from "../../../../i18n";
+import type { Messages } from "../../../../i18n";
+
 export type ThreadTabId = "activities" | "comments";
 
 type ThreadTabStripProps = {
@@ -11,15 +14,20 @@ type ThreadTabStripProps = {
     onChange: (next: ThreadTabId) => void;
 };
 
-const TABS: { id: ThreadTabId; label: string; icon: ReactElement }[] = [
+type ThreadTab = {
+    id: ThreadTabId;
+    labelKey: keyof Messages["chat"]["threadTabs"];
+    icon: ReactElement;
+};
+const TABS: ThreadTab[] = [
     {
         id: "comments",
-        label: "Comments",
+        labelKey: "comments",
         icon: <ChatBubbleOutlineRoundedIcon sx={{ fontSize: 16 }} />,
     },
     {
         id: "activities",
-        label: "Activities",
+        labelKey: "activities",
         icon: <HistoryRoundedIcon sx={{ fontSize: 16 }} />,
     },
 ];
@@ -39,6 +47,7 @@ const TABS: { id: ThreadTabId; label: string; icon: ReactElement }[] = [
  */
 export const ThreadTabStrip = ({ value, onChange }: ThreadTabStripProps) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
 
     return (
@@ -104,7 +113,7 @@ export const ThreadTabStrip = ({ value, onChange }: ThreadTabStripProps) => {
                                 fontSize: "0.78rem",
                             }}
                         >
-                            {tab.label}
+                            {t.chat.threadTabs[tab.labelKey]}
                         </Typography>
                     </Box>
                 );

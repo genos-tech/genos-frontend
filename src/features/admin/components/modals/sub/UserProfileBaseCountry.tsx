@@ -11,6 +11,7 @@ import {
 } from "@mui/joy";
 
 import { useAuth } from "../../../../../context/AuthContext";
+import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { updateUserProfile } from "../../../services/updateUserProfile";
 
@@ -29,11 +30,12 @@ type UserProfileBaseCountryProps = {
 export const UserProfileBaseCountry = (props: UserProfileBaseCountryProps) => {
     const { myself, setMyself, user } = props;
     const { accessToken } = useAuth();
+    const { t } = useTranslation();
 
     const [openCountryEditor, setOpenCountryEditor] = useState(false);
     const [isCountryUpdated, setIsCountryUpdated] = useState(false);
-    const [countryValue, setCountryValue] = useState(
-        myself.userId !== user?.userId ? "Not Set" : "Set Your Role"
+    const [countryValue, setCountryValue] = useState<string>(
+        myself.userId !== user?.userId ? t.admin.country.notSet : t.admin.country.setYourRole
     );
     useEffect(() => {
         if (isCountryUpdated === false && openCountryEditor === false) {
@@ -45,7 +47,11 @@ export const UserProfileBaseCountry = (props: UserProfileBaseCountryProps) => {
             ) {
                 setCountryValue(user.baseCountry);
             } else {
-                setCountryValue(myself.userId !== user?.userId ? "Not Set" : "Set Your Role");
+                setCountryValue(
+                    myself.userId !== user?.userId
+                        ? t.admin.country.notSet
+                        : t.admin.country.setYourRole
+                );
             }
         }
     }, [user, isCountryUpdated]);
@@ -61,7 +67,7 @@ export const UserProfileBaseCountry = (props: UserProfileBaseCountryProps) => {
                         isOptionEqualToValue={(option, value) => option.code === value.code}
                         open={open}
                         options={countries}
-                        placeholder="Choose a country"
+                        placeholder={t.admin.country.chooseCountry}
                         sx={{ width: 300 }}
                         value={defaultCountry}
                         renderOption={(props, option) => {
@@ -130,7 +136,7 @@ export const UserProfileBaseCountry = (props: UserProfileBaseCountryProps) => {
                             setOpenCountryEditor(false);
                         }}
                     >
-                        CANCEL
+                        {t.admin.country.cancel}
                     </Chip>
                 </Stack>
             )}

@@ -24,6 +24,7 @@ import { alpha } from "@mui/system";
 import { useAuth } from "../../../../context/AuthContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps } from "../../../../types/tasks";
 import { ColorPickerMenu } from "../contents/base/sub/TagColorPickerMenu";
@@ -55,6 +56,7 @@ export const ModalManageTags: React.FC<Props> = ({
     setProjectTags,
 }) => {
     const { accessToken } = useAuth();
+    const { t } = useTranslation();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -103,7 +105,7 @@ export const ModalManageTags: React.FC<Props> = ({
 
             if (!response.ok) {
                 const data = await response.json();
-                throw new Error(data.error || "Failed to update tag");
+                throw new Error(data.error || t.tasks.modals.manageTags.updateFailed);
             }
 
             setProjectTags(
@@ -140,7 +142,7 @@ export const ModalManageTags: React.FC<Props> = ({
 
             if (!response.ok && response.status !== 204) {
                 const data = await response.json();
-                throw new Error(data.error || "Failed to delete tag");
+                throw new Error(data.error || t.tasks.modals.manageTags.deleteFailed);
             }
 
             setProjectTags(projectTags.filter((t) => t.tagName !== tagName));
@@ -202,7 +204,7 @@ export const ModalManageTags: React.FC<Props> = ({
                             flex: 1,
                         }}
                     >
-                        Manage Tags
+                        {t.tasks.modals.manageTags.heading}
                     </Typography>
                     <IconButton
                         size="sm"
@@ -246,7 +248,7 @@ export const ModalManageTags: React.FC<Props> = ({
                             level="body-sm"
                             sx={{ color: "rgba(255,255,255,0.4)", textAlign: "center", py: 3 }}
                         >
-                            No tags created yet.
+                            {t.tasks.modals.manageTags.noTagsCreated}
                         </Typography>
                     )}
 
@@ -319,9 +321,13 @@ export const ModalManageTags: React.FC<Props> = ({
                                             fontSize: "0.7rem",
                                         }}
                                     >
-                                        {editName || "preview"}
+                                        {editName || t.tasks.modals.manageTags.previewName}
                                     </Chip>
-                                    <Tooltip title="Save" size="sm" variant="outlined">
+                                    <Tooltip
+                                        title={t.tasks.modals.manageTags.saveTooltip}
+                                        size="sm"
+                                        variant="outlined"
+                                    >
                                         <IconButton
                                             size="sm"
                                             variant="plain"
@@ -335,7 +341,11 @@ export const ModalManageTags: React.FC<Props> = ({
                                             <CheckRoundedIcon sx={{ fontSize: 18 }} />
                                         </IconButton>
                                     </Tooltip>
-                                    <Tooltip title="Cancel" size="sm" variant="outlined">
+                                    <Tooltip
+                                        title={t.tasks.modals.manageTags.cancelTooltip}
+                                        size="sm"
+                                        variant="outlined"
+                                    >
                                         <IconButton
                                             size="sm"
                                             variant="plain"
@@ -376,7 +386,7 @@ export const ModalManageTags: React.FC<Props> = ({
                                                 level="body-xs"
                                                 sx={{ color: "rgba(232,121,195,0.8)", mr: 0.5 }}
                                             >
-                                                Delete?
+                                                {t.tasks.modals.manageTags.deletePrompt}
                                             </Typography>
                                             <Button
                                                 size="sm"
@@ -389,7 +399,7 @@ export const ModalManageTags: React.FC<Props> = ({
                                                     borderRadius: "6px",
                                                 }}
                                             >
-                                                Yes
+                                                {t.tasks.modals.manageTags.yes}
                                             </Button>
                                             <Button
                                                 size="sm"
@@ -402,12 +412,16 @@ export const ModalManageTags: React.FC<Props> = ({
                                                     color: "rgba(255,255,255,0.5)",
                                                 }}
                                             >
-                                                No
+                                                {t.tasks.modals.manageTags.no}
                                             </Button>
                                         </Stack>
                                     ) : (
                                         <>
-                                            <Tooltip title="Edit" size="sm" variant="outlined">
+                                            <Tooltip
+                                                title={t.tasks.modals.manageTags.editTooltip}
+                                                size="sm"
+                                                variant="outlined"
+                                            >
                                                 <IconButton
                                                     size="sm"
                                                     variant="plain"
@@ -422,7 +436,11 @@ export const ModalManageTags: React.FC<Props> = ({
                                                     <EditRoundedIcon sx={{ fontSize: 16 }} />
                                                 </IconButton>
                                             </Tooltip>
-                                            <Tooltip title="Delete" size="sm" variant="outlined">
+                                            <Tooltip
+                                                title={t.tasks.modals.manageTags.deleteTooltip}
+                                                size="sm"
+                                                variant="outlined"
+                                            >
                                                 <IconButton
                                                     size="sm"
                                                     variant="plain"
@@ -465,7 +483,7 @@ export const ModalManageTags: React.FC<Props> = ({
                             },
                         }}
                     >
-                        Close
+                        {t.tasks.modals.manageTags.closeButton}
                     </Button>
                 </Stack>
             </ModalDialog>

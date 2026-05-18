@@ -4,6 +4,7 @@ import NotificationsActiveRounded from "@mui/icons-material/NotificationsActiveR
 import { Box, Button, IconButton, Sheet, Stack, Typography } from "@mui/joy";
 
 import { WebNotificationPermission } from "../../hooks/common/useNotifications";
+import { useTranslation } from "../../i18n";
 
 interface PermissionBannerProps {
     permission: WebNotificationPermission;
@@ -38,6 +39,7 @@ export const PermissionBanner = ({
     requestPermission,
 }: PermissionBannerProps) => {
     const [dismissed, setDismissed] = useState<boolean>(isDismissedThisSession());
+    const { t } = useTranslation();
 
     if (dismissed) return null;
     if (permission !== "default") return null;
@@ -90,14 +92,15 @@ export const PermissionBanner = ({
                     <NotificationsActiveRounded />
                 </Box>
                 <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Typography level="title-sm">Enable desktop notifications</Typography>
+                    <Typography level="title-sm">
+                        {t.services.notifications.banner.title}
+                    </Typography>
                     <Typography level="body-xs">
-                        Get notified about new messages, mentions, and inbox updates while the tab
-                        is in the background.
+                        {t.services.notifications.banner.body}
                     </Typography>
                 </Box>
                 <Button size="sm" onClick={handleEnable}>
-                    Enable
+                    {t.services.notifications.banner.enable}
                 </Button>
                 <IconButton size="sm" variant="plain" color="neutral" onClick={handleDismiss}>
                     <CloseRounded />

@@ -4,6 +4,7 @@ import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineR
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
 import KeyboardRoundedIcon from "@mui/icons-material/KeyboardRounded";
+import LanguageRoundedIcon from "@mui/icons-material/LanguageRounded";
 import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
 import PaletteRoundedIcon from "@mui/icons-material/PaletteRounded";
 import PrivacyTipRoundedIcon from "@mui/icons-material/PrivacyTipRounded";
@@ -32,6 +33,7 @@ import {
 } from "../../hooks/common/useBubbleStylePreference";
 import { useSpotlightPreferences } from "../../hooks/common/useSpotlightPreferences";
 import { ThemePreference, useThemePreference } from "../../hooks/common/useThemePreference";
+import { Locale, useTranslation } from "../../i18n";
 import { NotificationSettingsPanel } from "../../services/notifications/NotificationSettingsPanel";
 import { getServiceShortcutModifierKeys, isMac } from "../../utils/platform";
 
@@ -72,22 +74,22 @@ const Kbd = ({ children }: { children: React.ReactNode }) => (
 
 const AppearanceSection = () => {
     const { preference, setPreference } = useThemePreference();
+    const { t } = useTranslation();
     return (
         <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
             <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
                 <PaletteRoundedIcon />
-                <Typography level="title-md">Appearance</Typography>
+                <Typography level="title-md">{t.settings.appearance.heading}</Typography>
             </Stack>
             <Typography level="body-xs" sx={{ mb: 1.5 }}>
-                Choose how the app looks. "System" follows your OS theme and updates automatically
-                when it changes.
+                {t.settings.appearance.description}
             </Typography>
 
             <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={2}>
                 <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Typography level="title-sm">Theme</Typography>
+                    <Typography level="title-sm">{t.settings.appearance.themeLabel}</Typography>
                     <Typography level="body-xs">
-                        Applies immediately and persists across sessions.
+                        {t.settings.appearance.themeHelper}
                     </Typography>
                 </Box>
                 <Select
@@ -101,19 +103,25 @@ const AppearanceSection = () => {
                     <Option value="light">
                         <Stack alignItems="center" direction="row" spacing={1}>
                             <LightModeRoundedIcon sx={{ fontSize: 18 }} />
-                            <Typography level="body-sm">Light</Typography>
+                            <Typography level="body-sm">
+                                {t.settings.appearance.themeLight}
+                            </Typography>
                         </Stack>
                     </Option>
                     <Option value="dark">
                         <Stack alignItems="center" direction="row" spacing={1}>
                             <DarkModeRoundedIcon sx={{ fontSize: 18 }} />
-                            <Typography level="body-sm">Dark</Typography>
+                            <Typography level="body-sm">
+                                {t.settings.appearance.themeDark}
+                            </Typography>
                         </Stack>
                     </Option>
                     <Option value="system">
                         <Stack alignItems="center" direction="row" spacing={1}>
                             <SettingsBrightnessRoundedIcon sx={{ fontSize: 18 }} />
-                            <Typography level="body-sm">System</Typography>
+                            <Typography level="body-sm">
+                                {t.settings.appearance.themeSystem}
+                            </Typography>
                         </Stack>
                     </Option>
                 </Select>
@@ -124,22 +132,24 @@ const AppearanceSection = () => {
 
 const MessageLayoutSection = () => {
     const { style, setStyle } = useBubbleStylePreference();
+    const { t } = useTranslation();
     return (
         <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
             <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
                 <ChatBubbleOutlineRoundedIcon />
-                <Typography level="title-md">Message layout</Typography>
+                <Typography level="title-md">{t.settings.messageLayout.heading}</Typography>
             </Stack>
             <Typography level="body-xs" sx={{ mb: 1.5 }}>
-                Bubble: flexible-width balloons aligned by author (current). Compact: full-width
-                squared rows with author on the left (Slack-style).
+                {t.settings.messageLayout.description}
             </Typography>
 
             <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={2}>
                 <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Typography level="title-sm">Style</Typography>
+                    <Typography level="title-sm">
+                        {t.settings.messageLayout.styleLabel}
+                    </Typography>
                     <Typography level="body-xs">
-                        Applies immediately to chat, threads, and task comments.
+                        {t.settings.messageLayout.styleHelper}
                     </Typography>
                 </Box>
                 <Select
@@ -153,13 +163,17 @@ const MessageLayoutSection = () => {
                     <Option value="bubble">
                         <Stack alignItems="center" direction="row" spacing={1}>
                             <ChatBubbleOutlineRoundedIcon sx={{ fontSize: 18 }} />
-                            <Typography level="body-sm">Bubble</Typography>
+                            <Typography level="body-sm">
+                                {t.settings.messageLayout.styleBubble}
+                            </Typography>
                         </Stack>
                     </Option>
                     <Option value="compact">
                         <Stack alignItems="center" direction="row" spacing={1}>
                             <ViewStreamRoundedIcon sx={{ fontSize: 18 }} />
-                            <Typography level="body-sm">Compact</Typography>
+                            <Typography level="body-sm">
+                                {t.settings.messageLayout.styleCompact}
+                            </Typography>
                         </Stack>
                     </Option>
                 </Select>
@@ -170,15 +184,15 @@ const MessageLayoutSection = () => {
 
 const SpotlightSection = () => {
     const { aiAnswers, webSearch, setAiAnswers, setWebSearch } = useSpotlightPreferences();
+    const { t } = useTranslation();
     return (
         <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
             <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
                 <AutoAwesomeRoundedIcon />
-                <Typography level="title-md">Spotlight</Typography>
+                <Typography level="title-md">{t.settings.spotlight.heading}</Typography>
             </Stack>
             <Typography level="body-xs" sx={{ mb: 1.5 }}>
-                Spotlight always searches your chats, tasks, and notes. The toggles below gate the
-                optional LLM-powered answers, which count against your daily ask quota.
+                {t.settings.spotlight.description}
             </Typography>
 
             <Stack
@@ -189,10 +203,11 @@ const SpotlightSection = () => {
                 sx={{ mb: 1.5 }}
             >
                 <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Typography level="title-sm">AI answers</Typography>
+                    <Typography level="title-sm">
+                        {t.settings.spotlight.aiAnswersLabel}
+                    </Typography>
                     <Typography level="body-xs">
-                        Lets the "Ask" button send your query to the agent. When off, Spotlight
-                        returns search results only.
+                        {t.settings.spotlight.aiAnswersHelper}
                     </Typography>
                 </Box>
                 <Switch checked={aiAnswers} onChange={(e) => setAiAnswers(e.target.checked)} />
@@ -208,10 +223,11 @@ const SpotlightSection = () => {
                 sx={{ mt: 1.5, opacity: aiAnswers ? 1 : 0.5 }}
             >
                 <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Typography level="title-sm">Web search</Typography>
+                    <Typography level="title-sm">
+                        {t.settings.spotlight.webSearchLabel}
+                    </Typography>
                     <Typography level="body-xs">
-                        Allow the agent to browse the web when answering. Requires AI answers to be
-                        on.
+                        {t.settings.spotlight.webSearchHelper}
                     </Typography>
                 </Box>
                 <Switch
@@ -226,25 +242,60 @@ const SpotlightSection = () => {
 
 const PrivacySection = () => {
     const { enabled, setEnabled } = useAnalyticsPreferences();
+    const { t } = useTranslation();
     return (
         <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
             <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
                 <PrivacyTipRoundedIcon />
-                <Typography level="title-md">Privacy & analytics</Typography>
+                <Typography level="title-md">{t.settings.privacy.heading}</Typography>
             </Stack>
             <Typography level="body-xs" sx={{ mb: 1.5 }}>
-                Helps us understand which features get used so we can focus on the right things.
+                {t.settings.privacy.description}
             </Typography>
 
             <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={2}>
                 <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Typography level="title-sm">Share anonymous usage data</Typography>
-                    <Typography level="body-xs">
-                        Sends your user ID, team, and role plus the pages you visit. No message
-                        content, no clicks tracked. Turn off to opt out completely.
-                    </Typography>
+                    <Typography level="title-sm">{t.settings.privacy.shareLabel}</Typography>
+                    <Typography level="body-xs">{t.settings.privacy.shareHelper}</Typography>
                 </Box>
                 <Switch checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
+            </Stack>
+        </Sheet>
+    );
+};
+
+const LanguageSection = () => {
+    const { t, locale, setLocale } = useTranslation();
+    return (
+        <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
+            <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
+                <LanguageRoundedIcon />
+                <Typography level="title-md">{t.settings.language.heading}</Typography>
+            </Stack>
+            <Typography level="body-xs" sx={{ mb: 1.5 }}>
+                {t.settings.language.description}
+            </Typography>
+
+            <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={2}>
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography level="title-sm">{t.settings.language.label}</Typography>
+                    <Typography level="body-xs">{t.settings.language.helper}</Typography>
+                </Box>
+                <Select
+                    size="sm"
+                    sx={{ minWidth: 140 }}
+                    value={locale}
+                    onChange={(_e, value) => {
+                        if (value) setLocale(value as Locale);
+                    }}
+                >
+                    <Option value="en">
+                        <Typography level="body-sm">{t.settings.language.english}</Typography>
+                    </Option>
+                    <Option value="ja">
+                        <Typography level="body-sm">{t.settings.language.japanese}</Typography>
+                    </Option>
+                </Select>
             </Stack>
         </Sheet>
     );
@@ -257,6 +308,7 @@ type ShortcutGroup = {
 };
 
 const KeyboardShortcutsSection = () => {
+    const { t } = useTranslation();
     // Modifier display reflects what `useGlobalServiceShortcut` actually
     // listens to: Ctrl+Cmd on Mac, Ctrl+Alt elsewhere.
     const modifierKeys = useMemo(getServiceShortcutModifierKeys, []);
@@ -264,44 +316,46 @@ const KeyboardShortcutsSection = () => {
 
     const groups: ShortcutGroup[] = [
         {
-            title: "Global",
-            description:
-                "Available anywhere. The letter shortcuts now compose navigation with a creation action; the cycle gesture works like the macOS Cmd+Tab switcher.",
+            title: t.settings.shortcuts.global.title,
+            description: t.settings.shortcuts.global.description,
             rows: [
                 {
-                    label: "Open Spotlight search",
+                    label: t.settings.shortcuts.global.rows.spotlight,
                     combo: [isMac() ? "⌘" : "Ctrl", "K"],
                 },
                 {
-                    label: "Open Tasks and start a new task",
+                    label: t.settings.shortcuts.global.rows.tasksNew,
                     combo: [...modifierKeys, "T"],
                 },
                 {
-                    label: "Open Notes and create a new My Note",
+                    label: t.settings.shortcuts.global.rows.notesNew,
                     combo: [...modifierKeys, "N"],
                 },
                 {
-                    label: "Cycle through services",
-                    combo: ["Hold ⌘", "Tap Ctrl to cycle", "Release ⌘ to switch"],
+                    label: t.settings.shortcuts.global.rows.cycle,
+                    combo: [
+                        t.settings.shortcuts.global.cycleCombo.hold,
+                        t.settings.shortcuts.global.cycleCombo.tap,
+                        t.settings.shortcuts.global.cycleCombo.release,
+                    ],
                 },
             ],
         },
         {
-            title: "Chat",
-            description:
-                "Active while a chat surface is mounted. Editable text fields keep platform text-selection shortcuts.",
+            title: t.settings.shortcuts.chat.title,
+            description: t.settings.shortcuts.chat.description,
             rows: [
                 {
-                    label: "Switch chat tab",
+                    label: t.settings.shortcuts.chat.rows.switchTab,
                     combo: [cmdLabel, "Shift", "← / →"],
                 },
                 {
-                    label: "Move selection in chat list",
+                    label: t.settings.shortcuts.chat.rows.moveSelection,
                     combo: [cmdLabel, "Shift", "↑ / ↓"],
                 },
                 {
-                    label: "Open thread of a message",
-                    combo: [cmdLabel, "Click message"],
+                    label: t.settings.shortcuts.chat.rows.openThread,
+                    combo: [cmdLabel, t.settings.shortcuts.chat.clickMessage],
                 },
             ],
         },
@@ -311,7 +365,7 @@ const KeyboardShortcutsSection = () => {
         <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
             <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
                 <KeyboardRoundedIcon />
-                <Typography level="title-md">Keyboard shortcuts</Typography>
+                <Typography level="title-md">{t.settings.shortcuts.heading}</Typography>
             </Stack>
 
             <Stack spacing={2}>
@@ -369,14 +423,19 @@ const KeyboardShortcutsSection = () => {
  * Dedicated home for user-level settings. Sections from top to bottom:
  *
  *   1. Appearance       – theme mode (light / dark / system).
- *   2. Notifications    – delegates to `NotificationSettingsPanel`.
- *   3. Keyboard shortcuts – read-only reference for the global service shortcuts.
+ *   2. Message layout   – bubble vs compact rendering of chat messages.
+ *   3. Spotlight        – AI answers + web search toggles.
+ *   4. Privacy          – analytics opt-out.
+ *   5. Language         – locale switcher (English / 日本語).
+ *   6. Notifications    – delegates to `NotificationSettingsPanel`.
+ *   7. Keyboard shortcuts – read-only reference for the global service shortcuts.
  *
  * Notification state is read from `NotificationsContext` provided at the
  * App root, so the modal needs no notification-specific props.
  */
 export const SettingsModal = ({ open, onClose }: Props) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     return (
         <Modal open={open} onClose={onClose}>
@@ -394,7 +453,7 @@ export const SettingsModal = ({ open, onClose }: Props) => {
             >
                 <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 1 }}>
                     <SettingsRoundedIcon />
-                    <Typography level="title-lg">Settings</Typography>
+                    <Typography level="title-lg">{t.settings.title}</Typography>
                     <Box sx={{ flex: 1 }} />
                     <IconButton variant="plain" onClick={onClose}>
                         <CloseRoundedIcon />
@@ -406,6 +465,7 @@ export const SettingsModal = ({ open, onClose }: Props) => {
                     <MessageLayoutSection />
                     <SpotlightSection />
                     <PrivacySection />
+                    <LanguageSection />
                     <NotificationSettingsPanel />
                     <KeyboardShortcutsSection />
                 </Stack>

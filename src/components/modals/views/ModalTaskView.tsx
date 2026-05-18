@@ -11,6 +11,7 @@ import { UIStateManagementState } from "../../../hooks/common/useUIStateManageme
 import { NoteManagementState } from "../../../hooks/notes/useNoteManagement";
 import { SprintMilestoneManagementState } from "../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../i18n";
 import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
 import { TaskTarget } from "../../../utils/parseInternalUrl";
@@ -60,6 +61,7 @@ export const ModalTaskView = (props: ModalTaskViewProps) => {
         useSM,
     } = props;
 
+    const { t } = useTranslation();
     const [modalTask, setModalTask] = useState<TaskProps | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -81,7 +83,7 @@ export const ModalTaskView = (props: ModalTaskViewProps) => {
                 if (cancelled) return;
                 const loaded = Array.isArray(result) ? result[0] : undefined;
                 if (!loaded) {
-                    setErrorMessage("This task isn't available.");
+                    setErrorMessage(t.common.modalView.taskUnavailable);
                     setIsLoading(false);
                     return;
                 }
@@ -90,7 +92,7 @@ export const ModalTaskView = (props: ModalTaskViewProps) => {
             } catch (e) {
                 if (!cancelled) {
                     console.error("ModalTaskView load failed:", e);
-                    setErrorMessage("Failed to load this task.");
+                    setErrorMessage(t.common.modalView.taskLoadFailed);
                     setIsLoading(false);
                 }
             }
@@ -133,7 +135,7 @@ export const ModalTaskView = (props: ModalTaskViewProps) => {
                 }}
             >
                 <Typography level="body-md" sx={{ color: "neutral.500" }}>
-                    Loading…
+                    {t.common.modalView.loadingTask}
                 </Typography>
             </Box>
         );

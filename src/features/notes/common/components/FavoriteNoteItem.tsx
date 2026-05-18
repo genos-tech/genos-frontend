@@ -4,6 +4,7 @@ import { Box, IconButton, ListItem, ListItemButton, ListItemContent, Typography 
 import { useColorScheme } from "@mui/joy/styles";
 
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { useTranslation } from "../../../../i18n";
 import { ChatNoteMetaProps, MyNoteMetaProps, TaskNoteMetaProps } from "../../../../types/notes";
 
 interface FavoriteNoteItemProps {
@@ -15,6 +16,20 @@ interface FavoriteNoteItemProps {
 function FavoriteNoteItemComponent({ note, noteType, useNM }: FavoriteNoteItemProps) {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const { t } = useTranslation();
+
+    const getChatTypeLabel = (chatType: number): string => {
+        switch (chatType) {
+            case 1:
+                return t.notes.chatTypes.dm;
+            case 2:
+                return t.notes.chatTypes.gm;
+            case 3:
+                return t.notes.chatTypes.pm;
+            default:
+                return t.notes.chatTypes.chat;
+        }
+    };
 
     // Check if this specific note is currently selected
     const isSelected =
@@ -121,7 +136,7 @@ function FavoriteNoteItemComponent({ note, noteType, useNM }: FavoriteNoteItemPr
                             letterSpacing: "-0.01em",
                         }}
                     >
-                        {note.title || "Untitled"}
+                        {note.title || t.notes.defaults.untitled}
                     </Typography>
                     {subLabel && (
                         <Typography
@@ -165,19 +180,6 @@ function FavoriteNoteItemComponent({ note, noteType, useNM }: FavoriteNoteItemPr
             </ListItemButton>
         </ListItem>
     );
-}
-
-function getChatTypeLabel(chatType: number): string {
-    switch (chatType) {
-        case 1:
-            return "DM";
-        case 2:
-            return "GM";
-        case 3:
-            return "PM";
-        default:
-            return "Chat";
-    }
 }
 
 export const FavoriteNoteItem = memo(FavoriteNoteItemComponent);

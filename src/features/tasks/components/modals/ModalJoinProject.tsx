@@ -11,6 +11,7 @@ import { useAuth } from "../../../../context/AuthContext";
 import { loadSpecificPM } from "../../../../features/chat/services/loadSpecificPM";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../../types/chat";
 import { ProjectProps } from "../../../../types/tasks";
@@ -60,6 +61,7 @@ export const ModalJoinProject: React.FC<Props> = ({
     setOpenJoinProject,
 }) => {
     const { accessToken } = useAuth();
+    const { t } = useTranslation();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     async function joinProject(): Promise<void> {
@@ -83,7 +85,7 @@ export const ModalJoinProject: React.FC<Props> = ({
                                     },
                                     content: [
                                         {
-                                            text: "Has sent a request to join the project: ",
+                                            text: t.tasks.modals.joinProject.requestMessagePrefix,
                                             type: "text",
                                             styles: {},
                                         },
@@ -93,7 +95,7 @@ export const ModalJoinProject: React.FC<Props> = ({
                                             styles: { bold: true, textColor: "pink" },
                                         },
                                         {
-                                            text: ".",
+                                            text: t.tasks.modals.joinProject.requestMessageSuffix,
                                             type: "text",
                                             styles: {},
                                         },
@@ -127,7 +129,7 @@ export const ModalJoinProject: React.FC<Props> = ({
                                 }),
                             });
                             if (!sendInboxMessageResponse.ok) {
-                                throw new Error("Failed to send a inbox message");
+                                throw new Error(t.tasks.modals.joinProject.sendMessageFailed);
                             }
                         }
                     );
@@ -150,7 +152,7 @@ export const ModalJoinProject: React.FC<Props> = ({
                     if (!joinProjectResponse.ok) {
                         console.error(joinProjectData);
                         throw new Error(
-                            joinProjectData.hint || "Failed to join the created project"
+                            joinProjectData.hint || t.tasks.modals.joinProject.joinFailed
                         );
                     } else {
                         if (openJoinProject.projectId) {
@@ -207,7 +209,7 @@ export const ModalJoinProject: React.FC<Props> = ({
                 }
                 setOpenJoinProject(disableOpenJoinModalParams);
             } else {
-                const err_msg: string = "Socket not found.";
+                const err_msg: string = t.tasks.modals.joinProject.socketNotFound;
                 console.error(err_msg);
                 setErrorMessage(err_msg);
                 throw new Error(err_msg);
@@ -296,7 +298,7 @@ export const ModalJoinProject: React.FC<Props> = ({
                                     letterSpacing: "0.1em",
                                 }}
                             >
-                                Private Project
+                                {t.tasks.modals.joinProject.privateBadge}
                             </Typography>
                         </>
                     ) : (
@@ -310,7 +312,7 @@ export const ModalJoinProject: React.FC<Props> = ({
                                     letterSpacing: "0.1em",
                                 }}
                             >
-                                Public Project
+                                {t.tasks.modals.joinProject.publicBadge}
                             </Typography>
                         </>
                     )}
@@ -325,7 +327,9 @@ export const ModalJoinProject: React.FC<Props> = ({
                         mb: 0.5,
                     }}
                 >
-                    {openJoinProject.isPrivate ? "Request to Join" : "Join Project"}
+                    {openJoinProject.isPrivate
+                        ? t.tasks.modals.joinProject.requestHeading
+                        : t.tasks.modals.joinProject.joinHeading}
                 </Typography>
 
                 {/* Project Name */}
@@ -375,7 +379,7 @@ export const ModalJoinProject: React.FC<Props> = ({
                             },
                         }}
                     >
-                        Cancel
+                        {t.tasks.modals.joinProject.cancelButton}
                     </Button>
                     <Button
                         onClick={handleJoinProject}
@@ -403,7 +407,9 @@ export const ModalJoinProject: React.FC<Props> = ({
                             },
                         }}
                     >
-                        {openJoinProject.isPrivate ? "Send" : "Join"}
+                        {openJoinProject.isPrivate
+                            ? t.tasks.modals.joinProject.sendButton
+                            : t.tasks.modals.joinProject.joinButton}
                     </Button>
                 </Stack>
             </ModalDialog>

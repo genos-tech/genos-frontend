@@ -6,6 +6,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
+import { useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
 import { InboxSectionProps } from "../types/inboxTypes";
 import { InboxBubble } from "./InboxBubble";
@@ -28,18 +29,21 @@ export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionExtendedProps
             socket,
             useTEM,
             itemKeyPrefix,
-            emptyTitle = "All caught up!",
-            emptySubtitle = "No new items to review",
+            emptyTitle,
+            emptySubtitle,
             isRequest = false,
             selectedItemId,
         },
         ref
     ) => {
         const { mode } = useColorScheme();
+        const { t } = useTranslation();
         const isDark = mode === "dark";
         const palette = isDark ? purplePalette.dark : purplePalette.light;
         const navigate = useNavigate();
         const basePath = isRequest ? "/workspace/inbox/requests" : "/workspace/inbox/activities";
+        const resolvedEmptyTitle = emptyTitle ?? t.inbox.section.defaultEmptyTitle;
+        const resolvedEmptySubtitle = emptySubtitle ?? t.inbox.section.defaultEmptySubtitle;
 
         // Scroll to selected item when it changes
         useEffect(() => {
@@ -207,7 +211,7 @@ export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionExtendedProps
                                 textAlign: "center",
                             }}
                         >
-                            {emptyTitle}
+                            {resolvedEmptyTitle}
                         </Typography>
                         <Typography
                             level="body-sm"
@@ -217,7 +221,7 @@ export const InboxSection = forwardRef<VirtuosoHandle, InboxSectionExtendedProps
                                 maxWidth: 200,
                             }}
                         >
-                            {emptySubtitle}
+                            {resolvedEmptySubtitle}
                         </Typography>
                     </Box>
                 )}

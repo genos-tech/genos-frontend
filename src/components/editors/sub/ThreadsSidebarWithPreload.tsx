@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { CommentsExtension } from "@blocknote/core/comments";
 import { ThreadsSidebar, useExtension, useThreads } from "@blocknote/react";
 
+import { useTranslation } from "../../../i18n";
 import { ThreadsSidebarErrorBoundary } from "./ThreadsSidebarErrorBoundary";
 
 type ThreadsSidebarWithPreloadProps = {
@@ -22,6 +23,7 @@ export const ThreadsSidebarWithPreload = ({
 }: ThreadsSidebarWithPreloadProps) => {
     const comments = useExtension(CommentsExtension);
     const threads = useThreads();
+    const { t } = useTranslation();
     const [ready, setReady] = useState(false);
     const prevUserStoreRef = useRef(comments.userStore);
 
@@ -54,7 +56,9 @@ export const ThreadsSidebarWithPreload = ({
     }, [threads, comments.userStore]);
 
     if (!ready) {
-        return <div style={{ padding: 12, color: "#888" }}>Loading comments...</div>;
+        return (
+            <div style={{ padding: 12, color: "#888" }}>{t.common.editor.loadingComments}</div>
+        );
     }
 
     return (

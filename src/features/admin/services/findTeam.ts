@@ -1,5 +1,6 @@
 import axios from "axios";
 
+import { getMessages } from "../../../i18n";
 import { authApi } from "../../../services/api";
 
 export const findTeam = async (
@@ -7,6 +8,7 @@ export const findTeam = async (
     teamId: string,
     setErrorMessage?: (value: string) => void
 ) => {
+    const m = getMessages().admin.auth.errors;
     try {
         const api = authApi(accessToken);
         if (api) {
@@ -16,22 +18,22 @@ export const findTeam = async (
         } else {
             console.error("Unauthorized. Auth toke is not found.");
             if (setErrorMessage) {
-                setErrorMessage("Unauthorized. Auth toke is not found.");
+                setErrorMessage(m.tokenMissing);
             }
         }
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
             console.error("API error:", error.response?.status, error.response?.data);
             if (!error.response) {
-                setErrorMessage?.("Network error. Please check your connection and try again.");
+                setErrorMessage?.(m.network);
             } else if (error.response.status === 404 || error.response.status === 500) {
-                setErrorMessage?.("Team not found. Please check the Team ID and try again.");
+                setErrorMessage?.(m.teamNotFound);
             } else {
-                setErrorMessage?.("Something went wrong. Please try again later.");
+                setErrorMessage?.(m.generic);
             }
         } else {
             console.error("Unexpected error:", error);
-            setErrorMessage?.("An unexpected error occurred. Please try again.");
+            setErrorMessage?.(m.unexpected);
         }
     }
 };

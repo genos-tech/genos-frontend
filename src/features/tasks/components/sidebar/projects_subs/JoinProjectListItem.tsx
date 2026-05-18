@@ -6,6 +6,7 @@ import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
+import { useTranslation } from "../../../../../i18n";
 import { Toggler } from "../common";
 
 type JoinProjectListItemProps = {
@@ -22,6 +23,7 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
     const { usePM, setOpenJoinProject } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const { t } = useTranslation();
 
     return (
         <Toggler
@@ -59,7 +61,7 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
                             }}
                             noWrap
                         >
-                            Join Project
+                            {t.tasks.sidebar.joinProject}
                         </Typography>
                     </ListItemContent>
                     <KeyboardArrowDownIcon
@@ -156,7 +158,7 @@ export const JoinProjectListItem = (props: JoinProjectListItemProps) => {
                             }}
                             noWrap
                         >
-                            No projects available
+                            {t.tasks.sidebar.noProjectsAvailable}
                         </Typography>
                     </ListItem>
                 )}

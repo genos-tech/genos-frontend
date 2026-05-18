@@ -2,10 +2,12 @@ import AllInboxRoundedIcon from "@mui/icons-material/AllInboxRounded";
 import { Box, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
 
 export const InboxHeader = () => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const palette = isDark ? purplePalette.dark : purplePalette.light;
 
@@ -77,7 +79,7 @@ export const InboxHeader = () => {
                         backgroundClip: "text",
                     }}
                 >
-                    Inbox
+                    {t.inbox.header.title}
                 </Typography>
                 <Typography
                     level="body-xs"
@@ -87,7 +89,7 @@ export const InboxHeader = () => {
                         mt: -0.3,
                     }}
                 >
-                    Stay on top of notifications
+                    {t.inbox.header.subtitle}
                 </Typography>
             </Box>
         </Box>

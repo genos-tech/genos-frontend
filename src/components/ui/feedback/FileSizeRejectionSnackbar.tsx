@@ -2,6 +2,7 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
 import { IconButton, Snackbar, Stack, Typography } from "@mui/joy";
 
+import { fmt, useTranslation } from "../../../i18n";
 import {
     FileSizeRejection,
     formatBytes,
@@ -28,6 +29,7 @@ export const FileSizeRejectionSnackbar = ({
     onDismiss,
     autoHideDuration = 6000,
 }: FileSizeRejectionSnackbarProps) => {
+    const { t } = useTranslation();
     const open = rejection !== null;
     const previewFiles = rejection?.files.slice(0, PREVIEW_NAME_LIMIT) ?? [];
     const overflow = (rejection?.files.length ?? 0) - previewFiles.length;
@@ -63,7 +65,9 @@ export const FileSizeRejectionSnackbar = ({
         >
             <Stack spacing={0.25}>
                 <Typography level="title-sm" sx={{ fontWeight: 600 }}>
-                    File size limit ({MAX_UPLOAD_FILE_SIZE_LABEL}) exceeded
+                    {fmt(t.common.ui.fileSize.limitExceededTitle, {
+                        label: MAX_UPLOAD_FILE_SIZE_LABEL,
+                    })}
                 </Typography>
                 {previewFiles.map((f) => (
                     <Typography key={`${f.name}-${f.size}`} level="body-xs">
@@ -72,7 +76,7 @@ export const FileSizeRejectionSnackbar = ({
                 ))}
                 {overflow > 0 && (
                     <Typography level="body-xs" sx={{ opacity: 0.8 }}>
-                        {`+ ${overflow} more`}
+                        {fmt(t.common.ui.fileSize.overflowMore, { count: overflow })}
                     </Typography>
                 )}
             </Stack>

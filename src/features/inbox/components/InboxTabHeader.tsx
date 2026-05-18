@@ -4,6 +4,7 @@ import { Box, Chip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import { useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
 
 type InboxTab = "requests" | "activities";
@@ -14,6 +15,7 @@ type InboxTabHeaderProps = {
 
 export const InboxTabHeader = ({ requestCount }: InboxTabHeaderProps) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const palette = isDark ? purplePalette.dark : purplePalette.light;
     const navigate = useNavigate();
@@ -26,21 +28,21 @@ export const InboxTabHeader = ({ requestCount }: InboxTabHeaderProps) => {
 
     const tabs: {
         id: InboxTab;
-        label: string;
+        labelKey: "requests" | "activities";
         path: string;
         icon: React.ReactNode;
         count?: number;
     }[] = [
         {
             id: "requests",
-            label: "Requests",
+            labelKey: "requests",
             path: "/workspace/inbox/requests",
             icon: <PendingActionsRoundedIcon sx={{ fontSize: 16 }} />,
             count: requestCount,
         },
         {
             id: "activities",
-            label: "Activities",
+            labelKey: "activities",
             path: "/workspace/inbox/activities",
             icon: <NotificationsActiveRoundedIcon sx={{ fontSize: 16 }} />,
         },
@@ -124,7 +126,7 @@ export const InboxTabHeader = ({ requestCount }: InboxTabHeaderProps) => {
                                 transition: "all 0.2s ease",
                             }}
                         >
-                            {tab.label}
+                            {t.inbox.tabs[tab.labelKey]}
                         </Typography>
                         {tab.count && tab.count > 0 && (
                             <Chip

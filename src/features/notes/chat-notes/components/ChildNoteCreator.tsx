@@ -4,6 +4,7 @@ import { Box, ListItem, ListItemButton, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { useTranslation } from "../../../../i18n";
 
 interface ChildNoteCreatorProps {
     node: any;
@@ -18,6 +19,7 @@ export const ChildNoteCreator = memo(function ChildNoteCreator({
 }: ChildNoteCreatorProps) {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const { t } = useTranslation();
 
     const handleCreateChildNote = () => {
         if (node.noteType === 1) {
@@ -92,7 +94,7 @@ export const ChildNoteCreator = memo(function ChildNoteCreator({
                             transition: "color 0.2s ease",
                         }}
                     >
-                        Add sub-note
+                        {t.notes.sidebar.addSubNote}
                     </Typography>
                 </ListItemButton>
             </ListItem>

@@ -27,6 +27,7 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
 import { effortLevels, priorities } from "../../utils/taskMeta";
@@ -219,6 +220,7 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
         sprintNamesById,
     } = props;
 
+    const { t } = useTranslation();
     const isChild = depth > 0;
     const taskIdStr = String(task.id);
     const hasChildren = childrenByParent.has(taskIdStr);
@@ -769,7 +771,7 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                                 <TextField
                                     {...params}
                                     autoFocus
-                                    placeholder="Search members..."
+                                    placeholder={t.tasks.table.searchMembersPlaceholder}
                                     sx={{
                                         minWidth: 180,
                                         "& .MuiOutlinedInput-root": {
@@ -1465,7 +1467,7 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                                     },
                                 }}
                             >
-                                ↳ Drop to nest
+                                {t.tasks.table.dropToNest}
                             </Box>
                         )}
                         {/* Drag Handle */}
@@ -1473,7 +1475,7 @@ export const DraggableTaskRow = (props: DraggableTaskRowProps) => {
                             {...provided.dragHandleProps}
                             className="task-row-drag-handle"
                             style={getDragHandleStyles(snapshot.isDragging, mode)}
-                            title="Drag to reorder"
+                            title={t.tasks.table.dragToReorder}
                         >
                             <DragIndicatorIcon sx={{ fontSize: 20 }} />
                         </div>

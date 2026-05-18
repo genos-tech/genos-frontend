@@ -20,6 +20,7 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 import { TaskProps } from "../../../../types/tasks";
@@ -70,6 +71,7 @@ export const NoteHeaderActions = ({
     const isDark = mode === "dark";
     const styles = isDark ? NoteHeaderActionsStyles.dark : NoteHeaderActionsStyles.light;
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     // Resolve the active note from useNM based on noteType so the share
     // modal targets the note shown in this header. noteType=4 (shared
@@ -199,7 +201,7 @@ export const NoteHeaderActions = ({
                     >
                         <NoteAddRoundedIcon sx={{ fontSize: 18 }} />
                         <Typography level="body-xs" sx={{ fontWeight: 600, color: "inherit" }}>
-                            New Note
+                            {t.notes.header.newNote}
                         </Typography>
                     </IconButton>
                 </Tooltip>
@@ -260,16 +262,30 @@ export const NoteHeaderActions = ({
                                 size="sm"
                                 sx={{ borderRadius: "8px" }}
                                 variant="outlined"
-                                title={`Open Task #${currentTask.id}${
-                                    currentTask.title ? ` — ${currentTask.title}` : ""
-                                }`}
+                                title={
+                                    currentTask.title
+                                        ? fmt(t.notes.header.openTaskTooltipWithTitle, {
+                                              id: currentTask.id,
+                                              title: currentTask.title,
+                                          })
+                                        : fmt(t.notes.header.openTaskTooltip, {
+                                              id: currentTask.id,
+                                          })
+                                }
                             >
                                 <Box
                                     component="button"
                                     type="button"
-                                    aria-label={`Open Task #${currentTask.id}${
-                                        currentTask.title ? `: ${currentTask.title}` : ""
-                                    }`}
+                                    aria-label={
+                                        currentTask.title
+                                            ? fmt(t.notes.header.openTaskAriaWithTitle, {
+                                                  id: currentTask.id,
+                                                  title: currentTask.title,
+                                              })
+                                            : fmt(t.notes.header.openTaskAria, {
+                                                  id: currentTask.id,
+                                              })
+                                    }
                                     sx={{
                                         display: "flex",
                                         alignItems: "center",
@@ -307,7 +323,7 @@ export const NoteHeaderActions = ({
                                             letterSpacing: "-0.01em",
                                         }}
                                     >
-                                        Task #{currentTask.id}
+                                        {fmt(t.notes.header.taskIdLabel, { id: currentTask.id })}
                                     </Typography>
 
                                     {/* Title section */}
@@ -405,12 +421,15 @@ export const NoteHeaderActions = ({
                         size="sm"
                         title={
                             ownerMember
-                                ? `Owner: ${ownerMember.userName}${
-                                      otherMembers.length > 0
-                                          ? ` · ${otherMembers.length} more`
-                                          : ""
-                                  }`
-                                : "Members"
+                                ? otherMembers.length > 0
+                                    ? fmt(t.notes.header.ownerLabelWithMore, {
+                                          name: ownerMember.userName,
+                                          count: otherMembers.length,
+                                      })
+                                    : fmt(t.notes.header.ownerLabel, {
+                                          name: ownerMember.userName,
+                                      })
+                                : t.notes.header.membersLabel
                         }
                         variant="outlined"
                     >
@@ -508,11 +527,11 @@ export const NoteHeaderActions = ({
                     </Tooltip>
 
                     {isOwner && (
-                        <Tooltip size="sm" title="Share" variant="outlined">
+                        <Tooltip size="sm" title={t.notes.header.share} variant="outlined">
                             <Box
                                 component="button"
                                 type="button"
-                                aria-label="Share note"
+                                aria-label={t.notes.header.shareNoteAria}
                                 onClick={openShareModal}
                                 sx={{
                                     ...actionButtonStyle,
@@ -537,7 +556,7 @@ export const NoteHeaderActions = ({
                                         letterSpacing: "-0.01em",
                                     }}
                                 >
-                                    Share
+                                    {t.notes.header.share}
                                 </Typography>
                             </Box>
                         </Tooltip>
@@ -550,14 +569,14 @@ export const NoteHeaderActions = ({
                 const items: MoreMenuItem[] = [
                     {
                         id: "shareNote",
-                        label: "Share…",
+                        label: t.notes.header.shareEllipsis,
                         icon: <PersonAddRoundedIcon sx={{ fontSize: 18 }} />,
                         visible: isOwner && activeNoteId != null,
                         onClick: openShareModal,
                     },
                     {
                         id: "copyNoteLink",
-                        label: "Copy note link",
+                        label: t.notes.header.copyNoteLink,
                         icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
                         visible: !!onCopyNoteLink,
                         onClick: () => {
@@ -566,14 +585,14 @@ export const NoteHeaderActions = ({
                     },
                     {
                         id: "openTask",
-                        label: "Open Task",
+                        label: t.notes.header.openTask,
                         icon: <AssignmentRoundedIcon sx={{ fontSize: 18 }} />,
                         visible: noteType === 2 && !!currentTask && !!currentTask.id,
                         onClick: onOpenTask,
                     },
                     {
                         id: "openInNotes",
-                        label: "Open in Notes",
+                        label: t.notes.header.openInNotes,
                         icon: <OpenInNewRoundedIcon sx={{ fontSize: 18 }} />,
                         visible:
                             noteType === 2 &&
@@ -591,20 +610,20 @@ export const NoteHeaderActions = ({
                     },
                     {
                         id: "newNote",
-                        label: "New Note",
+                        label: t.notes.header.newNote,
                         icon: <NoteAddRoundedIcon sx={{ fontSize: 18 }} />,
                         visible: noteType === 1,
                         onClick: onCreateNewNote,
                     },
                     {
                         id: "childNote",
-                        label: "Child Note",
+                        label: t.notes.header.childNote,
                         icon: <AddIcon sx={{ fontSize: 18 }} />,
                         onClick: onCreateChildNote,
                     },
                     {
                         id: "deleteNote",
-                        label: "Delete Note",
+                        label: t.notes.header.deleteNote,
                         icon: <DeleteOutlineRoundedIcon sx={{ fontSize: 18 }} />,
                         danger: true,
                         onClick: onDeleteNote,
@@ -625,7 +644,7 @@ export const NoteHeaderActions = ({
             {isInTaskPage && (
                 <Tooltip
                     size="sm"
-                    title="Close"
+                    title={t.notes.header.close}
                     variant="outlined"
                     sx={{
                         background: styles.menuBg,

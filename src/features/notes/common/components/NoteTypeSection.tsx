@@ -4,6 +4,7 @@ import { Box, List, ListItem, ListItemButton, ListItemContent, Typography } from
 import { useColorScheme } from "@mui/joy/styles";
 
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { useTranslation } from "../../../../i18n";
 
 interface NoteTypeSectionProps {
     title: string;
@@ -24,6 +25,7 @@ export function NoteTypeSection({
 }: NoteTypeSectionProps) {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const { t } = useTranslation();
     const isSelected = useNM.currentNoteType === noteType;
 
     // Initialize open state based on whether this section is selected
@@ -161,7 +163,7 @@ export function NoteTypeSection({
                             borderRadius: "4px",
                         }}
                     >
-                        Soon
+                        {t.notes.sidebar.soonBadge}
                     </Typography>
                 )}
             </ListItemButton>

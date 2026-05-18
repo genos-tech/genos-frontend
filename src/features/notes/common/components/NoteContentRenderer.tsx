@@ -10,6 +10,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TaskPreview } from "../../../tasks/components/contents/TaskPreview";
 import { ChatNoteMain } from "../../chat-notes/components/ChatNoteMain";
@@ -33,6 +34,7 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
     const { myself, setMyself, useUISM, socket, useTEM, usePM, useNM, useCM, useTM } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const { t } = useTranslation();
 
     const renderPlaceholder = (message: string, subtitle?: string) => (
         <Box
@@ -172,7 +174,7 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
                             fontSize: "0.75rem",
                         }}
                     >
-                        Select from sidebar
+                        {t.notes.placeholder.selectFromSidebar}
                     </Typography>
                 </Stack>
             </Stack>
@@ -250,7 +252,7 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
                                 letterSpacing: "-0.02em",
                             }}
                         >
-                            No Note Selected
+                            {t.notes.placeholder.noNoteSelectedTitle}
                         </Typography>
                         <Typography
                             level="body-sm"
@@ -261,8 +263,8 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
                             }}
                         >
                             {useNM.currentNoteType === 1
-                                ? "Choose a note from the sidebar, or create a new one"
-                                : "Choose a note from the sidebar to start editing"}
+                                ? t.notes.placeholder.chooseMyNoteOrCreate
+                                : t.notes.placeholder.chooseNoteToEdit}
                         </Typography>
                     </Stack>
 
@@ -279,7 +281,7 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
                                 px: 2.5,
                             }}
                         >
-                            New My Note
+                            {t.notes.placeholder.newMyNote}
                         </Button>
                     )}
                 </Stack>
@@ -357,7 +359,10 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
 
     // Shared Note placeholder
     if (useNM.currentNoteType === 4) {
-        return renderPlaceholder("Shared Notes", "Coming soon - collaborate with your team");
+        return renderPlaceholder(
+            t.notes.placeholder.sharedNotesTitle,
+            t.notes.placeholder.sharedNotesSubtitle
+        );
     }
 
     // Fallback: tabs exist but the current note for the active type is

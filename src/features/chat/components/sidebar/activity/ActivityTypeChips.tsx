@@ -2,6 +2,7 @@ import React from "react";
 import { Box, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { useTranslation } from "../../../../../i18n";
 import { ActivityMessageProps } from "../../../../../types/chat";
 
 interface ActivityTypeChipsProps {
@@ -91,6 +92,7 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
     chatTypeLookup,
 }) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
 
     // chat_type=4 is dual-purpose: task-comment activities carry a `taskId`
@@ -103,7 +105,7 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
     const chatTypeLabel = isMDM
         ? "MDM"
         : isTaskComment
-          ? "Task Comment"
+          ? t.chat.activity.chipTaskComment
           : chatTypeLookup[activity.chatType];
 
     // The "project + #taskId" pair only makes sense for PM messages and for
@@ -144,7 +146,7 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
                 (which already self-label as "MDM"). */}
             {activity.activityType === 1 && activity.chatType !== 4 && (
                 <ModernChip
-                    label="Reply"
+                    label={t.chat.activity.chipReply}
                     colorScheme={CHIP_COLORS.reply}
                     isDark={isDark}
                     variant="filled"
@@ -153,7 +155,7 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
 
             {activity.activityType === 2 && (
                 <ModernChip
-                    label="Reaction"
+                    label={t.chat.activity.chipReaction}
                     colorScheme={CHIP_COLORS.reaction}
                     isDark={isDark}
                     variant="filled"
@@ -162,7 +164,7 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
 
             {activity.activityType === 3 && (
                 <ModernChip
-                    label="Mention"
+                    label={t.chat.activity.chipMention}
                     colorScheme={CHIP_COLORS.mention}
                     isDark={isDark}
                     variant="filled"
@@ -178,7 +180,7 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
 
             {activity.isThread === true && (
                 <ModernChip
-                    label="Thread"
+                    label={t.chat.activity.chipThread}
                     colorScheme={CHIP_COLORS.thread}
                     isDark={isDark}
                     variant="outlined"

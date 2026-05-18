@@ -20,6 +20,7 @@ import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, SearchListProps } from "../../../../types/chat";
 import { loadSearchList } from "../../services/loadChatSearchList";
@@ -51,6 +52,7 @@ export const ChatSearch = (props: ChatSearchProps) => {
     } = props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
 
     const mediaUrl = useMemo(() => import.meta.env.VITE_MEDIA_ROOT_DJANGO, []);
@@ -142,13 +144,13 @@ export const ChatSearch = (props: ChatSearchProps) => {
             }}
         >
             <Autocomplete
-                aria-label="Search"
+                aria-label={t.chat.sidebar.searchAriaLabel}
                 groupBy={(option) => option.type}
                 isOptionEqualToValue={(option, value) => option.name === value.name}
                 loading={loading}
                 open={openSearchBox}
                 options={options}
-                placeholder="Search people & groups..."
+                placeholder={t.chat.sidebar.searchPlaceholder}
                 size="sm"
                 startDecorator={
                     <SearchRoundedIcon

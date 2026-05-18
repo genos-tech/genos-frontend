@@ -1,3 +1,4 @@
+import { getMessages } from "../../../i18n";
 import { AttachmentFileProps } from "../../../types/tasks";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
@@ -41,7 +42,7 @@ export const uploadTaskAttachments = async (
         const data = await res.json();
 
         if (!res.ok) {
-            throw new Error(data?.message || "Attachment Upload Failed");
+            throw new Error(data?.message || getMessages().tasks.errors.attachmentUploadFailed);
         }
         if (data) uploaded.push(data);
     }

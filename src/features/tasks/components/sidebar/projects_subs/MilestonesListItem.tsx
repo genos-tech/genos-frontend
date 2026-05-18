@@ -29,6 +29,7 @@ import { TeamManagementState } from "../../../../../hooks/common/useTeamManageme
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { SprintMilestoneManagementState } from "../../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { Milestone, MilestoneStatus } from "../../../sprint-milestone/types";
 import {
@@ -65,6 +66,7 @@ export const MilestonesListItem = ({
 }: Props) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const { t } = useTranslation();
 
     const sprints = useSM.projectSprints[currentProjectId] ?? [];
 
@@ -137,8 +139,9 @@ export const MilestonesListItem = ({
             {milestones.map((m) => {
                 const sprintName =
                     m.sprintId == null
-                        ? "No sprint"
-                        : (sprints.find((s) => s.sprintId === m.sprintId)?.name ?? "Sprint");
+                        ? t.tasks.sidebar.noSprint
+                        : (sprints.find((s) => s.sprintId === m.sprintId)?.name ??
+                          t.tasks.sidebar.sprintFallback);
                 return (
                     <ListItem key={m.milestoneId} sx={{ pl: 0, pr: 1 }}>
                         <ListItemButton
@@ -270,7 +273,7 @@ export const MilestonesListItem = ({
                                             );
                                         }}
                                     >
-                                        Move to: No sprint
+                                        {t.tasks.sidebar.moveToNoSprint}
                                     </MenuItem>
                                     {sprints
                                         .filter((s) => s.sprintId !== m.sprintId)
@@ -286,7 +289,8 @@ export const MilestonesListItem = ({
                                                     );
                                                 }}
                                             >
-                                                Move to: {s.name}
+                                                {t.tasks.sidebar.moveToSprintPrefix}
+                                                {s.name}
                                             </MenuItem>
                                         ))}
                                 </Menu>
@@ -300,18 +304,21 @@ export const MilestonesListItem = ({
     );
 };
 
-const AddMilestoneRow = ({ onClick, isDark }: { onClick: () => void; isDark: boolean }) => (
-    <ListItem sx={{ pl: 0 }}>
-        <ListItemButton sx={{ borderRadius: 8, ml: 5, py: 0.5 }} onClick={onClick}>
-            <AddIcon sx={{ fontSize: 16, mr: 0.5 }} />
-            <Typography
-                level="body-sm"
-                sx={{
-                    color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.55)",
-                }}
-            >
-                Add milestone
-            </Typography>
-        </ListItemButton>
-    </ListItem>
-);
+const AddMilestoneRow = ({ onClick, isDark }: { onClick: () => void; isDark: boolean }) => {
+    const { t } = useTranslation();
+    return (
+        <ListItem sx={{ pl: 0 }}>
+            <ListItemButton sx={{ borderRadius: 8, ml: 5, py: 0.5 }} onClick={onClick}>
+                <AddIcon sx={{ fontSize: 16, mr: 0.5 }} />
+                <Typography
+                    level="body-sm"
+                    sx={{
+                        color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.55)",
+                    }}
+                >
+                    {t.tasks.sidebar.addMilestone}
+                </Typography>
+            </ListItemButton>
+        </ListItem>
+    );
+};

@@ -33,6 +33,7 @@ import { ProjectManagementState } from "../../../../../hooks/common/useProjectMa
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { TaskNoteProps } from "../../../../../types/notes";
 import { TaskProps } from "../../../../../types/tasks";
@@ -90,6 +91,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const styles = isDark ? TaskHeaderStyles.dark : TaskHeaderStyles.light;
+    const { t } = useTranslation();
     const location = useLocation();
     // True when the user is currently inside the Tasks service (any URL
     // under `/workspace/tasks`). Mirrors the active-route detection used by the
@@ -300,7 +302,11 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 letterSpacing: "0.05em",
                             }}
                         >
-                            {isMilestone ? "Milestone" : isSubTask ? "Sub Task" : "New Task"}
+                            {isMilestone
+                                ? t.tasks.titleBlock.milestoneBadge
+                                : isSubTask
+                                  ? t.tasks.titleBlock.subTaskBadge
+                                  : t.tasks.titleBlock.newTaskBadge}
                         </Typography>
                     </Box>
                 )}
@@ -308,7 +314,11 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                 {/* Right side: Action buttons */}
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, ml: "auto" }}>
                     {isOnTasksRoute && taskContent.threadId !== null && (
-                        <Tooltip size="sm" title="Check Thread" variant="outlined">
+                        <Tooltip
+                            size="sm"
+                            title={t.tasks.titleBlock.checkThread}
+                            variant="outlined"
+                        >
                             <IconButton
                                 size="sm"
                                 variant="plain"
@@ -353,7 +363,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             const items: MoreMenuItem[] = [
                                 {
                                     id: "copyTaskLink",
-                                    label: "Copy task link",
+                                    label: t.tasks.titleBlock.menu.copyTaskLink,
                                     icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
                                     onClick: async () => {
                                         if (taskContent.project && taskContent.id) {
@@ -368,7 +378,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 },
                                 {
                                     id: "openThread",
-                                    label: "Open Thread",
+                                    label: t.tasks.titleBlock.menu.openThread,
                                     icon: <QuestionAnswerRoundedIcon sx={{ fontSize: 18 }} />,
                                     visible:
                                         taskContent.threadId !== null &&
@@ -388,7 +398,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 },
                                 {
                                     id: "newTask",
-                                    label: "New Task",
+                                    label: t.tasks.titleBlock.menu.newTask,
                                     icon: <AssignmentRoundedIcon sx={{ fontSize: 18 }} />,
                                     onClick: () => {
                                         useTM.handleCreateTask();
@@ -396,7 +406,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 },
                                 {
                                     id: "newSubTask",
-                                    label: "New Sub Task",
+                                    label: t.tasks.titleBlock.menu.newSubTask,
                                     icon: <AssignmentRoundedIcon sx={{ fontSize: 18 }} />,
                                     onClick: () => {
                                         if (
@@ -421,7 +431,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 },
                                 {
                                     id: "openNote",
-                                    label: "Open Note",
+                                    label: t.tasks.titleBlock.menu.openNote,
                                     icon: <NoteAltRoundedIcon sx={{ fontSize: 18 }} />,
                                     onClick: () => {
                                         if (useNM.setIsTaskNoteVisible && taskContent.project) {
@@ -455,7 +465,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 },
                                 {
                                     id: "newTag",
-                                    label: "New Tag",
+                                    label: t.tasks.titleBlock.menu.newTag,
                                     icon: <LocalOfferRoundedIcon sx={{ fontSize: 18 }} />,
                                     onClick: () => {
                                         useTM.setOpenCreateTag(true);
@@ -463,7 +473,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 },
                                 {
                                     id: "newProject",
-                                    label: "New Project",
+                                    label: t.tasks.titleBlock.menu.newProject,
                                     icon: <AddIcon sx={{ fontSize: 18 }} />,
                                     onClick: () => {
                                         usePM.setOpenCreateProject(true);
@@ -471,7 +481,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 },
                                 {
                                     id: "deleteTask",
-                                    label: "Delete Task",
+                                    label: t.tasks.titleBlock.menu.deleteTask,
                                     icon: <DeleteRoundedIcon sx={{ fontSize: 18 }} />,
                                     visible: taskContent.status.status !== "Closed",
                                     danger: true,
@@ -497,7 +507,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
 
                     <Tooltip
                         size="sm"
-                        title="Close"
+                        title={t.tasks.titleBlock.closeTooltip}
                         variant="outlined"
                         sx={{
                             background: styles.menuBg,
@@ -609,7 +619,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
             <FormControl sx={{ width: "100%" }} required>
                 <Input
                     key={"taskTitle"}
-                    placeholder="Enter task title..."
+                    placeholder={t.tasks.titleBlock.titlePlaceholder}
                     value={taskTitle}
                     variant="plain"
                     slotProps={{

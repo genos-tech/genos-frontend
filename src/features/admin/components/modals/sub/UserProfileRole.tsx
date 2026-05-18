@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Autocomplete, Button, Chip, Stack, Typography } from "@mui/joy";
 
 import { useAuth } from "../../../../../context/AuthContext";
+import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { updateUserProfile } from "../../../services/updateUserProfile";
 
@@ -13,18 +14,21 @@ type UserProfileRoleProps = {
 export const UserProfileRole = (props: UserProfileRoleProps) => {
     const { myself, setMyself, user } = props;
     const { accessToken } = useAuth();
+    const { t } = useTranslation();
 
     const [openRoleEditor, setOpenRoleEditor] = useState(false);
     const [isRoleUpdated, setIsRoleUpdated] = useState(false);
-    const [roleValue, setRoleValue] = useState(
-        myself.userId !== user?.userId ? "Not Set" : "Set Your Role"
+    const [roleValue, setRoleValue] = useState<string>(
+        myself.userId !== user?.userId ? t.admin.role.notSet : t.admin.role.setYourRole
     );
     useEffect(() => {
         if (isRoleUpdated === false && openRoleEditor === false) {
             if (user && user.role && user.role !== "" && user.role !== "undefined") {
                 setRoleValue(user.role);
             } else {
-                setRoleValue(myself.userId !== user?.userId ? "Not Set" : "Set Your Role");
+                setRoleValue(
+                    myself.userId !== user?.userId ? t.admin.role.notSet : t.admin.role.setYourRole
+                );
             }
         }
     }, [user, isRoleUpdated]);
@@ -41,7 +45,7 @@ export const UserProfileRole = (props: UserProfileRoleProps) => {
                         isOptionEqualToValue={(option, value) => option.role === value.role}
                         open={open}
                         options={templateRoleOptions}
-                        placeholder="Choose a role"
+                        placeholder={t.admin.role.chooseRole}
                         sx={{ width: 300 }}
                         slotProps={{
                             input: {
@@ -86,7 +90,7 @@ export const UserProfileRole = (props: UserProfileRoleProps) => {
                             setOpenRoleEditor(false);
                         }}
                     >
-                        CANCEL
+                        {t.admin.role.cancel}
                     </Chip>
                 </Stack>
             )}

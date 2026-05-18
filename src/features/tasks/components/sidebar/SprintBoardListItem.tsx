@@ -4,6 +4,7 @@ import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../i18n";
 
 type SprintBoardListItemProps = {
     useTM: TaskManagementState;
@@ -14,6 +15,7 @@ export const SprintBoardListItem = (props: SprintBoardListItemProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const isSelected = useTM.isSprintBoardVisible === true;
+    const { t } = useTranslation();
 
     return (
         <ListItem>
@@ -76,7 +78,7 @@ export const SprintBoardListItem = (props: SprintBoardListItemProps) => {
                             color: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.8)",
                         }}
                     >
-                        Board
+                        {t.tasks.sidebar.board}
                     </Typography>
                 </ListItemContent>
             </ListItemButton>

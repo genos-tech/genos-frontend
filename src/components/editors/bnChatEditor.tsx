@@ -43,6 +43,7 @@ import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useEditorDraft } from "../../hooks/common/useEditorDraft";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
+import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { AllChatProps, ChatProps, MessageProps } from "../../types/chat";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
@@ -93,6 +94,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
     } = props;
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
+    const { t } = useTranslation();
     const urlLinkModal = useUrlLinkModal();
     const editorBoxRef = useRef<HTMLDivElement>(null);
     useAnchorClickIntercept(editorBoxRef, urlLinkModal);
@@ -180,7 +182,9 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
             const uploadChatAttachmentData = await uploadChatAttachmentResponse.json();
 
             if (!uploadChatAttachmentResponse.ok) {
-                throw new Error(uploadChatAttachmentData.message || "Attachment Upload Failed");
+                throw new Error(
+                    uploadChatAttachmentData.message || t.common.editor.attachmentUploadFailed
+                );
             }
 
             // The backend's `chatAttachmentUrl` is DRF's default `FileField`
@@ -308,7 +312,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
             if (content && content.length > 0) {
                 contentText = getFirstLine(content[0]);
             } else if (editor.document.slice(-2, -1)[0].type === "image") {
-                contentText = "Image attachment";
+                contentText = t.common.editor.imageAttachment;
             }
 
             socket.emit(
@@ -460,7 +464,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
             >
                 <FileUploadStatusBadge count={editorUploadCount} />
                 <FileUploadOverlay
-                    label="Uploading dropped files…"
+                    label={t.common.ui.fileUpload.uploadingDroppedFiles}
                     open={pendingUpload !== null}
                     detail={
                         pendingUpload

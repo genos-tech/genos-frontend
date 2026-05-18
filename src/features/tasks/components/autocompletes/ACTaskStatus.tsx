@@ -5,6 +5,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 import { Socket } from "socket.io-client";
 
+import { useTranslation } from "../../../../i18n";
 import { TaskProps } from "../../../../types/tasks";
 import { statuses } from "../../utils/taskMeta";
 
@@ -19,6 +20,7 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
     const { socket, taskContent, setTaskContent, setTaskUpdated, setTaskStatusUpdated } = props;
 
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
 
     return (
         <Autocomplete
@@ -26,7 +28,7 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
             getOptionLabel={(option) => option.status || ""}
             isOptionEqualToValue={(option, value) => option.status === value.status}
             options={statuses}
-            placeholder="Status"
+            placeholder={t.tasks.autocomplete.statusPlaceholder}
             size="sm"
             sx={{ width: "100%" }}
             value={taskContent ? [taskContent.status] : []}

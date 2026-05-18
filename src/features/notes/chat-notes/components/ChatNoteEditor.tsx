@@ -8,6 +8,7 @@ import { BnChatNoteEditor } from "../../../../components/editors/bnChatNoteEdito
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { ChatNoteProps, NoteRoleMember } from "../../../../types/notes";
 
@@ -54,6 +55,7 @@ export const ChatNoteEditor = ({
     currentNoteMembers,
     resyncSignal,
 }: ChatNoteEditorProps) => {
+    const { t } = useTranslation();
     return (
         <>
             <FormControl
@@ -68,7 +70,7 @@ export const ChatNoteEditor = ({
             >
                 <Input
                     key={"currentChatNoteTitle"}
-                    placeholder="Note Title"
+                    placeholder={t.notes.editor.titlePlaceholder}
                     startDecorator={<NoteAltIcon />}
                     value={currentChatNoteTitle}
                     variant="soft"
@@ -118,7 +120,7 @@ export const ChatNoteEditor = ({
                             },
                         }}
                     >
-                        Saved
+                        {t.notes.editor.savedChip}
                     </Chip>
                 </Box>
             )}

@@ -20,6 +20,7 @@ import {
     UploadingTileBadge,
 } from "../../../../../components/ui/feedback/FileUploadProgress";
 import { useFileSizeGuard } from "../../../../../components/ui/feedback/useFileSizeGuard";
+import { fmt, useTranslation } from "../../../../../i18n";
 import {
     AttachmentFileProps,
     FileProps,
@@ -55,6 +56,7 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
     const { taskContent, setTaskContent, isUploading = false } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const { t } = useTranslation();
     const [images, setImages] = useState<FileProps[]>([]);
     const [textFiles, setTextFiles] = useState<FileProps[]>([]);
     const [uploadingFiles, setUploadingFiles] = useState<AttachmentFileProps[]>([]);
@@ -230,13 +232,13 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                 onDrop={isUploading ? undefined : handleDroppedFiles}
             >
                 <FileUploadOverlay
-                    label="Uploading attachments…"
+                    label={t.tasks.attachmentUpload.uploading}
                     open={isUploading}
                     detail={
                         uploadingFiles.length > 0
-                            ? `${uploadingFiles.length} file${
-                                  uploadingFiles.length === 1 ? "" : "s"
-                              }`
+                            ? fmt(t.tasks.attachmentUpload.fileCount, {
+                                  count: uploadingFiles.length,
+                              })
                             : undefined
                     }
                 />
@@ -339,7 +341,7 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                         <Tooltip
                             placement="top"
                             size="sm"
-                            title={`Download "${file.name}"`}
+                            title={fmt(t.tasks.tabs.downloadFileTooltip, { name: file.name })}
                             variant="outlined"
                         >
                             <div
@@ -512,7 +514,7 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                             <Tooltip
                                 placement="left"
                                 size="sm"
-                                title="Download"
+                                title={t.tasks.tooltips.download}
                                 variant="outlined"
                             >
                                 <IconButton

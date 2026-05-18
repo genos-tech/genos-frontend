@@ -30,6 +30,7 @@ import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { InboxManagementState } from "../../hooks/inbox/useInboxManagement";
+import { useTranslation } from "../../i18n";
 import { analytics } from "../../services/analytics";
 import { purplePalette } from "../../theme/purplePalette";
 import { UserProps } from "../../types/admin";
@@ -53,7 +54,7 @@ const NAV_ITEMS = [
     {
         id: 0,
         icon: AllInboxRoundedIcon,
-        label: "Inbox",
+        labelKey: "inbox" as const,
         path: "/workspace/inbox",
         shortcutKey: "I",
         colorScheme: NAV_ACCENT,
@@ -61,7 +62,7 @@ const NAV_ITEMS = [
     {
         id: 1,
         icon: QuestionAnswerRoundedIcon,
-        label: "Chats",
+        labelKey: "chats" as const,
         path: "/workspace/chat",
         shortcutKey: "C",
         colorScheme: NAV_ACCENT,
@@ -69,7 +70,7 @@ const NAV_ITEMS = [
     {
         id: 2,
         icon: AssignmentRoundedIcon,
-        label: "Tasks",
+        labelKey: "tasks" as const,
         path: "/workspace/tasks",
         shortcutKey: "T",
         colorScheme: NAV_ACCENT,
@@ -77,7 +78,7 @@ const NAV_ITEMS = [
     {
         id: 3,
         icon: NoteAltRoundedIcon,
-        label: "Notes",
+        labelKey: "notes" as const,
         path: "/workspace/notes",
         shortcutKey: "N",
         colorScheme: NAV_ACCENT,
@@ -99,6 +100,7 @@ export const Sidebar = (props: SidebarProps) => {
     const { useTEM, socket, myself, setMyself, useIM, useCM, useUISM, onOpenSpotlight } = props;
     const { setAccessToken } = useAuth();
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const palette = isDark ? purplePalette.dark : purplePalette.light;
     // Solid bg color used to "cut out" badges and avatar borders against
@@ -330,7 +332,7 @@ export const Sidebar = (props: SidebarProps) => {
                                         transition: "all 0.2s ease",
                                     }}
                                 >
-                                    Search
+                                    {t.sidebar.nav.search}
                                 </Typography>
                             </ListItemButton>
                         </Tooltip>
@@ -348,7 +350,11 @@ export const Sidebar = (props: SidebarProps) => {
                                     placement="right"
                                     size="sm"
                                     sx={{ zIndex: 10020 }}
-                                    title={isMac() ? "Hold ⌘ + tap Ctrl" : "Hold Ctrl + tap Alt"}
+                                    title={
+                                        isMac()
+                                            ? t.sidebar.tooltips.switchServiceMac
+                                            : t.sidebar.tooltips.switchServiceOther
+                                    }
                                     variant="outlined"
                                 >
                                     <ListItemButton
@@ -454,7 +460,7 @@ export const Sidebar = (props: SidebarProps) => {
                                                 transition: "all 0.2s ease",
                                             }}
                                         >
-                                            {item.label}
+                                            {t.sidebar.nav[item.labelKey]}
                                         </Typography>
                                     </ListItemButton>
                                 </Tooltip>
@@ -478,7 +484,7 @@ export const Sidebar = (props: SidebarProps) => {
                             placement="right"
                             size="sm"
                             sx={{ zIndex: 10020 }}
-                            title="Settings"
+                            title={t.sidebar.tooltips.settings}
                             variant="outlined"
                         >
                             <ListItemButton
@@ -535,7 +541,7 @@ export const Sidebar = (props: SidebarProps) => {
                             placement="right"
                             size="sm"
                             sx={{ zIndex: 10020 }}
-                            title="Sign out"
+                            title={t.sidebar.tooltips.signOut}
                             variant="outlined"
                         >
                             <ListItemButton
@@ -603,7 +609,7 @@ export const Sidebar = (props: SidebarProps) => {
                     placement="right"
                     size="sm"
                     sx={{ zIndex: 10020 }}
-                    title="Open My Profile"
+                    title={t.sidebar.tooltips.openProfile}
                     variant="outlined"
                 >
                     <Box

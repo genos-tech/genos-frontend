@@ -6,6 +6,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { fmt, Messages, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { ModalNoteHistory } from "./ModalNoteHistory";
 
@@ -21,19 +22,19 @@ interface NoteHistoryChipProps {
 }
 
 // Format an ISO timestamp as a short relative string.
-const relTime = (iso: string): string => {
-    const t = new Date(iso).getTime();
-    if (!t) return "";
-    const diff = Date.now() - t;
+const relTime = (iso: string, t: Messages): string => {
+    const ts = new Date(iso).getTime();
+    if (!ts) return "";
+    const diff = Date.now() - ts;
     const sec = Math.floor(diff / 1000);
-    if (sec < 45) return "just now";
-    if (sec < 90) return "1m ago";
+    if (sec < 45) return t.notes.history.relTime.justNow;
+    if (sec < 90) return t.notes.history.relTime.oneMinShort;
     const min = Math.floor(sec / 60);
-    if (min < 60) return `${min}m ago`;
+    if (min < 60) return fmt(t.notes.history.relTime.minutesShort, { n: min });
     const hr = Math.floor(min / 60);
-    if (hr < 24) return `${hr}h ago`;
+    if (hr < 24) return fmt(t.notes.history.relTime.hoursShort, { n: hr });
     const day = Math.floor(hr / 24);
-    if (day < 7) return `${day}d ago`;
+    if (day < 7) return fmt(t.notes.history.relTime.daysShort, { n: day });
     return new Date(iso).toLocaleDateString(undefined, {
         month: "short",
         day: "numeric",
@@ -52,6 +53,7 @@ export const NoteHistoryChip = ({
 }: NoteHistoryChipProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const { t } = useTranslation();
 
     // Periodic re-render so the relative time advances without waiting
     // for a new save.
@@ -66,15 +68,18 @@ export const NoteHistoryChip = ({
     const head = useNM.currentNoteVersions[0];
     if (!head || noteId <= 0) return null;
 
-    const editorName = head.editor?.userName ?? "Someone";
+    const editorName = head.editor?.userName ?? t.notes.defaults.someone;
     const tsForChip = head.tsUpdatedAt || head.tsCreatedAt;
-    const summary = `Edited by ${editorName} · ${relTime(tsForChip)}`;
+    const summary = fmt(t.notes.history.chipSummary, {
+        name: editorName,
+        time: relTime(tsForChip, t),
+    });
 
     return (
         <>
             <Tooltip
                 size="sm"
-                title="View version history"
+                title={t.notes.history.chipTooltip}
                 variant="outlined"
                 sx={{
                     background: isDark ? "rgba(20,16,28,0.95)" : "rgba(255,255,255,0.98)",

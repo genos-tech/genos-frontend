@@ -2,6 +2,7 @@ import { Socket } from "socket.io-client";
 
 import { ChatService } from "../../../db/services/chat.service";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
+import { getMessages } from "../../../i18n";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps, MDMMemberProps, MessageProps } from "../../../types/chat";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
@@ -12,12 +13,11 @@ import { createMDMChat } from "./createMDMChat";
 import { loadMDMHistory } from "./loadMDMHistory";
 import { popSpecificMessages } from "./popSpecificMessages";
 
-const mdmCreatedMessage = "Started this conversation";
-
-const createMDMMessage = [
+const getMdmCreatedMessage = () => getMessages().chat.system.startedConversation;
+const getCreateMDMMessage = () => [
     {
         type: "paragraph",
-        content: [{ type: "text", text: mdmCreatedMessage, styles: {} }],
+        content: [{ type: "text", text: getMdmCreatedMessage(), styles: {} }],
     },
     { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] },
 ];
@@ -29,6 +29,8 @@ const addMDMChatAndMessage = async (
     useCM: ChatManagementState,
     mdmMembers?: MDMMemberProps[]
 ) => {
+    const mdmCreatedMessage = getMdmCreatedMessage();
+    const createMDMMessage = getCreateMDMMessage();
     const ts = getLocalCurrentTimestamp();
 
     const newMessage: MessageProps = {
@@ -165,6 +167,7 @@ export const createMDMChatGroup = async (
     accessToken: string,
     selectedMembers?: UserProps[]
 ) => {
+    const createMDMMessage = getCreateMDMMessage();
     const data = await createMDMChat(
         accessToken,
         myself,

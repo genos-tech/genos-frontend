@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Box, Chip, Tooltip } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
+import { fmt, useTranslation } from "../../../i18n";
 import { UserProps } from "../../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../../types/chat";
 import { GroupedReactionProps, ReactionProps } from "../../../types/common";
@@ -60,6 +61,7 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
         setShowEmojiPicker,
         setUniqueReactionEmojiCount,
     } = props;
+    const { t } = useTranslation();
     const [baseEmojiList, setBaseEmojiList] = useState<string[]>(["👀", "👍", "✅"]);
     const [groupedReactions, setGroupedReactions] = useState<GroupedReactionProps[]>(
         groupEmojis(reactions)
@@ -243,14 +245,17 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
                 <Tooltip
                     key={`tooltip-${index}`}
                     variant="outlined"
-                    title={
-                        senders
-                            .slice(0, 5)
-                            .map((sender) => `${sender.userName} `)
-                            .join(" and ") +
-                        (senders.length > 5 ? " and more" : "") +
-                        " reacted"
-                    }
+                    title={fmt(
+                        senders.length > 5
+                            ? t.common.ui.emoji.multipleReacted
+                            : t.common.ui.emoji.singleReacted,
+                        {
+                            names: senders
+                                .slice(0, 5)
+                                .map((sender) => `${sender.userName} `)
+                                .join(" and "),
+                        }
+                    )}
                 >
                     <Chip
                         key={`emoji-chip-${emoji}-${index}`}
@@ -283,7 +288,7 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
                     variant="outlined"
                 >
                     <Chip size="sm" sx={{ fontSize: "0.8rem" }} variant="plain">
-                        +{hidden.length} more
+                        {fmt(t.common.ui.emoji.moreLabel, { count: hidden.length })}
                     </Chip>
                 </Tooltip>
             )}

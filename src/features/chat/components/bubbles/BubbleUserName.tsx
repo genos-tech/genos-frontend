@@ -1,6 +1,7 @@
 import { Box, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { extractMMDDHHMMSSs } from "../../../../utils/dateUtils";
 import { statuses } from "../../../tasks/utils/taskMeta";
@@ -59,6 +60,7 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
     } = props;
 
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const taskStatusDetails = statuses.find((item) => item.status === taskStatus);
     const isEdited = extractMMDDHHMMSSs(tsSent) !== extractMMDDHHMMSSs(tsUpdated);
@@ -139,7 +141,7 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                         >
                             {isEdited ? (
                                 <>
-                                    {dtSent} {isThread ? "" : "Updated"}
+                                    {dtSent} {isThread ? "" : t.chat.bubble.updated}
                                 </>
                             ) : (
                                 dtSent

@@ -5,14 +5,18 @@ import Typography from "@mui/joy/Typography";
 import { alpha } from "@mui/system";
 import { Droppable } from "react-beautiful-dnd";
 
+import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
 import { SprintBoardCard } from "./SprintBoardCard";
 
-// Column configuration
+// Column configuration. `title` is an English fallback for code paths
+// that haven't been i18n'd yet; the rendered string is resolved via
+// `t.tasks.board[titleKey]`.
 export type ColumnConfig = {
     id: string;
     title: string;
+    titleKey: keyof (typeof import("../../../../i18n/locales/en/tasks").tasks)["board"];
     status: string;
     color: string;
     bgColor: string;
@@ -74,6 +78,8 @@ export const SprintBoardColumn = ({
     const mode: "light" | "dark" | undefined =
         colorMode === "light" || colorMode === "dark" ? colorMode : undefined;
     const isDark = mode === "dark";
+    const { t } = useTranslation();
+    const columnTitle = t.tasks.board[column.titleKey];
 
     return (
         <div style={getColumnStyles(column.color, mode)}>
@@ -90,7 +96,7 @@ export const SprintBoardColumn = ({
                             color: column.color,
                         }}
                     >
-                        {column.title}
+                        {columnTitle}
                     </Typography>
                 </Box>
                 <span
@@ -228,7 +234,11 @@ export const SprintBoardColumn = ({
                                                 "font-weight 150ms ease, letter-spacing 150ms ease",
                                         }}
                                     >
-                                        {isOver ? `↳ Drop to ${column.title}` : "Drop tasks here"}
+                                        {isOver
+                                            ? fmt(t.tasks.board.dropToColumn, {
+                                                  title: columnTitle,
+                                              })
+                                            : t.tasks.board.dropTasksHere}
                                     </Typography>
                                 </Box>
                             ) : (

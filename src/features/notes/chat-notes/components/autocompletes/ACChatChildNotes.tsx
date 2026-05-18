@@ -5,6 +5,7 @@ import CircularProgress from "@mui/joy/CircularProgress";
 
 import { useAuth } from "../../../../../context/AuthContext";
 import { NoteManagementState } from "../../../../../hooks/notes/useNoteManagement";
+import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { ChatNoteProps } from "../../../../../types/notes";
 import { loadChatSubNotes } from "../../../chat-notes/services/loadChatSubNotes";
@@ -18,6 +19,7 @@ type ACChatChildNotesProps = {
 export const ACChatChildNotes = (props: ACChatChildNotesProps) => {
     const { myself, openSearchBox, setOpenSearchBox, useNM } = props;
     const { accessToken } = useAuth();
+    const { t } = useTranslation();
     const [options, setOptions] = useState<ChatNoteProps[]>([]);
     const loading = openSearchBox && options.length === 0;
 
@@ -68,14 +70,14 @@ export const ACChatChildNotes = (props: ACChatChildNotesProps) => {
 
     return (
         <Autocomplete
-            aria-label="Search"
+            aria-label={t.notes.autocomplete.searchAria}
             getOptionKey={(option) => option.noteId}
             getOptionLabel={(option) => option.title}
             isOptionEqualToValue={(option, value) => option.noteId === value.noteId}
             loading={loading}
             open={openSearchBox}
             options={options}
-            placeholder={"Search Child Notes"}
+            placeholder={t.notes.autocomplete.searchChildNotes}
             size="sm"
             startDecorator={<SearchRoundedIcon />}
             endDecorator={

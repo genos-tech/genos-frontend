@@ -14,6 +14,7 @@ import {
 import { useColorScheme } from "@mui/joy/styles";
 
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { useTranslation } from "../../../../i18n";
 import { BaseNoteTreeNode } from "../types/noteTypes";
 
 interface NoteTreeRendererProps<T extends BaseNoteTreeNode> {
@@ -37,6 +38,7 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
 }: NoteTreeRendererProps<T>) {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const { t } = useTranslation();
 
     // Check if this node should be expanded based on the current chain or tab items
     const shouldBeExpanded = useCallback(() => {
@@ -236,7 +238,7 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                                 letterSpacing: "-0.01em",
                             }}
                         >
-                            {node.title || "Untitled"}
+                            {node.title || t.notes.defaults.untitled}
                         </Typography>
                     </ListItemContent>
 

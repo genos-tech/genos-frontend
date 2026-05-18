@@ -17,6 +17,7 @@ import {
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { useTranslation } from "../../../../i18n";
 import { SignUpResponse, UserProps } from "../../../../types/admin";
 import { replaceSpacesWithUnderscore } from "../../../../utils/stringHelper";
 import { joinTeam } from "../../../admin/services/joinTeam";
@@ -37,6 +38,7 @@ type Props = {
 
 export const ModalCreateProject: React.FC<Props> = ({ myself, usePM, setIsNewProjectCreated }) => {
     const { accessToken } = useAuth();
+    const { t } = useTranslation();
 
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [isPrivate, setIsPrivate] = useState(false);
@@ -80,7 +82,9 @@ export const ModalCreateProject: React.FC<Props> = ({ myself, usePM, setIsNewPro
 
                     if (!createProjectResponse.ok) {
                         console.error(createProjectData);
-                        throw new Error(createProjectData.hint || "Project Creation Failed");
+                        throw new Error(
+                            createProjectData.hint || t.tasks.modals.createProject.creationFailed
+                        );
                     } else {
                         // Step-3: Join the project.
                         const joinProjectResponse = await fetch(`${base_url}/project/join/`, {
@@ -101,7 +105,7 @@ export const ModalCreateProject: React.FC<Props> = ({ myself, usePM, setIsNewPro
                         if (!joinProjectResponse.ok) {
                             console.error(joinProjectData);
                             throw new Error(
-                                joinProjectData.hint || "Failed to join the created project"
+                                joinProjectData.hint || t.tasks.modals.createProject.joinFailed
                             );
                         } else {
                             // Step-4: Join the team for the system user.
@@ -205,13 +209,13 @@ export const ModalCreateProject: React.FC<Props> = ({ myself, usePM, setIsNewPro
                             fontWeight: 600,
                         }}
                     >
-                        Create New Project
+                        {t.tasks.modals.createProject.heading}
                     </Typography>
                 </Box>
 
                 {/* Input */}
                 <Input
-                    placeholder="Enter project name..."
+                    placeholder={t.tasks.modals.createProject.namePlaceholder}
                     value={projectName}
                     onChange={(e) => setProjectName(e.target.value)}
                     onKeyDown={(e) => {
@@ -277,7 +281,9 @@ export const ModalCreateProject: React.FC<Props> = ({ myself, usePM, setIsNewPro
                                 : "rgba(34, 197, 94, 0.9)",
                         }}
                     >
-                        {isPrivate ? "Private Project" : "Public Project"}
+                        {isPrivate
+                            ? t.tasks.modals.createProject.privateProject
+                            : t.tasks.modals.createProject.publicProject}
                     </Typography>
                 </Box>
 
@@ -311,7 +317,7 @@ export const ModalCreateProject: React.FC<Props> = ({ myself, usePM, setIsNewPro
                             },
                         }}
                     >
-                        Cancel
+                        {t.tasks.modals.createProject.cancelButton}
                     </Button>
                     <Button
                         disabled={!projectName.trim()}
@@ -333,7 +339,7 @@ export const ModalCreateProject: React.FC<Props> = ({ myself, usePM, setIsNewPro
                             },
                         }}
                     >
-                        Create Project
+                        {t.tasks.modals.createProject.createButton}
                     </Button>
                 </Stack>
             </ModalDialog>

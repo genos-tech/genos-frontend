@@ -1,4 +1,5 @@
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
+import { fmt, getMessages } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { ActivityMessageProps, NewMessageProps, NewThreadMessageProps } from "../../types/chat";
 import { InboxItemProps } from "../../types/common";
@@ -31,17 +32,18 @@ const extractInboxText = (body: any): string => {
 };
 
 const labelForChatType = (chatType: number, chatName?: string): string => {
+    const labels = getMessages().services.notifications.routerChatType;
     switch (chatType) {
         case 1:
-            return "Direct message";
+            return labels.direct;
         case 2:
-            return chatName ? `#${chatName}` : "Group";
+            return chatName ? fmt(labels.groupNamed, { name: chatName }) : labels.group;
         case 3:
-            return chatName ? `Project • ${chatName}` : "Project chat";
+            return chatName ? fmt(labels.projectNamed, { name: chatName }) : labels.project;
         case 4:
-            return chatName ? `${chatName}` : "Group DM";
+            return chatName ? `${chatName}` : labels.groupDm;
         default:
-            return "Chat";
+            return labels.unknown;
     }
 };
 
@@ -63,18 +65,20 @@ const buildChatIntent = (
     const isRoomMessage = msg.chatType === 2 || msg.chatType === 3 || msg.chatType === 4;
     if (!isIncomingDm && !isRoomMessage) return null;
 
-    const senderName = msg.sender.userName || "Someone";
+    const routerMessages = getMessages().services.notifications.router;
+    const senderName = msg.sender.userName || routerMessages.someone;
     const chatLabel = labelForChatType(msg.chatType, msg.chatName);
+    const title =
+        msg.chatType === 1
+            ? senderName
+            : msg.chatType === 3
+              ? chatLabel
+              : fmt(routerMessages.chatTitleWithLabel, { senderName, chatLabel });
 
     console.log("send chat notification", {
         id: `chat:${msg.chatType}:${msg.chatId}:${msg.messageId}`,
         category: "chats",
-        title:
-            msg.chatType === 1
-                ? senderName
-                : msg.chatType === 3
-                  ? chatLabel
-                  : `${senderName} • ${chatLabel}`,
+        title,
         body: truncate(msg.contentText || ""),
         icon: useTEM.teamMemberProfiles[msg.sender.userId]?.avatarImgPath || undefined,
         senderId: msg.sender.userId,
@@ -83,12 +87,7 @@ const buildChatIntent = (
     return {
         id: `chat:${msg.chatType}:${msg.chatId}:${msg.messageId}`,
         category: "chats",
-        title:
-            msg.chatType === 1
-                ? senderName
-                : msg.chatType === 3
-                  ? chatLabel
-                  : `${senderName} • ${chatLabel}`,
+        title,
         body: truncate(msg.contentText || ""),
         icon: useTEM.teamMemberProfiles[msg.sender.userId]?.avatarImgPath || undefined,
         senderId: msg.sender.userId,
@@ -118,13 +117,15 @@ const buildThreadIntent = (
     const isIncomingForMe = (!fromMe && toMe) || (!fromMe && isRoomChat);
     if (!isIncomingForMe) return null;
 
-    const senderName = msg.sender.userName || "Someone";
+    const routerMessages = getMessages().services.notifications.router;
+    const senderName = msg.sender.userName || routerMessages.someone;
     const parentLabel = labelForChatType(msg.chatType, msg.chatName);
+    const title = fmt(routerMessages.threadReplyTitle, { senderName, parentLabel });
 
     console.log("send thread notification", {
         id: `thread:${msg.chatType}:${msg.chatId}:${msg.threadId}:${msg.messageId}`,
         category: "thread_replies",
-        title: `${senderName} replied in ${parentLabel}`,
+        title,
         body: truncate(msg.contentText || ""),
         icon: useTEM.teamMemberProfiles[msg.sender.userId].avatarImgPath || undefined,
         senderId: msg.sender.userId,
@@ -133,7 +134,7 @@ const buildThreadIntent = (
     return {
         id: `thread:${msg.chatType}:${msg.chatId}:${msg.threadId}:${msg.messageId}`,
         category: "thread_replies",
-        title: `${senderName} replied in ${parentLabel}`,
+        title,
         body: truncate(msg.contentText || ""),
         icon: useTEM.teamMemberProfiles[msg.sender.userId].avatarImgPath || undefined,
         senderId: msg.sender.userId,
@@ -170,28 +171,27 @@ const buildActivityIntent = (
     }
     if (!category) return null;
 
-    const senderName = (activity as any).senderName || "Someone";
+    const routerMessages = getMessages().services.notifications.router;
+    const senderName = (activity as any).senderName || routerMessages.someone;
     const subjectLabel = activity.projectName
-        ? `Project • ${activity.projectName}`
+        ? fmt(routerMessages.activityProjectLabel, { projectName: activity.projectName })
         : labelForChatType(activity.chatType, activity.chatName);
+    const title =
+        category === "mentions"
+            ? fmt(routerMessages.mentionTitle, { senderName, subjectLabel })
+            : fmt(routerMessages.taskCommentTitle, { senderName });
 
     console.log("send activity notification", {
         id: `activity:${category}:${activity.activityId}`,
         category,
-        title:
-            category === "mentions"
-                ? `${senderName} mentioned you in ${subjectLabel}`
-                : `${senderName} commented on a task`,
+        title,
         body: truncate(activity.firstLineContent || ""),
     });
 
     return {
         id: `activity:${category}:${activity.activityId}`,
         category,
-        title:
-            category === "mentions"
-                ? `${senderName} mentioned you in ${subjectLabel}`
-                : `${senderName} commented on a task`,
+        title,
         body: truncate(activity.firstLineContent || ""),
         icon: useTEM.teamMemberProfiles[(activity as any).senderId].avatarImgPath || undefined,
         senderId: activity.senderId,
@@ -211,14 +211,15 @@ const buildInboxIntent = (
 ): NotificationIntent | null => {
     if (alreadyExist) return null;
 
-    const body = truncate(extractInboxText(item.itemBody) || "New inbox item");
+    const routerMessages = getMessages().services.notifications.router;
+    const body = truncate(extractInboxText(item.itemBody) || routerMessages.inboxFallback);
     const titleByType: Record<number, string> = {
-        0: "New activity",
-        1: "Join team request",
-        2: "Join project request",
-        3: "Join group request",
+        0: routerMessages.inboxTitleNewActivity,
+        1: routerMessages.inboxTitleJoinTeam,
+        2: routerMessages.inboxTitleJoinProject,
+        3: routerMessages.inboxTitleJoinGroup,
     };
-    const title = titleByType[item.itemType] || "New inbox item";
+    const title = titleByType[item.itemType] || routerMessages.inboxFallback;
 
     return {
         id: `inbox:${item.itemId}`,

@@ -2,6 +2,8 @@ import CloudUploadRoundedIcon from "@mui/icons-material/CloudUploadRounded";
 import { Box, CircularProgress, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { fmt, useTranslation } from "../../../i18n";
+
 /**
  * Shared visuals for "file is being uploaded" UI. Centralised so the
  * chat / task / note editors and the task attachment surfaces all give
@@ -32,12 +34,14 @@ type FileUploadOverlayProps = {
  */
 export const FileUploadOverlay = ({
     open,
-    label = "Uploading…",
+    label,
     detail,
     borderRadius = 12,
 }: FileUploadOverlayProps) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
+    const resolvedLabel = label ?? t.common.ui.fileUpload.uploadingDefault;
 
     if (!open) return null;
 
@@ -85,7 +89,7 @@ export const FileUploadOverlay = ({
                     color: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.8)",
                 }}
             >
-                {label}
+                {resolvedLabel}
             </Typography>
             {detail && (
                 <Typography
@@ -131,11 +135,14 @@ export const UploadingTileBadge = ({
     label,
 }: UploadingTileBadgeProps) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
 
     if (!open) return null;
 
-    const resolvedLabel = label ?? (variant === "pending" ? "Pending" : "Uploading");
+    const resolvedLabel =
+        label ??
+        (variant === "pending" ? t.common.ui.fileUpload.pending : t.common.ui.fileUpload.uploading);
 
     return (
         <Box
@@ -230,11 +237,16 @@ export const FileUploadStatusBadge = ({
     placement = "top-right",
 }: FileUploadStatusBadgeProps) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
 
     if (count <= 0) return null;
 
-    const resolved = label ?? `Uploading ${count} file${count === 1 ? "" : "s"}…`;
+    const template =
+        count === 1
+            ? t.common.ui.fileUpload.uploadingFilesOne
+            : t.common.ui.fileUpload.uploadingFilesOther;
+    const resolved = label ?? fmt(template, { count });
     const offsets = PLACEMENT_OFFSETS[placement];
 
     return (

@@ -16,6 +16,7 @@ import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../i18n";
 import { UserProps } from "../../../types/admin";
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../types/chat";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
@@ -74,6 +75,7 @@ export const ModalChatView = (props: ModalChatViewProps) => {
         useNM,
     } = props;
 
+    const { t } = useTranslation();
     const [modalChat, setModalChat] = useState<ChatProps | null>(null);
     const [modalThread, setModalThread] = useState<ThreadProps | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -107,7 +109,7 @@ export const ModalChatView = (props: ModalChatViewProps) => {
             (c) => c.chatId === target.chatId && c.chatType === target.chatType
         );
         if (!summary) {
-            setErrorMessage("This chat isn't available.");
+            setErrorMessage(t.common.modalView.chatUnavailable);
             setIsLoading(false);
             return () => {
                 cancelled = true;
@@ -141,7 +143,7 @@ export const ModalChatView = (props: ModalChatViewProps) => {
                 if (cancelled) return;
 
                 if (messages.length === 0) {
-                    setErrorMessage("No messages to display yet.");
+                    setErrorMessage(t.common.modalView.noMessagesYet);
                     setIsLoading(false);
                     return;
                 }
@@ -193,7 +195,7 @@ export const ModalChatView = (props: ModalChatViewProps) => {
                     if (cancelled) return;
 
                     if (!threadMessages || threadMessages.length === 0) {
-                        setErrorMessage("This thread is empty or unavailable.");
+                        setErrorMessage(t.common.modalView.threadEmpty);
                         setIsLoading(false);
                         return;
                     }
@@ -224,7 +226,7 @@ export const ModalChatView = (props: ModalChatViewProps) => {
             } catch (e) {
                 if (!cancelled) {
                     console.error("ModalChatView load failed:", e);
-                    setErrorMessage("Failed to load this chat.");
+                    setErrorMessage(t.common.modalView.chatLoadFailed);
                     setIsLoading(false);
                 }
             }
@@ -275,7 +277,7 @@ export const ModalChatView = (props: ModalChatViewProps) => {
                 }}
             >
                 <Typography level="body-md" sx={{ color: "neutral.500" }}>
-                    Loading…
+                    {t.common.modalView.loadingChat}
                 </Typography>
             </Box>
         );
@@ -302,7 +304,7 @@ export const ModalChatView = (props: ModalChatViewProps) => {
                     }}
                 >
                     <Typography level="body-md" sx={{ color: "neutral.500" }}>
-                        Loading thread…
+                        {t.common.modalView.loadingThread}
                     </Typography>
                 </Box>
             );

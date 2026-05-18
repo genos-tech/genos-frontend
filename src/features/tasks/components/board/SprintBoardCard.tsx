@@ -6,6 +6,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import Typography from "@mui/joy/Typography";
 import { Draggable } from "react-beautiful-dnd";
 
+import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
 
@@ -94,6 +95,7 @@ export const SprintBoardCard = ({
     const { mode: colorMode } = useColorScheme();
     const mode: "light" | "dark" | undefined =
         colorMode === "light" || colorMode === "dark" ? colorMode : undefined;
+    const { t } = useTranslation();
 
     const [isHovered, setIsHovered] = React.useState(false);
 
@@ -109,10 +111,10 @@ export const SprintBoardCard = ({
         // Treat any falsy due date as "no schedule" so a row whose
         // due date was just cleared doesn't briefly claim "Expired"
         // off a stale negative `daysLeft` cached on the task model.
-        if (!task.dueDate || daysLeft === null) return "No due date";
-        if (daysLeft < 0) return "Expired";
-        if (daysLeft === 0) return "Due today";
-        return `${daysLeft}d left`;
+        if (!task.dueDate || daysLeft === null) return t.tasks.board.noDueDate;
+        if (daysLeft < 0) return t.tasks.board.expired;
+        if (daysLeft === 0) return t.tasks.board.dueToday;
+        return fmt(t.tasks.board.daysLeft, { count: daysLeft });
     };
 
     const priorityStyle = task.priority ? priorityColors[task.priority] : null;
@@ -273,7 +275,7 @@ export const SprintBoardCard = ({
                                     fontSize: "0.65rem",
                                 }}
                             >
-                                {task.assigneeName || "Unassigned"}
+                                {task.assigneeName || t.tasks.board.unassigned}
                             </Typography>
                         </Box>
 

@@ -4,6 +4,7 @@ import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
+import { useTranslation } from "../../../../../i18n";
 
 type NewProjectListItemProps = {
     usePM: ProjectManagementState;
@@ -12,6 +13,7 @@ export const NewProjectListItem = (props: NewProjectListItemProps) => {
     const { usePM } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const { t } = useTranslation();
 
     return (
         <ListItem key={"listitem-createProject"}>
@@ -45,7 +47,7 @@ export const NewProjectListItem = (props: NewProjectListItemProps) => {
                     }}
                     noWrap
                 >
-                    New Project
+                    {t.tasks.sidebar.newProject}
                 </Typography>
             </ListItemButton>
         </ListItem>

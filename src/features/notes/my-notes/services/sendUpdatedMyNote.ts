@@ -1,5 +1,6 @@
 import axios from "axios";
 
+import { getMessages } from "../../../../i18n";
 import { authApi } from "../../../../services/api";
 import { UserProps } from "../../../../types/admin";
 import { MyNoteProps } from "../../../../types/notes";
@@ -23,7 +24,7 @@ export const sendUpdatedMyNote = async (
         } else {
             console.error("Unauthorized. Auth toke is not found.");
             if (setErrorMessage) {
-                setErrorMessage("Unauthorized. Auth toke is not found.");
+                setErrorMessage(getMessages().notes.errors.unauthorizedToken);
             }
         }
     } catch (error: unknown) {
@@ -31,12 +32,12 @@ export const sendUpdatedMyNote = async (
             if (error.response?.status === 400) {
                 console.error("HTTP 400 error:", error.response?.data);
                 if (setErrorMessage) {
-                    setErrorMessage("Message Id already exists.");
+                    setErrorMessage(getMessages().notes.errors.messageIdExists);
                 }
             } else if (error.response?.status === 401) {
                 console.error("HTTP 401 error:", error.response?.data);
                 if (setErrorMessage) {
-                    setErrorMessage("Unauthorized. Please log in again.");
+                    setErrorMessage(getMessages().notes.errors.unauthorizedLoginAgain);
                 }
             } else {
                 console.error("API error:", error.response?.status, error.response?.data);

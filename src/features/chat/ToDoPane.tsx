@@ -17,6 +17,7 @@ import { useAuth } from "../../context/AuthContext";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
+import { fmt, useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { ToDoFactProps } from "../../types/chat";
 
@@ -49,6 +50,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
     } = props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const styles = isDark ? ActionButtonStyles.dark : ActionButtonStyles.light;
     const [tmpAllTodos, setTmpAllTodos] = useState<ToDoFactProps[]>(todos);
@@ -140,7 +142,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                     letterSpacing: "-0.01em",
                                 }}
                             >
-                                My Todos
+                                {t.chat.todoPane.myTodos}
                             </Typography>
                             <Typography
                                 level="body-xs"
@@ -149,7 +151,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                     fontSize: "0.75rem",
                                 }}
                             >
-                                {completedCount} of {totalCount} completed
+                                {fmt(t.chat.todoPane.completedOfTotal, { completed: completedCount, total: totalCount })}
                             </Typography>
                         </Stack>
                     </Stack>
@@ -157,7 +159,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                     {/* Add Button */}
                     {isExistingTodaysTodo ? (
                         <Tooltip
-                            title="You already have a todo for today."
+                            title={t.chat.todoPane.existingTodayTooltip}
                             variant="outlined"
                             sx={{ borderRadius: "8px" }}
                         >
@@ -180,7 +182,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                 }}
                             >
                                 <AddIcon sx={{ fontSize: "18px" }} />
-                                New Todo
+                                {t.chat.todoPane.newTodo}
                             </IconButton>
                         </Tooltip>
                     ) : (
@@ -211,7 +213,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                             onClick={handleCreateNewTodo}
                         >
                             <AddIcon sx={{ fontSize: "18px" }} />
-                            New Todo
+                            {t.chat.todoPane.newTodo}
                         </IconButton>
                     )}
                 </Stack>
@@ -248,7 +250,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                 },
                             }}
                         >
-                            All ({totalCount})
+                            {fmt(t.chat.todoPane.allFilter, { count: totalCount })}
                         </Chip>
                         <Chip
                             size="sm"
@@ -291,7 +293,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                 />
                             }
                         >
-                            Incomplete ({totalCount - completedCount})
+                            {fmt(t.chat.todoPane.incompleteFilter, { count: totalCount - completedCount })}
                         </Chip>
                     </Stack>
                 </Stack>
@@ -385,8 +387,8 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                     }}
                                 >
                                     {useCM.showOnlyInCompleteTodos
-                                        ? "All caught up!"
-                                        : "No todos yet"}
+                                        ? t.chat.todoPane.allCaughtUp
+                                        : t.chat.todoPane.noTodosYet}
                                 </Typography>
                                 <Typography
                                     level="body-xs"
@@ -399,8 +401,8 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                     }}
                                 >
                                     {useCM.showOnlyInCompleteTodos
-                                        ? "You've completed all your tasks"
-                                        : "Create your first todo to get started"}
+                                        ? t.chat.todoPane.allCompletedSubtitle
+                                        : t.chat.todoPane.createFirstSubtitle}
                                 </Typography>
                             </Stack>
                         </Stack>
@@ -452,7 +454,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                 mb: 0.25,
                             }}
                         >
-                            Pro Tip
+                            {t.chat.todoPane.proTip}
                         </Typography>
                         <Typography
                             level="body-sm"
@@ -460,7 +462,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                 color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.55)",
                             }}
                         >
-                            Double click on a message to add it to your todo
+                            {t.chat.todoPane.proTipBody}
                         </Typography>
                     </Box>
                 </Stack>

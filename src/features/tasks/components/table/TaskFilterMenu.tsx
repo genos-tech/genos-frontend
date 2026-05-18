@@ -15,6 +15,7 @@ import { alpha } from "@mui/system";
 import { TaskFilterMenuStyles } from "../../../../components/ui/styles/commonStyle";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../i18n";
 import { TaskTableProps } from "../../../../types/tasks";
 import {
     getMilestoneStatusChipColor,
@@ -77,6 +78,12 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const styles = isDark ? TaskFilterMenuStyles.dark : TaskFilterMenuStyles.light;
+    const { t } = useTranslation();
+    // Resolve a `FilterProps` to its localized display string. Ad-hoc
+    // filters (e.g. project tags) carry no `labelKey` and fall back to
+    // their user-supplied `label`.
+    const filterLabel = (f: FilterProps): string =>
+        f.labelKey ? t.tasks.filters[f.labelKey] : f.label;
 
     // Status filter — when status filter is hidden (e.g. sprint board), default to "All"
     const [selectedStatus, setSelectedStatus] = React.useState<FilterProps[]>(
@@ -329,17 +336,17 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
 
     const milestoneFilterButtonLabel = useMemo(() => {
         if (selectedMilestoneKeys.length === 1 && selectedMilestoneKeys[0] === MILESTONE_ALL) {
-            return "All";
+            return t.tasks.milestoneFilter.all;
         }
         const first = selectedMilestoneKeys[0];
-        if (first === MILESTONE_NONE) return "No milestone";
+        if (first === MILESTONE_NONE) return t.tasks.milestoneFilter.noMilestone;
         if (typeof first === "number") {
             const m = visibleMilestones.find((mm) => mm.milestoneId === first);
             const title = m?.title ?? `#${first}`;
             return title.length > 16 ? `${title.slice(0, 16)}…` : title;
         }
-        return "All";
-    }, [selectedMilestoneKeys, visibleMilestones]);
+        return t.tasks.milestoneFilter.all;
+    }, [selectedMilestoneKeys, visibleMilestones, t]);
 
     // Apply filters
     const applyFilters = (
@@ -741,11 +748,12 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                     selectedMilestoneKeys.length === 1 &&
                                     selectedMilestoneKeys[0] === MILESTONE_ALL
                                 ) {
-                                    return "All milestones";
+                                    return t.tasks.milestoneFilter.allMilestones;
                                 }
                                 return selectedMilestoneKeys
                                     .map((k) => {
-                                        if (k === MILESTONE_NONE) return "No milestone";
+                                        if (k === MILESTONE_NONE)
+                                            return t.tasks.milestoneFilter.noMilestone;
                                         const m = visibleMilestones.find(
                                             (mm) => mm.milestoneId === k
                                         );
@@ -868,7 +876,10 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                     const isSelected = selectedMilestoneKeys.some(
                                         (k) => k === key
                                     );
-                                    const label = key === MILESTONE_ALL ? "All" : "No milestone";
+                                    const label =
+                                        key === MILESTONE_ALL
+                                            ? t.tasks.milestoneFilter.all
+                                            : t.tasks.milestoneFilter.noMilestone;
                                     return (
                                         <MenuItem
                                             key={`milestone-key-${String(key)}`}
@@ -955,9 +966,9 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                 );
                                 const sprintName =
                                     m.sprintId == null
-                                        ? "No sprint"
+                                        ? t.tasks.milestoneFilter.noSprint
                                         : (projectSprints.find((s) => s.sprintId === m.sprintId)
-                                              ?.name ?? "Sprint");
+                                              ?.name ?? t.tasks.milestoneFilter.sprintFallback);
                                 return (
                                     <MenuItem
                                         key={`milestone-${m.milestoneId}`}
@@ -1128,7 +1139,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                     <>
                         <Tooltip
                             placement="top"
-                            title={selectedStatus.map((status) => status.label).join(", ")}
+                            title={selectedStatus.map((status) => filterLabel(status)).join(", ")}
                             slotProps={{
                                 popper: {
                                     sx: {
@@ -1250,7 +1261,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                                     flex: 1,
                                                 }}
                                             >
-                                                {status.label}
+                                                {filterLabel(status)}
                                             </Typography>
                                             {isSelected && (
                                                 <Box
@@ -1285,7 +1296,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                     <>
                         <Tooltip
                             placement="top"
-                            title={selectedTags.map((tag) => tag.label).join(", ")}
+                            title={selectedTags.map((tag) => filterLabel(tag)).join(", ")}
                             slotProps={{
                                 popper: {
                                     sx: {
@@ -1404,7 +1415,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                                     flex: 1,
                                                 }}
                                             >
-                                                {tag.label}
+                                                {filterLabel(tag)}
                                             </Typography>
                                             {isSelected && (
                                                 <Box
@@ -1437,7 +1448,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                 {/* Priority Filter */}
                 <Tooltip
                     placement="top"
-                    title={selectedPriorities.map((priority) => priority.label).join(", ")}
+                    title={selectedPriorities.map((priority) => filterLabel(priority)).join(", ")}
                     slotProps={{
                         popper: {
                             sx: {
@@ -1554,7 +1565,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                             flex: 1,
                                         }}
                                     >
-                                        {priority.label}
+                                        {filterLabel(priority)}
                                     </Typography>
                                     {isSelected && (
                                         <Box
@@ -1585,7 +1596,9 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                 {/* Effort Level Filter */}
                 <Tooltip
                     placement="top"
-                    title={selectedEffortLevels.map((effortLevel) => effortLevel.label).join(", ")}
+                    title={selectedEffortLevels
+                        .map((effortLevel) => filterLabel(effortLevel))
+                        .join(", ")}
                     slotProps={{
                         popper: {
                             sx: {
@@ -1702,7 +1715,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                             flex: 1,
                                         }}
                                     >
-                                        {effortLevel.label}
+                                        {filterLabel(effortLevel)}
                                     </Typography>
                                     {isSelected && (
                                         <Box
@@ -1735,7 +1748,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                 {/* Reset Filters Button */}
                 <Tooltip
                     placement="top"
-                    title="Reset all filters to default"
+                    title={t.tasks.tooltips.resetFilters}
                     slotProps={{
                         popper: {
                             sx: {

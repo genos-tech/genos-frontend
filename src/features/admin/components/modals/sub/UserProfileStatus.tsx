@@ -19,6 +19,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { PulseDot } from "../../../../../components/ui/misc/PulseDot";
 import { ProfileModalStyles } from "../../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../../context/AuthContext";
+import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { updateUserProfile } from "../../../services/updateUserProfile";
 
@@ -61,6 +62,7 @@ export const UserProfileStatus = ({
 }: Props) => {
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const styles = mode === "dark" ? ProfileModalStyles.dark : ProfileModalStyles.light;
 
     // Derive directly from props. Mirroring this in useState — as the
@@ -74,7 +76,11 @@ export const UserProfileStatus = ({
         ? myself.isOfflineForced === "true"
         : profileUser?.isOnline !== true || profileUser?.isOfflineForced === "true";
     const presenceColor = isOffline ? PRESENCE_GREY : PRESENCE_GREEN;
-    const presenceLabel = isOffline ? (isSelfView ? "Offline (Forced)" : "Offline") : "Online";
+    const presenceLabel = isOffline
+        ? isSelfView
+            ? t.admin.status.offlineForced
+            : t.admin.status.offline
+        : t.admin.status.online;
     const customStatus = profileUser?.customStatus ?? "";
 
     const [openEditor, setOpenEditor] = useState(false);
@@ -167,11 +173,11 @@ export const UserProfileStatus = ({
                                 <Menu sx={{ zIndex: 10010 }}>
                                     <MenuItem onClick={() => persistPresence("false")}>
                                         <PulseDot color={PRESENCE_GREEN} />
-                                        Set Online
+                                        {t.admin.status.setOnline}
                                     </MenuItem>
                                     <MenuItem onClick={() => persistPresence("true")}>
                                         <PulseDot color={PRESENCE_GREY} />
-                                        Set Always Offline
+                                        {t.admin.status.setAlwaysOffline}
                                     </MenuItem>
                                 </Menu>
                             )}
@@ -192,7 +198,7 @@ export const UserProfileStatus = ({
                                         : undefined,
                                 }}
                             >
-                                {customStatus !== "" ? customStatus : "Update Status"}
+                                {customStatus !== "" ? customStatus : t.admin.status.updateStatus}
                             </Chip>
                         )}
 
@@ -225,7 +231,7 @@ export const UserProfileStatus = ({
                                     </Menu>
                                 </Dropdown>
                                 <Input
-                                    placeholder="Set your status…"
+                                    placeholder={t.admin.status.setStatusPlaceholder}
                                     size="sm"
                                     sx={{ width: 200 }}
                                     value={newStatus}
@@ -249,7 +255,7 @@ export const UserProfileStatus = ({
                         sx={{ borderRadius: "sm", fontWeight: "bold" }}
                         onClick={handleReset}
                     >
-                        RESET
+                        {t.admin.status.reset}
                     </Button>
                     <Button
                         color="neutral"
@@ -258,7 +264,7 @@ export const UserProfileStatus = ({
                         sx={{ borderRadius: "sm", fontWeight: "bold" }}
                         onClick={handleCloseEditor}
                     >
-                        CANCEL
+                        {t.admin.status.cancel}
                     </Button>
                     <Button
                         color="primary"
@@ -267,7 +273,7 @@ export const UserProfileStatus = ({
                         sx={{ borderRadius: "sm", fontWeight: "bold" }}
                         onClick={handleSet}
                     >
-                        SET
+                        {t.admin.status.set}
                     </Button>
                 </Stack>
             )}

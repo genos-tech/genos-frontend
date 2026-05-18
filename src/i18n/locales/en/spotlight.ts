@@ -1,0 +1,72 @@
+export const spotlight = {
+    placeholder: {
+        askBusy: "Wait for the current answer to finish…",
+        aiOff: "Search chats, tasks, notes (AI answers off)",
+        followUp: "Ask a follow-up — or click ‘Back to search’ to start over",
+        default: "Search chats, tasks, notes — press Enter to ask Genos",
+    },
+    actions: {
+        ask: "Ask",
+        cancel: "Cancel",
+        approve: "Approve",
+        reject: "Reject",
+        copyAnswer: "Copy answer",
+        retry: "Ask again",
+        showLess: "Show less",
+        moreCount: "+{count} more",
+        backToSearch: "Back to search",
+    },
+    states: {
+        searching: "Searching…",
+        thinking: "Thinking…",
+        streaming: "streaming…",
+        awaitingApproval: "awaiting your approval",
+        untitled: "(untitled)",
+    },
+    empty: {
+        initial: "Start typing to search across chats, tasks, and notes.",
+        noMatches: "No matches yet — try different keywords.",
+    },
+    errors: {
+        noTeam: "No team selected.",
+        searchFailed: "Search failed. Please try again.",
+        enableAiHint: "Enable AI answers in Settings",
+    },
+    conversation: {
+        header: "AI conversation",
+        turnCount: "{count, plural, one {# turn} other {# turns}}",
+        backToSearchTooltip: "Clear this conversation and return to the search view",
+        turnLabelQ: "Q",
+        turnLabelA: "A",
+    },
+    approval: {
+        titleWithTool: "Approval required: {toolName}",
+    },
+    usage: {
+        asksToday: "{used} / {limit} asks today",
+    },
+    entitySubtitle: {
+        dm: "Direct message",
+        gm: "Group chat",
+        mdm: "Multi-DM",
+        pm: "Project chat",
+        chatFallback: "Chat",
+        task: "Task",
+        notePersonal: "Personal note",
+        noteTask: "Task note",
+        noteChat: "Chat note",
+        noteFallback: "Note",
+    },
+    badges: {
+        thread: "Thread",
+        comment: "Comment",
+    },
+    chip: {
+        taskComment: "{subtitle} comment (#{id}){sep}",
+        taskPlain: "{subtitle} (#{id}){sep}",
+        chatThread: "{subtitle} thread (#{id}){sep}",
+        chatPlain: "{subtitle} (#{id}){sep}",
+        noteThread: "{subtitle} (thread) (#{id}){sep}",
+        notePlain: "{subtitle} (#{id}){sep}",
+    },
+} as const;

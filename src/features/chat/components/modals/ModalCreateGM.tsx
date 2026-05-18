@@ -25,6 +25,7 @@ import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { createChatGroup } from "../../services/createChatGroup";
 
@@ -55,6 +56,7 @@ export const ModalCreateGM: React.FC<Props> = ({
     setMyself,
 }) => {
     const { accessToken } = useAuth();
+    const { t } = useTranslation();
 
     const [isPrivate, setIsPrivate] = useState(false);
     const [CreateCGErrorMessage, setCreateCGErrorMessage] = useState<string | null>(null);
@@ -165,13 +167,13 @@ export const ModalCreateGM: React.FC<Props> = ({
                             fontWeight: 600,
                         }}
                     >
-                        Create New Group Message
+                        {t.chat.modals.createGM.title}
                     </Typography>
                 </Box>
 
                 {/* Group Name Input */}
                 <Input
-                    placeholder="Enter group name..."
+                    placeholder={t.chat.modals.createGM.groupNamePlaceholder}
                     value={chatName}
                     onChange={(e) => setGroupName(e.target.value)}
                     onKeyDown={(e) => {
@@ -233,7 +235,7 @@ export const ModalCreateGM: React.FC<Props> = ({
                                 : "rgba(34, 197, 94, 0.9)",
                         }}
                     >
-                        {isPrivate ? "Private Group" : "Public Group"}
+                        {isPrivate ? t.chat.modals.createGM.privateGroup : t.chat.modals.createGM.publicGroup}
                     </Typography>
                 </Box>
 
@@ -276,7 +278,7 @@ export const ModalCreateGM: React.FC<Props> = ({
 
                 {/* Member Search */}
                 <Input
-                    placeholder="Search team members..."
+                    placeholder={t.chat.modals.createGM.searchPlaceholder}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     startDecorator={
@@ -317,8 +319,8 @@ export const ModalCreateGM: React.FC<Props> = ({
                             }}
                         >
                             {searchQuery
-                                ? "No members found matching your search."
-                                : "No team members available."}
+                                ? t.chat.modals.createGM.noMembersMatchingSearch
+                                : t.chat.modals.createGM.noMembersAvailable}
                         </Typography>
                     ) : (
                         filteredMembers.map((member) => {
@@ -408,8 +410,7 @@ export const ModalCreateGM: React.FC<Props> = ({
                                 : "rgba(255, 255, 255, 0.4)",
                     }}
                 >
-                    {selectedMembers.length} member{selectedMembers.length !== 1 ? "s" : ""}{" "}
-                    selected (optional)
+                    {fmt(t.chat.modals.createGM.membersSelected, { count: selectedMembers.length })}
                 </Typography>
 
                 {/* Error Alert */}
@@ -442,7 +443,7 @@ export const ModalCreateGM: React.FC<Props> = ({
                             },
                         }}
                     >
-                        Cancel
+                        {t.chat.modals.createGM.cancel}
                     </Button>
                     <Button
                         disabled={!chatName.trim()}
@@ -464,7 +465,7 @@ export const ModalCreateGM: React.FC<Props> = ({
                             },
                         }}
                     >
-                        Create Group
+                        {t.chat.modals.createGM.createGroup}
                     </Button>
                 </Stack>
             </ModalDialog>

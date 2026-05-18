@@ -12,6 +12,7 @@ import { ThreadChatPaneHeaderStyles } from "../../../../components/ui/styles/com
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../i18n";
 import { MuteToggleButton } from "../../../../services/notifications/MuteToggleButton";
 import { UserProps } from "../../../../types/admin";
 import { ThreadProps } from "../../../../types/chat";
@@ -27,6 +28,7 @@ type ThreadChatPaneHeaderProps = {
 export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
     const { myself, useCM, useNM, useTM } = props;
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const styles = isDark ? ThreadChatPaneHeaderStyles.dark : ThreadChatPaneHeaderStyles.light;
     const { currentThreadTaskId } = useChatContext();
@@ -229,7 +231,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         return (
                             <Tooltip
                                 size="sm"
-                                title="Open Task"
+                                title={t.chat.headers.openTask}
                                 variant="outlined"
                                 sx={{ borderRadius: "8px" }}
                             >
@@ -354,14 +356,14 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     return (
                         <Tooltip
                             size="sm"
-                            title="New task linked to this thread"
+                            title={t.chat.headers.newTaskTooltip}
                             variant="outlined"
                             sx={{ borderRadius: "8px" }}
                         >
                             <Box
                                 component="button"
                                 type="button"
-                                aria-label="Create a new task linked to this thread"
+                                aria-label={t.chat.headers.newTaskAria}
                                 onClick={() => {
                                     useCM.setIsMainChatVisible(true);
                                     useCM.setIsThreadVisible(true);
@@ -419,7 +421,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                 {useCM.currentThreadChat?.chatType !== 3 && (
                     <Tooltip
                         size="sm"
-                        title="Open Note linked to this thread"
+                        title={t.chat.headers.openNoteTooltip}
                         variant="outlined"
                         sx={{ borderRadius: "8px" }}
                     >
@@ -472,7 +474,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                 )}
 
                 {/* Close Button */}
-                <Tooltip size="sm" title="Close" variant="outlined" sx={{ borderRadius: "8px" }}>
+                <Tooltip size="sm" title={t.chat.headers.close} variant="outlined" sx={{ borderRadius: "8px" }}>
                     <IconButton
                         size="sm"
                         variant="plain"

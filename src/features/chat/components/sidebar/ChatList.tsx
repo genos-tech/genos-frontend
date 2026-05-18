@@ -12,6 +12,8 @@ import { ProjectManagementState } from "../../../../hooks/common/useProjectManag
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../i18n";
+import type { Messages } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { ActivityMessageProps, AllChatProps, FlaggedMessageProps } from "../../../../types/chat";
 import { isMac } from "../../../../utils/platform";
@@ -47,35 +49,38 @@ const ACTIVITY_FILTERS = {
     [ACTIVITY_TYPES.REACTION]: (item: ActivityMessageProps) => item.activityType === 2,
 } as const;
 
-// Empty state configuration
-const EMPTY_STATES: Record<number, { icon: React.ElementType; title: string; subtitle: string }> =
-    {
-        [CHAT_TYPES.DM]: {
-            icon: ChatBubbleOutlineRoundedIcon,
-            title: "No direct messages",
-            subtitle: "Start a conversation with someone",
-        },
-        [CHAT_TYPES.GM]: {
-            icon: ChatBubbleOutlineRoundedIcon,
-            title: "No group messages",
-            subtitle: "Create or join a group to get started",
-        },
-        [CHAT_TYPES.PM]: {
-            icon: ChatBubbleOutlineRoundedIcon,
-            title: "No project updates",
-            subtitle: "Project conversations will appear here",
-        },
-        [CHAT_TYPES.ACTIVITY]: {
-            icon: NotificationsNoneRoundedIcon,
-            title: "No activities yet",
-            subtitle: "Mentions and replies will show up here",
-        },
-        [CHAT_TYPES.FLAGGED]: {
-            icon: FlagOutlinedIcon,
-            title: "No flagged messages",
-            subtitle: "Flag important messages to find them later",
-        },
-    };
+// Empty state configuration. Labels resolved at render time via i18n keys.
+type EmptyStateKeys = {
+    titleKey: keyof Messages["chat"]["sidebar"];
+    subtitleKey: keyof Messages["chat"]["sidebar"];
+};
+const EMPTY_STATES: Record<number, { icon: React.ElementType } & EmptyStateKeys> = {
+    [CHAT_TYPES.DM]: {
+        icon: ChatBubbleOutlineRoundedIcon,
+        titleKey: "emptyDMTitle",
+        subtitleKey: "emptyDMSubtitle",
+    },
+    [CHAT_TYPES.GM]: {
+        icon: ChatBubbleOutlineRoundedIcon,
+        titleKey: "emptyGMTitle",
+        subtitleKey: "emptyGMSubtitle",
+    },
+    [CHAT_TYPES.PM]: {
+        icon: ChatBubbleOutlineRoundedIcon,
+        titleKey: "emptyPMTitle",
+        subtitleKey: "emptyPMSubtitle",
+    },
+    [CHAT_TYPES.ACTIVITY]: {
+        icon: NotificationsNoneRoundedIcon,
+        titleKey: "emptyActivityTitle",
+        subtitleKey: "emptyActivitySubtitle",
+    },
+    [CHAT_TYPES.FLAGGED]: {
+        icon: FlagOutlinedIcon,
+        titleKey: "emptyFlaggedTitle",
+        subtitleKey: "emptyFlaggedSubtitle",
+    },
+};
 
 // Interfaces for better prop organization
 interface ChatListState {
@@ -181,6 +186,7 @@ const useFilteredActivityMessages = (
 // Empty state component
 const EmptyState = ({ chatType }: { chatType: number }) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const config = EMPTY_STATES[chatType] || EMPTY_STATES[CHAT_TYPES.DM];
     const Icon = config.icon;
@@ -250,7 +256,7 @@ const EmptyState = ({ chatType }: { chatType: number }) => {
                     textAlign: "center",
                 }}
             >
-                {config.title}
+                {t.chat.sidebar[config.titleKey]}
             </Typography>
             <Typography
                 level="body-xs"
@@ -260,7 +266,7 @@ const EmptyState = ({ chatType }: { chatType: number }) => {
                     maxWidth: 180,
                 }}
             >
-                {config.subtitle}
+                {t.chat.sidebar[config.subtitleKey]}
             </Typography>
         </Box>
     );

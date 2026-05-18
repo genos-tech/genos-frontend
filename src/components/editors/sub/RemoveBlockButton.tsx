@@ -2,8 +2,11 @@ import { SideMenuExtension } from "@blocknote/core/extensions";
 import { useBlockNoteEditor, useComponentsContext, useExtensionState } from "@blocknote/react";
 import { MdDelete } from "react-icons/md";
 
+import { useTranslation } from "../../../i18n";
+
 export function RemoveBlockButton() {
     const editor = useBlockNoteEditor<any, any, any>();
+    const { t } = useTranslation();
 
     const Components = useComponentsContext()!;
 
@@ -18,7 +21,7 @@ export function RemoveBlockButton() {
 
     return (
         <Components.SideMenu.Button
-            label="Remove block"
+            label={t.common.editor.removeBlock}
             icon={
                 <MdDelete
                     size={24}

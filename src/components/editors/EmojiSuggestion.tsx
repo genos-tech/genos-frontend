@@ -3,6 +3,8 @@ import emojiData from "@emoji-mart/data";
 import { Box } from "@mui/joy";
 import { init, SearchIndex } from "emoji-mart";
 
+import { getMessages } from "../../i18n";
+
 // Initialize emoji-mart's SearchIndex once at module load. The Promise is
 // intentionally not awaited; subsequent search() calls will start working as
 // soon as the data is registered (typically before the user can type a query).
@@ -30,7 +32,7 @@ const buildEmojiItem = (
         title: emoji.name ?? emoji.id,
         subtext: `:${emoji.id}:`,
         aliases: emoji.keywords,
-        group: "Emoji",
+        group: getMessages().common.editor.emojiGroup,
         onItemClick: () => {
             editor.insertInlineContent([{ type: "text", text: native, styles: {} }]);
         },

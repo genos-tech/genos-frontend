@@ -2,8 +2,11 @@ import { ReactNode } from "react";
 import { SideMenuExtension } from "@blocknote/core/extensions";
 import { useBlockNoteEditor, useComponentsContext, useExtensionState } from "@blocknote/react";
 
+import { useTranslation } from "../../../i18n";
+
 export function ResetBlockTypeItem(props: { children?: ReactNode }) {
     const editor = useBlockNoteEditor<any, any, any>();
+    const { t } = useTranslation();
 
     const Components = useComponentsContext()!;
 
@@ -22,7 +25,7 @@ export function ResetBlockTypeItem(props: { children?: ReactNode }) {
                 editor.updateBlock(block, { type: "paragraph" });
             }}
         >
-            {props.children || "Reset Type"}
+            {props.children || t.common.editor.resetType}
         </Components.Generic.Menu.Item>
     );
 }

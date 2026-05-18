@@ -32,6 +32,7 @@ import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { fmt, useTranslation } from "../../../../i18n";
 import { loadProjectProfile } from "../../../../services/loadProjectProfile";
 import { ProjectProfileProps, UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
@@ -71,6 +72,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
 
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const styles = isDark ? ProfileModalStyles.dark : ProfileModalStyles.light;
     const palette = isDark ? purplePalette.dark : purplePalette.light;
@@ -138,7 +140,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
             const uploadProfileImageData = await uploadProfileImageResponse.json();
 
             if (!uploadProfileImageResponse.ok) {
-                throw new Error("Failed to upload user profile image.");
+                throw new Error(t.admin.projectProfile.uploadFailed);
             } else {
                 addChat(
                     {
@@ -215,7 +217,9 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                         letterSpacing: "-0.02em",
                                     }}
                                 >
-                                    Project Profile - {pmChat.chatName}
+                                    {fmt(t.admin.projectProfile.title, {
+                                        projectName: pmChat.chatName,
+                                    })}
                                 </Typography>
                             </Box>
                         </Box>
@@ -295,7 +299,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                             <Tooltip
                                                 size="sm"
                                                 sx={{ zIndex: 9000 }}
-                                                title="Edit Profile Image"
+                                                title={t.admin.projectProfile.editProfileImage}
                                                 variant="outlined"
                                             >
                                                 <IconButton
@@ -350,7 +354,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                             mb: 0.5,
                                                         }}
                                                     >
-                                                        Owner
+                                                        {t.admin.projectProfile.owner}
                                                     </FormLabel>
                                                     <Button
                                                         color="neutral"
@@ -386,7 +390,8 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                                 ? useTEM.teamMemberProfiles[
                                                                       projectProfile?.ownerUserId
                                                                   ]?.userName
-                                                                : "N/A"}
+                                                                : t.admin.projectProfile
+                                                                      .notAvailable}
                                                         </Typography>
                                                     </Button>
                                                 </FormControl>
@@ -398,7 +403,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                             ? useTEM.teamMemberProfiles[
                                                                   projectProfile?.ownerUserId
                                                               ]?.userEmail
-                                                            : "N/A"
+                                                            : t.admin.projectProfile.notAvailable
                                                     }`}
                                                     startDecorator={
                                                         <EmailRoundedIcon
@@ -423,7 +428,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                         ? useTEM.teamMemberProfiles[
                                                               projectProfile?.ownerUserId
                                                           ]?.userEmail
-                                                        : "N/A"}
+                                                        : t.admin.projectProfile.notAvailable}
                                                 </Typography>
                                             </Stack>
 
@@ -444,13 +449,17 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                             mb: 0,
                                                         }}
                                                     >
-                                                        Members ({filteredMembers.length}/
-                                                        {projectProfile?.projectMembers?.length ||
-                                                            0}
-                                                        )
+                                                        {fmt(t.admin.projectProfile.members, {
+                                                            filtered: filteredMembers.length,
+                                                            total:
+                                                                projectProfile?.projectMembers
+                                                                    ?.length || 0,
+                                                        })}
                                                     </FormLabel>
                                                     <Input
-                                                        placeholder="Search members..."
+                                                        placeholder={
+                                                            t.admin.projectProfile.searchMembers
+                                                        }
                                                         value={memberSearchQuery}
                                                         onChange={(e) =>
                                                             setMemberSearchQuery(e.target.value)
@@ -559,8 +568,11 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                             }}
                                                         >
                                                             <Typography level="body-sm">
-                                                                No members found matching "
-                                                                {memberSearchQuery}"
+                                                                {fmt(
+                                                                    t.admin.projectProfile
+                                                                        .noMembersFound,
+                                                                    { query: memberSearchQuery }
+                                                                )}
                                                             </Typography>
                                                         </Box>
                                                     )}
@@ -579,7 +591,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                             mb: 0.5,
                                                         }}
                                                     >
-                                                        Is Private
+                                                        {t.admin.projectProfile.isPrivate}
                                                     </FormLabel>
                                                     <Box
                                                         sx={{
@@ -607,8 +619,8 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                             }}
                                                         >
                                                             {projectProfile?.isPrivate
-                                                                ? "Yes"
-                                                                : "No"}
+                                                                ? t.admin.projectProfile.yes
+                                                                : t.admin.projectProfile.no}
                                                         </Typography>
                                                     </Box>
                                                 </FormControl>
@@ -624,7 +636,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                             mb: 0.5,
                                                         }}
                                                     >
-                                                        Created Date
+                                                        {t.admin.projectProfile.createdDate}
                                                     </FormLabel>
                                                     <Box
                                                         sx={{
@@ -649,7 +661,8 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                                 ? extractYYYYMMDD(
                                                                       projectProfile.tsCreatedAt
                                                                   )
-                                                                : "N/A"}
+                                                                : t.admin.projectProfile
+                                                                      .notAvailable}
                                                         </Typography>
                                                     </Box>
                                                 </FormControl>

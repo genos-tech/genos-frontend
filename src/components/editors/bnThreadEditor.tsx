@@ -42,6 +42,7 @@ import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useEditorDraft } from "../../hooks/common/useEditorDraft";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
+import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { ChatProps, ThreadMessageProps, ThreadProps } from "../../types/chat";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
@@ -94,6 +95,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
     } = props;
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
+    const { t } = useTranslation();
     const urlLinkModal = useUrlLinkModal();
     const editorBoxRef = useRef<HTMLDivElement>(null);
     useAnchorClickIntercept(editorBoxRef, urlLinkModal);
@@ -172,7 +174,9 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
             const uploadChatAttachmentData = await uploadChatAttachmentResponse.json();
 
             if (!uploadChatAttachmentResponse.ok) {
-                throw new Error(uploadChatAttachmentData.message || "Attachment Upload Failed");
+                throw new Error(
+                    uploadChatAttachmentData.message || t.common.editor.attachmentUploadFailed
+                );
             }
 
             return `${django_url}${uploadChatAttachmentData.chatAttachmentUrl}`;
@@ -288,7 +292,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
             if (content && content.length > 0) {
                 contentText = getFirstLine(content[0]);
             } else if (editor.document.slice(-2, -1)[0].type === "image") {
-                contentText = "Image attachment";
+                contentText = t.common.editor.imageAttachment;
             }
 
             socket.emit(
@@ -402,7 +406,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
             >
                 <FileUploadStatusBadge count={editorUploadCount} />
                 <FileUploadOverlay
-                    label="Uploading dropped files…"
+                    label={t.common.ui.fileUpload.uploadingDroppedFiles}
                     open={pendingUpload !== null}
                     detail={
                         pendingUpload

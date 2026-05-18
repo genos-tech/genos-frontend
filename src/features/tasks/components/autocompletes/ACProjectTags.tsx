@@ -4,6 +4,7 @@ import AutocompleteOption from "@mui/joy/AutocompleteOption";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 
+import { useTranslation } from "../../../../i18n";
 import { TagListProps, TaskProps } from "../../../../types/tasks";
 
 type ACProjectTagsProps = {
@@ -25,6 +26,7 @@ export const ACProjectTags = (props: ACProjectTagsProps) => {
     } = props;
 
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
 
     return (
         <Autocomplete
@@ -33,7 +35,7 @@ export const ACProjectTags = (props: ACProjectTagsProps) => {
             isOptionEqualToValue={(option, value) => option.tagName === value.tagName}
             limitTags={3}
             options={projectTags}
-            placeholder="Tags"
+            placeholder={t.tasks.autocomplete.tagsPlaceholder}
             size="sm"
             sx={{ width: "100%" }}
             value={taskContent ? taskContent.tags : []}

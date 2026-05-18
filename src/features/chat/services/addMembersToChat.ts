@@ -2,6 +2,7 @@ import { Socket } from "socket.io-client";
 
 import { authApi } from "../../../services/api";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
+import { getMessages } from "../../../i18n";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, MDMMemberProps, MessageProps } from "../../../types/chat";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
@@ -128,6 +129,7 @@ export const convertDMToMDM = async (
 
         const chatId = data.chatId || data.mdm_id;
         const chatName = data.chatName;
+        const startedConversation = getMessages().chat.system.startedConversation;
 
         if (socket) {
             socket.emit(
@@ -144,7 +146,7 @@ export const convertDMToMDM = async (
                         message: [
                             {
                                 type: "paragraph",
-                                content: [{ type: "text", text: "Started this conversation", styles: {} }],
+                                content: [{ type: "text", text: startedConversation, styles: {} }],
                             },
                             { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] },
                         ],
@@ -189,10 +191,10 @@ export const convertDMToMDM = async (
             content: [
                 {
                     type: "paragraph",
-                    content: [{ type: "text", text: "Started this conversation", styles: {} }],
+                    content: [{ type: "text", text: startedConversation, styles: {} }],
                 },
             ],
-            contentText: "Started this conversation",
+            contentText: startedConversation,
             sender: myself,
             numReplies: 0,
             taskId: null,
@@ -208,7 +210,7 @@ export const convertDMToMDM = async (
             dmPartnerUser: defaultDmPartner,
             lastReadMessageId: 1,
             latestMessage: initialMessage,
-            latestMessageText: "Started this conversation",
+            latestMessageText: startedConversation,
             TSLastMessage: ts,
             mdmMembers: allMembers,
         };

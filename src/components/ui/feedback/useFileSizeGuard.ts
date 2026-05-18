@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 
+import { fmt, getMessages } from "../../../i18n";
 import {
     FileSizeRejection,
     isFileSizeAllowed,
@@ -69,7 +70,10 @@ export const useFileSizeGuard = () => {
                 if (!isFileSizeAllowed(file)) {
                     reportRejection({ files: [{ name: file.name, size: file.size }] });
                     throw new Error(
-                        `File "${file.name}" exceeds the ${MAX_UPLOAD_FILE_SIZE_LABEL} limit`
+                        fmt(getMessages().common.editor.fileSizeExceeded, {
+                            name: file.name,
+                            label: MAX_UPLOAD_FILE_SIZE_LABEL,
+                        })
                     );
                 }
                 return uploadFile(file);

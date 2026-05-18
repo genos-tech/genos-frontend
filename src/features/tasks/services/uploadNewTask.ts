@@ -1,6 +1,7 @@
 import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
+import { getMessages } from "../../../i18n";
 import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
 import {
@@ -34,14 +35,15 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
         setCurrentPreviewTaskId,
     } = props;
 
+    const errMsgs = getMessages().tasks.errors;
     if (taskContent.title === "") {
-        setTitleError("Task title is required !!!");
+        setTitleError(errMsgs.taskTitleRequired);
         setTitleErrorOpen(true);
     } else if (taskContent.project === null) {
-        setTitleError("Target project is required !!!");
+        setTitleError(errMsgs.targetProjectRequired);
         setTitleErrorOpen(true);
     } else if (taskContent.id === undefined) {
-        setTitleError("Target task id is required !!!");
+        setTitleError(errMsgs.targetTaskIdRequired);
         setTitleErrorOpen(true);
     } else {
         try {
@@ -93,7 +95,7 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
             const taskCreateData = await taskCreateResponse.json();
 
             if (!taskCreateResponse.ok) {
-                throw new Error("Failed to create a task");
+                throw new Error(errMsgs.createTaskFailed);
             } else {
                 if (taskCreateData.newly_mentioned_user_ids) {
                     const newly_mentioned_user_ids: string[] =
@@ -140,7 +142,7 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
 
                     if (!uploadAttachmentResponse.ok) {
                         throw new Error(
-                            uploadAttachmentData.message || "Attachment Upload Failed"
+                            uploadAttachmentData.message || errMsgs.attachmentUploadFailed
                         );
                     }
                 }

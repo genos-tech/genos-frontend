@@ -12,6 +12,7 @@ import { HeaderUserNameStyles } from "../../../../components/ui/styles/commonSty
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps } from "../../../../types/chat";
 
@@ -29,6 +30,7 @@ type HeaderUserNameProps = {
 export const HeaderUserName = (props: HeaderUserNameProps) => {
     const { useTEM, socket, myself, setMyself, useUISM, chat, isYou, useCM } = props;
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const styles = isDark ? HeaderUserNameStyles.dark : HeaderUserNameStyles.light;
 
@@ -213,7 +215,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                                     color: isOnline ? styles.onlineColor : styles.offlineColor,
                                 }}
                             >
-                                {isOnline ? "Online" : "Offline"}
+                                {isOnline ? t.chat.headers.online : t.chat.headers.offline}
                             </Typography>
                         </Chip>
                     )}

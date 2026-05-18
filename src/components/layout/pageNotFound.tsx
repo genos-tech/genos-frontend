@@ -5,11 +5,13 @@ import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import SearchOffRoundedIcon from "@mui/icons-material/SearchOffRounded";
 import { useNavigate } from "react-router-dom";
 
+import { I18nProvider, useTranslation } from "../../i18n";
 import { purplePalette, purpleTheme } from "../../theme/purplePalette";
 
 const PageNotFoundContent: React.FC = () => {
     const navigate = useNavigate();
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const palette = isDark ? purplePalette.dark : purplePalette.light;
 
@@ -125,7 +127,7 @@ const PageNotFoundContent: React.FC = () => {
                     mb: 1.5,
                 }}
             >
-                Page Not Found
+                {t.layout.pageNotFound.title}
             </Typography>
 
             {/* Subtitle */}
@@ -138,7 +140,7 @@ const PageNotFoundContent: React.FC = () => {
                     mb: 4,
                 }}
             >
-                The page you're looking for doesn't exist or has been moved to a new location.
+                {t.layout.pageNotFound.body}
             </Typography>
 
             {/* Button */}
@@ -167,7 +169,7 @@ const PageNotFoundContent: React.FC = () => {
                     },
                 }}
             >
-                Back to Home
+                {t.layout.pageNotFound.backHome}
             </Button>
         </Box>
     );
@@ -177,7 +179,9 @@ export const PageNotFound: React.FC = () => {
     return (
         <CssVarsProvider disableTransitionOnChange theme={purpleTheme}>
             <CssBaseline />
-            <PageNotFoundContent />
+            <I18nProvider>
+                <PageNotFoundContent />
+            </I18nProvider>
         </CssVarsProvider>
     );
 };

@@ -24,6 +24,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
+import { fmt, useTranslation } from "../../../i18n";
 import { CreateDMResponse, Team, TeamProfileProps, UserProps } from "../../../types/admin";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { createDMChat } from "../../chat/services/createDMChat";
@@ -63,6 +64,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
     const [teamProfile, setTeamProfile] = useState<TeamProfileProps | null>(null);
     const [openModalTeamProfile, setOpenModalTeamProfile] = useState<boolean>(false);
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const styles = isDark ? TeamDropdownStyles.dark : TeamDropdownStyles.light;
 
@@ -81,7 +83,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                 const initMessageBody = [
                     {
                         type: "paragraph",
-                        content: [{ type: "text", text: "Has joined", styles: {} }],
+                        content: [{ type: "text", text: t.admin.joinTeam.hasJoined, styles: {} }],
                     },
                     {
                         type: "paragraph",
@@ -188,7 +190,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                 <Tooltip
                     placement="right-start"
                     size="sm"
-                    title="Open Team Menu"
+                    title={t.admin.teamDropdown.openMenu}
                     variant="outlined"
                     sx={{
                         background: styles.menuBg,
@@ -279,7 +281,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                                 letterSpacing: "0.05em",
                             }}
                         >
-                            Team Management
+                            {t.admin.teamDropdown.management}
                         </Typography>
                     </Box>
 
@@ -312,7 +314,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                             </Box>
                         </ListItemDecorator>
                         <Typography level="body-sm" sx={{ fontWeight: 500 }}>
-                            Show Team Profile
+                            {t.admin.teamDropdown.showTeamProfile}
                         </Typography>
                     </MenuItem>
 
@@ -333,7 +335,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                             }}
                         >
                             <GroupsRoundedIcon sx={{ fontSize: 14 }} />
-                            Your Teams ({teams.length})
+                            {fmt(t.admin.teamDropdown.yourTeams, { count: teams.length })}
                         </Typography>
                     </Box>
 
@@ -405,7 +407,7 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                                             level="body-xs"
                                             sx={{ color: styles.successColor, fontWeight: 500 }}
                                         >
-                                            Current Team
+                                            {t.admin.teamDropdown.currentTeam}
                                         </Typography>
                                     )}
                                 </Box>

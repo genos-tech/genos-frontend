@@ -37,6 +37,7 @@ import { TeamManagementState } from "../../../../../hooks/common/useTeamManageme
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
+import { fmt, useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../../../../types/chat";
 import { TaskNoteProps } from "../../../../../types/notes";
@@ -113,6 +114,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const { t } = useTranslation();
 
     const {
         socket,
@@ -445,22 +447,22 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     // keep their meaning.
     const tabs = [
         {
-            label: "Comments",
+            label: t.tasks.tabs.comments,
             icon: <CommentRoundedIcon sx={{ fontSize: 16 }} />,
             count: taskComments.length,
         },
         {
-            label: "Notes",
+            label: t.tasks.tabs.notes,
             icon: <NoteAltRoundedIcon sx={{ fontSize: 16 }} />,
             count: taskNotes.length,
         },
         {
-            label: "Attachments",
+            label: t.tasks.tabs.attachments,
             icon: <AttachFileRoundedIcon sx={{ fontSize: 16 }} />,
             count: uploadedFiles.length,
         },
         {
-            label: "Activity",
+            label: t.tasks.tabs.activity,
             icon: <HistoryRoundedIcon sx={{ fontSize: 16 }} />,
             // Count is intentionally omitted — activity rows can grow
             // unboundedly so a number badge would be more noisy than
@@ -473,7 +475,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         <Box sx={{ flexGrow: 1, overflowX: "hidden" }}>
             <FileSizeRejectionSnackbar rejection={rejection} onDismiss={dismissRejection} />
             <Tabs
-                aria-label="Task Tabs"
+                aria-label={t.tasks.tabs.ariaLabel}
                 value={tabIndex}
                 onChange={(_, value) => setTabIndex(value as number)}
             >
@@ -919,7 +921,9 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                         <Tooltip
                                             placement="top"
                                             size="sm"
-                                            title={`Download "${file.name}"`}
+                                            title={fmt(t.tasks.tabs.downloadFileTooltip, {
+                                                name: file.name,
+                                            })}
                                             variant="outlined"
                                         >
                                             <div
@@ -1120,7 +1124,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                         <Tooltip
                                             placement="left"
                                             size="sm"
-                                            title="Download"
+                                            title={t.tasks.tabs.downloadTooltip}
                                             variant="outlined"
                                         >
                                             <IconButton

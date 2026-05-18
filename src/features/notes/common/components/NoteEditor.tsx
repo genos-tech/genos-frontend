@@ -9,6 +9,7 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { MyNoteProps } from "../../../../types/notes";
 
@@ -55,6 +56,7 @@ export const NoteEditor = ({
     useTEM,
     myself,
 }: NoteEditorProps) => {
+    const { t } = useTranslation();
     return (
         <>
             <FormControl
@@ -69,7 +71,7 @@ export const NoteEditor = ({
             >
                 <Input
                     key={"currentMyNoteTitle"}
-                    placeholder="Note Title"
+                    placeholder={t.notes.editor.titlePlaceholder}
                     startDecorator={<NoteAltIcon />}
                     value={currentMyNoteTitle}
                     variant="soft"
@@ -119,7 +121,7 @@ export const NoteEditor = ({
                             },
                         }}
                     >
-                        Saved
+                        {t.notes.editor.savedChip}
                     </Chip>
                 </Box>
             )}

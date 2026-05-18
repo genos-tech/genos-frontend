@@ -15,6 +15,7 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskProps } from "../../../../types/tasks";
 import { createEmptyTask } from "../../services/createEmptyTask";
@@ -120,6 +121,8 @@ interface TaskTemplate {
     id: TaskTemplateId;
     label: string;
     description: string;
+    labelKey: keyof (typeof import("../../../../i18n/locales/en/tasks").tasks)["createForm"]["templates"];
+    descriptionKey: keyof (typeof import("../../../../i18n/locales/en/tasks").tasks)["createForm"]["templates"];
     blocks: PartialBlock[];
 }
 
@@ -127,7 +130,9 @@ const TASK_TEMPLATES: Record<TaskTemplateId, TaskTemplate> = {
     default: {
         id: "default",
         label: "Standard task",
+        labelKey: "defaultLabel",
         description: "Goal, context, and acceptance criteria.",
+        descriptionKey: "defaultDescription",
         blocks: [
             ...section("🧾 Summary", placeholder("One or two lines on what this task delivers.")),
             ...section(
@@ -146,7 +151,9 @@ const TASK_TEMPLATES: Record<TaskTemplateId, TaskTemplate> = {
     bug: {
         id: "bug",
         label: "Bug report",
+        labelKey: "bugLabel",
         description: "Repro steps, expected vs. actual behavior.",
+        descriptionKey: "bugDescription",
         blocks: [
             ...section("🐞 Summary", placeholder("One-line description of the bug.")),
             ...section(
@@ -169,7 +176,9 @@ const TASK_TEMPLATES: Record<TaskTemplateId, TaskTemplate> = {
     spike: {
         id: "spike",
         label: "Research / spike",
+        labelKey: "spikeLabel",
         description: "Question-led investigation with a timebox.",
+        descriptionKey: "spikeDescription",
         blocks: [
             ...section("❓ Question", placeholder("What are we trying to learn or decide?")),
             ...section("💡 Hypothesis", placeholder("What do we currently believe is true?")),
@@ -193,7 +202,9 @@ const TASK_TEMPLATES: Record<TaskTemplateId, TaskTemplate> = {
     milestone: {
         id: "milestone",
         label: "Milestone",
+        labelKey: "milestoneLabel",
         description: "Goal, scope, success criteria, risks.",
+        descriptionKey: "milestoneDescription",
         blocks: [
             ...section(
                 "🎯 Goal",
@@ -259,6 +270,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const { t } = useTranslation();
 
     // Init task contents
     const [taskContent, setTaskContent] = useState<TaskProps>();
@@ -585,7 +597,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         myself,
                         project: taskContent.project,
                         milestone: created,
-                        sprintName: linkedSprint?.name ?? "No sprint",
+                        sprintName: linkedSprint?.name ?? t.tasks.createForm.sprintFallback,
                         reporter: myself,
                         assignees:
                             resolvedAssignees.length > 0
@@ -772,7 +784,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
 
                     {/* Main Content Section */}
                     <Box sx={{ p: 2.5 }}>
-                        <SectionHeader isDark={isDark}>Task Details</SectionHeader>
+                        <SectionHeader isDark={isDark}>{t.tasks.createForm.taskDetails}</SectionHeader>
                         <Box
                             sx={{
                                 p: 2,
@@ -825,7 +837,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                             justifyContent="space-between"
                             sx={{ mb: 1, gap: 1 }}
                         >
-                            <SectionHeader isDark={isDark}>Description</SectionHeader>
+                            <SectionHeader isDark={isDark}>{t.tasks.createForm.description}</SectionHeader>
                             <Select
                                 size="sm"
                                 startDecorator={<DescriptionRoundedIcon sx={{ fontSize: 16 }} />}
@@ -834,9 +846,13 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                     const tpl = opt
                                         ? TASK_TEMPLATES[opt.value as TaskTemplateId]
                                         : null;
+                                    const tplLabel = tpl
+                                        ? t.tasks.createForm.templates[tpl.labelKey]
+                                        : t.tasks.createForm.templates.defaultLabel;
                                     return (
                                         <Typography level="body-xs" sx={{ fontWeight: 600 }}>
-                                            Template: {tpl?.label ?? "Standard task"}
+                                            {t.tasks.createForm.templatePrefix}
+                                            {tplLabel}
                                         </Typography>
                                     );
                                 }}
@@ -859,7 +875,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                     <Option key={tpl.id} value={tpl.id}>
                                         <Stack spacing={0.25} sx={{ minWidth: 0 }}>
                                             <Typography level="body-sm" sx={{ fontWeight: 600 }}>
-                                                {tpl.label}
+                                                {t.tasks.createForm.templates[tpl.labelKey]}
                                             </Typography>
                                             <Typography
                                                 level="body-xs"
@@ -869,7 +885,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                                         : "rgba(0,0,0,0.6)",
                                                 }}
                                             >
-                                                {tpl.description}
+                                                {t.tasks.createForm.templates[tpl.descriptionKey]}
                                             </Typography>
                                         </Stack>
                                     </Option>
@@ -907,7 +923,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         <SectionDivider isDark={isDark} />
 
                         {/* Attachments Section */}
-                        <SectionHeader isDark={isDark}>Attachments</SectionHeader>
+                        <SectionHeader isDark={isDark}>{t.tasks.createForm.attachments}</SectionHeader>
                         <TaskCreateAttachmentBlock
                             isUploading={isCreatingTask}
                             setTaskContent={setTaskContent}

@@ -4,6 +4,8 @@ import { Box, IconButton, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { createPortal } from "react-dom";
 
+import { useTranslation } from "../../i18n";
+
 export type MoreMenuItem = {
     id: string;
     label: string;
@@ -55,11 +57,13 @@ export const MoreMenu = ({
     triggerSize = 28,
     triggerSx,
     menuMinWidth = 200,
-    ariaLabel = "More options",
+    ariaLabel,
     iconFontSize = 18,
 }: MoreMenuProps) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
+    const resolvedAriaLabel = ariaLabel ?? t.common.ui.moreMenu.ariaLabel;
 
     const [isOpen, setIsOpen] = useState(false);
     const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
@@ -341,7 +345,7 @@ export const MoreMenu = ({
                 ref={buttonRef}
                 aria-expanded={isOpen}
                 aria-haspopup="menu"
-                aria-label={ariaLabel}
+                aria-label={resolvedAriaLabel}
                 size="sm"
                 sx={{
                     width: triggerSize,

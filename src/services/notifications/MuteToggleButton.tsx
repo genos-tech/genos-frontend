@@ -2,6 +2,7 @@ import NotificationsActiveRounded from "@mui/icons-material/NotificationsActiveR
 import NotificationsOffRounded from "@mui/icons-material/NotificationsOffRounded";
 import { IconButton, Tooltip } from "@mui/joy";
 
+import { useTranslation } from "../../i18n";
 import { useNotificationsContext } from "./NotificationsContext";
 
 interface MuteToggleButtonProps {
@@ -30,11 +31,15 @@ export const MuteToggleButton = ({
     size = "sm",
 }: MuteToggleButtonProps) => {
     const ctx = useNotificationsContext();
+    const { t } = useTranslation();
     if (!ctx) return null;
     if (chatId === null || chatId === undefined || chatId === "") return null;
 
     const key = String(chatId);
     const muted = ctx.isMuted(chatType, key);
+    const label = muted
+        ? t.services.notifications.muteButton.unmute
+        : t.services.notifications.muteButton.mute;
 
     const handleClick = (event: React.MouseEvent) => {
         event.stopPropagation();
@@ -47,7 +52,7 @@ export const MuteToggleButton = ({
 
     return (
         <Tooltip
-            title={muted ? "Unmute notifications" : "Mute notifications"}
+            title={label}
             placement="bottom"
             size="sm"
             variant="outlined"
@@ -58,7 +63,7 @@ export const MuteToggleButton = ({
                 variant="plain"
                 color={color}
                 onClick={handleClick}
-                aria-label={muted ? "Unmute notifications" : "Mute notifications"}
+                aria-label={label}
             >
                 {muted ? <NotificationsOffRounded /> : <NotificationsActiveRounded />}
             </IconButton>

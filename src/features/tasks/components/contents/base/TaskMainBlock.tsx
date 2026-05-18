@@ -14,6 +14,7 @@ import { TeamManagementState } from "../../../../../hooks/common/useTeamManageme
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { SprintMilestoneManagementState } from "../../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { TagListProps, TaskProps } from "../../../../../types/tasks";
 import { loadSpecificTask } from "../../../services/loadSpecificTask";
@@ -121,6 +122,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const { t } = useTranslation();
 
     const [openManageTags, setOpenManageTags] = useState(false);
     const [parentTask, setParentTask] = useState<TaskProps>();
@@ -162,7 +164,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
             >
                 {/* Assignee */}
                 <ListItem sx={{ display: "flex", alignItems: "center" }}>
-                    <FieldLabel isDark={isDark}>Assignee</FieldLabel>
+                    <FieldLabel isDark={isDark}>{t.tasks.fields.assignee}</FieldLabel>
                     <Box
                         sx={{
                             display: "flex",
@@ -201,7 +203,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
 
                 {/* Reporter */}
                 <ListItem sx={{ display: "flex", alignItems: "center" }}>
-                    <FieldLabel isDark={isDark}>Reporter</FieldLabel>
+                    <FieldLabel isDark={isDark}>{t.tasks.fields.reporter}</FieldLabel>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1, width: "40%" }}>
                         <AvatarWithStatus
                             avatarUser={useTEM.teamMemberProfiles[reporter.userId]}
@@ -235,7 +237,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                 <Grid spacing={1} container sx={{ mt: 0.5 }}>
                     <Grid xs={6}>
                         <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
-                            <FieldLabel isDark={isDark}>Project</FieldLabel>
+                            <FieldLabel isDark={isDark}>{t.tasks.fields.project}</FieldLabel>
                             <ACTeamProjects
                                 isOpenProjectList={isOpenProjectList}
                                 setIsOpenProjectList={setIsOpenProjectList}
@@ -259,7 +261,11 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             >
                                 Tags
                             </Typography>
-                            <Tooltip size="sm" title="Create a New Tag" variant="outlined">
+                            <Tooltip
+                                size="sm"
+                                title={t.tasks.tooltips.createNewTag}
+                                variant="outlined"
+                            >
                                 <IconButton
                                     size="sm"
                                     variant="plain"
@@ -284,7 +290,11 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     <AddRoundedIcon sx={{ fontSize: 18 }} />
                                 </IconButton>
                             </Tooltip>
-                            <Tooltip size="sm" title="Manage Tags" variant="outlined">
+                            <Tooltip
+                                size="sm"
+                                title={t.tasks.tooltips.manageTags}
+                                variant="outlined"
+                            >
                                 <IconButton
                                     size="sm"
                                     variant="plain"
@@ -402,7 +412,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                 <Grid spacing={1} container>
                     <Grid xs={6}>
                         <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
-                            <FieldLabel isDark={isDark}>Priority</FieldLabel>
+                            <FieldLabel isDark={isDark}>{t.tasks.fields.priority}</FieldLabel>
                             <ACTaskPriority
                                 setTaskContent={setTaskContent}
                                 setTaskUpdated={setTaskUpdated}
@@ -435,7 +445,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                 {/* Status (only in preview mode) */}
                 {isPreviewMode && (
                     <ListItem sx={{ display: "flex", alignItems: "center", width: "49%" }}>
-                        <FieldLabel isDark={isDark}>Status</FieldLabel>
+                        <FieldLabel isDark={isDark}>{t.tasks.fields.status}</FieldLabel>
                         <ACTaskStatus
                             setTaskContent={setTaskContent}
                             setTaskStatusUpdated={setTaskStatusUpdated}
@@ -448,7 +458,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
 
                 {/* Due Date */}
                 <ListItem sx={{ display: "flex", alignItems: "center" }}>
-                    <FieldLabel isDark={isDark}>Due Date</FieldLabel>
+                    <FieldLabel isDark={isDark}>{t.tasks.fields.dueDate}</FieldLabel>
                     <TaskDueDateInput
                         setTaskContent={setTaskContent}
                         setTaskUpdated={setTaskUpdated}
@@ -458,7 +468,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
 
                 {/* Links */}
                 <ListItem sx={{ display: "flex", alignItems: "flex-start" }}>
-                    <FieldLabel isDark={isDark}>Links</FieldLabel>
+                    <FieldLabel isDark={isDark}>{t.tasks.fields.links}</FieldLabel>
                     <DynamicURLManager
                         setTaskContent={setTaskContent}
                         setTaskUpdated={setTaskUpdated}
@@ -475,7 +485,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             spacing={1}
                             sx={{ width: "100%" }}
                         >
-                            <FieldLabel isDark={isDark}>Parent Task</FieldLabel>
+                            <FieldLabel isDark={isDark}>{t.tasks.fields.parentTask}</FieldLabel>
                             <Box
                                 sx={{
                                     display: "flex",

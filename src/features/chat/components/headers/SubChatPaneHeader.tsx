@@ -13,6 +13,7 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { useMarkAllChatActivityRead } from "../../hooks/useMarkAllChatActivityRead";
 import { HeaderUserName } from "./HeaderUserName";
@@ -80,6 +81,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
     } = props;
 
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const styles = isDark ? ChatPaneHeaderStyles.dark : ChatPaneHeaderStyles.light;
 
@@ -185,7 +187,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                 {subChat && unreadActivityCount > 0 && (
                     <Tooltip
                         size="sm"
-                        title={`Mark all in this chat as read`}
+                        title={t.chat.headers.markAllReadAria}
                         variant="outlined"
                         sx={{ borderRadius: "8px" }}
                     >
@@ -194,7 +196,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                             variant="plain"
                             sx={actionButtonStyle}
                             onClick={() => markAllAsRead(subChat.chatType, subChat.chatId)}
-                            aria-label="Mark all in this chat as read"
+                            aria-label={t.chat.headers.markAllReadAria}
                         >
                             <DoneAllRoundedIcon sx={{ fontSize: 18, color: styles.accentColor }} />
                         </IconButton>
@@ -207,7 +209,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                         useCM.currentSubChat.chatType === 4) && (
                         <Tooltip
                             size="sm"
-                            title="Create a new task"
+                            title={t.chat.headers.createNewTaskTooltip}
                             variant="outlined"
                             sx={{ borderRadius: "8px" }}
                         >
@@ -236,7 +238,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                 {/* Swap Chat Button */}
                 <Tooltip
                     size="sm"
-                    title="Swap chats"
+                    title={t.chat.headers.swapChats}
                     variant="outlined"
                     sx={{ borderRadius: "8px" }}
                 >
@@ -256,7 +258,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                         {isToDoVisible === true ? (
                             <Tooltip
                                 size="sm"
-                                title="Back to DM"
+                                title={t.chat.headers.backToDM}
                                 variant="outlined"
                                 sx={{ borderRadius: "8px" }}
                             >
@@ -274,7 +276,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                         ) : (
                             <Tooltip
                                 size="sm"
-                                title="To-Do"
+                                title={t.chat.headers.todoTooltip}
                                 variant="outlined"
                                 sx={{ borderRadius: "8px" }}
                             >
@@ -309,7 +311,7 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
                 )}
 
                 {/* Close Button */}
-                <Tooltip size="sm" title="Close" variant="outlined" sx={{ borderRadius: "8px" }}>
+                <Tooltip size="sm" title={t.chat.headers.close} variant="outlined" sx={{ borderRadius: "8px" }}>
                     <IconButton
                         size="sm"
                         variant="plain"

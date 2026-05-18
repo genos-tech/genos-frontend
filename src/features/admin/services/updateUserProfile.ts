@@ -1,5 +1,6 @@
 import axios from "axios";
 
+import { getMessages } from "../../../i18n";
 import { authApi } from "../../../services/api";
 
 type updateUserProfileProps = {
@@ -40,7 +41,7 @@ export const updateUserProfile = async (props: updateUserProfileProps) => {
         } else {
             console.error("Unauthorized. Auth toke is not found.");
             if (setErrorMessage) {
-                setErrorMessage("Unauthorized. Auth toke is not found.");
+                setErrorMessage(getMessages().admin.auth.errors.tokenMissing);
             }
         }
     } catch (error: unknown) {
@@ -50,7 +51,7 @@ export const updateUserProfile = async (props: updateUserProfileProps) => {
             } else if (error.response?.status === 401) {
                 console.error("HTTP 401 error:", error.response?.data);
                 if (setErrorMessage) {
-                    setErrorMessage("Unauthorized. Please log in again.");
+                    setErrorMessage(getMessages().admin.auth.errors.unauthorized);
                 }
             } else {
                 console.error("API error:", error.response?.status, error.response?.data);

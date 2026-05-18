@@ -7,6 +7,7 @@ import axios from "axios";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { useTranslation } from "../../../../i18n";
 import { authApi } from "../../../../services/api";
 import { UserProps } from "../../../../types/admin";
 
@@ -45,6 +46,7 @@ export const ModalDeleteProject: React.FC<Props> = ({
     usePM,
 }) => {
     const { accessToken } = useAuth();
+    const { t } = useTranslation();
 
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -76,7 +78,7 @@ export const ModalDeleteProject: React.FC<Props> = ({
                 setErrorMessage(error.response?.data);
                 console.error("API error:", error.response?.status, error.response?.data);
             } else {
-                setErrorMessage("Unexpected error");
+                setErrorMessage(t.tasks.modals.deleteProject.unexpectedError);
                 console.error("Unexpected error:", error);
             }
         }
@@ -137,7 +139,7 @@ export const ModalDeleteProject: React.FC<Props> = ({
                         mb: 1,
                     }}
                 >
-                    Delete Project?
+                    {t.tasks.modals.deleteProject.heading}
                 </Typography>
 
                 {/* Project Name */}
@@ -162,7 +164,7 @@ export const ModalDeleteProject: React.FC<Props> = ({
                         mb: 2.5,
                     }}
                 >
-                    This action cannot be undone
+                    {t.tasks.modals.deleteProject.body}
                 </Typography>
 
                 {/* Error Alert */}
@@ -197,7 +199,7 @@ export const ModalDeleteProject: React.FC<Props> = ({
                             },
                         }}
                     >
-                        Cancel
+                        {t.tasks.modals.deleteProject.cancelButton}
                     </Button>
                     <Button
                         onClick={handleDeleteProject}
@@ -214,7 +216,7 @@ export const ModalDeleteProject: React.FC<Props> = ({
                             },
                         }}
                     >
-                        Delete Project
+                        {t.tasks.modals.deleteProject.confirmButton}
                     </Button>
                 </Stack>
             </ModalDialog>

@@ -15,6 +15,7 @@ import { ProjectManagementState } from "../../../../hooks/common/useProjectManag
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
 import { ReactionProps } from "../../../../types/common";
@@ -78,6 +79,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
     } = props;
 
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const isSent = variant === "sent";
     const dtSent = extractYYYYMMDDHHMM(message.tsSent);
@@ -221,7 +223,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                         threadId: message.messageId,
                         messageId: 1,
                         content: message.content,
-                        contentText: "Need to add",
+                        contentText: t.chat.system.needToAdd,
                         sender:
                             chat.chatType === 1
                                 ? myself.userId === message.sender.userId
@@ -580,9 +582,9 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                 enterDelay={1000}
                 title={
                     <>
-                        {chat.chatType === 3 ? "Click to open task" : null}
+                        {chat.chatType === 3 ? t.chat.bubble.clickToOpenTask : null}
                         {chat.chatType === 3 ? <br /> : null}
-                        {`${isMac() ? "⌘" : "Alt"}+Click to open thread`}
+                        {fmt(t.chat.bubble.clickToOpenThread, { modKey: isMac() ? "⌘" : "Alt" })}
                     </>
                 }
             >
@@ -781,9 +783,9 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                         enterDelay={1000}
                         title={
                             <>
-                                {chat.chatType === 3 ? "Click to open task" : null}
+                                {chat.chatType === 3 ? t.chat.bubble.clickToOpenTask : null}
                                 {chat.chatType === 3 ? <br /> : null}
-                                {`${isMac() ? "\u2318" : "Alt"}+Click to open thread`}
+                                {fmt(t.chat.bubble.clickToOpenThread, { modKey: isMac() ? "\u2318" : "Alt" })}
                             </>
                         }
                     >

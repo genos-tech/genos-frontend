@@ -6,6 +6,7 @@ import { Box, ListItem, ListItemButton, ListItemContent, Typography } from "@mui
 import { useColorScheme } from "@mui/joy/styles";
 
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { useTranslation } from "../../../../i18n";
 import { ChatNoteMetaProps, MyNoteMetaProps, TaskNoteMetaProps } from "../../../../types/notes";
 
 interface RecentNoteItemProps {
@@ -40,22 +41,23 @@ function getTypeColor(noteType: number, isDark: boolean) {
     }
 }
 
-function getChatTypeLabel(chatType: number): string {
-    switch (chatType) {
-        case 1:
-            return "DM";
-        case 2:
-            return "GM";
-        case 3:
-            return "PM";
-        default:
-            return "Chat";
-    }
-}
-
 function RecentNoteItemComponent({ note, noteType, useNM }: RecentNoteItemProps) {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const { t } = useTranslation();
+
+    const getChatTypeLabel = (chatType: number): string => {
+        switch (chatType) {
+            case 1:
+                return t.notes.chatTypes.dm;
+            case 2:
+                return t.notes.chatTypes.gm;
+            case 3:
+                return t.notes.chatTypes.pm;
+            default:
+                return t.notes.chatTypes.chat;
+        }
+    };
 
     const isSelected =
         useNM.currentNoteType === noteType &&
@@ -157,7 +159,7 @@ function RecentNoteItemComponent({ note, noteType, useNM }: RecentNoteItemProps)
                             letterSpacing: "-0.01em",
                         }}
                     >
-                        {note.title || "Untitled"}
+                        {note.title || t.notes.defaults.untitled}
                     </Typography>
                     {subLabel && (
                         <Typography

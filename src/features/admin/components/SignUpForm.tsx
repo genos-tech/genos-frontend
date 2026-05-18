@@ -20,6 +20,7 @@ import { CssVarsProvider, useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 
 import { SignUpFormStyles } from "../../../components/ui/styles/commonStyle";
+import { fmt, I18nProvider, useTranslation } from "../../../i18n";
 import { purplePalette, purpleTheme } from "../../../theme/purplePalette";
 import { SignUpResponse } from "../../../types/admin";
 import { signUp } from "../services/signup";
@@ -37,6 +38,7 @@ interface SignUpFormElement extends HTMLFormElement {
 
 const SignUpContent = () => {
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -143,10 +145,10 @@ const SignUpContent = () => {
                                         letterSpacing: "-0.02em",
                                     }}
                                 >
-                                    Create Account
+                                    {t.admin.auth.signUp.title}
                                 </Typography>
                                 <Typography level="body-sm" sx={{ color: styles.subtitleColor }}>
-                                    Join us and start your journey
+                                    {t.admin.auth.signUp.subtitle}
                                 </Typography>
                             </Stack>
 
@@ -173,7 +175,7 @@ const SignUpContent = () => {
                                 const confirm_password = formElements.confirm_password.value;
 
                                 if (password !== confirm_password) {
-                                    setErrorMessage("Passwords do not match.");
+                                    setErrorMessage(t.admin.auth.signUp.passwordMismatch);
                                 } else {
                                     _signup(name, email, password);
                                 }
@@ -191,12 +193,12 @@ const SignUpContent = () => {
                                             mb: 0.75,
                                         }}
                                     >
-                                        Name
+                                        {t.admin.auth.signUp.nameLabel}
                                     </FormLabel>
                                     <Input
                                         name="userName"
                                         type="text"
-                                        placeholder="Enter your name"
+                                        placeholder={t.admin.auth.signUp.namePlaceholder}
                                         startDecorator={
                                             <BadgeRoundedIcon
                                                 sx={{ color: styles.accentColor, fontSize: 20 }}
@@ -217,12 +219,12 @@ const SignUpContent = () => {
                                             mb: 0.75,
                                         }}
                                     >
-                                        Email
+                                        {t.admin.auth.signUp.emailLabel}
                                     </FormLabel>
                                     <Input
                                         name="email"
                                         type="email"
-                                        placeholder="Enter your email"
+                                        placeholder={t.admin.auth.signUp.emailPlaceholder}
                                         startDecorator={
                                             <EmailRoundedIcon
                                                 sx={{ color: styles.accentColor, fontSize: 20 }}
@@ -243,12 +245,12 @@ const SignUpContent = () => {
                                             mb: 0.75,
                                         }}
                                     >
-                                        Password
+                                        {t.admin.auth.signUp.passwordLabel}
                                     </FormLabel>
                                     <Input
                                         name="password"
                                         type="password"
-                                        placeholder="Create a password"
+                                        placeholder={t.admin.auth.signUp.passwordPlaceholder}
                                         startDecorator={
                                             <LockRoundedIcon
                                                 sx={{ color: styles.accentColor, fontSize: 20 }}
@@ -269,12 +271,12 @@ const SignUpContent = () => {
                                             mb: 0.75,
                                         }}
                                     >
-                                        Confirm Password
+                                        {t.admin.auth.signUp.confirmPasswordLabel}
                                     </FormLabel>
                                     <Input
                                         name="confirm_password"
                                         type="password"
-                                        placeholder="Confirm your password"
+                                        placeholder={t.admin.auth.signUp.confirmPasswordPlaceholder}
                                         startDecorator={
                                             <LockRoundedIcon
                                                 sx={{ color: styles.accentColor, fontSize: 20 }}
@@ -304,7 +306,7 @@ const SignUpContent = () => {
                                         },
                                     }}
                                 >
-                                    Create Account
+                                    {t.admin.auth.signUp.submit}
                                 </Button>
 
                                 <Typography
@@ -312,7 +314,7 @@ const SignUpContent = () => {
                                     textAlign="center"
                                     sx={{ color: styles.subtitleColor }}
                                 >
-                                    Already have an account?{" "}
+                                    {t.admin.auth.signUp.haveAccountPrompt}{" "}
                                     <Link
                                         href="signin"
                                         level="title-sm"
@@ -325,7 +327,7 @@ const SignUpContent = () => {
                                             },
                                         }}
                                     >
-                                        Sign in
+                                        {t.admin.auth.signUp.signInLink}
                                     </Link>
                                 </Typography>
                             </Stack>
@@ -338,7 +340,7 @@ const SignUpContent = () => {
                         level="body-xs"
                         sx={{ textAlign: "center", color: styles.subtitleColor }}
                     >
-                        © Genos {new Date().getFullYear()}
+                        {fmt(t.admin.brand.copyright, { year: new Date().getFullYear() })}
                     </Typography>
                 </Box>
             </Box>
@@ -358,7 +360,9 @@ export const SignUpForm = () => {
                     },
                 }}
             />
-            <SignUpContent />
+            <I18nProvider>
+                <SignUpContent />
+            </I18nProvider>
         </CssVarsProvider>
     );
 };

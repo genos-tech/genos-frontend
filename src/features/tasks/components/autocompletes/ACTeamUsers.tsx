@@ -6,6 +6,7 @@ import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithSt
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps } from "../../../../types/chat";
 import { TaskProps } from "../../../../types/tasks";
@@ -44,6 +45,9 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
         useUISM,
     } = props;
 
+    const { t } = useTranslation();
+    const youSuffix = t.tasks.autocomplete.youSuffix;
+
     return (
         <Autocomplete
             key={taskContent.id}
@@ -54,7 +58,7 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
             value={initialUser || myself}
             getOptionLabel={(option) =>
                 option.userEmail === myself.userEmail
-                    ? `${option.userName} (You) - ${option.userEmail}`
+                    ? `${option.userName} ${youSuffix} - ${option.userEmail}`
                     : `${option.userName} - ${option.userEmail}`
             }
             renderOption={(props, option) => {
@@ -77,7 +81,7 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
                                 />
                                 <Typography level="body-md" sx={{ pt: 0.5, pl: 1 }}>
                                     {option.userEmail === myself.userEmail
-                                        ? `${option.userName} (You) - ${option.userEmail}`
+                                        ? `${option.userName} ${youSuffix} - ${option.userEmail}`
                                         : `${option.userName} - ${option.userEmail}`}
                                 </Typography>
                             </Stack>

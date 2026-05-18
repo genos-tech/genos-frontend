@@ -2,6 +2,7 @@ import React from "react";
 import { Box, Stack, Tooltip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { ActivityMessageProps } from "../../../../../types/chat";
 import { GroupedReactionProps } from "../../../../../types/common";
@@ -18,6 +19,7 @@ export const ActivityReactions: React.FC<ActivityReactionsProps> = ({
     groupedReactions,
 }) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
 
     const displayed = groupedReactions.slice(0, 8);
@@ -53,7 +55,7 @@ export const ActivityReactions: React.FC<ActivityReactionsProps> = ({
                         whiteSpace: "nowrap",
                     }}
                 >
-                    reacted
+                    {t.chat.reactions.reactedLabel}
                 </Typography>
                 <Box
                     sx={{
@@ -83,8 +85,8 @@ export const ActivityReactions: React.FC<ActivityReactionsProps> = ({
                                     .slice(0, 5)
                                     .map((sender) => sender.userName)
                                     .join(", ") +
-                                (senders.length > 5 ? " and more" : "") +
-                                " reacted"
+                                (senders.length > 5 ? t.chat.reactions.andMore : "") +
+                                t.chat.reactions.reacted
                             }
                             sx={{
                                 borderRadius: "8px",

@@ -18,11 +18,14 @@ import { ColumnConfig, SprintBoardColumn } from "./SprintBoardColumn";
 
 const materialTheme = createTheme({ cssVariables: true });
 
-// Column definitions
+// Column definitions. `title` is filled in at render time from the
+// `titleKey` so the board columns stay localizable while `status` stays
+// the backend enum value the filterModel keys off.
 const COLUMNS: ColumnConfig[] = [
     {
         id: "open",
         title: "Open",
+        titleKey: "columnOpen",
         status: "Open",
         color: "#0044c2",
         bgColor: "rgba(0, 68, 194, 0.1)",
@@ -30,6 +33,7 @@ const COLUMNS: ColumnConfig[] = [
     {
         id: "wip",
         title: "Work In Progress",
+        titleKey: "columnWip",
         status: "WIP",
         color: "#ff8c00",
         bgColor: "rgba(255, 140, 0, 0.1)",
@@ -37,6 +41,7 @@ const COLUMNS: ColumnConfig[] = [
     {
         id: "closed",
         title: "Closed",
+        titleKey: "columnClosed",
         status: "Closed",
         color: "#1dc200",
         bgColor: "rgba(29, 194, 0, 0.1)",
@@ -44,6 +49,7 @@ const COLUMNS: ColumnConfig[] = [
     {
         id: "pending",
         title: "Pending",
+        titleKey: "columnPending",
         status: "Pending",
         color: "#b900ff",
         bgColor: "rgba(185, 0, 255, 0.1)",

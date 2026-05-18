@@ -56,6 +56,7 @@ import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickInterc
 import { useCollaborativeBlockNote } from "../../hooks/common/useCollaborativeBlockNote";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
+import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { getUserColor } from "../../utils/collabUtils";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
@@ -113,6 +114,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
     const { mode } = useColorScheme();
     const bnBoxClassName: string = `bn-task-body-box-${mode}`;
     const { accessToken } = useAuth();
+    const { t } = useTranslation();
     const urlLinkModal = useUrlLinkModal();
 
     // To avoid rendering issues, it's good practice to define your custom drag
@@ -120,10 +122,10 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
     // prop of `SideMenuController`.
     const CustomDragHandleMenu = () => (
         <DragHandleMenu>
-            <RemoveBlockItem>Delete</RemoveBlockItem>
-            <BlockColorsItem>Colors</BlockColorsItem>
+            <RemoveBlockItem>{t.common.editor.delete}</RemoveBlockItem>
+            <BlockColorsItem>{t.common.editor.colors}</BlockColorsItem>
             {/* Item which resets the hovered block's type. */}
-            <ResetBlockTypeItem>Reset Type</ResetBlockTypeItem>
+            <ResetBlockTypeItem>{t.common.editor.resetType}</ResetBlockTypeItem>
         </DragHandleMenu>
     );
 
@@ -187,7 +189,8 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
 
             if (!uploadTaskBodyAttachmentResponse.ok) {
                 throw new Error(
-                    uploadTaskBodyAttachmentData.message || "Task BodyAttachment Upload Failed"
+                    uploadTaskBodyAttachmentData.message ||
+                        t.common.editor.taskBodyAttachmentUploadFailed
                 );
             }
 
@@ -468,7 +471,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                         {selectedImage ? (
                             <Box>
                                 <img
-                                    alt="preview"
+                                    alt={t.common.editor.imagePreviewAlt}
                                     src={selectedImage}
                                     style={{
                                         maxWidth: "80vw",
@@ -481,7 +484,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                                     placement="top"
                                     size="sm"
                                     sx={{ zIndex: 10010 }}
-                                    title="Download"
+                                    title={t.common.editor.download}
                                     variant="outlined"
                                 >
                                     <IconButton

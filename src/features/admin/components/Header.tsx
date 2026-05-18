@@ -5,9 +5,11 @@ import { useColorScheme } from "@mui/joy/styles";
 import genosLogo from "../../../assets/genos_tech.png";
 import { ColorSchemeToggle } from "../../../components/layout/colorSchemeToggle";
 import { HeaderStyles } from "../../../components/ui/styles/commonStyle";
+import { useTranslation } from "../../../i18n";
 
 export const AdminHeader = () => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const styles = isDark ? HeaderStyles.dark : HeaderStyles.light;
 
@@ -62,7 +64,7 @@ export const AdminHeader = () => {
                 >
                     <img
                         src={genosLogo}
-                        alt="Genos Logo"
+                        alt={t.admin.brand.logoAlt}
                         style={{
                             width: 38,
                             height: 38,
@@ -86,7 +88,7 @@ export const AdminHeader = () => {
                                 letterSpacing: "-0.02em",
                             }}
                         >
-                            Genos
+                            {t.admin.brand.name}
                         </Typography>
                         <AutoAwesomeRoundedIcon
                             sx={{
@@ -108,7 +110,7 @@ export const AdminHeader = () => {
                             letterSpacing: "0.02em",
                         }}
                     >
-                        Team Collaboration Platform
+                        {t.admin.brand.tagline}
                     </Typography>
                 </Box>
             </Box>

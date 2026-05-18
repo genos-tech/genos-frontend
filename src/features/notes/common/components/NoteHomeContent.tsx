@@ -13,6 +13,7 @@ import { Box, Button, Card, Chip, Grid, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { Messages, useTranslation } from "../../../../i18n";
 import { ChatNoteMetaProps, MyNoteMetaProps, TaskNoteMetaProps } from "../../../../types/notes";
 
 type NoteHomeContentProps = {
@@ -45,16 +46,16 @@ const getNoteTypeIcon = (noteType: NoteType, fontSize = 16): ReactNode => {
     }
 };
 
-const getNoteTypeLabel = (noteType: NoteType): string => {
+const getNoteTypeLabel = (noteType: NoteType, t: Messages): string => {
     switch (noteType) {
         case NOTE_TYPES.PERSONAL:
-            return "Personal";
+            return t.notes.noteTypeLabels.personal;
         case NOTE_TYPES.TASK:
-            return "Task";
+            return t.notes.noteTypeLabels.task;
         case NOTE_TYPES.CHAT:
-            return "Chat";
+            return t.notes.noteTypeLabels.chat;
         default:
-            return "Note";
+            return t.notes.noteTypeLabels.note;
     }
 };
 
@@ -75,30 +76,30 @@ const getNoteTypeColor = (noteType: NoteType) => {
 // so a task-note pill on the home page reads `Project #123` and a
 // chat-note pill reads its chat-type label, matching the sidebar
 // exactly. Personal notes have no useful sub-label.
-const getChatTypeLabel = (chatType: number): string => {
+const getChatTypeLabel = (chatType: number, t: Messages): string => {
     switch (chatType) {
         case 1:
-            return "DM";
+            return t.notes.chatTypes.dm;
         case 2:
-            return "GM";
+            return t.notes.chatTypes.gm;
         case 3:
-            return "PM";
+            return t.notes.chatTypes.pm;
         case 4:
-            return "MDM";
+            return t.notes.chatTypes.mdm;
         default:
-            return "Chat";
+            return t.notes.chatTypes.chat;
     }
 };
 
-const getNoteSubLabel = (note: NoteMeta, noteType: NoteType): string | null => {
+const getNoteSubLabel = (note: NoteMeta, noteType: NoteType, t: Messages): string | null => {
     if (noteType === NOTE_TYPES.TASK) {
-        const t = note as TaskNoteMetaProps;
-        if (!t.projectName && !t.taskTitle) return null;
-        return `${t.projectName ?? ""}${t.taskId ? ` #${t.taskId}` : ""}`.trim() || null;
+        const tn = note as TaskNoteMetaProps;
+        if (!tn.projectName && !tn.taskTitle) return null;
+        return `${tn.projectName ?? ""}${tn.taskId ? ` #${tn.taskId}` : ""}`.trim() || null;
     }
     if (noteType === NOTE_TYPES.CHAT) {
         const c = note as ChatNoteMetaProps;
-        return c.chatName || c.chatTypeName || getChatTypeLabel(c.chatType);
+        return c.chatName || c.chatTypeName || getChatTypeLabel(c.chatType, t);
     }
     return null;
 };
@@ -106,6 +107,7 @@ const getNoteSubLabel = (note: NoteMeta, noteType: NoteType): string | null => {
 export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const { t } = useTranslation();
 
     // Anchor for the Favorites stat-card → scroll-to-section affordance.
     // Storing it on a ref (instead of an `id`) keeps the DOM clean and
@@ -143,21 +145,21 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
                 note: n as unknown as NoteMeta,
                 noteId: n.noteId,
                 noteType: NOTE_TYPES.PERSONAL,
-                title: n.title || "Untitled",
+                title: n.title || t.notes.defaults.untitled,
                 updatedAt: n.tsOpenedAt,
             })),
             ...useNM.recentNotes.taskNotes.map((n) => ({
                 note: n as unknown as NoteMeta,
                 noteId: n.noteId,
                 noteType: NOTE_TYPES.TASK,
-                title: n.title || "Untitled",
+                title: n.title || t.notes.defaults.untitled,
                 updatedAt: n.tsOpenedAt,
             })),
             ...useNM.recentNotes.chatNotes.map((n) => ({
                 note: n as unknown as NoteMeta,
                 noteId: n.noteId,
                 noteType: NOTE_TYPES.CHAT,
-                title: n.title || "Untitled",
+                title: n.title || t.notes.defaults.untitled,
                 updatedAt: n.tsOpenedAt,
             })),
         ];
@@ -228,7 +230,7 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
             color: "#818cf8",
             count: stats.personalCount,
             icon: <WindowRoundedIcon />,
-            label: "My Notes",
+            label: t.notes.home.statMyNotes,
             onClick: () => handleSwitchType(NOTE_TYPES.PERSONAL),
         },
         {
@@ -236,7 +238,7 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
             color: "#4ade80",
             count: stats.taskCount,
             icon: <AssignmentRoundedIcon />,
-            label: "Task Notes",
+            label: t.notes.home.statTaskNotes,
             onClick: () => handleSwitchType(NOTE_TYPES.TASK),
         },
         {
@@ -244,7 +246,7 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
             color: "#fb923c",
             count: stats.chatCount,
             icon: <QuestionAnswerRoundedIcon />,
-            label: "Chat Notes",
+            label: t.notes.home.statChatNotes,
             onClick: () => handleSwitchType(NOTE_TYPES.CHAT),
         },
         {
@@ -252,15 +254,15 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
             color: "#fbbf24",
             count: stats.favoritesCount,
             icon: <StarRoundedIcon />,
-            label: "Favorites",
+            label: t.notes.home.statFavorites,
             onClick: handleScrollToFavorites,
         },
     ];
 
     const tips = [
-        "Star important notes to access them from Favorites",
-        "Organize notes with nested hierarchies for better structure",
-        "Link notes to tasks and chats for seamless context",
+        t.notes.home.tip1,
+        t.notes.home.tip2,
+        t.notes.home.tip3,
     ];
     const randomTip = tips[Math.floor(Math.random() * tips.length)];
 
@@ -357,7 +359,7 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
                                         color: typeColors.text,
                                     }}
                                 >
-                                    {getNoteTypeLabel(noteType)}
+                                    {getNoteTypeLabel(noteType, t)}
                                 </Chip>
                             </Stack>
                         </Stack>
@@ -424,7 +426,7 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
                                 letterSpacing: "-0.02em",
                             }}
                         >
-                            Notes Dashboard
+                            {t.notes.home.title}
                         </Typography>
                     </Stack>
                     <Typography
@@ -434,7 +436,7 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
                             pl: 6.5,
                         }}
                     >
-                        Capture ideas, organize thoughts, and stay productive
+                        {t.notes.home.subtitle}
                     </Typography>
                 </Box>
 
@@ -519,7 +521,7 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
                 <Box>
                     {renderSectionHeader(
                         <CreateRoundedIcon sx={{ fontSize: 18 }} />,
-                        "Quick Actions"
+                        t.notes.home.quickActions
                     )}
                     <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
                         <Button
@@ -541,7 +543,7 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
                             }}
                             onClick={() => handleSwitchType(NOTE_TYPES.PERSONAL)}
                         >
-                            Open My Notes
+                            {t.notes.home.openMyNotes}
                         </Button>
                         <Button
                             endDecorator={<OpenInNewRoundedIcon sx={{ fontSize: 16 }} />}
@@ -562,7 +564,7 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
                             }}
                             onClick={() => handleSwitchType(NOTE_TYPES.TASK)}
                         >
-                            Open Task Notes
+                            {t.notes.home.openTaskNotes}
                         </Button>
                         <Button
                             endDecorator={<OpenInNewRoundedIcon sx={{ fontSize: 16 }} />}
@@ -583,7 +585,7 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
                             }}
                             onClick={() => handleSwitchType(NOTE_TYPES.CHAT)}
                         >
-                            Open Chat Notes
+                            {t.notes.home.openChatNotes}
                         </Button>
                     </Stack>
                 </Box>
@@ -596,7 +598,7 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
                     <Box>
                         {renderSectionHeader(
                             <ArticleRoundedIcon sx={{ fontSize: 18 }} />,
-                            "Recent Notes",
+                            t.notes.home.recentNotes,
                             <Chip color="neutral" size="sm" variant="soft">
                                 {recentNotes.length}
                             </Chip>
@@ -645,7 +647,7 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
                 <Box ref={favoritesSectionRef}>
                     {renderSectionHeader(
                         <StarRoundedIcon sx={{ fontSize: 18, color: "#f59e0b" }} />,
-                        "Favorites",
+                        t.notes.home.favorites,
                         favoriteRows.length > 0 ? (
                             <Chip color="warning" size="sm" variant="soft">
                                 {favoriteRows.length}
@@ -683,14 +685,14 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
                                         fontStyle: "italic",
                                     }}
                                 >
-                                    No favorites yet. Star notes to add them here.
+                                    {t.notes.home.favoritesEmpty}
                                 </Typography>
                             </Stack>
                         </Card>
                     ) : (
                         <Grid spacing={1.5} container>
                             {favoriteRows.map((row) => {
-                                const subLabel = getNoteSubLabel(row.note, row.noteType);
+                                const subLabel = getNoteSubLabel(row.note, row.noteType, t);
                                 const meta = subLabel ? (
                                     <Typography
                                         level="body-xs"
@@ -710,7 +712,7 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
                                 return renderNoteCard(
                                     `fav-${row.noteType}-${row.noteId}`,
                                     row.noteType,
-                                    row.note.title || "Untitled",
+                                    row.note.title || t.notes.defaults.untitled,
                                     meta,
                                     () => handleNoteClick(row.noteId, row.noteType),
                                     { star: true }
@@ -769,7 +771,7 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
                                         mb: 0.5,
                                     }}
                                 >
-                                    No notes opened yet
+                                    {t.notes.home.bigEmptyTitle}
                                 </Typography>
                                 <Typography
                                     level="body-sm"
@@ -779,8 +781,7 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
                                             : "rgba(0,0,0,0.45)",
                                     }}
                                 >
-                                    Use the quick actions above to jump into a section, or star a
-                                    note to pin it to your favorites.
+                                    {t.notes.home.bigEmptyBody}
                                 </Typography>
                             </Box>
                         </Stack>
@@ -829,7 +830,7 @@ export const NoteHomeContent = ({ useNM }: NoteHomeContentProps) => {
                                     mb: 0.25,
                                 }}
                             >
-                                Pro Tip
+                                {t.notes.home.proTip}
                             </Typography>
                             <Typography
                                 level="body-sm"

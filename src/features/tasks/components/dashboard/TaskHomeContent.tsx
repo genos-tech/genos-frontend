@@ -46,6 +46,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { fmt, getMessages, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
 import { SprintConfigDialog } from "../../sprint-milestone/components/SprintConfigDialog";
@@ -108,11 +109,14 @@ const PRIORITY_COLORS: Record<string, { light: string; dark: string }> = Object.
         .map((f) => [f.label, { light: f.lightModeColor, dark: f.darkModeColor }])
 );
 
-const STATUS_LABELS: Record<string, string> = {
-    Open: "Open",
-    WIP: "In Progress",
-    Pending: "Pending",
-    Closed: "Completed",
+// Maps a backend status enum to the i18n key whose value renders in
+// the dashboard. Resolve through `t.tasks.dashboard.statusLabels[key]`
+// at the call site (`statusKeyFor` below).
+const STATUS_LABEL_KEYS: Record<string, "open" | "wip" | "pending" | "closed"> = {
+    Open: "open",
+    WIP: "wip",
+    Pending: "pending",
+    Closed: "closed",
 };
 
 const getStatusIcon = (status: string, size = 14) => {
@@ -147,23 +151,28 @@ type DueTone = "overdue" | "today" | "soon" | "later" | "none";
 // Compact, human-readable due-date label used by the My Tasks "Up Next" list.
 // `tone` lets the caller pick the right color without re-parsing the date.
 const formatDueLabel = (dueDate: string | null): { text: string; tone: DueTone } => {
-    if (!dueDate) return { text: "No due date", tone: "none" };
+    const labels = getMessages().tasks.dueLabel;
+    if (!dueDate) return { text: labels.noDueDate, tone: "none" };
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const d = new Date(dueDate);
     d.setHours(0, 0, 0, 0);
     const diffDays = Math.round((d.getTime() - today.getTime()) / 86400000);
-    if (diffDays < 0) return { text: `Overdue ${-diffDays}d`, tone: "overdue" };
-    if (diffDays === 0) return { text: "Due today", tone: "today" };
-    if (diffDays === 1) return { text: "Due tomorrow", tone: "soon" };
+    if (diffDays < 0) return { text: fmt(labels.overdue, { days: -diffDays }), tone: "overdue" };
+    if (diffDays === 0) return { text: labels.dueToday, tone: "today" };
+    if (diffDays === 1) return { text: labels.dueTomorrow, tone: "soon" };
     if (diffDays <= 6) {
         return {
-            text: `Due ${d.toLocaleDateString(undefined, { weekday: "short" })}`,
+            text: fmt(labels.dueOn, {
+                when: d.toLocaleDateString(undefined, { weekday: "short" }),
+            }),
             tone: "soon",
         };
     }
     return {
-        text: `Due ${d.toLocaleDateString(undefined, { month: "short", day: "numeric" })}`,
+        text: fmt(labels.dueOn, {
+            when: d.toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+        }),
         tone: "later",
     };
 };
@@ -182,6 +191,7 @@ export const TaskHomeContent = ({
 }: TaskHomeContentProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const { t } = useTranslation();
     const headerStyles = isDark ? TaskHeaderStyles.dark : TaskHeaderStyles.light;
     const [sprintConfigOpen, setSprintConfigOpen] = useState(false);
     const [sprintManagerOpen, setSprintManagerOpen] = useState(false);
@@ -656,7 +666,8 @@ export const TaskHomeContent = ({
                             {title}
                         </Typography>
                         <Chip size="sm" sx={{ ml: "auto" }} variant="soft">
-                            {total} tasks
+                            {total}
+                            {t.tasks.dashboard.tasksSuffix}
                         </Chip>
                     </Stack>
                     {total > 0 &&
@@ -797,18 +808,18 @@ export const TaskHomeContent = ({
                                     letterSpacing: "-0.02em",
                                 }}
                             >
-                                Task Stats
+                                {t.tasks.dashboard.taskStats}
                             </Typography>
                         </Stack>
                         <Stack alignItems="center" direction="row" spacing={1.5}>
                             <Typography level="body-sm" sx={{ color: textMuted }}>
-                                {projectCount} projects
+                                {fmt(t.tasks.dashboard.projectsCount, { count: projectCount })}
                             </Typography>
                             {(useTM.isTaskPreviewVisible === true ||
                                 useTM.isCreatingTask.flag === true) && (
                                 <Tooltip
                                     size="sm"
-                                    title="Close Panel"
+                                    title={t.tasks.dashboard.closePanel}
                                     variant="outlined"
                                     sx={{
                                         background: headerStyles.menuBg,
@@ -991,8 +1002,8 @@ export const TaskHomeContent = ({
                                             value={selectedSprint?.sprintId ?? null}
                                             placeholder={
                                                 projectSprints.length === 0
-                                                    ? "No sprints — configure"
-                                                    : "Pick a sprint"
+                                                    ? t.tasks.dashboard.noSprintsConfigure
+                                                    : t.tasks.dashboard.pickASprint
                                             }
                                             slotProps={{
                                                 listbox: {
@@ -1075,7 +1086,10 @@ export const TaskHomeContent = ({
                                                 }
                                             )}
                                         </Select>
-                                        <Tooltip title="Sprint settings" variant="outlined">
+                                        <Tooltip
+                                            title={t.tasks.dashboard.sprintSettingsTooltip}
+                                            variant="outlined"
+                                        >
                                             <IconButton
                                                 disabled={!usePM.currentProject?.projectId}
                                                 size="sm"
@@ -1085,7 +1099,10 @@ export const TaskHomeContent = ({
                                                 <SettingsRoundedIcon />
                                             </IconButton>
                                         </Tooltip>
-                                        <Tooltip title="Manage sprints" variant="outlined">
+                                        <Tooltip
+                                            title={t.tasks.dashboard.manageSprintsTooltip}
+                                            variant="outlined"
+                                        >
                                             <IconButton
                                                 disabled={!usePM.currentProject?.projectId}
                                                 size="sm"
@@ -1097,7 +1114,7 @@ export const TaskHomeContent = ({
                                         </Tooltip>
                                         <Tooltip
                                             size="sm"
-                                            title="Closed in sprint / Created in sprint"
+                                            title={t.tasks.dashboard.burndownTooltip}
                                             variant="outlined"
                                         >
                                             <Chip
@@ -1274,7 +1291,7 @@ export const TaskHomeContent = ({
                                     level="title-lg"
                                     sx={{ fontWeight: 600, color: textPrimary, mb: 0.5 }}
                                 >
-                                    No Project Selected
+                                    {t.tasks.dashboard.noProjectSelected}
                                 </Typography>
                                 <Typography level="body-sm" sx={{ color: textMuted }}>
                                     Select a project from the sidebar to view sprint analytics
@@ -1475,7 +1492,10 @@ export const TaskHomeContent = ({
                                                                     {task.isMilestone === true && (
                                                                         <Tooltip
                                                                             size="sm"
-                                                                            title="Milestone"
+                                                                            title={
+                                                                                t.tasks.dashboard
+                                                                                    .milestoneTooltip
+                                                                            }
                                                                             variant="outlined"
                                                                         >
                                                                             <FlagRoundedIcon
@@ -1512,7 +1532,7 @@ export const TaskHomeContent = ({
                                                                     whiteSpace: "nowrap",
                                                                 }}
                                                             >
-                                                                {task.title || "Untitled Task"}
+                                                                {task.title || t.tasks.dashboard.untitledTask}
                                                             </Typography>
                                                             <Stack
                                                                 alignItems="center"
@@ -1685,11 +1705,10 @@ export const TaskHomeContent = ({
                                             level="title-md"
                                             sx={{ fontWeight: 600, color: textPrimary }}
                                         >
-                                            Nothing assigned to you yet
+                                            {t.tasks.dashboard.nothingAssignedTitle}
                                         </Typography>
                                         <Typography level="body-sm" sx={{ color: textMuted }}>
-                                            Tasks assigned to you in this project will show up
-                                            here.
+                                            {t.tasks.dashboard.nothingAssignedBody}
                                         </Typography>
                                     </Stack>
                                 </Card>
@@ -1700,7 +1719,7 @@ export const TaskHomeContent = ({
                                         {(
                                             [
                                                 {
-                                                    label: "Active",
+                                                    label: t.tasks.dashboard.kpiActive,
                                                     value: String(myStats.activeCount),
                                                     color: "#3b82f6",
                                                     icon: (
@@ -1710,7 +1729,7 @@ export const TaskHomeContent = ({
                                                     ),
                                                 },
                                                 {
-                                                    label: "Closed",
+                                                    label: t.tasks.dashboard.kpiClosed,
                                                     value: String(myStats.closedCount),
                                                     color: "#22c55e",
                                                     icon: (
@@ -1720,7 +1739,7 @@ export const TaskHomeContent = ({
                                                     ),
                                                 },
                                                 {
-                                                    label: "Overdue",
+                                                    label: t.tasks.dashboard.kpiOverdue,
                                                     value: String(myStats.overdueCount),
                                                     color: "#ef4444",
                                                     icon: (
@@ -1730,7 +1749,7 @@ export const TaskHomeContent = ({
                                                     ),
                                                 },
                                                 {
-                                                    label: "Due This Week",
+                                                    label: t.tasks.dashboard.kpiDueThisWeek,
                                                     value: String(myStats.dueThisWeekCount),
                                                     color: "#f59e0b",
                                                     icon: (
@@ -1740,7 +1759,7 @@ export const TaskHomeContent = ({
                                                     ),
                                                 },
                                                 {
-                                                    label: "Completion",
+                                                    label: t.tasks.dashboard.kpiCompletion,
                                                     value: `${myStats.completionPct}%`,
                                                     color: "#a78bfa",
                                                     icon: (
@@ -1943,7 +1962,8 @@ export const TaskHomeContent = ({
                                                                         }}
                                                                     >
                                                                         {task.title ||
-                                                                            "Untitled Task"}
+                                                                            t.tasks.dashboard
+                                                                                .untitledTask}
                                                                     </Typography>
                                                                 </Stack>
                                                                 {task.priority && (
@@ -2177,7 +2197,12 @@ export const TaskHomeContent = ({
                                                                     fontWeight: 500,
                                                                 }}
                                                             >
-                                                                {STATUS_LABELS[s.key]}
+                                                                {
+                                                                    t.tasks.dashboard.statusLabels[
+                                                                        STATUS_LABEL_KEYS[s.key] ??
+                                                                            "open"
+                                                                    ]
+                                                                }
                                                             </Typography>
                                                         </Box>
                                                     </Stack>
@@ -2241,16 +2266,26 @@ export const TaskHomeContent = ({
                                         >
                                             <thead>
                                                 <tr>
-                                                    <th style={{ width: "30%" }}>Member</th>
-                                                    <th style={{ textAlign: "center" }}>Open</th>
-                                                    <th style={{ textAlign: "center" }}>WIP</th>
-                                                    <th style={{ textAlign: "center" }}>
-                                                        Pending
+                                                    <th style={{ width: "30%" }}>
+                                                        {t.tasks.dashboard.member}
                                                     </th>
-                                                    <th style={{ textAlign: "center" }}>Closed</th>
-                                                    <th style={{ textAlign: "center" }}>Total</th>
                                                     <th style={{ textAlign: "center" }}>
-                                                        Closed (Sprint)
+                                                        {t.tasks.dashboard.open}
+                                                    </th>
+                                                    <th style={{ textAlign: "center" }}>
+                                                        {t.tasks.dashboard.wip}
+                                                    </th>
+                                                    <th style={{ textAlign: "center" }}>
+                                                        {t.tasks.dashboard.pending}
+                                                    </th>
+                                                    <th style={{ textAlign: "center" }}>
+                                                        {t.tasks.dashboard.closed}
+                                                    </th>
+                                                    <th style={{ textAlign: "center" }}>
+                                                        {t.tasks.dashboard.total}
+                                                    </th>
+                                                    <th style={{ textAlign: "center" }}>
+                                                        {t.tasks.dashboard.closedSprint}
                                                     </th>
                                                 </tr>
                                             </thead>
@@ -2415,7 +2450,7 @@ export const TaskHomeContent = ({
                             {/* ════════ Section E: Priority & Effort Breakdown ════════ */}
                             <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
                                 {renderDistributionCard(
-                                    "Priority Distribution",
+                                    t.tasks.dashboard.priorityDistribution,
                                     <WarningAmberRoundedIcon
                                         sx={{ fontSize: 16, color: "#f97316" }}
                                     />,
@@ -2423,7 +2458,7 @@ export const TaskHomeContent = ({
                                     priorityColors
                                 )}
                                 {renderDistributionCard(
-                                    "Effort Distribution",
+                                    t.tasks.dashboard.effortDistribution,
                                     <TrendingUpRoundedIcon
                                         sx={{ fontSize: 16, color: "#7c3aed" }}
                                     />,
@@ -2525,7 +2560,7 @@ export const TaskHomeContent = ({
                                                                     whiteSpace: "nowrap",
                                                                 }}
                                                             >
-                                                                {task.title || "Untitled"}
+                                                                {task.title || t.tasks.dashboard.untitledTask}
                                                             </Typography>
                                                             <Typography
                                                                 level="body-xs"
@@ -2649,7 +2684,7 @@ export const TaskHomeContent = ({
                                                                     whiteSpace: "nowrap",
                                                                 }}
                                                             >
-                                                                {task.title || "Untitled"}
+                                                                {task.title || t.tasks.dashboard.untitledTask}
                                                             </Typography>
                                                             <Typography
                                                                 level="body-xs"

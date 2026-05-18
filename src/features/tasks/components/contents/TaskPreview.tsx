@@ -40,6 +40,7 @@ import { useSendUpdatedTask } from "../../../../hooks/tasks/useSendUpdatedTask";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { useTaskEditState } from "../../../../hooks/tasks/useTaskEditState";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../../../types/chat";
 import { TaskNoteProps } from "../../../../types/notes";
@@ -129,6 +130,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const { t } = useTranslation();
 
     const [taskClosed, setTaskClosed] = useState(false);
     const [isAttachmentDeleted, setIsAttachmentDeleted] = useState(false);
@@ -609,7 +611,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
 
                     {/* Main Content Section */}
                     <Box sx={{ p: 2.5 }}>
-                        <SectionHeader isDark={isDark}>Task Details</SectionHeader>
+                        <SectionHeader isDark={isDark}>{t.tasks.preview.taskDetails}</SectionHeader>
                         <Box
                             sx={{
                                 p: 2,
@@ -659,7 +661,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
 
                         <Stack direction="row">
                             {/* Body Section */}
-                            <SectionHeader isDark={isDark}>Description</SectionHeader>
+                            <SectionHeader isDark={isDark}>{t.tasks.preview.description}</SectionHeader>
                             {/* Custom Bar */}
                             <TaskCustomBarBlock taskBodySaved={taskEditState.taskBodySaved} />
                         </Stack>
@@ -921,6 +923,7 @@ const MilestonePreviewInner = ({
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const styles = isDark ? TaskHeaderStyles.dark : TaskHeaderStyles.light;
+    const { t } = useTranslation();
 
     const milestone: Milestone | null = useMemo(() => {
         const projectId = usePM.currentProject?.projectId;
@@ -1450,7 +1453,7 @@ const MilestonePreviewInner = ({
     if (!milestone) {
         return (
             <Box sx={{ p: 3 }}>
-                <Typography level="body-sm">Loading milestone…</Typography>
+                <Typography level="body-sm">{t.tasks.preview.loadingMilestone}</Typography>
             </Box>
         );
     }
@@ -1600,7 +1603,7 @@ const MilestonePreviewInner = ({
                         const items: MoreMenuItem[] = [
                             {
                                 id: "copyMilestoneLink",
-                                label: "Copy milestone link",
+                                label: t.tasks.preview.menu.copyMilestoneLink,
                                 icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
                                 onClick: async () => {
                                     if (milestone.projectId && milestone.milestoneId) {
@@ -1615,7 +1618,7 @@ const MilestonePreviewInner = ({
                             },
                             {
                                 id: "newTask",
-                                label: "New Task",
+                                label: t.tasks.preview.menu.newTask,
                                 icon: <AssignmentRoundedIcon sx={{ fontSize: 18 }} />,
                                 onClick: () => {
                                     if (milestone.taskId == null) return;
@@ -1631,7 +1634,7 @@ const MilestonePreviewInner = ({
                             },
                             {
                                 id: "openNote",
-                                label: "Open Note",
+                                label: t.tasks.preview.menu.openNote,
                                 icon: <NoteAltRoundedIcon sx={{ fontSize: 18 }} />,
                                 onClick: () => {
                                     if (
@@ -1666,7 +1669,7 @@ const MilestonePreviewInner = ({
                             },
                             {
                                 id: "newTag",
-                                label: "New Tag",
+                                label: t.tasks.preview.menu.newTag,
                                 icon: <LocalOfferRoundedIcon sx={{ fontSize: 18 }} />,
                                 onClick: () => {
                                     useTM.setOpenCreateTag(true);
@@ -1674,7 +1677,7 @@ const MilestonePreviewInner = ({
                             },
                             {
                                 id: "newProject",
-                                label: "New Project",
+                                label: t.tasks.preview.menu.newProject,
                                 icon: <AddIcon sx={{ fontSize: 18 }} />,
                                 onClick: () => {
                                     usePM.setOpenCreateProject(true);
@@ -1682,11 +1685,11 @@ const MilestonePreviewInner = ({
                             },
                             {
                                 id: "deleteMilestone",
-                                label: "Delete Milestone",
+                                label: t.tasks.preview.menu.deleteMilestone,
                                 icon: <DeleteRoundedIcon sx={{ fontSize: 18 }} />,
                                 danger: true,
                                 onClick: async () => {
-                                    if (!confirm("Delete this milestone?")) return;
+                                    if (!confirm(t.tasks.preview.confirmDeleteMilestone)) return;
                                     await useSM.removeMilestone(
                                         milestone.milestoneId,
                                         milestone.projectId
@@ -1725,7 +1728,7 @@ const MilestonePreviewInner = ({
 
                     <Tooltip
                         size="sm"
-                        title="Close"
+                        title={t.tasks.preview.closeTooltip}
                         variant="outlined"
                         sx={{
                             background: styles.menuBg,
@@ -1799,7 +1802,7 @@ const MilestonePreviewInner = ({
 
             {/* Reuses the exact same layout as a normal task. */}
             <Box sx={{ p: 2.5 }}>
-                <SectionHeader isDark={isDark}>Milestone Details</SectionHeader>
+                <SectionHeader isDark={isDark}>{t.tasks.preview.milestoneDetails}</SectionHeader>
                 <Box
                     sx={{
                         p: 2,
@@ -1845,7 +1848,7 @@ const MilestonePreviewInner = ({
                 <SectionDivider isDark={isDark} />
 
                 <Stack direction="row">
-                    <SectionHeader isDark={isDark}>Description</SectionHeader>
+                    <SectionHeader isDark={isDark}>{t.tasks.preview.description}</SectionHeader>
                     <TaskCustomBarBlock taskBodySaved={bodySaved} />
                 </Stack>
                 <Box
@@ -1898,15 +1901,15 @@ const MilestonePreviewInner = ({
                     Task" button are persisted with that as their
                     parent_task_id. */}
                 <TaskSubTasksBlock
-                    buttonLabel="Task"
+                    buttonLabel={t.tasks.preview.taskButton}
                     currentTaskContent={taskContentLike}
-                    emptyText="No tasks yet. Create a task and assign it to this milestone."
+                    emptyText={t.tasks.preview.emptyMilestoneTasks}
                     forceLoad={true}
                     myself={myself}
                     SectionHeader={SectionHeader}
                     setMyself={setMyself}
                     socket={socket}
-                    title="Tasks in this milestone"
+                    title={t.tasks.preview.tasksInThisMilestone}
                     useCM={useCM}
                     useTEM={useTEM}
                     useTM={useTM}

@@ -30,6 +30,7 @@ import { ProjectManagementState } from "../../../../hooks/common/useProjectManag
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { isMac } from "../../../../utils/platform";
 import { useChatRouting } from "../../hooks/useChatRouting";
@@ -58,36 +59,36 @@ export const NAV_ITEMS = [
     {
         type: CHAT_PANE_TYPES.DM,
         icon: PersonRoundedIcon,
-        label: "Direct Messages",
-        shortLabel: "DMs",
+        labelKey: "navDM" as const,
+        shortLabelKey: "navDMShort" as const,
         colorScheme: { dark: "#a78bfa", light: "#7c3aed" },
     },
     {
         type: CHAT_PANE_TYPES.GM,
         icon: GroupsRoundedIcon,
-        label: "Group Messages",
-        shortLabel: "Groups",
+        labelKey: "navGM" as const,
+        shortLabelKey: "navGMShort" as const,
         colorScheme: { dark: "#a78bfa", light: "#7c3aed" },
     },
     {
         type: CHAT_PANE_TYPES.PM,
         icon: AccountTreeRoundedIcon,
-        label: "Project Updates",
-        shortLabel: "Projects",
+        labelKey: "navPM" as const,
+        shortLabelKey: "navPMShort" as const,
         colorScheme: { dark: "#a78bfa", light: "#7c3aed" },
     },
     {
         type: CHAT_PANE_TYPES.FLAGGED,
         icon: FlagRoundedIcon,
-        label: "Flagged Messages",
-        shortLabel: "Flagged",
+        labelKey: "navFlagged" as const,
+        shortLabelKey: "navFlaggedShort" as const,
         colorScheme: { dark: "#a78bfa", light: "#7c3aed" },
     },
     {
         type: CHAT_PANE_TYPES.ACTIVITY,
         icon: NotificationsActiveRoundedIcon,
-        label: "Recent Activities (last 30 days)",
-        shortLabel: "Activity",
+        labelKey: "navActivity" as const,
+        shortLabelKey: "navActivityShort" as const,
         colorScheme: { dark: "#a78bfa", light: "#7c3aed" },
     },
 ];
@@ -123,6 +124,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
         chatRouting,
     } = props;
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
 
     const [openSearchBox, setOpenSearchBox] = useState(false);
@@ -302,7 +304,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 return (
                                     <Tooltip
                                         key={item.type}
-                                        title={item.label}
+                                        title={t.chat.sidebar[item.labelKey]}
                                         size="sm"
                                         placement="top"
                                         variant="outlined"
@@ -476,7 +478,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                                 color: isDark ? "#a78bfa" : "#7c3aed",
                                             }}
                                         />
-                                        New Group Message
+                                        {t.chat.sidebar.newGroupMessageMenu}
                                     </MenuItem>
                                     <MenuItem
                                         onClick={() => setOpenCreateMDM(true)}
@@ -492,7 +494,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                                 color: isDark ? "#a78bfa" : "#7c3aed",
                                             }}
                                         />
-                                        New DM with friends
+                                        {t.chat.sidebar.newDmWithFriendsMenu}
                                     </MenuItem>
                                 </Menu>
                             </Dropdown>
@@ -511,8 +513,10 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             px: 0.5,
                         }}
                     >
-                        {NAV_ITEMS.find((item) => item.type === useCM.currentChatPaneType)
-                            ?.label || "Messages"}
+                        {(() => {
+                            const navItem = NAV_ITEMS.find((item) => item.type === useCM.currentChatPaneType);
+                            return navItem ? t.chat.sidebar[navItem.labelKey] : t.chat.sidebar.currentSectionFallback;
+                        })()}
                     </Typography>
                 </Box>
 
@@ -644,8 +648,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         }}
                     >
                         {totalUnread > 0
-                            ? `${totalUnread} unread message${totalUnread > 1 ? "s" : ""}`
-                            : "All caught up"}
+                            ? fmt(t.chat.sidebar.unreadCount, { count: totalUnread })
+                            : t.chat.sidebar.allCaughtUp}
                     </Typography>
                 </Box>
             </Sheet>

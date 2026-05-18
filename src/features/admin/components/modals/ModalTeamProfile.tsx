@@ -31,6 +31,7 @@ import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { fmt, useTranslation } from "../../../../i18n";
 import { TeamProfileProps, UserProps } from "../../../../types/admin";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
 
@@ -69,6 +70,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
 
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const styles = isDark ? ProfileModalStyles.dark : ProfileModalStyles.light;
 
@@ -132,7 +134,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
             const uploadProfileImageData = await uploadProfileImageResponse.json();
 
             if (!uploadProfileImageResponse.ok) {
-                throw new Error("Failed to upload team profile image.");
+                throw new Error(t.admin.teamProfile.uploadFailed);
             } else {
                 localStorage.setItem(
                     "teamImgPath",
@@ -202,7 +204,9 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                         letterSpacing: "-0.02em",
                                     }}
                                 >
-                                    Team Profile - {myself.teamName}
+                                    {fmt(t.admin.teamProfile.title, {
+                                        teamName: myself.teamName,
+                                    })}
                                 </Typography>
                             </Box>
                         </Box>
@@ -283,7 +287,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                 <Tooltip
                                                     size="sm"
                                                     sx={{ zIndex: 9000 }}
-                                                    title="Edit Team Image"
+                                                    title={t.admin.teamProfile.editTeamImage}
                                                     variant="outlined"
                                                 >
                                                     <IconButton
@@ -331,7 +335,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                             mb: 0.5,
                                                         }}
                                                     >
-                                                        Team Name
+                                                        {t.admin.teamProfile.teamName}
                                                     </FormLabel>
                                                     <Box
                                                         sx={{
@@ -369,7 +373,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                         mb: 0.5,
                                                     }}
                                                 >
-                                                    Team ID
+                                                    {t.admin.teamProfile.teamId}
                                                 </FormLabel>
                                                 <Box
                                                     sx={{
@@ -414,7 +418,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                             mb: 0.5,
                                                         }}
                                                     >
-                                                        Owner
+                                                        {t.admin.teamProfile.owner}
                                                     </FormLabel>
                                                     <Button
                                                         color="neutral"
@@ -505,11 +509,16 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                                 mb: 0,
                                                             }}
                                                         >
-                                                            Members ({filteredMembers.length}/
-                                                            {teamProfile.teamMembers.length})
+                                                            {fmt(t.admin.teamProfile.members, {
+                                                                filtered: filteredMembers.length,
+                                                                total: teamProfile.teamMembers
+                                                                    .length,
+                                                            })}
                                                         </FormLabel>
                                                         <Input
-                                                            placeholder="Search members..."
+                                                            placeholder={
+                                                                t.admin.teamProfile.searchMembers
+                                                            }
                                                             value={memberSearchQuery}
                                                             onChange={(e) =>
                                                                 setMemberSearchQuery(
@@ -628,8 +637,13 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                                 }}
                                                             >
                                                                 <Typography level="body-sm">
-                                                                    No members found matching "
-                                                                    {memberSearchQuery}"
+                                                                    {fmt(
+                                                                        t.admin.teamProfile
+                                                                            .noMembersFound,
+                                                                        {
+                                                                            query: memberSearchQuery,
+                                                                        }
+                                                                    )}
                                                                 </Typography>
                                                             </Box>
                                                         )}
@@ -648,7 +662,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                         mb: 0.5,
                                                     }}
                                                 >
-                                                    Created Date
+                                                    {t.admin.teamProfile.createdDate}
                                                 </FormLabel>
                                                 <Box
                                                     sx={{

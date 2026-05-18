@@ -6,6 +6,7 @@ import { Box, Button, IconButton, Input, Snackbar, Stack, Tooltip, Typography } 
 import { useEffect, useState } from "react";
 
 import { GitHubIcon } from "../../../../../../assets/GithubIcon";
+import { useTranslation } from "../../../../../../i18n";
 import { TaskProps } from "../../../../../../types/tasks";
 import { getPageTitle } from "../../../../utils/getPageTitle";
 
@@ -24,6 +25,7 @@ type DynamicURLManagerProps = {
 
 export const DynamicURLManager = (props: DynamicURLManagerProps) => {
     const { taskContent, setTaskContent, setTaskUpdated } = props;
+    const { t } = useTranslation();
     const [links, setLinks] = useState<LinkItem[]>([]);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [isAddingNew, setIsAddingNew] = useState(false);
@@ -70,7 +72,7 @@ export const DynamicURLManager = (props: DynamicURLManagerProps) => {
     const handleAddLink = async () => {
         if (!isValidUrl(newUrl)) {
             setErrorOpen(true);
-            setError("Please enter a valid URL.");
+            setError(t.tasks.dynamicUrl.invalidUrl);
             return;
         }
 
@@ -105,7 +107,7 @@ export const DynamicURLManager = (props: DynamicURLManagerProps) => {
     const handleEditLink = async (id: string, url: string, title: string) => {
         if (!isValidUrl(url)) {
             setErrorOpen(true);
-            setError("Please enter a valid URL.");
+            setError(t.tasks.dynamicUrl.invalidUrl);
             return;
         }
 
@@ -174,7 +176,7 @@ export const DynamicURLManager = (props: DynamicURLManagerProps) => {
                 >
                     <LinkIcon sx={{ color: "text.secondary" }} />
                     <Input
-                        placeholder="Paste URL"
+                        placeholder={t.tasks.dynamicUrl.urlPlaceholder}
                         size="sm"
                         sx={{ width: "250px", height: "30px" }}
                         type="url"
@@ -182,14 +184,14 @@ export const DynamicURLManager = (props: DynamicURLManagerProps) => {
                         onChange={(e) => setNewUrl(e.target.value)}
                     />
                     <Input
-                        placeholder="Title (optional)"
+                        placeholder={t.tasks.dynamicUrl.titlePlaceholder}
                         size="sm"
                         sx={{ width: "200px", height: "30px" }}
                         value={newTitle}
                         onChange={(e) => setNewTitle(e.target.value)}
                     />
                     <Button color="primary" size="sm" variant="outlined" onClick={handleAddLink}>
-                        Add
+                        {t.tasks.dynamicUrl.addButton}
                     </Button>
                     <Button
                         color="neutral"
@@ -202,7 +204,7 @@ export const DynamicURLManager = (props: DynamicURLManagerProps) => {
                             setError("");
                         }}
                     >
-                        Cancel
+                        {t.tasks.dynamicUrl.cancelButton}
                     </Button>
                 </Stack>
             ) : (
@@ -213,7 +215,7 @@ export const DynamicURLManager = (props: DynamicURLManagerProps) => {
                     variant="plain"
                     onClick={() => setIsAddingNew(true)}
                 >
-                    Add Link
+                    {t.tasks.dynamicUrl.addLinkButton}
                 </Button>
             )}
 
@@ -249,6 +251,7 @@ type LinkDisplayProps = {
 };
 
 const LinkDisplay = ({ link, editingId, onEdit, onSave, onDelete }: LinkDisplayProps) => {
+    const { t } = useTranslation();
     const [editUrl, setEditUrl] = useState(link.url);
     const [editTitle, setEditTitle] = useState(link.title);
 
@@ -272,7 +275,7 @@ const LinkDisplay = ({ link, editingId, onEdit, onSave, onDelete }: LinkDisplayP
             >
                 <LinkIconComponent sx={{ color: "text.secondary" }} />
                 <Input
-                    placeholder="Paste URL"
+                    placeholder={t.tasks.dynamicUrl.urlPlaceholder}
                     size="sm"
                     sx={{ width: "250px", height: "30px" }}
                     type="url"
@@ -280,7 +283,7 @@ const LinkDisplay = ({ link, editingId, onEdit, onSave, onDelete }: LinkDisplayP
                     onChange={(e) => setEditUrl(e.target.value)}
                 />
                 <Input
-                    placeholder="Title"
+                    placeholder={t.tasks.dynamicUrl.titlePlaceholderShort}
                     size="sm"
                     sx={{ width: "200px", height: "30px" }}
                     value={editTitle}
@@ -292,10 +295,10 @@ const LinkDisplay = ({ link, editingId, onEdit, onSave, onDelete }: LinkDisplayP
                     variant="outlined"
                     onClick={() => onSave(link.id, editUrl, editTitle)}
                 >
-                    Save
+                    {t.tasks.dynamicUrl.saveButton}
                 </Button>
                 <Button color="neutral" size="sm" variant="plain" onClick={() => onEdit(null)}>
-                    Cancel
+                    {t.tasks.dynamicUrl.cancelButton}
                 </Button>
             </Stack>
         );
@@ -317,12 +320,12 @@ const LinkDisplay = ({ link, editingId, onEdit, onSave, onDelete }: LinkDisplayP
                     {link.title}
                 </a>
             </Typography>
-            <Tooltip size="sm" title="Edit" variant="outlined">
+            <Tooltip size="sm" title={t.tasks.dynamicUrl.editTooltip} variant="outlined">
                 <IconButton color="neutral" size="sm" onClick={() => onEdit(link.id)}>
                     <EditIcon />
                 </IconButton>
             </Tooltip>
-            <Tooltip size="sm" title="Delete" variant="outlined">
+            <Tooltip size="sm" title={t.tasks.dynamicUrl.deleteTooltip} variant="outlined">
                 <IconButton color="danger" size="sm" onClick={() => onDelete(link.id)}>
                     <DeleteIcon />
                 </IconButton>

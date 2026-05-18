@@ -1,3 +1,4 @@
+import { getMessages } from "../../../i18n";
 import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
 import { Milestone } from "../sprint-milestone/types";
@@ -143,85 +144,97 @@ const mentionNode = (myself: UserProps, user: UserProps) => ({
     type: "mention",
 });
 
-export const taskMessageTemplate = (myself: UserProps, task: TaskProps) => [
-    {
-        children: [],
-        content: [plainText(`🧾 ${task.title}`)],
-        props: HEADING_BLOCK_PROPS,
-        type: "heading",
-    },
-    {
-        children: [],
-        content: [labelText("Status: "), getStatusChip(task.status?.status)],
-        props: DEFAULT_BLOCK_PROPS,
-        type: "paragraph",
-    },
-    {
-        children: [],
-        content: [labelText("Priority: "), getPriorityChip(task.priority?.priority)],
-        props: DEFAULT_BLOCK_PROPS,
-        type: "paragraph",
-    },
-    {
-        children: [],
-        content: [labelText("Effort: "), getEffortChip(task.effortLevel?.level)],
-        props: DEFAULT_BLOCK_PROPS,
-        type: "paragraph",
-    },
-    {
-        children: [],
-        content: [labelText("Assignee: "), mentionNode(myself, task.assignee)],
-        props: DEFAULT_BLOCK_PROPS,
-        type: "paragraph",
-    },
-    {
-        children: [],
-        content: [labelText("Reporter: "), mentionNode(myself, task.reporter)],
-        props: DEFAULT_BLOCK_PROPS,
-        type: "paragraph",
-    },
-    {
-        children: [],
-        content: [labelText("Due: "), plainText(`📅 ${task.dueDate || "—"}`)],
-        props: DEFAULT_BLOCK_PROPS,
-        type: "paragraph",
-    },
-    blankParagraph(),
-];
+export const taskMessageTemplate = (myself: UserProps, task: TaskProps) => {
+    const m = getMessages().tasks.messageTemplate;
+    return [
+        {
+            children: [],
+            content: [plainText(`🧾 ${task.title}`)],
+            props: HEADING_BLOCK_PROPS,
+            type: "heading",
+        },
+        {
+            children: [],
+            content: [labelText(m.statusLabel), getStatusChip(task.status?.status)],
+            props: DEFAULT_BLOCK_PROPS,
+            type: "paragraph",
+        },
+        {
+            children: [],
+            content: [labelText(m.priorityLabel), getPriorityChip(task.priority?.priority)],
+            props: DEFAULT_BLOCK_PROPS,
+            type: "paragraph",
+        },
+        {
+            children: [],
+            content: [labelText(m.effortLabel), getEffortChip(task.effortLevel?.level)],
+            props: DEFAULT_BLOCK_PROPS,
+            type: "paragraph",
+        },
+        {
+            children: [],
+            content: [labelText(m.assigneeLabel), mentionNode(myself, task.assignee)],
+            props: DEFAULT_BLOCK_PROPS,
+            type: "paragraph",
+        },
+        {
+            children: [],
+            content: [labelText(m.reporterLabel), mentionNode(myself, task.reporter)],
+            props: DEFAULT_BLOCK_PROPS,
+            type: "paragraph",
+        },
+        {
+            children: [],
+            content: [labelText(m.dueLabel), plainText(`📅 ${task.dueDate || "—"}`)],
+            props: DEFAULT_BLOCK_PROPS,
+            type: "paragraph",
+        },
+        blankParagraph(),
+    ];
+};
 
-export const taskCreatedThreadMessageTemplate = (myself: UserProps) => [
-    {
-        children: [],
-        content: [plainText("✨ New task created by "), mentionNode(myself, myself)],
-        props: DEFAULT_BLOCK_PROPS,
-        type: "paragraph",
-    },
-    blankParagraph(),
-];
+export const taskCreatedThreadMessageTemplate = (myself: UserProps) => {
+    const m = getMessages().tasks.messageTemplate;
+    return [
+        {
+            children: [],
+            content: [plainText(m.newTaskCreatedBy), mentionNode(myself, myself)],
+            props: DEFAULT_BLOCK_PROPS,
+            type: "paragraph",
+        },
+        blankParagraph(),
+    ];
+};
 
-export const taskThreadMessageTemplate = (myself: UserProps, task: TaskProps) => [
-    {
-        children: [],
-        content: [
-            mentionNode(myself, myself),
-            plainText(" moved this task to "),
-            getStatusChip(task.status?.status),
-        ],
-        props: DEFAULT_BLOCK_PROPS,
-        type: "paragraph",
-    },
-    blankParagraph(),
-];
+export const taskThreadMessageTemplate = (myself: UserProps, task: TaskProps) => {
+    const m = getMessages().tasks.messageTemplate;
+    return [
+        {
+            children: [],
+            content: [
+                mentionNode(myself, myself),
+                plainText(m.movedThisTaskTo),
+                getStatusChip(task.status?.status),
+            ],
+            props: DEFAULT_BLOCK_PROPS,
+            type: "paragraph",
+        },
+        blankParagraph(),
+    ];
+};
 
-export const taskThreadMessageForCommentAddedTemplate = (myself: UserProps) => [
-    {
-        children: [],
-        content: [plainText("💬 New comment from "), mentionNode(myself, myself)],
-        props: DEFAULT_BLOCK_PROPS,
-        type: "paragraph",
-    },
-    blankParagraph(),
-];
+export const taskThreadMessageForCommentAddedTemplate = (myself: UserProps) => {
+    const m = getMessages().tasks.messageTemplate;
+    return [
+        {
+            children: [],
+            content: [plainText(m.newCommentFrom), mentionNode(myself, myself)],
+            props: DEFAULT_BLOCK_PROPS,
+            type: "paragraph",
+        },
+        blankParagraph(),
+    ];
+};
 
 // Milestone-flavoured equivalents of the task templates above. The
 // PM chat needs a similar "something was created" message bubble for
@@ -237,6 +250,7 @@ export const milestoneMessageTemplate = (
     reporter: UserProps,
     assignees: UserProps[]
 ) => {
+    const m = getMessages().tasks.messageTemplate;
     const blocks: Array<Record<string, unknown>> = [
         {
             children: [],
@@ -247,7 +261,7 @@ export const milestoneMessageTemplate = (
         {
             children: [],
             content: [
-                labelText("Sprint: "),
+                labelText(m.sprintLabel),
                 {
                     styles: { bold: true, textColor: "blue" } as const,
                     text: sprintName || "—",
@@ -261,19 +275,19 @@ export const milestoneMessageTemplate = (
             children: [],
             // Milestones default to "Open" at create time; the helper
             // also handles legacy/empty values gracefully.
-            content: [labelText("Status: "), getStatusChip(milestone.status || "Open")],
+            content: [labelText(m.statusLabel), getStatusChip(milestone.status || "Open")],
             props: DEFAULT_BLOCK_PROPS,
             type: "paragraph",
         },
         {
             children: [],
-            content: [labelText("Priority: "), getPriorityChip(milestone.priority)],
+            content: [labelText(m.priorityLabel), getPriorityChip(milestone.priority)],
             props: DEFAULT_BLOCK_PROPS,
             type: "paragraph",
         },
         {
             children: [],
-            content: [labelText("Reporter: "), mentionNode(myself, reporter)],
+            content: [labelText(m.reporterLabel), mentionNode(myself, reporter)],
             props: DEFAULT_BLOCK_PROPS,
             type: "paragraph",
         },
@@ -283,11 +297,11 @@ export const milestoneMessageTemplate = (
     // node interleaved with a comma + space text node so the chat
     // renderer keeps mention click-through (you can't put commas
     // inside a mention node itself).
-    const assigneeContent: Array<Record<string, unknown>> = [labelText("Assignees: ")];
+    const assigneeContent: Array<Record<string, unknown>> = [labelText(m.assigneesLabel)];
     if (assignees.length === 0) {
         assigneeContent.push({
             styles: { italic: true, textColor: "gray" },
-            text: "Unassigned",
+            text: m.unassigned,
             type: "text",
         });
     } else {
@@ -307,7 +321,7 @@ export const milestoneMessageTemplate = (
 
     blocks.push({
         children: [],
-        content: [labelText("Due: "), plainText(`📅 ${milestone.dueDate ?? "—"}`)],
+        content: [labelText(m.dueLabel), plainText(`📅 ${milestone.dueDate ?? "—"}`)],
         props: DEFAULT_BLOCK_PROPS,
         type: "paragraph",
     });
@@ -317,12 +331,15 @@ export const milestoneMessageTemplate = (
     return blocks;
 };
 
-export const milestoneCreatedThreadMessageTemplate = (myself: UserProps) => [
-    {
-        children: [],
-        content: [plainText("🚩 New milestone created by "), mentionNode(myself, myself)],
-        props: DEFAULT_BLOCK_PROPS,
-        type: "paragraph",
-    },
-    blankParagraph(),
-];
+export const milestoneCreatedThreadMessageTemplate = (myself: UserProps) => {
+    const m = getMessages().tasks.messageTemplate;
+    return [
+        {
+            children: [],
+            content: [plainText(m.newMilestoneCreatedBy), mentionNode(myself, myself)],
+            props: DEFAULT_BLOCK_PROPS,
+            type: "paragraph",
+        },
+        blankParagraph(),
+    ];
+};

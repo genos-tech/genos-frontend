@@ -24,6 +24,7 @@
 // gives us token-by-token streaming.
 
 import type { SpotlightResult } from "../features/spotlight/types";
+import { fmt, getMessages } from "../i18n";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL as string;
 
@@ -115,7 +116,7 @@ export async function fetchAgentUsage(accessToken: string): Promise<AgentUsage |
 
 export async function askAgentStream(args: AskAgentArgs): Promise<void> {
     if (!args.accessToken) {
-        args.onError("Not signed in.");
+        args.onError(getMessages().services.agent.notSignedIn);
         return;
     }
     await runNdjsonStream(
@@ -138,7 +139,7 @@ export async function askAgentStream(args: AskAgentArgs): Promise<void> {
 
 export async function decideAgent(args: DecideAgentArgs): Promise<void> {
     if (!args.accessToken) {
-        args.onError("Not signed in.");
+        args.onError(getMessages().services.agent.notSignedIn);
         return;
     }
     await runNdjsonStream(
@@ -178,12 +179,14 @@ async function runNdjsonStream(
         // AbortError is expected when the user closes the overlay /
         // types a new query; silently swallow it.
         if ((err as Error).name === "AbortError") return;
-        handlers.onError(`Network error: ${(err as Error).message}`);
+        handlers.onError(
+            fmt(getMessages().services.agent.networkError, { message: (err as Error).message })
+        );
         return;
     }
 
     if (!resp.ok) {
-        let message = `Server returned ${resp.status}`;
+        let message = fmt(getMessages().services.agent.serverReturned, { status: resp.status });
         try {
             const data = await resp.json();
             if (data?.error) message = data.error;
@@ -201,7 +204,7 @@ async function runNdjsonStream(
 
     const reader = resp.body?.getReader();
     if (!reader) {
-        handlers.onError("Streaming response has no body.");
+        handlers.onError(getMessages().services.agent.streamNoBody);
         return;
     }
     const decoder = new TextDecoder("utf-8");
@@ -235,7 +238,11 @@ async function runNdjsonStream(
         // overlay; silently swallow it — the hook's onCancel already
         // cleans up the streaming state manually.
         if ((err as Error).name === "AbortError") return;
-        handlers.onError(`Stream interrupted: ${(err as Error).message}`);
+        handlers.onError(
+            fmt(getMessages().services.agent.streamInterrupted, {
+                message: (err as Error).message,
+            })
+        );
         return;
     } finally {
         try {
@@ -251,7 +258,7 @@ async function runNdjsonStream(
     // `isStreaming` flag. Without this the UI would show "streaming…"
     // forever.
     if (!doneEventReceived) {
-        handlers.onError("The answer stream ended unexpectedly. Please try again.");
+        handlers.onError(getMessages().services.agent.streamEndedUnexpectedly);
     }
 }
 
@@ -262,7 +269,9 @@ function dispatchLine(line: string, h: BaseStreamHandlers): boolean {
     try {
         evt = JSON.parse(line) as AgentEvent;
     } catch {
-        h.onError(`Malformed NDJSON line: ${line.slice(0, 120)}`);
+        h.onError(
+            fmt(getMessages().services.agent.malformedNdjsonLine, { line: line.slice(0, 120) })
+        );
         return false;
     }
     switch (evt.type) {
@@ -276,7 +285,7 @@ function dispatchLine(line: string, h: BaseStreamHandlers): boolean {
             h.onDone(evt.session_id);
             return true; // signals clean finish
         case "error":
-            h.onError(evt.message || "Unknown error");
+            h.onError(evt.message || getMessages().services.agent.unknownError);
             return false;
         case "tool_call_start":
             h.onToolStart?.({

@@ -5,9 +5,12 @@ import IconButton, { IconButtonProps } from "@mui/joy/IconButton";
 import { useColorScheme } from "@mui/joy/styles";
 import * as React from "react";
 
+import { useTranslation } from "../../i18n";
+
 export const ColorSchemeToggle = (props: IconButtonProps) => {
     const { onClick, sx, ...other } = props;
     const { mode, setMode } = useColorScheme();
+    const { t } = useTranslation();
     const [mounted, setMounted] = React.useState(false);
     React.useEffect(() => {
         setMounted(true);
@@ -18,7 +21,12 @@ export const ColorSchemeToggle = (props: IconButtonProps) => {
         );
     }
     return (
-        <Tooltip placement="right-start" size="sm" title="Switch Theme" variant="outlined">
+        <Tooltip
+            placement="right-start"
+            size="sm"
+            title={t.common.ui.colorScheme.switchTheme}
+            variant="outlined"
+        >
             <IconButton
                 color="neutral"
                 data-screenshot="toggle-mode"

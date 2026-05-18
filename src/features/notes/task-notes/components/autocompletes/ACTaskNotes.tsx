@@ -5,6 +5,7 @@ import CircularProgress from "@mui/joy/CircularProgress";
 
 import { useAuth } from "../../../../../context/AuthContext";
 import { NoteManagementState } from "../../../../../hooks/notes/useNoteManagement";
+import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { TaskNoteProps } from "../../../../../types/notes";
 import { loadTaskNotes } from "../../services/loadTaskNotes";
@@ -18,6 +19,7 @@ type ACTaskNotesProps = {
 export const ACTaskNotes = (props: ACTaskNotesProps) => {
     const { myself, openSearchBox, setOpenSearchBox, useNM } = props;
     const { accessToken } = useAuth();
+    const { t } = useTranslation();
     const [options, setOptions] = useState<TaskNoteProps[]>([]);
     const loading = openSearchBox && options.length === 0;
 
@@ -67,14 +69,14 @@ export const ACTaskNotes = (props: ACTaskNotesProps) => {
 
     return (
         <Autocomplete
-            aria-label="Search"
+            aria-label={t.notes.autocomplete.searchAria}
             getOptionKey={(option) => option.noteId}
             getOptionLabel={(option) => option.title}
             isOptionEqualToValue={(option, value) => option.noteId === value.noteId}
             loading={loading}
             open={openSearchBox}
             options={options}
-            placeholder={"Search Task Notes"}
+            placeholder={t.notes.autocomplete.searchTaskNotes}
             size="sm"
             startDecorator={<SearchRoundedIcon />}
             endDecorator={

@@ -29,6 +29,7 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import {
     AllChatProps,
@@ -158,6 +159,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
     } = props;
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
 
     const isYou = myself.userId === flaggedMessage.dmPartnerUser.userId;
@@ -667,7 +669,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
             }}
         >
             {CHAT_TYPE_LABELS[flaggedMessage.chatType as keyof typeof CHAT_TYPE_LABELS] ||
-                "Unknown"}
+                t.chat.listItem.unknown}
         </Chip>
     );
 
@@ -686,7 +688,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                         height: "20px",
                     }}
                 >
-                    Thread
+                    {t.chat.listItem.threadChip}
                 </Chip>
             );
         }
@@ -832,10 +834,10 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                                         {renderProjectChips()}
                                         {renderChatTypeChip()}
                                         {renderThreadChip()}
-                                        {chatRemoved && renderRemovedChip("Chat removed")}
+                                        {chatRemoved && renderRemovedChip(t.chat.listItem.chatRemoved)}
                                         {!chatRemoved &&
                                             sourceDeleted &&
-                                            renderRemovedChip("Message deleted")}
+                                            renderRemovedChip(t.chat.listItem.messageDeleted)}
                                     </Box>
                                 </Stack>
                             </Stack>
@@ -852,7 +854,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                                 >
                                     {extractYYYYMMDDHHMM(flaggedMessage.tsSent)}
                                 </Typography>
-                                <Tooltip size="sm" title="Unflag" variant="outlined">
+                                <Tooltip size="sm" title={t.chat.listItem.unflag} variant="outlined">
                                     <IconButton
                                         color={tmpIsFlagged ? "danger" : "neutral"}
                                         size="sm"

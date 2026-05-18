@@ -39,6 +39,7 @@ import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickInterc
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
+import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { ChatProps, ThreadMessageProps, ThreadProps } from "../../types/chat";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
@@ -89,6 +90,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
     } = props;
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
+    const { t } = useTranslation();
     const urlLinkModal = useUrlLinkModal();
     const editorBoxRef = useRef<HTMLDivElement>(null);
     useAnchorClickIntercept(editorBoxRef, urlLinkModal);
@@ -156,7 +158,9 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
             const uploadChatAttachmentData = await uploadChatAttachmentResponse.json();
 
             if (!uploadChatAttachmentResponse.ok) {
-                throw new Error(uploadChatAttachmentData.message || "Attachment Upload Failed");
+                throw new Error(
+                    uploadChatAttachmentData.message || t.common.editor.attachmentUploadFailed
+                );
             }
 
             return `${django_url}${uploadChatAttachmentData.chatAttachmentUrl}`;

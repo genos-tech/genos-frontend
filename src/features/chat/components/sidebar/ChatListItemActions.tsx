@@ -19,6 +19,7 @@ import {
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 import { extractYYYYMMDDHHMM } from "../../../../utils/dateUtils";
@@ -47,6 +48,7 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
     isToDoVisible,
 }) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
 
     // Show add members option for DM and MDM chats (chatType 1 and 4)
@@ -65,7 +67,7 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
             {/* To-Do Button */}
             {chat.dmPartnerUser.userId === myself.userId &&
                 (isToDoVisible ? (
-                    <Tooltip size="sm" title="Back to Chat" variant="outlined">
+                    <Tooltip size="sm" title={t.chat.listItem.backToChat} variant="outlined">
                         <IconButton
                             color="neutral"
                             component="a"
@@ -78,7 +80,7 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                         </IconButton>
                     </Tooltip>
                 ) : (
-                    <Tooltip size="sm" title="Open To-Do" variant="outlined">
+                    <Tooltip size="sm" title={t.chat.listItem.openTodo} variant="outlined">
                         <Badge
                             anchorOrigin={{ vertical: "top", horizontal: "right" }}
                             badgeContent={incompleteTodoCount}
@@ -103,7 +105,7 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
             {/* Pin Button */}
             <Tooltip
                 size="sm"
-                title={chat.isPinned ? "Unpin Chat" : "Pin Chat"}
+                title={chat.isPinned ? t.chat.listItem.unpinChat : t.chat.listItem.pinChat}
                 variant="outlined"
             >
                 <IconButton
@@ -180,7 +182,7 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                             <PersonAddRoundedIcon
                                 sx={{ fontSize: 18, color: isDark ? "#a78bfa" : "#7c3aed" }}
                             />
-                            Add members
+                            {t.chat.listItem.addMembersMenu}
                         </MenuItem>
                     )}
 
@@ -201,7 +203,7 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                         <SplitscreenIcon
                             sx={{ fontSize: 18, color: isDark ? "#a78bfa" : "#7c3aed" }}
                         />
-                        Open in split view
+                        {t.chat.listItem.openInSplitView}
                     </MenuItem>
                 </Menu>
             </Dropdown>

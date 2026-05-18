@@ -3,6 +3,7 @@ import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt
 import { Box, Button, IconButton, Tooltip, useColorScheme } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
+import { useTranslation } from "../../../i18n";
 import { UserProps } from "../../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../../types/chat";
 import { GroupedReactionProps, ReactionProps } from "../../../types/common";
@@ -62,6 +63,7 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
         setUniqueReactionEmojiCount,
     } = props;
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const [baseEmojiList, setBaseEmojiList] = useState<string[]>(["👍", "👀", "✅"]);
     const [groupedReactions, setGroupedReactions] = useState<GroupedReactionProps[]>(
@@ -265,7 +267,7 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
                             ))}
                         </>
                     )}
-                    <Tooltip size="sm" title="Emoji Reaction" variant="outlined">
+                    <Tooltip size="sm" title={t.common.ui.emoji.reaction} variant="outlined">
                         <IconButton
                             key={`emoji-icon-${message.messageId}`}
                             size="sm"

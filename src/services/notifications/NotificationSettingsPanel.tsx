@@ -12,53 +12,49 @@ import {
     Typography,
 } from "@mui/joy";
 
+import { fmt, Messages, useTranslation } from "../../i18n";
 import { useNotificationsContext } from "./NotificationsContext";
 import { NotificationCategory } from "./types";
 
-const CATEGORY_LABELS: Array<{
+type CategoryLabel = {
     id: NotificationCategory;
     label: string;
     description: string;
-}> = [
-    {
-        id: "chats",
-        label: "Chats",
-        description: "Direct messages, group chats, and project chat messages.",
-    },
-    {
-        id: "thread_replies",
-        label: "Thread replies",
-        description: "Replies posted under any message you can see.",
-    },
-    {
-        id: "mentions",
-        label: "Mentions",
-        description: "When someone @-mentions you anywhere.",
-    },
-    {
-        id: "task_comments",
-        label: "Task comments",
-        description: "New comments on tasks you participate in.",
-    },
-    {
-        id: "inbox",
-        label: "Inbox",
-        description: "Join requests, approvals, and other inbox items.",
-    },
-];
+};
 
-const labelForChatType = (chatType: number): string => {
+const buildCategoryLabels = (t: Messages): CategoryLabel[] => {
+    const cats = t.services.notifications.categories;
+    const descs = t.services.notifications.settings.categoryDescriptions;
+    return [
+        { id: "chats", label: cats.chats, description: descs.chats },
+        {
+            id: "thread_replies",
+            label: cats.threadReplies,
+            description: descs.threadReplies,
+        },
+        { id: "mentions", label: cats.mentions, description: descs.mentions },
+        {
+            id: "task_comments",
+            label: cats.taskComments,
+            description: descs.taskComments,
+        },
+        { id: "inbox", label: cats.inbox, description: descs.inbox },
+    ];
+};
+
+const labelForChatType = (chatType: number, t: Messages): string => {
+    const labels = t.services.notifications.settingsChatType;
     switch (chatType) {
         case 1:
-            return "Direct Messages";
+            return labels.direct;
         case 2:
-            return "Group Messages";
+            return labels.group;
         case 3:
-            return "Project Updates";
+            return labels.project;
         case 4:
-            return "Direct Messages";
+            return labels.direct;
         default:
-            return `Chat ${chatType}`;
+            return fmt(labels.fallback, { chatType });
     }
 };
 
@@ -69,6 +65,7 @@ const labelForChatType = (chatType: number): string => {
  */
 export const NotificationSettingsPanel = () => {
     const ctx = useNotificationsContext();
+    const { t } = useTranslation();
     if (!ctx) return null;
 
     const {
@@ -81,6 +78,8 @@ export const NotificationSettingsPanel = () => {
     } = ctx;
 
     const masterDisabled = !preferences.masterEnabled;
+    const categoryLabels = buildCategoryLabels(t);
+    const settingsMessages = t.services.notifications.settings;
 
     return (
         <Sheet variant="outlined" sx={{ p: 2, borderRadius: "lg" }}>
@@ -90,7 +89,7 @@ export const NotificationSettingsPanel = () => {
                 ) : (
                     <NotificationsOffRounded />
                 )}
-                <Typography level="title-md">Web notifications</Typography>
+                <Typography level="title-md">{settingsMessages.heading}</Typography>
                 <Box sx={{ flex: 1 }} />
                 <Switch
                     checked={preferences.masterEnabled}
@@ -98,8 +97,7 @@ export const NotificationSettingsPanel = () => {
                 />
             </Stack>
             <Typography level="body-xs" sx={{ mb: 1 }}>
-                Show desktop notifications when the tab is in the background, or an in-app toast
-                when it's foreground but you're on a different screen.
+                {settingsMessages.description}
             </Typography>
 
             {/* Permission state */}
@@ -109,7 +107,7 @@ export const NotificationSettingsPanel = () => {
                 alignItems="center"
                 sx={{ mb: 1.5, flexWrap: "wrap" }}
             >
-                <Typography level="body-sm">Browser permission:</Typography>
+                <Typography level="body-sm">{settingsMessages.browserPermissionLabel}</Typography>
                 <Chip
                     size="sm"
                     variant="soft"
@@ -127,7 +125,7 @@ export const NotificationSettingsPanel = () => {
                 </Chip>
                 {permission === "default" && (
                     <Button size="sm" onClick={requestPermission}>
-                        Allow
+                        {settingsMessages.allow}
                     </Button>
                 )}
             </Stack>
@@ -136,7 +134,7 @@ export const NotificationSettingsPanel = () => {
 
             {/* Category toggles */}
             <Stack spacing={1.25} sx={{ mt: 1.5, opacity: masterDisabled ? 0.5 : 1 }}>
-                {CATEGORY_LABELS.map((cat, idx) => {
+                {categoryLabels.map((cat, idx) => {
                     const enabled = (() => {
                         switch (cat.id) {
                             case "chats":
@@ -169,7 +167,7 @@ export const NotificationSettingsPanel = () => {
                                     onChange={(e) => setCategoryEnabled(cat.id, e.target.checked)}
                                 />
                             </Stack>
-                            {idx < CATEGORY_LABELS.length - 1 && <Divider sx={{ mt: 1.25 }} />}
+                            {idx < categoryLabels.length - 1 && <Divider sx={{ mt: 1.25 }} />}
                         </Box>
                     );
                 })}
@@ -178,12 +176,12 @@ export const NotificationSettingsPanel = () => {
             {/* Muted chats */}
             <Divider sx={{ mt: 2 }} />
             <Typography level="title-sm" sx={{ mt: 1.5, mb: 0.5 }}>
-                Muted chats ({preferences.mutedChats.length})
+                {fmt(settingsMessages.mutedChatsHeading, {
+                    count: preferences.mutedChats.length,
+                })}
             </Typography>
             {preferences.mutedChats.length === 0 ? (
-                <Typography level="body-xs">
-                    No muted chats. Use the bell icon in any chat header to mute it.
-                </Typography>
+                <Typography level="body-xs">{settingsMessages.noMutedChats}</Typography>
             ) : (
                 <Stack spacing={0.75} sx={{ mt: 0.5 }}>
                     {preferences.mutedChats.map((m) => {
@@ -214,7 +212,7 @@ export const NotificationSettingsPanel = () => {
                                     sx={{ minWidth: 0, flex: 1 }}
                                 >
                                     <Chip size="sm" variant="soft">
-                                        {labelForChatType(m.chatType)}
+                                        {labelForChatType(m.chatType, t)}
                                     </Chip>
                                     <Stack sx={{ minWidth: 0 }}>
                                         <Typography
@@ -245,7 +243,9 @@ export const NotificationSettingsPanel = () => {
                                     size="sm"
                                     variant="plain"
                                     onClick={() => unmute(m.chatType, m.chatId)}
-                                    aria-label={`Unmute ${displayName}`}
+                                    aria-label={fmt(settingsMessages.unmuteAriaLabel, {
+                                        name: displayName,
+                                    })}
                                 >
                                     <NotificationsActiveRounded />
                                 </IconButton>

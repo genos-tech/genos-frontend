@@ -4,6 +4,7 @@ import { Stack } from "@mui/joy";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { NoteBreadcrumbs } from "../../common/components/NoteBreadcrumbs";
 import { NoteHistoryChip } from "../../common/components/NoteHistoryChip";
@@ -25,12 +26,13 @@ export const MyNoteHeader = ({
     useCM,
     useUISM,
 }: MyNoteHeaderProps) => {
+    const { t } = useTranslation();
     return (
         <Stack alignItems="center" direction="row" spacing={1} sx={{ minWidth: 0, flex: 1 }}>
             <NoteBreadcrumbs
                 color="primary"
                 icon={<AssignmentRoundedIcon />}
-                label="My Notes"
+                label={t.notes.header.myNotesLabel}
                 noteChain={useNM.currentMyNoteChain}
                 onNodeClick={(noteId) => useNM.loadNote(1, noteId, -1)}
             />

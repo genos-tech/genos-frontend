@@ -13,6 +13,7 @@ import { TeamManagementState } from "../../../../hooks/common/useTeamManagement"
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { Toggler } from "./common";
 import { JoinProjectListItem } from "./projects_subs/JoinProjectListItem";
@@ -56,6 +57,7 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
     } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const { t } = useTranslation();
 
     return (
         <ListItem nested>
@@ -113,7 +115,7 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                     color: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.8)",
                                 }}
                             >
-                                Projects
+                                {t.tasks.sidebar.projects}
                             </Typography>
                         </ListItemContent>
                         <KeyboardArrowDownIcon

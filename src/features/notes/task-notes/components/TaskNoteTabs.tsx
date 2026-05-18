@@ -26,6 +26,7 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import { useTranslation } from "../../../../i18n";
 
 interface TaskNoteTabsProps {
     useNM: NoteManagementState;
@@ -68,6 +69,7 @@ export const TaskNoteTabs = ({
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const { t } = useTranslation();
     const [canScrollLeft, setCanScrollLeft] = useState(false);
     const [canScrollRight, setCanScrollRight] = useState(false);
     const scrollStateRef = useRef({ left: false, right: false });
@@ -403,7 +405,7 @@ export const TaskNoteTabs = ({
                     >
                         <Input
                             key={"currentTaskNoteTitle"}
-                            placeholder="Note Title"
+                            placeholder={t.notes.editor.titlePlaceholder}
                             startDecorator={<NoteAltIcon />}
                             value={currentTaskNoteTitle}
                             variant="soft"
@@ -452,7 +454,7 @@ export const TaskNoteTabs = ({
                                     },
                                 }}
                             >
-                                Saved
+                                {t.notes.editor.savedChip}
                             </Chip>
                         </Box>
                     )}
