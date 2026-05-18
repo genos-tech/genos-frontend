@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
@@ -7,7 +8,7 @@ import { Box, CircularProgress, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { createTheme, THEME_ID, ThemeProvider } from "@mui/material/styles";
 import dayjs from "dayjs";
-import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd";
+import { Virtuoso } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -354,7 +355,14 @@ const getTableContainerStyles = (mode: "light" | "dark" | undefined): React.CSSP
     width: "100%",
     flex: 1,
     minHeight: 0, // Important: allows flex item to shrink below content size
-    overflow: "auto",
+    // Only horizontal scroll on the outer container; vertical scrolling is
+    // owned by the virtualized Virtuoso inside, which manages visibility
+    // against its own scrollport. Mixing the two would either double-
+    // scrollbar or break Virtuoso's viewport measurements.
+    overflowX: "auto",
+    overflowY: "hidden",
+    display: "flex",
+    flexDirection: "column",
     borderRadius: "10px",
     border:
         mode === "dark" ? "1px solid rgba(255, 255, 255, 0.1)" : "1px solid rgba(0, 0, 0, 0.1)",
@@ -732,9 +740,35 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
             const dir = sortConfig.direction === "asc" ? 1 : -1;
             const primary = sortConfig.field;
 
+            // Per-sort caches keyed by task id. `parseTs` was the hot
+            // call previously — for a 1k-task list, an O(N log N) sort
+            // calls the comparator ~10k times, and each comparator hit
+            // would allocate up to 4 dayjs instances. Caching collapses
+            // it to one parse per (task, field). Same for `numericId`
+            // since `Number(s)` + `Number.isFinite` is non-trivial in v8.
+            const dateCache = new Map<string, number | null>();
+            const cacheDate = (key: string, raw: string | null | undefined) => {
+                let v = dateCache.get(key);
+                if (v === undefined) {
+                    v = parseTs(raw);
+                    dateCache.set(key, v);
+                }
+                return v;
+            };
+            const idCache = new Map<string | number, number | null>();
+            const cacheId = (raw: string | number | null | undefined) => {
+                if (raw == null) return null;
+                let v = idCache.get(raw);
+                if (v === undefined) {
+                    v = numericId(raw);
+                    idCache.set(raw, v);
+                }
+                return v;
+            };
+
             const idTieBreak = (a: TaskTableProps, b: TaskTableProps) =>
-                (numericId(a.id) ?? Number.MAX_SAFE_INTEGER) -
-                (numericId(b.id) ?? Number.MAX_SAFE_INTEGER);
+                (cacheId(a.id) ?? Number.MAX_SAFE_INTEGER) -
+                (cacheId(b.id) ?? Number.MAX_SAFE_INTEGER);
 
             const compareMilestones = (a: TaskTableProps, b: TaskTableProps) => {
                 // Sort milestones primarily by `daysLeft` ascending so the
@@ -756,8 +790,8 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                 }
                 // `daysLeft` is a derived/cached value — fall back to the
                 // raw due date in case a row has one set without the other.
-                const aDue = parseTs(a.dueDate);
-                const bDue = parseTs(b.dueDate);
+                const aDue = cacheDate(String(a.id ?? ""), a.dueDate);
+                const bDue = cacheDate(String(b.id ?? ""), b.dueDate);
                 const dueTier = nullTier(aDue, bDue);
                 if (dueTier !== 0) return dueTier;
                 if (aDue != null && bDue != null && aDue !== bDue) return aDue - bDue;
@@ -789,13 +823,28 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     if (as != null && bs != null && as !== bs) return as - bs; // asc
                 }
                 if (primary !== "dueDate") {
-                    const ad = parseTs(a.dueDate);
-                    const bd = parseTs(b.dueDate);
+                    const ad = cacheDate(String(a.id ?? ""), a.dueDate);
+                    const bd = cacheDate(String(b.id ?? ""), b.dueDate);
                     const t = nullTier(ad, bd);
                     if (t !== 0) return t;
                     if (ad != null && bd != null && ad !== bd) return ad - bd; // asc (expired first)
                 }
                 return idTieBreak(a, b);
+            };
+
+            // Primary-field cache — keyed on task identity. `fieldValue`
+            // is called twice per comparator invocation (~2 × N log N
+            // times for an N-task sort); when `primary` is a date column
+            // each call hits dayjs. Caching collapses to N parses.
+            const primaryCache = new Map<string, number | string | null>();
+            const cachePrimary = (task: TaskTableProps): number | string | null => {
+                const key = String(task.id ?? "");
+                let v = primaryCache.get(key);
+                if (v === undefined) {
+                    v = fieldValue(task, primary);
+                    primaryCache.set(key, v);
+                }
+                return v;
             };
 
             return [...tasks].sort((a, b) => {
@@ -806,8 +855,8 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                 if (aMile && bMile) return compareMilestones(a, b);
 
                 // 2. Primary column.
-                const av = fieldValue(a, primary);
-                const bv = fieldValue(b, primary);
+                const av = cachePrimary(a);
+                const bv = cachePrimary(b);
                 const primaryNullTier = nullTier(av, bv);
                 if (primaryNullTier !== 0) return primaryNullTier;
                 const primaryCmp = cmpValues(av, bv) * dir;
@@ -1308,40 +1357,34 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                         ))}
                     </div>
 
-                    {/* Draggable Table Body */}
-                    <DragDropContext onDragEnd={handleDragEnd}>
-                        <Droppable
-                            direction="vertical"
-                            droppableId="task-table"
-                            ignoreContainerClipping={false}
-                            isCombineEnabled={true}
-                            isDropDisabled={false}
-                        >
-                            {(provided, snapshot) => (
-                                <div
-                                    ref={provided.innerRef}
-                                    {...provided.droppableProps}
-                                    style={{
-                                        minHeight: 100,
-                                        minWidth: totalTableWidth,
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        backgroundColor: snapshot.isDraggingOver
-                                            ? mode === "dark"
-                                                ? "rgba(59, 130, 246, 0.08)"
-                                                : "rgba(59, 130, 246, 0.04)"
-                                            : "transparent",
-                                        transition: "background-color 0.25s ease",
-                                    }}
-                                >
-                                    {displayRows.map((task, index) => (
+                    {/* Draggable Table Body — virtualized via react-virtuoso
+                        so only the visible rows are in the DOM at any time.
+                        @hello-pangea/dnd integrates via `mode="virtual"` +
+                        `renderClone` (the dragged row needs a stable DOM
+                        anchor since the original may be unmounted by the
+                        virtualizer as the user scrolls). The empty state
+                        below renders in this slot instead when there are
+                        no rows — gating here keeps Virtuoso's `flex: 1`
+                        from swallowing the empty state's vertical space. */}
+                    {displayRows.length > 0 && (
+                        <DragDropContext onDragEnd={handleDragEnd}>
+                            <Droppable
+                                direction="vertical"
+                                droppableId="task-table"
+                                ignoreContainerClipping={false}
+                                isCombineEnabled={true}
+                                isDropDisabled={false}
+                                mode="virtual"
+                                renderClone={(provided, snapshot, rubric) => {
+                                    const task = displayRows[rubric.source.index];
+                                    if (!task) return <div ref={provided.innerRef} />;
+                                    return (
                                         <DraggableTaskRow
-                                            key={task.id}
                                             childrenByParent={childrenByParent}
                                             columns={columnsWithWidths}
                                             depth={depthMap.get(String(task.id)) ?? 0}
                                             expandedRows={expandedRows}
-                                            index={index}
+                                            index={rubric.source.index}
                                             mode={mode}
                                             myself={myself}
                                             setMyself={setMyself}
@@ -1357,12 +1400,62 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                             onRowDoubleClick={handleRowDoubleClick}
                                             onRowUpdate={handleRowUpdate}
                                         />
-                                    ))}
-                                    {provided.placeholder}
-                                </div>
-                            )}
-                        </Droppable>
-                    </DragDropContext>
+                                    );
+                                }}
+                            >
+                                {(provided, snapshot) => (
+                                    <Virtuoso
+                                        data={displayRows}
+                                        scrollerRef={(ref) => {
+                                            if (ref instanceof HTMLElement) {
+                                                provided.innerRef(ref);
+                                            }
+                                        }}
+                                        style={{
+                                            // Fill the column area beneath the
+                                            // sticky table header. `minHeight: 0`
+                                            // is the standard flex idiom to let
+                                            // a flex child shrink/grow inside a
+                                            // height-constrained parent.
+                                            flex: 1,
+                                            minHeight: 0,
+                                            minWidth: totalTableWidth,
+                                            backgroundColor: snapshot.isDraggingOver
+                                                ? mode === "dark"
+                                                    ? "rgba(59, 130, 246, 0.08)"
+                                                    : "rgba(59, 130, 246, 0.04)"
+                                                : "transparent",
+                                            transition: "background-color 0.25s ease",
+                                        }}
+                                        itemContent={(index, task) => (
+                                            <DraggableTaskRow
+                                                childrenByParent={childrenByParent}
+                                                columns={columnsWithWidths}
+                                                depth={depthMap.get(String(task.id)) ?? 0}
+                                                expandedRows={expandedRows}
+                                                index={index}
+                                                mode={mode}
+                                                myself={myself}
+                                                setMyself={setMyself}
+                                                socket={socket}
+                                                sprintNamesById={sprintNamesById}
+                                                task={task}
+                                                teamMembers={teamMembers}
+                                                toggleExpand={toggleExpand}
+                                                useCM={useCM}
+                                                useTEM={useTEM}
+                                                useTM={useTM}
+                                                useUISM={useUISM}
+                                                onRowDoubleClick={handleRowDoubleClick}
+                                                onRowUpdate={handleRowUpdate}
+                                            />
+                                        )}
+                                        computeItemKey={(_index, task) => String(task.id)}
+                                    />
+                                )}
+                            </Droppable>
+                        </DragDropContext>
+                    )}
 
                     {/* Empty state: show a spinner while we are still fetching tasks
                         (initial mount, team switch, or project switch). Once the load

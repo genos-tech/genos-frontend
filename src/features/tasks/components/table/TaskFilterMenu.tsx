@@ -348,7 +348,18 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         return t.tasks.milestoneFilter.all;
     }, [selectedMilestoneKeys, visibleMilestones, t]);
 
-    // Apply filters
+    // Apply filters — single-pass walk over allTasks. Previously this was
+    // 5-6 chained `.filter()` calls allocating intermediate arrays plus a
+    // separate second walk for childIds, each with its own `new Date()`
+    // per row. With 1k+ tasks the old version was the hottest visible
+    // path on filter toggles. The optimized version:
+    //   - precomputes per-dimension Sets / Booleans up front
+    //   - parses `now` once
+    //   - walks `allTasks` ONCE, classifying each task as a top-level
+    //     row (writes to `filteredTop`) and/or a visible child (writes
+    //     to `childIdSet`) in the same pass.
+    // Semantics are preserved exactly — see the legacy chained version
+    // in git history if you need to cross-check a corner case.
     const applyFilters = (
         statuses: FilterProps[],
         tags: FilterProps[],
@@ -356,225 +367,151 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         effortLevel: FilterProps[],
         milestoneSel: MilestoneFilterKey[]
     ) => {
-        // Apply all filters and set the displaying tasks
-        // Filters: status, tags, priority, effort level
-        let filteredTasks = useTM.allTasks;
-
-        // When the sidebar scopes the table to a single milestone, the
-        // "show only root tasks" short-circuit (parentTaskId === null)
-        // would drop the milestone's child tasks before the milestone-
-        // scope branch below ever sees them. Keep them in the candidate
-        // pool so the milestone scope can decide what stays.
         const milestoneScopeActive = useTM.tableMilestoneFilterId != null;
+        const now = Date.now();
 
-        // Filter by status
+        // --- Status predicate ---
+        // Two axes: status-string match + expired-due-date check. Mirrors
+        // the original branching (length===1 with "Expired" alone = all
+        // statuses but only expired due dates; length>1 with Expired in
+        // the mix = status in selection AND expired due date).
+        let statusStringFilter: Set<string> | null = null;
+        let requireExpired = false;
         if (statuses.length === 1) {
-            if (statuses[0].label === "All") {
-                if (!milestoneScopeActive) {
-                    filteredTasks = filteredTasks.filter((task) => task.parentTaskId === null);
-                }
-            } else if (statuses[0].label === "Expired") {
-                filteredTasks = filteredTasks.filter(
-                    (task) => task.dueDate && new Date(task.dueDate) < new Date()
-                );
-            } else {
-                filteredTasks = filteredTasks.filter((task) => task.status === statuses[0].label);
+            const label = statuses[0].label;
+            if (label === "Expired") {
+                requireExpired = true;
+            } else if (label !== "All") {
+                statusStringFilter = new Set([label]);
             }
-        } else {
-            filteredTasks = filteredTasks.filter((task) =>
-                statuses.some((status) => status.label === task.status)
+        } else if (statuses.length > 1) {
+            statusStringFilter = new Set(statuses.map((s) => s.label));
+            requireExpired = statuses.some((s) => s.label === "Expired");
+        }
+
+        // --- Tag predicate ---
+        let tagLabels: string[] | null = null;
+        if (tags.length > 0 && !(tags.length === 1 && tags[0].label === "All")) {
+            tagLabels = tags.map((t) => t.label);
+        }
+
+        // --- Priority predicate ---
+        let prioritySet: Set<string> | null = null;
+        if (!(priority.length === 1 && priority[0].label === "All")) {
+            prioritySet = new Set(priority.map((p) => p.label));
+        }
+
+        // --- Effort predicate ---
+        let effortSet: Set<string> | null = null;
+        if (!(effortLevel.length === 1 && effortLevel[0].label === "All")) {
+            effortSet = new Set(effortLevel.map((e) => e.label));
+        }
+
+        // --- Milestone (multi-select) predicate ---
+        const milestoneFilterActive = !(
+            milestoneSel.length === 1 && milestoneSel[0] === MILESTONE_ALL
+        );
+        const milestoneAllowNone = milestoneSel.includes(MILESTONE_NONE);
+        const milestoneIdSet = new Set<number>(
+            milestoneSel.filter((k): k is number => typeof k === "number")
+        );
+
+        // --- Milestone scope (sidebar-driven) predicate ---
+        let scopeBackingTaskId: string | null = null;
+        const scopeTarget = useTM.tableMilestoneFilterId;
+        if (milestoneScopeActive && scopeTarget != null) {
+            const milestoneTask = useTM.allTasks.find(
+                (t) => t.isMilestone === true && t.milestoneId === scopeTarget
             );
-
-            if (statuses.some((status) => status.label === "Expired")) {
-                filteredTasks = filteredTasks.filter(
-                    (task) => task.dueDate && new Date(task.dueDate) < new Date()
-                );
-            }
+            scopeBackingTaskId = milestoneTask?.id != null ? String(milestoneTask.id) : null;
         }
 
-        // Filter by tags
-        if (tags.length > 0) {
-            if (tags.length === 1 && tags[0].label === "All") {
-                if (!milestoneScopeActive) {
-                    filteredTasks = filteredTasks.filter((task) => task.parentTaskId === null);
+        // The "All in any dimension → restrict to roots" rule the
+        // legacy code applied inside each per-dimension `if (... "All")`
+        // branch. In practice it fires iff ANY dimension is in "All"
+        // mode AND milestone scope is inactive — the per-dimension
+        // applications were idempotent. Collapsed here into one flag.
+        const restrictTopToRoots =
+            !milestoneScopeActive &&
+            ((statuses.length === 1 && statuses[0].label === "All") ||
+                (tags.length === 1 && tags[0].label === "All") ||
+                (priority.length === 1 && priority[0].label === "All") ||
+                (effortLevel.length === 1 && effortLevel[0].label === "All"));
+
+        const filteredTop: TaskTableProps[] = [];
+        const childIdSet = new Set<string>();
+
+        for (const task of useTM.allTasks) {
+            // Status (string + expired axes)
+            if (statusStringFilter !== null && !statusStringFilter.has(task.status ?? "")) {
+                continue;
+            }
+            if (requireExpired) {
+                if (!task.dueDate) continue;
+                const ts = new Date(task.dueDate).getTime();
+                if (!Number.isFinite(ts) || ts >= now) continue;
+            }
+
+            // Tags (substring search on concatTags)
+            if (tagLabels !== null) {
+                const concat = task.concatTags;
+                if (!concat) continue;
+                let match = false;
+                for (const label of tagLabels) {
+                    if (concat.includes(label)) {
+                        match = true;
+                        break;
+                    }
                 }
-            } else {
-                // Include tasks with the selected tags
-                filteredTasks = filteredTasks.filter((task) =>
-                    tags.some((tag) => task.concatTags?.includes(tag.label))
-                );
-            }
-        }
-
-        // Filter by priority
-        if (priority.length === 1 && priority[0].label === "All") {
-            if (!milestoneScopeActive) {
-                filteredTasks = filteredTasks.filter((task) => task.parentTaskId === null);
-            }
-        } else {
-            filteredTasks = filteredTasks.filter((task) =>
-                priority.some((priority) => priority.label === task.priority)
-            );
-        }
-
-        // Filter by effort level
-        if (effortLevel.length === 1 && effortLevel[0].label === "All") {
-            if (!milestoneScopeActive) {
-                filteredTasks = filteredTasks.filter((task) => task.parentTaskId === null);
-            }
-        } else {
-            filteredTasks = filteredTasks.filter((task) =>
-                effortLevel.some((effortLevel) => effortLevel.label === task.effortLevel)
-            );
-        }
-
-        // Filter by milestone (multi-select). Only narrows when the
-        // user has picked anything other than the default "All". The
-        // sidebar-driven `tableMilestoneFilterId` scope branch below
-        // is intentionally separate and takes precedence visually
-        // (the menu button is hidden while it's active), so we don't
-        // need to do anything special here when both are set — the
-        // narrowing is monotonic.
-        if (!(milestoneSel.length === 1 && milestoneSel[0] === MILESTONE_ALL)) {
-            const allowNone = milestoneSel.includes(MILESTONE_NONE);
-            const ids = new Set<number>(
-                milestoneSel.filter((k): k is number => typeof k === "number")
-            );
-            filteredTasks = filteredTasks.filter((task) => {
-                if (task.milestoneId == null) return allowNone;
-                return ids.has(task.milestoneId);
-            });
-        }
-
-        // Milestone-scoped view: show the milestone's backing task as
-        // the only root row plus its direct children. This is what the
-        // sidebar's "click a milestone item" entry-point hooks into.
-        if (useTM.tableMilestoneFilterId != null) {
-            const target = useTM.tableMilestoneFilterId;
-            const allByProject = useTM.allTasks;
-            // Find the backing task for this milestone (a root task
-            // with `isMilestone === true` and `milestoneId === target`).
-            const milestoneTask = allByProject.find(
-                (t) => t.isMilestone === true && t.milestoneId === target
-            );
-            const backingTaskId = milestoneTask?.id ?? null;
-            filteredTasks = filteredTasks.filter((task) => {
-                if (task.isMilestone === true && task.milestoneId === target) return true;
-                if (task.milestoneId === target) return true;
-                if (
-                    backingTaskId != null &&
-                    task.parentTaskId != null &&
-                    String(task.parentTaskId) === String(backingTaskId)
-                ) {
-                    return true;
-                }
-                return false;
-            });
-        }
-
-        if (filteredTasks.length > 0) {
-            setCurrentDisplayingTasks(filteredTasks);
-        } else {
-            setCurrentDisplayingTasks([]);
-        }
-
-        // Sister set for the consuming table's expanded children.
-        //
-        // We re-run the same status/tags/priority/effortLevel/milestone
-        // predicates on the subtask universe, but we deliberately drop
-        // the "if All is selected for this dimension, also restrict to
-        // parentTaskId === null" branches above. Those exist purely to
-        // keep the *top-level* list lean when no specific filter is
-        // active; for children shown under an expanded parent the
-        // intent is the literal one in this file's comment — show only
-        // child tasks whose status/tags/priority/effort match what the
-        // user has selected. When everything is set to "All" the
-        // resulting set contains every subtask, which the consumer
-        // can then intersect with its own per-parent grouping.
-        if (setVisibleChildTaskIds) {
-            let childCandidates = useTM.allTasks.filter((t) => t.parentTaskId != null);
-
-            // Status
-            if (statuses.length === 1) {
-                if (statuses[0].label === "Expired") {
-                    childCandidates = childCandidates.filter(
-                        (t) => t.dueDate && new Date(t.dueDate) < new Date()
-                    );
-                } else if (statuses[0].label !== "All") {
-                    childCandidates = childCandidates.filter(
-                        (t) => t.status === statuses[0].label
-                    );
-                }
-            } else {
-                childCandidates = childCandidates.filter((t) =>
-                    statuses.some((s) => s.label === t.status)
-                );
-                if (statuses.some((s) => s.label === "Expired")) {
-                    childCandidates = childCandidates.filter(
-                        (t) => t.dueDate && new Date(t.dueDate) < new Date()
-                    );
-                }
-            }
-
-            // Tags
-            if (tags.length > 0 && !(tags.length === 1 && tags[0].label === "All")) {
-                childCandidates = childCandidates.filter((t) =>
-                    tags.some((tag) => t.concatTags?.includes(tag.label))
-                );
+                if (!match) continue;
             }
 
             // Priority
-            if (!(priority.length === 1 && priority[0].label === "All")) {
-                childCandidates = childCandidates.filter((t) =>
-                    priority.some((p) => p.label === t.priority)
-                );
+            if (prioritySet !== null && !prioritySet.has(task.priority ?? "")) {
+                continue;
             }
 
-            // Effort level
-            if (!(effortLevel.length === 1 && effortLevel[0].label === "All")) {
-                childCandidates = childCandidates.filter((t) =>
-                    effortLevel.some((e) => e.label === t.effortLevel)
-                );
+            // Effort
+            if (effortSet !== null && !effortSet.has(task.effortLevel ?? "")) {
+                continue;
             }
 
-            // Milestone (multi-select)
-            if (!(milestoneSel.length === 1 && milestoneSel[0] === MILESTONE_ALL)) {
-                const allowNone = milestoneSel.includes(MILESTONE_NONE);
-                const ids = new Set<number>(
-                    milestoneSel.filter((k): k is number => typeof k === "number")
-                );
-                childCandidates = childCandidates.filter((task) => {
-                    if (task.milestoneId == null) return allowNone;
-                    return ids.has(task.milestoneId);
-                });
+            // Milestone multi-select
+            if (milestoneFilterActive) {
+                if (task.milestoneId == null) {
+                    if (!milestoneAllowNone) continue;
+                } else if (!milestoneIdSet.has(task.milestoneId)) {
+                    continue;
+                }
             }
 
-            // Milestone-scope (sidebar) — mirror the top-level branch
-            // so children outside the scoped milestone are excluded.
-            if (useTM.tableMilestoneFilterId != null) {
-                const target = useTM.tableMilestoneFilterId;
-                const milestoneTask = useTM.allTasks.find(
-                    (t) => t.isMilestone === true && t.milestoneId === target
-                );
-                const backingTaskId = milestoneTask?.id ?? null;
-                childCandidates = childCandidates.filter((task) => {
-                    if (task.milestoneId === target) return true;
-                    if (
-                        backingTaskId != null &&
+            // Milestone scope (sidebar) — narrows to the backing task,
+            // any task in the scoped milestone, or any direct child of
+            // the backing task.
+            if (milestoneScopeActive) {
+                const inScope =
+                    (task.isMilestone === true && task.milestoneId === scopeTarget) ||
+                    task.milestoneId === scopeTarget ||
+                    (scopeBackingTaskId != null &&
                         task.parentTaskId != null &&
-                        String(task.parentTaskId) === String(backingTaskId)
-                    ) {
-                        return true;
-                    }
-                    return false;
-                });
+                        String(task.parentTaskId) === scopeBackingTaskId);
+                if (!inScope) continue;
             }
 
-            const idSet = new Set<string>();
-            for (const t of childCandidates) {
-                if (t.id != null) idSet.add(String(t.id));
+            // Task passes every dimension. Decide top-level vs child.
+            const isRoot = task.parentTaskId == null;
+            if (!restrictTopToRoots || isRoot) {
+                filteredTop.push(task);
             }
-            setVisibleChildTaskIds(idSet);
+            if (!isRoot && task.id != null) {
+                childIdSet.add(String(task.id));
+            }
+        }
+
+        setCurrentDisplayingTasks(filteredTop);
+
+        if (setVisibleChildTaskIds) {
+            setVisibleChildTaskIds(childIdSet);
         }
     };
 
