@@ -43,10 +43,10 @@ export default defineConfig({
                     if (id.includes("emoji-mart") || id.includes("@emoji-mart")) {
                         return "vendor-emoji";
                     }
-                    // @dnd-kit packages travel together (core ↔ sortable ↔
-                    // utilities). Bundling them here keeps the task table /
-                    // sprint board feature chunks lean.
-                    if (id.includes("@dnd-kit")) {
+                    // @hello-pangea/dnd is the drag-and-drop library used by
+                    // the task table and sprint board. Splitting it out
+                    // keeps the table/board feature chunks lean.
+                    if (id.includes("@hello-pangea/dnd")) {
                         return "vendor-dnd";
                     }
                     if (id.includes("@mui/icons-material")) {

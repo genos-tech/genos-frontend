@@ -1,11 +1,10 @@
 import React from "react";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import Avatar from "@mui/joy/Avatar";
 import Box from "@mui/joy/Box";
 import { useColorScheme } from "@mui/joy/styles";
 import Typography from "@mui/joy/Typography";
+import { Draggable } from "@hello-pangea/dnd";
 
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
@@ -68,13 +67,14 @@ const getCardStyles = (
           : mode === "dark"
             ? "1px solid rgba(255, 255, 255, 0.05)"
             : "1px solid rgba(0, 0, 0, 0.04)",
-    cursor: isDragging ? "grabbing" : "grab",
+    cursor: "pointer",
     transition: isDragging ? "none" : "all 0.15s ease",
     transform: isHovered && !isDragging ? "translateY(-1px)" : "none",
 });
 
 type SprintBoardCardProps = {
     task: TaskTableProps;
+    index: number;
     myself: UserProps;
     teamMemberProfiles: Record<string, UserProps>;
     // Pass the whole task so the parent can branch on `isMilestone` and
@@ -86,6 +86,7 @@ type SprintBoardCardProps = {
 
 const SprintBoardCardImpl = ({
     task,
+    index,
     myself,
     teamMemberProfiles,
     onTaskClick,
@@ -97,14 +98,6 @@ const SprintBoardCardImpl = ({
     const { t } = useTranslation();
 
     const [isHovered, setIsHovered] = React.useState(false);
-
-    // @dnd-kit/sortable replaces rbd's <Draggable> wrapper. `transform`
-    // carries the live drag offset; we serialize it via the CSS helper
-    // and merge with our static styles (transform last so the drag
-    // movement wins over the hover lift).
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-        id: String(task.id ?? ""),
-    });
 
     const getDaysLeftColor = (daysLeft: number | null) => {
         if (daysLeft === null) return mode === "dark" ? "#888" : "#666";
@@ -126,196 +119,195 @@ const SprintBoardCardImpl = ({
 
     const priorityStyle = task.priority ? priorityColors[task.priority] : null;
 
-    const dragStyle: React.CSSProperties = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-        // The original card's transform (hover lift) is only applied when
-        // not dragging; while dragging dnd-kit's transform owns the slot.
-        ...(isDragging ? { opacity: 0.85, zIndex: 10 } : {}),
-    };
-
     return (
-        <div
-            ref={setNodeRef}
-            {...attributes}
-            {...listeners}
-            style={{
-                ...getCardStyles(isDragging, isHovered, isSelected, mode),
-                ...dragStyle,
-            }}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            onClick={() => onTaskClick?.(task)}
-        >
-            {/* Header: ID + Priority */}
-            <Box
-                sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    mb: 0.75,
-                }}
-            >
-                <Typography
-                    level="body-xs"
-                    sx={{
-                        color: mode === "dark" ? "#6b9fd4" : "#5a8ac7",
-                        fontWeight: 600,
-                        fontFamily: "'SF Mono', 'Monaco', 'Consolas', monospace",
-                        fontSize: "0.65rem",
+        <Draggable draggableId={task.id?.toString() || ""} index={index} isDragDisabled={false}>
+            {(provided, snapshot) => (
+                <div
+                    ref={provided.innerRef}
+                    {...provided.draggableProps}
+                    {...provided.dragHandleProps}
+                    style={{
+                        ...getCardStyles(snapshot.isDragging, isHovered, isSelected, mode),
+                        ...provided.draggableProps.style,
                     }}
+                    onMouseEnter={() => setIsHovered(true)}
+                    onMouseLeave={() => setIsHovered(false)}
+                    onClick={() => onTaskClick?.(task)}
                 >
-                    #{task.id}
-                </Typography>
-                {priorityStyle && (
-                    <span
-                        style={{
-                            display: "inline-flex",
+                    {/* Header: ID + Priority */}
+                    <Box
+                        sx={{
+                            display: "flex",
                             alignItems: "center",
-                            justifyContent: "center",
-                            padding: "0 6px",
-                            borderRadius: 4,
-                            backgroundColor: priorityStyle.bg,
-                            color: priorityStyle.text,
-                            fontSize: "0.55rem",
-                            height: 16,
-                            fontWeight: 700,
-                            letterSpacing: "0.3px",
-                            textTransform: "uppercase",
+                            justifyContent: "space-between",
+                            mb: 0.75,
                         }}
                     >
-                        {task.priority}
-                    </span>
-                )}
-            </Box>
-
-            {/* Title */}
-            <Typography
-                level="body-sm"
-                sx={{
-                    fontWeight: 500,
-                    mb: 0.75,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    display: "-webkit-box",
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: "vertical",
-                    lineHeight: 1.35,
-                    fontSize: "0.9rem",
-                    color: mode === "dark" ? "#e8e8e8" : "#1a1a1a",
-                }}
-            >
-                {task.title}
-            </Typography>
-
-            {/* Tags */}
-            {task.tags && task.tags.length > 0 && (
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1 }}>
-                    {task.tags.slice(0, 3).map((tag: TagListProps, idx: number) => (
-                        <span
-                            key={idx}
-                            style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                padding: "0 6px",
-                                borderRadius: 8,
-                                backgroundColor: tag.tagColor,
-                                color: tag.tagTextColor,
-                                fontSize: "0.6rem",
-                                height: 16,
-                            }}
-                        >
-                            {tag.tagName}
-                        </span>
-                    ))}
-                    {task.tags.length > 3 && (
                         <Typography
                             level="body-xs"
-                            sx={{ color: mode === "dark" ? "#888" : "#666" }}
+                            sx={{
+                                color: mode === "dark" ? "#6b9fd4" : "#5a8ac7",
+                                fontWeight: 600,
+                                fontFamily: "'SF Mono', 'Monaco', 'Consolas', monospace",
+                                fontSize: "0.65rem",
+                            }}
                         >
-                            +{task.tags.length - 3}
+                            #{task.id}
                         </Typography>
-                    )}
-                </Box>
-            )}
+                        {priorityStyle && (
+                            <span
+                                style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    padding: "0 6px",
+                                    borderRadius: 4,
+                                    backgroundColor: priorityStyle.bg,
+                                    color: priorityStyle.text,
+                                    fontSize: "0.55rem",
+                                    height: 16,
+                                    fontWeight: 700,
+                                    letterSpacing: "0.3px",
+                                    textTransform: "uppercase",
+                                }}
+                            >
+                                {task.priority}
+                            </span>
+                        )}
+                    </Box>
 
-            {/* Footer: Assignee + Due date */}
-            <Box
-                sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    mt: 0.75,
-                    pt: 0.75,
-                    borderTop:
-                        mode === "dark"
-                            ? "1px solid rgba(255, 255, 255, 0.04)"
-                            : "1px solid rgba(0, 0, 0, 0.04)",
-                }}
-            >
-                {/* Assignee */}
-                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                    <Avatar
-                        size="sm"
-                        src={
-                            task.assigneeId === myself.userId
-                                ? `${media_url}/${myself.avatarImgPath}`
-                                : task.assigneeImgPath
-                                  ? `${media_url}/${task.assigneeImgPath}`
-                                  : undefined
-                        }
-                        sx={{
-                            width: 20,
-                            height: 20,
-                            fontSize: "0.6rem",
-                            border:
-                                mode === "dark"
-                                    ? "1.5px solid rgba(255, 255, 255, 0.1)"
-                                    : "1.5px solid rgba(0, 0, 0, 0.08)",
-                        }}
-                    >
-                        {task.assigneeName?.[0]?.toUpperCase() || "?"}
-                    </Avatar>
+                    {/* Title */}
                     <Typography
-                        level="body-xs"
+                        level="body-sm"
                         sx={{
-                            color: mode === "dark" ? "#999" : "#777",
-                            maxWidth: 70,
+                            fontWeight: 500,
+                            mb: 0.75,
                             overflow: "hidden",
                             textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            fontSize: "0.65rem",
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            lineHeight: 1.35,
+                            fontSize: "0.9rem",
+                            color: mode === "dark" ? "#e8e8e8" : "#1a1a1a",
                         }}
                     >
-                        {task.assigneeName || t.tasks.board.unassigned}
+                        {task.title}
                     </Typography>
-                </Box>
 
-                {/* Due date */}
-                <Box
-                    sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 0.25,
-                        color: getDaysLeftColor(task.daysLeft),
-                        padding: "2px 6px",
-                        borderRadius: 4,
-                        backgroundColor:
-                            task.daysLeft !== null && task.daysLeft <= 0
-                                ? mode === "dark"
-                                    ? "rgba(239, 68, 68, 0.15)"
-                                    : "rgba(239, 68, 68, 0.1)"
-                                : "transparent",
-                    }}
-                >
-                    <AccessTimeIcon sx={{ fontSize: 11 }} />
-                    <Typography level="body-xs" sx={{ fontWeight: 600, fontSize: "0.6rem" }}>
-                        {formatDaysLeft(task.daysLeft)}
-                    </Typography>
-                </Box>
-            </Box>
-        </div>
+                    {/* Tags */}
+                    {task.tags && task.tags.length > 0 && (
+                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 1 }}>
+                            {task.tags.slice(0, 3).map((tag: TagListProps, idx: number) => (
+                                <span
+                                    key={idx}
+                                    style={{
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        padding: "0 6px",
+                                        borderRadius: 8,
+                                        backgroundColor: tag.tagColor,
+                                        color: tag.tagTextColor,
+                                        fontSize: "0.6rem",
+                                        height: 16,
+                                    }}
+                                >
+                                    {tag.tagName}
+                                </span>
+                            ))}
+                            {task.tags.length > 3 && (
+                                <Typography
+                                    level="body-xs"
+                                    sx={{ color: mode === "dark" ? "#888" : "#666" }}
+                                >
+                                    +{task.tags.length - 3}
+                                </Typography>
+                            )}
+                        </Box>
+                    )}
+
+                    {/* Footer: Assignee + Due date */}
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            mt: 0.75,
+                            pt: 0.75,
+                            borderTop:
+                                mode === "dark"
+                                    ? "1px solid rgba(255, 255, 255, 0.04)"
+                                    : "1px solid rgba(0, 0, 0, 0.04)",
+                        }}
+                    >
+                        {/* Assignee */}
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                            <Avatar
+                                size="sm"
+                                src={
+                                    task.assigneeId === myself.userId
+                                        ? `${media_url}/${myself.avatarImgPath}`
+                                        : task.assigneeImgPath
+                                          ? `${media_url}/${task.assigneeImgPath}`
+                                          : undefined
+                                }
+                                sx={{
+                                    width: 20,
+                                    height: 20,
+                                    fontSize: "0.6rem",
+                                    border:
+                                        mode === "dark"
+                                            ? "1.5px solid rgba(255, 255, 255, 0.1)"
+                                            : "1.5px solid rgba(0, 0, 0, 0.08)",
+                                }}
+                            >
+                                {task.assigneeName?.[0]?.toUpperCase() || "?"}
+                            </Avatar>
+                            <Typography
+                                level="body-xs"
+                                sx={{
+                                    color: mode === "dark" ? "#999" : "#777",
+                                    maxWidth: 70,
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                    fontSize: "0.65rem",
+                                }}
+                            >
+                                {task.assigneeName || t.tasks.board.unassigned}
+                            </Typography>
+                        </Box>
+
+                        {/* Due date */}
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 0.25,
+                                color: getDaysLeftColor(task.daysLeft),
+                                padding: "2px 6px",
+                                borderRadius: 4,
+                                backgroundColor:
+                                    task.daysLeft !== null && task.daysLeft <= 0
+                                        ? mode === "dark"
+                                            ? "rgba(239, 68, 68, 0.15)"
+                                            : "rgba(239, 68, 68, 0.1)"
+                                        : "transparent",
+                            }}
+                        >
+                            <AccessTimeIcon sx={{ fontSize: 11 }} />
+                            <Typography
+                                level="body-xs"
+                                sx={{ fontWeight: 600, fontSize: "0.6rem" }}
+                            >
+                                {formatDaysLeft(task.daysLeft)}
+                            </Typography>
+                        </Box>
+                    </Box>
+                </div>
+            )}
+        </Draggable>
     );
 };
 

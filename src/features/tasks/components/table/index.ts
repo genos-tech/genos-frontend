@@ -1,5 +1,5 @@
-// @dnd-kit based draggable task table (migrated from react-beautiful-dnd
-// in Phase 5.5; the file names are kept to avoid churning import sites).
+// @hello-pangea/dnd based draggable table (the maintained fork of
+// react-beautiful-dnd — drop-in same API, actively shipping React 19 fixes).
 export { DraggableTaskTable } from "./DraggableTaskTable";
 export { DraggableTaskRow } from "./DraggableTaskRow";
 

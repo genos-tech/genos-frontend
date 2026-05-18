@@ -1,21 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-    closestCenter,
-    DndContext,
-    DragEndEvent,
-    DragOverEvent,
-    DragOverlay,
-    DragStartEvent,
-    KeyboardSensor,
-    PointerSensor,
-    useSensor,
-    useSensors,
-} from "@dnd-kit/core";
-import {
-    SortableContext,
-    sortableKeyboardCoordinates,
-    verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
@@ -24,6 +7,7 @@ import { Box, CircularProgress, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { createTheme, THEME_ID, ThemeProvider } from "@mui/material/styles";
 import dayjs from "dayjs";
+import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -483,22 +467,6 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         direction: "desc",
     });
 
-    // @dnd-kit drag state. `combineTargetId` is the row id whose centre
-    // the cursor is hovering over — when set, dropping there will
-    // reparent. We hold a ref alongside the state so the high-frequency
-    // `onDragOver` doesn't trigger a render on every animation frame.
-    const [activeDragId, setActiveDragId] = useState<string | null>(null);
-    const [combineTargetId, setCombineTargetId] = useState<string | null>(null);
-    const combineTargetIdRef = useRef<string | null>(null);
-
-    // 4px activation distance keeps click-without-drag (cell editing,
-    // milestone-row openPreview) reaching `onClick`. Keyboard sensor wires
-    // accessibility through @dnd-kit/sortable's coordinate getter.
-    const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
-        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-    );
-
     const toggleExpand = useCallback((id: string) => {
         setExpandedRows((prev) => {
             const next = new Set(prev);
@@ -597,19 +565,6 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         }
         return result;
     }, [currentDisplayingTasks, expandedRows, childrenByParent]);
-
-    // Stable string-id array for SortableContext. dnd-kit's reorder math
-    // walks this list, so it has to be referentially stable when the
-    // underlying displayRows array's content hasn't changed.
-    const displayRowIds = useMemo(() => displayRows.map((t) => String(t.id ?? "")), [displayRows]);
-
-    // The currently-dragged row, for the DragOverlay. Looked up against
-    // displayRows so we cover both top-level and nested children. `null`
-    // when no drag is in flight.
-    const activeDragRow = useMemo(() => {
-        if (!activeDragId) return null;
-        return displayRows.find((t) => String(t.id) === activeDragId) ?? null;
-    }, [activeDragId, displayRows]);
 
     // Column widths state - initialize from default column widths
     const [columnWidths, setColumnWidths] = useState<Record<string, number>>(() => {
@@ -865,10 +820,8 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         [sortConfig]
     );
 
-    // Reparent a task by dropping it ONTO another row (the "combine"
-    // gesture; replaces rbd's built-in `combine` via @dnd-kit's
-    // pointer-vs-rect midpoint test in `handleDragOver` below).
-    // Milestones can't be moved;
+    // Reparent a task by dropping it ONTO another row (the `combine`
+    // gesture from react-beautiful-dnd). Milestones can't be moved;
     // tasks can land under any other task — including a milestone
     // row, in which case they inherit that milestone's id too so
     // sprint / milestone-scoped views stay consistent. Optimistic +
@@ -949,115 +902,21 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         }
     };
 
-    // Reorder rows by id. dnd-kit's items array is `displayRowIds` (built
-    // from `displayRows`), so we splice in displayRows-space, then commit
-    // the top-level slice back to `currentDisplayingTasks`. Children
-    // continue to be ordered via `childrenByParent` (built from
-    // `useTM.allTasks`), so dropping a child between siblings is a no-op
-    // visually — matches the legacy behaviour where child reorder was
-    // never actually persisted.
-    const reorderTopLevel = (activeId: string, overId: string) => {
-        const fromIdx = displayRows.findIndex((t) => String(t.id) === activeId);
-        const toIdx = displayRows.findIndex((t) => String(t.id) === overId);
-        if (fromIdx === -1 || toIdx === -1 || fromIdx === toIdx) return;
-
-        // Only top-level rows participate in the persisted reorder. If
-        // either end is a nested child, there's no meaningful "sibling"
-        // semantic to commit — bail and let dnd-kit snap back.
-        const dragged = displayRows[fromIdx];
-        const target = displayRows[toIdx];
-        if (dragged.parentTaskId != null || target.parentTaskId != null) return;
+    // Handle drag end: combine = drop ONTO another row (reparent +
+    // persist); destination = drop between rows (local reorder only,
+    // matches previous behaviour).
+    const handleDragEnd = (result: DropResult) => {
+        if (result.combine) {
+            void reparentTask(result.draggableId, result.combine.draggableId);
+            return;
+        }
+        if (!result.destination) return;
 
         const items = Array.from(currentDisplayingTasks);
-        const f = items.findIndex((t) => String(t.id) === activeId);
-        const t = items.findIndex((t2) => String(t2.id) === overId);
-        if (f === -1 || t === -1 || f === t) return;
-        const [moved] = items.splice(f, 1);
-        items.splice(t, 0, moved);
+        const [reorderedItem] = items.splice(result.source.index, 1);
+        items.splice(result.destination.index, 0, reorderedItem);
+
         setCurrentDisplayingTasks(items);
-    };
-
-    const handleDragStart = (event: DragStartEvent) => {
-        const id = String(event.active.id);
-        setActiveDragId(id);
-        combineTargetIdRef.current = null;
-        setCombineTargetId(null);
-    };
-
-    // Distinguish "drop between rows" (reorder) from "drop onto a row"
-    // (reparent / combine). rbd had this baked in; @dnd-kit doesn't —
-    // we infer it from the geometry of the active vs over rect. Centre
-    // 50% of the over row = combine. The cycle index (`allChildrenByParent`)
-    // built in Phase 5.4 lets us silently suppress the combine cue when
-    // it would create a cycle, so the user only sees the cue when the
-    // drop is actually accepted.
-    const handleDragOver = (event: DragOverEvent) => {
-        const { active, over } = event;
-        if (!over || active.id === over.id) {
-            if (combineTargetIdRef.current !== null) {
-                combineTargetIdRef.current = null;
-                setCombineTargetId(null);
-            }
-            return;
-        }
-        const activeRect = active.rect.current.translated;
-        const overRect = over.rect;
-        if (!activeRect) return;
-        const dragMidY = activeRect.top + activeRect.height / 2;
-        const overMidY = overRect.top + overRect.height / 2;
-        const combineThreshold = overRect.height * 0.25;
-        const wouldCombine = Math.abs(dragMidY - overMidY) < combineThreshold;
-        const overId = String(over.id);
-
-        // Disallow combine onto self or onto descendants (would create
-        // a cycle). Cheap O(visited) lookup via the index from 5.4.
-        const isDescendant = (ancestorId: string, candidateId: string): boolean => {
-            const stack: string[] = [ancestorId];
-            const visited = new Set<string>();
-            while (stack.length > 0) {
-                const current = stack.pop();
-                if (current == null || visited.has(current)) continue;
-                visited.add(current);
-                const childIds = allChildrenByParent.get(current);
-                if (!childIds) continue;
-                for (const cid of childIds) {
-                    if (cid === candidateId) return true;
-                    stack.push(cid);
-                }
-            }
-            return false;
-        };
-
-        let next: string | null = null;
-        if (wouldCombine && !isDescendant(String(active.id), overId)) {
-            next = overId;
-        }
-        if (combineTargetIdRef.current !== next) {
-            combineTargetIdRef.current = next;
-            setCombineTargetId(next);
-        }
-    };
-
-    const handleDragCancel = () => {
-        combineTargetIdRef.current = null;
-        setCombineTargetId(null);
-        setActiveDragId(null);
-    };
-
-    const handleDragEnd = (event: DragEndEvent) => {
-        const { active, over } = event;
-        const activeId = String(active.id);
-        const combineTarget = combineTargetIdRef.current;
-        combineTargetIdRef.current = null;
-        setCombineTargetId(null);
-        setActiveDragId(null);
-
-        if (combineTarget && combineTarget !== activeId) {
-            void reparentTask(activeId, combineTarget);
-            return;
-        }
-        if (!over || over.id === active.id) return;
-        reorderTopLevel(activeId, String(over.id));
     };
 
     // Handle header click for sorting
@@ -1450,42 +1309,39 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     </div>
 
                     {/* Draggable Table Body */}
-                    <DndContext
-                        collisionDetection={closestCenter}
-                        sensors={sensors}
-                        onDragCancel={handleDragCancel}
-                        onDragEnd={handleDragEnd}
-                        onDragOver={handleDragOver}
-                        onDragStart={handleDragStart}
-                    >
-                        <SortableContext
-                            items={displayRowIds}
-                            strategy={verticalListSortingStrategy}
+                    <DragDropContext onDragEnd={handleDragEnd}>
+                        <Droppable
+                            direction="vertical"
+                            droppableId="task-table"
+                            ignoreContainerClipping={false}
+                            isCombineEnabled={true}
+                            isDropDisabled={false}
                         >
-                            <div
-                                style={{
-                                    minHeight: 100,
-                                    minWidth: totalTableWidth,
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    backgroundColor: activeDragId
-                                        ? mode === "dark"
-                                            ? "rgba(59, 130, 246, 0.08)"
-                                            : "rgba(59, 130, 246, 0.04)"
-                                        : "transparent",
-                                    transition: "background-color 0.25s ease",
-                                }}
-                            >
-                                {displayRows.map((task) => {
-                                    const idStr = String(task.id);
-                                    return (
+                            {(provided, snapshot) => (
+                                <div
+                                    ref={provided.innerRef}
+                                    {...provided.droppableProps}
+                                    style={{
+                                        minHeight: 100,
+                                        minWidth: totalTableWidth,
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        backgroundColor: snapshot.isDraggingOver
+                                            ? mode === "dark"
+                                                ? "rgba(59, 130, 246, 0.08)"
+                                                : "rgba(59, 130, 246, 0.04)"
+                                            : "transparent",
+                                        transition: "background-color 0.25s ease",
+                                    }}
+                                >
+                                    {displayRows.map((task, index) => (
                                         <DraggableTaskRow
                                             key={task.id}
                                             childrenByParent={childrenByParent}
                                             columns={columnsWithWidths}
-                                            depth={depthMap.get(idStr) ?? 0}
+                                            depth={depthMap.get(String(task.id)) ?? 0}
                                             expandedRows={expandedRows}
-                                            isCombineTarget={combineTargetId === idStr}
+                                            index={index}
                                             mode={mode}
                                             myself={myself}
                                             setMyself={setMyself}
@@ -1498,51 +1354,15 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                             useTEM={useTEM}
                                             useTM={useTM}
                                             useUISM={useUISM}
-                                            isCombineSource={
-                                                !!combineTargetId && activeDragId === idStr
-                                            }
                                             onRowDoubleClick={handleRowDoubleClick}
                                             onRowUpdate={handleRowUpdate}
                                         />
-                                    );
-                                })}
-                            </div>
-                        </SortableContext>
-                        {/* DragOverlay portal-renders a lightweight ghost
-                            of the dragged row. Without it the row is
-                            constrained to the scrollable table body and
-                            visually clipped by the column header / theme
-                            wrappers when dragged near the edges. Also
-                            stabilises combine detection — the original
-                            row stays put while only the overlay follows
-                            the pointer, so the over.rect geometry our
-                            handleDragOver inspects doesn't dance around. */}
-                        <DragOverlay>
-                            {activeDragRow ? (
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        minHeight: 36,
-                                        minWidth: totalTableWidth,
-                                        backgroundColor: mode === "dark" ? "#2e1065" : "#f3e8ff",
-                                        boxShadow:
-                                            mode === "dark"
-                                                ? "0 8px 24px rgba(0, 0, 0, 0.6)"
-                                                : "0 8px 24px rgba(0, 0, 0, 0.18)",
-                                        borderRadius: 6,
-                                        padding: "0 12px",
-                                        color: mode === "dark" ? "#e0e0e0" : "#333",
-                                        fontSize: "0.8rem",
-                                        fontWeight: 500,
-                                        opacity: 0.95,
-                                    }}
-                                >
-                                    {activeDragRow.title || `#${activeDragRow.id}`}
+                                    ))}
+                                    {provided.placeholder}
                                 </div>
-                            ) : null}
-                        </DragOverlay>
-                    </DndContext>
+                            )}
+                        </Droppable>
+                    </DragDropContext>
 
                     {/* Empty state: show a spinner while we are still fetching tasks
                         (initial mount, team switch, or project switch). Once the load
