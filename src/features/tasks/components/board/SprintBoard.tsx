@@ -1,8 +1,11 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-    closestCenter,
+    closestCorners,
     DndContext,
     DragEndEvent,
+    DragOverEvent,
+    DragOverlay,
+    DragStartEvent,
     KeyboardSensor,
     PointerSensor,
     useSensor,
@@ -23,6 +26,7 @@ import { loadProjectTags } from "../../services/loadProjectTags";
 import { updateTaskFromTable } from "../../services/updateTaskFromTable";
 import { FilterProps } from "../../types/TaskTableTypes";
 import { TaskFilterMenu } from "../table/TaskFilterMenu";
+import { SprintBoardCard } from "./SprintBoardCard";
 import { ColumnConfig, SprintBoardColumn } from "./SprintBoardColumn";
 
 const materialTheme = createTheme({ cssVariables: true });
@@ -195,100 +199,138 @@ export const SprintBoard = (props: SprintBoardProps) => {
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
 
-    // Map an `over.id` (either a card id or a `column-${id}` droppable id)
-    // back to the column id it sits under, plus the index within that
-    // column. Cards live inside columns via SortableContext; the column
-    // wrapper itself is also a Droppable so empty columns still accept
-    // drops.
-    const resolveOverColumn = useCallback(
-        (overId: string): { columnId: string; index: number } | null => {
-            if (overId.startsWith("column-")) {
-                const columnId = overId.slice("column-".length);
-                if (!(columnId in boardTasks)) return null;
-                return { columnId, index: boardTasks[columnId].length };
+    // Drag state. `activeTask` drives the DragOverlay (the floating ghost
+    // that follows the cursor — portal-rendered so it doesn't get clipped
+    // by column `overflow: hidden`). `dragSourceColumnRef` captures the
+    // ORIGINAL column at dragStart so we can persist a status change even
+    // after `onDragOver` has already mutated the card's position to a new
+    // column for the live preview.
+    const [activeTask, setActiveTask] = useState<TaskTableProps | null>(null);
+    const dragSourceColumnRef = useRef<string | null>(null);
+
+    // Given an `over.id` (card id or `column-${id}`), find the column that
+    // currently owns it. Walks `boardTasks` (which `onDragOver` keeps in
+    // sync with the live drag preview).
+    const findContainer = useCallback(
+        (id: string): string | null => {
+            if (id.startsWith("column-")) {
+                const columnId = id.slice("column-".length);
+                return columnId in boardTasks ? columnId : null;
             }
             for (const columnId of Object.keys(boardTasks)) {
-                const idx = boardTasks[columnId].findIndex((t) => String(t.id) === overId);
-                if (idx !== -1) return { columnId, index: idx };
+                if (boardTasks[columnId].some((t) => String(t.id) === id)) {
+                    return columnId;
+                }
             }
             return null;
         },
         [boardTasks]
     );
 
-    const findActiveTaskColumn = useCallback(
-        (activeId: string): { columnId: string; index: number } | null => {
-            for (const columnId of Object.keys(boardTasks)) {
-                const idx = boardTasks[columnId].findIndex((t) => String(t.id) === activeId);
-                if (idx !== -1) return { columnId, index: idx };
-            }
-            return null;
-        },
-        [boardTasks]
-    );
+    const handleDragStart = (event: DragStartEvent) => {
+        const activeId = String(event.active.id);
+        const sourceColumn = findContainer(activeId);
+        if (!sourceColumn) return;
+        dragSourceColumnRef.current = sourceColumn;
+        const task = boardTasks[sourceColumn].find((t) => String(t.id) === activeId) ?? null;
+        setActiveTask(task);
+    };
 
-    // Handle drag end (dnd-kit). No `source.index` / `destination.index`
-    // — we derive both from the items array via `arrayMove`-style splice.
-    const handleDragEnd = async (event: DragEndEvent) => {
+    // Move the active card between columns DURING drag so the destination
+    // column visually accepts it and the user sees a live preview. This is
+    // the canonical @dnd-kit kanban pattern — without it, cross-context
+    // drops can land in ambiguous states because the active item visually
+    // never leaves its source SortableContext.
+    const handleDragOver = (event: DragOverEvent) => {
         const { active, over } = event;
         if (!over) return;
         const activeId = String(active.id);
         const overId = String(over.id);
-        if (activeId === overId) return;
+        const sourceCol = findContainer(activeId);
+        const destCol = findContainer(overId);
+        if (!sourceCol || !destCol || sourceCol === destCol) return;
 
-        const from = findActiveTaskColumn(activeId);
-        const to = resolveOverColumn(overId);
-        if (!from || !to) return;
+        setBoardTasks((prev) => {
+            const sourceItems = [...prev[sourceCol]];
+            const destItems = [...prev[destCol]];
+            const fromIdx = sourceItems.findIndex((t) => String(t.id) === activeId);
+            if (fromIdx === -1) return prev;
+            const [moved] = sourceItems.splice(fromIdx, 1);
+            // Insert at the over-card's slot if over is a card, otherwise
+            // append (over is the column wrapper).
+            const overIdx = destItems.findIndex((t) => String(t.id) === overId);
+            const insertAt = overIdx === -1 ? destItems.length : overIdx;
+            destItems.splice(insertAt, 0, moved);
+            return { ...prev, [sourceCol]: sourceItems, [destCol]: destItems };
+        });
+    };
 
-        const sourceColumn = from.columnId;
-        const destColumn = to.columnId;
+    const handleDragCancel = () => {
+        dragSourceColumnRef.current = null;
+        setActiveTask(null);
+    };
 
-        if (sourceColumn === destColumn) {
-            // Reorder within the same column
-            if (from.index === to.index) return;
-            const columnTasks = [...boardTasks[sourceColumn]];
-            const [movedTask] = columnTasks.splice(from.index, 1);
-            columnTasks.splice(to.index, 0, movedTask);
-            setBoardTasks({ ...boardTasks, [sourceColumn]: columnTasks });
+    const handleDragEnd = async (event: DragEndEvent) => {
+        const { active, over } = event;
+        const activeId = String(active.id);
+        const sourceColumn = dragSourceColumnRef.current;
+        dragSourceColumnRef.current = null;
+        setActiveTask(null);
+
+        if (!over) return;
+        const finalColumn = findContainer(activeId);
+        if (!finalColumn || !sourceColumn) return;
+
+        // Same column: dnd-kit already gave us the new order via the items
+        // shift during drag. For within-column reorder, splice using the
+        // over.id index to commit the visual reorder to state.
+        if (finalColumn === sourceColumn) {
+            const overId = String(over.id);
+            if (activeId === overId) return;
+            const items = [...boardTasks[finalColumn]];
+            const fromIdx = items.findIndex((t) => String(t.id) === activeId);
+            const overIdx = items.findIndex((t) => String(t.id) === overId);
+            if (fromIdx === -1 || overIdx === -1 || fromIdx === overIdx) return;
+            const [moved] = items.splice(fromIdx, 1);
+            items.splice(overIdx, 0, moved);
+            setBoardTasks({ ...boardTasks, [finalColumn]: items });
             return;
         }
 
-        // Cross-column move: update status, mirror into allTasks, persist.
-        const sourceTasks = [...boardTasks[sourceColumn]];
-        const destTasks = [...boardTasks[destColumn]];
-        const [movedTask] = sourceTasks.splice(from.index, 1);
-        const newStatus = COLUMNS.find((col) => col.id === destColumn)?.status || movedTask.status;
+        // Cross-column: the card has already been moved into `finalColumn`
+        // by `onDragOver`. Now update its status to match the destination
+        // and persist to the backend.
+        const newStatus = COLUMNS.find((col) => col.id === finalColumn)?.status ?? null;
+        const movedTask = boardTasks[finalColumn].find((t) => String(t.id) === activeId);
+        if (!movedTask || !newStatus) return;
+
         const updatedMovedTask = { ...movedTask, status: newStatus };
-        destTasks.splice(to.index, 0, updatedMovedTask);
+        setBoardTasks((prev) => ({
+            ...prev,
+            [finalColumn]: prev[finalColumn].map((t) =>
+                String(t.id) === activeId ? updatedMovedTask : t
+            ),
+        }));
 
-        const newBoardTasks = {
-            ...boardTasks,
-            [sourceColumn]: sourceTasks,
-            [destColumn]: destTasks,
-        };
-        setBoardTasks(newBoardTasks);
-
-        if (newStatus && accessToken) {
-            try {
-                await updateTaskFromTable(
-                    updatedMovedTask,
-                    myself,
-                    socket || null,
-                    accessToken,
-                    teamMembers
-                );
-
-                const updatedAllTasks = useTM.allTasks.map((task: TaskTableProps) =>
-                    String(task.id) === activeId ? { ...task, status: newStatus } : task
-                );
-                useTM.setAllTasks(updatedAllTasks);
-            } catch (error) {
-                console.error("[SprintBoard] Failed to update task status:", error);
-            }
-        } else {
-            console.warn(
-                `[SprintBoard] Cannot update task: newStatus=${newStatus}, accessToken=${!!accessToken}`
+        if (!accessToken) {
+            console.warn("[SprintBoard] Cannot persist status: no accessToken");
+            return;
+        }
+        try {
+            await updateTaskFromTable(
+                updatedMovedTask,
+                myself,
+                socket || null,
+                accessToken,
+                teamMembers
             );
+            useTM.setAllTasks((prev) =>
+                prev.map((task: TaskTableProps) =>
+                    String(task.id) === activeId ? { ...task, status: newStatus } : task
+                )
+            );
+        } catch (error) {
+            console.error("[SprintBoard] Failed to update task status:", error);
         }
     };
 
@@ -330,9 +372,12 @@ export const SprintBoard = (props: SprintBoardProps) => {
                     hideStatusFilter
                 />
                 <DndContext
+                    collisionDetection={closestCorners}
                     sensors={sensors}
-                    collisionDetection={closestCenter}
+                    onDragCancel={handleDragCancel}
                     onDragEnd={handleDragEnd}
+                    onDragOver={handleDragOver}
+                    onDragStart={handleDragStart}
                 >
                     <div style={getBoardContainerStyles(mode)}>
                         {COLUMNS.map((column) => (
@@ -349,6 +394,20 @@ export const SprintBoard = (props: SprintBoardProps) => {
                             />
                         ))}
                     </div>
+                    {/* DragOverlay portal-renders the dragged card so it's
+                        not clipped by the column wrappers' `overflow: hidden`.
+                        Without this the card visually disappears behind the
+                        adjacent columns during a cross-column drag. */}
+                    <DragOverlay>
+                        {activeTask ? (
+                            <SprintBoardCard
+                                isSelected={false}
+                                myself={myself}
+                                task={activeTask}
+                                teamMemberProfiles={teamMemberProfiles}
+                            />
+                        ) : null}
+                    </DragOverlay>
                 </DndContext>
             </div>
         </ThemeProvider>

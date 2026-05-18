@@ -4,6 +4,7 @@ import {
     DndContext,
     DragEndEvent,
     DragOverEvent,
+    DragOverlay,
     DragStartEvent,
     KeyboardSensor,
     PointerSensor,
@@ -602,6 +603,14 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
     // underlying displayRows array's content hasn't changed.
     const displayRowIds = useMemo(() => displayRows.map((t) => String(t.id ?? "")), [displayRows]);
 
+    // The currently-dragged row, for the DragOverlay. Looked up against
+    // displayRows so we cover both top-level and nested children. `null`
+    // when no drag is in flight.
+    const activeDragRow = useMemo(() => {
+        if (!activeDragId) return null;
+        return displayRows.find((t) => String(t.id) === activeDragId) ?? null;
+    }, [activeDragId, displayRows]);
+
     // Column widths state - initialize from default column widths
     const [columnWidths, setColumnWidths] = useState<Record<string, number>>(() => {
         const widths: Record<string, number> = {};
@@ -940,23 +949,37 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         }
     };
 
-    // Reorder a flat list of tasks by id. Operates on `currentDisplayingTasks`
-    // so the visible order updates immediately; the displayRows tree is
-    // re-derived in the next render. We only consider top-level rows (since
-    // those are the ones SortableContext orders); a drop onto a child row
-    // is interpreted as "reparent under" via the combine path instead.
+    // Reorder rows by id. dnd-kit's items array is `displayRowIds` (built
+    // from `displayRows`), so we splice in displayRows-space, then commit
+    // the top-level slice back to `currentDisplayingTasks`. Children
+    // continue to be ordered via `childrenByParent` (built from
+    // `useTM.allTasks`), so dropping a child between siblings is a no-op
+    // visually — matches the legacy behaviour where child reorder was
+    // never actually persisted.
     const reorderTopLevel = (activeId: string, overId: string) => {
+        const fromIdx = displayRows.findIndex((t) => String(t.id) === activeId);
+        const toIdx = displayRows.findIndex((t) => String(t.id) === overId);
+        if (fromIdx === -1 || toIdx === -1 || fromIdx === toIdx) return;
+
+        // Only top-level rows participate in the persisted reorder. If
+        // either end is a nested child, there's no meaningful "sibling"
+        // semantic to commit — bail and let dnd-kit snap back.
+        const dragged = displayRows[fromIdx];
+        const target = displayRows[toIdx];
+        if (dragged.parentTaskId != null || target.parentTaskId != null) return;
+
         const items = Array.from(currentDisplayingTasks);
-        const from = items.findIndex((t) => String(t.id) === activeId);
-        const to = items.findIndex((t) => String(t.id) === overId);
-        if (from === -1 || to === -1 || from === to) return;
-        const [moved] = items.splice(from, 1);
-        items.splice(to, 0, moved);
+        const f = items.findIndex((t) => String(t.id) === activeId);
+        const t = items.findIndex((t2) => String(t2.id) === overId);
+        if (f === -1 || t === -1 || f === t) return;
+        const [moved] = items.splice(f, 1);
+        items.splice(t, 0, moved);
         setCurrentDisplayingTasks(items);
     };
 
     const handleDragStart = (event: DragStartEvent) => {
-        setActiveDragId(String(event.active.id));
+        const id = String(event.active.id);
+        setActiveDragId(id);
         combineTargetIdRef.current = null;
         setCombineTargetId(null);
     };
@@ -1013,6 +1036,12 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
             combineTargetIdRef.current = next;
             setCombineTargetId(next);
         }
+    };
+
+    const handleDragCancel = () => {
+        combineTargetIdRef.current = null;
+        setCombineTargetId(null);
+        setActiveDragId(null);
     };
 
     const handleDragEnd = (event: DragEndEvent) => {
@@ -1424,6 +1453,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     <DndContext
                         collisionDetection={closestCenter}
                         sensors={sensors}
+                        onDragCancel={handleDragCancel}
                         onDragEnd={handleDragEnd}
                         onDragOver={handleDragOver}
                         onDragStart={handleDragStart}
@@ -1478,6 +1508,40 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                 })}
                             </div>
                         </SortableContext>
+                        {/* DragOverlay portal-renders a lightweight ghost
+                            of the dragged row. Without it the row is
+                            constrained to the scrollable table body and
+                            visually clipped by the column header / theme
+                            wrappers when dragged near the edges. Also
+                            stabilises combine detection — the original
+                            row stays put while only the overlay follows
+                            the pointer, so the over.rect geometry our
+                            handleDragOver inspects doesn't dance around. */}
+                        <DragOverlay>
+                            {activeDragRow ? (
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        minHeight: 36,
+                                        minWidth: totalTableWidth,
+                                        backgroundColor: mode === "dark" ? "#2e1065" : "#f3e8ff",
+                                        boxShadow:
+                                            mode === "dark"
+                                                ? "0 8px 24px rgba(0, 0, 0, 0.6)"
+                                                : "0 8px 24px rgba(0, 0, 0, 0.18)",
+                                        borderRadius: 6,
+                                        padding: "0 12px",
+                                        color: mode === "dark" ? "#e0e0e0" : "#333",
+                                        fontSize: "0.8rem",
+                                        fontWeight: 500,
+                                        opacity: 0.95,
+                                    }}
+                                >
+                                    {activeDragRow.title || `#${activeDragRow.id}`}
+                                </div>
+                            ) : null}
+                        </DragOverlay>
                     </DndContext>
 
                     {/* Empty state: show a spinner while we are still fetching tasks
