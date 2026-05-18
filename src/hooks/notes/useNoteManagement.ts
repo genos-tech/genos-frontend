@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { NoteService } from "../../db/services/note.service";
 import { createEmptyChatNote } from "../../features/notes/chat-notes/services/createEmptyChatNote";
@@ -153,13 +153,10 @@ export interface NoteManagementState {
     isTaskVisibleInNote: boolean;
     setIsTaskVisibleInNote: (visible: boolean) => void;
 
-    // Note metadata trees
+    // Note metadata trees (derived from the meta arrays — no setters)
     myNoteMetaTree: MyNoteMetaTreeNode[];
-    setMyNoteMetaTree: (tree: MyNoteMetaTreeNode[]) => void;
     taskNoteMetaTree: TaskNoteMetaTreeNode[];
-    setTaskNoteMetaTree: (tree: TaskNoteMetaTreeNode[]) => void;
     chatNoteMetaTree: ChatNoteMetaTreeNode[];
-    setChatNoteMetaTree: (tree: ChatNoteMetaTreeNode[]) => void;
     allNoteIdChains: Record<string, number[]>;
     setAllNoteIdChains: (chains: Record<string, number[]>) => void;
 
@@ -274,21 +271,32 @@ export const useNoteManagement = (
 
     // Shared-with-me personal notes (drives the noteType=4 sidebar bucket)
     const [sharedNoteMeta, setSharedNoteMeta] = useState<SharedNoteMetaProps[]>([]);
-    const [sharedNoteMetaTree, setSharedNoteMetaTree] = useState<SharedNoteMetaTreeNode[]>([]);
 
     // Visibility states
     const [isTaskNoteVisible, setIsTaskNoteVisible] = useState(false);
     const [isTaskVisibleInNote, setIsTaskVisibleInNote] = useState(false);
 
-    // Note metadata trees
-    const [myNoteMetaTree, setMyNoteMetaTree] = useState<MyNoteMetaTreeNode[]>(
-        buildMyNoteTree(myNoteMeta)
+    // Note metadata trees — derived from the meta arrays. Previously stored in
+    // their own `useState` and re-built by a `useEffect` keyed on the meta
+    // dep, which cost an extra commit per meta update (render → effect →
+    // setState → re-render). The `useMemo` form computes the tree in the
+    // same render, with the same identity stability since meta is mutated
+    // via fresh-array setters (`[...prev, item]` / `loadXxxMeta` returns).
+    const myNoteMetaTree = useMemo<MyNoteMetaTreeNode[]>(
+        () => buildMyNoteTree(myNoteMeta),
+        [myNoteMeta]
     );
-    const [taskNoteMetaTree, setTaskNoteMetaTree] = useState<TaskNoteMetaTreeNode[]>(
-        buildTaskNoteTree(taskNoteMeta)
+    const taskNoteMetaTree = useMemo<TaskNoteMetaTreeNode[]>(
+        () => buildTaskNoteTree(taskNoteMeta),
+        [taskNoteMeta]
     );
-    const [chatNoteMetaTree, setChatNoteMetaTree] = useState<ChatNoteMetaTreeNode[]>(
-        buildChatNoteTree(chatNoteMeta)
+    const chatNoteMetaTree = useMemo<ChatNoteMetaTreeNode[]>(
+        () => buildChatNoteTree(chatNoteMeta),
+        [chatNoteMeta]
+    );
+    const sharedNoteMetaTree = useMemo<SharedNoteMetaTreeNode[]>(
+        () => buildSharedNoteTree(sharedNoteMeta),
+        [sharedNoteMeta]
     );
     const [allNoteIdChains, setAllNoteIdChains] = useState<Record<string, number[]>>({});
 
@@ -397,10 +405,6 @@ export const useNoteManagement = (
         }
     };
 
-    useEffect(() => {
-        setChatNoteMetaTree(buildChatNoteTree(chatNoteMeta));
-    }, [chatNoteMeta]);
-
     initCurrentChatNoteChain({
         chatNoteMeta: chatNoteMeta,
         currentChatNoteChain: currentChatNoteChain,
@@ -492,10 +496,6 @@ export const useNoteManagement = (
         }
     };
 
-    useEffect(() => {
-        setTaskNoteMetaTree(buildTaskNoteTree(taskNoteMeta));
-    }, [taskNoteMeta]);
-
     updataTaskNoteChain({
         currentTaskNote: currentTaskNote,
         taskNoteMetaTree: taskNoteMetaTree,
@@ -548,10 +548,6 @@ export const useNoteManagement = (
             setMyNoteMeta(loadedNotes);
         }
     };
-
-    useEffect(() => {
-        setMyNoteMetaTree(buildMyNoteTree(myNoteMeta));
-    }, [myNoteMeta]);
 
     // Favorite notes functions
     const getFavoriteNotesMeta = async () => {
@@ -761,10 +757,6 @@ export const useNoteManagement = (
         setSharedNoteMeta(loaded);
     };
 
-    useEffect(() => {
-        setSharedNoteMetaTree(buildSharedNoteTree(sharedNoteMeta));
-    }, [sharedNoteMeta]);
-
     // Recent notes functions
     const getRecentNotesMeta = async () => {
         const loadedRecents = await loadRecentNotesMeta(myself, accessToken);
@@ -863,9 +855,8 @@ export const useNoteManagement = (
         setCurrentChatNoteChain(undefined);
         setCurrentMyNoteChain(undefined);
         setCurrentTaskNoteChain(undefined);
-        setMyNoteMetaTree([]);
-        setTaskNoteMetaTree([]);
-        setChatNoteMetaTree([]);
+        // metaTree state is derived from the meta arrays via useMemo —
+        // clearing meta above is sufficient; no separate tree reset needed.
         setNewlyCreatedMyNotes([]);
         setNewlyCreatedTaskNotes([]);
         setNewlyCreatedChatNotes([]);
@@ -1266,13 +1257,10 @@ export const useNoteManagement = (
         isTaskVisibleInNote,
         setIsTaskVisibleInNote,
 
-        // Note metadata trees
+        // Note metadata trees (derived; no setters)
         myNoteMetaTree,
-        setMyNoteMetaTree,
         taskNoteMetaTree,
-        setTaskNoteMetaTree,
         chatNoteMetaTree,
-        setChatNoteMetaTree,
         allNoteIdChains,
         setAllNoteIdChains,
 

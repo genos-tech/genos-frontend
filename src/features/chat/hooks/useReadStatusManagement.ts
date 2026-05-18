@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef } from "react";
 
 import { useAuth } from "../../../context/AuthContext";
 import { chatChannel } from "../../../db/workers/channels";
@@ -14,6 +14,11 @@ interface UseReadStatusManagementProps {
     isThread?: boolean;
 }
 
+// Throttle windows (ms): how often to forward "last read" upstream during a
+// fast scroll. Thread panes update half as often as the main pane.
+const MAIN_THROTTLE_MS = 500;
+const THREAD_THROTTLE_MS = 1000;
+
 export const useReadStatusManagement = ({
     useCM,
     currentChat,
@@ -21,8 +26,13 @@ export const useReadStatusManagement = ({
     isThread = false,
 }: UseReadStatusManagementProps) => {
     const { accessToken } = useAuth();
-    const [tsLastReadStatusUpdated, setTsLastReadStatusUpdated] = useState<number>(Date.now());
-    const [indexLastReadStatusUpdated, setIndexLastReadStatusUpdated] = useState<number>(-1);
+    // Promoted from `useState` to `useRef`: these are throttle bookkeeping
+    // that's read by the next scroll handler and never rendered. Keeping
+    // them in state caused a re-render after every accepted tick — i.e.
+    // every 500 ms while the user scrolls — which cascades through the
+    // bubble list. Refs avoid that without affecting throttle behaviour.
+    const tsLastReadStatusUpdatedRef = useRef<number>(Date.now());
+    const indexLastReadStatusUpdatedRef = useRef<number>(-1);
 
     const updateReadStatus = (indexForLastReadMessageId: number) => {
         if (!accessToken || !currentChat.messages[indexForLastReadMessageId]) {
@@ -59,22 +69,21 @@ export const useReadStatusManagement = ({
     const handleReadStatusUpdate = (targetIndex: number) => {
         if (targetIndex !== -1) {
             updateReadStatus(targetIndex);
-            setIndexLastReadStatusUpdated(targetIndex);
-            const now = Date.now();
-            setTsLastReadStatusUpdated(now);
+            indexLastReadStatusUpdatedRef.current = targetIndex;
+            tsLastReadStatusUpdatedRef.current = Date.now();
         }
     };
 
     const handlePeriodicReadStatusUpdate = (visibleRangeEnd: number) => {
-        const intervalMs: number = isThread ? 1000 : 500;
+        const intervalMs = isThread ? THREAD_THROTTLE_MS : MAIN_THROTTLE_MS;
         const now = Date.now();
         if (
-            now - tsLastReadStatusUpdated >= intervalMs &&
-            visibleRangeEnd > indexLastReadStatusUpdated
+            now - tsLastReadStatusUpdatedRef.current >= intervalMs &&
+            visibleRangeEnd > indexLastReadStatusUpdatedRef.current
         ) {
             updateReadStatus(visibleRangeEnd);
-            setTsLastReadStatusUpdated(now);
-            setIndexLastReadStatusUpdated(visibleRangeEnd);
+            tsLastReadStatusUpdatedRef.current = now;
+            indexLastReadStatusUpdatedRef.current = visibleRangeEnd;
         }
     };
 
@@ -82,7 +91,5 @@ export const useReadStatusManagement = ({
         updateReadStatus,
         handleReadStatusUpdate,
         handlePeriodicReadStatusUpdate,
-        tsLastReadStatusUpdated,
-        indexLastReadStatusUpdated,
     };
 };

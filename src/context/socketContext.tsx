@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useRef } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { io, Socket } from "socket.io-client";
 
 import { useAuth } from "./AuthContext";
@@ -16,29 +16,29 @@ const SocketContext = createContext<SocketContextType | undefined>(undefined);
 // Create provider
 export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { accessToken } = useAuth();
-    const socketRef = useRef<Socket | null>(null);
+    // Promoted from `useRef` to `useState` so that the provider re-renders
+    // and its `value` updates after the socket is actually created in the
+    // effect — previously consumers could be stranded with the initial
+    // `null` until something else triggered them to re-render.
+    const [socket, setSocket] = useState<Socket | null>(null);
 
     useEffect(() => {
-        if (!socketRef.current) {
-            socketRef.current = io(ws_url, {
-                withCredentials: true,
-                extraHeaders: { Authorization: accessToken || "" },
-            });
+        const next = io(ws_url, {
+            withCredentials: true,
+            extraHeaders: { Authorization: accessToken || "" },
+        });
+        setSocket(next);
 
-            console.log("Socket initialized");
-
-            return () => {
-                socketRef.current?.disconnect();
-                socketRef.current = null;
-            };
-        }
+        return () => {
+            next.disconnect();
+            setSocket(null);
+        };
     }, [accessToken]);
 
-    return (
-        <SocketContext.Provider value={{ socket: socketRef.current }}>
-            {children}
-        </SocketContext.Provider>
-    );
+    // Memoize so unrelated parent re-renders don't churn consumers.
+    const value = useMemo(() => ({ socket }), [socket]);
+
+    return <SocketContext.Provider value={value}>{children}</SocketContext.Provider>;
 };
 
 // Custom hook to use socket

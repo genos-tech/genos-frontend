@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Box, Chip, Stack, useColorScheme } from "@mui/joy";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
@@ -97,120 +98,114 @@ export const MessageListRenderer = ({
     const { style: bubbleStyle } = useBubbleStylePreference();
     const isCompact = bubbleStyle === "compact";
 
-    const renderDateSeparator = (index: number) => {
-        if (
-            index === 0 ||
-            extractYYYYMMDD(messages[index - 1].tsSent) !== extractYYYYMMDD(messages[index].tsSent)
-        ) {
-            return (
-                <div style={{ padding: "0.5rem 0" }}>
-                    <div style={{ textAlign: "center", fontWeight: 300 }}>
-                        <Chip variant="soft">
-                            <span
-                                style={{
-                                    backgroundColor: "var(--alt-background)",
-                                    border: "1px solid var(--border)",
-                                    padding: "0.1rem 2rem",
-                                    borderRadius: "0.5rem",
-                                }}
-                            >
-                                {extractMMDD(messages[index].tsSent)}
-                            </span>
-                        </Chip>
-                    </div>
-                </div>
-            );
-        }
-        return null;
+    // Pre-compute every per-row datum in a single O(N) pass instead of doing
+    // it per-bubble inside `itemContent`. Virtuoso re-invokes `itemContent`
+    // for every visible cell on each scroll tick / context change — repeating
+    // these computations there meant 20–30× redundant string parsing and
+    // array lookups per frame on a 1k-message chat.
+    type ItemMeta = {
+        showDateSeparator: boolean;
+        dateLabel: string;
+        isSimpleBubble: boolean;
+        paddingTop: number;
+        paddingBottom: number;
     };
+    const itemMetas = useMemo<ItemMeta[]>(() => {
+        const out = new Array<ItemMeta>(messages.length);
+        const simpleBubbleWindowSecs = 600;
+        for (let i = 0; i < messages.length; i++) {
+            const msg = messages[i];
+            const prev = i > 0 ? messages[i - 1] : null;
 
-    const calculateIsSimpleBubble = (
-        index: number,
-        message: MessageProps | ThreadMessageProps
-    ) => {
-        if (index > 0) {
-            const limitSeconds: number = 600;
-            const prevMessage = messages[index - 1];
-            return (
-                prevMessage.sender.userId === message.sender.userId &&
-                getTimeDiffSeconds(prevMessage.tsSent, message.tsSent) < limitSeconds &&
-                (isThread || chat.chatType !== 3)
-            );
+            const currentDate = extractYYYYMMDD(msg.tsSent);
+            const showDateSeparator =
+                prev === null || extractYYYYMMDD(prev.tsSent) !== currentDate;
+            const dateLabel = showDateSeparator ? extractMMDD(msg.tsSent) : "";
+
+            const isSimpleBubble =
+                prev !== null &&
+                prev.sender.userId === msg.sender.userId &&
+                getTimeDiffSeconds(prev.tsSent, msg.tsSent) < simpleBubbleWindowSecs &&
+                (isThread || chat.chatType !== 3);
+
+            // Mirror BubbleUnderBar's chip-count rules so the reserved bottom
+            // padding stays in sync with whether a chip will actually render.
+            // PM bubbles surface task comments rather than thread replies;
+            // thread bubbles still use numReplies (the chip is gated off
+            // in-thread anyway).
+            let numRepliesWithoutFirstMessage: number;
+            if (isThread) {
+                numRepliesWithoutFirstMessage = (msg as MessageProps).numReplies;
+            } else if (chat.chatType === 3) {
+                numRepliesWithoutFirstMessage = (msg as MessageProps).taskCommentCount ?? 0;
+            } else {
+                numRepliesWithoutFirstMessage = (msg as MessageProps).numReplies - 1;
+            }
+
+            let paddingBottom = 0.3;
+            const reactions = (msg as MessageProps).reactions;
+            if (reactions && reactions.length > 0) {
+                paddingBottom += 2.5;
+            } else if (numRepliesWithoutFirstMessage > 0) {
+                paddingBottom += 2.5;
+            } else if (chat.chatType === 3) {
+                paddingBottom += 1;
+            }
+            if (i === messages.length - 1) paddingBottom += 3;
+
+            out[i] = {
+                dateLabel,
+                isSimpleBubble,
+                paddingBottom,
+                paddingTop: 0.3,
+                showDateSeparator,
+            };
         }
-        return false;
-    };
+        return out;
+    }, [messages, isThread, chat.chatType]);
 
-    const calculatePadding = (index: number, message: MessageProps | ThreadMessageProps) => {
-        const paddingTop = 0.3;
-        let paddingBottom = 0.3;
+    // Focus-state inputs change when the user clicks a thread or follows a
+    // jump-to-message link, but they're independent of `messages`. Compute
+    // the two keys once per context change, then resolve per-row in O(1).
+    const focusKey: string | null = useMemo(
+        () =>
+            isThread
+                ? (useCM.currentThreadChat?.moveToSpecificIndex ?? null)
+                : (useCM.currentMainChat?.moveToSpecificIndex ?? null),
+        [
+            isThread,
+            useCM.currentThreadChat?.moveToSpecificIndex,
+            useCM.currentMainChat?.moveToSpecificIndex,
+        ]
+    );
+    const threadActiveTarget = useMemo<{
+        threadId: number | null | undefined;
+        taskId: number | null | undefined;
+    } | null>(() => {
+        if (isThread) return null;
+        if (!useCM.isThreadVisible || !useCM.currentThreadChat) return null;
+        return {
+            taskId: useCM.currentThreadChat.taskId,
+            threadId: useCM.currentThreadChat.threadId,
+        };
+    }, [isThread, useCM.isThreadVisible, useCM.currentThreadChat]);
 
-        // Mirror BubbleUnderBar's chip-count rules so the reserved
-        // bottom padding stays in sync with whether a chip will
-        // actually render. PM bubbles surface task comments rather
-        // than thread replies; thread bubbles still use numReplies
-        // (the chip is gated off in-thread anyway).
-        let numRepliesWithoutFirstMessage: number;
-
-        if (isThread) {
-            numRepliesWithoutFirstMessage = (message as MessageProps).numReplies;
-        } else if (chat.chatType === 3) {
-            numRepliesWithoutFirstMessage = (message as MessageProps).taskCommentCount ?? 0;
-        } else {
-            numRepliesWithoutFirstMessage = (message as MessageProps).numReplies - 1;
-        }
-
-        if (
-            (message as MessageProps).reactions &&
-            (message as MessageProps).reactions!.length > 0
-        ) {
-            paddingBottom = paddingBottom + 2.5;
-        } else if (numRepliesWithoutFirstMessage > 0) {
-            paddingBottom = paddingBottom + 2.5;
-        } else if (chat.chatType === 3) {
-            paddingBottom = paddingBottom + 1;
-        }
-
-        if (index === messages.length - 1) {
-            paddingBottom = paddingBottom + 3;
-        }
-
-        return { paddingTop, paddingBottom };
-    };
-
-    const getFocusedState = (
+    const resolveFocusedState = (
         message: MessageProps | ThreadMessageProps
     ): "focused" | "threadActive" | false => {
-        if (isThread) {
-            if (
-                (message as ThreadMessageProps).messageIdWithChatIdAndThreadId ===
-                useCM.currentThreadChat?.moveToSpecificIndex
-            ) {
-                return "focused";
+        const messageKey = isThread
+            ? (message as ThreadMessageProps).messageIdWithChatIdAndThreadId
+            : (message as MessageProps).messageIdWithChatId;
+        if (messageKey === focusKey) return "focused";
+        if (!threadActiveTarget) return false;
+        if (chat.chatType === 3) {
+            const taskId = (message as MessageProps).taskId;
+            if (taskId && threadActiveTarget.taskId && taskId === threadActiveTarget.taskId) {
+                return "threadActive";
             }
             return false;
         }
-        if (
-            (message as MessageProps).messageIdWithChatId ===
-            useCM.currentMainChat?.moveToSpecificIndex
-        ) {
-            return "focused";
-        }
-        if (useCM.isThreadVisible && useCM.currentThreadChat) {
-            // PM threads key on taskId (each PM message represents a task);
-            // DM/GM threads key on the parent message's messageId.
-            if (chat.chatType === 3) {
-                const messageTaskId = (message as MessageProps).taskId;
-                if (
-                    messageTaskId &&
-                    useCM.currentThreadChat.taskId &&
-                    messageTaskId === useCM.currentThreadChat.taskId
-                ) {
-                    return "threadActive";
-                }
-            } else if (message.messageId === useCM.currentThreadChat.threadId) {
-                return "threadActive";
-            }
-        }
+        if (message.messageId === threadActiveTarget.threadId) return "threadActive";
         return false;
     };
 
@@ -252,10 +247,26 @@ export const MessageListRenderer = ({
                 itemContent={(index, _, { isScrolling }) => {
                     const message = messages[index];
                     const isYou = myself.userId === message.sender.userId;
-                    const isFocused = getFocusedState(message);
-                    const dateSeparator = renderDateSeparator(index);
-                    const isSimpleBubble = calculateIsSimpleBubble(index, message);
-                    const { paddingTop, paddingBottom } = calculatePadding(index, message);
+                    const isFocused = resolveFocusedState(message);
+                    const meta = itemMetas[index];
+                    const dateSeparator = meta.showDateSeparator ? (
+                        <div style={{ padding: "0.5rem 0" }}>
+                            <div style={{ textAlign: "center", fontWeight: 300 }}>
+                                <Chip variant="soft">
+                                    <span
+                                        style={{
+                                            backgroundColor: "var(--alt-background)",
+                                            border: "1px solid var(--border)",
+                                            padding: "0.1rem 2rem",
+                                            borderRadius: "0.5rem",
+                                        }}
+                                    >
+                                        {meta.dateLabel}
+                                    </span>
+                                </Chip>
+                            </div>
+                        </div>
+                    ) : null;
 
                     return (
                         <div>
@@ -269,8 +280,8 @@ export const MessageListRenderer = ({
                                         : isYou
                                           ? "row-reverse"
                                           : "row",
-                                    paddingTop: paddingTop,
-                                    paddingBottom: paddingBottom,
+                                    paddingTop: meta.paddingTop,
+                                    paddingBottom: meta.paddingBottom,
                                     paddingX: isCompact ? 0 : 1,
                                 }}
                             >
@@ -279,7 +290,7 @@ export const MessageListRenderer = ({
                                         currentMessageIndex={index}
                                         isFocused={isFocused}
                                         isScrolling={isScrolling}
-                                        isSimpleBubble={isSimpleBubble}
+                                        isSimpleBubble={meta.isSimpleBubble}
                                         message={message as ThreadMessageProps}
                                         myself={myself}
                                         setEditTargetMessage={setEditTargetMessage}
@@ -299,7 +310,7 @@ export const MessageListRenderer = ({
                                         chat={chat as ChatProps}
                                         isFocused={isFocused}
                                         isScrolling={isScrolling}
-                                        isSimpleBubble={isSimpleBubble}
+                                        isSimpleBubble={meta.isSimpleBubble}
                                         message={message as MessageProps}
                                         myself={myself}
                                         setEditTargetMessage={setEditTargetMessage}
