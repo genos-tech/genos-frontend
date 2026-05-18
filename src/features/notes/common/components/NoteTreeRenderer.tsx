@@ -1,4 +1,4 @@
-import { memo, ReactNode, useCallback, useEffect, useState } from "react";
+import { memo, ReactNode } from "react";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import StarOutlineRoundedIcon from "@mui/icons-material/StarOutlineRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
@@ -40,34 +40,11 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
     const isDark = mode === "dark";
     const { t } = useTranslation();
 
-    // Check if this node should be expanded based on the current chain or tab items
-    const shouldBeExpanded = useCallback(() => {
-        // Check if node is in the current chain (path to selected note)
-        const isInCurrentChain = currentChain?.some(
-            (chainedNote) => chainedNote.noteId === node.noteId
-        );
-
-        // Check if any open tab has this node in its chain
-        const isInTabChain = useNM.tabItems.some((tabNote) =>
-            useNM.allNoteIdChains[`${tabNote.noteType}-${tabNote.noteId}`]?.some(
-                (chainedNoteId: number) => chainedNoteId === node.noteId
-            )
-        );
-
-        return isInCurrentChain || isInTabChain;
-    }, [currentChain, node.noteId, useNM.tabItems, useNM.allNoteIdChains]);
-
-    const [open, setOpen] = useState(shouldBeExpanded);
+    // Open state is owned by useNoteManagement so the whole tree shares a
+    // single Set instead of one useState + useEffect per row. Sticky
+    // auto-expand (chain membership → open) runs once in the hook.
+    const open = useNM.isNodeExpanded(noteType, node.noteId);
     const hasChildren = node.children.length > 0;
-
-    // Sync open state when the chain or tabs change
-    useEffect(() => {
-        const newShouldBeExpanded = shouldBeExpanded();
-        // Only auto-expand, don't auto-collapse (user might want it open)
-        if (newShouldBeExpanded && !open) {
-            setOpen(true);
-        }
-    }, [shouldBeExpanded, currentChain, useNM.tabItems]);
 
     // Check if this specific node is currently selected.
     // noteType=4 (shared personal notes) shares the editor slot with
@@ -92,13 +69,13 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
 
         // If the node has children and we're clicking it, expand it
         if (hasChildren && !open) {
-            setOpen(true);
+            useNM.expandNode(noteType, node.noteId);
         }
     };
 
     const handleChevronClick = (e: React.MouseEvent) => {
         e.stopPropagation();
-        setOpen((prev) => !prev);
+        useNM.toggleNodeExpanded(noteType, node.noteId);
     };
 
     // Check if this note is favorited
@@ -275,40 +252,31 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                     </IconButton>
                 </ListItemButton>
 
-                {/* Children with smooth animation */}
-                <Box
-                    sx={{
-                        display: "grid",
-                        transition: "grid-template-rows 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                        gridTemplateRows: open ? "1fr" : "0fr",
-                        "& > *": {
-                            overflow: "hidden",
-                        },
-                    }}
-                >
+                {/* Children: rendered only when expanded so collapsed
+                    subtrees pay zero render cost. Trade-off vs. the previous
+                    CSS-grid trick: loses the slide animation but unmounts
+                    deep subtrees entirely, which dominates at heavy scale. */}
+                {open && hasChildren && (
                     <List
                         sx={{
                             pl: 2,
                             "--List-nestedInsetStart": "16px",
                         }}
                     >
-                        {hasChildren &&
-                            currentChain &&
-                            node.children.map((child) => (
-                                <NoteTreeRenderer
-                                    key={child.noteId}
-                                    createChildNoteList={createChildNoteList}
-                                    currentChain={currentChain}
-                                    useNM={useNM}
-                                    node={child as T}
-                                    noteType={noteType}
-                                    timestamp={timestamp}
-                                    depth={depth + 1}
-                                />
-                            ))}
-                        {/* {open && isSelected && createChildNoteList(node)} */}
+                        {node.children.map((child) => (
+                            <NoteTreeRenderer
+                                key={child.noteId}
+                                createChildNoteList={createChildNoteList}
+                                currentChain={currentChain}
+                                useNM={useNM}
+                                node={child as T}
+                                noteType={noteType}
+                                timestamp={timestamp}
+                                depth={depth + 1}
+                            />
+                        ))}
                     </List>
-                </Box>
+                )}
             </ListItem>
         </Box>
     );
