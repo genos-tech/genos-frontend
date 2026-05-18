@@ -237,6 +237,15 @@ export function useCollaborativeBlockNote({
         });
     }, []);
 
+    // Lifecycle cleanup runs in the order WebSocket → IndexedDB persistence
+    // → Y.Doc. The provider must come down before its underlying doc is
+    // destroyed (otherwise it can attempt to post a final awareness frame to
+    // a freed structure); IndexedDB persistence is independent but is closed
+    // first so its in-flight transactions finish against a live doc. The
+    // Yjs doc itself was never being destroyed previously — Hocuspocus and
+    // y-indexeddb both hold references to it, but neither calls `destroy()`,
+    // so its internal stores leaked across tab switches until garbage
+    // collection caught up.
     useEffect(() => {
         return () => {
             provider?.destroy();
@@ -248,6 +257,12 @@ export function useCollaborativeBlockNote({
             idbProvider?.destroy();
         };
     }, [idbProvider]);
+
+    useEffect(() => {
+        return () => {
+            doc?.destroy();
+        };
+    }, [doc]);
 
     const commentsExtension = useMemo(() => {
         if (!threadStore) return null;

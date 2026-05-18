@@ -524,6 +524,24 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         return map;
     }, [useTM.allTasks, visibleChildTaskIds]);
 
+    // Unfiltered parent → children index used for the drag-and-drop cycle
+    // check. The filtered `childrenByParent` above hides rows that don't
+    // pass the user's filter, but a filter-hidden descendant still blocks
+    // a reparent move — so the cycle check needs the complete tree. Map
+    // lookup is O(1), replacing the previous O(N) per-step walk of
+    // `useTM.allTasks` inside `isDescendant`.
+    const allChildrenByParent = useMemo(() => {
+        const map = new Map<string, string[]>();
+        for (const task of useTM.allTasks) {
+            if (task.parentTaskId == null || task.id == null) continue;
+            const parentId = String(task.parentTaskId);
+            const arr = map.get(parentId) || [];
+            arr.push(String(task.id));
+            map.set(parentId, arr);
+        }
+        return map;
+    }, [useTM.allTasks]);
+
     const depthMap = useMemo(() => new Map<string, number>(), []);
 
     const displayRows = useMemo(() => {
@@ -830,21 +848,23 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         }
 
         // Cycle check: target must not be a descendant of dragged.
-        // Walks `useTM.allTasks` (not the filtered `childrenByParent`)
-        // so a filter-hidden descendant still blocks the move.
+        // Uses the unfiltered `allChildrenByParent` index (built once per
+        // task-set change) so a filter-hidden descendant still blocks the
+        // move. The previous implementation scanned `useTM.allTasks`
+        // linearly inside the BFS loop — O(N × depth) per drag. With the
+        // index this collapses to O(visited).
         const isDescendant = (ancestorId: string, candidateId: string): boolean => {
-            const queue: string[] = [ancestorId];
+            const stack: string[] = [ancestorId];
             const visited = new Set<string>();
-            while (queue.length > 0) {
-                const current = queue.shift();
+            while (stack.length > 0) {
+                const current = stack.pop();
                 if (current == null || visited.has(current)) continue;
                 visited.add(current);
-                for (const t of useTM.allTasks) {
-                    if (t.parentTaskId == null) continue;
-                    if (String(t.parentTaskId) !== current) continue;
-                    const cid = String(t.id);
+                const childIds = allChildrenByParent.get(current);
+                if (!childIds) continue;
+                for (const cid of childIds) {
                     if (cid === candidateId) return true;
-                    queue.push(cid);
+                    stack.push(cid);
                 }
             }
             return false;

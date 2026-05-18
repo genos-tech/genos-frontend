@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useColorScheme } from "@mui/joy/styles";
 import { createTheme, THEME_ID, ThemeProvider } from "@mui/material/styles";
 import { DragDropContext, DropResult } from "react-beautiful-dnd";
@@ -262,16 +262,25 @@ export const SprintBoard = (props: SprintBoardProps) => {
     // with `currentPreviewKind === "task"` before the reroute kicks in
     // (which also re-runs the `setIsTaskUpdated` cascade and mutates
     // `useTM.allTasks`). Regular tasks keep the old path.
-    const handleTaskClick = (task: TaskTableProps) => {
-        useTM.setIsTaskPreviewVisible(true);
-        if (task.isMilestone === true && task.milestoneId != null) {
-            useTM.setCurrentPreviewMilestoneId(task.milestoneId);
-            return;
-        }
-        if (task.id) {
-            useTM.setCurrentPreviewTaskId(parseInt(task.id));
-        }
-    };
+    // Stabilize the click handler so `SprintBoardCard` (now React.memo) can
+    // skip re-renders when nothing about a card has changed. Destructuring
+    // pins the underlying useState setters — those are guaranteed stable by
+    // React regardless of how often `useTM` is re-constructed by its hook.
+    const { setIsTaskPreviewVisible, setCurrentPreviewMilestoneId, setCurrentPreviewTaskId } =
+        useTM;
+    const handleTaskClick = useCallback(
+        (task: TaskTableProps) => {
+            setIsTaskPreviewVisible(true);
+            if (task.isMilestone === true && task.milestoneId != null) {
+                setCurrentPreviewMilestoneId(task.milestoneId);
+                return;
+            }
+            if (task.id) {
+                setCurrentPreviewTaskId(parseInt(task.id));
+            }
+        },
+        [setIsTaskPreviewVisible, setCurrentPreviewMilestoneId, setCurrentPreviewTaskId]
+    );
 
     return (
         <ThemeProvider theme={{ [THEME_ID]: materialTheme }}>

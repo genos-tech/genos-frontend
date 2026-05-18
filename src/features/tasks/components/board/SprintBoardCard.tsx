@@ -84,7 +84,7 @@ type SprintBoardCardProps = {
     isSelected?: boolean;
 };
 
-export const SprintBoardCard = ({
+const SprintBoardCardImpl = ({
     task,
     index,
     myself,
@@ -310,3 +310,12 @@ export const SprintBoardCard = ({
         </Draggable>
     );
 };
+
+// Memoized export. Every prop is either a primitive or a value already
+// memoized upstream (`teamMemberProfiles` is a state object whose identity
+// only changes when team membership churns; `onTaskClick` should be wrapped
+// in `useCallback` in the parent — see SprintBoard.handleTaskClick). The
+// card body reads ZERO state-manager values, so default shallow equality
+// is safe: there are no captured-at-render-time reads that would go stale
+// when memo skips a render.
+export const SprintBoardCard = React.memo(SprintBoardCardImpl);
