@@ -9,8 +9,11 @@ import {
 } from "react";
 
 import { en } from "./locales/en";
+import { es } from "./locales/es";
+import { fr } from "./locales/fr";
 import { ja } from "./locales/ja";
-import { deepMerge, Locale, Messages } from "./types";
+import { zh } from "./locales/zh";
+import { deepMerge, DeepPartial, Locale, Messages } from "./types";
 
 /**
  * Centralized i18n layer. Mirrors the manual `ja` / `en` `Copy` pattern that
@@ -24,16 +27,39 @@ import { deepMerge, Locale, Messages } from "./types";
  *
  * For non-React contexts (service errors, websocket handlers) use the
  * standalone `getMessages()` helper which reads localStorage directly.
+ *
+ * Non-English dictionaries are `DeepPartial<Messages>` — missing keys
+ * deep-merge-fall-back to the English value so translators can ship
+ * incrementally without breaking the build.
  */
 
 const STORAGE_KEY = "weikiy-locale";
 
+const NON_EN_DICTIONARIES: Record<Exclude<Locale, "en">, DeepPartial<Messages>> = {
+    ja,
+    es,
+    fr,
+    zh,
+};
+
+const isLocale = (v: string | null): v is Locale =>
+    v === "en" || v === "ja" || v === "es" || v === "fr" || v === "zh";
+
+const navigatorLocale = (): Locale => {
+    if (typeof navigator === "undefined") return "en";
+    const lang = navigator.language.toLowerCase();
+    if (lang.startsWith("ja")) return "ja";
+    if (lang.startsWith("es")) return "es";
+    if (lang.startsWith("fr")) return "fr";
+    if (lang.startsWith("zh")) return "zh";
+    return "en";
+};
+
 const readInitialLocale = (): Locale => {
     if (typeof window === "undefined") return "en";
     const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (stored === "en" || stored === "ja") return stored;
-    if (typeof navigator !== "undefined" && navigator.language.startsWith("ja")) return "ja";
-    return "en";
+    if (isLocale(stored)) return stored;
+    return navigatorLocale();
 };
 
 interface I18nContextValue {
@@ -47,10 +73,10 @@ const I18nContext = createContext<I18nContextValue | null>(null);
 export const I18nProvider = ({ children }: { children: ReactNode }) => {
     const [locale, setLocaleState] = useState<Locale>(readInitialLocale);
 
-    const t = useMemo<Messages>(
-        () => (locale === "en" ? en : deepMerge(en, ja)),
-        [locale]
-    );
+    const t = useMemo<Messages>(() => {
+        if (locale === "en") return en;
+        return deepMerge(en, NON_EN_DICTIONARIES[locale]);
+    }, [locale]);
 
     const setLocale = useCallback((l: Locale) => {
         setLocaleState(l);

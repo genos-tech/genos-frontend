@@ -72,9 +72,11 @@ export const settings = {
         heading: "Language",
         description: "Choose the language used throughout the app.",
         label: "Language",
-        helper:
-            "Some translations may be incomplete; missing values fall back to English.",
+        helper: "Some translations may be incomplete; missing values fall back to English.",
         english: "English",
         japanese: "日本語",
+        spanish: "Español",
+        french: "Français",
+        chinese: "中文",
     },
 } as const;

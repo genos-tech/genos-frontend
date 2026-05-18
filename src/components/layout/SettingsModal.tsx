@@ -88,9 +88,7 @@ const AppearanceSection = () => {
             <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={2}>
                 <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Typography level="title-sm">{t.settings.appearance.themeLabel}</Typography>
-                    <Typography level="body-xs">
-                        {t.settings.appearance.themeHelper}
-                    </Typography>
+                    <Typography level="body-xs">{t.settings.appearance.themeHelper}</Typography>
                 </Box>
                 <Select
                     size="sm"
@@ -145,12 +143,8 @@ const MessageLayoutSection = () => {
 
             <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={2}>
                 <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Typography level="title-sm">
-                        {t.settings.messageLayout.styleLabel}
-                    </Typography>
-                    <Typography level="body-xs">
-                        {t.settings.messageLayout.styleHelper}
-                    </Typography>
+                    <Typography level="title-sm">{t.settings.messageLayout.styleLabel}</Typography>
+                    <Typography level="body-xs">{t.settings.messageLayout.styleHelper}</Typography>
                 </Box>
                 <Select
                     size="sm"
@@ -203,12 +197,8 @@ const SpotlightSection = () => {
                 sx={{ mb: 1.5 }}
             >
                 <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Typography level="title-sm">
-                        {t.settings.spotlight.aiAnswersLabel}
-                    </Typography>
-                    <Typography level="body-xs">
-                        {t.settings.spotlight.aiAnswersHelper}
-                    </Typography>
+                    <Typography level="title-sm">{t.settings.spotlight.aiAnswersLabel}</Typography>
+                    <Typography level="body-xs">{t.settings.spotlight.aiAnswersHelper}</Typography>
                 </Box>
                 <Switch checked={aiAnswers} onChange={(e) => setAiAnswers(e.target.checked)} />
             </Stack>
@@ -223,12 +213,8 @@ const SpotlightSection = () => {
                 sx={{ mt: 1.5, opacity: aiAnswers ? 1 : 0.5 }}
             >
                 <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Typography level="title-sm">
-                        {t.settings.spotlight.webSearchLabel}
-                    </Typography>
-                    <Typography level="body-xs">
-                        {t.settings.spotlight.webSearchHelper}
-                    </Typography>
+                    <Typography level="title-sm">{t.settings.spotlight.webSearchLabel}</Typography>
+                    <Typography level="body-xs">{t.settings.spotlight.webSearchHelper}</Typography>
                 </Box>
                 <Switch
                     checked={webSearch}
@@ -294,6 +280,15 @@ const LanguageSection = () => {
                     </Option>
                     <Option value="ja">
                         <Typography level="body-sm">{t.settings.language.japanese}</Typography>
+                    </Option>
+                    <Option value="es">
+                        <Typography level="body-sm">{t.settings.language.spanish}</Typography>
+                    </Option>
+                    <Option value="fr">
+                        <Typography level="body-sm">{t.settings.language.french}</Typography>
+                    </Option>
+                    <Option value="zh">
+                        <Typography level="body-sm">{t.settings.language.chinese}</Typography>
                     </Option>
                 </Select>
             </Stack>

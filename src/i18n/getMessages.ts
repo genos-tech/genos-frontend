@@ -1,5 +1,8 @@
 import { en } from "./locales/en";
+import { es } from "./locales/es";
+import { fr } from "./locales/fr";
 import { ja } from "./locales/ja";
+import { zh } from "./locales/zh";
 import { deepMerge, Locale, Messages } from "./types";
 
 const STORAGE_KEY = "weikiy-locale";
@@ -7,7 +10,8 @@ const STORAGE_KEY = "weikiy-locale";
 const readStoredLocale = (): Locale => {
     if (typeof window === "undefined") return "en";
     const v = window.localStorage.getItem(STORAGE_KEY);
-    return v === "en" || v === "ja" ? v : "en";
+    if (v === "en" || v === "ja" || v === "es" || v === "fr" || v === "zh") return v;
+    return "en";
 };
 
 /**
@@ -21,6 +25,16 @@ const readStoredLocale = (): Locale => {
  */
 export const getMessages = (locale?: Locale): Messages => {
     const resolved = locale ?? readStoredLocale();
-    if (resolved === "ja") return deepMerge(en, ja);
-    return en;
+    switch (resolved) {
+        case "ja":
+            return deepMerge(en, ja);
+        case "es":
+            return deepMerge(en, es);
+        case "fr":
+            return deepMerge(en, fr);
+        case "zh":
+            return deepMerge(en, zh);
+        default:
+            return en;
+    }
 };

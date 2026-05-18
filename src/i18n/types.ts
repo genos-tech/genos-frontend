@@ -12,10 +12,10 @@ import { en } from "./locales/en";
  */
 export type Messages = typeof en;
 
-export type Locale = "en" | "ja";
+export type Locale = "en" | "ja" | "es" | "fr" | "zh";
 
 export type DeepPartial<T> = {
-    [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
+    [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K] extends string ? string : T[K];
 };
 
 /**
