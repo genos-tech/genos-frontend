@@ -11,7 +11,6 @@ import type { UserProps } from "../../types/admin";
 import type {
     ActivityMessageProps,
     AllChatProps,
-    ChatProps,
     FlaggedMessageProps,
     MessageProps,
     ThreadMessageProps,
@@ -23,18 +22,21 @@ import type { TaskTableProps } from "../../types/tasks";
 type AnyNote = MyNoteProps | TaskNoteProps | ChatNoteProps;
 
 type HistoryLoadReq = { myself: UserProps; accessToken: string };
-type HistoryLoadRes = "done";
+// Handlers that exist purely for their side effect — IDB writes, API
+// requests — type their response as `void`. The Promise resolves once the
+// work completes; callers wait on the Promise but don't read the value.
+type HistoryLoadRes = void;
 
 // ---- chat channel ---------------------------------------------------------
 
 export type ChatRequests = {
-    addChat: { req: { chat: AllChatProps; chatType: number }; res: "done" };
-    addMessage: { req: { message: MessageProps; chatType: number }; res: "done" };
+    addChat: { req: { chat: AllChatProps; chatType: number }; res: void };
+    addMessage: { req: { message: MessageProps; chatType: number }; res: void };
     addThreadMessage: {
         req: { threadMessage: ThreadMessageProps; chatType: number };
-        res: "done";
+        res: void;
     };
-    addFlaggedMessage: { req: { message: FlaggedMessageProps }; res: "done" };
+    addFlaggedMessage: { req: { message: FlaggedMessageProps }; res: void };
     popFlaggedMessages: { req: Record<string, never>; res: FlaggedMessageProps[] };
     checkKnownChat: { req: { chatId: number; chatType: number }; res: boolean };
     loadDMHistory: { req: HistoryLoadReq; res: HistoryLoadRes };
@@ -52,7 +54,7 @@ export type ChatRequests = {
         res: ActivityMessageProps[] | { error: string };
     };
     popAllChats: { req: Record<string, never>; res: AllChatProps[] };
-    popLatestChat: { req: { chatType: number }; res: ChatProps | null };
+    popLatestChat: { req: { chatType: number }; res: AllChatProps | null };
     popSpecificChat: {
         req: { chatId: number; chatType: number };
         res: AllChatProps | null;
@@ -75,32 +77,32 @@ export type ChatRequests = {
             threadId: number;
             lastReadMessageId: number;
         };
-        res: "done";
+        res: void;
     };
 };
 
 // ---- notes channel --------------------------------------------------------
 
 export type NotesRequests = {
-    addNote: { req: { note: AnyNote; noteType: number }; res: "done" };
+    addNote: { req: { note: AnyNote; noteType: number }; res: void };
     checkNoteExists: { req: { noteId: number; noteType: number }; res: boolean };
     loadAllNotes: {
         req: { myself: UserProps; accessToken: string };
-        res: "done";
+        res: void;
     };
 };
 
 // ---- tasks channel --------------------------------------------------------
 
 export type TasksRequests = {
-    addTask: { req: { task: TaskTableProps }; res: "done" };
+    addTask: { req: { task: TaskTableProps }; res: void };
     loadProjectTasks: {
         req: { myself: UserProps; accessToken: string; projectId: number };
-        res: "done";
+        res: void;
     };
     loadTeamTasks: {
         req: { myself: UserProps; accessToken: string };
-        res: "done";
+        res: void;
     };
     popSpecificProjectTasks: {
         req: { projectId: number; targetStatuses: string[] };
@@ -111,18 +113,18 @@ export type TasksRequests = {
 // ---- inbox channel --------------------------------------------------------
 
 export type InboxRequests = {
-    addInboxItem: { req: { inboxItem: InboxItemProps }; res: "done" };
-    loadInbox: { req: { myself: UserProps; accessToken: string }; res: "done" };
+    addInboxItem: { req: { inboxItem: InboxItemProps }; res: void };
+    loadInbox: { req: { myself: UserProps; accessToken: string }; res: void };
     popInboxItems: { req: Record<string, never>; res: InboxItemProps[] };
 };
 
 // ---- activity channel -----------------------------------------------------
 
 export type ActivityRequests = {
-    addActivityMessage: { req: { activityMessage: ActivityMessageProps }; res: "done" };
+    addActivityMessage: { req: { activityMessage: ActivityMessageProps }; res: void };
     loadActivityHistory: {
         req: { myself: UserProps; accessToken: string };
-        res: "done";
+        res: void;
     };
     popActivityMessages: {
         req: { myself: UserProps };
@@ -143,7 +145,7 @@ export type ActivityRequests = {
 // ---- users channel --------------------------------------------------------
 
 export type UsersRequests = {
-    addUser: { req: { user: UserProps }; res: "done" };
+    addUser: { req: { user: UserProps }; res: void };
     loadTeamMembers: {
         req: { myself: UserProps; accessToken: string };
         res: UserProps[];

@@ -12,8 +12,6 @@ export type HandlerMap<C extends ContractMap> = {
     [K in keyof C]: (payload: C[K]["req"]) => Promise<C[K]["res"]> | C[K]["res"];
 };
 
-declare const self: DedicatedWorkerGlobalScope & typeof globalThis;
-
 export const registerHandlers = <C extends ContractMap>(handlers: HandlerMap<C>): void => {
     self.onmessage = async (event: MessageEvent<WorkerRequest<unknown>>) => {
         const { correlationId, type, payload } = event.data;

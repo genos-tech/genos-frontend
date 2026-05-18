@@ -17,13 +17,11 @@ const taskService = new TaskService();
 export const tasksHandlers: HandlerMap<TasksRequests> = {
     addTask: async ({ task }) => {
         await taskRepo.put(task);
-        return "done";
     },
 
     loadProjectTasks: async ({ myself, projectId, accessToken }) => {
         const taskList = await loadProjectTasksFromApi(myself, projectId, accessToken);
         if (taskList?.length) await taskRepo.batchInsert(taskList);
-        return "done";
     },
 
     loadTeamTasks: async ({ myself, accessToken }) => {
@@ -32,7 +30,6 @@ export const tasksHandlers: HandlerMap<TasksRequests> = {
         for (let i = 0; i < taskList.length; i += BATCH_SIZE) {
             await taskRepo.batchInsert(taskList.slice(i, i + BATCH_SIZE));
         }
-        return "done";
     },
 
     popSpecificProjectTasks: async ({ projectId, targetStatuses }) => {

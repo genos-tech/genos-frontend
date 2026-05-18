@@ -28,7 +28,6 @@ const checkIsOnline = (
 export const usersHandlers: HandlerMap<UsersRequests> = {
     addUser: async ({ user }) => {
         await userService.saveUser(user);
-        return "done";
     },
 
     loadTeamMembers: async ({ myself, accessToken }) => {

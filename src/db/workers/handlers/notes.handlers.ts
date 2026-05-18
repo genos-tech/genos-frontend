@@ -28,7 +28,6 @@ export const notesHandlers: HandlerMap<NotesRequests> = {
             const repo = NoteRepositoryFactory.createChatNoteRepository();
             await repo.put(note);
         }
-        return "done";
     },
 
     checkNoteExists: async ({ noteId, noteType }) => {
@@ -61,6 +60,5 @@ export const notesHandlers: HandlerMap<NotesRequests> = {
         for (let i = 0; i < chatNotes.length; i += BATCH_SIZE) {
             await noteService.batchInsertChatNotes(chatNotes.slice(i, i + BATCH_SIZE));
         }
-        return "done";
     },
 };

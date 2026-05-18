@@ -13,7 +13,6 @@ const inboxRepo = new InboxRepository();
 export const inboxHandlers: HandlerMap<InboxRequests> = {
     addInboxItem: async ({ inboxItem }) => {
         await inboxRepo.put(inboxItem);
-        return "done";
     },
 
     loadInbox: async ({ myself, accessToken }) => {
@@ -26,7 +25,6 @@ export const inboxHandlers: HandlerMap<InboxRequests> = {
         for (let i = 0; i < history.length; i += BATCH_SIZE) {
             await inboxRepo.batchInsert(history.slice(i, i + BATCH_SIZE));
         }
-        return "done";
     },
 
     popInboxItems: async () => {

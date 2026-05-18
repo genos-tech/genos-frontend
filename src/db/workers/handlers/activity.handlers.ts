@@ -17,7 +17,6 @@ const activityService = new ActivityService();
 export const activityHandlers: HandlerMap<ActivityRequests> = {
     addActivityMessage: async ({ activityMessage }) => {
         await activityService.addActivityMessage(activityMessage);
-        return "done";
     },
 
     loadActivityHistory: async ({ myself, accessToken }) => {
@@ -30,7 +29,6 @@ export const activityHandlers: HandlerMap<ActivityRequests> = {
                 );
             }
         }
-        return "done";
     },
 
     popActivityMessages: async ({ myself }) => {

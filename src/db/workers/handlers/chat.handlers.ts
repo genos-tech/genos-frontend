@@ -229,20 +229,18 @@ const writeMDMHistory = async (history: {
 export const chatHandlers: HandlerMap<ChatRequests> = {
     addChat: async ({ chat, chatType }) => {
         const storeName = CHAT_STORE_BY_TYPE[chatType];
-        if (!storeName) return "done";
+        if (!storeName) return;
         const repo = new ChatRepository(storeName);
         await repo.put(chat);
-        return "done";
     },
 
     addFlaggedMessage: async ({ message }) => {
         await flaggedRepo.put(message);
-        return "done" as const;
     },
 
     addMessage: async ({ message, chatType }) => {
         const storeName = MESSAGE_STORE_BY_TYPE[chatType];
-        if (!storeName) return "done";
+        if (!storeName) return;
         const repo = new MessageRepository(storeName);
 
         // For PM bubbles only, defend `taskCommentCount` from stale or
@@ -261,7 +259,6 @@ export const chatHandlers: HandlerMap<ChatRequests> = {
             }
         }
         await repo.put(message);
-        return "done";
     },
 
     addThreadMessage: async ({ threadMessage, chatType }) => {
@@ -269,7 +266,6 @@ export const chatHandlers: HandlerMap<ChatRequests> = {
         else if (chatType === 2) await chatService.addGMThreadMessage(threadMessage);
         else if (chatType === 3) await chatService.addPMThreadMessage(threadMessage);
         // MDM thread storage is not wired in the legacy worker; leave a no-op.
-        return "done";
     },
 
     checkKnownChat: async ({ chatId, chatType }) => {
@@ -288,7 +284,6 @@ export const chatHandlers: HandlerMap<ChatRequests> = {
             accessToken
         );
         if (history) await writeDMHistory(history);
-        return "done";
     },
 
     loadGMHistory: async ({ myself, accessToken }) => {
@@ -299,7 +294,6 @@ export const chatHandlers: HandlerMap<ChatRequests> = {
             accessToken
         );
         if (history) await writeGMHistory(history);
-        return "done";
     },
 
     loadMDMHistory: async ({ myself, accessToken }) => {
@@ -312,11 +306,9 @@ export const chatHandlers: HandlerMap<ChatRequests> = {
             );
             if (history) await writeMDMHistory(history);
         } catch (error) {
-            // Match prior worker: log and report done so callers still
-            // resolve.
+            // Match prior worker: log and continue so callers still resolve.
             console.error("[chat:loadMDMHistory]", error);
         }
-        return "done";
     },
 
     loadPMHistory: async ({ myself, accessToken }) => {
@@ -327,7 +319,6 @@ export const chatHandlers: HandlerMap<ChatRequests> = {
             accessToken
         );
         if (history) await writePMHistory(history);
-        return "done";
     },
 
     markAllChatActivityAsRead: async ({
@@ -437,7 +428,7 @@ export const chatHandlers: HandlerMap<ChatRequests> = {
             const api = authApi(accessToken);
             if (!api) {
                 console.error("Unauthorized. Auth toke is not found.");
-                return "done";
+                return;
             }
             await api.put("/chat/read/", {
                 chat_id: chatId,
@@ -459,6 +450,5 @@ export const chatHandlers: HandlerMap<ChatRequests> = {
                 console.error("[chat:updateReadStatus] Unexpected error", error);
             }
         }
-        return "done";
     },
 };
