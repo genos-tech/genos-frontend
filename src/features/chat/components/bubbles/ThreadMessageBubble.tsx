@@ -182,6 +182,31 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
 
     useEffect(() => {
         if (selectedEmoji !== null) {
+            // Backend's reaction handler skips its 8-way Django refetch when this
+            // is present (see backend/socketio_events/message_reaction_handlers.py).
+            const emptyUser = {
+                userName: "",
+                userId: "",
+                avatarImgPath: "",
+                tsLastSeen: "",
+                tsJoined: "",
+                customStatus: "",
+            };
+            const messageSnapshot = {
+                sender: message.sender,
+                receiver:
+                    thread.chatType === 1
+                        ? message.sender.userId === myself.userId
+                            ? thread.dmPartnerUser
+                            : myself
+                        : emptyUser,
+                dmPartnerUser: thread.chatType === 1 ? thread.dmPartnerUser : emptyUser,
+                taskId: message.taskId,
+                content: message.content,
+                tsSent: message.tsSent,
+                tsUpdated: message.tsUpdated,
+            };
+
             const existingIndex = reactions.findIndex(
                 (r) => r.emoji === selectedEmoji && r.sender.userId === myself.userId
             );
@@ -206,6 +231,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                         is_thread_binary: 1,
                         reaction_emoji: selectedEmoji,
                         current_emojis: reactions,
+                        messageSnapshot,
                     });
 
                     if (message.messageId === 1 && thread.chatType !== 3) {
@@ -226,6 +252,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                             is_thread_binary: 0,
                             reaction_emoji: selectedEmoji,
                             current_emojis: reactions,
+                            messageSnapshot,
                         });
                     }
                 }
@@ -257,6 +284,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                         is_thread_binary: 1,
                         reaction_emoji: selectedEmoji,
                         current_emojis: reactions,
+                        messageSnapshot,
                     });
 
                     if (message.messageId === 1 && thread.chatType !== 3) {
@@ -277,6 +305,7 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                             is_thread_binary: 0,
                             reaction_emoji: selectedEmoji,
                             current_emojis: reactions,
+                            messageSnapshot,
                             send_activity: false,
                         });
                     }

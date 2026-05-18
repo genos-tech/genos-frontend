@@ -87,6 +87,31 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
     }, [reactions]);
 
     const handleAddReaction = (selectedEmoji: string) => {
+        // Backend's reaction handler skips its 8-way Django refetch when this
+        // is present (see backend/socketio_events/message_reaction_handlers.py).
+        const emptyUser = {
+            userName: "",
+            userId: "",
+            avatarImgPath: "",
+            tsLastSeen: "",
+            tsJoined: "",
+            customStatus: "",
+        };
+        const messageSnapshot = {
+            sender: message.sender,
+            receiver:
+                chatType === 1
+                    ? message.sender.userId === myself.userId
+                        ? dmPartnerUser
+                        : myself
+                    : emptyUser,
+            dmPartnerUser: chatType === 1 ? dmPartnerUser : emptyUser,
+            taskId: message.taskId,
+            content: message.content,
+            tsSent: message.tsSent,
+            tsUpdated: message.tsUpdated,
+        };
+
         const existingIndex = reactions.findIndex(
             (r) => r.emoji === selectedEmoji && r.sender.userId === myself.userId
         );
@@ -112,6 +137,7 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
                     is_thread_binary: isThread === true ? 1 : 0,
                     reaction_emoji: selectedEmoji,
                     current_emojis: reactions,
+                    messageSnapshot,
                 });
 
                 // If the reaction is for the first message in the thread,
@@ -134,6 +160,7 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
                         is_thread_binary: 0,
                         reaction_emoji: selectedEmoji,
                         current_emojis: reactions,
+                        messageSnapshot,
                     });
                 }
 
@@ -157,6 +184,7 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
                         is_thread_binary: 1,
                         reaction_emoji: selectedEmoji,
                         current_emojis: reactions,
+                        messageSnapshot,
                     });
                 }
             }
@@ -189,6 +217,7 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
                     is_thread_binary: isThread === true ? 1 : 0,
                     reaction_emoji: selectedEmoji,
                     current_emojis: reactions,
+                    messageSnapshot,
                 });
 
                 // Update the parent message as well if it's the first thread message
@@ -210,6 +239,7 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
                         is_thread_binary: 0,
                         reaction_emoji: selectedEmoji,
                         current_emojis: reactions,
+                        messageSnapshot,
                         send_activity: false,
                     });
                 }
@@ -233,6 +263,7 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
                         is_thread_binary: 1,
                         reaction_emoji: selectedEmoji,
                         current_emojis: reactions,
+                        messageSnapshot,
                         send_activity: false,
                     });
                 }

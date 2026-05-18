@@ -349,6 +349,32 @@ export const MessageBubble = (props: MessageBubbleProps) => {
 
     useEffect(() => {
         if (selectedEmoji !== null) {
+            // Backend's reaction handler skips its 8-way Django refetch when this
+            // is present (see backend/socketio_events/message_reaction_handlers.py).
+            const emptyUser = {
+                userName: "",
+                userId: "",
+                avatarImgPath: "",
+                tsLastSeen: "",
+                tsJoined: "",
+                customStatus: "",
+            };
+            const messageSnapshot = {
+                sender: message.sender,
+                receiver:
+                    chat.chatType === 1
+                        ? message.sender.userId === myself.userId
+                            ? chat.dmPartnerUser
+                            : myself
+                        : emptyUser,
+                dmPartnerUser: chat.chatType === 1 ? chat.dmPartnerUser : emptyUser,
+                taskId: message.taskId,
+                taskStatus: message.taskStatus,
+                content: message.content,
+                tsSent: message.tsSent,
+                tsUpdated: message.tsUpdated,
+            };
+
             const existingIndex = reactions.findIndex(
                 (r) => r.emoji === selectedEmoji && r.sender.userId === myself.userId
             );
@@ -373,6 +399,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                         is_thread_binary: 0,
                         reaction_emoji: selectedEmoji,
                         current_emojis: reactions,
+                        messageSnapshot,
                     });
 
                     if (message.messageId === 1 && chat.chatType !== 3) {
@@ -393,6 +420,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             is_thread_binary: 0,
                             reaction_emoji: selectedEmoji,
                             current_emojis: reactions,
+                            messageSnapshot,
                         });
                     }
 
@@ -414,6 +442,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             is_thread_binary: 1,
                             reaction_emoji: selectedEmoji,
                             current_emojis: reactions,
+                            messageSnapshot,
                         });
                     }
                 }
@@ -445,6 +474,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                         is_thread_binary: 0,
                         reaction_emoji: selectedEmoji,
                         current_emojis: reactions,
+                        messageSnapshot,
                     });
 
                     if (message.messageId === 1 && chat.chatType !== 3) {
@@ -465,6 +495,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             is_thread_binary: 0,
                             reaction_emoji: selectedEmoji,
                             current_emojis: reactions,
+                            messageSnapshot,
                             send_activity: false,
                         });
                     }
@@ -487,6 +518,7 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             is_thread_binary: 1,
                             reaction_emoji: selectedEmoji,
                             current_emojis: reactions,
+                            messageSnapshot,
                             send_activity: false,
                         });
                     }
@@ -785,7 +817,9 @@ export const MessageBubble = (props: MessageBubbleProps) => {
                             <>
                                 {chat.chatType === 3 ? t.chat.bubble.clickToOpenTask : null}
                                 {chat.chatType === 3 ? <br /> : null}
-                                {fmt(t.chat.bubble.clickToOpenThread, { modKey: isMac() ? "\u2318" : "Alt" })}
+                                {fmt(t.chat.bubble.clickToOpenThread, {
+                                    modKey: isMac() ? "\u2318" : "Alt",
+                                })}
                             </>
                         }
                     >
