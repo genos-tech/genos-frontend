@@ -1,6 +1,6 @@
 import { IDBPDatabase, openDB } from "idb";
 
-import { IndexConfig, StoreConfig } from "../types";
+import { StoreConfig } from "../types";
 import { DB_NAME, DB_VERSION, INDEX_KEY_PATHS, INDEX_NAMES, KEY_PATHS, STORES } from "./constants";
 
 // Store configurations
@@ -205,6 +205,19 @@ export const STORE_CONFIGS: Record<string, StoreConfig> = {
                 ],
                 unique: false,
             },
+            {
+                name: INDEX_NAMES.TASK_META_ASSIGNEE,
+                keyPath: INDEX_KEY_PATHS.TASK_META_ASSIGNEE,
+                unique: false,
+            },
+            {
+                name: INDEX_NAMES.TASK_META_ASSIGNEE_PROJECT,
+                keyPath: [
+                    INDEX_KEY_PATHS.TASK_META_ASSIGNEE_PROJECT[0],
+                    INDEX_KEY_PATHS.TASK_META_ASSIGNEE_PROJECT[1],
+                ],
+                unique: false,
+            },
         ],
     },
     [STORES.TASK_FULL]: {
@@ -221,14 +234,45 @@ export const STORE_CONFIGS: Record<string, StoreConfig> = {
     [STORES.PERSONAL_NOTES]: {
         name: STORES.PERSONAL_NOTES,
         keyPath: KEY_PATHS.PERSONAL_NOTES,
+        indexes: [
+            {
+                name: INDEX_NAMES.PERSONAL_NOTES_OWNER,
+                keyPath: INDEX_KEY_PATHS.PERSONAL_NOTES_OWNER,
+                unique: false,
+            },
+        ],
     },
     [STORES.TASK_NOTES]: {
         name: STORES.TASK_NOTES,
         keyPath: KEY_PATHS.TASK_NOTES,
+        indexes: [
+            {
+                name: INDEX_NAMES.TASK_NOTES_OWNER,
+                keyPath: INDEX_KEY_PATHS.TASK_NOTES_OWNER,
+                unique: false,
+            },
+            {
+                name: INDEX_NAMES.TASK_NOTES_TASK,
+                keyPath: INDEX_KEY_PATHS.TASK_NOTES_TASK,
+                unique: false,
+            },
+        ],
     },
     [STORES.CHAT_NOTES]: {
         name: STORES.CHAT_NOTES,
         keyPath: KEY_PATHS.CHAT_NOTES,
+        indexes: [
+            {
+                name: INDEX_NAMES.CHAT_NOTES_OWNER,
+                keyPath: INDEX_KEY_PATHS.CHAT_NOTES_OWNER,
+                unique: false,
+            },
+            {
+                name: INDEX_NAMES.CHAT_NOTES_CHAT,
+                keyPath: INDEX_KEY_PATHS.CHAT_NOTES_CHAT,
+                unique: false,
+            },
+        ],
     },
     [STORES.TODOS]: {
         name: STORES.TODOS,
@@ -237,42 +281,40 @@ export const STORE_CONFIGS: Record<string, StoreConfig> = {
     },
 };
 
-// Initialize database with proper schema
+// Initialize database with proper schema.
+//
+// Upgrade rules:
+//   - If a store is missing, create it and all of its declared indexes.
+//   - If a store already exists, only add indexes that are not yet present.
+//     Existing indexes are never recreated or renamed here. To rename or
+//     repurpose an index, drop and re-add it in a dedicated migration step.
 export const initDB = async (): Promise<IDBPDatabase> => {
     return openDB(DB_NAME, DB_VERSION, {
-        upgrade(db) {
-            // Create all stores with their configurations
+        upgrade(db, _oldVersion, _newVersion, tx) {
             Object.values(STORE_CONFIGS).forEach((config) => {
                 if (!db.objectStoreNames.contains(config.name)) {
                     const store = db.createObjectStore(config.name, {
                         keyPath: config.keyPath,
                     });
-
-                    // Create indexes if they exist
                     config.indexes?.forEach((index) => {
                         store.createIndex(index.name, index.keyPath, {
                             unique: index.unique || false,
                         });
                     });
+                    return;
                 }
+
+                if (!config.indexes?.length) return;
+
+                const store = tx.objectStore(config.name);
+                const existing = new Set<string>(Array.from(store.indexNames));
+                config.indexes.forEach((index) => {
+                    if (existing.has(index.name)) return;
+                    store.createIndex(index.name, index.keyPath, {
+                        unique: index.unique || false,
+                    });
+                });
             });
         },
     });
-};
-
-// Helper function to create a store with indexes
-const createStoreWithIndexes = (
-    db: IDBDatabase,
-    storeName: string,
-    keyPath: string,
-    indexes: IndexConfig[] = []
-) => {
-    if (!db.objectStoreNames.contains(storeName)) {
-        const store = db.createObjectStore(storeName, { keyPath });
-        indexes.forEach((index) => {
-            store.createIndex(index.name, index.keyPath, {
-                unique: index.unique || false,
-            });
-        });
-    }
 };
