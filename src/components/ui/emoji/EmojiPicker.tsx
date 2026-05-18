@@ -1,8 +1,13 @@
-import { useEffect, useRef } from "react";
-import data from "@emoji-mart/data";
-import Picker from "@emoji-mart/react";
+import { lazy, Suspense, useEffect, useRef } from "react";
 import { useColorScheme } from "@mui/joy/styles";
 import { createPortal } from "react-dom";
+
+// The actual emoji-mart picker + its data table is code-split: lazy import
+// keeps ~80 kB (gzipped) out of the main bundle. The picker only mounts
+// after the user clicks an emoji button, by which time the chunk has
+// usually downloaded; first-click latency is the trade-off and feels
+// acceptable for a non-critical-path feature.
+const EmojiPickerInner = lazy(() => import("./EmojiPickerInner"));
 
 type EmojiPickerProps = {
     editorPos?: any;
@@ -77,11 +82,12 @@ export const EmojiPicker = ({
                 boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.2)",
             }}
         >
-            <Picker
-                data={data}
-                theme={mode === "dark" ? "dark" : "light"}
-                onEmojiSelect={handleEmojiSelect}
-            />
+            <Suspense fallback={null}>
+                <EmojiPickerInner
+                    theme={mode === "dark" ? "dark" : "light"}
+                    onEmojiSelect={handleEmojiSelect}
+                />
+            </Suspense>
         </div>
     );
 
