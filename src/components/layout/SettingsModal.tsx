@@ -290,6 +290,12 @@ const LanguageSection = () => {
                     <Option value="zh">
                         <Typography level="body-sm">{t.settings.language.chinese}</Typography>
                     </Option>
+                    <Option value="ar">
+                        <Typography level="body-sm">{t.settings.language.arabic}</Typography>
+                    </Option>
+                    <Option value="hi">
+                        <Typography level="body-sm">{t.settings.language.hindi}</Typography>
+                    </Option>
                 </Select>
             </Stack>
         </Sheet>

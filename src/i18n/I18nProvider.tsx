@@ -8,12 +8,14 @@ import {
     useState,
 } from "react";
 
+import { ar } from "./locales/ar";
 import { en } from "./locales/en";
 import { es } from "./locales/es";
 import { fr } from "./locales/fr";
+import { hi } from "./locales/hi";
 import { ja } from "./locales/ja";
 import { zh } from "./locales/zh";
-import { deepMerge, DeepPartial, Locale, Messages } from "./types";
+import { deepMerge, DeepPartial, Locale, Messages, RTL_LOCALES } from "./types";
 
 /**
  * Centralized i18n layer. Mirrors the manual `ja` / `en` `Copy` pattern that
@@ -40,10 +42,12 @@ const NON_EN_DICTIONARIES: Record<Exclude<Locale, "en">, DeepPartial<Messages>> 
     es,
     fr,
     zh,
+    ar,
+    hi,
 };
 
 const isLocale = (v: string | null): v is Locale =>
-    v === "en" || v === "ja" || v === "es" || v === "fr" || v === "zh";
+    v === "en" || v === "ja" || v === "es" || v === "fr" || v === "zh" || v === "ar" || v === "hi";
 
 const navigatorLocale = (): Locale => {
     if (typeof navigator === "undefined") return "en";
@@ -52,6 +56,8 @@ const navigatorLocale = (): Locale => {
     if (lang.startsWith("es")) return "es";
     if (lang.startsWith("fr")) return "fr";
     if (lang.startsWith("zh")) return "zh";
+    if (lang.startsWith("ar")) return "ar";
+    if (lang.startsWith("hi")) return "hi";
     return "en";
 };
 
@@ -85,11 +91,14 @@ export const I18nProvider = ({ children }: { children: ReactNode }) => {
         }
     }, []);
 
-    // Reflect the locale on <html lang> so screen readers and any assistive
-    // tech that keys off lang attribute pick it up. Cheap, no-cost win.
+    // Reflect the locale on <html lang> + <html dir> so screen readers,
+    // logical-property CSS (margin-inline-start etc.), and any assistive
+    // tech keying off these attributes pick up the change. Arabic flips
+    // the document to RTL; everything else stays LTR.
     useEffect(() => {
         if (typeof document !== "undefined") {
             document.documentElement.lang = locale;
+            document.documentElement.dir = RTL_LOCALES.has(locale) ? "rtl" : "ltr";
         }
     }, [locale]);
 

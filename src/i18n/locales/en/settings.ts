@@ -78,5 +78,7 @@ export const settings = {
         spanish: "Español",
         french: "Français",
         chinese: "中文",
+        arabic: "العربية",
+        hindi: "हिन्दी",
     },
 } as const;

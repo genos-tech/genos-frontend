@@ -12,7 +12,13 @@ import { en } from "./locales/en";
  */
 export type Messages = typeof en;
 
-export type Locale = "en" | "ja" | "es" | "fr" | "zh";
+export type Locale = "en" | "ja" | "es" | "fr" | "zh" | "ar" | "hi";
+
+/**
+ * Locales rendered right-to-left. Currently only Arabic; Hebrew/Farsi/Urdu
+ * would join this set when added.
+ */
+export const RTL_LOCALES: ReadonlySet<Locale> = new Set(["ar"]);
 
 export type DeepPartial<T> = {
     [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K] extends string ? string : T[K];
