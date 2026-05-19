@@ -1,6 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";
+import Stack from "@mui/joy/Stack";
 import { useColorScheme } from "@mui/joy/styles";
+import Switch from "@mui/joy/Switch";
+import Typography from "@mui/joy/Typography";
 import { createTheme, THEME_ID, ThemeProvider } from "@mui/material/styles";
 import { Socket } from "socket.io-client";
 
@@ -94,6 +97,19 @@ export const SprintBoard = (props: SprintBoardProps) => {
     // Filtered tasks from TaskFilterMenu
     const [filteredTasks, setFilteredTasks] = useState<TaskTableProps[]>([]);
 
+    // Subscription to TaskFilterMenu's per-task "subtask passes the
+    // filter" set. The table consumes this too (via its expand chevron);
+    // the board uses it to honor the user's "Show child tasks" toggle —
+    // when on, every non-root that matched the active filter is added
+    // to the columns alongside the root rows already in `filteredTasks`.
+    const [visibleChildTaskIds, setVisibleChildTaskIds] = useState<Set<string> | null>(null);
+    // When `Milestone: All` is selected the filter pipeline leaves
+    // every "no-milestone" subtask out of the board because the board
+    // shows only root rows by default — that's the right default to
+    // avoid drowning the user in nested cards, but it gives no way to
+    // see the full picture. This toggle is the escape hatch.
+    const [showAllChildTasks, setShowAllChildTasks] = useState<boolean>(false);
+
     // Tag filter setup
     const [predefinedTagsFilters, setPredefinedTagsFilters] = useState<FilterProps[]>([]);
     useEffect(() => {
@@ -149,6 +165,12 @@ export const SprintBoard = (props: SprintBoardProps) => {
     // `parentTaskId === null` re-filter was clipping the milestone's
     // children back out, which is exactly why dropdown-milestone
     // selection previously rendered only the milestone backing card.
+    //
+    // The "Show child tasks" toggle is the explicit opt-in for the
+    // flooded view: when on, we merge in every non-root that passed
+    // the filter (`visibleChildTaskIds`). The merge is dedup-keyed by
+    // id so the milestone-filter case (where `filteredTasks` already
+    // contains matching non-roots) doesn't double-render.
     useEffect(() => {
         const organized: Record<string, TaskTableProps[]> = {
             open: [],
@@ -157,16 +179,37 @@ export const SprintBoard = (props: SprintBoardProps) => {
             closed: [],
         };
 
-        for (const task of filteredTasks || []) {
+        const seenIds = new Set<string>();
+        const dispatchToColumn = (task: TaskTableProps) => {
             const status = task.status?.toLowerCase() || "open";
             if (status === "open") organized.open.push(task);
             else if (status === "wip") organized.wip.push(task);
             else if (status === "pending") organized.pending.push(task);
             else if (status === "closed") organized.closed.push(task);
+        };
+
+        for (const task of filteredTasks || []) {
+            const idKey = task.id != null ? String(task.id) : "";
+            if (idKey) {
+                if (seenIds.has(idKey)) continue;
+                seenIds.add(idKey);
+            }
+            dispatchToColumn(task);
+        }
+
+        if (showAllChildTasks && visibleChildTaskIds && visibleChildTaskIds.size > 0) {
+            for (const task of useTM.allTasks) {
+                if (task.id == null) continue;
+                const idKey = String(task.id);
+                if (seenIds.has(idKey)) continue;
+                if (!visibleChildTaskIds.has(idKey)) continue;
+                seenIds.add(idKey);
+                dispatchToColumn(task);
+            }
         }
 
         setBoardTasks(organized);
-    }, [filteredTasks]);
+    }, [filteredTasks, showAllChildTasks, visibleChildTaskIds, useTM.allTasks]);
 
     // Sync the dragged task's new status onto the open preview pane so
     // the user immediately sees the change there. Mirrors the manual
@@ -420,10 +463,37 @@ export const SprintBoard = (props: SprintBoardProps) => {
                     isTaskUpdated={useTM.isTaskUpdated}
                     predefinedTagsFilters={predefinedTagsFilters}
                     setCurrentDisplayingTasks={setFilteredTasks}
+                    setVisibleChildTaskIds={setVisibleChildTaskIds}
                     useSM={useSM}
                     useTM={useTM}
                     hideStatusFilter
                 />
+                <Stack
+                    alignItems="center"
+                    direction="row"
+                    spacing={1}
+                    sx={{
+                        px: 1.5,
+                        py: 0.5,
+                        flexShrink: 0,
+                    }}
+                >
+                    <Switch
+                        checked={showAllChildTasks}
+                        size="sm"
+                        onChange={(event) => setShowAllChildTasks(event.target.checked)}
+                    />
+                    <Typography
+                        level="body-sm"
+                        sx={{
+                            cursor: "pointer",
+                            color: mode === "dark" ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.65)",
+                        }}
+                        onClick={() => setShowAllChildTasks((prev) => !prev)}
+                    >
+                        Show child tasks
+                    </Typography>
+                </Stack>
                 <DragDropContext onDragEnd={handleDragEnd}>
                     <div style={getBoardContainerStyles(mode)}>
                         {COLUMNS.map((column) => {
