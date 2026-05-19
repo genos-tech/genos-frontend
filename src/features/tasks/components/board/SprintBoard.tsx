@@ -436,28 +436,49 @@ export const SprintBoard = (props: SprintBoardProps) => {
                 />
                 <DragDropContext onDragEnd={handleDragEnd}>
                     <div style={getBoardContainerStyles(mode)}>
-                        {COLUMNS.map((column) => (
-                            <SprintBoardColumn
-                                key={column.id}
-                                column={column}
-                                // Pending state lights up the card on
-                                // click; the debounced setters then
-                                // catch the real state up ~150 ms later.
-                                isMilestonePreviewActive={
-                                    pendingMilestoneId != null
-                                        ? true
-                                        : useTM.currentPreviewKind === "milestone"
-                                }
-                                myself={myself}
-                                selectedMilestoneId={
-                                    pendingMilestoneId ?? useTM.currentPreviewMilestoneId
-                                }
-                                selectedTaskId={pendingTaskId ?? useTM.currentPreviewTaskId}
-                                tasks={boardTasks[column.id] || []}
-                                teamMemberProfiles={teamMemberProfiles}
-                                onTaskClick={handleTaskClick}
-                            />
-                        ))}
+                        {COLUMNS.map((column) => {
+                            // Pending state lights up the just-clicked
+                            // card; the debounced setters catch the
+                            // real `useTM.currentPreview*` state up
+                            // ~150 ms later. When the click is a *mode
+                            // switch* (e.g. milestone preview is open
+                            // and the user clicks a regular task — or
+                            // vice versa) the stale useTM values for
+                            // the old mode would otherwise keep the
+                            // previously-selected card highlighted
+                            // until the timer fires, producing the
+                            // "both cards selected for a second"
+                            // glitch. The pending fields express
+                            // intent: when one mode is pending, the
+                            // other mode's highlight must be
+                            // suppressed immediately.
+                            const taskPending = pendingTaskId != null;
+                            const milestonePending = pendingMilestoneId != null;
+                            const selectedTaskId = milestonePending
+                                ? undefined
+                                : (pendingTaskId ?? useTM.currentPreviewTaskId);
+                            const selectedMilestoneId = taskPending
+                                ? undefined
+                                : (pendingMilestoneId ?? useTM.currentPreviewMilestoneId);
+                            const isMilestonePreviewActive = taskPending
+                                ? false
+                                : milestonePending
+                                  ? true
+                                  : useTM.currentPreviewKind === "milestone";
+                            return (
+                                <SprintBoardColumn
+                                    key={column.id}
+                                    column={column}
+                                    isMilestonePreviewActive={isMilestonePreviewActive}
+                                    myself={myself}
+                                    selectedMilestoneId={selectedMilestoneId}
+                                    selectedTaskId={selectedTaskId}
+                                    tasks={boardTasks[column.id] || []}
+                                    teamMemberProfiles={teamMemberProfiles}
+                                    onTaskClick={handleTaskClick}
+                                />
+                            );
+                        })}
                     </div>
                 </DragDropContext>
             </div>
