@@ -400,8 +400,26 @@ export const TaskHomeLayout = ({
                         </>
                     )}
 
+                    {/* The panel must stay mounted across the
+                        milestone→task transition. `setCurrentPreviewMilestoneId`
+                        intentionally clears `currentPreviewTask` to undefined
+                        so a stale task can't bleed through the milestone
+                        pane; when the user then opens a regular task,
+                        `currentPreviewTaskId` flips to the new id but
+                        `currentPreviewTask` only repopulates after
+                        `loadTask` resolves. Without including
+                        `currentPreviewTaskId !== -1` in the mount guard,
+                        the panel unmounts during that load and remounts
+                        once data arrives — visible to the user as a
+                        flash where the preview pane disappears entirely.
+                        Particularly noticeable in SprintBoard when a
+                        Pending-status milestone is clicked, then a
+                        regular task in another column is clicked
+                        rapidly afterward. */}
                     {useTM.isTaskPreviewVisible &&
-                        (useTM.currentPreviewTask || useTM.currentPreviewKind === "milestone") &&
+                        (useTM.currentPreviewTask ||
+                            useTM.currentPreviewTaskId !== -1 ||
+                            useTM.currentPreviewKind === "milestone") &&
                         renderTaskPreviewPanel()}
                     {useTM.isCreatingTask.flag && renderCreateTaskPanel()}
                     {useNM.isTaskNoteVisible &&
