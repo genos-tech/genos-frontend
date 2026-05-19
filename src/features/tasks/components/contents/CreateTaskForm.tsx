@@ -1,9 +1,25 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DescriptionRoundedIcon from "@mui/icons-material/DescriptionRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
-import { Box, Button, Divider, Option, Select, Sheet, Stack, Typography } from "@mui/joy";
+import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
+import {
+    Box,
+    Button,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Divider,
+    Modal,
+    ModalDialog,
+    Option,
+    Select,
+    Sheet,
+    Stack,
+    Typography,
+} from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -431,6 +447,39 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         // accepting any non-null id here would surface the previous
         // task's body in the editor.
         if (useTM.initialEmptyTaskId && useTM.initialEmptyTaskId === freshEmptyTaskIdRef.current) {
+            // If a draft exists (user typed something, navigated away, came
+            // back — or reloaded the browser with content still in flight),
+            // hydrate every form field from the persisted snapshot instead
+            // of resetting to defaults. The `id` is always overridden with
+            // the freshly-created empty-task id from this mount: the draft's
+            // original empty-task on the backend is now orphaned and not
+            // reusable. Attachments are dropped (see TaskDraft docstring).
+            const draft = useTM.getTaskDraft();
+            if (draft) {
+                setTaskTitle(draft.taskTitle);
+                setBody(draft.body);
+                setAssignee(draft.assignee ?? myself);
+                setReporter(draft.reporter ?? myself);
+                setTemplateId(draft.templateId);
+                setTaskContent({
+                    ...draft.taskContent,
+                    id: useTM.initialEmptyTaskId,
+                    attachments: [],
+                } as TaskProps);
+                // BlockNote seeded itself from `body` on mount; if a draft
+                // restores a different body, we have to push it through
+                // replaceBlocks because the editor's already initialized.
+                const editor = editorRef.current;
+                if (editor) {
+                    try {
+                        editor.replaceBlocks(editor.document, draft.body);
+                    } catch {
+                        // Editor not ready yet — the next render's seed
+                        // will pick up the new body via `initialBody`.
+                    }
+                }
+                return;
+            }
             setTaskContent({
                 id: useTM.initialEmptyTaskId,
                 project: usePM.currentProject,
@@ -464,6 +513,29 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         }
     }, [useTM.initialEmptyTaskId]);
 
+    // Persist the draft to localStorage on every meaningful change, but
+    // DEBOUNCED — `JSON.stringify(body)` + `localStorage.setItem` on every
+    // keystroke is what was causing typing lag in the editor. Each
+    // keystroke restarts the 500ms timer; a save only fires after the user
+    // pauses. If they navigate away mid-debounce the last <500ms of input
+    // is lost, which is an explicit trade we accepted for smooth typing.
+    useEffect(() => {
+        if (!taskContent || !taskContent.id) return;
+        const timer = setTimeout(() => {
+            useTM.setTaskDraft({
+                taskContent: { ...taskContent, attachments: [] },
+                taskTitle,
+                body,
+                assignee,
+                reporter,
+                templateId,
+                savedAt: new Date().toISOString(),
+            });
+        }, 500);
+        return () => clearTimeout(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [taskTitle, body, taskContent, assignee, reporter, templateId]);
+
     // Update task title when it changes
     useEffect(() => {
         if (taskContent && taskTitle !== "") {
@@ -487,6 +559,9 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     // Update status once task is created
     useEffect(() => {
         if (isSubmitted) {
+            // The submitted task is now persisted to the backend — the
+            // draft no longer represents in-progress work.
+            useTM.setTaskDraft(null);
             if (useTM.setIsCreatingTask) {
                 useTM.setIsCreatingTask({
                     flag: false,
@@ -547,6 +622,9 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         });
         setIsCreatingMilestone(false);
         if (created) {
+            // Milestone landed — the draft no longer represents in-progress
+            // work, so drop it before we close the form.
+            useTM.setTaskDraft(null);
             // Reset creation pane and refresh milestones list. We
             // include "Closed" so the dashboard's SprintMilestonesSection
             // can keep showing milestones that flip to Closed without
@@ -631,6 +709,47 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
 
     const [titleErrorOpen, setTitleErrorOpen] = useState(false);
     const [titleError, setTitleError] = useState("");
+
+    // "Has the user actually entered anything worth confirming before
+    // discarding?" The Cancel buttons short-circuit straight to teardown
+    // when this is false, so an untouched form doesn't pop a modal.
+    //
+    // Body comparison goes against ALL templates (not just the
+    // currently-selected one) because `applyTemplate` swaps the body
+    // wholesale to a different template's seed blocks — a user who's
+    // only browsing templates hasn't entered any content of their own.
+    const isDirty = useMemo(() => {
+        if (taskTitle.trim() !== "") return true;
+        if ((taskContent?.attachments?.length || 0) > 0) return true;
+        const bodyStr = JSON.stringify(body);
+        const matchesAnyTemplate = TASK_TEMPLATE_OPTIONS.some(
+            (t) => JSON.stringify(t.blocks) === bodyStr
+        );
+        return !matchesAnyTemplate;
+    }, [taskTitle, taskContent?.attachments, body]);
+
+    // Separate state from TaskCreateFooter's modal because the milestone
+    // Cancel button lives inline in this component (the footer is task-only).
+    const [showMilestoneDiscardConfirm, setShowMilestoneDiscardConfirm] = useState(false);
+
+    const performMilestoneCancel = () => {
+        useTM.setTaskDraft(null);
+        useTM.setIsCreatingTask({
+            flag: false,
+            parentTaskId: null,
+            rootTaskId: null,
+            creationKind: "task",
+            milestoneId: null,
+        });
+    };
+
+    const handleMilestoneCancelClick = () => {
+        if (isDirty) {
+            setShowMilestoneDiscardConfirm(true);
+        } else {
+            performMilestoneCancel();
+        }
+    };
 
     // Get team members
     const [isOpenTeamMembersList, setIsOpenTeamMembersList] = useState(false);
@@ -764,6 +883,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         }}
                     >
                         <TaskTitleBlock
+                            isDirty={isDirty}
                             isMilestone={creationKind === "milestone"}
                             isPreviewMode={false}
                             isSubTask={creationKind === "subtask"}
@@ -784,7 +904,9 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
 
                     {/* Main Content Section */}
                     <Box sx={{ p: 2.5 }}>
-                        <SectionHeader isDark={isDark}>{t.tasks.createForm.taskDetails}</SectionHeader>
+                        <SectionHeader isDark={isDark}>
+                            {t.tasks.createForm.taskDetails}
+                        </SectionHeader>
                         <Box
                             sx={{
                                 p: 2,
@@ -837,7 +959,9 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                             justifyContent="space-between"
                             sx={{ mb: 1, gap: 1 }}
                         >
-                            <SectionHeader isDark={isDark}>{t.tasks.createForm.description}</SectionHeader>
+                            <SectionHeader isDark={isDark}>
+                                {t.tasks.createForm.description}
+                            </SectionHeader>
                             <Select
                                 size="sm"
                                 startDecorator={<DescriptionRoundedIcon sx={{ fontSize: 16 }} />}
@@ -923,7 +1047,9 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                         <SectionDivider isDark={isDark} />
 
                         {/* Attachments Section */}
-                        <SectionHeader isDark={isDark}>{t.tasks.createForm.attachments}</SectionHeader>
+                        <SectionHeader isDark={isDark}>
+                            {t.tasks.createForm.attachments}
+                        </SectionHeader>
                         <TaskCreateAttachmentBlock
                             isUploading={isCreatingTask}
                             setTaskContent={setTaskContent}
@@ -946,15 +1072,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                     color="neutral"
                                     size="sm"
                                     variant="plain"
-                                    onClick={() => {
-                                        useTM.setIsCreatingTask({
-                                            flag: false,
-                                            parentTaskId: null,
-                                            rootTaskId: null,
-                                            creationKind: "task",
-                                            milestoneId: null,
-                                        });
-                                    }}
+                                    onClick={handleMilestoneCancelClick}
                                 >
                                     Cancel
                                 </Button>
@@ -973,6 +1091,7 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                             <TaskCreateFooter
                                 accessToken={accessToken}
                                 isCreatingTask={isCreatingTask}
+                                isDirty={isDirty}
                                 myself={myself}
                                 setIsCreatingTask={setIsCreatingTask}
                                 setIsSubmitted={setIsSubmitted}
@@ -987,6 +1106,45 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                             />
                         )}
                     </Box>
+
+                    {/* Milestone-path discard confirmation. TaskCreateFooter
+                        renders its own equivalent for the task path. */}
+                    <Modal
+                        open={showMilestoneDiscardConfirm}
+                        onClose={() => setShowMilestoneDiscardConfirm(false)}
+                    >
+                        <ModalDialog variant="outlined" role="alertdialog">
+                            <DialogTitle>
+                                <WarningRoundedIcon sx={{ color: "#f59e0b" }} />
+                                Discard this milestone draft?
+                            </DialogTitle>
+                            <Divider />
+                            <DialogContent>
+                                Your title, description, and any other changes will be lost. This
+                                can&apos;t be undone.
+                            </DialogContent>
+                            <DialogActions>
+                                <Button
+                                    color="danger"
+                                    variant="solid"
+                                    startDecorator={<CloseRoundedIcon sx={{ fontSize: 16 }} />}
+                                    onClick={() => {
+                                        setShowMilestoneDiscardConfirm(false);
+                                        performMilestoneCancel();
+                                    }}
+                                >
+                                    Discard draft
+                                </Button>
+                                <Button
+                                    color="neutral"
+                                    variant="plain"
+                                    onClick={() => setShowMilestoneDiscardConfirm(false)}
+                                >
+                                    Keep editing
+                                </Button>
+                            </DialogActions>
+                        </ModalDialog>
+                    </Modal>
                 </Sheet>
             )}
         </>

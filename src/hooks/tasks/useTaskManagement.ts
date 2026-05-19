@@ -1,4 +1,12 @@
-import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
+import {
+    Dispatch,
+    SetStateAction,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 
 import { popSpecificProjectTasks } from "../../features/chat/services/popSpecificProjectTasks";
 import { loadTaskMeta } from "../../features/notes/task-notes/services/loadTaskMeta";
@@ -15,6 +23,25 @@ import {
 } from "../../types/tasks";
 import { getLocalCurrentDate, getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { initCurrentTaskChain } from "./sidebar";
+
+// Draft snapshot of an in-progress CreateTaskForm. Persisted to
+// localStorage in `setTaskDraft` below so navigating away from the
+// task page (or even reloading the browser) doesn't lose the user's
+// typing. Attachments are intentionally excluded — they're uploaded
+// files tied to a backend empty-task id, which doesn't survive
+// re-mount cleanly.
+export type TaskDraft = {
+    taskContent: TaskProps;
+    taskTitle: string;
+    body: any[];
+    assignee: UserProps;
+    reporter: UserProps;
+    templateId: "default" | "bug" | "spike" | "milestone";
+    savedAt: string;
+};
+
+const TASK_DRAFT_KEY = "createTaskForm:draft:v1";
+const TASK_DRAFT_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 export interface TaskManagementState {
     // Task preview state
@@ -107,6 +134,14 @@ export interface TaskManagementState {
     // Initial empty task
     initialEmptyTaskId: number | undefined;
     setInitialEmptyTaskId: (id: number | undefined) => void;
+
+    // In-progress draft of the CreateTaskForm. Backed by a ref + localStorage
+    // — intentionally NOT React state — so saving on every keystroke doesn't
+    // trigger a re-render cascade across every consumer of `useTM`. Call
+    // `getTaskDraft()` to read the latest value; CreateTaskForm only needs
+    // it once on mount for hydration.
+    getTaskDraft: () => TaskDraft | null;
+    setTaskDraft: (draft: TaskDraft | null) => void;
 
     // Task state management
     isNewTaskCreated: boolean;
@@ -259,6 +294,52 @@ export const useTaskManagement = (
 
     // Initial empty task
     const [initialEmptyTaskId, setInitialEmptyTaskId] = useState<number | undefined>(undefined);
+
+    // CreateTaskForm draft — stored in a ref (not React state) so the
+    // per-keystroke save in CreateTaskForm doesn't trigger a re-render
+    // cascade through every `useTM` consumer. localStorage is the durable
+    // backing; the ref just caches the parsed value to avoid re-parsing
+    // JSON on every read. `getTaskDraft()` is the read API.
+    const taskDraftRef = useRef<TaskDraft | null | undefined>(undefined);
+
+    const getTaskDraft = useCallback((): TaskDraft | null => {
+        if (taskDraftRef.current !== undefined) return taskDraftRef.current;
+        try {
+            const raw = localStorage.getItem(TASK_DRAFT_KEY);
+            if (!raw) {
+                taskDraftRef.current = null;
+                return null;
+            }
+            const parsed = JSON.parse(raw) as TaskDraft;
+            // Drop stale drafts so we don't surprise the user weeks later
+            // with content from a project they may have forgotten about.
+            const ageMs = Date.now() - new Date(parsed.savedAt).getTime();
+            if (!Number.isFinite(ageMs) || ageMs > TASK_DRAFT_TTL_MS) {
+                localStorage.removeItem(TASK_DRAFT_KEY);
+                taskDraftRef.current = null;
+                return null;
+            }
+            taskDraftRef.current = parsed;
+            return parsed;
+        } catch {
+            taskDraftRef.current = null;
+            return null;
+        }
+    }, []);
+
+    const setTaskDraft = useCallback((next: TaskDraft | null) => {
+        taskDraftRef.current = next;
+        try {
+            if (next) {
+                localStorage.setItem(TASK_DRAFT_KEY, JSON.stringify(next));
+            } else {
+                localStorage.removeItem(TASK_DRAFT_KEY);
+            }
+        } catch {
+            // localStorage might be disabled / full / private mode — fall
+            // back silently; the ref still holds the value for this session.
+        }
+    }, []);
 
     // Task state management
     const [isNewTaskCreated, setIsNewTaskCreated] = useState(false);
@@ -552,6 +633,10 @@ export const useTaskManagement = (
         // Initial empty task
         initialEmptyTaskId,
         setInitialEmptyTaskId,
+
+        // CreateTaskForm draft
+        getTaskDraft,
+        setTaskDraft,
 
         // Task state management
         isNewTaskCreated,

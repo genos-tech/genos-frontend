@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import CancelIcon from "@mui/icons-material/Cancel";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
@@ -9,13 +10,21 @@ import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
+import VisibilityOffRoundedIcon from "@mui/icons-material/VisibilityOffRounded";
+import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
 import {
     Box,
     Button,
     Chip,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Divider,
     FormControl,
     IconButton,
     Input,
+    Modal,
+    ModalDialog,
     Snackbar,
     Stack,
     Tooltip,
@@ -62,6 +71,11 @@ type TaskTitleBlockProps = {
     // "New Task". Only meaningful when `isPreviewMode` is false.
     isMilestone?: boolean;
     isSubTask?: boolean;
+    // True when the user has entered title / body / attachment content.
+    // The X (close) button asks for confirmation only when this is true
+    // AND we're in create mode — preview mode and untouched-create both
+    // close immediately.
+    isDirty?: boolean;
 };
 
 export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
@@ -85,6 +99,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         usePM,
         isMilestone,
         isSubTask,
+        isDirty = false,
     } = props;
 
     const { accessToken } = useAuth();
@@ -99,7 +114,137 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
     // already encodes.
     const isOnTasksRoute = location.pathname.includes("/workspace/tasks");
     const [openDeleteTask, setOpenDeleteTask] = useState<boolean>(false);
+    const [showCloseDiscardConfirm, setShowCloseDiscardConfirm] = useState(false);
     const titleInputRef = useRef<HTMLInputElement | null>(null);
+
+    // Teardown actually invoked by the X (close) button. Extracted from
+    // the inline onClick so the discard-confirm modal can call it after
+    // the user picks "Discard draft".
+    const performClose = () => {
+        if (isPreviewMode === false && useTM.setIsCreatingTask) {
+            useTM.setIsCreatingTask({
+                flag: false,
+                parentTaskId: null,
+                rootTaskId: useTM.currentPreviewTask?.rootTaskId || null,
+                creationKind: "task",
+                milestoneId: null,
+            });
+        }
+        if (isPreviewMode === true && setTaskClosed) {
+            setTaskClosed(true);
+        }
+
+        useCM.setIsMainChatVisible(true);
+
+        if (useTM.setIsTaskPreviewVisible) {
+            if (isPreviewMode === true) {
+                useTM.setIsTaskPreviewVisible(false);
+                useTM.setCurrentPreviewTaskId(-1);
+            }
+            if (useTM.isCreatingTask.flag === false && useNM.isTaskNoteVisible === false) {
+                if (useTM.isTaskTableVisible === false) {
+                    if (useTM.isSprintBoardVisible === false) {
+                        useTM.setIsTaskTableVisible(true);
+                    } else {
+                        useTM.setIsSprintBoardVisible(true);
+                    }
+                }
+            }
+        }
+
+        useTM.setIsCreatingTask({
+            flag: false,
+            parentTaskId: null,
+            rootTaskId: null,
+            creationKind: "task",
+            milestoneId: null,
+        });
+
+        if (useTM.isTaskPreviewVisible === false) {
+            if (useTM.isTaskTableVisible === false) {
+                if (useTM.isSprintBoardVisible === false) {
+                    if (useTM.isTaskDashboardVisible === false) {
+                        useTM.setIsTaskTableVisible(true);
+                    } else {
+                        useTM.setIsTaskDashboardVisible(true);
+                    }
+                } else {
+                    useTM.setIsSprintBoardVisible(true);
+                }
+            }
+        }
+
+        if (useNM.setIsTaskVisibleInNote) {
+            useNM.setIsTaskVisibleInNote(false);
+        }
+
+        if (useTM.isCreatingTask.flag === true && taskContent.id !== undefined) {
+            // Create-mode close = discard the in-progress task. Clear the
+            // persisted draft alongside the backend empty-task so the next
+            // form open starts clean.
+            useTM.setTaskDraft(null);
+            deleteEmptyTask({
+                myself: myself,
+                taskId: taskContent.id,
+                accessToken: accessToken,
+                setInitialEmptyTaskId: useTM.setInitialEmptyTaskId,
+            });
+        }
+    };
+
+    // "Hide" is the close-but-keep-draft variant offered alongside
+    // "Discard" in the confirm modal. Same visibility teardown as
+    // `performClose`, but deliberately skips both `setTaskDraft(null)`
+    // AND `deleteEmptyTask` — the user gets their form state back on
+    // re-open via the localStorage draft. Note: the backend empty-task
+    // for this session is now orphaned; a fresh one is created on the
+    // next mount and the draft hydrates onto it. demo-user-cleanup
+    // sweeps the orphan in due course.
+    const performHide = () => {
+        if (isPreviewMode === false && useTM.setIsCreatingTask) {
+            useTM.setIsCreatingTask({
+                flag: false,
+                parentTaskId: null,
+                rootTaskId: useTM.currentPreviewTask?.rootTaskId || null,
+                creationKind: "task",
+                milestoneId: null,
+            });
+        }
+
+        useCM.setIsMainChatVisible(true);
+
+        // Surface a default main panel if everything else is hidden, mirroring
+        // the same fallback logic in `performClose`. We skip the
+        // `setIsTaskPreviewVisible` branch performClose has — Hide never
+        // closes a preview pane (there isn't one in create mode).
+        if (useTM.isTaskPreviewVisible === false) {
+            if (useTM.isTaskTableVisible === false) {
+                if (useTM.isSprintBoardVisible === false) {
+                    if (useTM.isTaskDashboardVisible === false) {
+                        useTM.setIsTaskTableVisible(true);
+                    } else {
+                        useTM.setIsTaskDashboardVisible(true);
+                    }
+                } else {
+                    useTM.setIsSprintBoardVisible(true);
+                }
+            }
+        }
+
+        if (useNM.setIsTaskVisibleInNote) {
+            useNM.setIsTaskVisibleInNote(false);
+        }
+    };
+
+    // Dirty drafts confirm via modal; untouched create-mode and any
+    // preview-mode close fire `performClose` directly.
+    const handleCloseClick = () => {
+        if (isPreviewMode === false && isDirty) {
+            setShowCloseDiscardConfirm(true);
+        } else {
+            performClose();
+        }
+    };
 
     const handleStatusChange = (newStatus: string, color: string) => {
         if (setTaskContent) {
@@ -530,79 +675,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                     transform: "translateY(-1px)",
                                 },
                             }}
-                            onClick={() => {
-                                if (isPreviewMode === false && useTM.setIsCreatingTask) {
-                                    useTM.setIsCreatingTask({
-                                        flag: false,
-                                        parentTaskId: null,
-                                        rootTaskId: useTM.currentPreviewTask?.rootTaskId || null,
-                                        creationKind: "task",
-                                        milestoneId: null,
-                                    });
-                                }
-                                if (isPreviewMode === true && setTaskClosed) {
-                                    setTaskClosed(true);
-                                }
-
-                                useCM.setIsMainChatVisible(true);
-
-                                if (useTM.setIsTaskPreviewVisible) {
-                                    if (isPreviewMode === true) {
-                                        useTM.setIsTaskPreviewVisible(false);
-                                        useTM.setCurrentPreviewTaskId(-1);
-                                    }
-                                    if (
-                                        useTM.isCreatingTask.flag === false &&
-                                        useNM.isTaskNoteVisible === false
-                                    ) {
-                                        if (useTM.isTaskTableVisible === false) {
-                                            if (useTM.isSprintBoardVisible === false) {
-                                                useTM.setIsTaskTableVisible(true);
-                                            } else {
-                                                useTM.setIsSprintBoardVisible(true);
-                                            }
-                                        }
-                                    }
-                                }
-
-                                useTM.setIsCreatingTask({
-                                    flag: false,
-                                    parentTaskId: null,
-                                    rootTaskId: null,
-                                    creationKind: "task",
-                                    milestoneId: null,
-                                });
-
-                                if (useTM.isTaskPreviewVisible === false) {
-                                    if (useTM.isTaskTableVisible === false) {
-                                        if (useTM.isSprintBoardVisible === false) {
-                                            if (useTM.isTaskDashboardVisible === false) {
-                                                useTM.setIsTaskTableVisible(true);
-                                            } else {
-                                                useTM.setIsTaskDashboardVisible(true);
-                                            }
-                                        } else {
-                                            useTM.setIsSprintBoardVisible(true);
-                                        }
-                                    }
-                                }
-
-                                if (useNM.setIsTaskVisibleInNote) {
-                                    useNM.setIsTaskVisibleInNote(false);
-                                }
-
-                                if (
-                                    useTM.isCreatingTask.flag === true &&
-                                    taskContent.id !== undefined
-                                ) {
-                                    deleteEmptyTask({
-                                        myself: myself,
-                                        taskId: taskContent.id,
-                                        accessToken: accessToken,
-                                        setInitialEmptyTaskId: useTM.setInitialEmptyTaskId,
-                                    });
-                                }
-                            }}
+                            onClick={handleCloseClick}
                         >
                             <CancelIcon
                                 sx={{
@@ -614,6 +687,62 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     </Tooltip>
                 </Box>
             </Stack>
+
+            {/* Close-button discard confirmation. Only shown in create
+                mode when the form is dirty — preview-mode close skips
+                this entirely via `handleCloseClick`.
+                Three exits, in order of destructiveness:
+                  - Discard draft → wipe everything (`performClose`)
+                  - Hide → close the form but keep the draft so the user
+                    can resume on next open (`performHide`)
+                  - Keep editing → cancel the modal, stay in the form */}
+            <Modal
+                open={showCloseDiscardConfirm}
+                onClose={() => setShowCloseDiscardConfirm(false)}
+            >
+                <ModalDialog variant="outlined" role="alertdialog">
+                    <DialogTitle>
+                        <WarningRoundedIcon sx={{ color: "#f59e0b" }} />
+                        Close this draft?
+                    </DialogTitle>
+                    <Divider />
+                    <DialogContent>
+                        You can discard your changes, hide the form (your draft is saved so you can
+                        resume later), or keep editing.
+                    </DialogContent>
+                    <DialogActions>
+                        <Button
+                            color="danger"
+                            variant="solid"
+                            startDecorator={<CloseRoundedIcon sx={{ fontSize: 16 }} />}
+                            onClick={() => {
+                                setShowCloseDiscardConfirm(false);
+                                performClose();
+                            }}
+                        >
+                            Discard draft
+                        </Button>
+                        <Button
+                            color="primary"
+                            variant="soft"
+                            startDecorator={<VisibilityOffRoundedIcon sx={{ fontSize: 16 }} />}
+                            onClick={() => {
+                                setShowCloseDiscardConfirm(false);
+                                performHide();
+                            }}
+                        >
+                            Hide (save draft)
+                        </Button>
+                        <Button
+                            color="neutral"
+                            variant="plain"
+                            onClick={() => setShowCloseDiscardConfirm(false)}
+                        >
+                            Keep editing
+                        </Button>
+                    </DialogActions>
+                </ModalDialog>
+            </Modal>
 
             {/* Title Input */}
             <FormControl sx={{ width: "100%" }} required>

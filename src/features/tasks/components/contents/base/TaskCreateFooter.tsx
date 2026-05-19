@@ -1,6 +1,17 @@
+import { useState } from "react";
 import AddTaskRoundedIcon from "@mui/icons-material/AddTaskRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import { Button, Stack } from "@mui/joy";
+import WarningRoundedIcon from "@mui/icons-material/WarningRounded";
+import {
+    Button,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Divider,
+    Modal,
+    ModalDialog,
+    Stack,
+} from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -28,6 +39,11 @@ type TaskCreateFooterProps = {
     setTitleError: (value: string) => void;
     setTitleErrorOpen: (value: boolean) => void;
     usePM: ProjectManagementState;
+    /** True when the user has entered title / body / attachment content.
+     *  Cancel asks for confirmation only when this is true — clicking
+     *  Cancel on an untouched form proceeds straight to teardown so we
+     *  don't pester the user with a modal for a no-op. */
+    isDirty?: boolean;
 };
 
 export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
@@ -45,10 +61,12 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
         setTitleError,
         setTitleErrorOpen,
         usePM,
+        isDirty = false,
     } = props;
 
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
 
     const isDisabled =
         isCreatingTask || taskTitle === "" || taskContent.project?.projectId === null;
@@ -89,6 +107,10 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
     };
 
     const handleCancel = () => {
+        // Cancel = "throw away anything in progress" — wipe the persisted
+        // draft alongside the backend empty-task so the next form open is
+        // a clean slate.
+        useTM.setTaskDraft(null);
         if (useTM.setIsCreatingTask) {
             useTM.setIsCreatingTask({
                 flag: false,
@@ -107,6 +129,22 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
                 setInitialEmptyTaskId: useTM.setInitialEmptyTaskId,
             });
         }
+    };
+
+    // Two-step cancel: dirty drafts confirm via modal, untouched drafts
+    // (user clicked into the form, did nothing, clicked Cancel) tear
+    // down immediately so we don't nag.
+    const handleCancelClick = () => {
+        if (isDirty) {
+            setShowDiscardConfirm(true);
+        } else {
+            handleCancel();
+        }
+    };
+
+    const confirmDiscard = () => {
+        setShowDiscardConfirm(false);
+        handleCancel();
     };
 
     return (
@@ -136,10 +174,40 @@ export const TaskCreateFooter = (props: TaskCreateFooterProps) => {
                         transform: "scale(0.98)",
                     },
                 }}
-                onClick={handleCancel}
+                onClick={handleCancelClick}
             >
                 Cancel
             </Button>
+
+            <Modal open={showDiscardConfirm} onClose={() => setShowDiscardConfirm(false)}>
+                <ModalDialog variant="outlined" role="alertdialog">
+                    <DialogTitle>
+                        <WarningRoundedIcon sx={{ color: "#f59e0b" }} />
+                        Discard this draft?
+                    </DialogTitle>
+                    <Divider />
+                    <DialogContent>
+                        Your title, body, and attachments will be lost. This can&apos;t be undone.
+                    </DialogContent>
+                    <DialogActions>
+                        <Button
+                            color="danger"
+                            variant="solid"
+                            startDecorator={<CloseRoundedIcon sx={{ fontSize: 16 }} />}
+                            onClick={confirmDiscard}
+                        >
+                            Discard draft
+                        </Button>
+                        <Button
+                            color="neutral"
+                            variant="plain"
+                            onClick={() => setShowDiscardConfirm(false)}
+                        >
+                            Keep editing
+                        </Button>
+                    </DialogActions>
+                </ModalDialog>
+            </Modal>
             <Button
                 disabled={isDisabled}
                 loading={isCreatingTask}
