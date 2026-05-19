@@ -1,4 +1,5 @@
 import { memo, useEffect, useRef, useState } from "react";
+import { Draggable } from "@hello-pangea/dnd";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import KeyboardArrowDownRoundedIcon from "@mui/icons-material/KeyboardArrowDownRounded";
@@ -18,7 +19,6 @@ import {
 } from "@mui/material";
 import { alpha } from "@mui/system";
 import dayjs from "dayjs";
-import { Draggable } from "@hello-pangea/dnd";
 import { Socket } from "socket.io-client";
 
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
@@ -179,7 +179,16 @@ type DraggableTaskRowProps = {
     myself: UserProps;
     teamMembers: UserProps[];
     onRowUpdate: (task: TaskTableProps) => Promise<TaskTableProps>;
-    onRowDoubleClick: (taskId: number) => void;
+    // Parent-owned debounced preview switch. Replaces the older
+    // `onRowDoubleClick(taskId)` callback — the parent now coalesces
+    // rapid clicks so the heavy TaskPreview fetch cascade only fires
+    // for the last row the user lands on.
+    onRequestPreview: (task: TaskTableProps) => void;
+    // Local pending highlight from the parent: when set, the row should
+    // light up against these IDs (instant feedback) even though the
+    // real useTM.currentPreview* hasn't caught up yet.
+    pendingTaskId: number | null;
+    pendingMilestoneId: number | null;
     useTM: TaskManagementState;
     useTEM: TeamManagementState;
     useCM: ChatManagementState;
@@ -206,7 +215,9 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
         myself,
         teamMembers,
         onRowUpdate,
-        onRowDoubleClick,
+        onRequestPreview,
+        pendingTaskId,
+        pendingMilestoneId,
         useTM,
         useTEM,
         useCM,
@@ -236,13 +247,20 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
 
     // Check if this row is the currently selected/previewed task.
     // Milestone rows are selected when the milestone preview is open
-    // for this task's milestoneId.
+    // for this task's milestoneId. While a click-debounce is in flight
+    // the parent passes pendingTaskId / pendingMilestoneId so the
+    // highlight tracks the latest click instantly even though
+    // useTM.currentPreview* hasn't switched yet.
     const isMilestoneRow = task.isMilestone === true;
     const isSelected = isMilestoneRow
-        ? useTM.isTaskPreviewVisible &&
-          useTM.currentPreviewKind === "milestone" &&
-          useTM.currentPreviewMilestoneId === task.milestoneId
-        : useTM.isTaskPreviewVisible && useTM.currentPreviewTaskId === Number(task.id);
+        ? pendingMilestoneId != null
+            ? pendingMilestoneId === task.milestoneId
+            : useTM.isTaskPreviewVisible &&
+              useTM.currentPreviewKind === "milestone" &&
+              useTM.currentPreviewMilestoneId === task.milestoneId
+        : pendingTaskId != null
+          ? pendingTaskId === Number(task.id)
+          : useTM.isTaskPreviewVisible && useTM.currentPreviewTaskId === Number(task.id);
 
     // When this row becomes the selected/previewed one, nudge it into
     // view if the user can't already see it. Scoped to the false→true
@@ -261,18 +279,11 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
         return () => window.cancelAnimationFrame(id);
     }, [isSelected]);
 
-    // Centralized click handler for opening either a task or a
-    // milestone preview, keeping the bug-fix invariants from
-    // useTaskManagement (mutual exclusivity of preview kinds).
+    // Open-preview path routes through the parent's debounced
+    // `onRequestPreview` so rapid clicks collapse into a single
+    // TaskPreview fetch cascade instead of fanning out one per click.
     const openPreview = () => {
-        useTM.setIsTaskPreviewVisible(true);
-        if (isMilestoneRow && task.milestoneId != null) {
-            useTM.setCurrentPreviewKind("milestone");
-            useTM.setCurrentPreviewMilestoneId(task.milestoneId);
-        } else {
-            useTM.setCurrentPreviewKind("task");
-            useTM.setCurrentPreviewTaskId(Number(task.id));
-        }
+        onRequestPreview(task);
     };
 
     // Edit states for different fields
@@ -1410,14 +1421,10 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             },
                         }}
                         onDoubleClick={() => {
-                            // Milestone rows always go through the milestone
-                            // preview path; regular tasks fall through to
-                            // the table-level handler.
-                            if (isMilestoneRow) {
-                                openPreview();
-                            } else {
-                                onRowDoubleClick(Number(task.id));
-                            }
+                            // Single debounced path for both task and
+                            // milestone rows — the parent's
+                            // onRequestPreview owns the routing.
+                            openPreview();
                         }}
                     >
                         {/* Floating hint that pops in when this row will
@@ -1508,15 +1515,18 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
 
 // Memoized export. The comparator covers every prop that affects this
 // row's visible output. State-manager objects (`useTM`, `useTEM`, `useCM`,
-// `useUISM`) and callbacks (`onRowUpdate`, `onRowDoubleClick`,
+// `useUISM`) and callbacks (`onRowUpdate`, `onRequestPreview`,
 // `toggleExpand`, `setMyself`) are intentionally excluded — they're
 // recreated on every parent render but only their stable setter methods
 // are invoked from this component's handlers, never read at render time.
 //
-// The four useTM fields that DO affect rendering — they drive the
-// "this row is selected" highlight — are compared explicitly so the row
-// re-renders when the preview pane opens/closes against a different
-// task/milestone.
+// The useTM fields that DO affect rendering — they drive the "this row
+// is selected" highlight — are compared explicitly so the row re-renders
+// when the preview pane opens/closes against a different task/milestone.
+// `pendingTaskId` and `pendingMilestoneId` are part of that same
+// highlight calculation (they take priority over the useTM values
+// during the click-debounce window) so they belong in the comparator
+// too — otherwise the in-flight click would not light the row up.
 //
 // `task` is compared by reference: useTaskManagement replaces a task via
 // `next[existingIdx] = nextRow` with a fresh object, so any real content
@@ -1533,6 +1543,8 @@ const areEqual = (prev: DraggableTaskRowProps, next: DraggableTaskRowProps): boo
     prev.expandedRows === next.expandedRows &&
     prev.childrenByParent === next.childrenByParent &&
     prev.sprintNamesById === next.sprintNamesById &&
+    prev.pendingTaskId === next.pendingTaskId &&
+    prev.pendingMilestoneId === next.pendingMilestoneId &&
     prev.useTM.isTaskPreviewVisible === next.useTM.isTaskPreviewVisible &&
     prev.useTM.currentPreviewKind === next.useTM.currentPreviewKind &&
     prev.useTM.currentPreviewTaskId === next.useTM.currentPreviewTaskId &&

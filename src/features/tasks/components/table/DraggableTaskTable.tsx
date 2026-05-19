@@ -1146,11 +1146,86 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         }
     };
 
-    // Handle row click for preview
-    const handleRowDoubleClick = (taskId: number) => {
-        useTM.setIsTaskPreviewVisible(true);
-        useTM.setCurrentPreviewTaskId(taskId);
-    };
+    // Rapid row-click coalescing. Mirrors SprintBoard.handleTaskClick:
+    // each preview switch fans out ~13 TaskPreview fetches, so clicking
+    // many rows in quick succession (id-cell single click or row
+    // double-click) used to peg the backend and break the highlight
+    // mid-flight. Decouple instant visual selection from the heavy
+    // preview load by holding `pendingTaskId` / `pendingMilestoneId`
+    // locally and debouncing the real setters by 150 ms — the rapid
+    // sequence collapses into a single fetch for the final row.
+    const [pendingTaskId, setPendingTaskId] = useState<number | null>(null);
+    const [pendingMilestoneId, setPendingMilestoneId] = useState<number | null>(null);
+    const previewSwitchTimerRef = useRef<number | null>(null);
+
+    useEffect(() => {
+        if (pendingTaskId != null && pendingTaskId === useTM.currentPreviewTaskId) {
+            setPendingTaskId(null);
+        }
+    }, [pendingTaskId, useTM.currentPreviewTaskId]);
+    useEffect(() => {
+        if (pendingMilestoneId != null && pendingMilestoneId === useTM.currentPreviewMilestoneId) {
+            setPendingMilestoneId(null);
+        }
+    }, [pendingMilestoneId, useTM.currentPreviewMilestoneId]);
+
+    useEffect(() => {
+        return () => {
+            if (previewSwitchTimerRef.current != null) {
+                window.clearTimeout(previewSwitchTimerRef.current);
+                previewSwitchTimerRef.current = null;
+            }
+        };
+    }, []);
+
+    const PREVIEW_SWITCH_DEBOUNCE_MS = 150;
+
+    const {
+        setIsTaskPreviewVisible: setIsTaskPreviewVisibleRow,
+        setCurrentPreviewKind: setCurrentPreviewKindRow,
+        setCurrentPreviewMilestoneId: setCurrentPreviewMilestoneIdRow,
+        setCurrentPreviewTaskId: setCurrentPreviewTaskIdRow,
+    } = useTM;
+
+    const requestPreview = useCallback(
+        (task: TaskTableProps) => {
+            const isMile = task.isMilestone === true && task.milestoneId != null;
+            // Step 1: instant visual feedback. Pane visibility is cheap;
+            // only the heavy fetch-triggering setters are deferred so
+            // opening the pane from a closed state never feels delayed.
+            if (isMile) {
+                setPendingMilestoneId(task.milestoneId as number);
+                setPendingTaskId(null);
+            } else if (task.id != null) {
+                setPendingTaskId(Number(task.id));
+                setPendingMilestoneId(null);
+            }
+            setIsTaskPreviewVisibleRow(true);
+
+            // Step 2: debounce the fetch cascade. Successive rapid
+            // clicks coalesce into a single TaskPreview load for the
+            // last row the user landed on.
+            if (previewSwitchTimerRef.current != null) {
+                window.clearTimeout(previewSwitchTimerRef.current);
+            }
+            previewSwitchTimerRef.current = window.setTimeout(() => {
+                previewSwitchTimerRef.current = null;
+                if (isMile) {
+                    setCurrentPreviewKindRow("milestone");
+                    setCurrentPreviewMilestoneIdRow(task.milestoneId as number);
+                } else if (task.id != null) {
+                    setCurrentPreviewKindRow("task");
+                    setCurrentPreviewTaskIdRow(Number(task.id));
+                }
+            }, PREVIEW_SWITCH_DEBOUNCE_MS);
+        },
+        [
+            setIsTaskPreviewVisibleRow,
+            setCurrentPreviewKindRow,
+            setCurrentPreviewMilestoneIdRow,
+            setCurrentPreviewTaskIdRow,
+        ]
+    );
 
     // Show the "Sprint" column only when the filtered list actually
     // contains a milestone — for a pure task-only view the sprint linkage
@@ -1385,6 +1460,8 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                             index={index}
                                             mode={mode}
                                             myself={myself}
+                                            pendingMilestoneId={pendingMilestoneId}
+                                            pendingTaskId={pendingTaskId}
                                             setMyself={setMyself}
                                             socket={socket}
                                             sprintNamesById={sprintNamesById}
@@ -1395,7 +1472,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                             useTEM={useTEM}
                                             useTM={useTM}
                                             useUISM={useUISM}
-                                            onRowDoubleClick={handleRowDoubleClick}
+                                            onRequestPreview={requestPreview}
                                             onRowUpdate={handleRowUpdate}
                                         />
                                     ))}

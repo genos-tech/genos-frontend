@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";
 import { useColorScheme } from "@mui/joy/styles";
 import { createTheme, THEME_ID, ThemeProvider } from "@mui/material/styles";
@@ -335,20 +335,92 @@ export const SprintBoard = (props: SprintBoardProps) => {
     // skip re-renders when nothing about a card has changed. Destructuring
     // pins the underlying useState setters — those are guaranteed stable by
     // React regardless of how often `useTM` is re-constructed by its hook.
-    const { setIsTaskPreviewVisible, setCurrentPreviewMilestoneId, setCurrentPreviewTaskId } =
-        useTM;
+    const {
+        setIsTaskPreviewVisible,
+        setCurrentPreviewKind,
+        setCurrentPreviewMilestoneId,
+        setCurrentPreviewTaskId,
+    } = useTM;
+
+    // Rapid card-click coalescing. Each click fans out ~13 TaskPreview
+    // network requests (4× activity, 2× childTasks, 2× meta, 2× tag…).
+    // Clicking 10 cards in a second pegged the backend at >100 requests
+    // and broke card selection mid-flight. The fix decouples *visual*
+    // selection (immediate) from the *preview load* (debounced 150 ms),
+    // so a rapid sequence collapses into a single fetch for the last
+    // card the user landed on while the highlight still tracks every
+    // click in real time.
+    const [pendingTaskId, setPendingTaskId] = useState<number | null>(null);
+    const [pendingMilestoneId, setPendingMilestoneId] = useState<number | null>(null);
+    const previewSwitchTimerRef = useRef<number | null>(null);
+
+    // Drop the pending highlight once the real preview state has caught
+    // up (timer fired, fetch kicked off). The row equality check stays
+    // honest: `selectedTaskId` below reads from useTM after this clears.
+    useEffect(() => {
+        if (pendingTaskId != null && pendingTaskId === useTM.currentPreviewTaskId) {
+            setPendingTaskId(null);
+        }
+    }, [pendingTaskId, useTM.currentPreviewTaskId]);
+    useEffect(() => {
+        if (pendingMilestoneId != null && pendingMilestoneId === useTM.currentPreviewMilestoneId) {
+            setPendingMilestoneId(null);
+        }
+    }, [pendingMilestoneId, useTM.currentPreviewMilestoneId]);
+
+    // Clean up any in-flight timer on unmount so we don't write into a
+    // dead component.
+    useEffect(() => {
+        return () => {
+            if (previewSwitchTimerRef.current != null) {
+                window.clearTimeout(previewSwitchTimerRef.current);
+                previewSwitchTimerRef.current = null;
+            }
+        };
+    }, []);
+
+    const PREVIEW_SWITCH_DEBOUNCE_MS = 150;
+
     const handleTaskClick = useCallback(
         (task: TaskTableProps) => {
+            const isMile = task.isMilestone === true && task.milestoneId != null;
+            // Step 1: instant visual feedback. Card highlights re-render
+            // off these local pending IDs (see selectedTaskId /
+            // selectedMilestoneId on SprintBoardColumn below). Pane
+            // visibility is cheap and stays instant — only the heavy
+            // fetch-triggering setters are deferred so opening the
+            // preview pane from a closed state never feels delayed.
+            if (isMile) {
+                setPendingMilestoneId(task.milestoneId as number);
+                setPendingTaskId(null);
+            } else if (task.id) {
+                setPendingTaskId(parseInt(task.id));
+                setPendingMilestoneId(null);
+            }
             setIsTaskPreviewVisible(true);
-            if (task.isMilestone === true && task.milestoneId != null) {
-                setCurrentPreviewMilestoneId(task.milestoneId);
-                return;
+
+            // Step 2: debounce the heavy state switch that triggers the
+            // TaskPreview fetch cascade.
+            if (previewSwitchTimerRef.current != null) {
+                window.clearTimeout(previewSwitchTimerRef.current);
             }
-            if (task.id) {
-                setCurrentPreviewTaskId(parseInt(task.id));
-            }
+            previewSwitchTimerRef.current = window.setTimeout(() => {
+                previewSwitchTimerRef.current = null;
+                if (isMile) {
+                    setCurrentPreviewKind("milestone");
+                    setCurrentPreviewMilestoneId(task.milestoneId as number);
+                } else if (task.id) {
+                    setCurrentPreviewKind("task");
+                    setCurrentPreviewTaskId(parseInt(task.id));
+                }
+            }, PREVIEW_SWITCH_DEBOUNCE_MS);
         },
-        [setIsTaskPreviewVisible, setCurrentPreviewMilestoneId, setCurrentPreviewTaskId]
+        [
+            setIsTaskPreviewVisible,
+            setCurrentPreviewKind,
+            setCurrentPreviewMilestoneId,
+            setCurrentPreviewTaskId,
+        ]
     );
 
     return (
@@ -368,10 +440,19 @@ export const SprintBoard = (props: SprintBoardProps) => {
                             <SprintBoardColumn
                                 key={column.id}
                                 column={column}
-                                isMilestonePreviewActive={useTM.currentPreviewKind === "milestone"}
+                                // Pending state lights up the card on
+                                // click; the debounced setters then
+                                // catch the real state up ~150 ms later.
+                                isMilestonePreviewActive={
+                                    pendingMilestoneId != null
+                                        ? true
+                                        : useTM.currentPreviewKind === "milestone"
+                                }
                                 myself={myself}
-                                selectedMilestoneId={useTM.currentPreviewMilestoneId}
-                                selectedTaskId={useTM.currentPreviewTaskId}
+                                selectedMilestoneId={
+                                    pendingMilestoneId ?? useTM.currentPreviewMilestoneId
+                                }
+                                selectedTaskId={pendingTaskId ?? useTM.currentPreviewTaskId}
                                 tasks={boardTasks[column.id] || []}
                                 teamMemberProfiles={teamMemberProfiles}
                                 onTaskClick={handleTaskClick}
