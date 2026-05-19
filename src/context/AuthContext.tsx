@@ -1,5 +1,8 @@
 import { createContext, ReactNode, useContext, useEffect, useMemo, useRef, useState } from "react";
 
+import { NoteService } from "../db/services/note.service";
+import { TaskService } from "../db/services/task.service";
+import { DatabaseUtils } from "../db/utils/database";
 import { analytics } from "../services/analytics";
 import { clearAllEditorDrafts } from "../utils/editorDraftStorage";
 
@@ -210,6 +213,67 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             clearRefreshTimer();
         };
     }, []);
+
+    // One-shot sweep of orphaned per-document Yjs IndexedDB databases
+    // (`task-body:<id>`, `my-note:<id>`, `chat-note:<id>`, `task-note:<id>`).
+    // y-indexeddb creates one DB per editor document and never cleans up,
+    // so deleted tasks/notes leave their CRDT logs behind forever. Per-row
+    // deletes are hooked at the delete-modal call sites; this sweep cleans
+    // up orphans that pre-date the hook or escaped it (e.g. soft-deleted
+    // tasks that later disappear from `taskMeta`).
+    //
+    // Fires once per sign-in (the `hasSweptRef` guard skips later token
+    // refreshes). Delayed so the post-auth fetches have time to repopulate
+    // genosData — the sweep reads its allow-list from there.
+    const hasSweptRef = useRef(false);
+    useEffect(() => {
+        if (!accessToken || hasSweptRef.current) return;
+        hasSweptRef.current = true;
+        const timer = setTimeout(async () => {
+            try {
+                const taskService = new TaskService();
+                const noteService = new NoteService();
+                const [tasks, myNotes, chatNotes, taskNotes] = await Promise.all([
+                    taskService.getAllTasks(),
+                    noteService.getAllPersonalNotes(),
+                    noteService.getAllChatNotes(),
+                    noteService.getAllTaskNotes(),
+                ]);
+                const taskIds = new Set<number>();
+                for (const t of tasks) {
+                    const n = Number((t as { id?: number | string }).id);
+                    if (Number.isFinite(n)) taskIds.add(n);
+                }
+                const myNoteIds = new Set<number>(
+                    myNotes
+                        .map((n) => Number((n as { noteId?: number }).noteId))
+                        .filter(Number.isFinite)
+                );
+                const chatNoteIds = new Set<number>(
+                    chatNotes
+                        .map((n) => Number((n as { noteId?: number }).noteId))
+                        .filter(Number.isFinite)
+                );
+                const taskNoteIds = new Set<number>(
+                    taskNotes
+                        .map((n) => Number((n as { noteId?: number }).noteId))
+                        .filter(Number.isFinite)
+                );
+                const deleted = await DatabaseUtils.sweepOrphanYjsDatabases({
+                    taskIds,
+                    myNoteIds,
+                    chatNoteIds,
+                    taskNoteIds,
+                });
+                if (deleted > 0) {
+                    console.log(`[IDB] Swept ${deleted} orphan Yjs database(s).`);
+                }
+            } catch (err) {
+                console.error("[IDB] Yjs orphan sweep failed:", err);
+            }
+        }, 30_000);
+        return () => clearTimeout(timer);
+    }, [accessToken]);
 
     // `setAccessToken` is a stable useState setter; memo only needs to refresh
     // when `accessToken` changes. Without this, the provider's `value` is a

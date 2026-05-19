@@ -6,6 +6,7 @@ import { Alert, Box, Button, Modal, ModalDialog, Stack, Typography } from "@mui/
 
 import { useAuth } from "../../../../context/AuthContext";
 import { NoteService } from "../../../../db/services/note.service";
+import { DatabaseUtils } from "../../../../db/utils/database";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
@@ -59,6 +60,11 @@ export const ModalDeleteChatNote: React.FC<Props> = ({
             await deleteChatNote(myself, useNM.currentChatNote?.noteId, accessToken);
             // Delete from indexedDB
             await noteService.deleteChatNote(useNM.currentChatNote?.noteId);
+            // Drop the per-document Yjs IndexedDB (`chat-note:<id>`) — y-indexeddb
+            // creates one DB per editor document and never cleans up on its own.
+            if (useNM.currentChatNote?.noteId !== undefined) {
+                await DatabaseUtils.deleteYjsDatabase(`chat-note:${useNM.currentChatNote.noteId}`);
+            }
             // Delete the deleted noteId from the meta object
             useNM.setChatNoteMeta(
                 useNM.chatNoteMeta.filter((note) => note.noteId !== useNM.currentChatNote?.noteId)

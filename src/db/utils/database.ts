@@ -106,6 +106,84 @@ export class DatabaseUtils {
         }
     }
 
+    // y-indexeddb creates one IndexedDB database per Yjs document name
+    // (`task-body:<id>`, `my-note:<id>`, `chat-note:<id>`, `task-note:<id>`).
+    // Wraps the deletion in a promise + try/catch so callers can fire-and-forget
+    // without worrying about the request semantics or transient failures.
+    static async deleteYjsDatabase(name: string): Promise<boolean> {
+        try {
+            await new Promise<void>((resolve, reject) => {
+                const req = indexedDB.deleteDatabase(name);
+                req.onsuccess = () => resolve();
+                req.onerror = () => reject(req.error);
+                // Browsers fire `blocked` when an open connection holds the
+                // DB; we resolve anyway because (a) the open handle will close
+                // when its owner unmounts and (b) the next sweep / row-delete
+                // will retry.
+                req.onblocked = () => resolve();
+            });
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    // Sweep orphaned per-document Yjs databases. Enumerates every IDB
+    // database the origin owns, filters to ones with a Yjs document prefix,
+    // and deletes any whose ID is NOT in the supplied `activeIds` sets.
+    // Returns the number of databases deleted.
+    //
+    // `indexedDB.databases()` is supported in Chrome/Edge/Safari + Firefox
+    // 126+. On older Firefox the call throws or returns undefined; we
+    // degrade to a no-op rather than hand-rolling a separate enumeration.
+    static async sweepOrphanYjsDatabases(activeIds: {
+        taskIds: Set<number>;
+        myNoteIds: Set<number>;
+        chatNoteIds: Set<number>;
+        taskNoteIds: Set<number>;
+    }): Promise<number> {
+        // `indexedDB.databases` is on the global IDBFactory but TS's lib.dom
+        // doesn't always have it.
+        const databasesFn = (
+            indexedDB as IDBFactory & {
+                databases?: () => Promise<{ name?: string }[]>;
+            }
+        ).databases;
+        if (typeof databasesFn !== "function") return 0;
+
+        let dbs: { name?: string }[];
+        try {
+            dbs = await databasesFn.call(indexedDB);
+        } catch {
+            return 0;
+        }
+
+        const prefixes: Array<[string, Set<number>]> = [
+            ["task-body:", activeIds.taskIds],
+            ["my-note:", activeIds.myNoteIds],
+            ["chat-note:", activeIds.chatNoteIds],
+            ["task-note:", activeIds.taskNoteIds],
+        ];
+
+        let deleted = 0;
+        for (const { name } of dbs) {
+            if (!name) continue;
+            for (const [prefix, alive] of prefixes) {
+                if (!name.startsWith(prefix)) continue;
+                const idStr = name.slice(prefix.length);
+                const id = Number(idStr);
+                // Defensive: a non-numeric suffix is an unknown format, leave it
+                // alone rather than risk deleting something we don't own.
+                if (!Number.isFinite(id)) break;
+                if (alive.has(id)) break;
+                const ok = await DatabaseUtils.deleteYjsDatabase(name);
+                if (ok) deleted += 1;
+                break;
+            }
+        }
+        return deleted;
+    }
+
     // Get database size (approximate)
     static async getDatabaseSize(): Promise<number> {
         try {

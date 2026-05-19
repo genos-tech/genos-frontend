@@ -6,6 +6,7 @@ import { Alert, Box, Button, Modal, ModalDialog, Stack, Typography } from "@mui/
 
 import { useAuth } from "../../../../context/AuthContext";
 import { NoteService } from "../../../../db/services/note.service";
+import { DatabaseUtils } from "../../../../db/utils/database";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { MyNoteMetaProps, MyNoteProps } from "../../../../types/notes";
@@ -62,6 +63,10 @@ export const ModalDeleteMyNote: React.FC<Props> = ({
             await deleteMyNote(myself, currentMyNote.noteId, accessToken);
             // Delete from indexedDB
             await noteService.deletePersonalNote(currentMyNote.noteId);
+            // Drop the per-document Yjs IndexedDB (`my-note:<id>`) too —
+            // y-indexeddb creates one DB per editor document and never
+            // cleans up on its own.
+            await DatabaseUtils.deleteYjsDatabase(`my-note:${currentMyNote.noteId}`);
             // Delete the deleted noteId from the meta object
             setMyNoteMeta(myNoteMeta.filter((note) => note.noteId !== currentMyNote.noteId));
             handleCloseTab(currentTabIndex, currentMyNote.noteId);
