@@ -200,6 +200,13 @@ export const es: DeepPartial<Messages> = {
             styleBubble: "Burbuja",
             styleCompact: "Compacto",
         },
+        doubleClickTodo: {
+            heading: "Acción al hacer doble clic",
+            description: "Elige qué sucede al hacer doble clic en una burbuja de mensaje.",
+            toggleLabel: "Agregar mensaje a Pendientes con doble clic",
+            toggleHelper:
+                "Desactívalo para usar el doble clic para seleccionar texto. Se aplica a mensajes de chat, hilos y comentarios de tareas.",
+        },
         spotlight: {
             heading: "Spotlight",
             description:

@@ -755,6 +755,9 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                                     fontWeight: isSelected ? 600 : 500,
                                                     color: mode === "dark" ? "#e8e8e8" : "#1a1a1a",
                                                     lineHeight: 1.3,
+                                                    overflow: "hidden",
+                                                    textOverflow: "ellipsis",
+                                                    whiteSpace: "nowrap",
                                                 }}
                                             >
                                                 {option.userName}
@@ -848,6 +851,9 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                             cursor: "pointer",
                             padding: "4px 8px",
                             borderRadius: "6px",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
                             transition: "background-color 0.15s ease",
                             "&:hover": {
                                 backgroundColor:

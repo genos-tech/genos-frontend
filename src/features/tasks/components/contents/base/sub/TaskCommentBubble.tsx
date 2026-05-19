@@ -10,6 +10,7 @@ import { EmojiPicker } from "../../../../../../components/ui/emoji/EmojiPicker";
 import { ReactionTaskCommentEmojiDisplay } from "../../../../../../components/ui/emoji/ReactionTaskCommentEmojiDisplay";
 import { ChatManagementState } from "../../../../../../hooks/chats/useChatManagement";
 import { useBubbleStylePreference } from "../../../../../../hooks/common/useBubbleStylePreference";
+import { useDoubleClickTodoPreference } from "../../../../../../hooks/common/useDoubleClickTodoPreference";
 import { TeamManagementState } from "../../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../../hooks/common/useUIStateManagement";
 import { useTranslation } from "../../../../../../i18n";
@@ -78,6 +79,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
     const { t } = useTranslation();
     const { style } = useBubbleStylePreference();
     const isCompact = style === "compact";
+    const { enabled: doubleClickTodoEnabled } = useDoubleClickTodoPreference();
     const isSent = comment.senderId === myself.userId;
 
     // Palette harmonised with MessageBubble: sent → purple, received →
@@ -303,14 +305,18 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                     transition: "background-color 0.15s ease",
                 }}
                 onClick={onCommentClick}
-                onDoubleClick={() => {
-                    if (setTodoFromMessageBubble) {
-                        setTodoFromMessageBubble({
-                            ...comment,
-                            projectId: currentProjectId ?? null,
-                        });
-                    }
-                }}
+                onDoubleClick={
+                    doubleClickTodoEnabled
+                        ? () => {
+                              if (setTodoFromMessageBubble) {
+                                  setTodoFromMessageBubble({
+                                      ...comment,
+                                      projectId: currentProjectId ?? null,
+                                  });
+                              }
+                          }
+                        : undefined
+                }
                 onMouseEnter={() => setShowUnderBarOption(true)}
                 onMouseLeave={() => setShowUnderBarOption(false)}
             >
@@ -415,14 +421,18 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                 onClick={onCommentClick}
                 onMouseEnter={() => setShowUnderBarOption(true)}
                 onMouseLeave={() => setShowUnderBarOption(false)}
-                onDoubleClick={() => {
-                    if (setTodoFromMessageBubble) {
-                        setTodoFromMessageBubble({
-                            ...comment,
-                            projectId: currentProjectId ?? null,
-                        });
-                    }
-                }}
+                onDoubleClick={
+                    doubleClickTodoEnabled
+                        ? () => {
+                              if (setTodoFromMessageBubble) {
+                                  setTodoFromMessageBubble({
+                                      ...comment,
+                                      projectId: currentProjectId ?? null,
+                                  });
+                              }
+                          }
+                        : undefined
+                }
             >
                 <Sheet
                     sx={{

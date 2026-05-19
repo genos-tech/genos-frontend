@@ -197,6 +197,12 @@ export const zh: DeepPartial<Messages> = {
             styleBubble: "气泡",
             styleCompact: "紧凑",
         },
+        doubleClickTodo: {
+            heading: "双击操作",
+            description: "选择双击消息气泡时执行的操作。",
+            toggleLabel: "双击将消息添加到待办",
+            toggleHelper: "关闭后可使用双击选中文本。适用于聊天消息、话题消息和任务评论。",
+        },
         spotlight: {
             heading: "Spotlight",
             description:

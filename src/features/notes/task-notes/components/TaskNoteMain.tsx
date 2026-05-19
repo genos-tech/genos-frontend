@@ -182,7 +182,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                         sx={{
                             width: "100%",
                             height: "30px",
-                            mt: "10px",
+                            mt: isInTaskPage ? "-15px" : "10px",
                             mb: "5px",
                         }}
                     >
@@ -190,7 +190,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                             <Box
                                 sx={{
                                     ml: "5px",
-                                    mb: "10px",
+                                    mb: "5px",
                                     width: "40%",
                                 }}
                             >

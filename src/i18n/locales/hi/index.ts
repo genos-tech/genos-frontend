@@ -200,6 +200,13 @@ export const hi: DeepPartial<Messages> = {
             styleBubble: "बबल",
             styleCompact: "कॉम्पैक्ट",
         },
+        doubleClickTodo: {
+            heading: "डबल-क्लिक क्रिया",
+            description: "मेसेज बबल पर डबल-क्लिक करने पर क्या हो, यह चुनें।",
+            toggleLabel: "डबल-क्लिक से मेसेज को To-Do में जोड़ें",
+            toggleHelper:
+                "इसे बंद करें ताकि डबल-क्लिक से टेक्स्ट चुना जा सके। चैट मेसेज, थ्रेड मेसेज और टास्क कमेंट पर लागू होता है।",
+        },
         spotlight: {
             heading: "Spotlight",
             description:

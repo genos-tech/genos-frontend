@@ -11,6 +11,7 @@ import { EmojiReaction } from "../../../../components/ui/emoji/EmojiReaction";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useBubbleStylePreference } from "../../../../hooks/common/useBubbleStylePreference";
+import { useDoubleClickTodoPreference } from "../../../../hooks/common/useDoubleClickTodoPreference";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -87,6 +88,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
     const navigate = useNavigate();
     const { style } = useBubbleStylePreference();
     const isCompact = style === "compact";
+    const { enabled: doubleClickTodoEnabled } = useDoubleClickTodoPreference();
     const isSystemUser = message.sender.isSystemUser === true;
     const hideAvatarSlot = (chat.chatType === 3 || chat.chatType === 4) && isSystemUser;
 
@@ -667,7 +669,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                     transition: "background-color 0.15s ease",
                 }}
                 onClick={handleMessageClick}
-                onDoubleClick={handleAddMessageToToDo}
+                onDoubleClick={doubleClickTodoEnabled ? handleAddMessageToToDo : undefined}
                 onMouseEnter={() => setShowUnderBarOption(true)}
                 onMouseLeave={() => setShowUnderBarOption(false)}
             >
@@ -865,7 +867,9 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                                 },
                             }}
                             onClick={handleMessageClick}
-                            onDoubleClick={handleAddMessageToToDo}
+                            onDoubleClick={
+                                doubleClickTodoEnabled ? handleAddMessageToToDo : undefined
+                            }
                             onMouseEnter={() => setShowUnderBarOption(true)}
                             onMouseLeave={() => setShowUnderBarOption(false)}
                         >

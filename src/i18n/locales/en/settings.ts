@@ -27,6 +27,13 @@ export const settings = {
         styleBubble: "Bubble",
         styleCompact: "Compact",
     },
+    doubleClickTodo: {
+        heading: "Double-click action",
+        description: "Choose what happens when you double-click a message bubble.",
+        toggleLabel: "Add message to To-Do on double-click",
+        toggleHelper:
+            "Turn this off to use double-click for selecting text instead. Applies to chat messages, thread messages, and task comments.",
+    },
     spotlight: {
         heading: "Spotlight",
         description:
@@ -93,7 +100,7 @@ export const settings = {
         heading: "Task sort",
         description:
             "Pick up to two sort keys for each surface. The primary key sorts first; the secondary key breaks ties. Applies immediately and persists across sessions.",
-        sprintBoardLabel: "Sprint board",
+        sprintBoardLabel: "Board",
         sprintBoardHelper:
             "Cards within each column are sorted by these keys. Default leaves the order as the filter pipeline produced it.",
         tableLabel: "Task table",

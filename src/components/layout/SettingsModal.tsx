@@ -7,6 +7,7 @@ import KeyboardRoundedIcon from "@mui/icons-material/KeyboardRounded";
 import LanguageRoundedIcon from "@mui/icons-material/LanguageRounded";
 import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
 import PaletteRoundedIcon from "@mui/icons-material/PaletteRounded";
+import PlaylistAddCheckRoundedIcon from "@mui/icons-material/PlaylistAddCheckRounded";
 import PrivacyTipRoundedIcon from "@mui/icons-material/PrivacyTipRounded";
 import SettingsBrightnessRoundedIcon from "@mui/icons-material/SettingsBrightnessRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
@@ -41,6 +42,7 @@ import {
     BubbleStyle,
     useBubbleStylePreference,
 } from "../../hooks/common/useBubbleStylePreference";
+import { useDoubleClickTodoPreference } from "../../hooks/common/useDoubleClickTodoPreference";
 import { useSpotlightPreferences } from "../../hooks/common/useSpotlightPreferences";
 import { SortTier, useTaskSortPreferences } from "../../hooks/common/useTaskSortPreferences";
 import { ThemePreference, useThemePreference } from "../../hooks/common/useThemePreference";
@@ -182,6 +184,34 @@ const MessageLayoutSection = () => {
                         </Stack>
                     </Option>
                 </Select>
+            </Stack>
+        </Sheet>
+    );
+};
+
+const DoubleClickTodoSection = () => {
+    const { enabled, setEnabled } = useDoubleClickTodoPreference();
+    const { t } = useTranslation();
+    return (
+        <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
+            <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
+                <PlaylistAddCheckRoundedIcon />
+                <Typography level="title-md">{t.settings.doubleClickTodo.heading}</Typography>
+            </Stack>
+            <Typography level="body-xs" sx={{ mb: 1.5 }}>
+                {t.settings.doubleClickTodo.description}
+            </Typography>
+
+            <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={2}>
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography level="title-sm">
+                        {t.settings.doubleClickTodo.toggleLabel}
+                    </Typography>
+                    <Typography level="body-xs">
+                        {t.settings.doubleClickTodo.toggleHelper}
+                    </Typography>
+                </Box>
+                <Switch checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
             </Stack>
         </Sheet>
     );
@@ -688,6 +718,7 @@ export const SettingsModal = ({ open, onClose }: Props) => {
                     <TabPanel value="chat" sx={{ px: 0, py: 2 }}>
                         <Stack spacing={2}>
                             <MessageLayoutSection />
+                            <DoubleClickTodoSection />
                         </Stack>
                     </TabPanel>
                     <TabPanel value="tasks" sx={{ px: 0, py: 2 }}>

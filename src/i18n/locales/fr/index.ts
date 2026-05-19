@@ -202,6 +202,14 @@ export const fr: DeepPartial<Messages> = {
             styleBubble: "Bulle",
             styleCompact: "Compact",
         },
+        doubleClickTodo: {
+            heading: "Action au double-clic",
+            description:
+                "Choisissez l'action effectuée lors d'un double-clic sur une bulle de message.",
+            toggleLabel: "Ajouter le message aux À faire au double-clic",
+            toggleHelper:
+                "Désactivez pour utiliser le double-clic afin de sélectionner du texte. S'applique aux messages de chat, fils et commentaires de tâches.",
+        },
         spotlight: {
             heading: "Spotlight",
             description:

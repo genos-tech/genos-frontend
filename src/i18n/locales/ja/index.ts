@@ -199,6 +199,13 @@ export const ja: DeepPartial<Messages> = {
             styleBubble: "バブル",
             styleCompact: "コンパクト",
         },
+        doubleClickTodo: {
+            heading: "ダブルクリックの動作",
+            description: "メッセージのバブルをダブルクリックしたときの動作を選択します。",
+            toggleLabel: "ダブルクリックでメッセージをTo-Doに追加",
+            toggleHelper:
+                "オフにすると、ダブルクリックでテキストを選択できます。チャット、スレッド、タスクコメントに適用されます。",
+        },
         spotlight: {
             heading: "Spotlight",
             description:
@@ -263,7 +270,7 @@ export const ja: DeepPartial<Messages> = {
             heading: "タスクの並び替え",
             description:
                 "各画面で最大 2 つの並び順を設定できます。プライマリで並び替え、タイブレイクはセカンダリで行います。即時反映され、セッション間で保持されます。",
-            sprintBoardLabel: "スプリントボード",
+            sprintBoardLabel: "タスクボード",
             sprintBoardHelper:
                 "各カラム内のカードがこのキーで並び替えられます。デフォルトはフィルター結果の順序を維持します。",
             tableLabel: "タスクテーブル",

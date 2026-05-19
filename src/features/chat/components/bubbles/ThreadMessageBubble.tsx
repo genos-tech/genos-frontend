@@ -11,6 +11,7 @@ import { EmojiReaction } from "../../../../components/ui/emoji/EmojiReaction";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useBubbleStylePreference } from "../../../../hooks/common/useBubbleStylePreference";
+import { useDoubleClickTodoPreference } from "../../../../hooks/common/useDoubleClickTodoPreference";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../../../types/admin";
@@ -80,6 +81,7 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
     const dtSent = extractYYYYMMDDHHMM(message.tsSent);
     const { style } = useBubbleStylePreference();
     const isCompact = style === "compact";
+    const { enabled: doubleClickTodoEnabled } = useDoubleClickTodoPreference();
     const isSystemUser = message.sender.isSystemUser === true;
 
     // Get bubble colors based on variant and theme
@@ -426,9 +428,13 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                     transition: "background-color 0.15s ease",
                 }}
                 onClick={handleMessageClick}
-                onDoubleClick={() => {
-                    setTodoFromMessageBubble(message);
-                }}
+                onDoubleClick={
+                    doubleClickTodoEnabled
+                        ? () => {
+                              setTodoFromMessageBubble(message);
+                          }
+                        : undefined
+                }
                 onMouseEnter={() => setShowUnderBarOption(true)}
                 onMouseLeave={() => setShowUnderBarOption(false)}
             >
@@ -599,9 +605,13 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                         onClick={handleMessageClick}
                         onMouseEnter={() => setShowUnderBarOption(true)}
                         onMouseLeave={() => setShowUnderBarOption(false)}
-                        onDoubleClick={() => {
-                            setTodoFromMessageBubble(message);
-                        }}
+                        onDoubleClick={
+                            doubleClickTodoEnabled
+                                ? () => {
+                                      setTodoFromMessageBubble(message);
+                                  }
+                                : undefined
+                        }
                     >
                         {/* Subtle highlight for sent messages */}
                         {isSent && !isFocused && (

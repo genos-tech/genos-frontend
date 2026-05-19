@@ -24,6 +24,7 @@ import { useAnalyticsPageviews } from "./hooks/common/useAnalyticsPageviews";
 import { AnalyticsPreferencesProvider } from "./hooks/common/useAnalyticsPreferences";
 import { useAppInitialization } from "./hooks/common/useAppInitialization";
 import { BubbleStylePreferenceProvider } from "./hooks/common/useBubbleStylePreference";
+import { DoubleClickTodoPreferenceProvider } from "./hooks/common/useDoubleClickTodoPreference";
 import { useGlobalServiceShortcut } from "./hooks/common/useGlobalServiceShortcut";
 import { useNotifications } from "./hooks/common/useNotifications";
 import { useProjectTaskManagement } from "./hooks/common/useProjectTaskManagement";
@@ -401,57 +402,60 @@ export const App = () => {
             <I18nProvider>
                 <ThemePreferenceProvider>
                     <BubbleStylePreferenceProvider>
-                        <TaskSortPreferencesProvider>
-                            <SpotlightPreferencesProvider>
-                                <AnalyticsPreferencesProvider>
-                                    <NotificationsProvider value={useNotif}>
-                                        <NotificationToastHost
-                                            subscribeToasts={useNotif.subscribeToasts}
-                                            onOpenIntent={openIntent}
-                                        />
-                                        <ServiceSwitcherOverlay
-                                            mruOrder={serviceSwitcherMruOrder}
-                                            previewIndex={serviceSwitcherPreviewIndex}
-                                        />
-                                        <SpotlightOverlay
-                                            aiAnswersEnabled={spotlight.aiAnswersEnabled}
-                                            ask={spotlight.ask}
-                                            dailyUsage={spotlight.dailyUsage}
-                                            error={spotlight.error}
-                                            isLoading={spotlight.isLoading}
-                                            isOpen={spotlight.isOpen}
-                                            query={spotlight.query}
-                                            results={spotlight.results}
-                                            turns={spotlight.turns}
-                                            onApprove={spotlight.onApprove}
-                                            onAsk={spotlight.onAsk}
-                                            onCancel={spotlight.onCancel}
-                                            onClose={spotlight.close}
-                                            onNewConversation={spotlight.onNewConversation}
-                                            onQueryChange={spotlight.setQuery}
-                                            onReject={spotlight.onReject}
-                                            onSelect={handleSpotlightSelect}
-                                        />
-                                        <ConnectionStatusSnackbar
-                                            showApiDown={showApiDown}
-                                            showWsDisconnected={showWsDisconnected}
-                                        />
-                                        {useUISM.isLoading ? (
-                                            <InitialLoad
-                                                myself={myself}
-                                                setCurrentMainChat={useCM.setCurrentMainChat}
-                                                setIsLoading={useUISM.setIsLoading}
+                        <DoubleClickTodoPreferenceProvider>
+                            <TaskSortPreferencesProvider>
+                                <SpotlightPreferencesProvider>
+                                    <AnalyticsPreferencesProvider>
+                                        <NotificationsProvider value={useNotif}>
+                                            <NotificationToastHost
+                                                subscribeToasts={useNotif.subscribeToasts}
+                                                onOpenIntent={openIntent}
                                             />
-                                        ) : (
-                                            <div className="main-container">
-                                                <PermissionBanner
-                                                    masterEnabled={
-                                                        useNotif.preferences.masterEnabled
-                                                    }
-                                                    permission={useNotif.permission}
-                                                    requestPermission={useNotif.requestPermission}
+                                            <ServiceSwitcherOverlay
+                                                mruOrder={serviceSwitcherMruOrder}
+                                                previewIndex={serviceSwitcherPreviewIndex}
+                                            />
+                                            <SpotlightOverlay
+                                                aiAnswersEnabled={spotlight.aiAnswersEnabled}
+                                                ask={spotlight.ask}
+                                                dailyUsage={spotlight.dailyUsage}
+                                                error={spotlight.error}
+                                                isLoading={spotlight.isLoading}
+                                                isOpen={spotlight.isOpen}
+                                                query={spotlight.query}
+                                                results={spotlight.results}
+                                                turns={spotlight.turns}
+                                                onApprove={spotlight.onApprove}
+                                                onAsk={spotlight.onAsk}
+                                                onCancel={spotlight.onCancel}
+                                                onClose={spotlight.close}
+                                                onNewConversation={spotlight.onNewConversation}
+                                                onQueryChange={spotlight.setQuery}
+                                                onReject={spotlight.onReject}
+                                                onSelect={handleSpotlightSelect}
+                                            />
+                                            <ConnectionStatusSnackbar
+                                                showApiDown={showApiDown}
+                                                showWsDisconnected={showWsDisconnected}
+                                            />
+                                            {useUISM.isLoading ? (
+                                                <InitialLoad
+                                                    myself={myself}
+                                                    setCurrentMainChat={useCM.setCurrentMainChat}
+                                                    setIsLoading={useUISM.setIsLoading}
                                                 />
-                                                {/* Sidebar lives here (outside <Routes>) so it
+                                            ) : (
+                                                <div className="main-container">
+                                                    <PermissionBanner
+                                                        masterEnabled={
+                                                            useNotif.preferences.masterEnabled
+                                                        }
+                                                        permission={useNotif.permission}
+                                                        requestPermission={
+                                                            useNotif.requestPermission
+                                                        }
+                                                    />
+                                                    {/* Sidebar lives here (outside <Routes>) so it
                                 is mounted once for the whole authenticated
                                 shell. Switching services only swaps the
                                 routed content next to it instead of
@@ -464,198 +468,251 @@ export const App = () => {
                                 profile by `userId` from a single source
                                 of truth instead of taking a fan-out of
                                 props at every callsite. */}
-                                                <AvatarContextProvider
-                                                    value={{
-                                                        myself,
-                                                        setMyself,
-                                                        teamMemberProfiles:
-                                                            useTEM.teamMemberProfiles,
-                                                        setTeamMemberProfiles:
-                                                            useTEM.setTeamMemberProfiles,
-                                                        socket: socketInstance,
-                                                        useCM,
-                                                        useUISM,
-                                                    }}
-                                                >
-                                                    <UrlLinkModalProvider
+                                                    <AvatarContextProvider
                                                         value={{
-                                                            openModalByHref:
-                                                                urlLinkModal.openModalByHref,
+                                                            myself,
+                                                            setMyself,
+                                                            teamMemberProfiles:
+                                                                useTEM.teamMemberProfiles,
+                                                            setTeamMemberProfiles:
+                                                                useTEM.setTeamMemberProfiles,
+                                                            socket: socketInstance,
+                                                            useCM,
+                                                            useUISM,
                                                         }}
                                                     >
-                                                        <UrlLinkModal
-                                                            accessToken={accessToken}
-                                                            myself={myself}
-                                                            setMyself={setMyself}
-                                                            socket={socketInstance}
-                                                            target={urlLinkModal.target}
-                                                            useCM={useCM}
-                                                            useNM={useNM}
-                                                            usePM={usePM}
-                                                            useSM={useSM}
-                                                            useTEM={useTEM}
-                                                            useTM={useTM}
-                                                            useUISM={useUISM}
-                                                            onClose={urlLinkModal.closeModal}
-                                                        />
-                                                        <Box
-                                                            sx={{
-                                                                display: "flex",
-                                                                minHeight: "100dvh",
-                                                                width: "100vw",
+                                                        <UrlLinkModalProvider
+                                                            value={{
+                                                                openModalByHref:
+                                                                    urlLinkModal.openModalByHref,
                                                             }}
                                                         >
-                                                            <Sidebar
+                                                            <UrlLinkModal
+                                                                accessToken={accessToken}
                                                                 myself={myself}
                                                                 setMyself={setMyself}
                                                                 socket={socketInstance}
+                                                                target={urlLinkModal.target}
                                                                 useCM={useCM}
-                                                                useIM={useIM}
+                                                                useNM={useNM}
+                                                                usePM={usePM}
+                                                                useSM={useSM}
                                                                 useTEM={useTEM}
+                                                                useTM={useTM}
                                                                 useUISM={useUISM}
-                                                                onOpenSpotlight={spotlight.open}
+                                                                onClose={urlLinkModal.closeModal}
                                                             />
-                                                            <Routes>
-                                                                <Route
-                                                                    path="inbox/*"
-                                                                    element={
-                                                                        <Suspense
-                                                                            fallback={
-                                                                                <RouteLoadingFallback />
-                                                                            }
-                                                                        >
-                                                                            <InboxHome
-                                                                                myself={myself}
-                                                                                setMyself={
-                                                                                    setMyself
+                                                            <Box
+                                                                sx={{
+                                                                    display: "flex",
+                                                                    minHeight: "100dvh",
+                                                                    width: "100vw",
+                                                                }}
+                                                            >
+                                                                <Sidebar
+                                                                    myself={myself}
+                                                                    setMyself={setMyself}
+                                                                    socket={socketInstance}
+                                                                    useCM={useCM}
+                                                                    useIM={useIM}
+                                                                    useTEM={useTEM}
+                                                                    useUISM={useUISM}
+                                                                    onOpenSpotlight={
+                                                                        spotlight.open
+                                                                    }
+                                                                />
+                                                                <Routes>
+                                                                    <Route
+                                                                        path="inbox/*"
+                                                                        element={
+                                                                            <Suspense
+                                                                                fallback={
+                                                                                    <RouteLoadingFallback />
                                                                                 }
-                                                                                socket={
-                                                                                    socketInstance
-                                                                                }
-                                                                                useCM={useCM}
-                                                                                useIM={useIM}
-                                                                                useTEM={useTEM}
-                                                                                useUISM={useUISM}
+                                                                            >
+                                                                                <InboxHome
+                                                                                    myself={myself}
+                                                                                    setMyself={
+                                                                                        setMyself
+                                                                                    }
+                                                                                    socket={
+                                                                                        socketInstance
+                                                                                    }
+                                                                                    useCM={useCM}
+                                                                                    useIM={useIM}
+                                                                                    useTEM={useTEM}
+                                                                                    useUISM={
+                                                                                        useUISM
+                                                                                    }
+                                                                                />
+                                                                            </Suspense>
+                                                                        }
+                                                                    />
+                                                                    <Route
+                                                                        path="chat/*"
+                                                                        element={
+                                                                            <FeatureErrorBoundary feature="Chat">
+                                                                                <Suspense
+                                                                                    fallback={
+                                                                                        <RouteLoadingFallback />
+                                                                                    }
+                                                                                >
+                                                                                    <ChatHome
+                                                                                        myself={
+                                                                                            myself
+                                                                                        }
+                                                                                        setMyself={
+                                                                                            setMyself
+                                                                                        }
+                                                                                        socket={
+                                                                                            socketInstance
+                                                                                        }
+                                                                                        useCM={
+                                                                                            useCM
+                                                                                        }
+                                                                                        useIM={
+                                                                                            useIM
+                                                                                        }
+                                                                                        useNM={
+                                                                                            useNM
+                                                                                        }
+                                                                                        usePM={
+                                                                                            usePM
+                                                                                        }
+                                                                                        useSM={
+                                                                                            useSM
+                                                                                        }
+                                                                                        useTEM={
+                                                                                            useTEM
+                                                                                        }
+                                                                                        useTM={
+                                                                                            useTM
+                                                                                        }
+                                                                                        useUISM={
+                                                                                            useUISM
+                                                                                        }
+                                                                                    />
+                                                                                </Suspense>
+                                                                            </FeatureErrorBoundary>
+                                                                        }
+                                                                    />
+                                                                    <Route
+                                                                        path="tasks/*"
+                                                                        element={
+                                                                            <FeatureErrorBoundary feature="Tasks">
+                                                                                <Suspense
+                                                                                    fallback={
+                                                                                        <RouteLoadingFallback />
+                                                                                    }
+                                                                                >
+                                                                                    <TaskHome
+                                                                                        myself={
+                                                                                            myself
+                                                                                        }
+                                                                                        setMyself={
+                                                                                            setMyself
+                                                                                        }
+                                                                                        socket={
+                                                                                            socketInstance
+                                                                                        }
+                                                                                        useCM={
+                                                                                            useCM
+                                                                                        }
+                                                                                        useIM={
+                                                                                            useIM
+                                                                                        }
+                                                                                        useNM={
+                                                                                            useNM
+                                                                                        }
+                                                                                        usePM={
+                                                                                            usePM
+                                                                                        }
+                                                                                        useSM={
+                                                                                            useSM
+                                                                                        }
+                                                                                        useTEM={
+                                                                                            useTEM
+                                                                                        }
+                                                                                        useTM={
+                                                                                            useTM
+                                                                                        }
+                                                                                        useUISM={
+                                                                                            useUISM
+                                                                                        }
+                                                                                    />
+                                                                                </Suspense>
+                                                                            </FeatureErrorBoundary>
+                                                                        }
+                                                                    />
+                                                                    <Route
+                                                                        path="notes/*"
+                                                                        element={
+                                                                            <FeatureErrorBoundary feature="Notes">
+                                                                                <Suspense
+                                                                                    fallback={
+                                                                                        <RouteLoadingFallback />
+                                                                                    }
+                                                                                >
+                                                                                    <NoteHome
+                                                                                        myself={
+                                                                                            myself
+                                                                                        }
+                                                                                        setMyself={
+                                                                                            setMyself
+                                                                                        }
+                                                                                        socket={
+                                                                                            socketInstance
+                                                                                        }
+                                                                                        useCM={
+                                                                                            useCM
+                                                                                        }
+                                                                                        useIM={
+                                                                                            useIM
+                                                                                        }
+                                                                                        useNM={
+                                                                                            useNM
+                                                                                        }
+                                                                                        usePM={
+                                                                                            usePM
+                                                                                        }
+                                                                                        useSM={
+                                                                                            useSM
+                                                                                        }
+                                                                                        useTEM={
+                                                                                            useTEM
+                                                                                        }
+                                                                                        useTM={
+                                                                                            useTM
+                                                                                        }
+                                                                                        useUISM={
+                                                                                            useUISM
+                                                                                        }
+                                                                                    />
+                                                                                </Suspense>
+                                                                            </FeatureErrorBoundary>
+                                                                        }
+                                                                    />
+                                                                    {/* Default redirect to inbox */}
+                                                                    <Route
+                                                                        path=""
+                                                                        element={
+                                                                            <Navigate
+                                                                                to="inbox"
+                                                                                replace
                                                                             />
-                                                                        </Suspense>
-                                                                    }
-                                                                />
-                                                                <Route
-                                                                    path="chat/*"
-                                                                    element={
-                                                                        <FeatureErrorBoundary feature="Chat">
-                                                                            <Suspense
-                                                                                fallback={
-                                                                                    <RouteLoadingFallback />
-                                                                                }
-                                                                            >
-                                                                                <ChatHome
-                                                                                    myself={myself}
-                                                                                    setMyself={
-                                                                                        setMyself
-                                                                                    }
-                                                                                    socket={
-                                                                                        socketInstance
-                                                                                    }
-                                                                                    useCM={useCM}
-                                                                                    useIM={useIM}
-                                                                                    useNM={useNM}
-                                                                                    usePM={usePM}
-                                                                                    useSM={useSM}
-                                                                                    useTEM={useTEM}
-                                                                                    useTM={useTM}
-                                                                                    useUISM={
-                                                                                        useUISM
-                                                                                    }
-                                                                                />
-                                                                            </Suspense>
-                                                                        </FeatureErrorBoundary>
-                                                                    }
-                                                                />
-                                                                <Route
-                                                                    path="tasks/*"
-                                                                    element={
-                                                                        <FeatureErrorBoundary feature="Tasks">
-                                                                            <Suspense
-                                                                                fallback={
-                                                                                    <RouteLoadingFallback />
-                                                                                }
-                                                                            >
-                                                                                <TaskHome
-                                                                                    myself={myself}
-                                                                                    setMyself={
-                                                                                        setMyself
-                                                                                    }
-                                                                                    socket={
-                                                                                        socketInstance
-                                                                                    }
-                                                                                    useCM={useCM}
-                                                                                    useIM={useIM}
-                                                                                    useNM={useNM}
-                                                                                    usePM={usePM}
-                                                                                    useSM={useSM}
-                                                                                    useTEM={useTEM}
-                                                                                    useTM={useTM}
-                                                                                    useUISM={
-                                                                                        useUISM
-                                                                                    }
-                                                                                />
-                                                                            </Suspense>
-                                                                        </FeatureErrorBoundary>
-                                                                    }
-                                                                />
-                                                                <Route
-                                                                    path="notes/*"
-                                                                    element={
-                                                                        <FeatureErrorBoundary feature="Notes">
-                                                                            <Suspense
-                                                                                fallback={
-                                                                                    <RouteLoadingFallback />
-                                                                                }
-                                                                            >
-                                                                                <NoteHome
-                                                                                    myself={myself}
-                                                                                    setMyself={
-                                                                                        setMyself
-                                                                                    }
-                                                                                    socket={
-                                                                                        socketInstance
-                                                                                    }
-                                                                                    useCM={useCM}
-                                                                                    useIM={useIM}
-                                                                                    useNM={useNM}
-                                                                                    usePM={usePM}
-                                                                                    useSM={useSM}
-                                                                                    useTEM={useTEM}
-                                                                                    useTM={useTM}
-                                                                                    useUISM={
-                                                                                        useUISM
-                                                                                    }
-                                                                                />
-                                                                            </Suspense>
-                                                                        </FeatureErrorBoundary>
-                                                                    }
-                                                                />
-                                                                {/* Default redirect to inbox */}
-                                                                <Route
-                                                                    path=""
-                                                                    element={
-                                                                        <Navigate
-                                                                            to="inbox"
-                                                                            replace
-                                                                        />
-                                                                    }
-                                                                />
-                                                            </Routes>
-                                                        </Box>
-                                                    </UrlLinkModalProvider>
-                                                </AvatarContextProvider>
-                                            </div>
-                                        )}
-                                    </NotificationsProvider>
-                                </AnalyticsPreferencesProvider>
-                            </SpotlightPreferencesProvider>
-                        </TaskSortPreferencesProvider>
+                                                                        }
+                                                                    />
+                                                                </Routes>
+                                                            </Box>
+                                                        </UrlLinkModalProvider>
+                                                    </AvatarContextProvider>
+                                                </div>
+                                            )}
+                                        </NotificationsProvider>
+                                    </AnalyticsPreferencesProvider>
+                                </SpotlightPreferencesProvider>
+                            </TaskSortPreferencesProvider>
+                        </DoubleClickTodoPreferenceProvider>
                     </BubbleStylePreferenceProvider>
                 </ThemePreferenceProvider>
             </I18nProvider>

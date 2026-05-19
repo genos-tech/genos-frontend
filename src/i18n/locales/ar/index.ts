@@ -200,6 +200,13 @@ export const ar: DeepPartial<Messages> = {
             styleBubble: "فقاعة",
             styleCompact: "مضغوط",
         },
+        doubleClickTodo: {
+            heading: "إجراء النقر المزدوج",
+            description: "اختر ما يحدث عند النقر المزدوج على فقاعة الرسالة.",
+            toggleLabel: "إضافة الرسالة إلى قائمة المهام عند النقر المزدوج",
+            toggleHelper:
+                "أوقف التشغيل لاستخدام النقر المزدوج لتحديد النص. يُطبَّق على رسائل المحادثة والمواضيع وتعليقات المهام.",
+        },
         spotlight: {
             heading: "Spotlight",
             description:
