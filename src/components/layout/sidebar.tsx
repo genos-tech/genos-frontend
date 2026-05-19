@@ -27,6 +27,7 @@ import { Socket } from "socket.io-client";
 import { useAuth } from "../../context/AuthContext";
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
 import { TeamDropdown } from "../../features/admin/components/teamDropdown";
+import { OAUTH_INTEGRATIONS_ENABLED } from "../../features/integrations/featureFlags";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
@@ -84,14 +85,18 @@ const NAV_ITEMS = [
         shortcutKey: "N",
         colorScheme: NAV_ACCENT,
     },
-    {
-        id: 4,
-        icon: HubRoundedIcon,
-        labelKey: "integrations" as const,
-        path: "/workspace/integrations",
-        shortcutKey: "G",
-        colorScheme: NAV_ACCENT,
-    },
+    ...(OAUTH_INTEGRATIONS_ENABLED
+        ? [
+              {
+                  id: 4,
+                  icon: HubRoundedIcon,
+                  labelKey: "integrations" as const,
+                  path: "/workspace/integrations",
+                  shortcutKey: "G",
+                  colorScheme: NAV_ACCENT,
+              },
+          ]
+        : []),
 ];
 
 type SidebarProps = {

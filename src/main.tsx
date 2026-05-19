@@ -11,6 +11,7 @@ import { OAuthSuccessHandler } from "./features/admin/components/OAuthSuccessHan
 import { ResetPasswordForm } from "./features/admin/components/ResetPasswordForm";
 import { SignInForm } from "./features/admin/components/SignInForm";
 import { SignUpForm } from "./features/admin/components/SignUpForm";
+import { OAUTH_INTEGRATIONS_ENABLED } from "./features/integrations/featureFlags";
 import { analytics } from "./services/analytics";
 import { startLongTaskObserver } from "./services/perfObserver";
 
@@ -63,7 +64,9 @@ createRoot(document.getElementById("root")!).render(
                     the JWT from the URL hash and finishes sign-in)
                     and signed-in users (failure paths only — connect
                     successes go straight to the next route). */}
-                <Route element={<OAuthSuccessHandler />} path="/oauth/success" />
+                {OAUTH_INTEGRATIONS_ENABLED && (
+                    <Route element={<OAuthSuccessHandler />} path="/oauth/success" />
+                )}
 
                 {/* Protected routes */}
                 <Route element={<AuthGuard />}>

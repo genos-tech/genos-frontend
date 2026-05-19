@@ -15,6 +15,7 @@ import { UrlLinkModal } from "./components/modals/UrlLinkModal";
 import { AvatarContextProvider } from "./components/ui/avatars/AvatarContext";
 import { InitialLoad } from "./components/ui/misc/InitialLoad";
 import { RouteLoadingFallback } from "./components/ui/misc/RouteLoadingFallback";
+import { OAUTH_INTEGRATIONS_ENABLED } from "./features/integrations/featureFlags";
 import { SpotlightOverlay } from "./features/spotlight/SpotlightOverlay";
 import { CHAT_TYPE_CODE, SpotlightResult } from "./features/spotlight/types";
 import { useSpotlight } from "./features/spotlight/useSpotlight";
@@ -697,20 +698,22 @@ export const App = () => {
                                                                             </FeatureErrorBoundary>
                                                                         }
                                                                     />
-                                                                    <Route
-                                                                        path="integrations"
-                                                                        element={
-                                                                            <FeatureErrorBoundary feature="Integrations">
-                                                                                <Suspense
-                                                                                    fallback={
-                                                                                        <RouteLoadingFallback />
-                                                                                    }
-                                                                                >
-                                                                                    <IntegrationsHome />
-                                                                                </Suspense>
-                                                                            </FeatureErrorBoundary>
-                                                                        }
-                                                                    />
+                                                                    {OAUTH_INTEGRATIONS_ENABLED && (
+                                                                        <Route
+                                                                            path="integrations"
+                                                                            element={
+                                                                                <FeatureErrorBoundary feature="Integrations">
+                                                                                    <Suspense
+                                                                                        fallback={
+                                                                                            <RouteLoadingFallback />
+                                                                                        }
+                                                                                    >
+                                                                                        <IntegrationsHome />
+                                                                                    </Suspense>
+                                                                                </FeatureErrorBoundary>
+                                                                            }
+                                                                        />
+                                                                    )}
                                                                     {/* Default redirect to inbox */}
                                                                     <Route
                                                                         path=""
