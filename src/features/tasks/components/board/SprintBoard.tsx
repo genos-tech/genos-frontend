@@ -139,27 +139,17 @@ export const SprintBoard = (props: SprintBoardProps) => {
         closed: [],
     });
 
-    // Organize filtered tasks into board columns. We deliberately do
-    // NOT restrict by sprint binding here:
-    //   1. Without a milestone scope, the board should show every
-    //      milestone (backing tasks) AND every regular root task so
-    //      users can see the full project at a glance — not just the
-    //      handful of things tied to the current sprint. The user's
-    //      sprint scoping happens in the dashboard / sidebar.
-    //   2. With a milestone scope active (clicked from the sidebar),
-    //      `TaskFilterMenu` already narrows `filteredTasks` to the
-    //      milestone's children, so we just trust its output.
-    // Dropping the milestone/sprint deps also means a milestone preview
-    // refreshing its data no longer rebuilds the board's columns, so a
-    // just-clicked card stays put instead of being filtered away by the
-    // momentary state churn.
+    // Organize filtered tasks into board columns. `filteredTasks` is
+    // already the authoritative "what should be on the board" list:
+    // `TaskFilterMenu.applyFilters` includes the milestone's tasks and
+    // subtasks in `filteredTop` whenever a milestone filter (sidebar
+    // scope OR dropdown) is active, and otherwise keeps the list
+    // restricted to roots so the default view doesn't flood with
+    // every nested subtask in the project. The old local
+    // `parentTaskId === null` re-filter was clipping the milestone's
+    // children back out, which is exactly why dropdown-milestone
+    // selection previously rendered only the milestone backing card.
     useEffect(() => {
-        const milestoneScopeActive = useTM.tableMilestoneFilterId != null;
-        const tasks = (filteredTasks || []).filter((task) => {
-            if (milestoneScopeActive) return true;
-            return task.parentTaskId === null;
-        });
-
         const organized: Record<string, TaskTableProps[]> = {
             open: [],
             wip: [],
@@ -167,16 +157,16 @@ export const SprintBoard = (props: SprintBoardProps) => {
             closed: [],
         };
 
-        tasks.forEach((task: TaskTableProps) => {
+        for (const task of filteredTasks || []) {
             const status = task.status?.toLowerCase() || "open";
             if (status === "open") organized.open.push(task);
             else if (status === "wip") organized.wip.push(task);
             else if (status === "pending") organized.pending.push(task);
             else if (status === "closed") organized.closed.push(task);
-        });
+        }
 
         setBoardTasks(organized);
-    }, [filteredTasks, useTM.tableMilestoneFilterId]);
+    }, [filteredTasks]);
 
     // Sync the dragged task's new status onto the open preview pane so
     // the user immediately sees the change there. Mirrors the manual

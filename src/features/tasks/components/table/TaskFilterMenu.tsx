@@ -429,10 +429,22 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         // The "All in any dimension → restrict to roots" rule the
         // legacy code applied inside each per-dimension `if (... "All")`
         // branch. In practice it fires iff ANY dimension is in "All"
-        // mode AND milestone scope is inactive — the per-dimension
+        // mode AND no milestone scope is active — the per-dimension
         // applications were idempotent. Collapsed here into one flag.
+        //
+        // Milestone-dropdown selection (`milestoneFilterActive`) counts
+        // the same as the sidebar's `tableMilestoneFilterId` scope:
+        // when the user has narrowed to a specific milestone, we want
+        // its tasks and subtasks to land in `filteredTop` so a flat
+        // kanban view (SprintBoard) can surface them. The table's
+        // depth-0 render still strips non-roots via
+        // `parentRows = currentDisplayingTasks.filter(t => t.parentTaskId == null)`
+        // ([DraggableTaskTable.tsx:562]), so this relaxation does not
+        // double-render rows there — non-roots only surface via the
+        // expand chevron through `childrenByParent`.
         const restrictTopToRoots =
             !milestoneScopeActive &&
+            !milestoneFilterActive &&
             ((statuses.length === 1 && statuses[0].label === "All") ||
                 (tags.length === 1 && tags[0].label === "All") ||
                 (priority.length === 1 && priority[0].label === "All") ||
