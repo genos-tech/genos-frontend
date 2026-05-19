@@ -25,14 +25,14 @@ export const ChatListItemMessage: React.FC<ChatListItemMessageProps> = ({ chat }
                 level="body-xs"
                 sx={{
                     fontWeight: hasUnread ? 600 : 400,
-                    fontSize: "0.75rem",
+                    fontSize: "1rem",
                     color: hasUnread
                         ? isDark
-                            ? "rgba(255,255,255,0.75)"
-                            : "rgba(0,0,0,0.7)"
+                            ? "rgba(255,255,255,0.95)"
+                            : "rgba(0,0,0,0.9)"
                         : isDark
-                          ? "rgba(255,255,255,0.45)"
-                          : "rgba(0,0,0,0.45)",
+                          ? "rgba(255,255,255,0.7)"
+                          : "rgba(0,0,0,0.65)",
                     display: "-webkit-box",
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: "vertical",

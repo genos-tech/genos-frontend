@@ -59,7 +59,7 @@ export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
                         noWrap
                         sx={{
                             fontWeight: 600,
-                            fontSize: "0.85rem",
+                            fontSize: "1rem",
                             color: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.85)",
                             minWidth: 0,
                             lineHeight: 1.3,

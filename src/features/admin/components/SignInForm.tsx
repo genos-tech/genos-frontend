@@ -60,6 +60,12 @@ const SignInContent = () => {
         const signInRes: SignInResponse = await signIn(email, password, setErrorMessage);
 
         if (signInRes) {
+            // Capture the previously signed-in user before the setItem block
+            // below overwrites it, so we can skip wiping IndexedDB when the
+            // same user is signing back in. `userId` is intentionally
+            // preserved across logout to support this comparison.
+            const previousUserId = localStorage.getItem("userId");
+
             setAccessToken(signInRes.access);
             localStorage.setItem("isSigningIn", "yes");
             localStorage.setItem("userName", signInRes.username || "");
@@ -73,8 +79,9 @@ const SignInContent = () => {
             localStorage.setItem("avatarImgPath", signInRes.profile_image_file_name || "");
 
             if (signInRes.user_id) {
-                // Clear all data from indexedDB first.
-                await DatabaseUtils.clearTeamScopedStores();
+                if (previousUserId !== signInRes.user_id) {
+                    await DatabaseUtils.clearTeamScopedStores();
+                }
 
                 navigate("/jointeam");
             } else {

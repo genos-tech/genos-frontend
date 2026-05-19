@@ -123,11 +123,13 @@ export const Sidebar = (props: SidebarProps) => {
 
             if (response.ok) {
                 // Clear all localStorage items
+                // `userId` is intentionally omitted: it survives logout as
+                // a "last signed-in user" marker so the next sign-in can
+                // detect a user change and decide whether to wipe IndexedDB.
                 const keysToRemove = [
                     "isSigningIn",
                     "userEmail",
                     "userName",
-                    "userId",
                     "avatarImgPath",
                     "teamId",
                     "tsJoined",

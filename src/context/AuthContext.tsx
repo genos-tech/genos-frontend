@@ -19,11 +19,14 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 // signin screen. Mirrors the list in `sidebar.tsx`'s logout handler
 // so a forced sign-out from a missing/expired refresh cookie leaves
 // the same clean slate as a manual logout.
+//
+// `userId` is intentionally NOT in this list: it survives logout as
+// a "last signed-in user" marker so the next sign-in can detect a
+// user change and decide whether to wipe team-scoped IndexedDB.
 export const AUTH_LOCAL_STORAGE_KEYS = [
     "isSigningIn",
     "userEmail",
     "userName",
-    "userId",
     "avatarImgPath",
     "teamId",
     "tsJoined",
