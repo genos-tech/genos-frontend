@@ -50,6 +50,49 @@ export const AUTH_LOCAL_STORAGE_KEYS = [
     "isDemoUser",
 ];
 
+// Device-level UI preferences that belong to "this browser for this person"
+// rather than to a specific account. Preserved across user-change by
+// `clearUserScopedLocalStorage` so signing in as someone else doesn't reset
+// theme, locale, or layout choices.
+//
+// When you add a new preference hook in `hooks/common/`, add its storage
+// key here too — otherwise it'll get wiped the next time a different user
+// signs in on the same device.
+export const DEVICE_PREFERENCE_LOCAL_STORAGE_KEYS = [
+    "weikiy-theme-preference",
+    "weikiy-bubble-style-preference",
+    "weikiy-locale",
+    "weikiy-spotlight-preferences:v1",
+    "weikiy-analytics-preferences:v1",
+    "weikiy-double-click-todo-preference:v1",
+    "weikiy.sprintBoard.sortTiers.v2",
+    "weikiy.taskTable.sortTiers.v2",
+];
+
+/**
+ * Wipe localStorage of the previously signed-in user's data while keeping
+ * device-level UI preferences intact. Called from the sign-in flow when a
+ * *different* user signs in on the same device, so things like editor
+ * drafts, Spotlight conversation history, last-opened chat/note IDs, and
+ * cached profile fields don't leak across user boundaries.
+ *
+ * Implemented as an allowlist sweep rather than a hardcoded removal list
+ * so it transparently handles team-scoped and prefix-keyed storage
+ * (`weikiy-editor-draft:v1:*`, `spotlight:session:v1:<teamId>`,
+ * `noteTabs:<teamId>`) without needing to enumerate every variant.
+ */
+export const clearUserScopedLocalStorage = (): void => {
+    const preserved = new Map<string, string>();
+    for (const key of DEVICE_PREFERENCE_LOCAL_STORAGE_KEYS) {
+        const val = localStorage.getItem(key);
+        if (val !== null) preserved.set(key, val);
+    }
+    localStorage.clear();
+    for (const [key, val] of preserved) {
+        localStorage.setItem(key, val);
+    }
+};
+
 // Outcome of a single refresh attempt. We need to distinguish three
 // cases because they have different policies:
 //   - "ok": got a new access token, stop the retry loop.

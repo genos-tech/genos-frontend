@@ -25,7 +25,11 @@ import { CssVarsProvider, useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 
 import { SignInFormStyles } from "../../../components/ui/styles/commonStyle";
-import { AUTH_LOCAL_STORAGE_KEYS, useAuth } from "../../../context/AuthContext";
+import {
+    AUTH_LOCAL_STORAGE_KEYS,
+    clearUserScopedLocalStorage,
+    useAuth,
+} from "../../../context/AuthContext";
 import { DatabaseUtils } from "../../../db/utils";
 import { fmt, I18nProvider, useTranslation } from "../../../i18n";
 import { purplePalette, purpleTheme } from "../../../theme/purplePalette";
@@ -60,11 +64,20 @@ const SignInContent = () => {
         const signInRes: SignInResponse = await signIn(email, password, setErrorMessage);
 
         if (signInRes) {
-            // Capture the previously signed-in user before the setItem block
-            // below overwrites it, so we can skip wiping IndexedDB when the
-            // same user is signing back in. `userId` is intentionally
-            // preserved across logout to support this comparison.
+            // Capture the previously signed-in user before we touch
+            // localStorage below, so we can decide whether to wipe the
+            // previous user's caches. `userId` is intentionally preserved
+            // across logout to support this comparison.
             const previousUserId = localStorage.getItem("userId");
+            const isDifferentUser = previousUserId !== signInRes.user_id;
+
+            if (isDifferentUser) {
+                // Different user on this device — wipe the previous user's
+                // localStorage (device-level UI prefs are preserved) so
+                // their drafts / last-opened state / Spotlight history
+                // don't leak into the new session.
+                clearUserScopedLocalStorage();
+            }
 
             setAccessToken(signInRes.access);
             localStorage.setItem("isSigningIn", "yes");
@@ -79,7 +92,7 @@ const SignInContent = () => {
             localStorage.setItem("avatarImgPath", signInRes.profile_image_file_name || "");
 
             if (signInRes.user_id) {
-                if (previousUserId !== signInRes.user_id) {
+                if (isDifferentUser) {
                     await DatabaseUtils.clearTeamScopedStores();
                 }
 
