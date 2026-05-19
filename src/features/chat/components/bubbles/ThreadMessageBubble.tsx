@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { Box, Sheet, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
@@ -51,7 +51,7 @@ type threadMessageBubbleProps = {
     ) => void;
 };
 
-export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
+const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
     const {
         useTEM,
         myself,
@@ -105,18 +105,19 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
                 `/workspace/chat/${typePath}/${thread.chatId}/thread/${threadId}/message/${message.messageId}`
             );
 
-            // Update currentThreadChat's moveToSpecificIndex to focus on this message
-            // Format: {chatId}-{threadId}-{messageId} to match messageIdWithChatIdAndThreadId
+            // Update currentThreadChat's moveToSpecificIndex to focus on this
+            // message. Format: {chatId}-{threadId}-{messageId} to match
+            // messageIdWithChatIdAndThreadId.
+            //
+            // Uses the functional updater so the latest `currentThreadChat`
+            // is read at call time — required for downstream React.memo on
+            // this bubble to be safe (we no longer close over the value at
+            // render time).
             const newMoveIndex = `${thread.chatId}-${threadId}-${message.messageId}`;
-            if (
-                useCM.currentThreadChat &&
-                useCM.currentThreadChat.moveToSpecificIndex !== newMoveIndex
-            ) {
-                useCM.setCurrentThreadChat({
-                    ...useCM.currentThreadChat,
-                    moveToSpecificIndex: newMoveIndex,
-                });
-            }
+            useCM.setCurrentThreadChat((prev) => {
+                if (!prev || prev.moveToSpecificIndex === newMoveIndex) return prev;
+                return { ...prev, moveToSpecificIndex: newMoveIndex };
+            });
         }
     };
 
@@ -714,3 +715,18 @@ export const ThreadMessageBubble = (props: threadMessageBubbleProps) => {
         </Box>
     );
 };
+
+// Memoized export. See MessageBubble.tsx for the rationale on which props
+// the comparator considers — same reasoning applies here. `thread` plays
+// the role of `chat` for thread context; the rest mirrors MessageBubble.
+const areEqual = (prev: threadMessageBubbleProps, next: threadMessageBubbleProps): boolean =>
+    prev.message === next.message &&
+    prev.thread === next.thread &&
+    prev.variant === next.variant &&
+    prev.isFocused === next.isFocused &&
+    prev.isScrolling === next.isScrolling &&
+    prev.isSimpleBubble === next.isSimpleBubble &&
+    prev.currentMessageIndex === next.currentMessageIndex &&
+    prev.myself.userId === next.myself.userId;
+
+export const ThreadMessageBubble = memo(ThreadMessageBubbleImpl, areEqual);

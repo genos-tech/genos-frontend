@@ -1,21 +1,6 @@
+import { usersChannel } from "../../../db/workers/channels";
 import { UserProps } from "../../../types/admin";
-import AddUserWorker from "../../../db/workers/addUserWorker.ts?worker";
 
 export const addUser = (user: UserProps): Promise<null> => {
-    return new Promise((resolve, reject) => {
-        const addUserWorker = new AddUserWorker();
-
-        addUserWorker.postMessage({ user: user });
-
-        addUserWorker.onmessage = (event) => {
-            addUserWorker.terminate();
-            resolve(null);
-        };
-
-        addUserWorker.onerror = (error) => {
-            addUserWorker.terminate();
-            console.error(error);
-            reject(error);
-        };
-    });
+    return usersChannel.request("addUser", { user }).then(() => null);
 };

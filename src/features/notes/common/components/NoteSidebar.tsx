@@ -111,8 +111,7 @@ function groupTaskNotes(notes: TaskNoteMetaTreeNode[], t: Messages): ProjectGrou
             mg = {
                 milestoneId,
                 milestoneTitle:
-                    milestoneTitle ||
-                    fmt(t.notes.defaults.milestoneFallback, { milestoneId }),
+                    milestoneTitle || fmt(t.notes.defaults.milestoneFallback, { milestoneId }),
                 directNotes: [],
                 tasks: [],
             };
@@ -130,8 +129,7 @@ function groupTaskNotes(notes: TaskNoteMetaTreeNode[], t: Messages): ProjectGrou
         if (!tg) {
             tg = {
                 taskId,
-                taskTitle:
-                    taskTitle || fmt(t.notes.defaults.taskFallback, { taskId }),
+                taskTitle: taskTitle || fmt(t.notes.defaults.taskFallback, { taskId }),
                 notes: [],
                 subtasks: [],
             };
@@ -149,8 +147,7 @@ function groupTaskNotes(notes: TaskNoteMetaTreeNode[], t: Messages): ProjectGrou
         if (!sg) {
             sg = {
                 taskId,
-                taskTitle:
-                    taskTitle || fmt(t.notes.defaults.taskFallback, { taskId }),
+                taskTitle: taskTitle || fmt(t.notes.defaults.taskFallback, { taskId }),
                 notes: [],
             };
             tg.subtasks.push(sg);
@@ -640,6 +637,43 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         );
     };
 
+    // Pre-compute the recent-notes rows once per `useNM.recentNotes` change.
+    // The previous implementation rebuilt the merged + sorted array inside
+    // `renderRecentNotes` on every render — three spread map copies plus an
+    // O(N log N) sort — even when no recents had moved.
+    type RecentRow = {
+        note: MyNoteMetaProps | TaskNoteMetaProps | ChatNoteMetaProps;
+        noteType: number;
+        tsOpenedAt: string;
+    };
+    const sortedRecentRows = useMemo<RecentRow[]>(() => {
+        const recents = useNM.recentNotes;
+        if (!recents) return [];
+        const rows: RecentRow[] = [
+            ...recents.personalNotes.map((n) => ({
+                note: n,
+                noteType: 1,
+                tsOpenedAt: n.tsOpenedAt,
+            })),
+            ...recents.taskNotes.map((n) => ({
+                note: n,
+                noteType: 2,
+                tsOpenedAt: n.tsOpenedAt,
+            })),
+            ...recents.chatNotes.map((n) => ({
+                note: n,
+                noteType: 3,
+                tsOpenedAt: n.tsOpenedAt,
+            })),
+        ];
+        rows.sort((a, b) => {
+            const aT = a.tsOpenedAt ? new Date(a.tsOpenedAt).getTime() : 0;
+            const bT = b.tsOpenedAt ? new Date(b.tsOpenedAt).getTime() : 0;
+            return bT - aT;
+        });
+        return rows;
+    }, [useNM.recentNotes]);
+
     // Render recent notes section content. Flat list ordered by
     // tsOpenedAt desc — the natural shape for "recents" since
     // chronology is the primary signal. Each row carries a small
@@ -647,29 +681,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     const renderRecentNotes = () => {
         if (!useNM.recentNotes) return null;
 
-        type RecentRow = {
-            note: MyNoteMetaProps | TaskNoteMetaProps | ChatNoteMetaProps;
-            noteType: number;
-            tsOpenedAt: string;
-        };
-
-        const rows: RecentRow[] = [
-            ...useNM.recentNotes.personalNotes.map((n) => ({
-                note: n,
-                noteType: 1,
-                tsOpenedAt: n.tsOpenedAt,
-            })),
-            ...useNM.recentNotes.taskNotes.map((n) => ({
-                note: n,
-                noteType: 2,
-                tsOpenedAt: n.tsOpenedAt,
-            })),
-            ...useNM.recentNotes.chatNotes.map((n) => ({
-                note: n,
-                noteType: 3,
-                tsOpenedAt: n.tsOpenedAt,
-            })),
-        ];
+        const rows = sortedRecentRows;
 
         if (rows.length === 0) {
             return (
@@ -686,12 +698,6 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 </Box>
             );
         }
-
-        rows.sort((a, b) => {
-            const aT = a.tsOpenedAt ? new Date(a.tsOpenedAt).getTime() : 0;
-            const bT = b.tsOpenedAt ? new Date(b.tsOpenedAt).getTime() : 0;
-            return bT - aT;
-        });
 
         return (
             <Box>

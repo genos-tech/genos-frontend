@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { loadSpecificThreadMessages } from "../../features/chat/services/loadSpecificThreadMessages";
@@ -45,11 +45,17 @@ export interface ChatManagementState {
     currentSubChat: ChatProps | undefined;
     setCurrentSubChat: (value: ChatProps | undefined) => void;
     currentThreadChat: ThreadProps | undefined;
-    setCurrentThreadChat: (value: ThreadProps | undefined) => void;
+    // Widened to the full `Dispatch<SetStateAction<...>>` so callers can use
+    // the functional updater form `setCurrentThreadChat((prev) => ...)` to
+    // patch a single field without reading the current value at render time.
+    // This is what makes downstream `React.memo` on message bubbles safe —
+    // handlers no longer close over a stale `useCM.currentThreadChat`.
+    setCurrentThreadChat: Dispatch<SetStateAction<ThreadProps | undefined>>;
     allChats: AllChatProps[];
     setAllChats: (value: AllChatProps[] | ((prev: AllChatProps[]) => AllChatProps[])) => void;
     flaggedMessages: FlaggedMessageProps[];
-    setFlaggedMessages: (value: FlaggedMessageProps[]) => void;
+    // Same reasoning as setCurrentThreadChat above.
+    setFlaggedMessages: Dispatch<SetStateAction<FlaggedMessageProps[]>>;
     activityMessages: ActivityMessageProps[];
     setActivityMessages: (value: ActivityMessageProps[]) => void;
     unReadChatCounts: Record<string, number>;

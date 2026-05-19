@@ -1,6 +1,6 @@
+import { usersChannel } from "../../../db/workers/channels";
 import { UserProps } from "../../../types/admin";
 import { ProjectProps, TagListProps } from "../../../types/tasks";
-import LoadTeamMemberWorker from "../../../db/workers/loadTeamMembersWorker.ts?worker";
 import { loadProjectTags } from "../services/loadProjectTags";
 import { loadTeamProjects } from "../services/loadTeamProjects";
 
@@ -12,21 +12,15 @@ type UpdateTeamMembersOptions = {
 };
 export const updateTeamMembersOptions = async (props: UpdateTeamMembersOptions) => {
     const { myself, accessToken, setTeamMembers } = props;
-    const loadTeamMembersWorker = new LoadTeamMemberWorker();
-    loadTeamMembersWorker.postMessage({
-        myself: myself,
-        accessToken: accessToken,
-    });
-    loadTeamMembersWorker.onmessage = (event) => {
-        if (event.data) {
-            setTeamMembers(event.data);
-        } else {
-            console.error("Failed to load team members");
+    if (!accessToken) return;
+    try {
+        const members = await usersChannel.request("loadTeamMembers", { myself, accessToken });
+        if (members?.length) {
+            setTeamMembers(members);
         }
-    };
-    return () => {
-        loadTeamMembersWorker.terminate();
-    };
+    } catch (err) {
+        console.error("Failed to load team members", err);
+    }
 };
 
 // update Project options

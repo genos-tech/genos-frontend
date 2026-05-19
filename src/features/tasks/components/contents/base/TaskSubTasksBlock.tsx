@@ -72,6 +72,11 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
     const [childTasks, setChildTasks] = useState<TaskProps[]>([]);
 
     useEffect(() => {
+        // Cancelled-flag guard: slow child-task responses for an old
+        // taskId must not overwrite the freshly-selected task's
+        // sub-tree when the user click-storms cards faster than the
+        // backend round-trip.
+        let cancelled = false;
         (async () => {
             // Load when either the row is the active task preview, or
             // the parent explicitly opted in via `forceLoad` (milestone
@@ -88,8 +93,12 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                 currentTaskContent.id!,
                 accessToken
             );
+            if (cancelled) return;
             setChildTasks(loaded?.length ? loaded : []);
         })();
+        return () => {
+            cancelled = true;
+        };
     }, [currentTaskContent, forceLoad]);
 
     return (

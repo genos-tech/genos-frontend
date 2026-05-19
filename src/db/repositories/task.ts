@@ -35,6 +35,35 @@ export class TaskRepository extends BaseRepository<TaskTableProps> {
         }
     }
 
+    // Get tasks assigned to a user, across all projects.
+    async getTasksByAssignee(assigneeId: string): Promise<TaskTableProps[]> {
+        try {
+            const db = await this.getDB();
+            const tx = db.transaction(this.storeName, "readonly");
+            const store = tx.objectStore(this.storeName);
+            const index = store.index(INDEX_NAMES.TASK_META_ASSIGNEE);
+            return await index.getAll(assigneeId);
+        } catch {
+            return [];
+        }
+    }
+
+    // Get tasks assigned to a user inside a single project.
+    async getTasksByAssigneeAndProject(
+        assigneeId: string,
+        projectId: number
+    ): Promise<TaskTableProps[]> {
+        try {
+            const db = await this.getDB();
+            const tx = db.transaction(this.storeName, "readonly");
+            const store = tx.objectStore(this.storeName);
+            const index = store.index(INDEX_NAMES.TASK_META_ASSIGNEE_PROJECT);
+            return await index.getAll([assigneeId, projectId]);
+        } catch {
+            return [];
+        }
+    }
+
     // Get tasks by status
     async getTasksByStatus(projectId: number, status: string): Promise<TaskTableProps[]> {
         try {

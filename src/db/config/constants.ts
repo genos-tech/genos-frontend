@@ -1,6 +1,10 @@
 // Database constants
 export const DB_NAME = "genosData";
-export const DB_VERSION = 4;
+// Bumped to 5: add indexes for task-by-assignee, and per-owner / per-related
+// lookups on note stores. Migration is additive: the upgrade callback adds the
+// new indexes on the existing stores without touching the row data. See
+// `initDB` in ./schema.ts.
+export const DB_VERSION = 5;
 
 // LRU cap for the full-task cache (TASK_FULL store).
 export const MAX_CACHED_FULL_TASKS = 500;
@@ -82,7 +86,14 @@ export const INDEX_NAMES = {
     PM_THREAD_MESSAGES_COMPOUND: "PmThreadMessagesCompoundIndex",
     TASK_META: "TaskMetaIndex",
     TASK_META_COMPOUND: "TaskMetaCompoundIndex",
+    TASK_META_ASSIGNEE: "TaskMetaAssigneeIndex",
+    TASK_META_ASSIGNEE_PROJECT: "TaskMetaAssigneeProjectIndex",
     TASK_FULL_LRU: "TaskFullLRUIndex",
+    PERSONAL_NOTES_OWNER: "PersonalNotesOwnerIndex",
+    TASK_NOTES_OWNER: "TaskNotesOwnerIndex",
+    TASK_NOTES_TASK: "TaskNotesTaskIndex",
+    CHAT_NOTES_OWNER: "ChatNotesOwnerIndex",
+    CHAT_NOTES_CHAT: "ChatNotesChatIndex",
     TODOS: "TodosUserIndex",
 } as const;
 
@@ -111,6 +122,13 @@ export const INDEX_KEY_PATHS = {
     PM_THREAD_MESSAGES_COMPOUND: ["chatId", "threadId"],
     TASK_META: "projectId",
     TASK_META_COMPOUND: ["projectId", "status"],
+    TASK_META_ASSIGNEE: "assigneeId",
+    TASK_META_ASSIGNEE_PROJECT: ["assigneeId", "projectId"],
     TASK_FULL_LRU: "accessedAt",
+    PERSONAL_NOTES_OWNER: "ownerId",
+    TASK_NOTES_OWNER: "ownerId",
+    TASK_NOTES_TASK: "taskId",
+    CHAT_NOTES_OWNER: "ownerId",
+    CHAT_NOTES_CHAT: "chatId",
     TODOS: "userId",
 } as const;

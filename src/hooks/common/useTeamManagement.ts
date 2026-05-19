@@ -1,6 +1,6 @@
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 
-import PopTeamUsersWorker from "../../db/workers/popTeamUsersWorker.ts?worker";
+import { usersChannel } from "../../db/workers/channels";
 import { findTeam } from "../../features/admin/services/findTeam";
 import { popTeamMembers } from "../../features/chat/services/popTeamMembers";
 import { FindTeamResponse, Team, UserProps } from "../../types/admin";
@@ -34,6 +34,10 @@ export const useTeamManagement = (
         teamOwnerId: "",
         teamImgPath: localStorage.getItem("teamImgPath") || undefined,
     });
+    // Track the active interval id so a `myself` change cancels the previous
+    // interval before scheduling a new one. Without this, every re-run of the
+    // effect would stack another interval on top of the old one.
+    const intervalRef = useRef<number | null>(null);
 
     const funcSetTeamMembers = async () => {
         const teamMembers: UserProps[] = await popTeamMembers(myself);
@@ -56,37 +60,37 @@ export const useTeamManagement = (
             setCurrentTeamId(myself.teamId);
         }
 
-        if (myself.userId !== "") {
-            const popTeamUsersWorker = new PopTeamUsersWorker();
+        if (!myself.userId) return;
 
-            const handleWorkerResponse = (event: MessageEvent) => {
-                const data = event.data;
-                if (data.error) {
-                    console.error("Worker failed:", data.error);
-                } else {
-                    setTeamMemberProfiles(data);
-                    const members = Object.values(data) as UserProps[];
+        const refresh = () => {
+            usersChannel
+                .request("popTeamUsers", { myself })
+                .then((data) => {
+                    if (data && typeof data === "object" && "error" in data) {
+                        console.error("popTeamUsers failed:", data.error);
+                        return;
+                    }
+                    const record = data as Record<string, UserProps>;
+                    setTeamMemberProfiles(record);
+                    const members = Object.values(record);
                     if (members.length > 0) {
                         setTeamMembers(members);
                     }
-                }
-            };
+                })
+                .catch((err) => {
+                    console.error("popTeamUsers error:", err);
+                });
+        };
 
-            // Initial load
-            popTeamUsersWorker.postMessage({ myself });
-            popTeamUsersWorker.onmessage = handleWorkerResponse;
+        refresh();
+        intervalRef.current = window.setInterval(refresh, 60_000);
 
-            // Run every minute
-            const interval = setInterval(() => {
-                popTeamUsersWorker.postMessage({ myself });
-                popTeamUsersWorker.onmessage = handleWorkerResponse;
-            }, 60_000);
-
-            return () => {
-                popTeamUsersWorker.terminate();
-                clearInterval(interval);
-            };
-        }
+        return () => {
+            if (intervalRef.current !== null) {
+                window.clearInterval(intervalRef.current);
+                intervalRef.current = null;
+            }
+        };
     }, [myself]);
 
     return {

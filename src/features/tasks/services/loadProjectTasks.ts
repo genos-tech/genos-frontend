@@ -1,4 +1,4 @@
-import LoadProjectTasksWorker from "../../../db/workers/loadProjectTasksWorker.ts?worker";
+import { tasksChannel } from "../../../db/workers/channels";
 import { UserProps } from "../../../types/admin";
 import { ThreadMessageProps } from "../../../types/chat";
 
@@ -17,25 +17,23 @@ export const loadProjectTasks = (
     projectId: number,
     accessToken: string | null
 ): Promise<ThreadMessageProps[]> => {
+    if (!accessToken) {
+        return Promise.resolve([]);
+    }
     const key = `${myself.teamId}:${projectId}`;
     const existing = inFlight.get(key);
     if (existing) return existing;
 
-    const promise = new Promise<ThreadMessageProps[]>((resolve, reject) => {
-        const worker = new LoadProjectTasksWorker();
-        worker.postMessage({ myself, projectId, accessToken });
-        worker.onmessage = (event) => {
-            worker.terminate();
-            resolve(event.data as ThreadMessageProps[]);
-        };
-        worker.onerror = (error) => {
-            worker.terminate();
-            console.error(error);
-            reject(error);
-        };
-    }).finally(() => {
-        inFlight.delete(key);
-    });
+    // The tasks-channel worker writes the result into IDB and replies with
+    // "done"; the legacy worker did the same. Callers historically typed
+    // the return as `ThreadMessageProps[]` but actually used it only as a
+    // completion signal — keep the shape `[]` to preserve API surface.
+    const promise = tasksChannel
+        .request("loadProjectTasks", { myself, projectId, accessToken })
+        .then(() => [] as ThreadMessageProps[])
+        .finally(() => {
+            inFlight.delete(key);
+        });
 
     inFlight.set(key, promise);
     return promise;

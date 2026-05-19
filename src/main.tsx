@@ -10,6 +10,7 @@ import { JoinTeam } from "./features/admin/components/joinTeamFrom";
 import { SignInForm } from "./features/admin/components/SignInForm";
 import { SignUpForm } from "./features/admin/components/SignUpForm";
 import { analytics } from "./services/analytics";
+import { startLongTaskObserver } from "./services/perfObserver";
 
 import { App } from "./App";
 import GenosLandingPage from "./lp/LandingPage";
@@ -18,6 +19,14 @@ import GenosLandingPage from "./lp/LandingPage";
 // VITE_POSTHOG_KEY / VITE_POSTHOG_HOST are unset, so leaving them blank
 // in .env.local is the local-dev kill switch.
 analytics.init();
+
+// Dev-only: log main-thread tasks >50ms to the console. The observer is
+// stripped from production builds by Vite's dead-code elimination on
+// `import.meta.env.DEV`. See `services/perfObserver.ts` for the audit
+// procedure (Phase 6.1 deliverable).
+if (import.meta.env.DEV) {
+    startLongTaskObserver();
+}
 
 // Layout for everything that needs access to AuthContext (the sign-in /
 // sign-up flows, the authenticated workspace, join-team, the 404 page).

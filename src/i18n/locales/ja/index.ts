@@ -793,6 +793,7 @@ export const ja: DeepPartial<Messages> = {
             noDueDate: "期限なし",
             daysLeft: "残り {count} 日",
             unassigned: "未割り当て",
+            showChildTasks: "サブタスクを表示",
         },
         subTasks: {
             title: "サブタスク",

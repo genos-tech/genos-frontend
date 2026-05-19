@@ -59,19 +59,17 @@ export class TaskService {
         return this.taskRepo.taskExists(taskId);
     }
 
-    // Get tasks assigned to a user
+    // Get tasks assigned to a user (indexed)
     async getTasksByAssignee(assigneeId: string): Promise<TaskTableProps[]> {
-        const allTasks = await this.getAllTasks();
-        return allTasks.filter((task) => task.assigneeId === assigneeId);
+        return this.taskRepo.getTasksByAssignee(assigneeId);
     }
 
-    // Get tasks by assignee and project
+    // Get tasks by assignee and project (compound-indexed)
     async getTasksByAssigneeAndProject(
         assigneeId: string,
         projectId: number
     ): Promise<TaskTableProps[]> {
-        const projectTasks = await this.getTasksByProject(projectId);
-        return projectTasks.filter((task) => task.assigneeId === assigneeId);
+        return this.taskRepo.getTasksByAssigneeAndProject(assigneeId, projectId);
     }
 
     // Batch insert tasks

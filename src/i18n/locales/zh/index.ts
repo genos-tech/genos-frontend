@@ -783,6 +783,7 @@ export const zh: DeepPartial<Messages> = {
             noDueDate: "无截止日期",
             daysLeft: "剩 {count} 天",
             unassigned: "未指派",
+            showChildTasks: "显示子任务",
         },
         subTasks: {
             title: "子任务",

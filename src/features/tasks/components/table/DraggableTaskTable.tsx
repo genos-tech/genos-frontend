@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
@@ -7,7 +8,6 @@ import { Box, CircularProgress, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { createTheme, THEME_ID, ThemeProvider } from "@mui/material/styles";
 import dayjs from "dayjs";
-import { DragDropContext, Droppable, DropResult } from "react-beautiful-dnd";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
@@ -524,6 +524,24 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         return map;
     }, [useTM.allTasks, visibleChildTaskIds]);
 
+    // Unfiltered parent → children index used for the drag-and-drop cycle
+    // check. The filtered `childrenByParent` above hides rows that don't
+    // pass the user's filter, but a filter-hidden descendant still blocks
+    // a reparent move — so the cycle check needs the complete tree. Map
+    // lookup is O(1), replacing the previous O(N) per-step walk of
+    // `useTM.allTasks` inside `isDescendant`.
+    const allChildrenByParent = useMemo(() => {
+        const map = new Map<string, string[]>();
+        for (const task of useTM.allTasks) {
+            if (task.parentTaskId == null || task.id == null) continue;
+            const parentId = String(task.parentTaskId);
+            const arr = map.get(parentId) || [];
+            arr.push(String(task.id));
+            map.set(parentId, arr);
+        }
+        return map;
+    }, [useTM.allTasks]);
+
     const depthMap = useMemo(() => new Map<string, number>(), []);
 
     const displayRows = useMemo(() => {
@@ -714,9 +732,35 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
             const dir = sortConfig.direction === "asc" ? 1 : -1;
             const primary = sortConfig.field;
 
+            // Per-sort caches keyed by task id. `parseTs` was the hot
+            // call previously — for a 1k-task list, an O(N log N) sort
+            // calls the comparator ~10k times, and each comparator hit
+            // would allocate up to 4 dayjs instances. Caching collapses
+            // it to one parse per (task, field). Same for `numericId`
+            // since `Number(s)` + `Number.isFinite` is non-trivial in v8.
+            const dateCache = new Map<string, number | null>();
+            const cacheDate = (key: string, raw: string | null | undefined) => {
+                let v = dateCache.get(key);
+                if (v === undefined) {
+                    v = parseTs(raw);
+                    dateCache.set(key, v);
+                }
+                return v;
+            };
+            const idCache = new Map<string | number, number | null>();
+            const cacheId = (raw: string | number | null | undefined) => {
+                if (raw == null) return null;
+                let v = idCache.get(raw);
+                if (v === undefined) {
+                    v = numericId(raw);
+                    idCache.set(raw, v);
+                }
+                return v;
+            };
+
             const idTieBreak = (a: TaskTableProps, b: TaskTableProps) =>
-                (numericId(a.id) ?? Number.MAX_SAFE_INTEGER) -
-                (numericId(b.id) ?? Number.MAX_SAFE_INTEGER);
+                (cacheId(a.id) ?? Number.MAX_SAFE_INTEGER) -
+                (cacheId(b.id) ?? Number.MAX_SAFE_INTEGER);
 
             const compareMilestones = (a: TaskTableProps, b: TaskTableProps) => {
                 // Sort milestones primarily by `daysLeft` ascending so the
@@ -738,8 +782,8 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                 }
                 // `daysLeft` is a derived/cached value — fall back to the
                 // raw due date in case a row has one set without the other.
-                const aDue = parseTs(a.dueDate);
-                const bDue = parseTs(b.dueDate);
+                const aDue = cacheDate(String(a.id ?? ""), a.dueDate);
+                const bDue = cacheDate(String(b.id ?? ""), b.dueDate);
                 const dueTier = nullTier(aDue, bDue);
                 if (dueTier !== 0) return dueTier;
                 if (aDue != null && bDue != null && aDue !== bDue) return aDue - bDue;
@@ -771,13 +815,28 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     if (as != null && bs != null && as !== bs) return as - bs; // asc
                 }
                 if (primary !== "dueDate") {
-                    const ad = parseTs(a.dueDate);
-                    const bd = parseTs(b.dueDate);
+                    const ad = cacheDate(String(a.id ?? ""), a.dueDate);
+                    const bd = cacheDate(String(b.id ?? ""), b.dueDate);
                     const t = nullTier(ad, bd);
                     if (t !== 0) return t;
                     if (ad != null && bd != null && ad !== bd) return ad - bd; // asc (expired first)
                 }
                 return idTieBreak(a, b);
+            };
+
+            // Primary-field cache — keyed on task identity. `fieldValue`
+            // is called twice per comparator invocation (~2 × N log N
+            // times for an N-task sort); when `primary` is a date column
+            // each call hits dayjs. Caching collapses to N parses.
+            const primaryCache = new Map<string, number | string | null>();
+            const cachePrimary = (task: TaskTableProps): number | string | null => {
+                const key = String(task.id ?? "");
+                let v = primaryCache.get(key);
+                if (v === undefined) {
+                    v = fieldValue(task, primary);
+                    primaryCache.set(key, v);
+                }
+                return v;
             };
 
             return [...tasks].sort((a, b) => {
@@ -788,8 +847,8 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                 if (aMile && bMile) return compareMilestones(a, b);
 
                 // 2. Primary column.
-                const av = fieldValue(a, primary);
-                const bv = fieldValue(b, primary);
+                const av = cachePrimary(a);
+                const bv = cachePrimary(b);
                 const primaryNullTier = nullTier(av, bv);
                 if (primaryNullTier !== 0) return primaryNullTier;
                 const primaryCmp = cmpValues(av, bv) * dir;
@@ -830,21 +889,23 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         }
 
         // Cycle check: target must not be a descendant of dragged.
-        // Walks `useTM.allTasks` (not the filtered `childrenByParent`)
-        // so a filter-hidden descendant still blocks the move.
+        // Uses the unfiltered `allChildrenByParent` index (built once per
+        // task-set change) so a filter-hidden descendant still blocks the
+        // move. The previous implementation scanned `useTM.allTasks`
+        // linearly inside the BFS loop — O(N × depth) per drag. With the
+        // index this collapses to O(visited).
         const isDescendant = (ancestorId: string, candidateId: string): boolean => {
-            const queue: string[] = [ancestorId];
+            const stack: string[] = [ancestorId];
             const visited = new Set<string>();
-            while (queue.length > 0) {
-                const current = queue.shift();
+            while (stack.length > 0) {
+                const current = stack.pop();
                 if (current == null || visited.has(current)) continue;
                 visited.add(current);
-                for (const t of useTM.allTasks) {
-                    if (t.parentTaskId == null) continue;
-                    if (String(t.parentTaskId) !== current) continue;
-                    const cid = String(t.id);
+                const childIds = allChildrenByParent.get(current);
+                if (!childIds) continue;
+                for (const cid of childIds) {
                     if (cid === candidateId) return true;
-                    queue.push(cid);
+                    stack.push(cid);
                 }
             }
             return false;
@@ -1085,11 +1146,86 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         }
     };
 
-    // Handle row click for preview
-    const handleRowDoubleClick = (taskId: number) => {
-        useTM.setIsTaskPreviewVisible(true);
-        useTM.setCurrentPreviewTaskId(taskId);
-    };
+    // Rapid row-click coalescing. Mirrors SprintBoard.handleTaskClick:
+    // each preview switch fans out ~13 TaskPreview fetches, so clicking
+    // many rows in quick succession (id-cell single click or row
+    // double-click) used to peg the backend and break the highlight
+    // mid-flight. Decouple instant visual selection from the heavy
+    // preview load by holding `pendingTaskId` / `pendingMilestoneId`
+    // locally and debouncing the real setters by 150 ms — the rapid
+    // sequence collapses into a single fetch for the final row.
+    const [pendingTaskId, setPendingTaskId] = useState<number | null>(null);
+    const [pendingMilestoneId, setPendingMilestoneId] = useState<number | null>(null);
+    const previewSwitchTimerRef = useRef<number | null>(null);
+
+    useEffect(() => {
+        if (pendingTaskId != null && pendingTaskId === useTM.currentPreviewTaskId) {
+            setPendingTaskId(null);
+        }
+    }, [pendingTaskId, useTM.currentPreviewTaskId]);
+    useEffect(() => {
+        if (pendingMilestoneId != null && pendingMilestoneId === useTM.currentPreviewMilestoneId) {
+            setPendingMilestoneId(null);
+        }
+    }, [pendingMilestoneId, useTM.currentPreviewMilestoneId]);
+
+    useEffect(() => {
+        return () => {
+            if (previewSwitchTimerRef.current != null) {
+                window.clearTimeout(previewSwitchTimerRef.current);
+                previewSwitchTimerRef.current = null;
+            }
+        };
+    }, []);
+
+    const PREVIEW_SWITCH_DEBOUNCE_MS = 150;
+
+    const {
+        setIsTaskPreviewVisible: setIsTaskPreviewVisibleRow,
+        setCurrentPreviewKind: setCurrentPreviewKindRow,
+        setCurrentPreviewMilestoneId: setCurrentPreviewMilestoneIdRow,
+        setCurrentPreviewTaskId: setCurrentPreviewTaskIdRow,
+    } = useTM;
+
+    const requestPreview = useCallback(
+        (task: TaskTableProps) => {
+            const isMile = task.isMilestone === true && task.milestoneId != null;
+            // Step 1: instant visual feedback. Pane visibility is cheap;
+            // only the heavy fetch-triggering setters are deferred so
+            // opening the pane from a closed state never feels delayed.
+            if (isMile) {
+                setPendingMilestoneId(task.milestoneId as number);
+                setPendingTaskId(null);
+            } else if (task.id != null) {
+                setPendingTaskId(Number(task.id));
+                setPendingMilestoneId(null);
+            }
+            setIsTaskPreviewVisibleRow(true);
+
+            // Step 2: debounce the fetch cascade. Successive rapid
+            // clicks coalesce into a single TaskPreview load for the
+            // last row the user landed on.
+            if (previewSwitchTimerRef.current != null) {
+                window.clearTimeout(previewSwitchTimerRef.current);
+            }
+            previewSwitchTimerRef.current = window.setTimeout(() => {
+                previewSwitchTimerRef.current = null;
+                if (isMile) {
+                    setCurrentPreviewKindRow("milestone");
+                    setCurrentPreviewMilestoneIdRow(task.milestoneId as number);
+                } else if (task.id != null) {
+                    setCurrentPreviewKindRow("task");
+                    setCurrentPreviewTaskIdRow(Number(task.id));
+                }
+            }, PREVIEW_SWITCH_DEBOUNCE_MS);
+        },
+        [
+            setIsTaskPreviewVisibleRow,
+            setCurrentPreviewKindRow,
+            setCurrentPreviewMilestoneIdRow,
+            setCurrentPreviewTaskIdRow,
+        ]
+    );
 
     // Show the "Sprint" column only when the filtered list actually
     // contains a milestone — for a pure task-only view the sprint linkage
@@ -1137,11 +1273,16 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         [hasMilestoneInDisplay, t]
     );
 
-    // Create columns with dynamic widths for passing to rows
-    const columnsWithWidths: ColumnDef[] = visibleColumns.map((col) => ({
-        ...col,
-        width: getColumnWidth(col.field),
-    }));
+    // Create columns with dynamic widths for passing to rows. Memoized so
+    // that React.memo on DraggableTaskRow isn't defeated by a fresh array
+    // identity on every parent render — `columnWidths` only changes when
+    // the user actually drag-resizes a column, so most renders skip the
+    // recompute.
+    const columnsWithWidths = useMemo<ColumnDef[]>(
+        () => visibleColumns.map((col) => ({ ...col, width: getColumnWidth(col.field) })),
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [visibleColumns, columnWidths]
+    );
 
     // Calculate total table width (drag handle + all columns)
     const dragHandleWidth = 28;
@@ -1319,6 +1460,8 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                             index={index}
                                             mode={mode}
                                             myself={myself}
+                                            pendingMilestoneId={pendingMilestoneId}
+                                            pendingTaskId={pendingTaskId}
                                             setMyself={setMyself}
                                             socket={socket}
                                             sprintNamesById={sprintNamesById}
@@ -1329,7 +1472,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                             useTEM={useTEM}
                                             useTM={useTM}
                                             useUISM={useUISM}
-                                            onRowDoubleClick={handleRowDoubleClick}
+                                            onRequestPreview={requestPreview}
                                             onRowUpdate={handleRowUpdate}
                                         />
                                     ))}

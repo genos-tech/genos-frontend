@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { Dispatch, SetStateAction, useState } from "react";
 import { keyframes } from "@emotion/react";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
@@ -41,7 +41,7 @@ type Props = {
     currentThreadChat?: ThreadProps;
     setCurrentThreadChat?: (chat: ThreadProps) => void;
     flaggedMessages?: FlaggedMessageProps[];
-    setFlaggedMessages?: (messages: FlaggedMessageProps[]) => void;
+    setFlaggedMessages?: Dispatch<SetStateAction<FlaggedMessageProps[]>>;
 };
 
 export const ModalDeleteMessage: React.FC<Props> = ({
@@ -62,12 +62,25 @@ export const ModalDeleteMessage: React.FC<Props> = ({
     const chatService = new ChatService();
     const { t } = useTranslation();
 
-    const cleanupFlaggedMessage = async (chatType: number, chatId: number, threadId: number, messageId: number) => {
-        if (!flaggedMessages || !setFlaggedMessages) return;
+    const cleanupFlaggedMessage = async (
+        chatType: number,
+        chatId: number,
+        threadId: number,
+        messageId: number
+    ) => {
+        if (!setFlaggedMessages) return;
         const flaggedId = `${chatType}-${chatId}-${threadId}-${messageId}`;
-        const match = flaggedMessages.find((fm) => fm.flaggedMessageId === flaggedId);
-        if (match) {
-            setFlaggedMessages(flaggedMessages.filter((fm) => fm.flaggedMessageId !== flaggedId));
+        // Use the functional updater so we read the latest flagged-messages
+        // list at call time — `flaggedMessages` (the prop) can be a render
+        // or two behind once the parent message-bubble is memoized.
+        // `hadMatch` is captured inside the updater and read after.
+        let hadMatch = false;
+        setFlaggedMessages((prev) => {
+            const next = prev.filter((fm) => fm.flaggedMessageId !== flaggedId);
+            hadMatch = next.length !== prev.length;
+            return hadMatch ? next : prev;
+        });
+        if (hadMatch) {
             try {
                 const flaggedService = new FlaggedService();
                 await flaggedService.deleteFlaggedMessage(flaggedId);
@@ -101,7 +114,12 @@ export const ModalDeleteMessage: React.FC<Props> = ({
             setErrorMessage(null);
 
             // Remove from flagged messages if flagged
-            cleanupFlaggedMessage(message.chatType, message.chatId, message.threadId, message.messageId);
+            cleanupFlaggedMessage(
+                message.chatType,
+                message.chatId,
+                message.threadId,
+                message.messageId
+            );
 
             // Broadcast delete to other members
             socket.emit("thread_message", {

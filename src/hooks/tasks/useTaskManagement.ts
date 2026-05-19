@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
 
 import { popSpecificProjectTasks } from "../../features/chat/services/popSpecificProjectTasks";
 import { loadTaskMeta } from "../../features/notes/task-notes/services/loadTaskMeta";
@@ -39,13 +39,21 @@ export interface TaskManagementState {
         // milestones).
         milestoneId: number | null;
     };
-    setIsCreatingTask: (creating: {
-        flag: boolean;
-        parentTaskId: number | null;
-        rootTaskId: number | null;
-        creationKind: "task" | "milestone";
-        milestoneId: number | null;
-    }) => void;
+    // Widened to `Dispatch<SetStateAction<...>>` so callers can patch a
+    // single field via functional updates (`(prev) => ({ ...prev, flag: false })`)
+    // without reading `useTM.isCreatingTask` at render time. That older
+    // read-then-capture pattern produced a stale-closure trap once
+    // `React.memo` was added to message bubbles / task rows that own
+    // those click handlers.
+    setIsCreatingTask: Dispatch<
+        SetStateAction<{
+            flag: boolean;
+            parentTaskId: number | null;
+            rootTaskId: number | null;
+            creationKind: "task" | "milestone";
+            milestoneId: number | null;
+        }>
+    >;
 
     // Project state
     tsLastLoadProjectTasks: number | undefined;
@@ -121,9 +129,11 @@ export interface TaskManagementState {
     isLoadingTasks: boolean;
     setIsLoadingTasks: (loading: boolean) => void;
 
-    // Task metadata
+    // Task metadata. `taskMetaTree` is derived from `taskMeta` via useMemo;
+    // callers that need to clear the tree should clear `taskMeta` instead.
+    taskMeta: TaskMetaProps[];
+    setTaskMeta: Dispatch<SetStateAction<TaskMetaProps[]>>;
     taskMetaTree: TaskMetaTreeNode[];
-    setTaskMetaTree: (tree: TaskMetaTreeNode[]) => void;
     currentTaskChain: TaskMetaTreeNode[];
     setCurrentTaskChain: (chain: TaskMetaTreeNode[]) => void;
 
@@ -278,7 +288,10 @@ export const useTaskManagement = (
 
     // Task metadata
     const [taskMeta, setTaskMeta] = useState<TaskMetaProps[]>([]);
-    const [taskMetaTree, setTaskMetaTree] = useState<TaskMetaTreeNode[]>(buildTaskTree(taskMeta));
+    // Derived: same-render compute via useMemo. Previously a `useState` +
+    // `useEffect(() => setTaskMetaTree(buildTaskTree(taskMeta)), [taskMeta])`
+    // pair, which cost an extra commit per meta update.
+    const taskMetaTree = useMemo<TaskMetaTreeNode[]>(() => buildTaskTree(taskMeta), [taskMeta]);
     const [currentTaskChain, setCurrentTaskChain] = useState<TaskMetaTreeNode[]>([]);
 
     // Task visibility
@@ -289,7 +302,8 @@ export const useTaskManagement = (
         setIsNewTaskCreated(false);
         setIsTaskUpdated(false);
         setAllTasks([]);
-        setTaskMetaTree([]);
+        // Clear `taskMeta`; `taskMetaTree` is derived and will refresh.
+        setTaskMeta([]);
         setCurrentTaskChain([]);
         setIsTaskVisibleInNote(false);
     };
@@ -422,10 +436,8 @@ export const useTaskManagement = (
         setCurrentTaskChain: setCurrentTaskChain,
     });
 
-    useEffect(() => {
-        const newTaskMetaTree = buildTaskTree(taskMeta);
-        setTaskMetaTree([...newTaskMetaTree]);
-    }, [taskMeta]);
+    // taskMetaTree is derived from taskMeta via useMemo above; the redundant
+    // effect that mirrored it into local state has been removed.
 
     useEffect(() => {
         // Update an ongoing task. We spread the existing row first so
@@ -555,9 +567,10 @@ export const useTaskManagement = (
         isLoadingTasks,
         setIsLoadingTasks,
 
-        // Task metadata
+        // Task metadata (taskMetaTree derived from taskMeta via useMemo)
+        setTaskMeta,
+        taskMeta,
         taskMetaTree,
-        setTaskMetaTree,
         currentTaskChain,
         setCurrentTaskChain,
 

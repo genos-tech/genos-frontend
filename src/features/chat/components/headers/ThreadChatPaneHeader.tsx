@@ -465,7 +465,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                 useCM.setIsMainChatVisible(false);
                                 useCM.setIsThreadVisible(true);
                                 useTM.setIsTaskPreviewVisible(false);
-                                useTM.setIsCreatingTask({ ...useTM.isCreatingTask, flag: false });
+                                useTM.setIsCreatingTask((prev) => ({ ...prev, flag: false }));
                             }}
                         >
                             <NoteAltRoundedIcon sx={{ fontSize: 18, color: styles.accentColor }} />
@@ -474,7 +474,12 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                 )}
 
                 {/* Close Button */}
-                <Tooltip size="sm" title={t.chat.headers.close} variant="outlined" sx={{ borderRadius: "8px" }}>
+                <Tooltip
+                    size="sm"
+                    title={t.chat.headers.close}
+                    variant="outlined"
+                    sx={{ borderRadius: "8px" }}
+                >
                     <IconButton
                         size="sm"
                         variant="plain"

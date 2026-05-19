@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useRef } from "react";
 
 import { useAuth } from "../../../context/AuthContext";
+import { chatChannel } from "../../../db/workers/channels";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, ChatProps, ThreadProps } from "../../../types/chat";
-import UpdateReadStatusWorker from "../../../db/workers/updateReadStatusWorker.ts?worker";
 import { addChat } from "../services/addChat";
 
 interface UseReadStatusManagementProps {
@@ -14,6 +14,11 @@ interface UseReadStatusManagementProps {
     isThread?: boolean;
 }
 
+// Throttle windows (ms): how often to forward "last read" upstream during a
+// fast scroll. Thread panes update half as often as the main pane.
+const MAIN_THROTTLE_MS = 500;
+const THREAD_THROTTLE_MS = 1000;
+
 export const useReadStatusManagement = ({
     useCM,
     currentChat,
@@ -21,65 +26,64 @@ export const useReadStatusManagement = ({
     isThread = false,
 }: UseReadStatusManagementProps) => {
     const { accessToken } = useAuth();
-    const [tsLastReadStatusUpdated, setTsLastReadStatusUpdated] = useState<number>(Date.now());
-    const [indexLastReadStatusUpdated, setIndexLastReadStatusUpdated] = useState<number>(-1);
+    // Promoted from `useState` to `useRef`: these are throttle bookkeeping
+    // that's read by the next scroll handler and never rendered. Keeping
+    // them in state caused a re-render after every accepted tick — i.e.
+    // every 500 ms while the user scrolls — which cascades through the
+    // bubble list. Refs avoid that without affecting throttle behaviour.
+    const tsLastReadStatusUpdatedRef = useRef<number>(Date.now());
+    const indexLastReadStatusUpdatedRef = useRef<number>(-1);
 
     const updateReadStatus = (indexForLastReadMessageId: number) => {
-        if (accessToken && currentChat.messages[indexForLastReadMessageId]) {
-            const updateReadStatusWorker = new UpdateReadStatusWorker();
-            const lastReadMessageId: number =
-                currentChat.messages[indexForLastReadMessageId].messageId;
+        if (!accessToken || !currentChat.messages[indexForLastReadMessageId]) {
+            return;
+        }
+        const lastReadMessageId: number =
+            currentChat.messages[indexForLastReadMessageId].messageId;
 
-            updateReadStatusWorker.postMessage({
-                accessToken: accessToken,
-                myself: myself,
+        chatChannel
+            .request("updateReadStatus", {
+                accessToken,
+                myself,
                 chatType: currentChat.chatType,
                 chatId: currentChat.chatId,
-                isThread: isThread,
+                isThread,
                 threadId: isThread ? (currentChat as ThreadProps).threadId : 0,
-                lastReadMessageId: lastReadMessageId,
-            });
-
-            updateReadStatusWorker.onmessage = async (event) => {
-                if (event.data === "done") {
-                    if ((currentChat as ChatProps).lastReadMessageId < lastReadMessageId) {
-                        const updatedChat = {
-                            ...currentChat,
-                            lastReadMessageId: lastReadMessageId,
-                        };
-                        addChat(updatedChat as AllChatProps, updatedChat.chatType);
-                        await useCM.funcSetAllChats();
-                    }
-                } else {
-                    console.error("Failed to update read status");
+                lastReadMessageId,
+            })
+            .then(async () => {
+                if ((currentChat as ChatProps).lastReadMessageId < lastReadMessageId) {
+                    const updatedChat = {
+                        ...currentChat,
+                        lastReadMessageId,
+                    };
+                    await addChat(updatedChat as AllChatProps, updatedChat.chatType);
+                    await useCM.funcSetAllChats();
                 }
-            };
-
-            return () => {
-                updateReadStatusWorker.terminate();
-            };
-        }
+            })
+            .catch((err) => {
+                console.error("Failed to update read status", err);
+            });
     };
 
     const handleReadStatusUpdate = (targetIndex: number) => {
         if (targetIndex !== -1) {
             updateReadStatus(targetIndex);
-            setIndexLastReadStatusUpdated(targetIndex);
-            const now = Date.now();
-            setTsLastReadStatusUpdated(now);
+            indexLastReadStatusUpdatedRef.current = targetIndex;
+            tsLastReadStatusUpdatedRef.current = Date.now();
         }
     };
 
     const handlePeriodicReadStatusUpdate = (visibleRangeEnd: number) => {
-        const intervalMs: number = isThread ? 1000 : 500;
+        const intervalMs = isThread ? THREAD_THROTTLE_MS : MAIN_THROTTLE_MS;
         const now = Date.now();
         if (
-            now - tsLastReadStatusUpdated >= intervalMs &&
-            visibleRangeEnd > indexLastReadStatusUpdated
+            now - tsLastReadStatusUpdatedRef.current >= intervalMs &&
+            visibleRangeEnd > indexLastReadStatusUpdatedRef.current
         ) {
             updateReadStatus(visibleRangeEnd);
-            setTsLastReadStatusUpdated(now);
-            setIndexLastReadStatusUpdated(visibleRangeEnd);
+            tsLastReadStatusUpdatedRef.current = now;
+            indexLastReadStatusUpdatedRef.current = visibleRangeEnd;
         }
     };
 
@@ -87,7 +91,5 @@ export const useReadStatusManagement = ({
         updateReadStatus,
         handleReadStatusUpdate,
         handlePeriodicReadStatusUpdate,
-        tsLastReadStatusUpdated,
-        indexLastReadStatusUpdated,
     };
 };

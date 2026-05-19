@@ -1,10 +1,11 @@
 import React from "react";
+import { Draggable } from "@hello-pangea/dnd";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import Avatar from "@mui/joy/Avatar";
 import Box from "@mui/joy/Box";
 import { useColorScheme } from "@mui/joy/styles";
 import Typography from "@mui/joy/Typography";
-import { Draggable } from "react-beautiful-dnd";
 
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
@@ -84,7 +85,7 @@ type SprintBoardCardProps = {
     isSelected?: boolean;
 };
 
-export const SprintBoardCard = ({
+const SprintBoardCardImpl = ({
     task,
     index,
     myself,
@@ -143,17 +144,34 @@ export const SprintBoardCard = ({
                             mb: 0.75,
                         }}
                     >
-                        <Typography
-                            level="body-xs"
-                            sx={{
-                                color: mode === "dark" ? "#6b9fd4" : "#5a8ac7",
-                                fontWeight: 600,
-                                fontFamily: "'SF Mono', 'Monaco', 'Consolas', monospace",
-                                fontSize: "0.65rem",
-                            }}
-                        >
-                            #{task.id}
-                        </Typography>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                            {task.isMilestone === true && (
+                                // Visual marker so milestone backing
+                                // cards are distinguishable from regular
+                                // task cards. Same icon + color as
+                                // MilestonesListItem.tsx:155 for a
+                                // consistent milestone vocabulary
+                                // across the sidebar and the board.
+                                <FlagRoundedIcon
+                                    sx={{
+                                        fontSize: 12,
+                                        color: "#f97316",
+                                        flexShrink: 0,
+                                    }}
+                                />
+                            )}
+                            <Typography
+                                level="body-xs"
+                                sx={{
+                                    color: mode === "dark" ? "#6b9fd4" : "#5a8ac7",
+                                    fontWeight: 600,
+                                    fontFamily: "'SF Mono', 'Monaco', 'Consolas', monospace",
+                                    fontSize: "0.65rem",
+                                }}
+                            >
+                                #{task.id}
+                            </Typography>
+                        </Box>
                         {priorityStyle && (
                             <span
                                 style={{
@@ -310,3 +328,12 @@ export const SprintBoardCard = ({
         </Draggable>
     );
 };
+
+// Memoized export. Every prop is either a primitive or a value already
+// memoized upstream (`teamMemberProfiles` is a state object whose identity
+// only changes when team membership churns; `onTaskClick` should be wrapped
+// in `useCallback` in the parent — see SprintBoard.handleTaskClick). The
+// card body reads ZERO state-manager values, so default shallow equality
+// is safe: there are no captured-at-render-time reads that would go stale
+// when memo skips a render.
+export const SprintBoardCard = React.memo(SprintBoardCardImpl);

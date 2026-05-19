@@ -3,7 +3,7 @@ import Box from "@mui/joy/Box";
 import { useColorScheme } from "@mui/joy/styles";
 import Typography from "@mui/joy/Typography";
 import { alpha } from "@mui/system";
-import { Droppable } from "react-beautiful-dnd";
+import { Droppable } from "@hello-pangea/dnd";
 
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
@@ -64,7 +64,7 @@ type SprintBoardColumnProps = {
     isMilestonePreviewActive?: boolean;
 };
 
-export const SprintBoardColumn = ({
+const SprintBoardColumnImpl = ({
     column,
     tasks,
     myself,
@@ -275,3 +275,9 @@ export const SprintBoardColumn = ({
         </div>
     );
 };
+
+// Memoized export. Column re-renders are dominated by drag/drop activity
+// elsewhere on the board; with React.memo + a stable onTaskClick (see
+// SprintBoard.handleTaskClick), idle columns no longer commit on every
+// parent state churn (`useTM.allTasks`, theme toggles, filter changes).
+export const SprintBoardColumn = React.memo(SprintBoardColumnImpl);

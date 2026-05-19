@@ -21,8 +21,18 @@ export const useScrollManagement = ({
     });
     const [isScrolling, setIsScrolling] = useState(false);
 
+    // Coalesce rapid chat / index-map changes into a single delayed scroll.
+    // Without this ref, every dep change schedules a fresh 300 ms timer
+    // while leaving prior timers pending — and on cleanup-less unmount
+    // they'd still fire against a torn-down Virtuoso. Tracking the id in
+    // a ref lets us cancel before re-scheduling and on unmount.
+    const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     useEffect(() => {
-        setTimeout(() => {
+        if (scrollTimerRef.current !== null) {
+            clearTimeout(scrollTimerRef.current);
+        }
+        scrollTimerRef.current = setTimeout(() => {
+            scrollTimerRef.current = null;
             if (indexMap && currentChat.moveToSpecificIndex) {
                 const targetIndex = indexMap[currentChat.moveToSpecificIndex];
                 // Only scroll if the target is not already visible
@@ -37,6 +47,12 @@ export const useScrollManagement = ({
                 });
             }
         }, 300);
+        return () => {
+            if (scrollTimerRef.current !== null) {
+                clearTimeout(scrollTimerRef.current);
+                scrollTimerRef.current = null;
+            }
+        };
     }, [currentChat, indexMap]);
 
     return {

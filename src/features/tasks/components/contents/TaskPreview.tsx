@@ -185,10 +185,59 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         }
     }, [taskEditState.startIntervalUpdatingTask]);
 
-    // Auto save task body every Nms if needed
+    // Authoritative "dirty" signal for the body. `taskBodyEdited`
+    // alone is unreliable because the collaborative BlockNote editor's
+    // `onChange` fires once on Yjs initial-sync after every task
+    // load (see [bnTaskPreview.tsx:334-344]), falsely flipping the
+    // flag even when the user never typed.
+    //
+    // Two refs cooperate here:
+    //
+    //  * `currentBodyRef` mirrors `taskEditState.body` in real time.
+    //    The autosave interval's closure captures `taskEditState` at
+    //    setup time and would otherwise miss every keystroke that
+    //    follows. Reading through this ref gives the interval a live
+    //    view of the body without forcing it to re-create on every
+    //    keystroke.
+    //
+    //  * `lastLoadedBodyRef` holds the *canonical* baseline for the
+    //    current task. We capture it 100 ms after each task load so
+    //    the editor's Yjs initial-sync echo has settled — the raw
+    //    server JSON and the editor's canonical form often differ
+    //    (id assignment, property reordering), and comparing
+    //    raw-vs-canonical would mark every view-only switch as dirty
+    //    and fire a spurious autosave. 100 ms is comfortably below
+    //    human typing rhythm so the baseline catches the canonical
+    //    form before any real edit.
+    const lastLoadedBodyRef = useRef<string>("");
+    const prevTaskIdRef = useRef<number | null>(null);
+    const currentBodyRef = useRef<PartialBlock[]>([]);
+
+    useEffect(() => {
+        currentBodyRef.current = taskEditState.body;
+    }, [taskEditState.body]);
+
+    useEffect(() => {
+        const id = window.setTimeout(() => {
+            lastLoadedBodyRef.current = JSON.stringify(currentBodyRef.current ?? []);
+        }, 100);
+        return () => window.clearTimeout(id);
+    }, [taskEditState.currentTaskId]);
+
+    const isBodyDirty = (): boolean => {
+        return JSON.stringify(currentBodyRef.current ?? []) !== lastLoadedBodyRef.current;
+    };
+
+    // Auto save task body every Nms if needed. The interval used to
+    // fire `sendUpdatedTask(false)` whenever `taskBodyEdited` was
+    // truthy — but as noted above, that flag is unreliable, so on
+    // every view-only click sequence the interval would PUT the task
+    // back to the server every 3 s with no user edit involved. We
+    // gate the trigger on a real body-content diff instead, so the
+    // interval only fires when there are genuine unsaved edits.
     useEffect(() => {
         const intervalId = setInterval(() => {
-            if (taskEditState.taskBodyEdited === true) {
+            if (taskEditState.taskBodyEdited === true && isBodyDirty()) {
                 taskEditState.setStartIntervalUpdatingTask(true);
             }
         }, 3000);
@@ -216,30 +265,60 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         lastLocalEditAtRef.current = 0;
     }, [taskEditState.currentTaskId]);
 
-    // Update variables when an user change the target task
+    // Update variables when the user changes the target task.
+    //
+    // Critical correctness fix: only PUT the outgoing task if its body
+    // actually differs from what we last loaded into the editor.
+    // The collaborative BlockNote editor's `onChange` fires once on
+    // Yjs initial-sync after a task switch — that fire flips
+    // `taskBodyEdited` to true even though the user never typed.
+    // Without the body-diff check, every view-only click sequence
+    // generated spurious PUTs that could clobber legitimate edits
+    // (the PUT carries the *previous* task's state, so the "card
+    // jumps back to id=5" symptom was real data corruption, not UI
+    // drift).
     useEffect(() => {
-        if (taskEditState.taskBodyEdited) {
-            sendUpdatedTask(true);
-        } else {
-            if (useTM.currentPreviewTask) {
-                // Same-task overwrites within the post-edit window are
-                // almost always stale (either our own save's echo — local
-                // state is already correct — or a `loadTask` that started
-                // before our save and finished after it). Skip them.
-                const LOCAL_EDIT_SUPPRESS_MS = 5000;
-                const isSameTask =
-                    taskEditState.tmpCurrentTaskContent?.id === useTM.currentPreviewTask.id;
-                const recentLocalEdit =
-                    Date.now() - lastLocalEditAtRef.current < LOCAL_EDIT_SUPPRESS_MS;
-                if (isSameTask && recentLocalEdit) return;
+        const next = useTM.currentPreviewTask;
+        if (!next) return;
 
-                taskEditState.setTmpCurrentTaskContent(useTM.currentPreviewTask);
-                taskEditState.setCurrentTaskId(useTM.currentPreviewTask.id);
-                taskEditState.setTaskTitle(useTM.currentPreviewTask.title);
-                taskEditState.setBody(useTM.currentPreviewTask.body || []);
-                taskEditState.setUploadedFiles(useTM.currentPreviewTask.attachments || []);
+        const nextId = Number(next.id);
+        const prevId = prevTaskIdRef.current;
+        const isSwitch = prevId != null && prevId !== nextId;
+
+        if (isSwitch) {
+            // Switching to a different task. Save the outgoing one
+            // only if the body really changed since we loaded it.
+            if (taskEditState.taskBodyEdited && isBodyDirty()) {
+                sendUpdatedTask(true);
             }
+            // Reset the unreliable flag for the incoming task — the
+            // editor's initial-sync onChange will flip it back, but
+            // we now ignore it until the body actually diverges from
+            // the canonical baseline captured 100 ms later.
+            taskEditState.setTaskBodyEdited(false);
+            taskEditState.setTmpCurrentTaskContent(next);
+            taskEditState.setCurrentTaskId(next.id);
+            taskEditState.setTaskTitle(next.title);
+            taskEditState.setBody(next.body || []);
+            taskEditState.setUploadedFiles(next.attachments || []);
+            prevTaskIdRef.current = nextId;
+            return;
         }
+
+        // Same task refresh (e.g. a stale `loadTask` landing after
+        // our own save's echo). Keep the existing local-edit
+        // suppression window — without it a 5 s old fetch can
+        // overwrite content the user just typed.
+        const LOCAL_EDIT_SUPPRESS_MS = 5000;
+        const recentLocalEdit = Date.now() - lastLocalEditAtRef.current < LOCAL_EDIT_SUPPRESS_MS;
+        if (prevId === nextId && recentLocalEdit) return;
+
+        taskEditState.setTmpCurrentTaskContent(next);
+        taskEditState.setCurrentTaskId(next.id);
+        taskEditState.setTaskTitle(next.title);
+        taskEditState.setBody(next.body || []);
+        taskEditState.setUploadedFiles(next.attachments || []);
+        prevTaskIdRef.current = nextId;
     }, [useTM.currentPreviewTask]);
 
     // Update task title/attachments when the visible task Id is changed
@@ -310,9 +389,14 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         }
     }, [isAttachmentDeleted, deletedAttachmentId]);
 
-    // Get Task Notes
+    // Get Task Notes. Cancelled-flag guard ensures a slow response
+    // for an old taskId can't overwrite the fresh task's notes — the
+    // race is real when the user clicks cards faster than the request
+    // round-trip and the last-finished-wins ordering would otherwise
+    // land them on the wrong card's data.
     const [taskNotes, setTaskNotes] = useState<TaskNoteProps[]>([]);
     useEffect(() => {
+        let cancelled = false;
         (async () => {
             if (useTM.currentPreviewTask?.project) {
                 const loadedTaskNotes: TaskNoteProps[] = await loadTaskNotes(
@@ -321,14 +405,19 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                     Number(useTM.currentPreviewTask.id),
                     accessToken
                 );
+                if (cancelled) return;
                 const notes = loadedTaskNotes ?? [];
                 setTaskNotes(notes);
                 markNotesLoaded(notes.length);
             } else {
+                if (cancelled) return;
                 setTaskNotes([]);
                 markNotesLoaded(0);
             }
         })();
+        return () => {
+            cancelled = true;
+        };
     }, [taskEditState.currentTaskId, useNM.taskNoteMeta]);
 
     // Task comments are hoisted into `useTM` (shared with the chat
@@ -346,16 +435,23 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             markCommentsLoaded(0);
             return;
         }
+        // Cancelled-flag guard: stale comment loads must not clobber
+        // the freshly-selected task's data when clicks outrun fetches.
+        let cancelled = false;
         (async () => {
             const loadedTaskComments: TaskCommentProps[] = await loadTaskComments(
                 myself,
                 previewTaskId,
                 accessToken
             );
+            if (cancelled) return;
             const comments = loadedTaskComments ?? [];
             setTaskComments(comments);
             markCommentsLoaded(comments.length);
         })();
+        return () => {
+            cancelled = true;
+        };
     }, [useTM.isTaskCommentUpdated, taskEditState.currentTaskId]);
 
     // Get Task Activities. The fetch lives here (rather than inside
@@ -611,7 +707,9 @@ export const TaskPreview = (props: TaskPreviewProps) => {
 
                     {/* Main Content Section */}
                     <Box sx={{ p: 2.5 }}>
-                        <SectionHeader isDark={isDark}>{t.tasks.preview.taskDetails}</SectionHeader>
+                        <SectionHeader isDark={isDark}>
+                            {t.tasks.preview.taskDetails}
+                        </SectionHeader>
                         <Box
                             sx={{
                                 p: 2,
@@ -661,7 +759,9 @@ export const TaskPreview = (props: TaskPreviewProps) => {
 
                         <Stack direction="row">
                             {/* Body Section */}
-                            <SectionHeader isDark={isDark}>{t.tasks.preview.description}</SectionHeader>
+                            <SectionHeader isDark={isDark}>
+                                {t.tasks.preview.description}
+                            </SectionHeader>
                             {/* Custom Bar */}
                             <TaskCustomBarBlock taskBodySaved={taskEditState.taskBodySaved} />
                         </Stack>

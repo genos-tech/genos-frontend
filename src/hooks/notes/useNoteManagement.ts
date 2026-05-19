@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { NoteService } from "../../db/services/note.service";
 import { createEmptyChatNote } from "../../features/notes/chat-notes/services/createEmptyChatNote";
@@ -153,15 +153,20 @@ export interface NoteManagementState {
     isTaskVisibleInNote: boolean;
     setIsTaskVisibleInNote: (visible: boolean) => void;
 
-    // Note metadata trees
+    // Note metadata trees (derived from the meta arrays — no setters)
     myNoteMetaTree: MyNoteMetaTreeNode[];
-    setMyNoteMetaTree: (tree: MyNoteMetaTreeNode[]) => void;
     taskNoteMetaTree: TaskNoteMetaTreeNode[];
-    setTaskNoteMetaTree: (tree: TaskNoteMetaTreeNode[]) => void;
     chatNoteMetaTree: ChatNoteMetaTreeNode[];
-    setChatNoteMetaTree: (tree: ChatNoteMetaTreeNode[]) => void;
     allNoteIdChains: Record<string, number[]>;
     setAllNoteIdChains: (chains: Record<string, number[]>) => void;
+
+    // Note tree expand/collapse state, lifted out of NoteTreeRenderer so we
+    // don't pay one useState + useEffect per rendered node. Chain-driven
+    // auto-expand is additive — once opened (auto or manual) a node stays
+    // open until the user explicitly collapses it.
+    expandNode: (noteType: number, noteId: number) => void;
+    isNodeExpanded: (noteType: number, noteId: number) => boolean;
+    toggleNodeExpanded: (noteType: number, noteId: number) => void;
 
     // Note creation functions
     handleCreateNewChatNote: (
@@ -274,23 +279,65 @@ export const useNoteManagement = (
 
     // Shared-with-me personal notes (drives the noteType=4 sidebar bucket)
     const [sharedNoteMeta, setSharedNoteMeta] = useState<SharedNoteMetaProps[]>([]);
-    const [sharedNoteMetaTree, setSharedNoteMetaTree] = useState<SharedNoteMetaTreeNode[]>([]);
 
     // Visibility states
     const [isTaskNoteVisible, setIsTaskNoteVisible] = useState(false);
     const [isTaskVisibleInNote, setIsTaskVisibleInNote] = useState(false);
 
-    // Note metadata trees
-    const [myNoteMetaTree, setMyNoteMetaTree] = useState<MyNoteMetaTreeNode[]>(
-        buildMyNoteTree(myNoteMeta)
+    // Note metadata trees — derived from the meta arrays. Previously stored in
+    // their own `useState` and re-built by a `useEffect` keyed on the meta
+    // dep, which cost an extra commit per meta update (render → effect →
+    // setState → re-render). The `useMemo` form computes the tree in the
+    // same render, with the same identity stability since meta is mutated
+    // via fresh-array setters (`[...prev, item]` / `loadXxxMeta` returns).
+    const myNoteMetaTree = useMemo<MyNoteMetaTreeNode[]>(
+        () => buildMyNoteTree(myNoteMeta),
+        [myNoteMeta]
     );
-    const [taskNoteMetaTree, setTaskNoteMetaTree] = useState<TaskNoteMetaTreeNode[]>(
-        buildTaskNoteTree(taskNoteMeta)
+    const taskNoteMetaTree = useMemo<TaskNoteMetaTreeNode[]>(
+        () => buildTaskNoteTree(taskNoteMeta),
+        [taskNoteMeta]
     );
-    const [chatNoteMetaTree, setChatNoteMetaTree] = useState<ChatNoteMetaTreeNode[]>(
-        buildChatNoteTree(chatNoteMeta)
+    const chatNoteMetaTree = useMemo<ChatNoteMetaTreeNode[]>(
+        () => buildChatNoteTree(chatNoteMeta),
+        [chatNoteMeta]
+    );
+    const sharedNoteMetaTree = useMemo<SharedNoteMetaTreeNode[]>(
+        () => buildSharedNoteTree(sharedNoteMeta),
+        [sharedNoteMeta]
     );
     const [allNoteIdChains, setAllNoteIdChains] = useState<Record<string, number[]>>({});
+
+    // Lifted note-tree open/closed state. Set of `${noteType}-${noteId}` keys
+    // for currently-expanded nodes. Replaces per-row `useState(open)` +
+    // `useEffect` in NoteTreeRenderer, which were running once per visible
+    // tree node (typically hundreds at heavy scale).
+    const [expandedNodeIds, setExpandedNodeIds] = useState<Set<string>>(new Set());
+
+    const isNodeExpanded = useCallback(
+        (noteType: number, noteId: number) => expandedNodeIds.has(`${noteType}-${noteId}`),
+        [expandedNodeIds]
+    );
+
+    const toggleNodeExpanded = useCallback((noteType: number, noteId: number) => {
+        const key = `${noteType}-${noteId}`;
+        setExpandedNodeIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(key)) next.delete(key);
+            else next.add(key);
+            return next;
+        });
+    }, []);
+
+    const expandNode = useCallback((noteType: number, noteId: number) => {
+        const key = `${noteType}-${noteId}`;
+        setExpandedNodeIds((prev) => {
+            if (prev.has(key)) return prev;
+            const next = new Set(prev);
+            next.add(key);
+            return next;
+        });
+    }, []);
 
     const chatTypeLabels: Record<number, string> = {
         1: "DM",
@@ -397,10 +444,6 @@ export const useNoteManagement = (
         }
     };
 
-    useEffect(() => {
-        setChatNoteMetaTree(buildChatNoteTree(chatNoteMeta));
-    }, [chatNoteMeta]);
-
     initCurrentChatNoteChain({
         chatNoteMeta: chatNoteMeta,
         currentChatNoteChain: currentChatNoteChain,
@@ -492,10 +535,6 @@ export const useNoteManagement = (
         }
     };
 
-    useEffect(() => {
-        setTaskNoteMetaTree(buildTaskNoteTree(taskNoteMeta));
-    }, [taskNoteMeta]);
-
     updataTaskNoteChain({
         currentTaskNote: currentTaskNote,
         taskNoteMetaTree: taskNoteMetaTree,
@@ -548,10 +587,6 @@ export const useNoteManagement = (
             setMyNoteMeta(loadedNotes);
         }
     };
-
-    useEffect(() => {
-        setMyNoteMetaTree(buildMyNoteTree(myNoteMeta));
-    }, [myNoteMeta]);
 
     // Favorite notes functions
     const getFavoriteNotesMeta = async () => {
@@ -761,10 +796,6 @@ export const useNoteManagement = (
         setSharedNoteMeta(loaded);
     };
 
-    useEffect(() => {
-        setSharedNoteMetaTree(buildSharedNoteTree(sharedNoteMeta));
-    }, [sharedNoteMeta]);
-
     // Recent notes functions
     const getRecentNotesMeta = async () => {
         const loadedRecents = await loadRecentNotesMeta(myself, accessToken);
@@ -847,6 +878,35 @@ export const useNoteManagement = (
         selectedTabIndex: selectedTabIndex,
     });
 
+    // Sticky auto-expand: whenever a chain extends (selecting a deeper note,
+    // opening a new tab, etc.), make sure every ancestor is in the expanded
+    // set. Never removes — matches the legacy "only auto-expand, don't
+    // auto-collapse" rule the per-renderer useEffect enforced.
+    useEffect(() => {
+        setExpandedNodeIds((prev) => {
+            let changed = false;
+            const next = new Set(prev);
+            const addKey = (key: string) => {
+                if (!next.has(key)) {
+                    next.add(key);
+                    changed = true;
+                }
+            };
+            currentMyNoteChain?.forEach((n) => addKey(`1-${n.noteId}`));
+            currentTaskNoteChain?.forEach((n) => addKey(`2-${n.noteId}`));
+            currentChatNoteChain?.forEach((n) => addKey(`3-${n.noteId}`));
+            for (const tabKey in allNoteIdChains) {
+                const dash = tabKey.indexOf("-");
+                if (dash <= 0) continue;
+                const typePrefix = tabKey.slice(0, dash);
+                const ids = allNoteIdChains[tabKey];
+                if (!ids) continue;
+                for (const id of ids) addKey(`${typePrefix}-${id}`);
+            }
+            return changed ? next : prev;
+        });
+    }, [currentMyNoteChain, currentTaskNoteChain, currentChatNoteChain, allNoteIdChains]);
+
     // Initialize note states
     const initializeNoteStates = () => {
         // Reset all note states to initial values
@@ -863,9 +923,8 @@ export const useNoteManagement = (
         setCurrentChatNoteChain(undefined);
         setCurrentMyNoteChain(undefined);
         setCurrentTaskNoteChain(undefined);
-        setMyNoteMetaTree([]);
-        setTaskNoteMetaTree([]);
-        setChatNoteMetaTree([]);
+        // metaTree state is derived from the meta arrays via useMemo —
+        // clearing meta above is sufficient; no separate tree reset needed.
         setNewlyCreatedMyNotes([]);
         setNewlyCreatedTaskNotes([]);
         setNewlyCreatedChatNotes([]);
@@ -1266,15 +1325,17 @@ export const useNoteManagement = (
         isTaskVisibleInNote,
         setIsTaskVisibleInNote,
 
-        // Note metadata trees
+        // Note metadata trees (derived; no setters)
         myNoteMetaTree,
-        setMyNoteMetaTree,
         taskNoteMetaTree,
-        setTaskNoteMetaTree,
         chatNoteMetaTree,
-        setChatNoteMetaTree,
         allNoteIdChains,
         setAllNoteIdChains,
+
+        // Lifted note-tree expand state
+        expandNode,
+        isNodeExpanded,
+        toggleNodeExpanded,
 
         // Note creation functions
         handleCreateNewChatNote,

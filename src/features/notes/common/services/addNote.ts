@@ -1,20 +1,8 @@
-import AddNoteWorker from "../../../../db/workers/addNoteWorker.ts?worker";
+import { notesChannel } from "../../../../db/workers/channels";
 
+// `note` is `any` here to keep the legacy caller surface (where partially
+// hydrated note objects are passed) compatible. The repository layer is the
+// authoritative place for type-narrowing.
 export const addNote = (noteType: number, note: any): Promise<null> => {
-    return new Promise((resolve, reject) => {
-        const addNoteWorker = new AddNoteWorker();
-
-        addNoteWorker.postMessage({ noteType: noteType, note: note });
-
-        addNoteWorker.onmessage = (event) => {
-            addNoteWorker.terminate();
-            resolve(null);
-        };
-
-        addNoteWorker.onerror = (error) => {
-            addNoteWorker.terminate();
-            console.error(error);
-            reject(error);
-        };
-    });
+    return notesChannel.request("addNote", { note, noteType }).then(() => null);
 };

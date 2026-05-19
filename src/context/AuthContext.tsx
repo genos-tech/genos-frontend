@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useEffect, useRef, useState } from "react";
+import { createContext, ReactNode, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 import { analytics } from "../services/analytics";
 import { clearAllEditorDrafts } from "../utils/editorDraftStorage";
@@ -211,11 +211,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         };
     }, []);
 
-    return (
-        <AuthContext.Provider value={{ accessToken, setAccessToken }}>
-            {children}
-        </AuthContext.Provider>
-    );
+    // `setAccessToken` is a stable useState setter; memo only needs to refresh
+    // when `accessToken` changes. Without this, the provider's `value` is a
+    // fresh object every render → every `useAuth()` consumer (and there are
+    // many in the chat/notes/tasks tree) re-renders on every parent re-render.
+    const value = useMemo(() => ({ accessToken, setAccessToken }), [accessToken]);
+
+    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {

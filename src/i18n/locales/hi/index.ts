@@ -796,6 +796,7 @@ export const hi: DeepPartial<Messages> = {
             noDueDate: "कोई ड्यू तारीख नहीं",
             daysLeft: "{count}दि बाकी",
             unassigned: "असाइन नहीं",
+            showChildTasks: "सब टास्क दिखाएँ",
         },
         subTasks: {
             title: "सब टास्क",

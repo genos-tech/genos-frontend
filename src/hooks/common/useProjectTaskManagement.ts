@@ -148,7 +148,8 @@ export const useProjectTaskManagement = ({
         useTM.setIsTaskPreviewVisible(false);
         useTM.setIsTaskTableVisible(true);
         useTM.setCurrentTaskChain([]);
-        useTM.setTaskMetaTree([]);
+        // taskMetaTree is derived from taskMeta — clearing taskMeta drops the tree.
+        useTM.setTaskMeta([]);
         useTM.setIsCreatingTask({
             flag: false,
             parentTaskId: null,
