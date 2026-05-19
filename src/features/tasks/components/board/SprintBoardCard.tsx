@@ -297,31 +297,39 @@ const SprintBoardCardImpl = ({
                             </Typography>
                         </Box>
 
-                        {/* Due date */}
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 0.25,
-                                color: getDaysLeftColor(task.daysLeft),
-                                padding: "2px 6px",
-                                borderRadius: 4,
-                                backgroundColor:
-                                    task.daysLeft !== null && task.daysLeft <= 0
-                                        ? mode === "dark"
-                                            ? "rgba(239, 68, 68, 0.15)"
-                                            : "rgba(239, 68, 68, 0.1)"
-                                        : "transparent",
-                            }}
-                        >
-                            <AccessTimeIcon sx={{ fontSize: 11 }} />
-                            <Typography
-                                level="body-xs"
-                                sx={{ fontWeight: 600, fontSize: "0.6rem" }}
+                        {/* Due date — hidden for Closed tasks since
+                            the work is done and there's no remaining
+                            deadline to signal. Other statuses (Open /
+                            WIP / Pending) still show the chip; Pending
+                            cards keep it because a paused task can
+                            still have a real due date the user wants
+                            to see. */}
+                        {task.status !== "Closed" && (
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 0.25,
+                                    color: getDaysLeftColor(task.daysLeft),
+                                    padding: "2px 6px",
+                                    borderRadius: 4,
+                                    backgroundColor:
+                                        task.daysLeft !== null && task.daysLeft <= 0
+                                            ? mode === "dark"
+                                                ? "rgba(239, 68, 68, 0.15)"
+                                                : "rgba(239, 68, 68, 0.1)"
+                                            : "transparent",
+                                }}
                             >
-                                {formatDaysLeft(task.daysLeft)}
-                            </Typography>
-                        </Box>
+                                <AccessTimeIcon sx={{ fontSize: 11 }} />
+                                <Typography
+                                    level="body-xs"
+                                    sx={{ fontWeight: 600, fontSize: "0.6rem" }}
+                                >
+                                    {formatDaysLeft(task.daysLeft)}
+                                </Typography>
+                            </Box>
+                        )}
                     </Box>
                 </div>
             )}
