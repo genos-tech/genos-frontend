@@ -796,6 +796,7 @@ export const es: DeepPartial<Messages> = {
             noDueDate: "Sin fecha de vencimiento",
             daysLeft: "{count}d restantes",
             unassigned: "Sin asignar",
+            showChildTasks: "Mostrar subtareas",
         },
         subTasks: {
             title: "Subtareas",

@@ -11,6 +11,7 @@ import { useAuth } from "../../../../context/AuthContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
 import { loadProjectTags } from "../../services/loadProjectTags";
@@ -89,6 +90,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
     const { teamMembers, teamMemberProfiles, myself, usePM, useSM, useTM, socket } = props;
     const { mode: colorMode } = useColorScheme();
     const { accessToken } = useAuth();
+    const { t } = useTranslation();
 
     // Normalize mode
     const mode: "light" | "dark" | undefined =
@@ -109,6 +111,16 @@ export const SprintBoard = (props: SprintBoardProps) => {
     // avoid drowning the user in nested cards, but it gives no way to
     // see the full picture. This toggle is the escape hatch.
     const [showAllChildTasks, setShowAllChildTasks] = useState<boolean>(false);
+    // Hide the "Show child tasks" toggle whenever a milestone scope is
+    // already active — through the dropdown filter
+    // (`isMilestoneFilterActive`, published by TaskFilterMenu) OR
+    // through the sidebar (`useTM.tableMilestoneFilterId`). In either
+    // case the milestone's children are already on the board, so the
+    // toggle would be a no-op (and the label "Show child tasks" would
+    // misleadingly imply there are extra cards hiding).
+    const [isMilestoneFilterActive, setIsMilestoneFilterActive] = useState<boolean>(false);
+    const showChildTasksToggleVisible =
+        !isMilestoneFilterActive && useTM.tableMilestoneFilterId == null;
 
     // Tag filter setup
     const [predefinedTagsFilters, setPredefinedTagsFilters] = useState<FilterProps[]>([]);
@@ -463,37 +475,41 @@ export const SprintBoard = (props: SprintBoardProps) => {
                     isTaskUpdated={useTM.isTaskUpdated}
                     predefinedTagsFilters={predefinedTagsFilters}
                     setCurrentDisplayingTasks={setFilteredTasks}
+                    setIsMilestoneFilterActive={setIsMilestoneFilterActive}
                     setVisibleChildTaskIds={setVisibleChildTaskIds}
                     useSM={useSM}
                     useTM={useTM}
                     hideStatusFilter
                 />
-                <Stack
-                    alignItems="center"
-                    direction="row"
-                    spacing={1}
-                    sx={{
-                        px: 1.5,
-                        py: 0.5,
-                        flexShrink: 0,
-                    }}
-                >
-                    <Switch
-                        checked={showAllChildTasks}
-                        size="sm"
-                        onChange={(event) => setShowAllChildTasks(event.target.checked)}
-                    />
-                    <Typography
-                        level="body-sm"
+                {showChildTasksToggleVisible && (
+                    <Stack
+                        alignItems="center"
+                        direction="row"
+                        spacing={1}
                         sx={{
-                            cursor: "pointer",
-                            color: mode === "dark" ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.65)",
+                            px: 1.5,
+                            py: 0.5,
+                            flexShrink: 0,
                         }}
-                        onClick={() => setShowAllChildTasks((prev) => !prev)}
                     >
-                        Show child tasks
-                    </Typography>
-                </Stack>
+                        <Switch
+                            checked={showAllChildTasks}
+                            size="sm"
+                            onChange={(event) => setShowAllChildTasks(event.target.checked)}
+                        />
+                        <Typography
+                            level="body-sm"
+                            sx={{
+                                cursor: "pointer",
+                                color:
+                                    mode === "dark" ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.65)",
+                            }}
+                            onClick={() => setShowAllChildTasks((prev) => !prev)}
+                        >
+                            {t.tasks.board.showChildTasks}
+                        </Typography>
+                    </Stack>
+                )}
                 <DragDropContext onDragEnd={handleDragEnd}>
                     <div style={getBoardContainerStyles(mode)}>
                         {COLUMNS.map((column) => {

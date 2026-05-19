@@ -796,6 +796,7 @@ export const ar: DeepPartial<Messages> = {
             noDueDate: "بدون تاريخ استحقاق",
             daysLeft: "{count} يوم متبقٍ",
             unassigned: "غير مُسنَدة",
+            showChildTasks: "إظهار المهام الفرعية",
         },
         subTasks: {
             title: "المهام الفرعية",

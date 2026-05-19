@@ -803,6 +803,7 @@ export const fr: DeepPartial<Messages> = {
             noDueDate: "Pas d'échéance",
             daysLeft: "{count} j restants",
             unassigned: "Non assignée",
+            showChildTasks: "Afficher les sous-tâches",
         },
         subTasks: {
             title: "Sous-tâches",

@@ -357,6 +357,7 @@ export const tasks = {
         noDueDate: "No due date",
         daysLeft: "{count}d left",
         unassigned: "Unassigned",
+        showChildTasks: "Show child tasks",
     },
 
     // Sub-tasks block.

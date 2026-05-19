@@ -62,6 +62,12 @@ type TaskFilterMenuProps = {
     // specific filter is selected, which doesn't apply to children
     // shown beneath an already-expanded parent.
     setVisibleChildTaskIds?: (ids: Set<string>) => void;
+    // Optional: receives `true` whenever the user has narrowed the
+    // milestone multi-select to a specific milestone (anything other
+    // than the "All" sentinel) and `false` when it goes back to "All".
+    // The board uses this to hide its "Show child tasks" toggle when
+    // a milestone is already in scope (children are already showing).
+    setIsMilestoneFilterActive?: (active: boolean) => void;
     hideStatusFilter?: boolean;
 };
 
@@ -73,6 +79,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         predefinedTagsFilters,
         setCurrentDisplayingTasks,
         setVisibleChildTaskIds,
+        setIsMilestoneFilterActive,
         hideStatusFilter,
     } = props;
     const { mode } = useColorScheme();
@@ -524,6 +531,10 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
 
         if (setVisibleChildTaskIds) {
             setVisibleChildTaskIds(childIdSet);
+        }
+
+        if (setIsMilestoneFilterActive) {
+            setIsMilestoneFilterActive(milestoneFilterActive);
         }
     };
 
