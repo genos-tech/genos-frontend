@@ -10,6 +10,7 @@ import PaletteRoundedIcon from "@mui/icons-material/PaletteRounded";
 import PrivacyTipRoundedIcon from "@mui/icons-material/PrivacyTipRounded";
 import SettingsBrightnessRoundedIcon from "@mui/icons-material/SettingsBrightnessRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
+import SortRoundedIcon from "@mui/icons-material/SortRounded";
 import ViewStreamRoundedIcon from "@mui/icons-material/ViewStreamRounded";
 import {
     Box,
@@ -32,6 +33,13 @@ import {
     useBubbleStylePreference,
 } from "../../hooks/common/useBubbleStylePreference";
 import { useSpotlightPreferences } from "../../hooks/common/useSpotlightPreferences";
+import {
+    matchTablePreset,
+    resolveTablePreset,
+    SprintBoardSortKey,
+    TableSortPreset,
+    useTaskSortPreferences,
+} from "../../hooks/common/useTaskSortPreferences";
 import { ThemePreference, useThemePreference } from "../../hooks/common/useThemePreference";
 import { Locale, useTranslation } from "../../i18n";
 import { NotificationSettingsPanel } from "../../services/notifications/NotificationSettingsPanel";
@@ -302,6 +310,103 @@ const LanguageSection = () => {
     );
 };
 
+const TaskSortSection = () => {
+    const { sprintBoardSort, setSprintBoardSort, tableSort, setTableSort } =
+        useTaskSortPreferences();
+    const { t } = useTranslation();
+    // Resolve the current table {field, direction} into a named preset
+    // for the Select. When the user has clicked a column header that
+    // doesn't match any curated preset the value falls through to
+    // "custom" — the disabled option below makes it visible without
+    // being re-selectable.
+    const tablePreset = matchTablePreset(tableSort);
+    return (
+        <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
+            <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
+                <SortRoundedIcon />
+                <Typography level="title-md">{t.settings.taskSort.heading}</Typography>
+            </Stack>
+            <Typography level="body-xs" sx={{ mb: 1.5 }}>
+                {t.settings.taskSort.description}
+            </Typography>
+
+            <Stack
+                alignItems="center"
+                direction="row"
+                justifyContent="space-between"
+                spacing={2}
+                sx={{ mb: 1.5 }}
+            >
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography level="title-sm">
+                        {t.settings.taskSort.sprintBoardLabel}
+                    </Typography>
+                    <Typography level="body-xs">
+                        {t.settings.taskSort.sprintBoardHelper}
+                    </Typography>
+                </Box>
+                <Select
+                    size="sm"
+                    sx={{ minWidth: 160 }}
+                    value={sprintBoardSort}
+                    onChange={(_e, value) => {
+                        if (value === "default" || value === "dueDate" || value === "priority") {
+                            setSprintBoardSort(value as SprintBoardSortKey);
+                        }
+                    }}
+                >
+                    <Option value="default">{t.tasks.board.sortDefault}</Option>
+                    <Option value="dueDate">{t.tasks.board.sortDueDate}</Option>
+                    <Option value="priority">{t.tasks.board.sortPriority}</Option>
+                </Select>
+            </Stack>
+
+            <Divider />
+
+            <Stack
+                alignItems="center"
+                direction="row"
+                justifyContent="space-between"
+                spacing={2}
+                sx={{ mt: 1.5 }}
+            >
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography level="title-sm">{t.settings.taskSort.tableLabel}</Typography>
+                    <Typography level="body-xs">{t.settings.taskSort.tableHelper}</Typography>
+                </Box>
+                <Select
+                    size="sm"
+                    sx={{ minWidth: 220 }}
+                    value={tablePreset}
+                    onChange={(_e, value) => {
+                        if (!value) return;
+                        const resolved = resolveTablePreset(value as TableSortPreset);
+                        if (resolved) setTableSort(resolved);
+                    }}
+                >
+                    <Option value="priorityDesc">
+                        {t.settings.taskSort.tablePresetPriorityDesc}
+                    </Option>
+                    <Option value="dueDateAsc">{t.settings.taskSort.tablePresetDueDateAsc}</Option>
+                    <Option value="statusAsc">{t.settings.taskSort.tablePresetStatusAsc}</Option>
+                    <Option value="updatedAtDesc">
+                        {t.settings.taskSort.tablePresetUpdatedAtDesc}
+                    </Option>
+                    <Option value="createdDateDesc">
+                        {t.settings.taskSort.tablePresetCreatedDateDesc}
+                    </Option>
+                    <Option value="idAsc">{t.settings.taskSort.tablePresetIdAsc}</Option>
+                    {tablePreset === "custom" && (
+                        <Option disabled value="custom">
+                            {t.settings.taskSort.tablePresetCustom}
+                        </Option>
+                    )}
+                </Select>
+            </Stack>
+        </Sheet>
+    );
+};
+
 type ShortcutGroup = {
     title: string;
     description: string;
@@ -467,6 +572,7 @@ export const SettingsModal = ({ open, onClose }: Props) => {
                     <SpotlightSection />
                     <PrivacySection />
                     <LanguageSection />
+                    <TaskSortSection />
                     <NotificationSettingsPanel />
                     <KeyboardShortcutsSection />
                 </Stack>

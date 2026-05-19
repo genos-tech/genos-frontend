@@ -251,6 +251,23 @@ export const ja: DeepPartial<Messages> = {
             french: "Français",
             chinese: "中文",
         },
+        taskSort: {
+            heading: "タスクの並び替え",
+            description:
+                "スプリントボードとタスクテーブルの既定の並び順。即時反映され、セッション間で保持されます。",
+            sprintBoardLabel: "スプリントボード",
+            sprintBoardHelper:
+                "ボードのツールバーにも同じ選択肢があり、どちらで変更しても同期します。",
+            tableLabel: "タスクテーブル",
+            tableHelper: "列ヘッダーをクリックして並べ替えると、その選択も保持されます。",
+            tablePresetPriorityDesc: "優先度 — 高い順",
+            tablePresetDueDateAsc: "期限日 — 早い順",
+            tablePresetStatusAsc: "ステータス — アクティブ優先",
+            tablePresetUpdatedAtDesc: "最終更新 — 新しい順",
+            tablePresetCreatedDateDesc: "作成日 — 新しい順",
+            tablePresetIdAsc: "ID — 昇順",
+            tablePresetCustom: "カスタム（列ヘッダー）",
+        },
     },
     chat: {
         composer: {
@@ -794,6 +811,10 @@ export const ja: DeepPartial<Messages> = {
             daysLeft: "残り {count} 日",
             unassigned: "未割り当て",
             showChildTasks: "サブタスクを表示",
+            sortByLabel: "並び替え",
+            sortDefault: "デフォルト",
+            sortDueDate: "期限日",
+            sortPriority: "優先度",
         },
         subTasks: {
             title: "サブタスク",

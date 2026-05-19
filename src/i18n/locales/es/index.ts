@@ -252,6 +252,24 @@ export const es: DeepPartial<Messages> = {
             french: "Français",
             chinese: "中文",
         },
+        taskSort: {
+            heading: "Orden de tareas",
+            description:
+                "Orden predeterminado para las columnas del tablero de sprint y la tabla de tareas. Se aplica de inmediato y se conserva entre sesiones.",
+            sprintBoardLabel: "Tablero de sprint",
+            sprintBoardHelper:
+                "El mismo selector está en la barra del tablero — los cambios se sincronizan en ambos sitios.",
+            tableLabel: "Tabla de tareas",
+            tableHelper:
+                "Hacer clic en un encabezado de columna vuelve a ordenar la tabla; esa elección también se conserva.",
+            tablePresetPriorityDesc: "Prioridad — De alta a baja",
+            tablePresetDueDateAsc: "Fecha de vencimiento — Más cercana primero",
+            tablePresetStatusAsc: "Estado — Activas primero",
+            tablePresetUpdatedAtDesc: "Última actualización — Más reciente primero",
+            tablePresetCreatedDateDesc: "Creación — Más reciente primero",
+            tablePresetIdAsc: "ID — Ascendente",
+            tablePresetCustom: "Personalizado (por columna)",
+        },
     },
     chat: {
         composer: {
@@ -797,6 +815,10 @@ export const es: DeepPartial<Messages> = {
             daysLeft: "{count}d restantes",
             unassigned: "Sin asignar",
             showChildTasks: "Mostrar subtareas",
+            sortByLabel: "Ordenar por",
+            sortDefault: "Predeterminado",
+            sortDueDate: "Fecha de vencimiento",
+            sortPriority: "Prioridad",
         },
         subTasks: {
             title: "Subtareas",

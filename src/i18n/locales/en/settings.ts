@@ -81,4 +81,22 @@ export const settings = {
         arabic: "العربية",
         hindi: "हिन्दी",
     },
+    taskSort: {
+        heading: "Task sort",
+        description:
+            "Default ordering for the sprint board columns and the task table. Applies immediately and persists across sessions.",
+        sprintBoardLabel: "Sprint board",
+        sprintBoardHelper:
+            "Same selector lives in the board toolbar — changes in either place stay in sync.",
+        tableLabel: "Task table",
+        tableHelper:
+            "Clicking a column header still re-sorts the table; that choice persists too.",
+        tablePresetPriorityDesc: "Priority — High to Low",
+        tablePresetDueDateAsc: "Due date — Earliest first",
+        tablePresetStatusAsc: "Status — Active first",
+        tablePresetUpdatedAtDesc: "Last updated — Recent first",
+        tablePresetCreatedDateDesc: "Created — Recent first",
+        tablePresetIdAsc: "ID — Ascending",
+        tablePresetCustom: "Custom (column-driven)",
+    },
 } as const;

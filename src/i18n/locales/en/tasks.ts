@@ -358,6 +358,10 @@ export const tasks = {
         daysLeft: "{count}d left",
         unassigned: "Unassigned",
         showChildTasks: "Show child tasks",
+        sortByLabel: "Sort by",
+        sortDefault: "Default",
+        sortDueDate: "Due date",
+        sortPriority: "Priority",
     },
 
     // Sub-tasks block.

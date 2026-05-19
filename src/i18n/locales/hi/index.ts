@@ -254,6 +254,24 @@ export const hi: DeepPartial<Messages> = {
             arabic: "العربية",
             hindi: "हिन्दी",
         },
+        taskSort: {
+            heading: "टास्क क्रम",
+            description:
+                "स्प्रिंट बोर्ड के कॉलम और टास्क टेबल के लिए डिफ़ॉल्ट क्रम। तुरंत लागू होता है और सत्रों के बीच बना रहता है।",
+            sprintBoardLabel: "स्प्रिंट बोर्ड",
+            sprintBoardHelper:
+                "वही चयनकर्ता बोर्ड टूलबार में भी है — किसी भी जगह बदलाव सिंक रहता है।",
+            tableLabel: "टास्क टेबल",
+            tableHelper:
+                "कॉलम हेडर पर क्लिक करने से टेबल पुनः क्रमित होती है; वह चयन भी सुरक्षित रहता है।",
+            tablePresetPriorityDesc: "प्राथमिकता — उच्च से निम्न",
+            tablePresetDueDateAsc: "ड्यू तारीख — पहले निकटतम",
+            tablePresetStatusAsc: "स्थिति — सक्रिय पहले",
+            tablePresetUpdatedAtDesc: "हाल का अपडेट — नए पहले",
+            tablePresetCreatedDateDesc: "बनाया गया — नए पहले",
+            tablePresetIdAsc: "ID — आरोही",
+            tablePresetCustom: "कस्टम (कॉलम-आधारित)",
+        },
     },
     chat: {
         composer: {
@@ -797,6 +815,10 @@ export const hi: DeepPartial<Messages> = {
             daysLeft: "{count}दि बाकी",
             unassigned: "असाइन नहीं",
             showChildTasks: "सब टास्क दिखाएँ",
+            sortByLabel: "क्रमबद्ध करें",
+            sortDefault: "डिफ़ॉल्ट",
+            sortDueDate: "ड्यू तारीख",
+            sortPriority: "प्राथमिकता",
         },
         subTasks: {
             title: "सब टास्क",

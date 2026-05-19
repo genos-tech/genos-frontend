@@ -246,6 +246,21 @@ export const zh: DeepPartial<Messages> = {
             french: "Français",
             chinese: "中文",
         },
+        taskSort: {
+            heading: "任务排序",
+            description: "迭代看板和任务表的默认排序方式。立即生效并跨会话保留。",
+            sprintBoardLabel: "迭代看板",
+            sprintBoardHelper: "看板工具栏中也有同样的选项 — 任一处更改都会同步。",
+            tableLabel: "任务表",
+            tableHelper: "点击列标题仍会重新排序表格，并会保留所做选择。",
+            tablePresetPriorityDesc: "优先级 — 从高到低",
+            tablePresetDueDateAsc: "截止日期 — 最早优先",
+            tablePresetStatusAsc: "状态 — 活动优先",
+            tablePresetUpdatedAtDesc: "最近更新 — 最新优先",
+            tablePresetCreatedDateDesc: "创建时间 — 最新优先",
+            tablePresetIdAsc: "ID — 升序",
+            tablePresetCustom: "自定义（按列）",
+        },
     },
     chat: {
         composer: {
@@ -784,6 +799,10 @@ export const zh: DeepPartial<Messages> = {
             daysLeft: "剩 {count} 天",
             unassigned: "未指派",
             showChildTasks: "显示子任务",
+            sortByLabel: "排序",
+            sortDefault: "默认",
+            sortDueDate: "截止日期",
+            sortPriority: "优先级",
         },
         subTasks: {
             title: "子任务",

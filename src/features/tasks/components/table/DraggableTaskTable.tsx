@@ -13,6 +13,7 @@ import { Socket } from "socket.io-client";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { useTaskSortPreferences } from "../../../../hooks/common/useTaskSortPreferences";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
@@ -457,15 +458,16 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
     // not run yet; treat as permissive so the table is usable on
     // first paint without flashing children in and out.
     const [visibleChildTaskIds, setVisibleChildTaskIds] = useState<Set<string> | null>(null);
-    // Default to "Priority desc" so the comparator's multi-tier ordering
-    // (Priority desc → Status asc → DueDate asc) kicks in on first paint:
-    // Critical work surfaces above everything else, with Status and Due
-    // Date breaking ties. Users can still click any column header to swap
-    // the primary tier; the rest stay as tie-breakers.
-    const [sortConfig, setSortConfig] = useState<{ field: string; direction: "asc" | "desc" }>({
-        field: "priority",
-        direction: "desc",
-    });
+    // Sort config is now sourced from `useTaskSortPreferences` so it
+    // stays in sync with the Settings modal's preset selector and
+    // persists across reloads via localStorage. Default ("priority"
+    // desc) is encoded in the hook — Critical work surfaces above
+    // everything else on first paint. Users can still click any column
+    // header to swap the primary tier; the hook's `setTableSort` is
+    // what gets called, so the new field/direction is persisted as the
+    // active sort. The Settings select reflects the change via the
+    // shared context.
+    const { tableSort: sortConfig, setTableSort: setSortConfig } = useTaskSortPreferences();
 
     const toggleExpand = useCallback((id: string) => {
         setExpandedRows((prev) => {
@@ -960,12 +962,13 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         setCurrentDisplayingTasks(items);
     };
 
-    // Handle header click for sorting
+    // Handle header click for sorting. The hook's `setTableSort` takes
+    // a value (not a functional updater), so we compute the next state
+    // from the current `sortConfig` directly.
     const handleHeaderClick = (field: string) => {
-        setSortConfig((prev) => ({
-            field,
-            direction: prev.field === field && prev.direction === "asc" ? "desc" : "asc",
-        }));
+        const direction: "asc" | "desc" =
+            sortConfig.field === field && sortConfig.direction === "asc" ? "desc" : "asc";
+        setSortConfig({ field, direction });
     };
 
     // Apply sorting when sort config changes

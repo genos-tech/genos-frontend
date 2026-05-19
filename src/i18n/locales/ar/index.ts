@@ -254,6 +254,23 @@ export const ar: DeepPartial<Messages> = {
             arabic: "العربية",
             hindi: "हिन्दी",
         },
+        taskSort: {
+            heading: "ترتيب المهام",
+            description:
+                "الترتيب الافتراضي لأعمدة لوحة السبرنت وجدول المهام. يُطبَّق على الفور ويُحفظ بين الجلسات.",
+            sprintBoardLabel: "لوحة السبرنت",
+            sprintBoardHelper:
+                "يوجد نفس المحدد في شريط أدوات اللوحة — تتزامن التغييرات في كلا المكانين.",
+            tableLabel: "جدول المهام",
+            tableHelper: "النقر على رأس عمود يعيد ترتيب الجدول، ويُحفظ هذا الخيار أيضًا.",
+            tablePresetPriorityDesc: "الأولوية — من الأعلى إلى الأدنى",
+            tablePresetDueDateAsc: "تاريخ الاستحقاق — الأقرب أولاً",
+            tablePresetStatusAsc: "الحالة — النشطة أولاً",
+            tablePresetUpdatedAtDesc: "آخر تحديث — الأحدث أولاً",
+            tablePresetCreatedDateDesc: "الإنشاء — الأحدث أولاً",
+            tablePresetIdAsc: "المعرّف — تصاعدي",
+            tablePresetCustom: "مخصص (حسب العمود)",
+        },
     },
     chat: {
         composer: {
@@ -797,6 +814,10 @@ export const ar: DeepPartial<Messages> = {
             daysLeft: "{count} يوم متبقٍ",
             unassigned: "غير مُسنَدة",
             showChildTasks: "إظهار المهام الفرعية",
+            sortByLabel: "ترتيب حسب",
+            sortDefault: "افتراضي",
+            sortDueDate: "تاريخ الاستحقاق",
+            sortPriority: "الأولوية",
         },
         subTasks: {
             title: "المهام الفرعية",
