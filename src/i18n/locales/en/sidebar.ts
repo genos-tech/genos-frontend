@@ -4,6 +4,7 @@ export const sidebar = {
         chats: "Chats",
         tasks: "Tasks",
         notes: "Notes",
+        integrations: "Integrations",
         search: "Search",
     },
     tooltips: {

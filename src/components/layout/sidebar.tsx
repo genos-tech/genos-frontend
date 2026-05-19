@@ -1,6 +1,7 @@
 import { useState } from "react";
 import AllInboxRoundedIcon from "@mui/icons-material/AllInboxRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import HubRoundedIcon from "@mui/icons-material/HubRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
@@ -81,6 +82,14 @@ const NAV_ITEMS = [
         labelKey: "notes" as const,
         path: "/workspace/notes",
         shortcutKey: "N",
+        colorScheme: NAV_ACCENT,
+    },
+    {
+        id: 4,
+        icon: HubRoundedIcon,
+        labelKey: "integrations" as const,
+        path: "/workspace/integrations",
+        shortcutKey: "G",
         colorScheme: NAV_ACCENT,
     },
 ];

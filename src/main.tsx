@@ -7,6 +7,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { PageNotFound } from "./components/layout/pageNotFound";
 import { AuthGuard, GuestGuard } from "./features/admin/authGuard";
 import { JoinTeam } from "./features/admin/components/joinTeamFrom";
+import { OAuthSuccessHandler } from "./features/admin/components/OAuthSuccessHandler";
 import { ResetPasswordForm } from "./features/admin/components/ResetPasswordForm";
 import { SignInForm } from "./features/admin/components/SignInForm";
 import { SignUpForm } from "./features/admin/components/SignUpForm";
@@ -56,6 +57,13 @@ createRoot(document.getElementById("root")!).render(
                     <Route element={<SignInForm />} path="/signin" />
                     <Route element={<ResetPasswordForm />} path="/reset-password" />
                 </Route>
+
+                {/* OAuth bounce — not auth-guarded. Reached by both
+                    signed-out users (login intent: the page reads
+                    the JWT from the URL hash and finishes sign-in)
+                    and signed-in users (failure paths only — connect
+                    successes go straight to the next route). */}
+                <Route element={<OAuthSuccessHandler />} path="/oauth/success" />
 
                 {/* Protected routes */}
                 <Route element={<AuthGuard />}>

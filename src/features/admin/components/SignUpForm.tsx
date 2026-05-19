@@ -12,6 +12,7 @@ import {
     Box,
     Button,
     CssBaseline,
+    Divider,
     FormControl,
     FormLabel,
     GlobalStyles,
@@ -29,6 +30,7 @@ import { SignUpFormStyles } from "../../../components/ui/styles/commonStyle";
 import { fmt, I18nProvider, useTranslation } from "../../../i18n";
 import { purplePalette, purpleTheme } from "../../../theme/purplePalette";
 import { SignUpResponse } from "../../../types/admin";
+import { redirectToOAuthLogin } from "../../integrations/services/oauth";
 import { signUp } from "../services/signup";
 import { validatePassword } from "../utils/passwordValidation";
 import { AdminHeader } from "./Header";
@@ -206,6 +208,53 @@ const SignUpContent = () => {
                                 </Alert>
                             )}
                         </Stack>
+
+                        <Stack sx={{ gap: 1.25, mb: 2.5 }}>
+                            <Button
+                                fullWidth
+                                variant="outlined"
+                                onClick={() => redirectToOAuthLogin("google")}
+                                sx={{
+                                    py: 1.25,
+                                    borderRadius: "12px",
+                                    fontWeight: 600,
+                                    fontSize: "15px",
+                                    borderColor: styles.inputBorder,
+                                    color: styles.labelColor,
+                                    background: styles.inputBg,
+                                    "&:hover": {
+                                        borderColor: styles.accentColor,
+                                        background: `${styles.accentColor}10`,
+                                    },
+                                }}
+                            >
+                                {t.admin.auth.signIn.continueWithGoogle}
+                            </Button>
+                            <Button
+                                fullWidth
+                                variant="outlined"
+                                onClick={() => redirectToOAuthLogin("github")}
+                                sx={{
+                                    py: 1.25,
+                                    borderRadius: "12px",
+                                    fontWeight: 600,
+                                    fontSize: "15px",
+                                    borderColor: styles.inputBorder,
+                                    color: styles.labelColor,
+                                    background: styles.inputBg,
+                                    "&:hover": {
+                                        borderColor: styles.accentColor,
+                                        background: `${styles.accentColor}10`,
+                                    },
+                                }}
+                            >
+                                {t.admin.auth.signIn.continueWithGithub}
+                            </Button>
+                        </Stack>
+
+                        <Divider sx={{ mb: 2.5, color: styles.subtitleColor }}>
+                            {t.admin.auth.signIn.orDivider}
+                        </Divider>
 
                         <form
                             onSubmit={(event: React.FormEvent<SignUpFormElement>) => {

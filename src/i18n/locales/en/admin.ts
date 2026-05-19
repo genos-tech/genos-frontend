@@ -18,6 +18,8 @@ export const admin = {
             forgotPassword: "Forgot password?",
             submit: "Sign In",
             orDivider: "or",
+            continueWithGoogle: "Continue with Google",
+            continueWithGithub: "Continue with GitHub",
             demoButton: "Try with Demo User",
             demoLoading: "Setting up demo…",
             demoHint: "No signup needed — explore the app instantly.",

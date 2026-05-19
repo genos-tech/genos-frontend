@@ -205,6 +205,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 window.location.pathname === "/signin" ||
                 window.location.pathname === "/signup" ||
                 window.location.pathname === "/reset-password" ||
+                window.location.pathname === "/oauth/success" ||
                 window.location.pathname === "/home"
             ) {
                 return;

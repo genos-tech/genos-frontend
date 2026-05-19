@@ -64,6 +64,11 @@ const NoteHome = lazy(() =>
 const TaskHome = lazy(() =>
     import("./features/tasks/taskHome").then((m) => ({ default: m.TaskHome }))
 );
+const IntegrationsHome = lazy(() =>
+    import("./features/integrations/IntegrationsHome").then((m) => ({
+        default: m.IntegrationsHome,
+    }))
+);
 
 const API_DOWN_THRESHOLD = 3;
 
@@ -688,6 +693,20 @@ export const App = () => {
                                                                                             useUISM
                                                                                         }
                                                                                     />
+                                                                                </Suspense>
+                                                                            </FeatureErrorBoundary>
+                                                                        }
+                                                                    />
+                                                                    <Route
+                                                                        path="integrations"
+                                                                        element={
+                                                                            <FeatureErrorBoundary feature="Integrations">
+                                                                                <Suspense
+                                                                                    fallback={
+                                                                                        <RouteLoadingFallback />
+                                                                                    }
+                                                                                >
+                                                                                    <IntegrationsHome />
                                                                                 </Suspense>
                                                                             </FeatureErrorBoundary>
                                                                         }
