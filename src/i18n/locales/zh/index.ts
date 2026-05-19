@@ -171,6 +171,14 @@ export const zh: DeepPartial<Messages> = {
     },
     settings: {
         title: "设置",
+        tabs: {
+            general: "通用",
+            chat: "聊天",
+            tasks: "任务",
+            spotlight: "Spotlight",
+            notifications: "通知",
+            shortcuts: "快捷键",
+        },
         appearance: {
             heading: "外观",
             description: "选择应用的外观。“跟随系统”会根据操作系统主题自动切换。",

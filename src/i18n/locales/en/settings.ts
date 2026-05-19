@@ -1,5 +1,13 @@
 export const settings = {
     title: "Settings",
+    tabs: {
+        general: "General",
+        chat: "Chat",
+        tasks: "Tasks",
+        spotlight: "Spotlight",
+        notifications: "Notifications",
+        shortcuts: "Shortcuts",
+    },
     appearance: {
         heading: "Appearance",
         description:

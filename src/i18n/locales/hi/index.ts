@@ -173,6 +173,14 @@ export const hi: DeepPartial<Messages> = {
     },
     settings: {
         title: "सेटिंग्स",
+        tabs: {
+            general: "सामान्य",
+            chat: "चैट",
+            tasks: "टास्क",
+            spotlight: "स्पॉटलाइट",
+            notifications: "सूचनाएँ",
+            shortcuts: "शॉर्टकट",
+        },
         appearance: {
             heading: "दिखावट",
             description:

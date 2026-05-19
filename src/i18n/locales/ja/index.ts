@@ -172,6 +172,14 @@ export const ja: DeepPartial<Messages> = {
     },
     settings: {
         title: "設定",
+        tabs: {
+            general: "一般",
+            chat: "チャット",
+            tasks: "タスク",
+            spotlight: "スポットライト",
+            notifications: "通知",
+            shortcuts: "ショートカット",
+        },
         appearance: {
             heading: "外観",
             description:

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
@@ -23,6 +23,10 @@ import {
     Sheet,
     Stack,
     Switch,
+    Tab,
+    TabList,
+    TabPanel,
+    Tabs,
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -539,10 +543,20 @@ const KeyboardShortcutsSection = () => {
  * Notification state is read from `NotificationsContext` provided at the
  * App root, so the modal needs no notification-specific props.
  */
+// Tab keys mirror the i18n keys under `settings.tabs.*` and are kept
+// as a plain string union (rather than numeric indices) so reordering
+// or inserting a new tab doesn't silently shift selection.
+type SettingsTabKey = "general" | "chat" | "tasks" | "spotlight" | "notifications" | "shortcuts";
+
 export const SettingsModal = ({ open, onClose }: Props) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
+    // Tab selection is local component state — open the modal,
+    // navigate around, close — there's no need to persist this across
+    // sessions. Default to "general" because it holds the broadest
+    // app-wide preferences (appearance, language, privacy).
+    const [tab, setTab] = useState<SettingsTabKey>("general");
     return (
         <Modal open={open} onClose={onClose}>
             <ModalDialog
@@ -566,16 +580,65 @@ export const SettingsModal = ({ open, onClose }: Props) => {
                     </IconButton>
                 </Stack>
                 <Divider sx={{ mb: 2 }} />
-                <Stack spacing={2}>
-                    <AppearanceSection />
-                    <MessageLayoutSection />
-                    <SpotlightSection />
-                    <PrivacySection />
-                    <LanguageSection />
-                    <TaskSortSection />
-                    <NotificationSettingsPanel />
-                    <KeyboardShortcutsSection />
-                </Stack>
+                <Tabs
+                    value={tab}
+                    onChange={(_event, value) => {
+                        if (typeof value === "string") setTab(value as SettingsTabKey);
+                    }}
+                >
+                    <TabList
+                        // Tab strip can overflow on narrow viewports
+                        // (xs uses 92vw). Letting it scroll horizontally
+                        // keeps every tab reachable without forcing the
+                        // dialog wider than the rest of the app's
+                        // modals.
+                        sx={{
+                            overflowX: "auto",
+                            "&::-webkit-scrollbar": { display: "none" },
+                            scrollbarWidth: "none",
+                        }}
+                    >
+                        <Tab value="general">{t.settings.tabs.general}</Tab>
+                        <Tab value="chat">{t.settings.tabs.chat}</Tab>
+                        <Tab value="tasks">{t.settings.tabs.tasks}</Tab>
+                        <Tab value="spotlight">{t.settings.tabs.spotlight}</Tab>
+                        <Tab value="notifications">{t.settings.tabs.notifications}</Tab>
+                        <Tab value="shortcuts">{t.settings.tabs.shortcuts}</Tab>
+                    </TabList>
+
+                    <TabPanel value="general" sx={{ px: 0, py: 2 }}>
+                        <Stack spacing={2}>
+                            <AppearanceSection />
+                            <LanguageSection />
+                            <PrivacySection />
+                        </Stack>
+                    </TabPanel>
+                    <TabPanel value="chat" sx={{ px: 0, py: 2 }}>
+                        <Stack spacing={2}>
+                            <MessageLayoutSection />
+                        </Stack>
+                    </TabPanel>
+                    <TabPanel value="tasks" sx={{ px: 0, py: 2 }}>
+                        <Stack spacing={2}>
+                            <TaskSortSection />
+                        </Stack>
+                    </TabPanel>
+                    <TabPanel value="spotlight" sx={{ px: 0, py: 2 }}>
+                        <Stack spacing={2}>
+                            <SpotlightSection />
+                        </Stack>
+                    </TabPanel>
+                    <TabPanel value="notifications" sx={{ px: 0, py: 2 }}>
+                        <Stack spacing={2}>
+                            <NotificationSettingsPanel />
+                        </Stack>
+                    </TabPanel>
+                    <TabPanel value="shortcuts" sx={{ px: 0, py: 2 }}>
+                        <Stack spacing={2}>
+                            <KeyboardShortcutsSection />
+                        </Stack>
+                    </TabPanel>
+                </Tabs>
             </ModalDialog>
         </Modal>
     );

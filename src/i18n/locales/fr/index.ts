@@ -174,6 +174,14 @@ export const fr: DeepPartial<Messages> = {
     },
     settings: {
         title: "Paramètres",
+        tabs: {
+            general: "Général",
+            chat: "Chat",
+            tasks: "Tâches",
+            spotlight: "Spotlight",
+            notifications: "Notifications",
+            shortcuts: "Raccourcis",
+        },
         appearance: {
             heading: "Apparence",
             description:

@@ -173,6 +173,14 @@ export const es: DeepPartial<Messages> = {
     },
     settings: {
         title: "Ajustes",
+        tabs: {
+            general: "General",
+            chat: "Chat",
+            tasks: "Tareas",
+            spotlight: "Spotlight",
+            notifications: "Notificaciones",
+            shortcuts: "Atajos",
+        },
         appearance: {
             heading: "Apariencia",
             description:

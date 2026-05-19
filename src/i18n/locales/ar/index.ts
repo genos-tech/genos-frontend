@@ -173,6 +173,14 @@ export const ar: DeepPartial<Messages> = {
     },
     settings: {
         title: "الإعدادات",
+        tabs: {
+            general: "عام",
+            chat: "الدردشة",
+            tasks: "المهام",
+            spotlight: "Spotlight",
+            notifications: "الإشعارات",
+            shortcuts: "الاختصارات",
+        },
         appearance: {
             heading: "المظهر",
             description:
