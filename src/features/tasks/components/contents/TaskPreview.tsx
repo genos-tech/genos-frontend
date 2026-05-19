@@ -185,19 +185,47 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         }
     }, [taskEditState.startIntervalUpdatingTask]);
 
-    // Snapshot of the body as we loaded it into the editor for the
-    // current task. Authoritative "dirty" signal — `taskBodyEdited`
+    // Authoritative "dirty" signal for the body. `taskBodyEdited`
     // alone is unreliable because the collaborative BlockNote editor's
-    // `onChange` fires once on Yjs initial-sync after a task switch
-    // (see [bnTaskPreview.tsx:334-344]), which falsely flips the flag
-    // even when the user never typed. Comparing against this snapshot
-    // makes the dirty check truthful regardless of what flipped the
-    // flag.
+    // `onChange` fires once on Yjs initial-sync after every task
+    // load (see [bnTaskPreview.tsx:334-344]), falsely flipping the
+    // flag even when the user never typed.
+    //
+    // Two refs cooperate here:
+    //
+    //  * `currentBodyRef` mirrors `taskEditState.body` in real time.
+    //    The autosave interval's closure captures `taskEditState` at
+    //    setup time and would otherwise miss every keystroke that
+    //    follows. Reading through this ref gives the interval a live
+    //    view of the body without forcing it to re-create on every
+    //    keystroke.
+    //
+    //  * `lastLoadedBodyRef` holds the *canonical* baseline for the
+    //    current task. We capture it 100 ms after each task load so
+    //    the editor's Yjs initial-sync echo has settled — the raw
+    //    server JSON and the editor's canonical form often differ
+    //    (id assignment, property reordering), and comparing
+    //    raw-vs-canonical would mark every view-only switch as dirty
+    //    and fire a spurious autosave. 100 ms is comfortably below
+    //    human typing rhythm so the baseline catches the canonical
+    //    form before any real edit.
     const lastLoadedBodyRef = useRef<string>("");
     const prevTaskIdRef = useRef<number | null>(null);
+    const currentBodyRef = useRef<PartialBlock[]>([]);
+
+    useEffect(() => {
+        currentBodyRef.current = taskEditState.body;
+    }, [taskEditState.body]);
+
+    useEffect(() => {
+        const id = window.setTimeout(() => {
+            lastLoadedBodyRef.current = JSON.stringify(currentBodyRef.current ?? []);
+        }, 100);
+        return () => window.clearTimeout(id);
+    }, [taskEditState.currentTaskId]);
+
     const isBodyDirty = (): boolean => {
-        const currentBodyStr = JSON.stringify(taskEditState.body ?? []);
-        return currentBodyStr !== lastLoadedBodyRef.current;
+        return JSON.stringify(currentBodyRef.current ?? []) !== lastLoadedBodyRef.current;
     };
 
     // Auto save task body every Nms if needed. The interval used to
@@ -265,7 +293,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             }
             // Reset the unreliable flag for the incoming task — the
             // editor's initial-sync onChange will flip it back, but
-            // we now ignore it until the body actually diverges.
+            // we now ignore it until the body actually diverges from
+            // the canonical baseline captured 100 ms later.
             taskEditState.setTaskBodyEdited(false);
             taskEditState.setTmpCurrentTaskContent(next);
             taskEditState.setCurrentTaskId(next.id);
@@ -273,7 +302,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             taskEditState.setBody(next.body || []);
             taskEditState.setUploadedFiles(next.attachments || []);
             prevTaskIdRef.current = nextId;
-            lastLoadedBodyRef.current = JSON.stringify(next.body || []);
             return;
         }
 
@@ -291,7 +319,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         taskEditState.setBody(next.body || []);
         taskEditState.setUploadedFiles(next.attachments || []);
         prevTaskIdRef.current = nextId;
-        lastLoadedBodyRef.current = JSON.stringify(next.body || []);
     }, [useTM.currentPreviewTask]);
 
     // Update task title/attachments when the visible task Id is changed
