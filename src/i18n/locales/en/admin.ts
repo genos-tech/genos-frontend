@@ -59,8 +59,25 @@ export const admin = {
         },
         forgotPassword: {
             title: "Forgot Password?",
-            body: "Please contact the app owner to reset your password.",
+            body: "Enter the email associated with your account and we'll send you a reset link.",
+            emailLabel: "Email",
+            emailPlaceholder: "Enter your email",
+            submit: "Send reset link",
+            successTitle: "Check your inbox",
+            successBody:
+                "If that email is registered, you'll receive a reset link within a few minutes.",
             close: "Close",
+        },
+        passwordReset: {
+            title: "Set a new password",
+            subtitle: "Choose a strong password to finish resetting your account.",
+            submit: "Update password",
+            successTitle: "Password updated",
+            successBody: "Redirecting you to sign in…",
+            missingToken:
+                "This reset link is invalid or has expired. Request a new one from the sign-in page.",
+            invalidToken: "This reset link is invalid or has expired.",
+            backToSignIn: "Back to sign in",
         },
         errors: {
             network: "Network error. Please check your connection and try again.",

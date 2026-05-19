@@ -35,6 +35,7 @@ import { fmt, I18nProvider, useTranslation } from "../../../i18n";
 import { purplePalette, purpleTheme } from "../../../theme/purplePalette";
 import { SignInResponse } from "../../../types/admin";
 import { demoSignIn } from "../services/demoSignin";
+import { requestPasswordReset } from "../services/passwordReset";
 import { signIn } from "../services/signin";
 import { AdminHeader } from "./Header";
 
@@ -53,6 +54,10 @@ const SignInContent = () => {
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [rememberEmail, setRememberEmail] = useState<boolean>(false);
     const [openForgotPassword, setOpenForgotPassword] = useState<boolean>(false);
+    const [forgotEmail, setForgotEmail] = useState<string>("");
+    const [forgotSubmitting, setForgotSubmitting] = useState<boolean>(false);
+    const [forgotSucceeded, setForgotSucceeded] = useState<boolean>(false);
+    const [forgotError, setForgotError] = useState<string | null>(null);
     const [demoLoading, setDemoLoading] = useState<boolean>(false);
     const { setAccessToken } = useAuth();
     const { mode } = useColorScheme();
@@ -364,7 +369,17 @@ const SignInContent = () => {
                                                 color: styles.linkHover,
                                             },
                                         }}
-                                        onClick={() => setOpenForgotPassword(true)}
+                                        onClick={() => {
+                                            // Seed the modal email from the
+                                            // "Remember me" localStorage so
+                                            // returning users don't retype.
+                                            setForgotEmail(
+                                                localStorage.getItem("signInEmail") || ""
+                                            );
+                                            setForgotSucceeded(false);
+                                            setForgotError(null);
+                                            setOpenForgotPassword(true);
+                                        }}
                                     >
                                         {t.admin.auth.signIn.forgotPassword}
                                     </Link>
@@ -468,7 +483,14 @@ const SignInContent = () => {
 
             <Modal
                 open={openForgotPassword}
-                onClose={() => setOpenForgotPassword(false)}
+                onClose={() => {
+                    setOpenForgotPassword(false);
+                    // Reset transient modal state when it closes so the
+                    // next open starts fresh.
+                    setForgotSucceeded(false);
+                    setForgotError(null);
+                    setForgotSubmitting(false);
+                }}
                 sx={{ backdropFilter: "blur(4px)" }}
             >
                 <ModalDialog
@@ -492,28 +514,84 @@ const SignInContent = () => {
                             mb: 1,
                         }}
                     >
-                        {t.admin.auth.forgotPassword.title}
+                        {forgotSucceeded
+                            ? t.admin.auth.forgotPassword.successTitle
+                            : t.admin.auth.forgotPassword.title}
                     </Typography>
                     <Typography level="body-md" sx={{ color: styles.subtitleColor, mb: 2 }}>
-                        {t.admin.auth.forgotPassword.body}
+                        {forgotSucceeded
+                            ? t.admin.auth.forgotPassword.successBody
+                            : t.admin.auth.forgotPassword.body}
                     </Typography>
-                    <Typography
-                        component="a"
-                        href="mailto:genos.support@gmail.com?subject=Password%20Reset%20Request&body=Hi%2C%0A%0AI%20forgot%20my%20password.%20Could%20you%20please%20reset%20it%3F%0A%0AMy%20email%3A<replace_with_your_email>%20%0A%0AThank%20you."
-                        startDecorator={
-                            <EmailRoundedIcon sx={{ color: styles.accentColor, fontSize: 20 }} />
-                        }
-                        sx={{
-                            textDecoration: "none",
-                            color: styles.linkColor,
-                            fontWeight: 600,
-                            fontSize: "15px",
-                            transition: "all 0.2s ease",
-                            "&:hover": { color: styles.linkHover },
-                        }}
-                    >
-                        genos.support@gmail.com
-                    </Typography>
+
+                    {!forgotSucceeded && (
+                        <form
+                            onSubmit={async (event) => {
+                                event.preventDefault();
+                                if (!forgotEmail) return;
+                                setForgotError(null);
+                                setForgotSubmitting(true);
+                                const ok = await requestPasswordReset(forgotEmail, setForgotError);
+                                setForgotSubmitting(false);
+                                if (ok) setForgotSucceeded(true);
+                            }}
+                        >
+                            <FormControl required sx={{ mb: 1.5 }}>
+                                <Input
+                                    type="email"
+                                    placeholder={t.admin.auth.forgotPassword.emailPlaceholder}
+                                    value={forgotEmail}
+                                    onChange={(e) => setForgotEmail(e.target.value)}
+                                    startDecorator={
+                                        <EmailRoundedIcon
+                                            sx={{ color: styles.accentColor, fontSize: 20 }}
+                                        />
+                                    }
+                                    sx={{
+                                        "--Input-focusedThickness": "2px",
+                                        "--Input-radius": "10px",
+                                        background: styles.inputBg,
+                                        border: `1px solid ${styles.inputBorder}`,
+                                        py: 1,
+                                        "&:focus-within": {
+                                            borderColor: styles.inputFocusBorder,
+                                            boxShadow: styles.inputFocusShadow,
+                                        },
+                                    }}
+                                />
+                            </FormControl>
+                            {forgotError && (
+                                <Alert
+                                    color="danger"
+                                    sx={{
+                                        borderRadius: "10px",
+                                        border: `1px solid ${palette.dangerTintBorder}`,
+                                        mb: 1.5,
+                                    }}
+                                >
+                                    {forgotError}
+                                </Alert>
+                            )}
+                            <Button
+                                type="submit"
+                                fullWidth
+                                disabled={forgotSubmitting || !forgotEmail}
+                                startDecorator={
+                                    forgotSubmitting ? <CircularProgress size="sm" /> : null
+                                }
+                                sx={{
+                                    py: 1.25,
+                                    borderRadius: "10px",
+                                    fontWeight: 600,
+                                    background: styles.buttonBg,
+                                    "&:hover": { background: styles.buttonHover },
+                                }}
+                            >
+                                {t.admin.auth.forgotPassword.submit}
+                            </Button>
+                        </form>
+                    )}
+
                     <Button
                         variant="outlined"
                         sx={{
@@ -526,7 +604,12 @@ const SignInContent = () => {
                                 background: `${styles.accentColor}15`,
                             },
                         }}
-                        onClick={() => setOpenForgotPassword(false)}
+                        onClick={() => {
+                            setOpenForgotPassword(false);
+                            setForgotSucceeded(false);
+                            setForgotError(null);
+                            setForgotSubmitting(false);
+                        }}
                     >
                         {t.admin.auth.forgotPassword.close}
                     </Button>

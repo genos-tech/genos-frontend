@@ -7,6 +7,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { PageNotFound } from "./components/layout/pageNotFound";
 import { AuthGuard, GuestGuard } from "./features/admin/authGuard";
 import { JoinTeam } from "./features/admin/components/joinTeamFrom";
+import { ResetPasswordForm } from "./features/admin/components/ResetPasswordForm";
 import { SignInForm } from "./features/admin/components/SignInForm";
 import { SignUpForm } from "./features/admin/components/SignUpForm";
 import { analytics } from "./services/analytics";
@@ -53,6 +54,7 @@ createRoot(document.getElementById("root")!).render(
                     <Route element={<SignInForm />} path="/" />
                     <Route element={<SignUpForm />} path="/signup" />
                     <Route element={<SignInForm />} path="/signin" />
+                    <Route element={<ResetPasswordForm />} path="/reset-password" />
                 </Route>
 
                 {/* Protected routes */}

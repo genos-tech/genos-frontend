@@ -204,6 +204,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (
                 window.location.pathname === "/signin" ||
                 window.location.pathname === "/signup" ||
+                window.location.pathname === "/reset-password" ||
                 window.location.pathname === "/home"
             ) {
                 return;
