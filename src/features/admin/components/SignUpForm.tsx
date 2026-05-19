@@ -1,8 +1,12 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import BadgeRoundedIcon from "@mui/icons-material/BadgeRounded";
+import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
 import PersonAddRoundedIcon from "@mui/icons-material/PersonAddRounded";
+import RadioButtonUncheckedRoundedIcon from "@mui/icons-material/RadioButtonUncheckedRounded";
+import VisibilityOffRoundedIcon from "@mui/icons-material/VisibilityOffRounded";
+import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import {
     Alert,
     Box,
@@ -11,7 +15,9 @@ import {
     FormControl,
     FormLabel,
     GlobalStyles,
+    IconButton,
     Input,
+    LinearProgress,
     Link,
     Stack,
     Typography,
@@ -24,6 +30,7 @@ import { fmt, I18nProvider, useTranslation } from "../../../i18n";
 import { purplePalette, purpleTheme } from "../../../theme/purplePalette";
 import { SignUpResponse } from "../../../types/admin";
 import { signUp } from "../services/signup";
+import { validatePassword } from "../utils/passwordValidation";
 import { AdminHeader } from "./Header";
 
 interface FormElements extends HTMLFormControlsCollection {
@@ -40,10 +47,45 @@ const SignUpContent = () => {
     const navigate = useNavigate();
     const { t } = useTranslation();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [passwordFocused, setPasswordFocused] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const styles = isDark ? SignUpFormStyles.dark : SignUpFormStyles.light;
     const palette = isDark ? purplePalette.dark : purplePalette.light;
+
+    const validation = useMemo(() => validatePassword(password), [password]);
+    const showMeter = passwordFocused || password.length > 0;
+
+    // Joy LinearProgress accepts these palette names; map score → color.
+    const meterColor: "danger" | "warning" | "primary" | "success" | "neutral" =
+        validation.score <= 1
+            ? "danger"
+            : validation.score === 2
+              ? "warning"
+              : validation.score === 3
+                ? "primary"
+                : validation.score === 4
+                  ? "success"
+                  : "neutral";
+    const strengthLabel =
+        validation.score <= 1
+            ? t.admin.auth.signUp.passwordStrength.weak
+            : validation.score === 2
+              ? t.admin.auth.signUp.passwordStrength.fair
+              : validation.score === 3
+                ? t.admin.auth.signUp.passwordStrength.good
+                : t.admin.auth.signUp.passwordStrength.strong;
+
+    const checklistRows: { ok: boolean; label: string }[] = [
+        { ok: validation.length, label: t.admin.auth.signUp.passwordRequirements.minLength },
+        { ok: validation.uppercase, label: t.admin.auth.signUp.passwordRequirements.uppercase },
+        { ok: validation.lowercase, label: t.admin.auth.signUp.passwordRequirements.lowercase },
+        { ok: validation.number, label: t.admin.auth.signUp.passwordRequirements.number },
+    ];
 
     const _signup = async (username: string, email: string, password: string) => {
         const signUpRes: SignUpResponse = await signUp(
@@ -171,14 +213,16 @@ const SignUpContent = () => {
                                 const formElements = event.currentTarget.elements;
                                 const name = formElements.userName.value;
                                 const email = formElements.email.value;
-                                const password = formElements.password.value;
-                                const confirm_password = formElements.confirm_password.value;
 
-                                if (password !== confirm_password) {
-                                    setErrorMessage(t.admin.auth.signUp.passwordMismatch);
-                                } else {
-                                    _signup(name, email, password);
+                                if (!validation.isValid) {
+                                    setErrorMessage(t.admin.auth.signUp.passwordTooWeak);
+                                    return;
                                 }
+                                if (password !== confirmPassword) {
+                                    setErrorMessage(t.admin.auth.signUp.passwordMismatch);
+                                    return;
+                                }
+                                _signup(name, email, password);
                             }}
                         >
                             <Stack sx={{ gap: 2.5 }}>
@@ -249,15 +293,109 @@ const SignUpContent = () => {
                                     </FormLabel>
                                     <Input
                                         name="password"
-                                        type="password"
+                                        type={showPassword ? "text" : "password"}
                                         placeholder={t.admin.auth.signUp.passwordPlaceholder}
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        onFocus={() => setPasswordFocused(true)}
+                                        onBlur={() => setPasswordFocused(false)}
                                         startDecorator={
                                             <LockRoundedIcon
                                                 sx={{ color: styles.accentColor, fontSize: 20 }}
                                             />
                                         }
+                                        endDecorator={
+                                            <IconButton
+                                                aria-label={
+                                                    showPassword
+                                                        ? t.admin.auth.signUp.passwordVisibility
+                                                              .hide
+                                                        : t.admin.auth.signUp.passwordVisibility
+                                                              .show
+                                                }
+                                                size="sm"
+                                                variant="plain"
+                                                onClick={() => setShowPassword((v) => !v)}
+                                                sx={{
+                                                    color: styles.accentColor,
+                                                    "--IconButton-size": "28px",
+                                                }}
+                                            >
+                                                {showPassword ? (
+                                                    <VisibilityOffRoundedIcon
+                                                        sx={{ fontSize: 20 }}
+                                                    />
+                                                ) : (
+                                                    <VisibilityRoundedIcon sx={{ fontSize: 20 }} />
+                                                )}
+                                            </IconButton>
+                                        }
                                         sx={inputStyle}
                                     />
+                                    {showMeter && (
+                                        <Box sx={{ mt: 1 }}>
+                                            <Stack
+                                                alignItems="center"
+                                                direction="row"
+                                                spacing={1}
+                                                sx={{ mb: 0.75 }}
+                                            >
+                                                <LinearProgress
+                                                    color={meterColor}
+                                                    determinate
+                                                    value={(validation.score / 4) * 100}
+                                                    sx={{
+                                                        flex: 1,
+                                                        "--LinearProgress-thickness": "6px",
+                                                    }}
+                                                />
+                                                <Typography
+                                                    level="body-xs"
+                                                    sx={{
+                                                        color: styles.subtitleColor,
+                                                        minWidth: 48,
+                                                        fontWeight: 600,
+                                                    }}
+                                                >
+                                                    {strengthLabel}
+                                                </Typography>
+                                            </Stack>
+                                            <Stack spacing={0.25}>
+                                                {checklistRows.map((row) => (
+                                                    <Stack
+                                                        key={row.label}
+                                                        alignItems="center"
+                                                        direction="row"
+                                                        spacing={0.75}
+                                                    >
+                                                        {row.ok ? (
+                                                            <CheckCircleRoundedIcon
+                                                                color="success"
+                                                                sx={{ fontSize: 16 }}
+                                                            />
+                                                        ) : (
+                                                            <RadioButtonUncheckedRoundedIcon
+                                                                sx={{
+                                                                    fontSize: 16,
+                                                                    color: styles.subtitleColor,
+                                                                }}
+                                                            />
+                                                        )}
+                                                        <Typography
+                                                            level="body-xs"
+                                                            sx={{
+                                                                color: row.ok
+                                                                    ? styles.labelColor
+                                                                    : styles.subtitleColor,
+                                                            }}
+                                                        >
+                                                            {row.label}
+                                                        </Typography>
+                                                    </Stack>
+                                                ))}
+                                            </Stack>
+                                        </Box>
+                                    )}
                                 </FormControl>
 
                                 <FormControl required>
@@ -275,12 +413,42 @@ const SignUpContent = () => {
                                     </FormLabel>
                                     <Input
                                         name="confirm_password"
-                                        type="password"
-                                        placeholder={t.admin.auth.signUp.confirmPasswordPlaceholder}
+                                        type={showConfirmPassword ? "text" : "password"}
+                                        placeholder={
+                                            t.admin.auth.signUp.confirmPasswordPlaceholder
+                                        }
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
                                         startDecorator={
                                             <LockRoundedIcon
                                                 sx={{ color: styles.accentColor, fontSize: 20 }}
                                             />
+                                        }
+                                        endDecorator={
+                                            <IconButton
+                                                aria-label={
+                                                    showConfirmPassword
+                                                        ? t.admin.auth.signUp.passwordVisibility
+                                                              .hide
+                                                        : t.admin.auth.signUp.passwordVisibility
+                                                              .show
+                                                }
+                                                size="sm"
+                                                variant="plain"
+                                                onClick={() => setShowConfirmPassword((v) => !v)}
+                                                sx={{
+                                                    color: styles.accentColor,
+                                                    "--IconButton-size": "28px",
+                                                }}
+                                            >
+                                                {showConfirmPassword ? (
+                                                    <VisibilityOffRoundedIcon
+                                                        sx={{ fontSize: 20 }}
+                                                    />
+                                                ) : (
+                                                    <VisibilityRoundedIcon sx={{ fontSize: 20 }} />
+                                                )}
+                                            </IconButton>
                                         }
                                         sx={inputStyle}
                                     />

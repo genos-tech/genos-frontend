@@ -39,6 +39,23 @@ export const admin = {
             haveAccountPrompt: "Already have an account?",
             signInLink: "Sign in",
             passwordMismatch: "Passwords do not match.",
+            passwordTooWeak: "Password doesn't meet the strength requirements yet.",
+            passwordRequirements: {
+                minLength: "At least 8 characters",
+                uppercase: "One uppercase letter (A–Z)",
+                lowercase: "One lowercase letter (a–z)",
+                number: "One number (0–9)",
+            },
+            passwordStrength: {
+                weak: "Weak",
+                fair: "Fair",
+                good: "Good",
+                strong: "Strong",
+            },
+            passwordVisibility: {
+                show: "Show password",
+                hide: "Hide password",
+            },
         },
         forgotPassword: {
             title: "Forgot Password?",

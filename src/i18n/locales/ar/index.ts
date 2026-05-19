@@ -1419,6 +1419,23 @@ export const ar: DeepPartial<Messages> = {
                 haveAccountPrompt: "هل لديك حساب بالفعل؟",
                 signInLink: "تسجيل الدخول",
                 passwordMismatch: "كلمتا المرور غير متطابقتين.",
+                passwordTooWeak: "كلمة المرور لا تستوفي متطلبات القوة بعد.",
+                passwordRequirements: {
+                    minLength: "8 أحرف على الأقل",
+                    uppercase: "حرف كبير واحد (A–Z)",
+                    lowercase: "حرف صغير واحد (a–z)",
+                    number: "رقم واحد (0–9)",
+                },
+                passwordStrength: {
+                    weak: "ضعيفة",
+                    fair: "متوسطة",
+                    good: "جيدة",
+                    strong: "قوية",
+                },
+                passwordVisibility: {
+                    show: "إظهار كلمة المرور",
+                    hide: "إخفاء كلمة المرور",
+                },
             },
             forgotPassword: {
                 title: "هل نسيت كلمة المرور؟",

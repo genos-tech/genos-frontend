@@ -1439,6 +1439,24 @@ export const fr: DeepPartial<Messages> = {
                 haveAccountPrompt: "Vous avez déjà un compte ?",
                 signInLink: "Se connecter",
                 passwordMismatch: "Les mots de passe ne correspondent pas.",
+                passwordTooWeak:
+                    "Le mot de passe ne respecte pas encore les exigences de sécurité.",
+                passwordRequirements: {
+                    minLength: "Au moins 8 caractères",
+                    uppercase: "Une lettre majuscule (A–Z)",
+                    lowercase: "Une lettre minuscule (a–z)",
+                    number: "Un chiffre (0–9)",
+                },
+                passwordStrength: {
+                    weak: "Faible",
+                    fair: "Moyen",
+                    good: "Bon",
+                    strong: "Fort",
+                },
+                passwordVisibility: {
+                    show: "Afficher le mot de passe",
+                    hide: "Masquer le mot de passe",
+                },
             },
             forgotPassword: {
                 title: "Mot de passe oublié ?",

@@ -1423,6 +1423,23 @@ export const es: DeepPartial<Messages> = {
                 haveAccountPrompt: "¿Ya tienes una cuenta?",
                 signInLink: "Iniciar sesión",
                 passwordMismatch: "Las contraseñas no coinciden.",
+                passwordTooWeak: "La contraseña aún no cumple los requisitos de seguridad.",
+                passwordRequirements: {
+                    minLength: "Al menos 8 caracteres",
+                    uppercase: "Una letra mayúscula (A–Z)",
+                    lowercase: "Una letra minúscula (a–z)",
+                    number: "Un número (0–9)",
+                },
+                passwordStrength: {
+                    weak: "Débil",
+                    fair: "Regular",
+                    good: "Buena",
+                    strong: "Fuerte",
+                },
+                passwordVisibility: {
+                    show: "Mostrar contraseña",
+                    hide: "Ocultar contraseña",
+                },
             },
             forgotPassword: {
                 title: "¿Olvidaste tu contraseña?",

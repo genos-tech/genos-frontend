@@ -1421,6 +1421,23 @@ export const hi: DeepPartial<Messages> = {
                 haveAccountPrompt: "पहले से अकाउंट है?",
                 signInLink: "साइन इन",
                 passwordMismatch: "पासवर्ड मेल नहीं खाते।",
+                passwordTooWeak: "पासवर्ड अभी मज़बूती की शर्तें पूरी नहीं करता।",
+                passwordRequirements: {
+                    minLength: "कम से कम 8 अक्षर",
+                    uppercase: "एक बड़ा अक्षर (A–Z)",
+                    lowercase: "एक छोटा अक्षर (a–z)",
+                    number: "एक अंक (0–9)",
+                },
+                passwordStrength: {
+                    weak: "कमज़ोर",
+                    fair: "ठीक-ठाक",
+                    good: "अच्छा",
+                    strong: "मज़बूत",
+                },
+                passwordVisibility: {
+                    show: "पासवर्ड दिखाएँ",
+                    hide: "पासवर्ड छिपाएँ",
+                },
             },
             forgotPassword: {
                 title: "पासवर्ड भूल गए?",

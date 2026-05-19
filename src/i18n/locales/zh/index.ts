@@ -1396,6 +1396,23 @@ export const zh: DeepPartial<Messages> = {
                 haveAccountPrompt: "已有账号？",
                 signInLink: "登录",
                 passwordMismatch: "两次输入的密码不一致。",
+                passwordTooWeak: "密码尚未满足强度要求。",
+                passwordRequirements: {
+                    minLength: "至少 8 个字符",
+                    uppercase: "一个大写字母（A–Z）",
+                    lowercase: "一个小写字母（a–z）",
+                    number: "一个数字（0–9）",
+                },
+                passwordStrength: {
+                    weak: "弱",
+                    fair: "一般",
+                    good: "良好",
+                    strong: "强",
+                },
+                passwordVisibility: {
+                    show: "显示密码",
+                    hide: "隐藏密码",
+                },
             },
             forgotPassword: {
                 title: "忘记密码？",

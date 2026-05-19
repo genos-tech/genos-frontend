@@ -1420,6 +1420,23 @@ export const ja: DeepPartial<Messages> = {
                 haveAccountPrompt: "すでにアカウントをお持ちですか？",
                 signInLink: "サインイン",
                 passwordMismatch: "パスワードが一致しません。",
+                passwordTooWeak: "パスワードが強度要件を満たしていません。",
+                passwordRequirements: {
+                    minLength: "8文字以上",
+                    uppercase: "大文字を1つ以上（A〜Z）",
+                    lowercase: "小文字を1つ以上（a〜z）",
+                    number: "数字を1つ以上（0〜9）",
+                },
+                passwordStrength: {
+                    weak: "弱い",
+                    fair: "普通",
+                    good: "良好",
+                    strong: "強い",
+                },
+                passwordVisibility: {
+                    show: "パスワードを表示",
+                    hide: "パスワードを非表示",
+                },
             },
             forgotPassword: {
                 title: "パスワードをお忘れですか？",
