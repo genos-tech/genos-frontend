@@ -25,6 +25,7 @@ import { popTeamMembers } from "../../../chat/services/popTeamMembers";
 import { loadProjectTags } from "../../services/loadProjectTags";
 import { updateTaskFromTable } from "../../services/updateTaskFromTable";
 import { FilterProps } from "../../types/TaskTableTypes";
+import { buildComparator, nullTier, SortTier } from "../../utils/sortTask";
 import { effortLevels, priorities, statuses } from "../../utils/taskMeta";
 import { DraggableTaskRow } from "./DraggableTaskRow";
 import { TaskFilterMenu } from "./TaskFilterMenu";
@@ -178,131 +179,10 @@ export const defaultColumns: ColumnDef[] = [
 // For backwards compatibility
 export const columns = defaultColumns;
 
-// ---------------------------------------------------------------------------
-// Sort helpers
-// ---------------------------------------------------------------------------
-//
-// Categorical fields stored as strings (priority / effortLevel / status) are
-// what the user perceives as ordered, but `localeCompare` would sort them
-// alphabetically — e.g. Priority desc would surface "Normal" above "Low" and
-// bury "Critical" below "High" because of the letter ordering. The rank maps
-// below give each value an explicit numeric weight so the comparator can do
-// the obvious thing. Higher rank = more urgent for priority/effort. For
-// status the workflow order Open → WIP → Pending → Closed → Deleted is
-// modelled as ascending so "asc" naturally surfaces the most active rows
-// first; "desc" shows Deleted/Closed first.
-const PRIORITY_RANK: Record<string, number> = {
-    Critical: 5,
-    High: 4,
-    Normal: 3,
-    Low: 2,
-    Minimal: 1,
-};
-
-const EFFORT_RANK: Record<string, number> = {
-    Extensive: 5,
-    High: 4,
-    Moderate: 3,
-    Low: 2,
-    Minimal: 1,
-};
-
-const STATUS_RANK: Record<string, number> = {
-    Open: 1,
-    WIP: 2,
-    Pending: 3,
-    Closed: 4,
-    Deleted: 5,
-};
-
-// Parse a date string into an epoch ms number for numeric comparison.
-// `dueDate` is a free-form locale-ish string in the table model, so a plain
-// string sort would put "10/2/2025" before "9/30/2025"; using dayjs gives
-// the chronological ordering users expect.
-const parseTs = (s: string | null | undefined): number | null => {
-    if (!s) return null;
-    const d = dayjs(s);
-    return d.isValid() ? d.valueOf() : null;
-};
-
-const numericId = (s: string | number | null | undefined): number | null => {
-    if (s == null || s === "") return null;
-    const n = Number(s);
-    return Number.isFinite(n) ? n : null;
-};
-
-const lowerStr = (s: string | null | undefined): string | null => {
-    if (s == null || s === "") return null;
-    return s.toLowerCase();
-};
-
-// Resolve a row's value for a given sort field, normalizing it into the
-// shape the comparator expects:
-//   - numeric for id / daysLeft / priority / effortLevel / status / dates
-//   - lowercased string for textual columns
-//   - null when the row is missing the value (caller pushes nulls to the
-//     bottom regardless of direction)
-const fieldValue = (task: TaskTableProps, field: string): number | string | null => {
-    switch (field) {
-        case "id":
-            return numericId(task.id);
-        case "daysLeft":
-            return task.daysLeft ?? null;
-        case "title":
-            return lowerStr(task.title);
-        case "assigneeId":
-            // Sort by what the user actually sees in the cell, not the raw
-            // user-id UUID, so the column ordering matches their reading.
-            return (
-                lowerStr(task.assigneeName) ??
-                lowerStr(task.assigneeEmail) ??
-                lowerStr(task.assigneeId)
-            );
-        case "priority":
-            return PRIORITY_RANK[task.priority ?? ""] ?? null;
-        case "effortLevel":
-            return EFFORT_RANK[task.effortLevel ?? ""] ?? null;
-        case "status":
-            return STATUS_RANK[task.status ?? ""] ?? null;
-        case "tags":
-            return lowerStr(task.concatTags);
-        case "sprint":
-            // Sort by sprintId so tasks/milestones in the same sprint
-            // cluster together. Sprint names live in component state
-            // (`sprintNamesById`) and aren't reachable from this
-            // module-scope helper; sprintId is monotonically allocated
-            // so it correlates with sprint creation/sequence order.
-            return task.sprintId ?? null;
-        case "dueDate":
-        case "updatedAt":
-        case "createdDate":
-            return parseTs((task as any)[field]);
-        default: {
-            const raw = (task as any)[field];
-            if (raw == null || raw === "") return null;
-            return typeof raw === "number" ? raw : String(raw).toLowerCase();
-        }
-    }
-};
-
-// "Null tier" partition: rows missing the sort value always sink to the
-// bottom regardless of `asc`/`desc`, which matches what the user expects
-// when toggling direction (e.g. "Due Date desc" shouldn't fill the top
-// with rows that have no due date).
-const nullTier = (a: unknown, b: unknown): number => {
-    const aNull = a == null;
-    const bNull = b == null;
-    if (aNull && bNull) return 0;
-    if (aNull) return 1;
-    if (bNull) return -1;
-    return 0;
-};
-
-const cmpValues = (a: number | string | null, b: number | string | null): number => {
-    if (a == null || b == null) return 0; // null-tier already handled
-    if (typeof a === "number" && typeof b === "number") return a - b;
-    return String(a).localeCompare(String(b));
-};
+// Sort helpers (rank maps, parseTs, fieldValue, nullTier, comparator
+// builder) live in `features/tasks/utils/sortTask.ts` and are shared
+// with the sprint board. See that module for the rationale on rank
+// values and the field-value resolver.
 
 // Status options for dropdown. `label` doubles as a fallback for the
 // rendered display string; the actual UI looks up the label by
@@ -458,16 +338,17 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
     // not run yet; treat as permissive so the table is usable on
     // first paint without flashing children in and out.
     const [visibleChildTaskIds, setVisibleChildTaskIds] = useState<Set<string> | null>(null);
-    // Sort config is now sourced from `useTaskSortPreferences` so it
-    // stays in sync with the Settings modal's preset selector and
-    // persists across reloads via localStorage. Default ("priority"
-    // desc) is encoded in the hook — Critical work surfaces above
-    // everything else on first paint. Users can still click any column
-    // header to swap the primary tier; the hook's `setTableSort` is
-    // what gets called, so the new field/direction is persisted as the
-    // active sort. The Settings select reflects the change via the
-    // shared context.
-    const { tableSort: sortConfig, setTableSort: setSortConfig } = useTaskSortPreferences();
+    // Sort tiers are sourced from `useTaskSortPreferences` so they
+    // stay in sync with the Settings modal selectors and persist
+    // across reloads via localStorage. Default = `[{priority, desc}]`,
+    // matching the long-standing "Critical first" first-paint behaviour.
+    //
+    // Column-header click is treated as an in-place override of the
+    // **primary** tier (tier index 0) — the secondary tier set in
+    // Settings is left untouched. Clicking the same header twice
+    // toggles direction.
+    const { tableSortTiers: sortTiers, setTableSortTiers: setSortTiers } =
+        useTaskSortPreferences();
 
     const toggleExpand = useCallback((id: string) => {
         setExpandedRows((prev) => {
@@ -731,50 +612,35 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
     //      visually shuffle on re-render.
     const sortTasks = useCallback(
         (tasks: TaskTableProps[]) => {
-            const dir = sortConfig.direction === "asc" ? 1 : -1;
-            const primary = sortConfig.field;
+            // 1. Milestone rows are pinned above every regular task,
+            //    sorted internally by daysLeft → dueDate → sprint → id
+            //    so the next-up milestone surfaces first regardless of
+            //    what the user picked for the task tiers.
+            // 2. Regular tasks fall to the shared `buildComparator`
+            //    over the user's sortTiers (0–2 entries). Empty tiers
+            //    array = preserve filter-pipeline ordering, falling
+            //    through to id-tiebreak for determinism.
+            const taskComparator = buildComparator(sortTiers);
 
-            // Per-sort caches keyed by task id. `parseTs` was the hot
-            // call previously — for a 1k-task list, an O(N log N) sort
-            // calls the comparator ~10k times, and each comparator hit
-            // would allocate up to 4 dayjs instances. Caching collapses
-            // it to one parse per (task, field). Same for `numericId`
-            // since `Number(s)` + `Number.isFinite` is non-trivial in v8.
-            const dateCache = new Map<string, number | null>();
-            const cacheDate = (key: string, raw: string | null | undefined) => {
-                let v = dateCache.get(key);
-                if (v === undefined) {
-                    v = parseTs(raw);
-                    dateCache.set(key, v);
-                }
-                return v;
-            };
             const idCache = new Map<string | number, number | null>();
             const cacheId = (raw: string | number | null | undefined) => {
                 if (raw == null) return null;
-                let v = idCache.get(raw);
-                if (v === undefined) {
-                    v = numericId(raw);
-                    idCache.set(raw, v);
-                }
+                const cached = idCache.get(raw);
+                if (cached !== undefined) return cached;
+                const n = Number(raw);
+                const v = Number.isFinite(n) ? n : null;
+                idCache.set(raw, v);
                 return v;
             };
-
             const idTieBreak = (a: TaskTableProps, b: TaskTableProps) =>
                 (cacheId(a.id) ?? Number.MAX_SAFE_INTEGER) -
                 (cacheId(b.id) ?? Number.MAX_SAFE_INTEGER);
 
             const compareMilestones = (a: TaskTableProps, b: TaskTableProps) => {
-                // Sort milestones primarily by `daysLeft` ascending so the
-                // ordering naturally reads as:
-                //   - Expired milestones (negative daysLeft) at the top,
-                //   - then due-soon, then later,
-                //   - with future-sprint milestones (large daysLeft) sinking
-                //     to the bottom of the milestone group (but still above
-                //     every regular task — that's enforced by the milestone
-                //     pin in the outer comparator).
-                // Milestones with no due date are unscheduled, so they sink
-                // below all dated milestones.
+                // daysLeft ascending so expired milestones top the list,
+                // then due-soon, with unscheduled (null) milestones at
+                // the bottom of the milestone group (still above tasks
+                // — that's enforced by the milestone-pin step).
                 const aDays = a.daysLeft ?? null;
                 const bDays = b.daysLeft ?? null;
                 const daysTier = nullTier(aDays, bDays);
@@ -782,15 +648,15 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                 if (aDays != null && bDays != null && aDays !== bDays) {
                     return aDays - bDays;
                 }
-                // `daysLeft` is a derived/cached value — fall back to the
-                // raw due date in case a row has one set without the other.
-                const aDue = cacheDate(String(a.id ?? ""), a.dueDate);
-                const bDue = cacheDate(String(b.id ?? ""), b.dueDate);
-                const dueTier = nullTier(aDue, bDue);
-                if (dueTier !== 0) return dueTier;
-                if (aDue != null && bDue != null && aDue !== bDue) return aDue - bDue;
-                // Group same-due milestones by their sprint so a planning
-                // window stays visually coherent, then id for determinism.
+                // `daysLeft` is derived — fall back to the raw due date
+                // in case a row has one set without the other.
+                const aDue = a.dueDate ? new Date(a.dueDate).getTime() : NaN;
+                const bDue = b.dueDate ? new Date(b.dueDate).getTime() : NaN;
+                const aDueValid = Number.isFinite(aDue);
+                const bDueValid = Number.isFinite(bDue);
+                if (aDueValid !== bDueValid) return aDueValid ? -1 : 1;
+                if (aDueValid && bDueValid && aDue !== bDue) return aDue - bDue;
+                // Cluster milestones by sprint, then id.
                 const aSprint = a.sprintId ?? null;
                 const bSprint = b.sprintId ?? null;
                 const sprintTier = nullTier(aSprint, bSprint);
@@ -801,66 +667,15 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                 return idTieBreak(a, b);
             };
 
-            const tieBreakers = (a: TaskTableProps, b: TaskTableProps) => {
-                if (primary !== "priority") {
-                    const ap = PRIORITY_RANK[a.priority ?? ""] ?? null;
-                    const bp = PRIORITY_RANK[b.priority ?? ""] ?? null;
-                    const t = nullTier(ap, bp);
-                    if (t !== 0) return t;
-                    if (ap != null && bp != null && ap !== bp) return bp - ap; // desc
-                }
-                if (primary !== "status") {
-                    const as = STATUS_RANK[a.status ?? ""] ?? null;
-                    const bs = STATUS_RANK[b.status ?? ""] ?? null;
-                    const t = nullTier(as, bs);
-                    if (t !== 0) return t;
-                    if (as != null && bs != null && as !== bs) return as - bs; // asc
-                }
-                if (primary !== "dueDate") {
-                    const ad = cacheDate(String(a.id ?? ""), a.dueDate);
-                    const bd = cacheDate(String(b.id ?? ""), b.dueDate);
-                    const t = nullTier(ad, bd);
-                    if (t !== 0) return t;
-                    if (ad != null && bd != null && ad !== bd) return ad - bd; // asc (expired first)
-                }
-                return idTieBreak(a, b);
-            };
-
-            // Primary-field cache — keyed on task identity. `fieldValue`
-            // is called twice per comparator invocation (~2 × N log N
-            // times for an N-task sort); when `primary` is a date column
-            // each call hits dayjs. Caching collapses to N parses.
-            const primaryCache = new Map<string, number | string | null>();
-            const cachePrimary = (task: TaskTableProps): number | string | null => {
-                const key = String(task.id ?? "");
-                let v = primaryCache.get(key);
-                if (v === undefined) {
-                    v = fieldValue(task, primary);
-                    primaryCache.set(key, v);
-                }
-                return v;
-            };
-
             return [...tasks].sort((a, b) => {
-                // 1. Pin milestones to the top.
                 const aMile = a.isMilestone === true;
                 const bMile = b.isMilestone === true;
                 if (aMile !== bMile) return aMile ? -1 : 1;
                 if (aMile && bMile) return compareMilestones(a, b);
-
-                // 2. Primary column.
-                const av = cachePrimary(a);
-                const bv = cachePrimary(b);
-                const primaryNullTier = nullTier(av, bv);
-                if (primaryNullTier !== 0) return primaryNullTier;
-                const primaryCmp = cmpValues(av, bv) * dir;
-                if (primaryCmp !== 0) return primaryCmp;
-
-                // 3 + 4. Multi-tier tie-breakers, then id.
-                return tieBreakers(a, b);
+                return taskComparator(a, b);
             });
         },
-        [sortConfig]
+        [sortTiers]
     );
 
     // Reparent a task by dropping it ONTO another row (the `combine`
@@ -962,21 +777,35 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         setCurrentDisplayingTasks(items);
     };
 
-    // Handle header click for sorting. The hook's `setTableSort` takes
-    // a value (not a functional updater), so we compute the next state
-    // from the current `sortConfig` directly.
+    // Handle header click for sorting. Clicking a header overrides the
+    // **primary** tier (tier index 0) only — any secondary tier the
+    // user configured in Settings is preserved. Clicking the same
+    // header twice toggles direction.
     const handleHeaderClick = (field: string) => {
+        const currentPrimary = sortTiers[0];
         const direction: "asc" | "desc" =
-            sortConfig.field === field && sortConfig.direction === "asc" ? "desc" : "asc";
-        setSortConfig({ field, direction });
+            currentPrimary?.field === field && currentPrimary.direction === "asc" ? "desc" : "asc";
+        const nextPrimary: SortTier = { field, direction };
+        const next: SortTier[] = [nextPrimary];
+        // Preserve a configured secondary tier as long as it doesn't
+        // duplicate the new primary field (the hook would drop the dup
+        // anyway; we filter here for clarity).
+        const existingSecondary = sortTiers[1];
+        if (existingSecondary && existingSecondary.field !== field) {
+            next.push(existingSecondary);
+        }
+        setSortTiers(next);
     };
 
-    // Apply sorting when sort config changes
+    // Apply sorting whenever the user's sort tiers change. The deep
+    // dep is `sortTiers` (array identity from the hook) — flipping a
+    // header re-runs this and re-sorts the currently displayed rows.
     useEffect(() => {
         if (currentDisplayingTasks.length > 0) {
             setCurrentDisplayingTasks(sortTasks(currentDisplayingTasks));
         }
-    }, [sortConfig]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [sortTiers]);
 
     // Sorted setter for the filter pipeline. `TaskFilterMenu` calls back
     // into the table whenever filters or the upstream task list change,
@@ -1385,7 +1214,13 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                     >
                                         {column.headerName}
                                     </span>
-                                    {sortConfig.field === column.field && (
+                                    {/* Show the indicator only on the
+                                        primary tier (tier 0). The
+                                        secondary tier from Settings is
+                                        intentionally not flagged in the
+                                        header to avoid two arrows
+                                        competing visually. */}
+                                    {sortTiers[0]?.field === column.field && (
                                         <span
                                             style={{
                                                 fontSize: "0.7rem",
@@ -1393,7 +1228,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                                                 flexShrink: 0,
                                             }}
                                         >
-                                            {sortConfig.direction === "asc" ? "▲" : "▼"}
+                                            {sortTiers[0].direction === "asc" ? "▲" : "▼"}
                                         </span>
                                     )}
                                 </div>

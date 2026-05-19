@@ -262,19 +262,18 @@ export const ja: DeepPartial<Messages> = {
         taskSort: {
             heading: "タスクの並び替え",
             description:
-                "スプリントボードとタスクテーブルの既定の並び順。即時反映され、セッション間で保持されます。",
+                "各画面で最大 2 つの並び順を設定できます。プライマリで並び替え、タイブレイクはセカンダリで行います。即時反映され、セッション間で保持されます。",
             sprintBoardLabel: "スプリントボード",
             sprintBoardHelper:
-                "ボードのツールバーにも同じ選択肢があり、どちらで変更しても同期します。",
+                "各カラム内のカードがこのキーで並び替えられます。デフォルトはフィルター結果の順序を維持します。",
             tableLabel: "タスクテーブル",
-            tableHelper: "列ヘッダーをクリックして並べ替えると、その選択も保持されます。",
-            tablePresetPriorityDesc: "優先度 — 高い順",
-            tablePresetDueDateAsc: "期限日 — 早い順",
-            tablePresetStatusAsc: "ステータス — アクティブ優先",
-            tablePresetUpdatedAtDesc: "最終更新 — 新しい順",
-            tablePresetCreatedDateDesc: "作成日 — 新しい順",
-            tablePresetIdAsc: "ID — 昇順",
-            tablePresetCustom: "カスタム（列ヘッダー）",
+            tableHelper:
+                "列ヘッダーをクリックするとプライマリのキーが上書きされ、方向が切り替わります。セカンダリは保持されます。",
+            primaryLabel: "プライマリ",
+            secondaryLabel: "セカンダリ",
+            fieldNone: "なし",
+            directionAsc: "昇順",
+            directionDesc: "降順",
         },
     },
     chat: {

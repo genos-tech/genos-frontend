@@ -265,20 +265,18 @@ export const fr: DeepPartial<Messages> = {
         taskSort: {
             heading: "Tri des tâches",
             description:
-                "Ordre par défaut pour les colonnes du tableau de sprint et la table des tâches. Appliqué immédiatement et conservé entre les sessions.",
+                "Choisissez jusqu'à deux clés de tri par vue. La clé principale trie en premier ; la secondaire départage les égalités. Appliqué immédiatement et conservé entre les sessions.",
             sprintBoardLabel: "Tableau de sprint",
             sprintBoardHelper:
-                "Le même sélecteur est dans la barre du tableau — les changements restent synchronisés.",
+                "Les cartes de chaque colonne sont triées par ces clés. Par défaut, l'ordre du filtre est conservé.",
             tableLabel: "Table des tâches",
             tableHelper:
-                "Cliquer sur un en-tête de colonne re-trie la table ; ce choix est également conservé.",
-            tablePresetPriorityDesc: "Priorité — De haut en bas",
-            tablePresetDueDateAsc: "Date d'échéance — Plus proche en premier",
-            tablePresetStatusAsc: "Statut — Actives en premier",
-            tablePresetUpdatedAtDesc: "Dernière mise à jour — Plus récent en premier",
-            tablePresetCreatedDateDesc: "Création — Plus récent en premier",
-            tablePresetIdAsc: "ID — Croissant",
-            tablePresetCustom: "Personnalisé (par colonne)",
+                "Cliquer sur un en-tête remplace la clé principale et inverse la direction. La secondaire est conservée.",
+            primaryLabel: "Principale",
+            secondaryLabel: "Secondaire",
+            fieldNone: "Aucune",
+            directionAsc: "Croissant",
+            directionDesc: "Décroissant",
         },
     },
     chat: {

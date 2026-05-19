@@ -1,19 +1,25 @@
 import { createContext, ReactNode, useCallback, useContext, useState } from "react";
 
+import { isSortDirection, isSortField, SortTier } from "../../features/tasks/utils/sortTask";
+
 /**
  * Shared sort preferences for the two task-list surfaces (sprint board
- * and task table). Provides:
+ * and task table). Each surface stores up to **2 sort tiers**
+ * (`primary` + optional `secondary`); each tier is a `{field, direction}`
+ * pair. The comparator (`buildComparator` in
+ * `features/tasks/utils/sortTask.ts`) walks the array in order and
+ * tie-breaks on id at the end.
  *
- *   - `sprintBoardSort`: "default" | "dueDate" | "priority". Drives the
- *     toolbar selector in `SprintBoard.tsx` and the underlying per-column
- *     sort helper.
- *   - `tableSort`: { field, direction }. Drives the table's column-click
- *     sort + the matching comparator pipeline.
+ * Empty array = no sort applied (preserve filter pipeline order). This
+ * is the default for the sprint board (matches the old "default"
+ * sentinel). The table defaults to one tier (priority desc) so the
+ * "Critical work surfaces first" behaviour from before this refactor
+ * stays intact.
  *
- * Both are persisted to localStorage and the same hook backs the
- * Settings modal selectors, the SprintBoard toolbar, and the
- * DraggableTaskTable column-click — so changes in any one surface
- * propagate to the others without prop drilling.
+ * Both arrays are persisted to localStorage under `*.v2` keys; the old
+ * single-key shape from the previous version is intentionally not
+ * migrated — the schema change is large enough that resetting to
+ * sensible defaults is cleaner than guessing at a translation.
  *
  * Pattern matches `useThemePreference` / `useBubbleStylePreference` —
  * Context + Provider mounted near the App root. Consumed via the
@@ -21,120 +27,100 @@ import { createContext, ReactNode, useCallback, useContext, useState } from "rea
  * (rare, e.g. a story / isolated test), the hook returns no-op stubs.
  */
 
-// ---- Sprint Board ----
-export type SprintBoardSortKey = "default" | "dueDate" | "priority";
-const SPRINT_BOARD_STORAGE_KEY = "weikiy.sprintBoard.sortBy";
+export type { SortTier };
 
-const isSprintBoardSortKey = (val: unknown): val is SprintBoardSortKey =>
-    val === "default" || val === "dueDate" || val === "priority";
+const SPRINT_BOARD_STORAGE_KEY = "weikiy.sprintBoard.sortTiers.v2";
+const TABLE_STORAGE_KEY = "weikiy.taskTable.sortTiers.v2";
 
-// ---- Task Table ----
-export type TableSortConfig = {
-    field: string;
-    direction: "asc" | "desc";
-};
+// Defaults preserve the previous behaviour exactly:
+//   - Sprint board: "default" → no sort → []
+//   - Task table:   { field: "priority", direction: "desc" } → 1 tier
+const DEFAULT_SPRINT_BOARD_TIERS: SortTier[] = [];
+const DEFAULT_TABLE_TIERS: SortTier[] = [{ field: "priority", direction: "desc" }];
 
-const TABLE_STORAGE_KEY = "weikiy.taskTable.sort";
+const MAX_TIERS = 2;
 
-const DEFAULT_TABLE_SORT: TableSortConfig = { field: "priority", direction: "desc" };
-
-const isTableSort = (val: unknown): val is TableSortConfig => {
+const isSortTier = (val: unknown): val is SortTier => {
     if (typeof val !== "object" || val === null) return false;
     const obj = val as Record<string, unknown>;
-    return typeof obj.field === "string" && (obj.direction === "asc" || obj.direction === "desc");
+    return isSortField(obj.field) && isSortDirection(obj.direction);
 };
 
-// "Named" sort presets surfaced in the Settings modal. The table still
-// allows column-header clicks to sort by *any* field — when the
-// resulting `{field, direction}` doesn't match any preset, Settings
-// shows "Custom" (greyed out, non-selectable).
-export type TableSortPreset =
-    | "priorityDesc"
-    | "dueDateAsc"
-    | "statusAsc"
-    | "updatedAtDesc"
-    | "createdDateDesc"
-    | "idAsc"
-    | "custom";
-
-const TABLE_PRESETS: Record<Exclude<TableSortPreset, "custom">, TableSortConfig> = {
-    priorityDesc: { field: "priority", direction: "desc" },
-    dueDateAsc: { field: "dueDate", direction: "asc" },
-    statusAsc: { field: "status", direction: "asc" },
-    updatedAtDesc: { field: "updatedAt", direction: "desc" },
-    createdDateDesc: { field: "createdDate", direction: "desc" },
-    idAsc: { field: "id", direction: "asc" },
-};
-
-export const matchTablePreset = (config: TableSortConfig): TableSortPreset => {
-    for (const [key, value] of Object.entries(TABLE_PRESETS)) {
-        if (value.field === config.field && value.direction === config.direction) {
-            return key as TableSortPreset;
-        }
+// Validate + clamp incoming tier arrays — defends both the localStorage
+// read path (corrupted blob) and the public setter (callers that
+// accidentally pass an unbounded array).
+const sanitizeTiers = (tiers: unknown): SortTier[] => {
+    if (!Array.isArray(tiers)) return [];
+    const sanitized: SortTier[] = [];
+    for (const tier of tiers) {
+        if (!isSortTier(tier)) continue;
+        // Drop duplicates on field — having "priority asc" twice would
+        // be useless and confusing.
+        if (sanitized.some((t) => t.field === tier.field)) continue;
+        sanitized.push({ field: tier.field, direction: tier.direction });
+        if (sanitized.length >= MAX_TIERS) break;
     }
-    return "custom";
+    return sanitized;
 };
 
-export const resolveTablePreset = (preset: TableSortPreset): TableSortConfig | null => {
-    if (preset === "custom") return null;
-    return TABLE_PRESETS[preset] ?? null;
-};
-
-// ---- localStorage IO (defensive: SSR-safe + sandbox-safe) ----
-const readSprintBoardSort = (): SprintBoardSortKey => {
-    if (typeof window === "undefined") return "default";
+const readTiers = (storageKey: string, fallback: SortTier[]): SortTier[] => {
+    if (typeof window === "undefined") return fallback;
     try {
-        const v = window.localStorage.getItem(SPRINT_BOARD_STORAGE_KEY);
-        if (isSprintBoardSortKey(v)) return v;
-    } catch {
-        // localStorage unavailable (sandboxed iframe etc.) — fall through.
-    }
-    return "default";
-};
-
-const readTableSort = (): TableSortConfig => {
-    if (typeof window === "undefined") return DEFAULT_TABLE_SORT;
-    try {
-        const raw = window.localStorage.getItem(TABLE_STORAGE_KEY);
-        if (!raw) return DEFAULT_TABLE_SORT;
+        const raw = window.localStorage.getItem(storageKey);
+        if (!raw) return fallback;
         const parsed = JSON.parse(raw);
-        if (isTableSort(parsed)) return parsed;
+        const sanitized = sanitizeTiers(parsed);
+        // Treat "empty after sanitization" as "blob is fine, user wants
+        // zero tiers" only for the sprint board. For the table, fall
+        // back to default so a corrupted blob doesn't silently switch
+        // the table into an unsorted state on every reload.
+        if (sanitized.length === 0 && fallback.length > 0) {
+            // Distinguish "valid empty array (user-set)" from "broken blob".
+            if (Array.isArray(parsed) && parsed.length === 0) return sanitized;
+            return fallback;
+        }
+        return sanitized;
     } catch {
         // Either localStorage threw or the persisted blob is corrupted.
     }
-    return DEFAULT_TABLE_SORT;
+    return fallback;
 };
 
 interface TaskSortPreferencesContextValue {
-    sprintBoardSort: SprintBoardSortKey;
-    setSprintBoardSort: (key: SprintBoardSortKey) => void;
-    tableSort: TableSortConfig;
-    setTableSort: (sort: TableSortConfig) => void;
+    sprintBoardSortTiers: SortTier[];
+    setSprintBoardSortTiers: (tiers: SortTier[]) => void;
+    tableSortTiers: SortTier[];
+    setTableSortTiers: (tiers: SortTier[]) => void;
 }
 
 const TaskSortPreferencesContext = createContext<TaskSortPreferencesContextValue | null>(null);
 
 export const TaskSortPreferencesProvider = ({ children }: { children: ReactNode }) => {
-    const [sprintBoardSort, setSprintBoardSortState] =
-        useState<SprintBoardSortKey>(readSprintBoardSort);
-    const [tableSort, setTableSortState] = useState<TableSortConfig>(readTableSort);
+    const [sprintBoardSortTiers, setSprintBoardSortTiersState] = useState<SortTier[]>(() =>
+        readTiers(SPRINT_BOARD_STORAGE_KEY, DEFAULT_SPRINT_BOARD_TIERS)
+    );
+    const [tableSortTiers, setTableSortTiersState] = useState<SortTier[]>(() =>
+        readTiers(TABLE_STORAGE_KEY, DEFAULT_TABLE_TIERS)
+    );
 
-    const setSprintBoardSort = useCallback((key: SprintBoardSortKey) => {
-        setSprintBoardSortState(key);
+    const setSprintBoardSortTiers = useCallback((tiers: SortTier[]) => {
+        const sanitized = sanitizeTiers(tiers);
+        setSprintBoardSortTiersState(sanitized);
         if (typeof window !== "undefined") {
             try {
-                window.localStorage.setItem(SPRINT_BOARD_STORAGE_KEY, key);
+                window.localStorage.setItem(SPRINT_BOARD_STORAGE_KEY, JSON.stringify(sanitized));
             } catch {
                 // ignore
             }
         }
     }, []);
 
-    const setTableSort = useCallback((sort: TableSortConfig) => {
-        setTableSortState(sort);
+    const setTableSortTiers = useCallback((tiers: SortTier[]) => {
+        const sanitized = sanitizeTiers(tiers);
+        setTableSortTiersState(sanitized);
         if (typeof window !== "undefined") {
             try {
-                window.localStorage.setItem(TABLE_STORAGE_KEY, JSON.stringify(sort));
+                window.localStorage.setItem(TABLE_STORAGE_KEY, JSON.stringify(sanitized));
             } catch {
                 // ignore
             }
@@ -143,7 +129,12 @@ export const TaskSortPreferencesProvider = ({ children }: { children: ReactNode 
 
     return (
         <TaskSortPreferencesContext.Provider
-            value={{ sprintBoardSort, setSprintBoardSort, tableSort, setTableSort }}
+            value={{
+                sprintBoardSortTiers,
+                setSprintBoardSortTiers,
+                tableSortTiers,
+                setTableSortTiers,
+            }}
         >
             {children}
         </TaskSortPreferencesContext.Provider>
@@ -157,10 +148,10 @@ export const useTaskSortPreferences = (): TaskSortPreferencesContextValue => {
         // no-op stub so callers don't crash; the real provider will take
         // over once the App tree mounts.
         return {
-            sprintBoardSort: "default",
-            setSprintBoardSort: () => {},
-            tableSort: DEFAULT_TABLE_SORT,
-            setTableSort: () => {},
+            sprintBoardSortTiers: DEFAULT_SPRINT_BOARD_TIERS,
+            setSprintBoardSortTiers: () => {},
+            tableSortTiers: DEFAULT_TABLE_TIERS,
+            setTableSortTiers: () => {},
         };
     }
     return ctx;

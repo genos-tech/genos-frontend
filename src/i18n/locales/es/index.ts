@@ -263,20 +263,18 @@ export const es: DeepPartial<Messages> = {
         taskSort: {
             heading: "Orden de tareas",
             description:
-                "Orden predeterminado para las columnas del tablero de sprint y la tabla de tareas. Se aplica de inmediato y se conserva entre sesiones.",
+                "Elige hasta dos claves de orden por vista. La principal ordena primero; la secundaria deshace empates. Se aplica de inmediato y se conserva entre sesiones.",
             sprintBoardLabel: "Tablero de sprint",
             sprintBoardHelper:
-                "El mismo selector está en la barra del tablero — los cambios se sincronizan en ambos sitios.",
+                "Las tarjetas dentro de cada columna se ordenan por estas claves. Por defecto se mantiene el orden producido por el filtro.",
             tableLabel: "Tabla de tareas",
             tableHelper:
-                "Hacer clic en un encabezado de columna vuelve a ordenar la tabla; esa elección también se conserva.",
-            tablePresetPriorityDesc: "Prioridad — De alta a baja",
-            tablePresetDueDateAsc: "Fecha de vencimiento — Más cercana primero",
-            tablePresetStatusAsc: "Estado — Activas primero",
-            tablePresetUpdatedAtDesc: "Última actualización — Más reciente primero",
-            tablePresetCreatedDateDesc: "Creación — Más reciente primero",
-            tablePresetIdAsc: "ID — Ascendente",
-            tablePresetCustom: "Personalizado (por columna)",
+                "Hacer clic en un encabezado anula la clave principal y alterna la dirección. La secundaria se conserva.",
+            primaryLabel: "Principal",
+            secondaryLabel: "Secundaria",
+            fieldNone: "Ninguna",
+            directionAsc: "Ascendente",
+            directionDesc: "Descendente",
         },
     },
     chat: {

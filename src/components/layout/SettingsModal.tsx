@@ -31,19 +31,18 @@ import {
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import {
+    isSortDirection,
+    isSortField,
+    SORT_FIELD_OPTIONS,
+} from "../../features/tasks/utils/sortTask";
 import { useAnalyticsPreferences } from "../../hooks/common/useAnalyticsPreferences";
 import {
     BubbleStyle,
     useBubbleStylePreference,
 } from "../../hooks/common/useBubbleStylePreference";
 import { useSpotlightPreferences } from "../../hooks/common/useSpotlightPreferences";
-import {
-    matchTablePreset,
-    resolveTablePreset,
-    SprintBoardSortKey,
-    TableSortPreset,
-    useTaskSortPreferences,
-} from "../../hooks/common/useTaskSortPreferences";
+import { SortTier, useTaskSortPreferences } from "../../hooks/common/useTaskSortPreferences";
 import { ThemePreference, useThemePreference } from "../../hooks/common/useThemePreference";
 import { Locale, useTranslation } from "../../i18n";
 import { NotificationSettingsPanel } from "../../services/notifications/NotificationSettingsPanel";
@@ -314,16 +313,97 @@ const LanguageSection = () => {
     );
 };
 
+// One row in the 2-tier sort UI. The user picks a field (or "none" to
+// drop the tier) and a direction (asc/desc). When the field is "none"
+// the direction Select is disabled — its value is irrelevant.
+const SortTierRow = ({
+    label,
+    tier,
+    onChange,
+    /** Disable the entire row (used to grey out the secondary tier
+     *  when no primary is selected). */
+    disabled,
+}: {
+    label: string;
+    tier: SortTier | undefined;
+    onChange: (next: SortTier | null) => void;
+    disabled?: boolean;
+}) => {
+    const { t } = useTranslation();
+    const field = tier?.field ?? "none";
+    const direction = tier?.direction ?? "asc";
+    return (
+        <Stack alignItems="center" direction="row" spacing={1} sx={{ minWidth: 0 }}>
+            <Typography
+                level="body-sm"
+                sx={{ minWidth: 80, color: disabled ? "neutral.500" : undefined }}
+            >
+                {label}
+            </Typography>
+            <Select
+                disabled={disabled}
+                size="sm"
+                sx={{ minWidth: 140 }}
+                value={field}
+                onChange={(_e, value) => {
+                    if (value === "none") {
+                        onChange(null);
+                        return;
+                    }
+                    if (!isSortField(value)) return;
+                    onChange({ field: value, direction });
+                }}
+            >
+                <Option value="none">{t.settings.taskSort.fieldNone}</Option>
+                {SORT_FIELD_OPTIONS.map((opt) => (
+                    <Option key={opt.value} value={opt.value}>
+                        {t.tasks.table.columns[opt.labelKey]}
+                    </Option>
+                ))}
+            </Select>
+            <Select
+                disabled={disabled || tier == null}
+                size="sm"
+                sx={{ minWidth: 110 }}
+                value={direction}
+                onChange={(_e, value) => {
+                    if (!isSortDirection(value)) return;
+                    if (tier == null) return;
+                    onChange({ field: tier.field, direction: value });
+                }}
+            >
+                <Option value="asc">{t.settings.taskSort.directionAsc}</Option>
+                <Option value="desc">{t.settings.taskSort.directionDesc}</Option>
+            </Select>
+        </Stack>
+    );
+};
+
+// Helper: build a new tier array after a single row's edit. If the
+// primary is cleared, the secondary collapses up (or also clears).
+// If the secondary equals the new primary's field, drop it to avoid
+// useless duplicate sorts.
+const setTierAtIndex = (current: SortTier[], index: 0 | 1, next: SortTier | null): SortTier[] => {
+    const primary = index === 0 ? next : (current[0] ?? null);
+    let secondary = index === 1 ? next : (current[1] ?? null);
+    if (primary && secondary && primary.field === secondary.field) {
+        secondary = null;
+    }
+    if (!primary && secondary) {
+        // No primary → promote secondary to primary so the user's
+        // intent (sort by something) isn't silently lost.
+        return [secondary];
+    }
+    const result: SortTier[] = [];
+    if (primary) result.push(primary);
+    if (secondary) result.push(secondary);
+    return result;
+};
+
 const TaskSortSection = () => {
-    const { sprintBoardSort, setSprintBoardSort, tableSort, setTableSort } =
+    const { sprintBoardSortTiers, setSprintBoardSortTiers, tableSortTiers, setTableSortTiers } =
         useTaskSortPreferences();
     const { t } = useTranslation();
-    // Resolve the current table {field, direction} into a named preset
-    // for the Select. When the user has clicked a column header that
-    // doesn't match any curated preset the value falls through to
-    // "custom" — the disabled option below makes it visible without
-    // being re-selectable.
-    const tablePreset = matchTablePreset(tableSort);
     return (
         <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
             <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
@@ -334,79 +414,57 @@ const TaskSortSection = () => {
                 {t.settings.taskSort.description}
             </Typography>
 
-            <Stack
-                alignItems="center"
-                direction="row"
-                justifyContent="space-between"
-                spacing={2}
-                sx={{ mb: 1.5 }}
-            >
-                <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Typography level="title-sm">
-                        {t.settings.taskSort.sprintBoardLabel}
-                    </Typography>
-                    <Typography level="body-xs">
-                        {t.settings.taskSort.sprintBoardHelper}
-                    </Typography>
-                </Box>
-                <Select
-                    size="sm"
-                    sx={{ minWidth: 160 }}
-                    value={sprintBoardSort}
-                    onChange={(_e, value) => {
-                        if (value === "default" || value === "dueDate" || value === "priority") {
-                            setSprintBoardSort(value as SprintBoardSortKey);
+            {/* Sprint board — up to 2 tiers, default = [] (no sort). */}
+            <Box sx={{ mb: 1.5 }}>
+                <Typography level="title-sm">{t.settings.taskSort.sprintBoardLabel}</Typography>
+                <Typography level="body-xs" sx={{ mb: 1 }}>
+                    {t.settings.taskSort.sprintBoardHelper}
+                </Typography>
+                <Stack spacing={1}>
+                    <SortTierRow
+                        label={t.settings.taskSort.primaryLabel}
+                        tier={sprintBoardSortTiers[0]}
+                        onChange={(next) =>
+                            setSprintBoardSortTiers(setTierAtIndex(sprintBoardSortTiers, 0, next))
                         }
-                    }}
-                >
-                    <Option value="default">{t.tasks.board.sortDefault}</Option>
-                    <Option value="dueDate">{t.tasks.board.sortDueDate}</Option>
-                    <Option value="priority">{t.tasks.board.sortPriority}</Option>
-                </Select>
-            </Stack>
+                    />
+                    <SortTierRow
+                        disabled={sprintBoardSortTiers.length === 0}
+                        label={t.settings.taskSort.secondaryLabel}
+                        tier={sprintBoardSortTiers[1]}
+                        onChange={(next) =>
+                            setSprintBoardSortTiers(setTierAtIndex(sprintBoardSortTiers, 1, next))
+                        }
+                    />
+                </Stack>
+            </Box>
 
             <Divider />
 
-            <Stack
-                alignItems="center"
-                direction="row"
-                justifyContent="space-between"
-                spacing={2}
-                sx={{ mt: 1.5 }}
-            >
-                <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Typography level="title-sm">{t.settings.taskSort.tableLabel}</Typography>
-                    <Typography level="body-xs">{t.settings.taskSort.tableHelper}</Typography>
-                </Box>
-                <Select
-                    size="sm"
-                    sx={{ minWidth: 220 }}
-                    value={tablePreset}
-                    onChange={(_e, value) => {
-                        if (!value) return;
-                        const resolved = resolveTablePreset(value as TableSortPreset);
-                        if (resolved) setTableSort(resolved);
-                    }}
-                >
-                    <Option value="priorityDesc">
-                        {t.settings.taskSort.tablePresetPriorityDesc}
-                    </Option>
-                    <Option value="dueDateAsc">{t.settings.taskSort.tablePresetDueDateAsc}</Option>
-                    <Option value="statusAsc">{t.settings.taskSort.tablePresetStatusAsc}</Option>
-                    <Option value="updatedAtDesc">
-                        {t.settings.taskSort.tablePresetUpdatedAtDesc}
-                    </Option>
-                    <Option value="createdDateDesc">
-                        {t.settings.taskSort.tablePresetCreatedDateDesc}
-                    </Option>
-                    <Option value="idAsc">{t.settings.taskSort.tablePresetIdAsc}</Option>
-                    {tablePreset === "custom" && (
-                        <Option disabled value="custom">
-                            {t.settings.taskSort.tablePresetCustom}
-                        </Option>
-                    )}
-                </Select>
-            </Stack>
+            {/* Task table — up to 2 tiers, default = [{priority, desc}]. */}
+            <Box sx={{ mt: 1.5 }}>
+                <Typography level="title-sm">{t.settings.taskSort.tableLabel}</Typography>
+                <Typography level="body-xs" sx={{ mb: 1 }}>
+                    {t.settings.taskSort.tableHelper}
+                </Typography>
+                <Stack spacing={1}>
+                    <SortTierRow
+                        label={t.settings.taskSort.primaryLabel}
+                        tier={tableSortTiers[0]}
+                        onChange={(next) =>
+                            setTableSortTiers(setTierAtIndex(tableSortTiers, 0, next))
+                        }
+                    />
+                    <SortTierRow
+                        disabled={tableSortTiers.length === 0}
+                        label={t.settings.taskSort.secondaryLabel}
+                        tier={tableSortTiers[1]}
+                        onChange={(next) =>
+                            setTableSortTiers(setTierAtIndex(tableSortTiers, 1, next))
+                        }
+                    />
+                </Stack>
+            </Box>
         </Sheet>
     );
 };
@@ -581,20 +639,34 @@ export const SettingsModal = ({ open, onClose }: Props) => {
                 </Stack>
                 <Divider sx={{ mb: 2 }} />
                 <Tabs
+                    orientation="vertical"
+                    sx={{
+                        // Sidebar tab list on the left, panel on the
+                        // right. The Tabs component flexes children
+                        // along its orientation, so a row layout drops
+                        // out naturally once orientation flips.
+                        bgcolor: "transparent",
+                        gap: 2,
+                    }}
                     value={tab}
                     onChange={(_event, value) => {
                         if (typeof value === "string") setTab(value as SettingsTabKey);
                     }}
                 >
                     <TabList
-                        // Tab strip can overflow on narrow viewports
-                        // (xs uses 92vw). Letting it scroll horizontally
-                        // keeps every tab reachable without forcing the
-                        // dialog wider than the rest of the app's
-                        // modals.
                         sx={{
-                            overflowX: "auto",
-                            "&::-webkit-scrollbar": { display: "none" },
+                            // Fixed sidebar width keeps the panel area
+                            // predictable across translated labels.
+                            // The panel itself can scroll independently
+                            // (ModalDialog handles overflow).
+                            minWidth: 160,
+                            flexShrink: 0,
+                            // Drop the default underline indicator —
+                            // vertical tabs read better with a left
+                            // border on the active item, which Joy's
+                            // theme handles for `orientation="vertical"`.
+                            // Hide any horizontal-scroll affordance.
+                            overflow: "visible",
                             scrollbarWidth: "none",
                         }}
                     >

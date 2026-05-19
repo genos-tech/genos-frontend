@@ -1,7 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DragDropContext, DropResult } from "@hello-pangea/dnd";
-import Option from "@mui/joy/Option";
-import Select from "@mui/joy/Select";
 import Stack from "@mui/joy/Stack";
 import { useColorScheme } from "@mui/joy/styles";
 import Switch from "@mui/joy/Switch";
@@ -11,10 +9,7 @@ import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
-import {
-    SprintBoardSortKey,
-    useTaskSortPreferences,
-} from "../../../../hooks/common/useTaskSortPreferences";
+import { useTaskSortPreferences } from "../../../../hooks/common/useTaskSortPreferences";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
@@ -23,32 +18,17 @@ import { TagListProps, TaskTableProps } from "../../../../types/tasks";
 import { loadProjectTags } from "../../services/loadProjectTags";
 import { updateTaskFromTable } from "../../services/updateTaskFromTable";
 import { FilterProps } from "../../types/TaskTableTypes";
+import { buildComparator } from "../../utils/sortTask";
 import { statuses } from "../../utils/taskMeta";
 import { TaskFilterMenu } from "../table/TaskFilterMenu";
 import { ColumnConfig, SprintBoardColumn } from "./SprintBoardColumn";
 
 const materialTheme = createTheme({ cssVariables: true });
 
-// Priority-string → ranking. Lower number = higher priority. Tasks
-// without a priority sink to the bottom. Both "Normal" (current name in
-// utils/taskMeta.ts) and "Medium" (legacy alias still referenced by
-// SprintBoardCard's color map) get the same rank so a task labelled
-// either way orders correctly.
-const PRIORITY_ORDER: Record<string, number> = {
-    Critical: 0,
-    High: 1,
-    Normal: 2,
-    Medium: 2,
-    Low: 3,
-    Minimal: 4,
-};
-
-// `SortBy` semantics are owned by `useTaskSortPreferences` — keep them
-// imported, not redeclared, so the Settings modal and the toolbar share
-// the same type. "default" preserves the filter pipeline's natural
-// ordering; the compound keys ("due date primary, priority tiebreaker")
-// match how kanban users usually scan a column — urgency by date, then
-// severity within the same day.
+// Sort tiers (priority/due-date/etc. ranking, comparator builder) now
+// live in features/tasks/utils/sortTask.ts so the sprint board and the
+// task table share one set of rank maps. Selection is owned by the
+// Settings modal via `useTaskSortPreferences`.
 
 // Column definitions. `title` is filled in at render time from the
 // `titleKey` so the board columns stay localizable while `status` stays
@@ -149,48 +129,22 @@ export const SprintBoard = (props: SprintBoardProps) => {
     const showChildTasksToggleVisible =
         !isMilestoneFilterActive && useTM.tableMilestoneFilterId == null;
 
-    // Per-column sort key. Sourced from the shared
-    // `useTaskSortPreferences` hook so the Settings modal can drive
-    // this too. localStorage persistence + lazy init both live inside
-    // the hook — this component just reads/writes the value.
-    const { sprintBoardSort: sortBy, setSprintBoardSort: setSortBy } = useTaskSortPreferences();
-
-    // Stable sort helper. Returns a *new* array so the caller can safely
-    // assign it as state. Sort-key helpers are inline closures so the
-    // sort callback can reuse them without re-walking the task object.
-    // Tasks without a due date or a recognised priority sink to the
-    // bottom of their column via Number.POSITIVE_INFINITY.
-    const sortColumn = useMemo(
-        () =>
-            (tasks: TaskTableProps[]): TaskTableProps[] => {
-                if (sortBy === "default" || tasks.length < 2) return tasks;
-                const dueDateKey = (task: TaskTableProps): number => {
-                    const raw = task.dueDate;
-                    if (!raw) return Number.POSITIVE_INFINITY;
-                    const ts = new Date(raw).getTime();
-                    return Number.isFinite(ts) ? ts : Number.POSITIVE_INFINITY;
-                };
-                const priorityKey = (task: TaskTableProps): number => {
-                    if (!task.priority) return Number.POSITIVE_INFINITY;
-                    const v = PRIORITY_ORDER[task.priority];
-                    return v != null ? v : Number.POSITIVE_INFINITY;
-                };
-                return [...tasks].sort((a, b) => {
-                    if (sortBy === "dueDate") {
-                        const da = dueDateKey(a);
-                        const db = dueDateKey(b);
-                        if (da !== db) return da - db;
-                        return priorityKey(a) - priorityKey(b);
-                    }
-                    // sortBy === "priority"
-                    const pa = priorityKey(a);
-                    const pb = priorityKey(b);
-                    if (pa !== pb) return pa - pb;
-                    return dueDateKey(a) - dueDateKey(b);
-                });
-            },
-        [sortBy]
-    );
+    // Per-column sort tiers. Sourced from the shared
+    // `useTaskSortPreferences` hook so the Settings modal is the only
+    // surface that mutates them. Empty array = no sort (preserve
+    // filter-pipeline ordering). Up to 2 tiers; the shared comparator
+    // builder applies them in order and tie-breaks on id at the end.
+    const { sprintBoardSortTiers } = useTaskSortPreferences();
+    const sortColumn = useMemo(() => {
+        if (sprintBoardSortTiers.length === 0) {
+            return (tasks: TaskTableProps[]): TaskTableProps[] => tasks;
+        }
+        const comparator = buildComparator(sprintBoardSortTiers);
+        return (tasks: TaskTableProps[]): TaskTableProps[] => {
+            if (tasks.length < 2) return tasks;
+            return [...tasks].sort(comparator);
+        };
+    }, [sprintBoardSortTiers]);
 
     // Tag filter setup
     const [predefinedTagsFilters, setPredefinedTagsFilters] = useState<FilterProps[]>([]);
@@ -559,73 +513,40 @@ export const SprintBoard = (props: SprintBoardProps) => {
                     useTM={useTM}
                     hideStatusFilter
                 />
-                <Stack
-                    alignItems="center"
-                    direction="row"
-                    spacing={2}
-                    sx={{
-                        px: 1.5,
-                        py: 0.5,
-                        flexShrink: 0,
-                    }}
-                >
-                    {/* Sort selector — always visible; the chosen key
-                        is persisted via localStorage. */}
-                    <Stack alignItems="center" direction="row" spacing={1}>
+                {/* Show child tasks toggle — only when no milestone
+                    scope is active (dropdown or sidebar). Sort is now
+                    configured exclusively from the Settings modal; the
+                    toolbar used to host a Sort selector but the user
+                    asked to consolidate all sort UI in one place. */}
+                {showChildTasksToggleVisible && (
+                    <Stack
+                        alignItems="center"
+                        direction="row"
+                        spacing={1}
+                        sx={{
+                            px: 1.5,
+                            py: 0.5,
+                            flexShrink: 0,
+                        }}
+                    >
+                        <Switch
+                            checked={showAllChildTasks}
+                            size="sm"
+                            onChange={(event) => setShowAllChildTasks(event.target.checked)}
+                        />
                         <Typography
                             level="body-sm"
                             sx={{
+                                cursor: "pointer",
                                 color:
                                     mode === "dark" ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.65)",
                             }}
+                            onClick={() => setShowAllChildTasks((prev) => !prev)}
                         >
-                            {t.tasks.board.sortByLabel}
+                            {t.tasks.board.showChildTasks}
                         </Typography>
-                        <Select
-                            size="sm"
-                            value={sortBy}
-                            sx={{ minWidth: 140 }}
-                            onChange={(_event, value) => {
-                                if (
-                                    value === "default" ||
-                                    value === "dueDate" ||
-                                    value === "priority"
-                                ) {
-                                    setSortBy(value as SprintBoardSortKey);
-                                }
-                            }}
-                        >
-                            <Option value="default">{t.tasks.board.sortDefault}</Option>
-                            <Option value="dueDate">{t.tasks.board.sortDueDate}</Option>
-                            <Option value="priority">{t.tasks.board.sortPriority}</Option>
-                        </Select>
                     </Stack>
-
-                    {/* Show child tasks toggle — only when no milestone
-                        scope is active (dropdown or sidebar). */}
-                    {showChildTasksToggleVisible && (
-                        <Stack alignItems="center" direction="row" spacing={1}>
-                            <Switch
-                                checked={showAllChildTasks}
-                                size="sm"
-                                onChange={(event) => setShowAllChildTasks(event.target.checked)}
-                            />
-                            <Typography
-                                level="body-sm"
-                                sx={{
-                                    cursor: "pointer",
-                                    color:
-                                        mode === "dark"
-                                            ? "rgba(255,255,255,0.7)"
-                                            : "rgba(0,0,0,0.65)",
-                                }}
-                                onClick={() => setShowAllChildTasks((prev) => !prev)}
-                            >
-                                {t.tasks.board.showChildTasks}
-                            </Typography>
-                        </Stack>
-                    )}
-                </Stack>
+                )}
                 <DragDropContext onDragEnd={handleDragEnd}>
                     <div style={getBoardContainerStyles(mode)}>
                         {COLUMNS.map((column) => {

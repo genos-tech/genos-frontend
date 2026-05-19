@@ -265,19 +265,18 @@ export const ar: DeepPartial<Messages> = {
         taskSort: {
             heading: "ترتيب المهام",
             description:
-                "الترتيب الافتراضي لأعمدة لوحة السبرنت وجدول المهام. يُطبَّق على الفور ويُحفظ بين الجلسات.",
+                "اختر حتى مفتاحَي ترتيب لكل عرض. يفرز المفتاح الأساسي أولاً، ويفصل المفتاح الثانوي حالات التعادل. يُطبَّق فورًا ويُحفظ بين الجلسات.",
             sprintBoardLabel: "لوحة السبرنت",
             sprintBoardHelper:
-                "يوجد نفس المحدد في شريط أدوات اللوحة — تتزامن التغييرات في كلا المكانين.",
+                "تُرتَّب البطاقات داخل كل عمود وفق هذه المفاتيح. الافتراضي يحافظ على ترتيب نتيجة عامل التصفية.",
             tableLabel: "جدول المهام",
-            tableHelper: "النقر على رأس عمود يعيد ترتيب الجدول، ويُحفظ هذا الخيار أيضًا.",
-            tablePresetPriorityDesc: "الأولوية — من الأعلى إلى الأدنى",
-            tablePresetDueDateAsc: "تاريخ الاستحقاق — الأقرب أولاً",
-            tablePresetStatusAsc: "الحالة — النشطة أولاً",
-            tablePresetUpdatedAtDesc: "آخر تحديث — الأحدث أولاً",
-            tablePresetCreatedDateDesc: "الإنشاء — الأحدث أولاً",
-            tablePresetIdAsc: "المعرّف — تصاعدي",
-            tablePresetCustom: "مخصص (حسب العمود)",
+            tableHelper:
+                "النقر على رأس عمود يستبدل المفتاح الأساسي ويبدّل الاتجاه؛ يُحفظ المفتاح الثانوي.",
+            primaryLabel: "أساسي",
+            secondaryLabel: "ثانوي",
+            fieldNone: "لا شيء",
+            directionAsc: "تصاعدي",
+            directionDesc: "تنازلي",
         },
     },
     chat: {
