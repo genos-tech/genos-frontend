@@ -34,6 +34,8 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskProps } from "../../../../types/tasks";
+import { LinkedPrCard } from "../../../integrations/components/LinkedPrCard";
+import { parsePrUrl } from "../../../integrations/utils/parsePrUrl";
 import { createEmptyTask } from "../../services/createEmptyTask";
 import {
     updateProjectOptions,
@@ -949,6 +951,34 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                                 useUISM={useUISM}
                             />
                         </Box>
+
+                        {/* Linked PRs — auto-detected from the body
+                            (via TaskMainBlock's debounced effect) and
+                            also from URLs the user pasted into the
+                            Links field. Mirrors TaskPreview's layout. */}
+                        {(() => {
+                            const prUrls = (taskContent.links ?? [])
+                                .map((l) => l.url)
+                                .filter((u) => parsePrUrl(u) !== null);
+                            if (prUrls.length === 0) return null;
+                            return (
+                                <>
+                                    <SectionDivider isDark={isDark} />
+                                    <SectionHeader isDark={isDark}>
+                                        {t.tasks.linkedPr.header}
+                                    </SectionHeader>
+                                    <Stack spacing={1}>
+                                        {prUrls.map((url) => (
+                                            <LinkedPrCard
+                                                key={url}
+                                                url={url}
+                                                accessToken={accessToken ?? ""}
+                                            />
+                                        ))}
+                                    </Stack>
+                                </>
+                            );
+                        })()}
 
                         <SectionDivider isDark={isDark} />
 

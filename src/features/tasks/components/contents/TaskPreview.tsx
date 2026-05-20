@@ -50,6 +50,8 @@ import {
     TaskCommentProps,
     TaskProps,
 } from "../../../../types/tasks";
+import { LinkedPrCard } from "../../../integrations/components/LinkedPrCard";
+import { parsePrUrl } from "../../../integrations/utils/parsePrUrl";
 import { loadTaskNotes } from "../../../notes/task-notes/services/loadTaskNotes";
 import { loadSpecificTask } from "../../services/loadSpecificTask";
 import { loadTaskActivities } from "../../services/loadTaskActivities";
@@ -754,6 +756,33 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                                 useUISM={useUISM}
                             />
                         </Box>
+
+                        {(() => {
+                            // Auto-detect PR URLs in the task's Links list and
+                            // surface a rich card per PR. Source of truth is
+                            // `links`; no separate column / input.
+                            const prUrls = (taskEditState.tmpCurrentTaskContent.links ?? [])
+                                .map((l) => l.url)
+                                .filter((u) => parsePrUrl(u) !== null);
+                            if (prUrls.length === 0) return null;
+                            return (
+                                <>
+                                    <SectionDivider isDark={isDark} />
+                                    <SectionHeader isDark={isDark}>
+                                        {t.tasks.linkedPr.header}
+                                    </SectionHeader>
+                                    <Stack spacing={1}>
+                                        {prUrls.map((url) => (
+                                            <LinkedPrCard
+                                                key={url}
+                                                url={url}
+                                                accessToken={accessToken ?? ""}
+                                            />
+                                        ))}
+                                    </Stack>
+                                </>
+                            );
+                        })()}
 
                         <SectionDivider isDark={isDark} />
 

@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import CallMergeRoundedIcon from "@mui/icons-material/CallMergeRounded";
+import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
+import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import GitHubIcon from "@mui/icons-material/GitHub";
@@ -437,6 +440,152 @@ const CalendarTab = ({
     );
 };
 
+// Drives the auto-status-sync feature: when a PR merges on GitHub,
+// GitHub POSTs to our webhook URL and Genos transitions any task that
+// has the PR in its Links list → "Closed".
+//
+// Default path is **automatic**: pasting a PR URL into a task's Links
+// triggers backend webhook registration on that repo using the saving
+// user's stored GitHub OAuth token (the `repo` scope already granted
+// via "Connect GitHub"). The manual section is only relevant when the
+// user lacks repo-admin and an org admin needs to wire it up by hand.
+//
+// We deliberately do NOT expose `GITHUB_WEBHOOK_SECRET` over the API
+// — the operator who sets it in env vars already knows the value.
+const WebhookSetup = () => {
+    const djangoUrl =
+        (import.meta.env.VITE_DJANGO_URL as string | undefined) ||
+        window.location.origin.replace(/\/+$/, "");
+    const webhookUrl = `${djangoUrl.replace(/\/+$/, "")}/api/v2/github/webhook/`;
+
+    const [copied, setCopied] = useState(false);
+    const [showManual, setShowManual] = useState(false);
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(webhookUrl);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+        } catch {
+            /* clipboard blocked in dev / iframe — silent. */
+        }
+    };
+
+    return (
+        <Card variant="outlined" sx={{ p: 2 }}>
+            <Stack spacing={1.5}>
+                <Stack direction="row" alignItems="center" spacing={1}>
+                    <BoltRoundedIcon sx={{ color: "primary.500" }} />
+                    <Typography level="title-sm">
+                        Auto-close tasks when their PR is merged
+                    </Typography>
+                </Stack>
+
+                <Alert color="success" startDecorator={<CheckRoundedIcon />}>
+                    <Box>
+                        <Typography level="body-sm" sx={{ fontWeight: 600 }}>
+                            No setup needed
+                        </Typography>
+                        <Typography level="body-xs" sx={{ color: "text.secondary" }}>
+                            Paste any GitHub PR URL into a task's Links and Genos registers our
+                            webhook on that repo for you, using your connected GitHub account. When
+                            the PR merges, the task auto-transitions to <strong>Closed</strong>.
+                        </Typography>
+                    </Box>
+                </Alert>
+
+                <Box>
+                    <Button
+                        size="sm"
+                        variant="plain"
+                        color="neutral"
+                        onClick={() => setShowManual((v) => !v)}
+                        sx={{ pl: 0 }}
+                    >
+                        {showManual ? "Hide" : "Show"} manual setup
+                        {showManual ? "" : " (only needed if you lack repo admin)"}
+                    </Button>
+                </Box>
+
+                {showManual && (
+                    <>
+                        <Typography level="body-xs" sx={{ color: "text.secondary" }}>
+                            If auto-registration didn&apos;t happen (typically because your GitHub
+                            user lacks admin on that repo), a repo admin can paste the URL below
+                            into the repo&apos;s webhook settings manually.
+                        </Typography>
+
+                        <FormControl>
+                            <FormLabel>Webhook URL</FormLabel>
+                            <Input
+                                value={webhookUrl}
+                                readOnly
+                                size="sm"
+                                endDecorator={
+                                    <Tooltip title={copied ? "Copied" : "Copy"} size="sm">
+                                        <IconButton
+                                            size="sm"
+                                            variant="plain"
+                                            onClick={handleCopy}
+                                            aria-label="Copy webhook URL"
+                                        >
+                                            {copied ? (
+                                                <CheckRoundedIcon fontSize="small" />
+                                            ) : (
+                                                <ContentCopyRoundedIcon fontSize="small" />
+                                            )}
+                                        </IconButton>
+                                    </Tooltip>
+                                }
+                                sx={{
+                                    fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+                                }}
+                            />
+                        </FormControl>
+
+                        <Sheet variant="soft" sx={{ p: 1.5, borderRadius: "md" }}>
+                            <Typography
+                                level="body-xs"
+                                sx={{ fontWeight: 600, mb: 0.5, color: "text.primary" }}
+                            >
+                                Manual steps (one-time per repo)
+                            </Typography>
+                            <Stack component="ol" spacing={0.25} sx={{ pl: 2.5, my: 0 }}>
+                                <li>
+                                    <Typography level="body-xs">
+                                        On the GitHub repo:{" "}
+                                        <strong>Settings → Webhooks → Add webhook</strong>.
+                                    </Typography>
+                                </li>
+                                <li>
+                                    <Typography level="body-xs">
+                                        Payload URL: paste the URL above. Content type:{" "}
+                                        <code>application/json</code>.
+                                    </Typography>
+                                </li>
+                                <li>
+                                    <Typography level="body-xs">
+                                        Secret: paste the same value the operator set in the
+                                        backend env var <code>GITHUB_WEBHOOK_SECRET</code>.
+                                    </Typography>
+                                </li>
+                                <li>
+                                    <Typography level="body-xs">
+                                        Events: select{" "}
+                                        <strong>
+                                            &quot;Let me select individual events&quot;
+                                        </strong>{" "}
+                                        → check only <strong>Pull requests</strong>. Save.
+                                    </Typography>
+                                </li>
+                            </Stack>
+                        </Sheet>
+                    </>
+                )}
+            </Stack>
+        </Card>
+    );
+};
+
 const GithubTab = ({
     accessToken,
     githubConnected,
@@ -540,6 +689,8 @@ const GithubTab = ({
                     ))}
                 </Stack>
             )}
+
+            <WebhookSetup />
         </Stack>
     );
 };

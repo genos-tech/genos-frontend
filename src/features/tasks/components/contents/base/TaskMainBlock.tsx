@@ -17,6 +17,8 @@ import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagemen
 import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { TagListProps, TaskProps } from "../../../../../types/tasks";
+import { extractPrUrlsFromBlocks } from "../../../../integrations/utils/extractPrUrls";
+import { parsePrUrl } from "../../../../integrations/utils/parsePrUrl";
 import { loadSpecificTask } from "../../../services/loadSpecificTask";
 import { SprintMilestonePicker } from "../../../sprint-milestone/components/SprintMilestonePicker";
 import { ACProjectTags } from "../../autocompletes/ACProjectTags";
@@ -145,6 +147,46 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
             }
         })();
     }, [taskContent]);
+
+    // Mirror PR URLs from the BlockNote task body into the Links list so
+    // the LinkedPrCard appears in the metadata panel automatically — no
+    // double-entry.
+    //
+    // Debounced: the body changes on every keystroke and we don't want
+    // to re-render the entire task panel that often. The timer resets
+    // each keystroke, so the scan + setTaskContent only fire ~1s after
+    // typing pauses. Add-only — deleting a PR URL from the body leaves
+    // the link entry intact (silent removal would be surprising; the
+    // existing DynamicURLManager handles deletes).
+    useEffect(() => {
+        const handle = setTimeout(() => {
+            const prUrls = extractPrUrlsFromBlocks(taskContent.body);
+            if (prUrls.length === 0) return;
+            const existing = new Set((taskContent.links ?? []).map((l) => l.url));
+            const newUrls = prUrls.filter((u) => !existing.has(u));
+            if (newUrls.length === 0) return;
+            const newLinks = newUrls.map((url) => {
+                const ref = parsePrUrl(url);
+                const title = ref ? `${ref.owner}/${ref.repo}#${ref.number}` : url;
+                return {
+                    id: `link-pr-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                    url,
+                    title,
+                    isGitHub: true,
+                };
+            });
+            setTaskContent({
+                ...taskContent,
+                links: [...(taskContent.links ?? []), ...newLinks],
+            });
+            setTaskUpdated?.(true);
+        }, 1000);
+        return () => clearTimeout(handle);
+        // Watch the body only — we read links inside the effect to
+        // dedupe, but listing links in deps would loop (we mutate them
+        // here, that re-triggers the effect, infinite).
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [taskContent.body]);
 
     return (
         <Box
