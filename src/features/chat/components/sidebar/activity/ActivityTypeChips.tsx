@@ -1,9 +1,10 @@
-import React from "react";
-import { Box, Stack, Typography } from "@mui/joy";
+import React, { useState } from "react";
+import { Box, Stack, Tooltip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { useTranslation } from "../../../../../i18n";
 import { ActivityMessageProps } from "../../../../../types/chat";
+import { formatTaskDisplayId } from "../../../../tasks/utils/taskDisplayId";
 
 interface ActivityTypeChipsProps {
     activity: ActivityMessageProps;
@@ -26,6 +27,10 @@ interface ModernChipProps {
     colorScheme: { dark: string; light: string };
     isDark: boolean;
     variant?: "filled" | "outlined" | "soft";
+    /** When set, the chip becomes clickable; clicking copies this value
+     *  to the clipboard and shows a brief "Copied!" tooltip. Used for
+     *  task ID chips so users can paste the ID into a branch name. */
+    copyText?: string;
 }
 
 const ModernChip: React.FC<ModernChipProps> = ({
@@ -33,6 +38,7 @@ const ModernChip: React.FC<ModernChipProps> = ({
     colorScheme,
     isDark,
     variant = "soft",
+    copyText,
 }) => {
     const color = isDark ? colorScheme.dark : colorScheme.light;
 
@@ -63,9 +69,25 @@ const ModernChip: React.FC<ModernChipProps> = ({
     };
 
     const styles = getStyles();
+    const [copied, setCopied] = useState(false);
+    const handleClick = (event: React.MouseEvent) => {
+        if (!copyText) return;
+        // Activity rows wrap a click handler that opens the source
+        // chat/task — stop propagation so the chip "Copy" gesture
+        // doesn't also navigate.
+        event.stopPropagation();
+        navigator.clipboard
+            .writeText(copyText)
+            .then(() => {
+                setCopied(true);
+                window.setTimeout(() => setCopied(false), 1200);
+            })
+            .catch(() => {});
+    };
 
-    return (
+    const chip = (
         <Box
+            onClick={copyText ? handleClick : undefined}
             sx={{
                 display: "inline-flex",
                 alignItems: "center",
@@ -79,11 +101,19 @@ const ModernChip: React.FC<ModernChipProps> = ({
                 whiteSpace: "nowrap",
                 border: "1px solid",
                 transition: "all 0.15s ease",
+                cursor: copyText ? "pointer" : "default",
                 ...styles,
             }}
         >
             {label}
         </Box>
+    );
+
+    if (!copyText) return chip;
+    return (
+        <Tooltip arrow placement="top" title={copied ? "Copied!" : "Click to copy"}>
+            {chip}
+        </Tooltip>
     );
 };
 
@@ -132,7 +162,8 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
                     />
                     {!!activity.taskId && (
                         <ModernChip
-                            label={`#${activity.taskId}`}
+                            label={formatTaskDisplayId(activity)}
+                            copyText={formatTaskDisplayId(activity)}
                             colorScheme={CHIP_COLORS.task}
                             isDark={isDark}
                             variant="outlined"

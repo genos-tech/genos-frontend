@@ -847,6 +847,7 @@ export const hi: DeepPartial<Messages> = {
             dueDate: "ड्यू तारीख",
             links: "लिंक",
             parentTask: "पैरेंट टास्क",
+            branches: "ब्रांच",
         },
         filters: {
             all: "सभी",

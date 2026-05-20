@@ -855,6 +855,7 @@ export const fr: DeepPartial<Messages> = {
             dueDate: "Échéance",
             links: "Liens",
             parentTask: "Tâche parente",
+            branches: "Branches",
         },
         filters: {
             all: "Toutes",

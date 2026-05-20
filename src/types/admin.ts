@@ -98,6 +98,10 @@ export type ProjectProfileProps = {
     projectMembers: UserProps[];
     isPrivate: boolean;
     tsCreatedAt: string;
+    // Short uppercase code shown as the prefix in human-readable task
+    // display IDs (the "GEN" in "GEN-42"). Editable from the project
+    // profile modal; auto-derived on project create.
+    code?: string | null;
 };
 
 export type TeamProfileProps = {

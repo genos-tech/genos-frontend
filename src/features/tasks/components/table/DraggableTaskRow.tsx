@@ -30,6 +30,7 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
+import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { effortLevels, priorities } from "../../utils/taskMeta";
 import { ColumnDef, statusOptions } from "./DraggableTaskTable";
 
@@ -392,7 +393,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                       : "#7c3aed",
                             }}
                         >
-                            #{task.id}
+                            {formatTaskDisplayId(task)}
                         </Typography>
                         <OpenInNewIcon sx={{ ml: 0.5, fontSize: 14 }} />
                     </IconButton>

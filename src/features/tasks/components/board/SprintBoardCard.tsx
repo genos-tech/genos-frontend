@@ -10,6 +10,7 @@ import Typography from "@mui/joy/Typography";
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
+import { CopyableTaskIdText } from "../CopyableTaskId";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
@@ -160,7 +161,8 @@ const SprintBoardCardImpl = ({
                                     }}
                                 />
                             )}
-                            <Typography
+                            <CopyableTaskIdText
+                                task={task}
                                 level="body-xs"
                                 sx={{
                                     color: mode === "dark" ? "#6b9fd4" : "#5a8ac7",
@@ -168,9 +170,7 @@ const SprintBoardCardImpl = ({
                                     fontFamily: "'SF Mono', 'Monaco', 'Consolas', monospace",
                                     fontSize: "0.65rem",
                                 }}
-                            >
-                                #{task.id}
-                            </Typography>
+                            />
                         </Box>
                         {priorityStyle && (
                             <span

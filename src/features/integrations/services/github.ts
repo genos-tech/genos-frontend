@@ -73,3 +73,35 @@ export const getPullDetail = async (
             : null;
     }
 };
+
+export interface LinkedBranch {
+    owner: string;
+    repo: string;
+    name: string;
+    url: string;
+    commit_sha?: string | null;
+}
+
+export interface LinkedBranchesResponse {
+    branches: LinkedBranch[];
+}
+
+// Fetch branches whose names match the task's display ID (e.g. branches
+// containing "GEN-42"). Returns an empty list silently on any failure —
+// the calling UI hides the section when there's nothing to show, so a
+// dropped request is indistinguishable from no matches by design.
+export const loadLinkedBranches = async (
+    accessToken: string | null,
+    taskId: number | string
+): Promise<LinkedBranch[]> => {
+    try {
+        const api = authApi(accessToken);
+        if (!api) return [];
+        const res = await api.get<LinkedBranchesResponse>("/github/branches/for-task/", {
+            params: { task_id: taskId },
+        });
+        return res.data.branches ?? [];
+    } catch {
+        return [];
+    }
+};

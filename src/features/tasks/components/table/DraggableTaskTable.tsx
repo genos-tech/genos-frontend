@@ -53,12 +53,12 @@ export type ColumnDef = {
 };
 
 export const defaultColumns: ColumnDef[] = [
-    { field: "__expand", headerName: "", width: 32, align: "center", resizable: false },
+    { field: "__expand", headerName: "", width: 16, align: "center", resizable: false },
     {
         field: "id",
         headerName: "ID",
         headerLabelKey: "id",
-        width: 80,
+        width: 100,
         align: "center",
         resizable: false,
     },

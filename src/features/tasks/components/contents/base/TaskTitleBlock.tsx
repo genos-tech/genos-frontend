@@ -47,6 +47,7 @@ import { UserProps } from "../../../../../types/admin";
 import { TaskNoteProps } from "../../../../../types/notes";
 import { TaskProps } from "../../../../../types/tasks";
 import { deleteEmptyTask } from "../../../services/deleteEmptyTask";
+import { CopyableTaskIdChip } from "../../CopyableTaskId";
 import { ModalDeleteTask } from "../../modals/ModalDeleteTask";
 
 type TaskTitleBlockProps = {
@@ -354,8 +355,10 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 Complete Task
                             </Button>
                         )}
-                        <Chip
+                        <CopyableTaskIdChip
                             key={`task-title-block-${taskContent.id}`}
+                            task={taskContent}
+                            fallback="N/A"
                             size="md"
                             variant="soft"
                             sx={{
@@ -370,9 +373,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                     : "rgba(0,0,0,0.06)",
                                 color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.65)",
                             }}
-                        >
-                            #{taskContent.id || "N/A"}
-                        </Chip>
+                        />
                         <Chip
                             key={`task-title-block-status-${taskContent.status.status}`}
                             size="md"

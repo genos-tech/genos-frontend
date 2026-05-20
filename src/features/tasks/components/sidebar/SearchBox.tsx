@@ -15,6 +15,7 @@ import { alpha } from "@mui/system";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { SearchTeamTasksResponse } from "../../../../types/tasks";
+import { CopyableTaskIdChip } from "../CopyableTaskId";
 
 type TaskSidebarSearchBoxProps = {
     openSearch: boolean;
@@ -127,8 +128,9 @@ export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
                 <AutocompleteOption {...props} key={`ac-taskhome-search-task-${option.taskId}`}>
                     <ListItemContent sx={{ fontSize: "sm" }}>
                         <Stack direction="row" spacing={1} alignItems="center">
-                            <Chip
+                            <CopyableTaskIdChip
                                 key={`ac-taskhome-search-task-id-chip-${option.taskId}`}
+                                task={option}
                                 size="sm"
                                 variant="soft"
                                 sx={{
@@ -142,9 +144,7 @@ export const TaskSidebarSearchBox = (props: TaskSidebarSearchBoxProps) => {
                                         : "rgba(0,0,0,0.06)",
                                     color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.55)",
                                 }}
-                            >
-                                #{option.taskId}
-                            </Chip>
+                            />
                             <Chip
                                 key={`ac-taskhome-search-task-chip-${option.taskId}`}
                                 size="sm"
