@@ -86,6 +86,24 @@ export interface LinkedBranchesResponse {
     branches: LinkedBranch[];
 }
 
+// PR auto-linked to a task via branch naming convention (head ref
+// contains the task's display ID). The backend dedupes by html_url.
+export interface LinkedPull {
+    owner: string;
+    repo: string;
+    branch: string;
+    number: number;
+    html_url: string;
+    title: string;
+    state: "open" | "closed";
+    draft: boolean;
+    merged_at: string | null;
+}
+
+export interface LinkedPullsResponse {
+    pulls: LinkedPull[];
+}
+
 // Fetch branches whose names match the task's display ID (e.g. branches
 // containing "GEN-42"). Returns an empty list silently on any failure —
 // the calling UI hides the section when there's nothing to show, so a
@@ -101,6 +119,24 @@ export const loadLinkedBranches = async (
             params: { task_id: taskId },
         });
         return res.data.branches ?? [];
+    } catch {
+        return [];
+    }
+};
+
+// PRs whose head branch matches the task's display ID. Drives the
+// task table's PR column. Server-side cached for 60s.
+export const loadLinkedPulls = async (
+    accessToken: string | null,
+    taskId: number | string
+): Promise<LinkedPull[]> => {
+    try {
+        const api = authApi(accessToken);
+        if (!api) return [];
+        const res = await api.get<LinkedPullsResponse>("/github/pulls/for-task/", {
+            params: { task_id: taskId },
+        });
+        return res.data.pulls ?? [];
     } catch {
         return [];
     }

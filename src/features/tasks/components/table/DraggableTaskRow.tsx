@@ -23,6 +23,7 @@ import { Socket } from "socket.io-client";
 
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { PulseDot } from "../../../../components/ui/misc/PulseDot";
+import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -30,6 +31,7 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
+import { PrStatusCell } from "../../../integrations/components/PrStatusCell";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { effortLevels, priorities } from "../../utils/taskMeta";
 import { ColumnDef, statusOptions } from "./DraggableTaskTable";
@@ -233,6 +235,7 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
     } = props;
 
     const { t } = useTranslation();
+    const { accessToken } = useAuth();
     const isChild = depth > 0;
     const taskIdStr = String(task.id);
     const hasChildren = childrenByParent.has(taskIdStr);
@@ -528,6 +531,15 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         }}
                     />
                 ) : null;
+
+            case "pr": {
+                // Auto-linked PRs: PRs whose head branch contains the
+                // task's display ID. The cell handles its own async
+                // fetch + the empty case (no display ID, no GitHub
+                // connection, no matching PRs → renders nothing).
+                if (task.id == null) return null;
+                return <PrStatusCell taskId={task.id} accessToken={accessToken} />;
+            }
 
             case "tags":
                 const tags = task.tags || [];

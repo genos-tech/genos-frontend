@@ -907,6 +907,7 @@ export const zh: DeepPartial<Messages> = {
             columns: {
                 id: "ID",
                 status: "状态",
+                pr: "PR",
                 tags: "标签",
                 title: "标题",
                 assignee: "负责人",

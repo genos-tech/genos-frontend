@@ -494,6 +494,7 @@ export const tasks = {
         columns: {
             id: "ID",
             status: "Status",
+            pr: "PR",
             tags: "Tags",
             title: "Title",
             assignee: "Assignee",

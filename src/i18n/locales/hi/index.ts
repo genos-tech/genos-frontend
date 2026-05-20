@@ -923,6 +923,7 @@ export const hi: DeepPartial<Messages> = {
             columns: {
                 id: "ID",
                 status: "स्टेटस",
+                pr: "PR",
                 tags: "टैग",
                 title: "शीर्षक",
                 assignee: "असाइनी",

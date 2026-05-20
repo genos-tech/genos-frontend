@@ -923,6 +923,7 @@ export const es: DeepPartial<Messages> = {
             columns: {
                 id: "ID",
                 status: "Estado",
+                pr: "PR",
                 tags: "Etiquetas",
                 title: "Título",
                 assignee: "Asignado",

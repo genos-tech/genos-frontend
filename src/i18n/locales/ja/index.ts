@@ -920,6 +920,7 @@ export const ja: DeepPartial<Messages> = {
             columns: {
                 id: "ID",
                 status: "ステータス",
+                pr: "PR",
                 tags: "タグ",
                 title: "タイトル",
                 assignee: "担当者",

@@ -104,6 +104,19 @@ export const defaultColumns: ColumnDef[] = [
         resizable: true,
     },
     {
+        // Compact PR-state badge surfaced when the task has at least
+        // one GitHub PR URL in `links`. State is fetched lazily via
+        // `prStatusCache`; the column otherwise renders blank.
+        field: "pr",
+        headerName: "PR",
+        headerLabelKey: "pr",
+        width: 60,
+        minWidth: 48,
+        maxWidth: 100,
+        align: "center",
+        resizable: true,
+    },
+    {
         field: "priority",
         headerName: "Priority",
         headerLabelKey: "priority",

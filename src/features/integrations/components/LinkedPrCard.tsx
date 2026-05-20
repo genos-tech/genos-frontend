@@ -21,7 +21,15 @@ import { useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
 import { redirectToOAuthConnect } from "../services/oauth";
 import { getCachedOrFetchPrStatus, type PrStatusResult } from "../services/prStatusCache";
-import type { CheckRunsResponse, CombinedStatus, PrDetailResponse } from "../services/prTypes";
+import type { PrDetailResponse } from "../services/prTypes";
+import {
+    ciStateColor,
+    deriveCiState,
+    derivePrState,
+    prStateColor,
+    type CiState,
+    type PrState,
+} from "../utils/prState";
 import {
     CheckFailingIcon,
     CheckNoneIcon,
@@ -43,46 +51,6 @@ interface Props {
     hideOnNotConnected?: boolean;
 }
 
-type CiState = "passing" | "failing" | "pending" | "none";
-
-const deriveCiState = (cs: CombinedStatus | null, cr: CheckRunsResponse | null): CiState => {
-    const checks = cr?.check_runs ?? [];
-    const csState = cs?.state ?? null;
-    const hasFailure = checks.some(
-        (c) => c.conclusion === "failure" || c.conclusion === "action_required"
-    );
-    const hasPending = checks.some((c) => c.status !== "completed") || csState === "pending";
-    if (hasFailure || csState === "failure" || csState === "error") return "failing";
-    if (hasPending) return "pending";
-    if (checks.length === 0 && (csState === null || csState === undefined)) return "none";
-    return "passing";
-};
-
-type PrState = "merged" | "draft" | "open" | "closed";
-
-const derivePrState = (pull: PrDetailResponse["pull"]): PrState => {
-    if (pull.merged) return "merged";
-    if (pull.draft) return "draft";
-    if (pull.state === "open") return "open";
-    return "closed";
-};
-
-// GitHub's canonical colors for PR state badges. Matches what
-// github.com renders.
-const prStateColor = (state: PrState): string => {
-    switch (state) {
-        case "open":
-            return "#1f883d";
-        case "merged":
-            return "#8250df";
-        case "closed":
-            return "#cf222e";
-        case "draft":
-        default:
-            return "#6e7781";
-    }
-};
-
 const PrStateIcon = ({ state, size = 16 }: { state: PrState; size?: number }) => {
     const color = prStateColor(state);
     const common = { width: size, height: size, style: { color } };
@@ -100,14 +68,7 @@ const PrStateIcon = ({ state, size = 16 }: { state: PrState; size?: number }) =>
 };
 
 const CiBadge = ({ state, size = 16 }: { state: CiState; size?: number }) => {
-    const color =
-        state === "passing"
-            ? "#1f883d"
-            : state === "failing"
-              ? "#cf222e"
-              : state === "pending"
-                ? "#bf8700"
-                : "#6e7781";
+    const color = ciStateColor(state);
     const common = { width: size, height: size, style: { color } };
     switch (state) {
         case "passing":

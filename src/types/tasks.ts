@@ -171,6 +171,11 @@ export type TaskTableProps = {
     concatTags: string | null;
     teamId: string | null;
     projectId: number | null;
+    // External links attached to this task. Carried on the table row
+    // for future column renderers; the PR column itself sources its
+    // PRs from the auto-link endpoint (`/github/pulls/for-task/`), not
+    // from this field — that's intentional, see PrStatusCell.
+    links?: TaskProps["links"];
     // True for the backing task of a milestone. Renders with a flag
     // icon in the table and double-click routes to MilestonePreview.
     isMilestone?: boolean | null;
