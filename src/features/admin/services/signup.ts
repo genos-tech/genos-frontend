@@ -2,6 +2,7 @@ import axios from "axios";
 
 import { getMessages } from "../../../i18n";
 import { nonAuthApi } from "../../../services/api";
+import type { SignUpResponse, SignUpVerificationResponse } from "../../../types/admin";
 
 export const signUp = async (
     username: string,
@@ -9,7 +10,7 @@ export const signUp = async (
     password: string,
     isSystemUser: boolean,
     setErrorMessage?: (value: string) => void
-) => {
+): Promise<SignUpResponse | SignUpVerificationResponse | undefined> => {
     const is_system_user: boolean = isSystemUser;
     try {
         const api = nonAuthApi();
@@ -19,7 +20,7 @@ export const signUp = async (
             password,
             is_system_user,
         });
-        return res.data;
+        return res.data as SignUpResponse | SignUpVerificationResponse;
     } catch (error: unknown) {
         const m = getMessages().admin.auth.errors;
         if (axios.isAxiosError(error)) {

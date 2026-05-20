@@ -18,4 +18,4 @@
  * Flip to `true` to re-enable everything for ongoing development.
  * That's the only change required.
  */
-export const OAUTH_INTEGRATIONS_ENABLED = false;
+export const OAUTH_INTEGRATIONS_ENABLED = true;

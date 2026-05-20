@@ -33,10 +33,10 @@ import {
 import { DatabaseUtils } from "../../../db/utils";
 import { fmt, I18nProvider, useTranslation } from "../../../i18n";
 import { purplePalette, purpleTheme } from "../../../theme/purplePalette";
-import { SignInResponse } from "../../../types/admin";
 import { OAUTH_INTEGRATIONS_ENABLED } from "../../integrations/featureFlags";
 import { redirectToOAuthLogin } from "../../integrations/services/oauth";
 import { demoSignIn } from "../services/demoSignin";
+import { resendVerificationEmail } from "../services/emailVerification";
 import { requestPasswordReset } from "../services/passwordReset";
 import { signIn } from "../services/signin";
 import { AdminHeader } from "./Header";
@@ -61,6 +61,8 @@ const SignInContent = () => {
     const [forgotSucceeded, setForgotSucceeded] = useState<boolean>(false);
     const [forgotError, setForgotError] = useState<string | null>(null);
     const [demoLoading, setDemoLoading] = useState<boolean>(false);
+    const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
+    const [resendStatus, setResendStatus] = useState<"idle" | "sending" | "sent">("idle");
     const { setAccessToken } = useAuth();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -68,9 +70,17 @@ const SignInContent = () => {
     const palette = isDark ? purplePalette.dark : purplePalette.light;
 
     const _signin = async (email: string, password: string) => {
-        const signInRes: SignInResponse = await signIn(email, password, setErrorMessage);
+        setUnverifiedEmail(null);
+        setResendStatus("idle");
+        const signInRes = await signIn(email, password, setErrorMessage);
 
-        if (signInRes) {
+        if (signInRes && "kind" in signInRes && signInRes.kind === "unverified") {
+            setUnverifiedEmail(signInRes.email);
+            setErrorMessage(null);
+            return;
+        }
+
+        if (signInRes && "access" in signInRes) {
             // Capture the previously signed-in user before we touch
             // localStorage below, so we can decide whether to wipe the
             // previous user's caches. `userId` is intentionally preserved
@@ -108,6 +118,13 @@ const SignInContent = () => {
                 console.error("Failed to get userId from sign-in response:", signInRes);
             }
         }
+    };
+
+    const _resendVerification = async () => {
+        if (!unverifiedEmail) return;
+        setResendStatus("sending");
+        const ok = await resendVerificationEmail(unverifiedEmail, setErrorMessage);
+        setResendStatus(ok ? "sent" : "idle");
     };
 
     const _demoSignin = async () => {
@@ -261,6 +278,39 @@ const SignInContent = () => {
                                     }}
                                 >
                                     {errorMessage}
+                                </Alert>
+                            )}
+
+                            {unverifiedEmail && (
+                                <Alert
+                                    color="warning"
+                                    sx={{
+                                        borderRadius: "12px",
+                                        flexDirection: "column",
+                                        alignItems: "stretch",
+                                        gap: 1,
+                                    }}
+                                >
+                                    <Typography level="body-sm">
+                                        {resendStatus === "sent"
+                                            ? t.admin.auth.signIn.emailNotVerified.resendSent
+                                            : t.admin.auth.signIn.emailNotVerified.message}
+                                    </Typography>
+                                    {resendStatus !== "sent" && (
+                                        <Button
+                                            size="sm"
+                                            variant="soft"
+                                            color="warning"
+                                            disabled={resendStatus === "sending"}
+                                            onClick={_resendVerification}
+                                            sx={{ alignSelf: "flex-start" }}
+                                        >
+                                            {resendStatus === "sending"
+                                                ? t.admin.auth.signIn.emailNotVerified.resending
+                                                : t.admin.auth.signIn.emailNotVerified
+                                                      .resendButton}
+                                        </Button>
+                                    )}
                                 </Alert>
                             )}
                         </Stack>

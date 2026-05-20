@@ -18,7 +18,7 @@ import {
 import { useAuth } from "../../../../context/AuthContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { useTranslation } from "../../../../i18n";
-import { SignUpResponse, UserProps } from "../../../../types/admin";
+import { UserProps } from "../../../../types/admin";
 import { replaceSpacesWithUnderscore } from "../../../../utils/stringHelper";
 import { joinTeam } from "../../../admin/services/joinTeam";
 import { signUp } from "../../../admin/services/signup";
@@ -53,7 +53,7 @@ export const ModalCreateProject: React.FC<Props> = ({ myself, usePM, setIsNewPro
             // Signup for a system user for the new project
             const _signup = async (projectEmail: string, password: string) => {
                 // Step-1: Create a system user for the new project.
-                const signUpRes: SignUpResponse = await signUp(
+                const signUpRes = await signUp(
                     projectName,
                     projectEmail,
                     password,
@@ -62,7 +62,10 @@ export const ModalCreateProject: React.FC<Props> = ({ myself, usePM, setIsNewPro
                 );
 
                 // Step-2: If the system user is created successfully, create the project.
-                if (signUpRes) {
+                // System user signups always return the JWT shape (the
+                // backend skips the email-verification branch for
+                // is_system_user=True), so the user payload is present.
+                if (signUpRes && "user" in signUpRes) {
                     const createProjectResponse = await fetch(`${base_url}/project/`, {
                         method: "POST",
                         headers: {
