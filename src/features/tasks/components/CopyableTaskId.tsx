@@ -58,7 +58,7 @@ export const CopyableTaskIdChip = ({
     const text = formatTaskDisplayId(task) || fallback;
     const { copied, onClick } = useCopyState();
     return (
-        <Tooltip arrow placement="top" title={tooltipTitle(copied)}>
+        <Tooltip arrow placement="top" title={tooltipTitle(copied)} variant="outlined">
             <Chip
                 {...rest}
                 onClick={onClick(text)}
