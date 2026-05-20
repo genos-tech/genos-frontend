@@ -25,6 +25,12 @@ export const admin = {
             demoHint: "No signup needed — explore the app instantly.",
             demoWarning:
                 "Your demo account is automatically deleted after 24 hours (or when you sign out).",
+            emailNotVerified: {
+                message: "Your email isn't verified yet. Check your inbox for the link.",
+                resendButton: "Resend email",
+                resending: "Sending…",
+                resendSent: "Sent — check your inbox.",
+            },
         },
         signUp: {
             title: "Create Account",
@@ -58,6 +64,15 @@ export const admin = {
                 show: "Show password",
                 hide: "Hide password",
             },
+            afterSubmit: {
+                title: "Check your inbox",
+                body: "We sent a verification link to {email}. Click it to finish signing up.",
+                checkInboxHint: "Click the link in the email to verify your address.",
+                resend: "Resend email",
+                resending: "Sending…",
+                resendSent: "Sent — check your inbox.",
+                backToSignIn: "Back to sign in",
+            },
         },
         forgotPassword: {
             title: "Forgot Password?",
@@ -79,6 +94,22 @@ export const admin = {
             missingToken:
                 "This reset link is invalid or has expired. Request a new one from the sign-in page.",
             invalidToken: "This reset link is invalid or has expired.",
+            backToSignIn: "Back to sign in",
+        },
+        emailVerification: {
+            verifyingTitle: "Verifying your email…",
+            successTitle: "Your email is verified",
+            successBody: "You can now sign in to your account.",
+            signInButton: "Sign in",
+            invalidTitle: "This link is invalid or has expired",
+            invalidBody: "Request a new verification email below.",
+            missingTokenTitle: "No verification token found",
+            missingTokenBody: "Open the link from your verification email and try again.",
+            resendLabel: "Email address",
+            resendPlaceholder: "Enter your email",
+            resendButton: "Resend verification email",
+            resending: "Sending…",
+            resendSent: "Sent — check your inbox.",
             backToSignIn: "Back to sign in",
         },
         errors: {

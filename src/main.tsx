@@ -11,6 +11,7 @@ import { OAuthSuccessHandler } from "./features/admin/components/OAuthSuccessHan
 import { ResetPasswordForm } from "./features/admin/components/ResetPasswordForm";
 import { SignInForm } from "./features/admin/components/SignInForm";
 import { SignUpForm } from "./features/admin/components/SignUpForm";
+import { VerifyEmailHandler } from "./features/admin/components/VerifyEmailHandler";
 import { OAUTH_INTEGRATIONS_ENABLED } from "./features/integrations/featureFlags";
 import { analytics } from "./services/analytics";
 import { startLongTaskObserver } from "./services/perfObserver";
@@ -67,6 +68,11 @@ createRoot(document.getElementById("root")!).render(
                 {OAUTH_INTEGRATIONS_ENABLED && (
                     <Route element={<OAuthSuccessHandler />} path="/oauth/success" />
                 )}
+
+                {/* Email verification — outside guards because the user
+                    is not signed in yet. After verifying they're sent
+                    to /signin to authenticate. */}
+                <Route element={<VerifyEmailHandler />} path="/verify-email" />
 
                 {/* Protected routes */}
                 <Route element={<AuthGuard />}>

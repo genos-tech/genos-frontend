@@ -56,6 +56,16 @@ export type SignUpResponse = {
     message: string;
 };
 
+export type SignUpVerificationResponse = {
+    message: "verification_email_sent";
+    email: string;
+};
+
+export type SignInUnverifiedResult = {
+    kind: "unverified";
+    email: string;
+};
+
 export type MyTeamResponse = {
     team_ids: number[];
 };
