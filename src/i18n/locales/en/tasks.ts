@@ -441,6 +441,29 @@ export const tasks = {
         },
     },
 
+    // Linked GitHub PR — surfaced on TaskPreview when set.
+    linkedPr: {
+        header: "Linked PR",
+        fieldLabel: "Linked PR (GitHub)",
+        paste: "https://github.com/owner/repo/pull/123",
+        invalid: "Must be https://github.com/<owner>/<repo>/pull/<number>",
+        connectPrompt: "Connect GitHub to see PR status",
+        connectButton: "Connect GitHub",
+        stateOpen: "Open",
+        stateDraft: "Draft",
+        stateMerged: "Merged",
+        stateClosed: "Closed",
+        ciPassing: "All checks passing",
+        ciFailing: "Some checks failing",
+        ciPending: "Checks in progress",
+        ciNone: "No CI checks",
+        openOnGithub: "Open on GitHub",
+        lastUpdated: "Last updated {when}",
+        loadError: "Couldn't load PR — open on GitHub",
+        privateOrDeleted:
+            "This PR is private to a repo you don't have access to, or it was deleted.",
+    },
+
     // Tabs.
     tabs: {
         ariaLabel: "Task Tabs",

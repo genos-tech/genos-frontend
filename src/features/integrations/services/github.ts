@@ -61,14 +61,15 @@ export const getPullDetail = async (
     repo: string,
     number: number,
     setErrorMessage?: (value: string) => void
-): Promise<unknown | null> => {
+): Promise<unknown | "github_not_connected" | null> => {
     try {
         const api = authApi(accessToken);
         if (!api) return null;
         const res = await api.get(`/github/pulls/${owner}/${repo}/${number}/`);
         return res.data;
     } catch (error) {
-        surfaceError(error, setErrorMessage);
-        return null;
+        return surfaceError(error, setErrorMessage) === "github_not_connected"
+            ? "github_not_connected"
+            : null;
     }
 };

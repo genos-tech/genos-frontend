@@ -125,6 +125,9 @@ export type TaskProps = {
         title: string;
         isGitHub: boolean;
     }[];
+    // Optional single GitHub PR URL surfaced on the task detail view
+    // with state + CI badge. null/undefined = no PR linked.
+    linkedPrUrl?: string | null;
     attachments: AttachmentFileProps[];
     parentTaskId: number | null;
     rootTaskId: number | null;

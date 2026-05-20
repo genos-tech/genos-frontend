@@ -48,6 +48,10 @@ export const sendUpdatedSpecificTask = async (
                 due_date: updatedTask.dueDate !== "" ? updatedTask.dueDate : null,
                 links: updatedTask.links,
                 tags: updatedTask.tags,
+                // Always send (even when null) so the backend's
+                // explicit-null branch can clear an existing link.
+                // See PUT handler `clear_linked_pr_url` logic.
+                linked_pr_url: updatedTask.linkedPrUrl ?? null,
                 // Always send `milestone` (even when null) so the
                 // backend can distinguish "key absent" (no change)
                 // from "explicit clear". The PUT handler's milestone

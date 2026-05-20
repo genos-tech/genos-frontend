@@ -50,6 +50,7 @@ import {
     TaskCommentProps,
     TaskProps,
 } from "../../../../types/tasks";
+import { LinkedPrCard } from "../../../integrations/components/LinkedPrCard";
 import { loadTaskNotes } from "../../../notes/task-notes/services/loadTaskNotes";
 import { loadSpecificTask } from "../../services/loadSpecificTask";
 import { loadTaskActivities } from "../../services/loadTaskActivities";
@@ -754,6 +755,19 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                                 useUISM={useUISM}
                             />
                         </Box>
+
+                        {taskEditState.tmpCurrentTaskContent.linkedPrUrl && (
+                            <>
+                                <SectionDivider isDark={isDark} />
+                                <SectionHeader isDark={isDark}>
+                                    {t.tasks.linkedPr.header}
+                                </SectionHeader>
+                                <LinkedPrCard
+                                    url={taskEditState.tmpCurrentTaskContent.linkedPrUrl}
+                                    accessToken={accessToken ?? ""}
+                                />
+                            </>
+                        )}
 
                         <SectionDivider isDark={isDark} />
 
