@@ -178,13 +178,7 @@ const ciTooltipLabel = (state: CiState, t: ReturnType<typeof useTranslation>["t"
 // Rendered inside Tooltip's `title` prop. Colors flow through
 // `purplePalette` so the panel matches menus/popovers elsewhere instead
 // of Joy's stock white-on-black solid tooltip.
-const HoverDetails = ({
-    payload,
-    isDark,
-}: {
-    payload: PrDetailResponse;
-    isDark: boolean;
-}) => {
+const HoverDetails = ({ payload, isDark }: { payload: PrDetailResponse; isDark: boolean }) => {
     const { pull } = payload;
     const palette = isDark ? purplePalette.dark : purplePalette.light;
 
@@ -199,7 +193,21 @@ const HoverDetails = ({
     const comments = (pull.comments ?? 0) + (pull.review_comments ?? 0);
 
     return (
-        <Stack spacing={0.75} sx={{ minWidth: 260, p: 0.5 }}>
+        <Stack
+            spacing={0.75}
+            sx={{
+                minWidth: 260,
+                p: 1.25,
+                // Solid surface (vs `menuBg`'s translucent dark) so the
+                // tooltip body has clear contrast against the dark task
+                // panel sitting behind the popper. `surfaceSolid` is the
+                // palette's most opaque card surface.
+                bgcolor: palette.surfaceSolid,
+                border: `1px solid ${palette.menuBorder}`,
+                borderRadius: "10px",
+                boxShadow: palette.shadow,
+            }}
+        >
             {author && (
                 <Stack direction="row" alignItems="center" spacing={1}>
                     {avatar && (
@@ -242,12 +250,8 @@ const HoverDetails = ({
                         {/* Diff +/- colors are functional, not branded —
                             keep GitHub's canonical green/red but pick
                             the shade that's readable on each theme. */}
-                        <span style={{ color: isDark ? "#7ee787" : "#1a7f37" }}>
-                            +{adds ?? 0}
-                        </span>{" "}
-                        <span style={{ color: isDark ? "#ffa198" : "#cf222e" }}>
-                            −{dels ?? 0}
-                        </span>
+                        <span style={{ color: isDark ? "#7ee787" : "#1a7f37" }}>+{adds ?? 0}</span>{" "}
+                        <span style={{ color: isDark ? "#ffa198" : "#cf222e" }}>−{dels ?? 0}</span>
                         {changed != null ? ` · ${changed} file${changed === 1 ? "" : "s"}` : ""}
                     </Typography>
                 )}
@@ -368,20 +372,23 @@ export const LinkedPrCard = ({ url, accessToken }: Props) => {
         <Tooltip
             arrow
             placement="top-start"
-            variant="outlined"
+            variant="plain"
             size="sm"
             title={<HoverDetails payload={result.payload} isDark={isDark} />}
             sx={{
                 maxWidth: 320,
-                // Override Joy's tooltip surface to match the palette's
-                // menu/popover styling so it blends with the rest of the
-                // app (instead of Joy's stock white-on-black solid).
-                bgcolor: palette.menuBg,
-                borderColor: palette.menuBorder,
+                // The visible surface lives on `HoverDetails`' inner
+                // Stack (palette.surfaceSolid + border + shadow), so
+                // make this outer wrapper transparent / unpadded —
+                // otherwise we'd render two stacked card surfaces.
+                bgcolor: "transparent",
+                border: "none",
+                boxShadow: "none",
+                p: 0,
                 color: palette.text,
-                boxShadow: palette.shadow,
-                // The arrow inherits `bgcolor`/`borderColor` from the
-                // tooltip body, so no extra slotProps needed.
+                // Tint the arrow to the same solid surface so it looks
+                // attached to the inner panel.
+                "--Tooltip-arrowColor": palette.surfaceSolid,
             }}
         >
             <Card
