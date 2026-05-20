@@ -36,6 +36,11 @@ import {
 interface Props {
     url: string;
     accessToken: string;
+    /** When true, render nothing if the user hasn't connected GitHub.
+     *  Chat / task-comment unfurls use this so a single chat scroll
+     *  doesn't show a "Connect GitHub" prompt for every PR-bearing
+     *  message. Task metadata view keeps the default (prompt visible). */
+    hideOnNotConnected?: boolean;
 }
 
 type CiState = "passing" | "failing" | "pending" | "none";
@@ -269,7 +274,7 @@ const HoverDetails = ({ payload, isDark }: { payload: PrDetailResponse; isDark: 
     );
 };
 
-export const LinkedPrCard = ({ url, accessToken }: Props) => {
+export const LinkedPrCard = ({ url, accessToken, hideOnNotConnected }: Props) => {
     const { t } = useTranslation();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -300,6 +305,10 @@ export const LinkedPrCard = ({ url, accessToken }: Props) => {
     }
 
     if (result.kind === "github_not_connected") {
+        // Chat / task-comment unfurl path opts out of the inline Connect
+        // prompt — rendering it under every PR-bearing message would be
+        // visually noisy. Task metadata view keeps it.
+        if (hideOnNotConnected) return null;
         return (
             <Card variant="outlined" sx={{ p: 1.5 }}>
                 <Stack spacing={1.25}>

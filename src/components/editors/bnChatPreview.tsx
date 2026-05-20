@@ -1,7 +1,7 @@
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { codeBlockOptions } from "@blocknote/code-block";
 import {
     BlockNoteSchema,
@@ -13,10 +13,13 @@ import {
 import { BlockNoteView } from "@blocknote/mantine";
 import { useCreateBlockNote } from "@blocknote/react";
 import DownloadIcon from "@mui/icons-material/Download";
-import { Box, IconButton, Modal, ModalDialog, Tooltip } from "@mui/joy";
+import { Box, IconButton, Modal, ModalDialog, Stack, Tooltip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { useAuth } from "../../context/AuthContext";
+import { LinkedPrCard } from "../../features/integrations/components/LinkedPrCard";
+import { extractPrUrlsFromBlocks } from "../../features/integrations/utils/extractPrUrls";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
@@ -27,6 +30,10 @@ import { UserProps } from "../../types/admin";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
 import { CreateMentionSpec } from "./Mention";
+
+// Cap the number of inline PR previews per message body. Anyone pasting
+// more than this is abusing the channel; the rest are silently dropped.
+const MAX_PR_UNFURLS = 4;
 
 type BnChatPreviewProps = {
     useTEM: TeamManagementState;
@@ -93,6 +100,16 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
     // (e.g. signin / signup), in which case anchor clicks fall through
     // to the browser's default — same as before this feature shipped.
     const urlLinkModal = useUrlLinkModal();
+    const { accessToken } = useAuth();
+
+    // Scan the message body for GitHub PR URLs once per content change
+    // and render a LinkedPrCard per match below the body. Memoized so
+    // Virtuoso scroll re-renders don't re-walk the document. Caps at
+    // MAX_PR_UNFURLS to keep noisy paste-bombs in check.
+    const prUrls = useMemo(
+        () => extractPrUrlsFromBlocks(content).slice(0, MAX_PR_UNFURLS),
+        [content]
+    );
     // Native capture-phase anchor interceptor — see the hook for why we
     // use a direct DOM listener instead of React's onClickCapture.
     const editorBoxRef = useRef<HTMLDivElement>(null);
@@ -153,6 +170,19 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
                 data-changing-font-demo // custom font
                 onClick={handleEditorClick}
             ></BlockNoteView>
+
+            {prUrls.length > 0 && accessToken && (
+                <Stack spacing={0.75} sx={{ mt: 0.75, mb: 0.5 }}>
+                    {prUrls.map((url) => (
+                        <LinkedPrCard
+                            key={url}
+                            url={url}
+                            accessToken={accessToken}
+                            hideOnNotConnected
+                        />
+                    ))}
+                </Stack>
+            )}
 
             <Modal open={opened} sx={{ zIndex: 10010 }} onClose={() => setOpened(false)}>
                 <ModalDialog>
