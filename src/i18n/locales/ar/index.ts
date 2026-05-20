@@ -847,6 +847,7 @@ export const ar: DeepPartial<Messages> = {
             dueDate: "تاريخ الاستحقاق",
             links: "الروابط",
             parentTask: "المهمة الأصلية",
+            branches: "الفروع",
         },
         filters: {
             all: "الكل",

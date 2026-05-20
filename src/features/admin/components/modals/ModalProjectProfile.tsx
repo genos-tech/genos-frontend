@@ -27,13 +27,13 @@ import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithSt
 import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/FileSizeRejectionSnackbar";
 import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
 import { ProfileModalStyles } from "../../../../components/ui/styles/commonStyle";
-import { purplePalette } from "../../../../theme/purplePalette";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { loadProjectProfile } from "../../../../services/loadProjectProfile";
+import { purplePalette } from "../../../../theme/purplePalette";
 import { ProjectProfileProps, UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
@@ -81,6 +81,48 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
 
     // Member search state
     const [memberSearchQuery, setMemberSearchQuery] = useState("");
+
+    // Editable project code state. The chip flips to an Input when the
+    // user clicks the pencil; Save fires PUT /project/ to persist.
+    const [codeEditMode, setCodeEditMode] = useState(false);
+    const [codeDraft, setCodeDraft] = useState("");
+    const [codeError, setCodeError] = useState<string | null>(null);
+    const [codeSaving, setCodeSaving] = useState(false);
+
+    const handleCodeSave = async () => {
+        if (!projectProfile?.projectId) return;
+        const next = codeDraft.trim().toUpperCase();
+        if (!/^[A-Z][A-Z0-9]{1,5}$/.test(next)) {
+            setCodeError("2-6 chars, letters & digits, start with a letter.");
+            return;
+        }
+        setCodeSaving(true);
+        setCodeError(null);
+        try {
+            const res = await fetch(`${base_url}/project/`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({
+                    project_id: projectProfile.projectId,
+                    code: next,
+                }),
+            });
+            if (!res.ok) {
+                const body = await res.json().catch(() => ({}));
+                setCodeError(body.error || `Save failed (${res.status})`);
+                return;
+            }
+            setProjectProfile({ ...projectProfile, code: next });
+            setCodeEditMode(false);
+        } catch (_err) {
+            setCodeError("Network error.");
+        } finally {
+            setCodeSaving(false);
+        }
+    };
 
     // Filter members based on search query
     const filteredMembers = useMemo(() => {
@@ -580,6 +622,138 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                             </FormControl>
 
                                             <Stack direction="row" spacing={4} sx={{ mt: 1 }}>
+                                                <FormControl>
+                                                    <FormLabel
+                                                        sx={{
+                                                            color: styles.labelColor,
+                                                            fontSize: "0.75rem",
+                                                            fontWeight: 600,
+                                                            textTransform: "uppercase",
+                                                            letterSpacing: "0.05em",
+                                                            mb: 0.5,
+                                                        }}
+                                                    >
+                                                        Code
+                                                    </FormLabel>
+                                                    {codeEditMode ? (
+                                                        <Stack
+                                                            direction="row"
+                                                            spacing={0.5}
+                                                            alignItems="center"
+                                                        >
+                                                            <Input
+                                                                size="sm"
+                                                                value={codeDraft}
+                                                                autoFocus
+                                                                onChange={(e) =>
+                                                                    setCodeDraft(
+                                                                        e.target.value.toUpperCase()
+                                                                    )
+                                                                }
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === "Enter")
+                                                                        void handleCodeSave();
+                                                                    if (e.key === "Escape") {
+                                                                        setCodeEditMode(false);
+                                                                        setCodeError(null);
+                                                                    }
+                                                                }}
+                                                                slotProps={{
+                                                                    input: {
+                                                                        maxLength: 6,
+                                                                        spellCheck: false,
+                                                                        style: {
+                                                                            textTransform:
+                                                                                "uppercase",
+                                                                        },
+                                                                    },
+                                                                }}
+                                                                sx={{
+                                                                    width: 90,
+                                                                    "--Input-radius": "8px",
+                                                                }}
+                                                            />
+                                                            <Button
+                                                                size="sm"
+                                                                variant="solid"
+                                                                loading={codeSaving}
+                                                                onClick={handleCodeSave}
+                                                            >
+                                                                Save
+                                                            </Button>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="plain"
+                                                                color="neutral"
+                                                                onClick={() => {
+                                                                    setCodeEditMode(false);
+                                                                    setCodeError(null);
+                                                                }}
+                                                            >
+                                                                Cancel
+                                                            </Button>
+                                                        </Stack>
+                                                    ) : (
+                                                        <Stack
+                                                            direction="row"
+                                                            spacing={0.5}
+                                                            alignItems="center"
+                                                        >
+                                                            <Box
+                                                                sx={{
+                                                                    display: "inline-flex",
+                                                                    px: 1.5,
+                                                                    py: 0.5,
+                                                                    borderRadius: "8px",
+                                                                    background: isDark
+                                                                        ? "rgba(124,58,237,0.1)"
+                                                                        : "rgba(124,58,237,0.05)",
+                                                                    border: `1px solid ${styles.border}`,
+                                                                    fontFamily:
+                                                                        "ui-monospace, SFMono-Regular, Menlo, monospace",
+                                                                }}
+                                                            >
+                                                                <Typography
+                                                                    fontWeight={600}
+                                                                    sx={{
+                                                                        color: styles.valueColor,
+                                                                    }}
+                                                                >
+                                                                    {projectProfile?.code || "—"}
+                                                                </Typography>
+                                                            </Box>
+                                                            <Tooltip title="Edit code" size="sm">
+                                                                <IconButton
+                                                                    size="sm"
+                                                                    variant="plain"
+                                                                    onClick={() => {
+                                                                        setCodeDraft(
+                                                                            projectProfile?.code ||
+                                                                                ""
+                                                                        );
+                                                                        setCodeError(null);
+                                                                        setCodeEditMode(true);
+                                                                    }}
+                                                                >
+                                                                    <EditIcon
+                                                                        sx={{ fontSize: 16 }}
+                                                                    />
+                                                                </IconButton>
+                                                            </Tooltip>
+                                                        </Stack>
+                                                    )}
+                                                    {codeError && (
+                                                        <Typography
+                                                            level="body-xs"
+                                                            sx={{
+                                                                color: palette.dangerTint,
+                                                                mt: 0.5,
+                                                            }}
+                                                        >
+                                                            {codeError}
+                                                        </Typography>
+                                                    )}
+                                                </FormControl>
                                                 <FormControl>
                                                     <FormLabel
                                                         sx={{

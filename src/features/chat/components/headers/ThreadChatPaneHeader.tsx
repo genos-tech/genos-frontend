@@ -16,6 +16,8 @@ import { useTranslation } from "../../../../i18n";
 import { MuteToggleButton } from "../../../../services/notifications/MuteToggleButton";
 import { UserProps } from "../../../../types/admin";
 import { ThreadProps } from "../../../../types/chat";
+import { CopyableTaskIdText } from "../../../tasks/components/CopyableTaskId";
+import { formatTaskDisplayId } from "../../../tasks/utils/taskDisplayId";
 import { useChatContext } from "../../context/ChatContext";
 
 type ThreadChatPaneHeaderProps = {
@@ -238,7 +240,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                 <Box
                                     component="button"
                                     type="button"
-                                    aria-label={`Open Task #${useCM.currentThreadChat?.taskId ?? "N/A"}`}
+                                    aria-label={`Open Task ${formatTaskDisplayId(useCM.currentThreadChat) || "N/A"}`}
                                     onClick={() => {
                                         useCM.setIsMainChatVisible(false);
                                         useCM.setIsThreadVisible(true);
@@ -282,16 +284,17 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                             color: styles.accentColor,
                                         }}
                                     />
-                                    <Typography
+                                    <CopyableTaskIdText
+                                        task={useCM.currentThreadChat}
+                                        fallback="N/A"
+                                        prefix="Task "
                                         level="body-xs"
                                         sx={{
                                             fontWeight: 700,
                                             color: styles.textColor,
                                             letterSpacing: "-0.01em",
                                         }}
-                                    >
-                                        Task #{useCM.currentThreadChat?.taskId ?? "N/A"}
-                                    </Typography>
+                                    />
 
                                     {showStatus && status && (
                                         <>

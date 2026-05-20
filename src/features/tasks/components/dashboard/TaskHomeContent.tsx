@@ -54,6 +54,7 @@ import { SprintManagerDialog } from "../../sprint-milestone/components/SprintMan
 import { SprintMilestonesSection } from "../../sprint-milestone/components/SprintMilestonesSection";
 import { Sprint } from "../../sprint-milestone/types";
 import { predefinedPriorityFilters } from "../../types/TaskTableTypes";
+import { CopyableTaskIdText } from "../CopyableTaskId";
 
 // A task augmented with status/close-date rolled up from its parent chain.
 // `effectiveStatus`:
@@ -1480,15 +1481,14 @@ export const TaskHomeContent = ({
                                                                     direction="row"
                                                                     spacing={0.5}
                                                                 >
-                                                                    <Typography
+                                                                    <CopyableTaskIdText
+                                                                        task={task}
                                                                         level="body-xs"
                                                                         sx={{
                                                                             fontWeight: 600,
                                                                             color: textMuted,
                                                                         }}
-                                                                    >
-                                                                        #{task.id}
-                                                                    </Typography>
+                                                                    />
                                                                     {task.isMilestone === true && (
                                                                         <Tooltip
                                                                             size="sm"
@@ -1532,7 +1532,8 @@ export const TaskHomeContent = ({
                                                                     whiteSpace: "nowrap",
                                                                 }}
                                                             >
-                                                                {task.title || t.tasks.dashboard.untitledTask}
+                                                                {task.title ||
+                                                                    t.tasks.dashboard.untitledTask}
                                                             </Typography>
                                                             <Stack
                                                                 alignItems="center"
@@ -1931,16 +1932,15 @@ export const TaskHomeContent = ({
                                                                     spacing={0.75}
                                                                     sx={{ flex: 1, minWidth: 0 }}
                                                                 >
-                                                                    <Typography
+                                                                    <CopyableTaskIdText
+                                                                        task={task}
                                                                         level="body-xs"
                                                                         sx={{
                                                                             fontWeight: 600,
                                                                             color: textMuted,
                                                                             flexShrink: 0,
                                                                         }}
-                                                                    >
-                                                                        #{task.id}
-                                                                    </Typography>
+                                                                    />
                                                                     {task.isMilestone === true && (
                                                                         <FlagRoundedIcon
                                                                             sx={{
@@ -2560,7 +2560,8 @@ export const TaskHomeContent = ({
                                                                     whiteSpace: "nowrap",
                                                                 }}
                                                             >
-                                                                {task.title || t.tasks.dashboard.untitledTask}
+                                                                {task.title ||
+                                                                    t.tasks.dashboard.untitledTask}
                                                             </Typography>
                                                             <Typography
                                                                 level="body-xs"
@@ -2684,7 +2685,8 @@ export const TaskHomeContent = ({
                                                                     whiteSpace: "nowrap",
                                                                 }}
                                                             >
-                                                                {task.title || t.tasks.dashboard.untitledTask}
+                                                                {task.title ||
+                                                                    t.tasks.dashboard.untitledTask}
                                                             </Typography>
                                                             <Typography
                                                                 level="body-xs"

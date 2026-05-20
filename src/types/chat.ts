@@ -63,6 +63,9 @@ export type ThreadProps = {
     threadId: number;
     dmPartnerUser: UserProps;
     taskId: number | null;
+    // Human-readable task identifier ("GEN-42") when this thread is
+    // attached to a task. Falls back via `formatTaskDisplayId`.
+    displayId?: string | null;
     messages: ThreadMessageProps[];
     TSLastMessage: string;
     project?: ProjectProps;
@@ -98,6 +101,7 @@ export type ActivityMessageProps = {
     messageUniqueKey: string;
     threadMessageUniqueKey: string;
     taskId: number;
+    displayId?: string | null;
     projectId?: number;
     projectName?: string;
     firstLineContent: string;

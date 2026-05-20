@@ -31,6 +31,7 @@ import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
 import { effortLevels, priorities } from "../../utils/taskMeta";
+import { CopyableTaskIdText } from "../CopyableTaskId";
 import { ColumnDef, statusOptions } from "./DraggableTaskTable";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
@@ -358,44 +359,60 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 );
 
             case "id":
+                // The ID has two actions: click the text to copy the
+                // display ID (handy when starting a branch named after
+                // the task), click the open-in-new icon to pop the task
+                // preview. Double-click on the row also opens preview,
+                // so keeping both gestures is non-redundant.
                 return (
-                    <IconButton
-                        size="small"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            openPreview();
-                        }}
+                    <Box
                         sx={{
+                            display: "inline-flex",
+                            alignItems: "center",
                             color: isMilestoneRow
                                 ? "#f97316"
                                 : mode === "dark"
                                   ? "#a78bfa"
                                   : "#7c3aed",
-                            fontWeight: 600,
-                            "&:hover": {
-                                backgroundColor: isMilestoneRow
-                                    ? "rgba(249, 115, 22, 0.12)"
-                                    : mode === "dark"
-                                      ? "rgba(167,139,250,0.15)"
-                                      : "rgba(124,58,237,0.1)",
-                            },
                         }}
                     >
-                        <Typography
+                        <CopyableTaskIdText
+                            task={task}
                             fontSize="13px"
                             sx={{
                                 fontWeight: 600,
-                                color: isMilestoneRow
-                                    ? "#f97316"
-                                    : mode === "dark"
-                                      ? "#a78bfa"
-                                      : "#7c3aed",
+                                color: "inherit",
+                                px: 0.5,
+                                borderRadius: "4px",
+                                "&:hover": {
+                                    backgroundColor: isMilestoneRow
+                                        ? "rgba(249, 115, 22, 0.12)"
+                                        : mode === "dark"
+                                          ? "rgba(167,139,250,0.15)"
+                                          : "rgba(124,58,237,0.1)",
+                                },
+                            }}
+                        />
+                        <IconButton
+                            size="small"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                openPreview();
+                            }}
+                            sx={{
+                                color: "inherit",
+                                "&:hover": {
+                                    backgroundColor: isMilestoneRow
+                                        ? "rgba(249, 115, 22, 0.12)"
+                                        : mode === "dark"
+                                          ? "rgba(167,139,250,0.15)"
+                                          : "rgba(124,58,237,0.1)",
+                                },
                             }}
                         >
-                            #{task.id}
-                        </Typography>
-                        <OpenInNewIcon sx={{ ml: 0.5, fontSize: 14 }} />
-                    </IconButton>
+                            <OpenInNewIcon sx={{ fontSize: 14 }} />
+                        </IconButton>
+                    </Box>
                 );
 
             case "status":

@@ -17,10 +17,12 @@ import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagemen
 import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { TagListProps, TaskProps } from "../../../../../types/tasks";
+import { LinkedBranch, loadLinkedBranches } from "../../../../integrations/services/github";
 import { extractPrUrlsFromBlocks } from "../../../../integrations/utils/extractPrUrls";
 import { parsePrUrl } from "../../../../integrations/utils/parsePrUrl";
 import { loadSpecificTask } from "../../../services/loadSpecificTask";
 import { SprintMilestonePicker } from "../../../sprint-milestone/components/SprintMilestonePicker";
+import { CopyableTaskIdChip } from "../../CopyableTaskId";
 import { ACProjectTags } from "../../autocompletes/ACProjectTags";
 import { ACTaskEffortLevel } from "../../autocompletes/ACTaskEffortLevel";
 import { ACTaskPriority } from "../../autocompletes/ACTaskPriority";
@@ -128,6 +130,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
 
     const [openManageTags, setOpenManageTags] = useState(false);
     const [parentTask, setParentTask] = useState<TaskProps>();
+    const [linkedBranches, setLinkedBranches] = useState<LinkedBranch[]>([]);
     useEffect(() => {
         (async () => {
             if (taskContent.project && taskContent.parentTaskId != null) {
@@ -147,6 +150,27 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
             }
         })();
     }, [taskContent]);
+
+    // Auto-discover branches whose name contains this task's display ID
+    // (e.g. "feature/GEN-42-foo" for task GEN-42). Only meaningful once
+    // the task has a project-scoped ID — orphan tasks fall back to
+    // "#<id>" which would alias every task in the team. Scan once per
+    // task open; refresh is implicit on re-open.
+    useEffect(() => {
+        let cancelled = false;
+        const displayId = taskContent.displayId;
+        if (!taskContent.id || !displayId || displayId.startsWith("#")) {
+            setLinkedBranches([]);
+            return;
+        }
+        (async () => {
+            const branches = await loadLinkedBranches(accessToken, taskContent.id!);
+            if (!cancelled) setLinkedBranches(branches);
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [taskContent.id, taskContent.displayId, accessToken]);
 
     // Mirror PR URLs from the BlockNote task body into the Links list so
     // the LinkedPrCard appears in the metadata panel automatically — no
@@ -518,6 +542,61 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     />
                 </ListItem>
 
+                {/* Linked branches — auto-discovered branches whose names
+                    contain the task's display ID. Read-only chips that
+                    open the branch on GitHub. Hidden when none match. */}
+                {linkedBranches.length > 0 && (
+                    <ListItem sx={{ display: "flex", alignItems: "flex-start" }}>
+                        <FieldLabel isDark={isDark}>{t.tasks.fields.branches}</FieldLabel>
+                        <Box
+                            sx={{
+                                display: "flex",
+                                flexWrap: "wrap",
+                                gap: 0.5,
+                                flex: 1,
+                            }}
+                        >
+                            {linkedBranches.map((b) => (
+                                <Tooltip
+                                    key={`${b.owner}/${b.repo}/${b.name}`}
+                                    title={`${b.owner}/${b.repo}`}
+                                    placement="top"
+                                    arrow
+                                >
+                                    <Chip
+                                        component="a"
+                                        href={b.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        size="sm"
+                                        variant="outlined"
+                                        sx={{
+                                            borderRadius: "6px",
+                                            fontFamily: "monospace",
+                                            fontSize: "0.7rem",
+                                            px: 1,
+                                            cursor: "pointer",
+                                            background: isDark
+                                                ? "rgba(255,255,255,0.04)"
+                                                : "rgba(0,0,0,0.03)",
+                                            borderColor: isDark
+                                                ? "rgba(255,255,255,0.1)"
+                                                : "rgba(0,0,0,0.1)",
+                                            "&:hover": {
+                                                background: isDark
+                                                    ? "rgba(255,255,255,0.08)"
+                                                    : "rgba(0,0,0,0.06)",
+                                            },
+                                        }}
+                                    >
+                                        {b.name}
+                                    </Chip>
+                                </Tooltip>
+                            ))}
+                        </Box>
+                    </ListItem>
+                )}
+
                 {/* Parent Task (only if exists) */}
                 {parentTask !== undefined && (
                     <ListItem sx={{ display: "flex", alignItems: "center", mt: 1 }}>
@@ -579,7 +658,8 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     socket={socket}
                                     useUISM={useUISM}
                                 />
-                                <Chip
+                                <CopyableTaskIdChip
+                                    task={parentTask}
                                     size="sm"
                                     variant="outlined"
                                     sx={{
@@ -594,9 +674,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                             ? "rgba(255,255,255,0.1)"
                                             : "rgba(0,0,0,0.1)",
                                     }}
-                                >
-                                    #{parentTask.id}
-                                </Chip>
+                                />
                                 <Chip
                                     size="sm"
                                     variant="soft"

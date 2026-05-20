@@ -12,6 +12,7 @@ import { ProjectManagementState } from "../../../../hooks/common/useProjectManag
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { SearchTeamTasksResponse } from "../../../../types/tasks";
+import { CopyableTaskIdChip } from "../CopyableTaskId";
 import { Toggler } from "./common";
 
 type RecentsListItemProps = {
@@ -247,8 +248,9 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                                                     },
                                                 }}
                                             >
-                                                <Chip
+                                                <CopyableTaskIdChip
                                                     key={`task-id-chip-${task.taskId}`}
+                                                    task={task}
                                                     color="neutral"
                                                     variant="outlined"
                                                     sx={{
@@ -258,9 +260,7 @@ export const RecentsListItem = (props: RecentsListItemProps) => {
                                                         minHeight: 18,
                                                         px: 0.5,
                                                     }}
-                                                >
-                                                    #{task.taskId}
-                                                </Chip>
+                                                />
                                                 <Chip
                                                     key={`status-chip-${task.taskId}-${index}`}
                                                     variant="soft"

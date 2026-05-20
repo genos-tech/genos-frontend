@@ -26,6 +26,10 @@ export type TagListProps = {
 export type ProjectProps = {
     projectId: number;
     projectName: string;
+    // Short uppercase code used as the prefix in task display IDs
+    // (the "GEN" in "GEN-42"). Auto-derived on project create,
+    // editable from project settings.
+    projectCode?: string | null;
     projectTags: TagListProps[];
     isPrivate?: boolean;
     isJoined?: boolean;
@@ -102,6 +106,11 @@ export type TaskListByTagProps = {
 
 export type TaskProps = {
     id?: number;
+    // Human-readable task ID shown to users ("GEN-42"). Falls back to
+    // "#<id>" for orphan tasks without a project / pre-migration rows.
+    // Backend computes this from `project.code` + `project_task_number`
+    // and emits it on every task response.
+    displayId?: string | null;
     project: ProjectProps | null;
     title: string;
     body: PartialBlock[];
@@ -141,6 +150,8 @@ export type TaskProps = {
 
 export type TaskTableProps = {
     id: string | null;
+    // Human-readable task ID — see TaskProps.displayId.
+    displayId?: string | null;
     title: string | null;
     priority: string | null;
     effortLevel: string | null;
@@ -186,9 +197,11 @@ export type TaskTypesProps = {
 export type SearchTeamTasksResponse = {
     projectId: number;
     projectName: string;
+    projectCode?: string | null;
     projectTags: TagListProps[];
     systemUserId: string;
     taskId: number;
+    displayId?: string | null;
     title: string;
     status: TaskStatusProps;
     tsUpdated: string;

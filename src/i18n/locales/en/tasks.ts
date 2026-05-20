@@ -381,6 +381,7 @@ export const tasks = {
         dueDate: "Due Date",
         links: "Links",
         parentTask: "Parent Task",
+        branches: "Branches",
     },
 
     // Filter labels (TaskFilterMenu).

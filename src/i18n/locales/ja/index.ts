@@ -844,6 +844,7 @@ export const ja: DeepPartial<Messages> = {
             dueDate: "期限",
             links: "リンク",
             parentTask: "親タスク",
+            branches: "ブランチ",
         },
         filters: {
             all: "すべて",

@@ -831,6 +831,7 @@ export const zh: DeepPartial<Messages> = {
             dueDate: "截止日期",
             links: "链接",
             parentTask: "父任务",
+            branches: "分支",
         },
         filters: {
             all: "全部",
