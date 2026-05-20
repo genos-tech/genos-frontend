@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import BadgeRoundedIcon from "@mui/icons-material/BadgeRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
+import GitHubIcon from "@mui/icons-material/GitHub";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
 import MarkEmailReadRoundedIcon from "@mui/icons-material/MarkEmailReadRounded";
 import PersonAddRoundedIcon from "@mui/icons-material/PersonAddRounded";
@@ -36,6 +37,7 @@ import { resendVerificationEmail } from "../services/emailVerification";
 import { signUp } from "../services/signup";
 import { validatePassword } from "../utils/passwordValidation";
 import { AdminHeader } from "./Header";
+import { GoogleIcon } from "./icons/GoogleIcon";
 
 const maskEmail = (email: string): string => {
     const [local, domain] = email.split("@");
@@ -291,6 +293,7 @@ const SignUpContent = () => {
                                             <Button
                                                 fullWidth
                                                 variant="outlined"
+                                                startDecorator={<GoogleIcon />}
                                                 onClick={() => redirectToOAuthLogin("google")}
                                                 sx={{
                                                     py: 1.25,
@@ -311,6 +314,9 @@ const SignUpContent = () => {
                                             <Button
                                                 fullWidth
                                                 variant="outlined"
+                                                startDecorator={
+                                                    <GitHubIcon sx={{ fontSize: 20 }} />
+                                                }
                                                 onClick={() => redirectToOAuthLogin("github")}
                                                 sx={{
                                                     py: 1.25,

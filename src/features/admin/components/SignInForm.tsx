@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
+import GitHubIcon from "@mui/icons-material/GitHub";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
 import LoginRoundedIcon from "@mui/icons-material/LoginRounded";
 import ScienceRoundedIcon from "@mui/icons-material/ScienceRounded";
@@ -40,6 +41,7 @@ import { resendVerificationEmail } from "../services/emailVerification";
 import { requestPasswordReset } from "../services/passwordReset";
 import { signIn } from "../services/signin";
 import { AdminHeader } from "./Header";
+import { GoogleIcon } from "./icons/GoogleIcon";
 
 interface FormElements extends HTMLFormControlsCollection {
     email: HTMLInputElement;
@@ -321,6 +323,7 @@ const SignInContent = () => {
                                     <Button
                                         fullWidth
                                         variant="outlined"
+                                        startDecorator={<GoogleIcon />}
                                         onClick={() => redirectToOAuthLogin("google")}
                                         sx={{
                                             py: 1.25,
@@ -341,6 +344,7 @@ const SignInContent = () => {
                                     <Button
                                         fullWidth
                                         variant="outlined"
+                                        startDecorator={<GitHubIcon sx={{ fontSize: 20 }} />}
                                         onClick={() => redirectToOAuthLogin("github")}
                                         sx={{
                                             py: 1.25,
