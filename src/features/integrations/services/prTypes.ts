@@ -11,8 +11,17 @@ export interface GithubPullDetail {
     merged: boolean;
     created_at: string;
     updated_at: string;
-    head: { sha: string };
-    base: { repo: { full_name: string } };
+    user?: { login: string; avatar_url?: string };
+    head: { sha: string; ref?: string };
+    base: { ref?: string; repo: { full_name: string } };
+    // Stats are present on the GET /pulls/{n} response (not on the
+    // list endpoint). Optional so we don't crash on partial fixtures.
+    additions?: number;
+    deletions?: number;
+    changed_files?: number;
+    comments?: number;
+    review_comments?: number;
+    commits?: number;
 }
 
 export interface CombinedStatus {

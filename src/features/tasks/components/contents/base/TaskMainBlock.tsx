@@ -1,18 +1,7 @@
 import { useEffect, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
-import {
-    Box,
-    Chip,
-    Grid,
-    IconButton,
-    Input,
-    List,
-    ListItem,
-    Stack,
-    Tooltip,
-    Typography,
-} from "@mui/joy";
+import { Box, Chip, Grid, IconButton, List, ListItem, Stack, Tooltip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 import { Socket } from "socket.io-client";
@@ -28,7 +17,6 @@ import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagemen
 import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { TagListProps, TaskProps } from "../../../../../types/tasks";
-import { parsePrUrl } from "../../../../integrations/utils/parsePrUrl";
 import { loadSpecificTask } from "../../../services/loadSpecificTask";
 import { SprintMilestonePicker } from "../../../sprint-milestone/components/SprintMilestonePicker";
 import { ACProjectTags } from "../../autocompletes/ACProjectTags";
@@ -486,34 +474,6 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         setTaskUpdated={setTaskUpdated}
                         taskContent={taskContent}
                     />
-                </ListItem>
-
-                {/* Linked PR (GitHub) — single-URL field, live-validated. */}
-                <ListItem sx={{ display: "flex", alignItems: "flex-start" }}>
-                    <FieldLabel isDark={isDark}>{t.tasks.linkedPr.fieldLabel}</FieldLabel>
-                    <Stack sx={{ flex: 1, gap: 0.5 }}>
-                        <Input
-                            size="sm"
-                            placeholder={t.tasks.linkedPr.paste}
-                            value={taskContent.linkedPrUrl ?? ""}
-                            onChange={(e) => {
-                                const v = e.target.value;
-                                setTaskContent({
-                                    ...taskContent,
-                                    linkedPrUrl: v === "" ? null : v,
-                                });
-                                setTaskUpdated?.(true);
-                            }}
-                            slotProps={{ input: { spellCheck: false } }}
-                        />
-                        {taskContent.linkedPrUrl &&
-                            taskContent.linkedPrUrl !== "" &&
-                            !parsePrUrl(taskContent.linkedPrUrl) && (
-                                <Typography level="body-xs" sx={{ color: "danger.500" }}>
-                                    {t.tasks.linkedPr.invalid}
-                                </Typography>
-                            )}
-                    </Stack>
                 </ListItem>
 
                 {/* Parent Task (only if exists) */}

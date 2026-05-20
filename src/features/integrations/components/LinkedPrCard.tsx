@@ -1,28 +1,37 @@
 import React, { useEffect, useState } from "react";
-import CallMergeRoundedIcon from "@mui/icons-material/CallMergeRounded";
-import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
-import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
-import PendingRoundedIcon from "@mui/icons-material/PendingRounded";
 import {
     Alert,
+    Avatar,
     Box,
     Button,
     Card,
     Chip,
     CircularProgress,
-    IconButton,
+    Divider,
     Stack,
     Tooltip,
     Typography,
 } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 
-import { fmt, useTranslation } from "../../../i18n";
+import { useTranslation } from "../../../i18n";
+import { purplePalette } from "../../../theme/purplePalette";
 import { redirectToOAuthConnect } from "../services/oauth";
 import { getCachedOrFetchPrStatus, type PrStatusResult } from "../services/prStatusCache";
 import type { CheckRunsResponse, CombinedStatus, PrDetailResponse } from "../services/prTypes";
+import {
+    CheckFailingIcon,
+    CheckNoneIcon,
+    CheckPassingIcon,
+    CheckPendingIcon,
+    PrClosedIcon,
+    PrDraftIcon,
+    PrMergedIcon,
+    PrOpenIcon,
+} from "./icons/Octicons";
 
 interface Props {
     url: string;
@@ -44,52 +53,223 @@ const deriveCiState = (cs: CombinedStatus | null, cr: CheckRunsResponse | null):
     return "passing";
 };
 
-type StateChip = {
-    label: string;
-    color: "neutral" | "success" | "warning" | "primary" | "danger";
+type PrState = "merged" | "draft" | "open" | "closed";
+
+const derivePrState = (pull: PrDetailResponse["pull"]): PrState => {
+    if (pull.merged) return "merged";
+    if (pull.draft) return "draft";
+    if (pull.state === "open") return "open";
+    return "closed";
 };
 
-const stateChipFor = (
-    pull: PrDetailResponse["pull"],
-    t: ReturnType<typeof useTranslation>["t"]
-): StateChip => {
-    if (pull.merged) return { label: t.tasks.linkedPr.stateMerged, color: "primary" };
-    if (pull.draft) return { label: t.tasks.linkedPr.stateDraft, color: "neutral" };
-    if (pull.state === "open") return { label: t.tasks.linkedPr.stateOpen, color: "success" };
-    return { label: t.tasks.linkedPr.stateClosed, color: "neutral" };
+// GitHub's canonical colors for PR state badges. Matches what
+// github.com renders.
+const prStateColor = (state: PrState): string => {
+    switch (state) {
+        case "open":
+            return "#1f883d";
+        case "merged":
+            return "#8250df";
+        case "closed":
+            return "#cf222e";
+        case "draft":
+        default:
+            return "#6e7781";
+    }
 };
 
-const ciIconAndColor = (
-    state: CiState,
-    t: ReturnType<typeof useTranslation>["t"]
-): { icon: React.ReactElement; tooltip: string } => {
+const PrStateIcon = ({ state, size = 16 }: { state: PrState; size?: number }) => {
+    const color = prStateColor(state);
+    const common = { width: size, height: size, style: { color } };
+    switch (state) {
+        case "merged":
+            return <PrMergedIcon {...common} />;
+        case "draft":
+            return <PrDraftIcon {...common} />;
+        case "closed":
+            return <PrClosedIcon {...common} />;
+        case "open":
+        default:
+            return <PrOpenIcon {...common} />;
+    }
+};
+
+const CiBadge = ({ state, size = 16 }: { state: CiState; size?: number }) => {
+    const color =
+        state === "passing"
+            ? "#1f883d"
+            : state === "failing"
+              ? "#cf222e"
+              : state === "pending"
+                ? "#bf8700"
+                : "#6e7781";
+    const common = { width: size, height: size, style: { color } };
     switch (state) {
         case "passing":
-            return {
-                icon: <CheckCircleRoundedIcon sx={{ color: "success.500", fontSize: 18 }} />,
-                tooltip: t.tasks.linkedPr.ciPassing,
-            };
+            return <CheckPassingIcon {...common} />;
         case "failing":
-            return {
-                icon: <ErrorOutlineRoundedIcon sx={{ color: "danger.500", fontSize: 18 }} />,
-                tooltip: t.tasks.linkedPr.ciFailing,
-            };
+            return <CheckFailingIcon {...common} />;
         case "pending":
-            return {
-                icon: <PendingRoundedIcon sx={{ color: "warning.500", fontSize: 18 }} />,
-                tooltip: t.tasks.linkedPr.ciPending,
-            };
+            return <CheckPendingIcon {...common} />;
         case "none":
         default:
-            return {
-                icon: <PendingRoundedIcon sx={{ color: "neutral.400", fontSize: 18 }} />,
-                tooltip: t.tasks.linkedPr.ciNone,
-            };
+            return <CheckNoneIcon {...common} />;
     }
+};
+
+// "5 minutes ago" / "2 hours ago" / "3 days ago" — no extra dep,
+// good enough for a tooltip subtitle.
+const relativeAgo = (iso: string): string => {
+    const then = new Date(iso).getTime();
+    if (Number.isNaN(then)) return iso;
+    const secs = Math.max(1, Math.floor((Date.now() - then) / 1000));
+    const units: [number, string][] = [
+        [60, "second"],
+        [60, "minute"],
+        [24, "hour"],
+        [7, "day"],
+        [4.345, "week"],
+        [12, "month"],
+        [Number.POSITIVE_INFINITY, "year"],
+    ];
+    let value = secs;
+    let label = "second";
+    for (const [factor, unit] of units) {
+        if (value < factor) {
+            label = unit;
+            break;
+        }
+        value = value / factor;
+        label = unit;
+    }
+    const rounded = Math.max(1, Math.floor(value));
+    return `${rounded} ${label}${rounded === 1 ? "" : "s"} ago`;
+};
+
+const stateLabel = (state: PrState, t: ReturnType<typeof useTranslation>["t"]): string => {
+    switch (state) {
+        case "merged":
+            return t.tasks.linkedPr.stateMerged;
+        case "draft":
+            return t.tasks.linkedPr.stateDraft;
+        case "closed":
+            return t.tasks.linkedPr.stateClosed;
+        case "open":
+        default:
+            return t.tasks.linkedPr.stateOpen;
+    }
+};
+
+const ciTooltipLabel = (state: CiState, t: ReturnType<typeof useTranslation>["t"]): string => {
+    switch (state) {
+        case "passing":
+            return t.tasks.linkedPr.ciPassing;
+        case "failing":
+            return t.tasks.linkedPr.ciFailing;
+        case "pending":
+            return t.tasks.linkedPr.ciPending;
+        case "none":
+        default:
+            return t.tasks.linkedPr.ciNone;
+    }
+};
+
+// Rich hover content: author, branch, stats, opened/updated dates.
+// Rendered inside Tooltip's `title` prop. Colors flow through
+// `purplePalette` so the panel matches menus/popovers elsewhere instead
+// of Joy's stock white-on-black solid tooltip.
+const HoverDetails = ({
+    payload,
+    isDark,
+}: {
+    payload: PrDetailResponse;
+    isDark: boolean;
+}) => {
+    const { pull } = payload;
+    const palette = isDark ? purplePalette.dark : purplePalette.light;
+
+    const author = pull.user?.login;
+    const avatar = pull.user?.avatar_url;
+    const headRef = pull.head?.ref;
+    const baseRef = pull.base?.ref;
+    const adds = pull.additions;
+    const dels = pull.deletions;
+    const changed = pull.changed_files;
+    const commits = pull.commits;
+    const comments = (pull.comments ?? 0) + (pull.review_comments ?? 0);
+
+    return (
+        <Stack spacing={0.75} sx={{ minWidth: 260, p: 0.5 }}>
+            {author && (
+                <Stack direction="row" alignItems="center" spacing={1}>
+                    {avatar && (
+                        <Avatar
+                            src={avatar}
+                            size="sm"
+                            sx={{ width: 20, height: 20, fontSize: 10 }}
+                        />
+                    )}
+                    <Typography level="body-xs" sx={{ color: palette.text }}>
+                        Opened by <strong>{author}</strong> · {relativeAgo(pull.created_at)}
+                    </Typography>
+                </Stack>
+            )}
+
+            {(headRef || baseRef) && (
+                <Typography
+                    level="body-xs"
+                    sx={{
+                        color: palette.text,
+                        fontFamily:
+                            "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                        fontSize: 11,
+                    }}
+                >
+                    {headRef ?? "?"} → {baseRef ?? "?"}
+                </Typography>
+            )}
+
+            <Divider sx={{ borderColor: palette.divider }} />
+
+            <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap" }}>
+                {commits != null && (
+                    <Typography level="body-xs" sx={{ color: palette.text }}>
+                        {commits} commit{commits === 1 ? "" : "s"}
+                    </Typography>
+                )}
+                {(adds != null || dels != null) && (
+                    <Typography level="body-xs" sx={{ color: palette.text }}>
+                        {/* Diff +/- colors are functional, not branded —
+                            keep GitHub's canonical green/red but pick
+                            the shade that's readable on each theme. */}
+                        <span style={{ color: isDark ? "#7ee787" : "#1a7f37" }}>
+                            +{adds ?? 0}
+                        </span>{" "}
+                        <span style={{ color: isDark ? "#ffa198" : "#cf222e" }}>
+                            −{dels ?? 0}
+                        </span>
+                        {changed != null ? ` · ${changed} file${changed === 1 ? "" : "s"}` : ""}
+                    </Typography>
+                )}
+                {comments > 0 && (
+                    <Typography level="body-xs" sx={{ color: palette.text }}>
+                        {comments} comment{comments === 1 ? "" : "s"}
+                    </Typography>
+                )}
+            </Stack>
+
+            <Typography level="body-xs" sx={{ color: palette.textMuted }}>
+                Updated {relativeAgo(pull.updated_at)}
+            </Typography>
+        </Stack>
+    );
 };
 
 export const LinkedPrCard = ({ url, accessToken }: Props) => {
     const { t } = useTranslation();
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
+    const palette = isDark ? purplePalette.dark : purplePalette.light;
     const [result, setResult] = useState<PrStatusResult | null>(null);
 
     useEffect(() => {
@@ -105,7 +285,6 @@ export const LinkedPrCard = ({ url, accessToken }: Props) => {
         };
     }, [accessToken, url]);
 
-    // Loading
     if (result === null) {
         return (
             <Card variant="outlined" sx={{ p: 1.5 }}>
@@ -116,8 +295,6 @@ export const LinkedPrCard = ({ url, accessToken }: Props) => {
         );
     }
 
-    // GitHub not connected — render the same Alert + Connect button pattern
-    // the integrations page uses, scoped to this card.
     if (result.kind === "github_not_connected") {
         return (
             <Card variant="outlined" sx={{ p: 1.5 }}>
@@ -144,11 +321,21 @@ export const LinkedPrCard = ({ url, accessToken }: Props) => {
         );
     }
 
-    // Generic error (404 from upstream, network failure, malformed URL) —
-    // show the URL with a graceful fallback link.
     if (result.kind === "error") {
         return (
-            <Card variant="outlined" sx={{ p: 1.5 }}>
+            <Card
+                variant="outlined"
+                component="a"
+                href={url}
+                target="_blank"
+                rel="noreferrer"
+                sx={{
+                    p: 1.5,
+                    textDecoration: "none",
+                    color: "inherit",
+                    "&:hover": { borderColor: "primary.500" },
+                }}
+            >
                 <Stack direction="row" alignItems="center" spacing={1.25}>
                     <GitHubIcon sx={{ color: "neutral.500" }} />
                     <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -167,74 +354,102 @@ export const LinkedPrCard = ({ url, accessToken }: Props) => {
                             {url}
                         </Typography>
                     </Box>
-                    <IconButton
-                        size="sm"
-                        variant="plain"
-                        component="a"
-                        href={url}
-                        target="_blank"
-                        rel="noreferrer"
-                        aria-label={t.tasks.linkedPr.openOnGithub}
-                    >
-                        <OpenInNewRoundedIcon />
-                    </IconButton>
+                    <OpenInNewRoundedIcon sx={{ color: "text.tertiary", fontSize: 18 }} />
                 </Stack>
             </Card>
         );
     }
 
     const { pull, combined_status, check_runs } = result.payload;
-    const chip = stateChipFor(pull, t);
+    const prState = derivePrState(pull);
     const ci = deriveCiState(combined_status, check_runs);
-    const ciDisplay = ciIconAndColor(ci, t);
-    const lastUpdated = new Date(pull.updated_at).toLocaleString();
 
     return (
-        <Card variant="outlined" sx={{ p: 1.5 }}>
-            <Stack direction="row" alignItems="center" spacing={1.25}>
-                {pull.merged ? (
-                    <CallMergeRoundedIcon sx={{ color: "primary.500" }} />
-                ) : (
-                    <GitHubIcon sx={{ color: "neutral.600" }} />
-                )}
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography
-                        level="title-sm"
+        <Tooltip
+            arrow
+            placement="top-start"
+            variant="outlined"
+            size="sm"
+            title={<HoverDetails payload={result.payload} isDark={isDark} />}
+            sx={{
+                maxWidth: 320,
+                // Override Joy's tooltip surface to match the palette's
+                // menu/popover styling so it blends with the rest of the
+                // app (instead of Joy's stock white-on-black solid).
+                bgcolor: palette.menuBg,
+                borderColor: palette.menuBorder,
+                color: palette.text,
+                boxShadow: palette.shadow,
+                // The arrow inherits `bgcolor`/`borderColor` from the
+                // tooltip body, so no extra slotProps needed.
+            }}
+        >
+            <Card
+                variant="outlined"
+                component="a"
+                href={pull.html_url}
+                target="_blank"
+                rel="noreferrer"
+                sx={{
+                    p: 1.5,
+                    textDecoration: "none",
+                    color: "inherit",
+                    transition: "border-color 0.15s, transform 0.15s",
+                    "&:hover": {
+                        borderColor: "primary.500",
+                        transform: "translateY(-1px)",
+                    },
+                }}
+            >
+                <Stack direction="row" alignItems="center" spacing={1.25}>
+                    {/* PR state octicon */}
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <PrStateIcon state={prState} size={18} />
+                    </Box>
+
+                    {/* Title + repo path */}
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography
+                            level="title-sm"
+                            sx={{
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                            }}
+                        >
+                            {pull.title}
+                        </Typography>
+                        <Typography level="body-xs" sx={{ color: "text.secondary" }}>
+                            {pull.base.repo.full_name} #{pull.number}
+                        </Typography>
+                    </Box>
+
+                    {/* CI badge */}
+                    <Tooltip title={ciTooltipLabel(ci, t)} size="sm">
+                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                            <CiBadge state={ci} size={16} />
+                        </Box>
+                    </Tooltip>
+
+                    {/* State chip */}
+                    <Chip
+                        size="sm"
+                        variant="soft"
                         sx={{
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
+                            backgroundColor: `${prStateColor(prState)}1f`,
+                            color: prStateColor(prState),
+                            fontWeight: 600,
                         }}
                     >
-                        {pull.title}
-                    </Typography>
-                    <Typography level="body-xs" sx={{ color: "text.secondary" }}>
-                        {pull.base.repo.full_name} #{pull.number}
-                    </Typography>
-                </Box>
-                <Tooltip title={ciDisplay.tooltip} size="sm">
-                    <Box sx={{ display: "flex", alignItems: "center" }}>{ciDisplay.icon}</Box>
-                </Tooltip>
-                <Chip size="sm" color={chip.color} variant="soft">
-                    {chip.label}
-                </Chip>
-                <Tooltip
-                    title={fmt(t.tasks.linkedPr.lastUpdated, { when: lastUpdated })}
-                    size="sm"
-                >
-                    <IconButton
-                        size="sm"
-                        variant="plain"
-                        component="a"
-                        href={pull.html_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        aria-label={t.tasks.linkedPr.openOnGithub}
-                    >
-                        <OpenInNewRoundedIcon />
-                    </IconButton>
-                </Tooltip>
-            </Stack>
-        </Card>
+                        {stateLabel(prState, t)}
+                    </Chip>
+
+                    {/* Open-in-new affordance — purely decorative now that
+                        the whole card is clickable, but keeps the existing
+                        visual cue. */}
+                    <OpenInNewRoundedIcon sx={{ color: "text.tertiary", fontSize: 16 }} />
+                </Stack>
+            </Card>
+        </Tooltip>
     );
 };
