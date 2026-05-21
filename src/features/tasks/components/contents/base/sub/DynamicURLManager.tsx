@@ -329,37 +329,26 @@ const LinkDisplay = ({ link, editingId, onEdit, onSave, onDelete }: LinkDisplayP
                     {link.title}
                 </a>
             </Typography>
-            {/* Auto-linked entries (Source 2 in `pulls-for-task` uses
-                the `isAutoLinked` flag for PR-column persistence) are
-                managed by the auto-discovery effect in TaskMainBlock —
-                editing or deleting them by hand would either reintroduce
-                the flag on the next discovery pass or break the column.
-                The wrapping span keeps the tooltip visible while the
-                IconButton itself is disabled. */}
-            <Tooltip size="sm" title={t.tasks.dynamicUrl.editTooltip} variant="outlined">
-                <span>
-                    <IconButton
-                        color="neutral"
-                        size="sm"
-                        disabled={link.isAutoLinked === true}
-                        onClick={() => onEdit(link.id)}
-                    >
-                        <EditIcon />
-                    </IconButton>
-                </span>
-            </Tooltip>
-            <Tooltip size="sm" title={t.tasks.dynamicUrl.deleteTooltip} variant="outlined">
-                <span>
-                    <IconButton
-                        color="danger"
-                        size="sm"
-                        disabled={link.isAutoLinked === true}
-                        onClick={() => onDelete(link.id)}
-                    >
-                        <DeleteIcon />
-                    </IconButton>
-                </span>
-            </Tooltip>
+            {/* Edit / Delete buttons are hidden for auto-linked entries:
+                Source 2 in `pulls-for-task` uses the `isAutoLinked` flag
+                for PR-column persistence, and those entries are owned by
+                the auto-discovery effect in TaskMainBlock. Editing or
+                deleting one by hand would either get reintroduced on the
+                next discovery pass or break the column. */}
+            {!link.isAutoLinked && (
+                <>
+                    <Tooltip size="sm" title={t.tasks.dynamicUrl.editTooltip} variant="outlined">
+                        <IconButton color="neutral" size="sm" onClick={() => onEdit(link.id)}>
+                            <EditIcon />
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip size="sm" title={t.tasks.dynamicUrl.deleteTooltip} variant="outlined">
+                        <IconButton color="danger" size="sm" onClick={() => onDelete(link.id)}>
+                            <DeleteIcon />
+                        </IconButton>
+                    </Tooltip>
+                </>
+            )}
         </Stack>
     );
 };
