@@ -110,13 +110,16 @@ export interface LinkedPullsResponse {
 // dropped request is indistinguishable from no matches by design.
 export const loadLinkedBranches = async (
     accessToken: string | null,
-    taskId: number | string
+    taskId: number | string,
+    options?: { bypassCache?: boolean }
 ): Promise<LinkedBranch[]> => {
     try {
         const api = authApi(accessToken);
         if (!api) return [];
+        const params: Record<string, string | number> = { task_id: taskId };
+        if (options?.bypassCache) params.fresh = "1";
         const res = await api.get<LinkedBranchesResponse>("/github/branches/for-task/", {
-            params: { task_id: taskId },
+            params,
         });
         return res.data.branches ?? [];
     } catch {

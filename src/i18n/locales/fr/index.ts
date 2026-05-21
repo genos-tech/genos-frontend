@@ -624,6 +624,7 @@ export const fr: DeepPartial<Messages> = {
             sprintBurndown: "Clôturées dans le sprint / Créées dans le sprint",
             milestone: "Jalon",
             tasksInThisMilestone: "Tâches dans ce jalon",
+            refreshBranches: "Actualiser les branches",
         },
         buttons: {
             create: "Créer",

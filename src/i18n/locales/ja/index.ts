@@ -615,6 +615,7 @@ export const ja: DeepPartial<Messages> = {
             sprintBurndown: "スプリント内クローズ件数 / スプリント内作成件数",
             milestone: "マイルストーン",
             tasksInThisMilestone: "このマイルストーンのタスク",
+            refreshBranches: "ブランチを更新",
         },
         buttons: {
             create: "作成",

@@ -619,6 +619,7 @@ export const hi: DeepPartial<Messages> = {
             sprintBurndown: "स्प्रिंट में बंद / स्प्रिंट में बनाए गए",
             milestone: "माइलस्टोन",
             tasksInThisMilestone: "इस माइलस्टोन के टास्क",
+            refreshBranches: "ब्रांच रिफ्रेश करें",
         },
         buttons: {
             create: "बनाएँ",
