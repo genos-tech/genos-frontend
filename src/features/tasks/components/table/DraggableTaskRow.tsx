@@ -1507,24 +1507,30 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         </div>
 
                         {/* Table Cells */}
-                        {columns
-                            .filter((col) => !col.hidden)
-                            .map((column, idx) => (
-                                <div
-                                    key={column.field}
-                                    style={{
-                                        ...getTableCellStyles(column.width, column.align, mode),
-                                        borderRight:
-                                            idx === columns.filter((c) => !c.hidden).length - 1
-                                                ? "none"
-                                                : mode === "dark"
-                                                  ? "1px solid rgba(255, 255, 255, 0.04)"
-                                                  : "1px solid rgba(0, 0, 0, 0.04)",
-                                    }}
-                                >
-                                    {renderCellContent(column)}
-                                </div>
-                            ))}
+                        {/* `columns` is already filtered for visibility
+                            by the parent (DraggableTaskTable's
+                            `visibleColumns` honors user overrides on top
+                            of the column's `hidden` default). Re-applying
+                            `!col.hidden` here would silently strip
+                            user-enabled columns whose default is hidden
+                            (e.g. the PR column after the user opts in)
+                            and produce a header/row column mismatch. */}
+                        {columns.map((column, idx) => (
+                            <div
+                                key={column.field}
+                                style={{
+                                    ...getTableCellStyles(column.width, column.align, mode),
+                                    borderRight:
+                                        idx === columns.length - 1
+                                            ? "none"
+                                            : mode === "dark"
+                                              ? "1px solid rgba(255, 255, 255, 0.04)"
+                                              : "1px solid rgba(0, 0, 0, 0.04)",
+                                }}
+                            >
+                                {renderCellContent(column)}
+                            </div>
+                        ))}
                     </Box>
                 );
             }}
