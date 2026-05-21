@@ -208,19 +208,27 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
     // Mirror auto-linked PR URLs (PRs whose head branch matches this
     // task's display ID) into `taskContent.links`. Parallels the body-
     // mirror effect below, but the source is the `pulls-for-task`
-    // endpoint instead of the BlockNote document. Add-only: if the user
-    // deletes the auto-appended link from the Links section, it stays
-    // deleted until the task is re-opened (matching the existing
-    // body-mirror's "add-only" semantics — silently re-adding deletes
-    // would be surprising).
+    // endpoint instead of the BlockNote document. Two paths:
     //
-    // We use a ref to track URLs we've already appended in this mount
-    // so back-to-back fetches (e.g. due to render churn) don't re-add
-    // the same URL after a user deletion within the same task open.
+    //   • **Append** — PR URL isn't in links yet → push a new entry
+    //     flagged `isAutoLinked: true`.
+    //   • **Upgrade** — PR URL is already in links (because the user
+    //     pasted it into the body or Links, OR a manual entry pre-dated
+    //     auto-discovery) but lacks the flag → set `isAutoLinked: true`
+    //     in place. Without this, a PR whose branch matches the
+    //     display_id would lose its PR-column badge once the branch is
+    //     deleted post-merge (Source 2 in `pulls-for-task` filters on
+    //     the flag).
+    //
+    // Add/upgrade-only — if the user deletes the entry from the Links
+    // section, it stays deleted until the task is re-opened. The ref
+    // below tracks every URL we touched this mount (append OR upgrade)
+    // so back-to-back fetches (focus refetch, refresh icon, render
+    // churn) don't undo user deletions or thrash on the same entry.
     const appendedPrUrlsRef = useRef<Set<string>>(new Set());
     useEffect(() => {
-        // Reset the dedup set when the previewed task changes — a fresh
-        // task open should re-evaluate its own auto-link set.
+        // Reset the touched set when the previewed task changes — a
+        // fresh task open should re-evaluate its own auto-link set.
         appendedPrUrlsRef.current = new Set();
     }, [taskContent.id]);
 
@@ -244,22 +252,43 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
             const pulls = await loadLinkedPulls(accessToken, taskContent.id, opts);
             if (token !== pullsFetchTokenRef.current) return;
             if (pulls.length === 0) return;
-            const existingUrls = new Set((taskContent.links ?? []).map((l) => l.url));
-            const newPulls = pulls.filter(
-                (p) => !existingUrls.has(p.html_url) && !appendedPrUrlsRef.current.has(p.html_url)
-            );
-            if (newPulls.length === 0) return;
-            const newLinks = newPulls.map((p) => ({
+            const existingLinks = taskContent.links ?? [];
+            const existingByUrl = new Map(existingLinks.map((l) => [l.url, l]));
+
+            // Split the response into entries to upgrade (already in
+            // links but flag-less) and entries to append (not in links
+            // at all). Skip anything we've already touched this mount
+            // so user deletions stay sticky across focus refetches.
+            const toUpgradeUrls = new Set<string>();
+            const toAppend: typeof pulls = [];
+            for (const p of pulls) {
+                if (appendedPrUrlsRef.current.has(p.html_url)) continue;
+                const existing = existingByUrl.get(p.html_url);
+                if (existing) {
+                    if (!existing.isAutoLinked) toUpgradeUrls.add(p.html_url);
+                } else {
+                    toAppend.push(p);
+                }
+            }
+            if (toUpgradeUrls.size === 0 && toAppend.length === 0) return;
+
+            const newLinks = toAppend.map((p) => ({
                 id: `link-pr-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
                 url: p.html_url,
                 title: `${p.owner}/${p.repo}#${p.number}`,
                 isGitHub: true,
                 isAutoLinked: true,
             }));
-            for (const p of newPulls) appendedPrUrlsRef.current.add(p.html_url);
+            for (const p of toAppend) appendedPrUrlsRef.current.add(p.html_url);
+            for (const u of toUpgradeUrls) appendedPrUrlsRef.current.add(u);
+
+            const upgradedExisting = existingLinks.map((l) =>
+                toUpgradeUrls.has(l.url) ? { ...l, isAutoLinked: true } : l
+            );
+
             setTaskContent({
                 ...taskContent,
-                links: [...(taskContent.links ?? []), ...newLinks],
+                links: [...upgradedExisting, ...newLinks],
             });
             setTaskUpdated?.(true);
         } finally {
@@ -297,6 +326,12 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
     // typing pauses. Add-only — deleting a PR URL from the body leaves
     // the link entry intact (silent removal would be surprising; the
     // existing DynamicURLManager handles deletes).
+    //
+    // We do NOT mark these as `isAutoLinked` — the flag is reserved for
+    // PRs whose head branch matches the task's display ID (set only by
+    // the auto-discovery effect above). Body-pasted PRs are usually
+    // references to *other* tasks' work; flagging them would pollute
+    // the PR column with unrelated PRs.
     useEffect(() => {
         const handle = setTimeout(() => {
             const prUrls = extractPrUrlsFromBlocks(taskContent.body);
@@ -312,7 +347,6 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     url,
                     title,
                     isGitHub: true,
-                    isAutoLinked: true,
                 };
             });
             setTaskContent({
