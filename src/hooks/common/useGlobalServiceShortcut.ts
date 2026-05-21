@@ -73,6 +73,13 @@ export type GlobalServiceShortcutOptions = {
      * over the current route.
      */
     onOpenCalendarModal?: () => void;
+    /**
+     * Fired on `Ctrl+Cmd+M` (mac) / `Ctrl+Alt+M` (other). Generates a fresh
+     * Google Meet link and copies it to the clipboard — no chat post,
+     * no surviving calendar event. The handler owns the create →
+     * extract-link → delete-event flow; this hook just dispatches.
+     */
+    onQuickMeetClipboard?: () => void;
 };
 
 /**
@@ -96,6 +103,8 @@ export type GlobalServiceShortcutOptions = {
  *   - `Ctrl+Cmd+<letter>` on Mac, `Ctrl+Alt+<letter>` elsewhere.
  *   - `T` -> open Tasks AND start a new task (via `onOpenTasksAndCreate`).
  *   - `N` -> open Notes AND create a new My Note (via `onOpenNotesAndCreate`).
+ *   - `C` -> open the compact calendar modal (via `onOpenCalendarModal`).
+ *   - `M` -> generate a Meet link and copy to clipboard (via `onQuickMeetClipboard`).
  *   - If a letter shortcut fires while a cycle preview is in progress, the
  *     preview is canceled and the letter target wins.
  *   - Each letter is wired through a callback so this hook stays free of
@@ -196,6 +205,12 @@ export const useGlobalServiceShortcut = (
                     e.preventDefault();
                     if (previewIndexRef.current !== null) setPreviewIndex(null);
                     optionsRef.current.onOpenCalendarModal();
+                    return;
+                }
+                if (key === "m" && optionsRef.current?.onQuickMeetClipboard) {
+                    e.preventDefault();
+                    if (previewIndexRef.current !== null) setPreviewIndex(null);
+                    optionsRef.current.onQuickMeetClipboard();
                     return;
                 }
             }

@@ -774,6 +774,10 @@ const KeyboardShortcutsSection = () => {
                     combo: [...modifierKeys, "C"],
                 },
                 {
+                    label: t.settings.shortcuts.global.rows.meetClipboard,
+                    combo: [...modifierKeys, "M"],
+                },
+                {
                     label: t.settings.shortcuts.global.rows.cycle,
                     combo: [
                         t.settings.shortcuts.global.cycleCombo.hold,

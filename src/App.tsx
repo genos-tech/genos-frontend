@@ -9,6 +9,10 @@ import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import { CalendarModalProvider, useCalendarModalState } from "./context/CalendarModalContext";
 import { FeatureErrorBoundary } from "./components/FeatureErrorBoundary";
 import { ConnectionStatusSnackbar } from "./components/layout/ConnectionStatusSnackbar";
+import {
+    QuickMeetClipboardHandle,
+    QuickMeetClipboardHost,
+} from "./components/layout/QuickMeetClipboardHost";
 import { ServiceSwitcherOverlay } from "./components/layout/ServiceSwitcherOverlay";
 import { Sidebar } from "./components/layout/sidebar";
 import { TooSmallScreen } from "./components/layout/TooSmallScreen";
@@ -169,6 +173,12 @@ export const App = () => {
     // the tree.
     const calendarModal = useCalendarModalState();
 
+    // Imperative bridge to the Meet-clipboard handler, which lives
+    // inside I18nProvider (so its snackbar text can be translated).
+    // The shortcut listener — registered HERE, outside the provider
+    // tree — just calls `meetClipboardRef.current?.trigger()`.
+    const meetClipboardRef = useRef<QuickMeetClipboardHandle>(null);
+
     const { previewIndex: serviceSwitcherPreviewIndex, mruOrder: serviceSwitcherMruOrder } =
         useGlobalServiceShortcut({
             onOpenTasksAndCreate: () => {
@@ -180,6 +190,7 @@ export const App = () => {
                 void useNM.handleCreateNewMyNote(null);
             },
             onOpenCalendarModal: calendarModal.open,
+            onQuickMeetClipboard: () => meetClipboardRef.current?.trigger(),
         });
 
     // Click-to-open: jump to the chat / thread / task / inbox that the
@@ -453,6 +464,10 @@ export const App = () => {
                                             <ConnectionStatusSnackbar
                                                 showApiDown={showApiDown}
                                                 showWsDisconnected={showWsDisconnected}
+                                            />
+                                            <QuickMeetClipboardHost
+                                                accessToken={accessToken}
+                                                ref={meetClipboardRef}
                                             />
                                             {useUISM.isLoading ? (
                                                 <InitialLoad
