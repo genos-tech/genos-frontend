@@ -23,6 +23,7 @@ import {
     loadLinkedBranches,
     loadLinkedPulls,
 } from "../../../../integrations/services/github";
+import { getCachedOrFetchPrStatus } from "../../../../integrations/services/prStatusCache";
 import { extractPrUrlsFromBlocks } from "../../../../integrations/utils/extractPrUrls";
 import { parsePrUrl } from "../../../../integrations/utils/parsePrUrl";
 import { loadSpecificTask } from "../../../services/loadSpecificTask";
@@ -272,18 +273,30 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
             }
             if (toUpgradeUrls.size === 0 && toAppend.length === 0) return;
 
+            // The backend's `pulls-for-task` response already carries
+            // `title` — prefer it over the synthetic `owner/repo#number`
+            // fallback so the Link entry shows the actual PR subject.
+            const titleFor = (p: (typeof pulls)[number]): string =>
+                p.title || `${p.owner}/${p.repo}#${p.number}`;
+            const titleByUrl = new Map(pulls.map((p) => [p.html_url, titleFor(p)]));
+
             const newLinks = toAppend.map((p) => ({
                 id: `link-pr-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
                 url: p.html_url,
-                title: `${p.owner}/${p.repo}#${p.number}`,
+                title: titleFor(p),
                 isGitHub: true,
                 isAutoLinked: true,
             }));
             for (const p of toAppend) appendedPrUrlsRef.current.add(p.html_url);
             for (const u of toUpgradeUrls) appendedPrUrlsRef.current.add(u);
 
+            // Upgrade: also refresh the title from the live PR data —
+            // catches the case where the body-mirror inserted the entry
+            // earlier with the synthetic `owner/repo#number` placeholder.
             const upgradedExisting = existingLinks.map((l) =>
-                toUpgradeUrls.has(l.url) ? { ...l, isAutoLinked: true } : l
+                toUpgradeUrls.has(l.url)
+                    ? { ...l, isAutoLinked: true, title: titleByUrl.get(l.url) || l.title }
+                    : l
             );
 
             setTaskContent({
@@ -333,29 +346,47 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
     // references to *other* tasks' work; flagging them would pollute
     // the PR column with unrelated PRs.
     useEffect(() => {
-        const handle = setTimeout(() => {
+        let cancelled = false;
+        const handle = setTimeout(async () => {
             const prUrls = extractPrUrlsFromBlocks(taskContent.body);
             if (prUrls.length === 0) return;
             const existing = new Set((taskContent.links ?? []).map((l) => l.url));
             const newUrls = prUrls.filter((u) => !existing.has(u));
             if (newUrls.length === 0) return;
-            const newLinks = newUrls.map((url) => {
-                const ref = parsePrUrl(url);
-                const title = ref ? `${ref.owner}/${ref.repo}#${ref.number}` : url;
-                return {
-                    id: `link-pr-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-                    url,
-                    title,
-                    isGitHub: true,
-                };
-            });
+
+            // Resolve the real PR title via `prStatusCache` so the Link
+            // entry shows the PR's subject instead of the synthetic
+            // `owner/repo#number` placeholder. Fetches are parallel and
+            // cached (60s module-scope TTL) — re-pasting the same URL
+            // doesn't hit the network. Falls back to the placeholder on
+            // any failure (no auth, PR not accessible, etc.).
+            const titles = await Promise.all(
+                newUrls.map(async (url): Promise<string> => {
+                    const ref = parsePrUrl(url);
+                    const fallback = ref ? `${ref.owner}/${ref.repo}#${ref.number}` : url;
+                    if (!ref || !accessToken) return fallback;
+                    const r = await getCachedOrFetchPrStatus(accessToken, url);
+                    return r.kind === "ok" ? r.payload.pull.title || fallback : fallback;
+                })
+            );
+            if (cancelled) return;
+
+            const newLinks = newUrls.map((url, i) => ({
+                id: `link-pr-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                url,
+                title: titles[i],
+                isGitHub: true,
+            }));
             setTaskContent({
                 ...taskContent,
                 links: [...(taskContent.links ?? []), ...newLinks],
             });
             setTaskUpdated?.(true);
         }, 1000);
-        return () => clearTimeout(handle);
+        return () => {
+            cancelled = true;
+            clearTimeout(handle);
+        };
         // Watch the body only — we read links inside the effect to
         // dedupe, but listing links in deps would loop (we mutate them
         // here, that re-triggers the effect, infinite).

@@ -25,6 +25,7 @@ import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { TaskProps } from "../../../../../types/tasks";
 import { loadSpecificChildTasks } from "../../../services/loadSpecificChildTasks";
+import { formatTaskDisplayId } from "../../../utils/taskDisplayId";
 
 type TaskSubTasksBlockProps = {
     SectionHeader: React.ComponentType<{ children: React.ReactNode; isDark: boolean }>;
@@ -181,7 +182,10 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                     <ListItem sx={{ width: "100%" }} nested>
                         <List sx={{ gap: 0.5 }}>
                             {childTasks.map(
-                                ({ assignee, project, id, title, status, tags }, index) => {
+                                (
+                                    { assignee, project, id, displayId, title, status, tags },
+                                    index
+                                ) => {
                                     return (
                                         <ListItem key={`listitem-${id}-${index}`}>
                                             <AvatarWithStatus
@@ -229,7 +233,7 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                                         borderRadius: "5px",
                                                     }}
                                                 >
-                                                    {`#${id}`}
+                                                    {formatTaskDisplayId({ id, displayId })}
                                                 </Chip>
                                                 <Chip
                                                     key={`status-chip-${id}-${index}`} // pass the key directly
