@@ -620,6 +620,8 @@ export const ar: DeepPartial<Messages> = {
             sprintBurndown: "المغلقة في السبرنت / المُنشأة في السبرنت",
             milestone: "معلم",
             tasksInThisMilestone: "المهام في هذا المعلم",
+            refreshBranches: "تحديث الفروع",
+            refreshPullRequests: "تحديث طلبات السحب المرتبطة",
         },
         buttons: {
             create: "إنشاء",

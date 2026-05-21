@@ -123,6 +123,8 @@ export const tasks = {
         sprintBurndown: "Closed in sprint / Created in sprint",
         milestone: "Milestone",
         tasksInThisMilestone: "Tasks in this milestone",
+        refreshBranches: "Refresh branches",
+        refreshPullRequests: "Refresh linked PRs",
     },
 
     // Generic action button labels reused across screens.
