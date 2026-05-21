@@ -1,15 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
-import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import CallMergeRoundedIcon from "@mui/icons-material/CallMergeRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
-import GitHubIcon from "@mui/icons-material/GitHub";
 import HubRoundedIcon from "@mui/icons-material/HubRounded";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import VideoCameraFrontRoundedIcon from "@mui/icons-material/VideoCameraFrontRounded";
@@ -36,11 +33,10 @@ import {
 import { useColorScheme } from "@mui/joy/styles";
 
 import { CalendarEventModal } from "./components/CalendarEventModal";
+import { ConnectionsSection } from "./components/ConnectionsSection";
 import { CalendarEvent, deleteEvent, listEvents } from "./services/calendar";
 import {
-    Connection,
     ConnectionsResponse,
-    disconnectProvider,
     findGoogleConnection,
     hasCalendarScope,
     listConnections,
@@ -68,179 +64,6 @@ const eventStartLabel = (e: CalendarEvent): string => {
     const d = new Date(v);
     if (isNaN(d.getTime())) return v;
     return d.toLocaleString();
-};
-
-const ConnectionsTab = ({
-    data,
-    reload,
-    accessToken,
-}: {
-    data: ConnectionsResponse | null;
-    reload: () => void;
-    accessToken: string;
-}) => {
-    const [disconnecting, setDisconnecting] = useState<"google" | "github" | null>(null);
-    const [error, setError] = useState<string | null>(null);
-    const connected = useMemo(() => {
-        const m: Partial<Record<"google" | "github", Connection>> = {};
-        for (const c of data?.connections || []) m[c.provider] = c;
-        return m;
-    }, [data]);
-
-    const handleDisconnect = async (provider: "google" | "github") => {
-        setError(null);
-        setDisconnecting(provider);
-        const ok = await disconnectProvider(accessToken, provider, setError);
-        setDisconnecting(null);
-        if (ok) reload();
-    };
-
-    const Row = ({
-        provider,
-        label,
-        icon,
-    }: {
-        provider: "google" | "github";
-        label: string;
-        icon: React.ReactNode;
-    }) => {
-        const c = connected[provider];
-        const isPrimary = c?.is_primary === true;
-        return (
-            <Card variant="outlined" sx={{ p: 2 }}>
-                <Stack direction="row" alignItems="center" spacing={2}>
-                    <Box sx={{ fontSize: 32, display: "flex" }}>{icon}</Box>
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Stack direction="row" spacing={1} alignItems="center">
-                            <Typography level="title-md">{label}</Typography>
-                            {isPrimary && (
-                                <Chip size="sm" color="primary">
-                                    Primary login
-                                </Chip>
-                            )}
-                        </Stack>
-                        {c ? (
-                            <Typography level="body-sm" sx={{ color: "text.secondary" }}>
-                                {c.provider_email || "(no email shared)"}
-                            </Typography>
-                        ) : (
-                            <Typography level="body-sm" sx={{ color: "text.secondary" }}>
-                                Not connected
-                            </Typography>
-                        )}
-                    </Box>
-                    {/* A Google account that came in via sign-in only
-                        has openid/email/profile scopes — no calendar
-                        access. Surface that explicitly with a Grant
-                        button that re-runs the OAuth flow under the
-                        connect intent (broader scopes). The callback
-                        upgrades scopes on the existing row. */}
-                    {c && provider === "google" && !hasCalendarScope(c) && (
-                        <Button
-                            variant="solid"
-                            color="primary"
-                            onClick={() => {
-                                void redirectToOAuthConnect(
-                                    provider,
-                                    accessToken,
-                                    undefined,
-                                    setError
-                                );
-                            }}
-                        >
-                            Grant Calendar access
-                        </Button>
-                    )}
-                    {c ? (
-                        <Tooltip
-                            title={
-                                isPrimary
-                                    ? "You can't disconnect the provider you signed up with."
-                                    : ""
-                            }
-                            placement="left"
-                        >
-                            <span>
-                                <Button
-                                    variant="outlined"
-                                    color="danger"
-                                    disabled={isPrimary || disconnecting === provider}
-                                    onClick={() => handleDisconnect(provider)}
-                                >
-                                    {disconnecting === provider ? "Disconnecting…" : "Disconnect"}
-                                </Button>
-                            </span>
-                        </Tooltip>
-                    ) : (
-                        <Button
-                            onClick={() => {
-                                void redirectToOAuthConnect(
-                                    provider,
-                                    accessToken,
-                                    undefined,
-                                    setError
-                                );
-                            }}
-                        >
-                            Connect
-                        </Button>
-                    )}
-                </Stack>
-            </Card>
-        );
-    };
-
-    return (
-        <Stack spacing={2}>
-            {error && <Alert color="danger">{error}</Alert>}
-
-            {/* User-facing notice: while our OAuth app is still in
-                Google's verification queue, only whitelisted Gmail
-                addresses can grant Google access. Anyone else hits
-                "Error 403: access_denied" on the consent screen.
-                Surfacing the support email lets users self-serve
-                instead of getting stuck mid-flow. */}
-            <Alert
-                color="neutral"
-                variant="soft"
-                startDecorator={<InfoOutlinedIcon />}
-                sx={{ alignItems: "flex-start" }}
-            >
-                <Box>
-                    <Typography level="body-sm" sx={{ fontWeight: 600 }}>
-                        First time connecting Google?
-                    </Typography>
-                    <Typography level="body-xs" sx={{ color: "text.secondary", mt: 0.25 }}>
-                        Our Google integration is still going through Google&apos;s verification
-                        process. If you see{" "}
-                        <Typography
-                            component="span"
-                            sx={{ fontFamily: "monospace", fontWeight: 600 }}
-                        >
-                            Error 403: access_denied
-                        </Typography>{" "}
-                        when granting access, please email{" "}
-                        <Typography
-                            component="a"
-                            href="mailto:genos.support@gmail.com?subject=Add%20me%20as%20Google%20test%20user"
-                            sx={{ color: "primary.500", textDecoration: "underline" }}
-                        >
-                            genos.support@gmail.com
-                        </Typography>{" "}
-                        with your Gmail address — we&apos;ll add you as a test user. Access works
-                        within a minute of confirmation.
-                    </Typography>
-                </Box>
-            </Alert>
-
-            <Row
-                provider="google"
-                label="Google"
-                icon={<CalendarMonthRoundedIcon sx={{ color: "#4285f4" }} fontSize="inherit" />}
-            />
-            <Row provider="github" label="GitHub" icon={<GitHubIcon fontSize="inherit" />} />
-        </Stack>
-    );
 };
 
 const CalendarTab = ({
@@ -791,17 +614,13 @@ export const IntegrationsHome = () => {
                     </TabList>
 
                     <TabPanel value="connections" sx={{ px: 0 }}>
-                        {loadingConnections ? (
-                            <Stack alignItems="center" sx={{ py: 4 }}>
-                                <CircularProgress />
-                            </Stack>
-                        ) : (
-                            <ConnectionsTab
-                                data={data}
-                                reload={reload}
-                                accessToken={accessToken}
-                            />
-                        )}
+                        {/* Same component renders in Settings →
+                            Integrations. The page-level fetch above
+                            still populates `data` for the
+                            CalendarTab / GithubTab gates below; the
+                            section just does its own fetch — cheap
+                            and lets either surface render alone. */}
+                        <ConnectionsSection accessToken={accessToken} />
                     </TabPanel>
 
                     <TabPanel value="calendar" sx={{ px: 0 }}>

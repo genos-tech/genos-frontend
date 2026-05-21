@@ -7,6 +7,7 @@ export const settings = {
         spotlight: "Spotlight",
         notifications: "Notifications",
         shortcuts: "Shortcuts",
+        integrations: "Integrations",
     },
     appearance: {
         heading: "Appearance",

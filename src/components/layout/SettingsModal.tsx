@@ -36,6 +36,8 @@ import {
 import { useColorScheme } from "@mui/joy/styles";
 
 import { useAuth } from "../../context/AuthContext";
+import { ConnectionsSection } from "../../features/integrations/components/ConnectionsSection";
+import { OAUTH_INTEGRATIONS_ENABLED } from "../../features/integrations/featureFlags";
 import {
     findGoogleConnection,
     hasCalendarScope,
@@ -847,7 +849,28 @@ const KeyboardShortcutsSection = () => {
 // Tab keys mirror the i18n keys under `settings.tabs.*` and are kept
 // as a plain string union (rather than numeric indices) so reordering
 // or inserting a new tab doesn't silently shift selection.
-type SettingsTabKey = "general" | "chat" | "tasks" | "spotlight" | "notifications" | "shortcuts";
+type SettingsTabKey =
+    | "general"
+    | "chat"
+    | "tasks"
+    | "spotlight"
+    | "notifications"
+    | "shortcuts"
+    | "integrations";
+
+/**
+ * Settings → Integrations panel. Renders the same Connections UI
+ * (Google + GitHub Connect/Disconnect, Grant Calendar access, test-
+ * user notice) that the `/workspace/integrations` page surfaces, so
+ * users can manage their providers without leaving Settings. The
+ * `accessToken` gate keeps the panel quiet for pre-auth contexts
+ * (e.g., if the modal were ever rendered before sign-in completes).
+ */
+const IntegrationsSection = () => {
+    const { accessToken } = useAuth();
+    if (!accessToken) return null;
+    return <ConnectionsSection accessToken={accessToken} />;
+};
 
 export const SettingsModal = ({ open, onClose }: Props) => {
     const { mode } = useColorScheme();
@@ -919,6 +942,13 @@ export const SettingsModal = ({ open, onClose }: Props) => {
                         <Tab value="spotlight">{t.settings.tabs.spotlight}</Tab>
                         <Tab value="notifications">{t.settings.tabs.notifications}</Tab>
                         <Tab value="shortcuts">{t.settings.tabs.shortcuts}</Tab>
+                        {/* Integrations: same Connect/Disconnect surface
+                            the page route exposes. Gated on the same
+                            feature flag so disabled deploys don't show
+                            an empty tab. */}
+                        {OAUTH_INTEGRATIONS_ENABLED && (
+                            <Tab value="integrations">{t.settings.tabs.integrations}</Tab>
+                        )}
                     </TabList>
 
                     <TabPanel value="general" sx={{ px: 0, py: 2 }}>
@@ -956,6 +986,13 @@ export const SettingsModal = ({ open, onClose }: Props) => {
                             <KeyboardShortcutsSection />
                         </Stack>
                     </TabPanel>
+                    {OAUTH_INTEGRATIONS_ENABLED && (
+                        <TabPanel value="integrations" sx={{ px: 0, py: 2 }}>
+                            <Stack spacing={2}>
+                                <IntegrationsSection />
+                            </Stack>
+                        </TabPanel>
+                    )}
                 </Tabs>
             </ModalDialog>
         </Modal>
