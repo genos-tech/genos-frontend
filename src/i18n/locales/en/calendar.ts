@@ -10,6 +10,16 @@ export const calendar = {
     scopePrompt: "Calendar access hasn't been granted yet. Grant it to read and manage events.",
     grantButton: "Grant Calendar access",
     openTooltip: "Open calendar",
+    // Keyboard chord for the global shortcut handled by
+    // `useGlobalServiceShortcut` (letter "C" + the platform modifier
+    // set returned by `getServiceShortcutModifierKeys`). Split per
+    // platform so the tooltip composer can pick the right one at
+    // render time. Symbols (Ctrl, ⌘, Alt, +) are universal across
+    // locales — no translation needed.
+    openShortcut: {
+        mac: "Ctrl+⌘+C",
+        windows: "Ctrl+Alt+C",
+    },
     prev: "Previous",
     next: "Next",
     views: {

@@ -23,6 +23,7 @@ import { useTranslation } from "../../../../i18n";
 import { MuteToggleButton } from "../../../../services/notifications/MuteToggleButton";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../../types/chat";
+import { isMac } from "../../../../utils/platform";
 import { createEvent, deleteEvent, getEvent } from "../../../integrations/services/calendar";
 import { redirectToOAuthConnect } from "../../../integrations/services/oauth";
 import { useMarkAllChatActivityRead } from "../../hooks/useMarkAllChatActivityRead";
@@ -448,7 +449,11 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                         {calendarModal && (
                             <Tooltip
                                 size="sm"
-                                title={t.calendar.openTooltip}
+                                title={`${t.calendar.openTooltip} (${
+                                    isMac()
+                                        ? t.calendar.openShortcut.mac
+                                        : t.calendar.openShortcut.windows
+                                })`}
                                 variant="outlined"
                                 sx={{ borderRadius: "8px" }}
                             >
