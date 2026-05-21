@@ -66,6 +66,13 @@ export type GlobalServiceShortcutOptions = {
      * a new top-level My Note.
      */
     onOpenNotesAndCreate?: () => void;
+    /**
+     * Fired on `Ctrl+Cmd+C` (mac) / `Ctrl+Alt+C` (other). Toggles the global
+     * compact calendar modal. The callback resolves to the
+     * `CalendarModalContext` opener — no navigation, just a modal
+     * over the current route.
+     */
+    onOpenCalendarModal?: () => void;
 };
 
 /**
@@ -183,6 +190,12 @@ export const useGlobalServiceShortcut = (
                     e.preventDefault();
                     if (previewIndexRef.current !== null) setPreviewIndex(null);
                     optionsRef.current.onOpenNotesAndCreate();
+                    return;
+                }
+                if (key === "c" && optionsRef.current?.onOpenCalendarModal) {
+                    e.preventDefault();
+                    if (previewIndexRef.current !== null) setPreviewIndex(null);
+                    optionsRef.current.onOpenCalendarModal();
                     return;
                 }
             }

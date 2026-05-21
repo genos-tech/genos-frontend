@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import AddTaskRoundedIcon from "@mui/icons-material/AddTaskRounded";
+import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import ChecklistRoundedIcon from "@mui/icons-material/ChecklistRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DoneAllRoundedIcon from "@mui/icons-material/DoneAllRounded";
@@ -13,6 +14,7 @@ import { Socket } from "socket.io-client";
 
 import { ChatPaneHeaderStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
+import { useCalendarModal } from "../../../../context/CalendarModalContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -111,6 +113,11 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
     };
 
     const [openAddMembers, setOpenAddMembers] = useState(false);
+
+    // Compact calendar modal — opener pulled from the global
+    // provider. Returns null outside the provider (e.g. pre-auth
+    // routes), in which case the IconButton renders nothing below.
+    const calendarModal = useCalendarModal();
 
     // Quick Meet flow state. `lastQuickMeetEventId` carries the Google
     // event id created by the most recent click so the snackbar's Undo
@@ -430,6 +437,32 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                                         />
                                     </IconButton>
                                 </Badge>
+                            </Tooltip>
+                        )}
+
+                        {/* Compact Calendar modal — only surfaced
+                            in the DM-with-self header (per the
+                            Phase 3 plan). Keyboard shortcut
+                            Ctrl+Cmd+C / Ctrl+Alt+C is the other
+                            entry point. */}
+                        {calendarModal && (
+                            <Tooltip
+                                size="sm"
+                                title={t.calendar.openTooltip}
+                                variant="outlined"
+                                sx={{ borderRadius: "8px" }}
+                            >
+                                <IconButton
+                                    size="sm"
+                                    variant="plain"
+                                    sx={actionButtonStyle}
+                                    onClick={calendarModal.open}
+                                    aria-label={t.calendar.openTooltip}
+                                >
+                                    <CalendarMonthRoundedIcon
+                                        sx={{ fontSize: 18, color: styles.accentColor }}
+                                    />
+                                </IconButton>
                             </Tooltip>
                         )}
                     </>

@@ -739,6 +739,10 @@ const KeyboardShortcutsSection = () => {
                     combo: [...modifierKeys, "N"],
                 },
                 {
+                    label: t.settings.shortcuts.global.rows.calendar,
+                    combo: [...modifierKeys, "C"],
+                },
+                {
                     label: t.settings.shortcuts.global.rows.cycle,
                     combo: [
                         t.settings.shortcuts.global.cycleCombo.hold,

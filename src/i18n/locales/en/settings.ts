@@ -63,6 +63,7 @@ export const settings = {
                 spotlight: "Open Spotlight search",
                 tasksNew: "Open Tasks and start a new task",
                 notesNew: "Open Notes and create a new My Note",
+                calendar: "Open compact calendar",
                 cycle: "Cycle through services",
             },
             cycleCombo: {
