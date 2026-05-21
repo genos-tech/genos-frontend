@@ -22,13 +22,13 @@ import { extractPrUrlsFromBlocks } from "../../../../integrations/utils/extractP
 import { parsePrUrl } from "../../../../integrations/utils/parsePrUrl";
 import { loadSpecificTask } from "../../../services/loadSpecificTask";
 import { SprintMilestonePicker } from "../../../sprint-milestone/components/SprintMilestonePicker";
-import { CopyableTaskIdChip } from "../../CopyableTaskId";
 import { ACProjectTags } from "../../autocompletes/ACProjectTags";
 import { ACTaskEffortLevel } from "../../autocompletes/ACTaskEffortLevel";
 import { ACTaskPriority } from "../../autocompletes/ACTaskPriority";
 import { ACTaskStatus } from "../../autocompletes/ACTaskStatus";
 import { ACTeamProjects } from "../../autocompletes/ACTeamProjects";
 import { ACTeamUsers } from "../../autocompletes/ACTeamUsers";
+import { CopyableTaskIdChip } from "../../CopyableTaskId";
 import { ModalManageTags } from "../../modals/ModalManageTags";
 import { DynamicURLManager } from "./sub/DynamicURLManager";
 import { TaskDueDateInput } from "./sub/TaskDueDateInput";
@@ -560,6 +560,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                 <Tooltip
                                     key={`${b.owner}/${b.repo}/${b.name}`}
                                     title={`${b.owner}/${b.repo}`}
+                                    variant="outlined"
                                     placement="top"
                                     arrow
                                 >
