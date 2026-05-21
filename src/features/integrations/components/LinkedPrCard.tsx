@@ -4,13 +4,11 @@ import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import {
     Alert,
-    Avatar,
     Box,
     Button,
     Card,
     Chip,
     CircularProgress,
-    Divider,
     Stack,
     Tooltip,
     Typography,
@@ -21,7 +19,6 @@ import { useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
 import { redirectToOAuthConnect } from "../services/oauth";
 import { getCachedOrFetchPrStatus, type PrStatusResult } from "../services/prStatusCache";
-import type { PrDetailResponse } from "../services/prTypes";
 import {
     ciStateColor,
     deriveCiState,
@@ -40,6 +37,7 @@ import {
     PrMergedIcon,
     PrOpenIcon,
 } from "./icons/Octicons";
+import { PrHoverDetails } from "./PrHoverDetails";
 
 interface Props {
     url: string;
@@ -83,35 +81,6 @@ const CiBadge = ({ state, size = 16 }: { state: CiState; size?: number }) => {
     }
 };
 
-// "5 minutes ago" / "2 hours ago" / "3 days ago" — no extra dep,
-// good enough for a tooltip subtitle.
-const relativeAgo = (iso: string): string => {
-    const then = new Date(iso).getTime();
-    if (Number.isNaN(then)) return iso;
-    const secs = Math.max(1, Math.floor((Date.now() - then) / 1000));
-    const units: [number, string][] = [
-        [60, "second"],
-        [60, "minute"],
-        [24, "hour"],
-        [7, "day"],
-        [4.345, "week"],
-        [12, "month"],
-        [Number.POSITIVE_INFINITY, "year"],
-    ];
-    let value = secs;
-    let label = "second";
-    for (const [factor, unit] of units) {
-        if (value < factor) {
-            label = unit;
-            break;
-        }
-        value = value / factor;
-        label = unit;
-    }
-    const rounded = Math.max(1, Math.floor(value));
-    return `${rounded} ${label}${rounded === 1 ? "" : "s"} ago`;
-};
-
 const stateLabel = (state: PrState, t: ReturnType<typeof useTranslation>["t"]): string => {
     switch (state) {
         case "merged":
@@ -138,101 +107,6 @@ const ciTooltipLabel = (state: CiState, t: ReturnType<typeof useTranslation>["t"
         default:
             return t.tasks.linkedPr.ciNone;
     }
-};
-
-// Rich hover content: author, branch, stats, opened/updated dates.
-// Rendered inside Tooltip's `title` prop. Colors flow through
-// `purplePalette` so the panel matches menus/popovers elsewhere instead
-// of Joy's stock white-on-black solid tooltip.
-const HoverDetails = ({ payload, isDark }: { payload: PrDetailResponse; isDark: boolean }) => {
-    const { pull } = payload;
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
-
-    const author = pull.user?.login;
-    const avatar = pull.user?.avatar_url;
-    const headRef = pull.head?.ref;
-    const baseRef = pull.base?.ref;
-    const adds = pull.additions;
-    const dels = pull.deletions;
-    const changed = pull.changed_files;
-    const commits = pull.commits;
-    const comments = (pull.comments ?? 0) + (pull.review_comments ?? 0);
-
-    return (
-        <Stack
-            spacing={0.75}
-            sx={{
-                minWidth: 260,
-                p: 1.25,
-                // Solid surface (vs `menuBg`'s translucent dark) so the
-                // tooltip body has clear contrast against the dark task
-                // panel sitting behind the popper. `surfaceSolid` is the
-                // palette's most opaque card surface.
-                bgcolor: palette.surfaceSolid,
-                border: `1px solid ${palette.menuBorder}`,
-                borderRadius: "10px",
-                boxShadow: palette.shadow,
-            }}
-        >
-            {author && (
-                <Stack direction="row" alignItems="center" spacing={1}>
-                    {avatar && (
-                        <Avatar
-                            src={avatar}
-                            size="sm"
-                            sx={{ width: 20, height: 20, fontSize: 10 }}
-                        />
-                    )}
-                    <Typography level="body-xs" sx={{ color: palette.text }}>
-                        Opened by <strong>{author}</strong> · {relativeAgo(pull.created_at)}
-                    </Typography>
-                </Stack>
-            )}
-
-            {(headRef || baseRef) && (
-                <Typography
-                    level="body-xs"
-                    sx={{
-                        color: palette.text,
-                        fontFamily:
-                            "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-                        fontSize: 11,
-                    }}
-                >
-                    {headRef ?? "?"} → {baseRef ?? "?"}
-                </Typography>
-            )}
-
-            <Divider sx={{ borderColor: palette.divider }} />
-
-            <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap" }}>
-                {commits != null && (
-                    <Typography level="body-xs" sx={{ color: palette.text }}>
-                        {commits} commit{commits === 1 ? "" : "s"}
-                    </Typography>
-                )}
-                {(adds != null || dels != null) && (
-                    <Typography level="body-xs" sx={{ color: palette.text }}>
-                        {/* Diff +/- colors are functional, not branded —
-                            keep GitHub's canonical green/red but pick
-                            the shade that's readable on each theme. */}
-                        <span style={{ color: isDark ? "#7ee787" : "#1a7f37" }}>+{adds ?? 0}</span>{" "}
-                        <span style={{ color: isDark ? "#ffa198" : "#cf222e" }}>−{dels ?? 0}</span>
-                        {changed != null ? ` · ${changed} file${changed === 1 ? "" : "s"}` : ""}
-                    </Typography>
-                )}
-                {comments > 0 && (
-                    <Typography level="body-xs" sx={{ color: palette.text }}>
-                        {comments} comment{comments === 1 ? "" : "s"}
-                    </Typography>
-                )}
-            </Stack>
-
-            <Typography level="body-xs" sx={{ color: palette.textMuted }}>
-                Updated {relativeAgo(pull.updated_at)}
-            </Typography>
-        </Stack>
-    );
 };
 
 export const LinkedPrCard = ({ url, accessToken, hideOnNotConnected }: Props) => {
@@ -344,7 +218,7 @@ export const LinkedPrCard = ({ url, accessToken, hideOnNotConnected }: Props) =>
             placement="top-start"
             variant="plain"
             size="sm"
-            title={<HoverDetails payload={result.payload} isDark={isDark} />}
+            title={<PrHoverDetails payload={result.payload} isDark={isDark} />}
             sx={{
                 maxWidth: 320,
                 // The visible surface lives on `HoverDetails`' inner

@@ -24,6 +24,7 @@ import {
     PrMergedIcon,
     PrOpenIcon,
 } from "./icons/Octicons";
+import { PrHoverDetails } from "./PrHoverDetails";
 
 // Compact PR/CI badge for the task table's PR column.
 //
@@ -160,21 +161,52 @@ const SinglePrBadge = ({
     }
     const ciColor = ciStateColor(ci);
 
+    // Once detail is loaded, render the rich `PrHoverDetails` panel
+    // shared with LinkedPrCard so the table column's hover matches the
+    // task preview. Before detail lands we fall back to a small tooltip
+    // built from the list payload (title, repo, derived state) so
+    // there's no empty hover during the first paint.
+    const hasDetail = detail?.kind === "ok";
+    const hoverTitle = hasDetail ? (
+        <PrHoverDetails
+            payload={detail.payload as PrDetailResponse}
+            isDark={isDark}
+            includeHeader
+        />
+    ) : (
+        <Stack spacing={0.25} sx={{ p: 0.5, color: palette.text }}>
+            <Box sx={{ fontWeight: 600 }}>
+                {repoLabel} #{pull.number}
+            </Box>
+            <Box sx={{ fontSize: 11, color: palette.textMuted }}>{title}</Box>
+            <Box sx={{ fontSize: 11 }}>
+                {prStateLabel(prState)} · {ciStateLabel(ci)}
+            </Box>
+        </Stack>
+    );
+
     return (
         <Tooltip
             arrow
             size="sm"
             placement="top"
-            title={
-                <Stack spacing={0.25} sx={{ p: 0.5, color: palette.text }}>
-                    <Box sx={{ fontWeight: 600 }}>
-                        {repoLabel} #{pull.number}
-                    </Box>
-                    <Box sx={{ fontSize: 11, color: palette.textMuted }}>{title}</Box>
-                    <Box sx={{ fontSize: 11 }}>
-                        {prStateLabel(prState)} · {ciStateLabel(ci)}
-                    </Box>
-                </Stack>
+            variant={hasDetail ? "plain" : undefined}
+            title={hoverTitle}
+            sx={
+                hasDetail
+                    ? {
+                          maxWidth: 320,
+                          // Surface lives on the inner Stack — keep the
+                          // outer wrapper transparent so we don't stack
+                          // two card surfaces.
+                          bgcolor: "transparent",
+                          border: "none",
+                          boxShadow: "none",
+                          p: 0,
+                          color: palette.text,
+                          "--Tooltip-arrowColor": palette.surfaceSolid,
+                      }
+                    : undefined
             }
         >
             <Box
