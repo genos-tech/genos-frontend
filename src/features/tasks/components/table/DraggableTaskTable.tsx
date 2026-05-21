@@ -14,6 +14,7 @@ import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { useTaskSortPreferences } from "../../../../hooks/common/useTaskSortPreferences";
+import { useTaskTableColumnPreferences } from "../../../../hooks/common/useTaskTableColumnPreferences";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
@@ -29,6 +30,7 @@ import { buildComparator, nullTier, SortTier } from "../../utils/sortTask";
 import { effortLevels, priorities, statuses } from "../../utils/taskMeta";
 import { DraggableTaskRow } from "./DraggableTaskRow";
 import { TaskFilterMenu } from "./TaskFilterMenu";
+import { TaskTableColumnSettings } from "./TaskTableColumnSettings";
 
 const materialTheme = createTheme({ cssVariables: true });
 
@@ -107,6 +109,10 @@ export const defaultColumns: ColumnDef[] = [
         // Compact PR-state badge surfaced when the task has at least
         // one GitHub PR URL in `links`. State is fetched lazily via
         // `prStatusCache`; the column otherwise renders blank.
+        //
+        // Hidden by default — opt-in via the table's column-settings
+        // gear. Teams that don't use the GitHub integration shouldn't
+        // see an empty column taking up table real estate.
         field: "pr",
         headerName: "PR",
         headerLabelKey: "pr",
@@ -115,6 +121,7 @@ export const defaultColumns: ColumnDef[] = [
         maxWidth: 100,
         align: "center",
         resizable: true,
+        hidden: true,
     },
     {
         field: "priority",
@@ -191,6 +198,12 @@ export const defaultColumns: ColumnDef[] = [
 
 // For backwards compatibility
 export const columns = defaultColumns;
+
+// Leading columns the user cannot reorder or hide. `__expand` is the
+// subtask-tree chevron (purely UI mechanics) and `id` is the task's
+// human identifier — both are essential and pinned at the front of the
+// table regardless of column-settings state.
+export const FIXED_LEADING_FIELDS: readonly string[] = ["__expand", "id"];
 
 // Sort helpers (rank maps, parseTs, fieldValue, nullTier, comparator
 // builder) live in `features/tasks/utils/sortTask.ts` and are shared
@@ -344,6 +357,10 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
 
     const [currentDisplayingTasks, setCurrentDisplayingTasks] = useState<TaskTableProps[]>([]);
     const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+    // Column-settings modal — opened via the gear icon next to the
+    // filter menu. The modal itself manages its own form state; we
+    // just gate visibility here.
+    const [isColumnSettingsOpen, setIsColumnSettingsOpen] = useState(false);
     // Set of child task ids that pass the active TaskFilterMenu
     // selection (status / tags / priority / effort / milestone). The
     // filter menu computes this in the same pass it builds
@@ -1098,25 +1115,65 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         return map;
     }, [useSM.projectSprints, currentProjectId]);
 
-    const visibleColumns = useMemo(
-        () =>
-            defaultColumns
-                .filter((col) => {
-                    if (col.hidden) return false;
-                    if (col.field === "sprint" && !hasMilestoneInDisplay) return false;
-                    return true;
-                })
-                .map((col) => ({
-                    ...col,
-                    // Resolve the translated label for this header at render
-                    // time. Columns without a labelKey (only `__expand`) keep
-                    // their empty headerName.
-                    headerName: col.headerLabelKey
-                        ? t.tasks.table.columns[col.headerLabelKey]
-                        : col.headerName,
-                })),
-        [hasMilestoneInDisplay, t]
-    );
+    // User-controlled column layout (localStorage-persisted). The hook
+    // owns *toggleable* columns only — `__expand` and `id` are always
+    // pinned at the front and never appear in the user's pref state.
+    const { fieldOrder, visibilityOverrides } = useTaskTableColumnPreferences();
+
+    const visibleColumns = useMemo(() => {
+        const byField = new Map<string, ColumnDef>(
+            defaultColumns.map((c): [string, ColumnDef] => [c.field, c])
+        );
+        // Fixed leading columns — never reorderable, never hideable.
+        const fixedLeading = FIXED_LEADING_FIELDS.map((f: string) => byField.get(f)).filter(
+            (c: ColumnDef | undefined): c is ColumnDef => !!c
+        );
+
+        // Toggleable columns: start with the user's preferred order,
+        // then append any defaults not yet in the user's list (so a
+        // newly-added column shows up at the end with default
+        // visibility on first render after deploy).
+        const toggleableInDefaultOrder = defaultColumns.filter(
+            (c: ColumnDef) => !FIXED_LEADING_FIELDS.includes(c.field)
+        );
+        const seen = new Set<string>();
+        const orderedToggleable: ColumnDef[] = [];
+        for (const field of fieldOrder) {
+            const col = byField.get(field);
+            if (!col || FIXED_LEADING_FIELDS.includes(field)) continue;
+            orderedToggleable.push(col);
+            seen.add(field);
+        }
+        for (const col of toggleableInDefaultOrder) {
+            if (!seen.has(col.field)) orderedToggleable.push(col);
+        }
+
+        // Effective visibility: user override > column default. The
+        // `sprint` column also auto-shows when the current list contains
+        // a milestone, regardless of either signal — keeps the existing
+        // "milestone view always shows sprint" UX.
+        const effectivelyVisible = (col: ColumnDef): boolean => {
+            if (col.field in visibilityOverrides) {
+                if (visibilityOverrides[col.field]) return true;
+                // User explicitly hid sprint, but a milestone is in view —
+                // honor the override anyway. The auto-show is a default,
+                // not a hard rule.
+                return false;
+            }
+            if (col.field === "sprint" && hasMilestoneInDisplay) return true;
+            return !col.hidden;
+        };
+
+        return [...fixedLeading, ...orderedToggleable.filter(effectivelyVisible)].map((col) => ({
+            ...col,
+            // Resolve the translated label for this header at render
+            // time. Columns without a labelKey (only `__expand`) keep
+            // their empty headerName.
+            headerName: col.headerLabelKey
+                ? t.tasks.table.columns[col.headerLabelKey]
+                : col.headerName,
+        }));
+    }, [fieldOrder, visibilityOverrides, hasMilestoneInDisplay, t]);
 
     // Create columns with dynamic widths for passing to rows. Memoized so
     // that React.memo on DraggableTaskRow isn't defeated by a fresh array
@@ -1153,6 +1210,11 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     setVisibleChildTaskIds={setVisibleChildTaskIds}
                     useSM={useSM}
                     useTM={useTM}
+                    onOpenColumnSettings={() => setIsColumnSettingsOpen(true)}
+                />
+                <TaskTableColumnSettings
+                    open={isColumnSettingsOpen}
+                    onClose={() => setIsColumnSettingsOpen(false)}
                 />
                 <div
                     className={`custom-scrollbar-${isDark ? "dark" : "light"}`}

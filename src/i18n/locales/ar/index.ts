@@ -928,6 +928,14 @@ export const ar: DeepPartial<Messages> = {
             dragToReorder: "اسحب لإعادة الترتيب",
             dragToResizeColumn: "اسحب لتغيير حجم العمود",
             dropToNest: "↳ أفلت للتداخل",
+            columnSettings: {
+                heading: "تخصيص الأعمدة",
+                description:
+                    "بدّل الإظهار واسحب لإعادة الترتيب. يُحفظ لكل جهاز. عمودا المعرّف والتوسيع يظهران دائماً.",
+                openTooltip: "تخصيص الأعمدة",
+                resetTooltip: "إعادة التعيين للوضع الافتراضي",
+                dragHandle: "اسحب لإعادة الترتيب",
+            },
             columns: {
                 id: "المعرّف",
                 status: "الحالة",

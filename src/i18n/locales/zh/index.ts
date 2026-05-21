@@ -912,6 +912,13 @@ export const zh: DeepPartial<Messages> = {
             dragToReorder: "拖动以重新排序",
             dragToResizeColumn: "拖动以调整列宽",
             dropToNest: "↳ 放入以嵌套",
+            columnSettings: {
+                heading: "自定义列",
+                description: "切换显示并拖动以重新排序。按设备保存。ID 和展开列始终显示。",
+                openTooltip: "自定义列",
+                resetTooltip: "重置为默认",
+                dragHandle: "拖动以重新排序",
+            },
             columns: {
                 id: "ID",
                 status: "状态",

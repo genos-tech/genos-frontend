@@ -3,10 +3,12 @@ import { useEffect, useMemo } from "react";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import { useColorScheme } from "@mui/joy/styles";
 import { Box, Chip, Stack, Tooltip, Typography } from "@mui/material";
 import Button from "@mui/material/Button";
 import Fade from "@mui/material/Fade";
+import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { tooltipClasses } from "@mui/material/Tooltip";
@@ -69,6 +71,12 @@ type TaskFilterMenuProps = {
     // a milestone is already in scope (children are already showing).
     setIsMilestoneFilterActive?: (active: boolean) => void;
     hideStatusFilter?: boolean;
+    // Optional: when provided, renders a "customize columns" gear icon
+    // inline with the "Filters" label that opens the column-settings
+    // modal. The task table passes this; the sprint board (which shares
+    // this menu but has no columns to configure) omits it, so the
+    // gear stays hidden there.
+    onOpenColumnSettings?: () => void;
 };
 
 export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
@@ -81,6 +89,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         setVisibleChildTaskIds,
         setIsMilestoneFilterActive,
         hideStatusFilter,
+        onOpenColumnSettings,
     } = props;
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -664,6 +673,48 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                     >
                         Filters
                     </Typography>
+                    {/* Column-customizer trigger — only rendered when the
+                        host (DraggableTaskTable) wires it up. The sprint
+                        board uses this same menu but doesn't have
+                        column-layout state, so it omits the prop and
+                        the icon stays hidden there. */}
+                    {onOpenColumnSettings && (
+                        <Tooltip
+                            placement="top"
+                            title={t.tasks.table.columnSettings.openTooltip}
+                            slotProps={{
+                                popper: {
+                                    sx: {
+                                        [`& .${tooltipClasses.tooltip}`]: {
+                                            background: styles.menuBg,
+                                            color: styles.textColor,
+                                            border: `1px solid ${styles.menuBorder}`,
+                                            fontSize: 11,
+                                            borderRadius: "8px",
+                                            px: 1.5,
+                                            py: 0.5,
+                                        },
+                                    },
+                                },
+                            }}
+                        >
+                            <IconButton
+                                size="small"
+                                aria-label={t.tasks.table.columnSettings.openTooltip}
+                                onClick={onOpenColumnSettings}
+                                sx={{
+                                    ml: 0.25,
+                                    color: styles.mutedText,
+                                    "&:hover": {
+                                        color: isDark ? "#a78bfa" : "#6d28d9",
+                                        background: styles.buttonHoverBg,
+                                    },
+                                }}
+                            >
+                                <TuneRoundedIcon sx={{ fontSize: 16 }} />
+                            </IconButton>
+                        </Tooltip>
+                    )}
                 </Stack>
 
                 {/* Divider */}

@@ -928,6 +928,14 @@ export const es: DeepPartial<Messages> = {
             dragToReorder: "Arrastra para reordenar",
             dragToResizeColumn: "Arrastra para redimensionar la columna",
             dropToNest: "↳ Soltar para anidar",
+            columnSettings: {
+                heading: "Personalizar columnas",
+                description:
+                    "Alterna la visibilidad y arrastra para reordenar. Por dispositivo. Las columnas ID y Expandir siempre se muestran.",
+                openTooltip: "Personalizar columnas",
+                resetTooltip: "Restablecer valores",
+                dragHandle: "Arrastra para reordenar",
+            },
             columns: {
                 id: "ID",
                 status: "Estado",

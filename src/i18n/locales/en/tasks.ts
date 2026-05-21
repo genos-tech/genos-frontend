@@ -491,6 +491,14 @@ export const tasks = {
         dragToReorder: "Drag to reorder",
         dragToResizeColumn: "Drag to resize column",
         dropToNest: "↳ Drop to nest",
+        columnSettings: {
+            heading: "Customize columns",
+            description:
+                "Toggle visibility and drag rows to reorder. Per-device — the ID and expand columns are always shown.",
+            openTooltip: "Customize columns",
+            resetTooltip: "Reset to defaults",
+            dragHandle: "Drag to reorder",
+        },
         columns: {
             id: "ID",
             status: "Status",

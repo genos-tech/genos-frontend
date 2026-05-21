@@ -936,6 +936,14 @@ export const fr: DeepPartial<Messages> = {
             dragToReorder: "Glisser pour réorganiser",
             dragToResizeColumn: "Glisser pour redimensionner la colonne",
             dropToNest: "↳ Déposer pour imbriquer",
+            columnSettings: {
+                heading: "Personnaliser les colonnes",
+                description:
+                    "Basculer la visibilité et glisser pour réorganiser. Par appareil. Les colonnes ID et Développer restent toujours visibles.",
+                openTooltip: "Personnaliser les colonnes",
+                resetTooltip: "Réinitialiser",
+                dragHandle: "Glisser pour réorganiser",
+            },
             columns: {
                 id: "ID",
                 status: "Statut",

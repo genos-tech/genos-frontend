@@ -925,6 +925,14 @@ export const ja: DeepPartial<Messages> = {
             dragToReorder: "ドラッグして並び替え",
             dragToResizeColumn: "ドラッグして列幅を変更",
             dropToNest: "↳ ドロップしてネスト",
+            columnSettings: {
+                heading: "列のカスタマイズ",
+                description:
+                    "表示を切り替えてドラッグで並び替え。デバイスごとに保存されます。IDと展開列は常に表示されます。",
+                openTooltip: "列のカスタマイズ",
+                resetTooltip: "デフォルトに戻す",
+                dragHandle: "ドラッグして並び替え",
+            },
             columns: {
                 id: "ID",
                 status: "ステータス",

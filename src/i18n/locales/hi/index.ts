@@ -928,6 +928,14 @@ export const hi: DeepPartial<Messages> = {
             dragToReorder: "क्रम बदलने के लिए ड्रैग करें",
             dragToResizeColumn: "कॉलम का साइज़ बदलने के लिए ड्रैग करें",
             dropToNest: "↳ नेस्ट करने के लिए ड्रॉप करें",
+            columnSettings: {
+                heading: "कॉलम कस्टमाइज़ करें",
+                description:
+                    "विज़िबिलिटी टॉगल करें और क्रम बदलने के लिए ड्रैग करें। प्रति-डिवाइस सेव होता है। ID और एक्सपैंड कॉलम हमेशा दिखते हैं।",
+                openTooltip: "कॉलम कस्टमाइज़ करें",
+                resetTooltip: "डिफ़ॉल्ट पर रीसेट करें",
+                dragHandle: "क्रम बदलने के लिए ड्रैग करें",
+            },
             columns: {
                 id: "ID",
                 status: "स्टेटस",
