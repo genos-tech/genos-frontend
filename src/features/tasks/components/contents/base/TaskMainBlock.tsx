@@ -211,6 +211,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                 url: p.html_url,
                 title: `${p.owner}/${p.repo}#${p.number}`,
                 isGitHub: true,
+                isAutoLinked: true,
             }));
             for (const p of newPulls) appendedPrUrlsRef.current.add(p.html_url);
             setTaskContent({
@@ -252,6 +253,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     url,
                     title,
                     isGitHub: true,
+                    isAutoLinked: true,
                 };
             });
             setTaskContent({
