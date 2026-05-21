@@ -1,6 +1,6 @@
 import { openDB } from "idb";
 
-import { DB_NAME, DB_VERSION, STORES } from "../config";
+import { DB_NAME, initDB, STORES } from "../config";
 
 // Stores that hold team-scoped data and must be wiped when the user switches teams.
 // USER_INFO is intentionally excluded: it is indexed by teamId and shared across teams
@@ -40,7 +40,7 @@ export class DatabaseUtils {
     // Check if a store exists
     static async storeExists(storeName: string): Promise<boolean> {
         try {
-            const db = await openDB(DB_NAME, DB_VERSION);
+            const db = await initDB();
             return db.objectStoreNames.contains(storeName);
         } catch {
             return false;
@@ -50,7 +50,7 @@ export class DatabaseUtils {
     // Get store count
     static async getStoreCount(storeName: string): Promise<number> {
         try {
-            const db = await openDB(DB_NAME, DB_VERSION);
+            const db = await initDB();
             const tx = db.transaction(storeName, "readonly");
             return await tx.store.count();
         } catch {
@@ -61,7 +61,7 @@ export class DatabaseUtils {
     // Clear all data from a store
     static async clearStore(storeName: string): Promise<boolean> {
         try {
-            const db = await openDB(DB_NAME, DB_VERSION);
+            const db = await initDB();
             const tx = db.transaction(storeName, "readwrite");
             await tx.store.clear();
             await tx.done;
@@ -75,7 +75,7 @@ export class DatabaseUtils {
     // Used when the user switches teams so no stale data leaks across teams.
     static async clearTeamScopedStores(): Promise<boolean> {
         try {
-            const db = await openDB(DB_NAME, DB_VERSION);
+            const db = await initDB();
             const presentStores = TEAM_SCOPED_STORES.filter((name) =>
                 db.objectStoreNames.contains(name)
             );
@@ -187,7 +187,7 @@ export class DatabaseUtils {
     // Get database size (approximate)
     static async getDatabaseSize(): Promise<number> {
         try {
-            const db = await openDB(DB_NAME, DB_VERSION);
+            const db = await initDB();
             const storeNames = Array.from(db.objectStoreNames);
             let totalSize = 0;
 
@@ -206,7 +206,7 @@ export class DatabaseUtils {
     // Check if database is accessible
     static async isDatabaseAccessible(): Promise<boolean> {
         try {
-            const db = await openDB(DB_NAME, DB_VERSION);
+            const db = await initDB();
             return db !== null;
         } catch {
             return false;
@@ -216,7 +216,7 @@ export class DatabaseUtils {
     // Get database version
     static async getDatabaseVersion(): Promise<number> {
         try {
-            const db = await openDB(DB_NAME, DB_VERSION);
+            const db = await initDB();
             return db.version;
         } catch {
             return 0;

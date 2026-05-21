@@ -1,6 +1,6 @@
-import { IDBPDatabase, openDB } from "idb";
+import { IDBPDatabase } from "idb";
 
-import { DB_NAME, DB_VERSION } from "../config";
+import { DB_NAME, DB_VERSION, initDB } from "../config";
 import { BatchOperationResult, OperationResult } from "../types";
 
 // Base repository class with common database operations
@@ -15,9 +15,20 @@ export abstract class BaseRepository<T> {
         this.storeName = storeName;
     }
 
-    // Get database connection
+    // Get database connection.
+    //
+    // Routed through `initDB()` so the schema-upgrade callback is always
+    // attached. A bare `openDB(name, version)` with no `upgrade` is
+    // catastrophic when the database doesn't exist yet (or sits at a
+    // lower version): the browser creates / bumps the DB at the target
+    // version *without any object stores*, and every subsequent
+    // `openDB(name, version)` sees the version match and skips its own
+    // upgrade callback — the malformed DB then persists forever. Any
+    // repo write happening before `useAppInitialization`'s pre-warm
+    // `initDB()` resolved used to race this way; now every entry point
+    // is equivalent.
     protected async getDB(): Promise<IDBPDatabase> {
-        return openDB(this.dbName, this.dbVersion);
+        return initDB();
     }
 
     // Get single item by key

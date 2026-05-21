@@ -1,10 +1,20 @@
 // Database constants
 export const DB_NAME = "genosData";
-// Bumped to 5: add indexes for task-by-assignee, and per-owner / per-related
-// lookups on note stores. Migration is additive: the upgrade callback adds the
-// new indexes on the existing stores without touching the row data. See
-// `initDB` in ./schema.ts.
-export const DB_VERSION = 5;
+// Bumped to 6: forces every browser through `initDB`'s upgrade callback
+// so any database that was created at v5 *without* its object stores
+// self-heals on next load. Previously, `BaseRepository.getDB` and
+// `DatabaseUtils.*` called `openDB(name, version)` with no upgrade
+// callback. Whichever entry point won the race on a fresh DB (most
+// commonly `SignInForm`'s `clearTeamScopedStores()` running before
+// `useAppInitialization` mounted) created the DB at v5 with zero
+// stores; every later `openDB(name, 5)` then saw a matching version
+// and silently skipped its upgrade, stranding the schema forever.
+//
+// Migration is still additive: the upgrade callback in ./schema.ts is
+// idempotent — it only creates stores / indexes that don't already
+// exist — so v4-or-correct-v5 databases re-enter the callback and
+// emerge unchanged.
+export const DB_VERSION = 6;
 
 // LRU cap for the full-task cache (TASK_FULL store).
 export const MAX_CACHED_FULL_TASKS = 500;
