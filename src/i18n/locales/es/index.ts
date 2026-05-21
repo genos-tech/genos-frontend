@@ -620,6 +620,7 @@ export const es: DeepPartial<Messages> = {
             milestone: "Hito",
             tasksInThisMilestone: "Tareas en este hito",
             refreshBranches: "Actualizar ramas",
+            refreshPullRequests: "Actualizar PRs vinculadas",
         },
         buttons: {
             create: "Crear",

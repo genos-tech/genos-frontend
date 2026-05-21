@@ -608,6 +608,7 @@ export const zh: DeepPartial<Messages> = {
             milestone: "里程碑",
             tasksInThisMilestone: "此里程碑下的任务",
             refreshBranches: "刷新分支",
+            refreshPullRequests: "刷新关联的 PR",
         },
         buttons: {
             create: "创建",

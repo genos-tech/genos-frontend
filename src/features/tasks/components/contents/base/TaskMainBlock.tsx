@@ -223,13 +223,27 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
         // task open should re-evaluate its own auto-link set.
         appendedPrUrlsRef.current = new Set();
     }, [taskContent.id]);
-    useEffect(() => {
-        let cancelled = false;
+
+    // Race guard + spinner state for PR discovery, mirroring the
+    // branches pattern. The fetch closure is held in a ref and rebuilt
+    // each render so it always sees the latest `taskContent.links` —
+    // critical because focus refetches can fire long after the initial
+    // task-open render and naively closing over `taskContent` would
+    // wipe out user-added links on the next setTaskContent.
+    const pullsFetchTokenRef = useRef(0);
+    const [pullsRefreshing, setPullsRefreshing] = useState(false);
+    const fetchLinkedPullsRef = useRef<(opts?: { bypassCache?: boolean }) => Promise<void>>(
+        async () => {}
+    );
+    fetchLinkedPullsRef.current = async (opts?: { bypassCache?: boolean }) => {
         const displayId = taskContent.displayId;
         if (!taskContent.id || !displayId || displayId.startsWith("#")) return;
-        (async () => {
-            const pulls = await loadLinkedPulls(accessToken, taskContent.id!);
-            if (cancelled || pulls.length === 0) return;
+        const token = ++pullsFetchTokenRef.current;
+        if (opts?.bypassCache) setPullsRefreshing(true);
+        try {
+            const pulls = await loadLinkedPulls(accessToken, taskContent.id, opts);
+            if (token !== pullsFetchTokenRef.current) return;
+            if (pulls.length === 0) return;
             const existingUrls = new Set((taskContent.links ?? []).map((l) => l.url));
             const newPulls = pulls.filter(
                 (p) => !existingUrls.has(p.html_url) && !appendedPrUrlsRef.current.has(p.html_url)
@@ -248,14 +262,30 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                 links: [...(taskContent.links ?? []), ...newLinks],
             });
             setTaskUpdated?.(true);
-        })();
-        return () => {
-            cancelled = true;
-        };
-        // Watch taskContent.id / displayId / accessToken — re-running
-        // when `links` changes would loop (we mutate it inside).
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        } finally {
+            if (token === pullsFetchTokenRef.current && opts?.bypassCache) {
+                setPullsRefreshing(false);
+            }
+        }
+    };
+
+    // Initial discovery on task open.
+    useEffect(() => {
+        void fetchLinkedPullsRef.current();
     }, [taskContent.id, taskContent.displayId, accessToken]);
+
+    // Refetch when the user returns to the window — covers "open a PR
+    // on GitHub for an already-linked branch → alt-tab back → expect to
+    // see the PR card here". Server cache is respected on focus; the
+    // refresh icon next to the "Links" label bypasses it for an
+    // immediate fresh fetch.
+    useEffect(() => {
+        const onFocus = () => {
+            void fetchLinkedPullsRef.current();
+        };
+        window.addEventListener("focus", onFocus);
+        return () => window.removeEventListener("focus", onFocus);
+    }, []);
 
     // Mirror PR URLs from the BlockNote task body into the Links list so
     // the LinkedPrCard appears in the metadata panel automatically — no
@@ -620,7 +650,52 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
 
                 {/* Links */}
                 <ListItem sx={{ display: "flex", alignItems: "flex-start" }}>
-                    <FieldLabel isDark={isDark}>{t.tasks.fields.links}</FieldLabel>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 0.25,
+                            minWidth: "85px",
+                        }}
+                    >
+                        <FieldLabel isDark={isDark}>{t.tasks.fields.links}</FieldLabel>
+                        <Tooltip
+                            title={t.tasks.tooltips.refreshPullRequests}
+                            variant="outlined"
+                            placement="top"
+                            arrow
+                        >
+                            <IconButton
+                                size="sm"
+                                variant="plain"
+                                color="neutral"
+                                disabled={pullsRefreshing}
+                                onClick={() => {
+                                    void fetchLinkedPullsRef.current({ bypassCache: true });
+                                }}
+                                sx={{
+                                    "--IconButton-size": "20px",
+                                    minHeight: "20px",
+                                    minWidth: "20px",
+                                    p: 0,
+                                    color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.5)",
+                                }}
+                            >
+                                <RefreshRoundedIcon
+                                    sx={{
+                                        fontSize: "0.95rem",
+                                        animation: pullsRefreshing
+                                            ? "spin 0.9s linear infinite"
+                                            : "none",
+                                        "@keyframes spin": {
+                                            "0%": { transform: "rotate(0deg)" },
+                                            "100%": { transform: "rotate(360deg)" },
+                                        },
+                                    }}
+                                />
+                            </IconButton>
+                        </Tooltip>
+                    </Box>
                     <DynamicURLManager
                         setTaskContent={setTaskContent}
                         setTaskUpdated={setTaskUpdated}

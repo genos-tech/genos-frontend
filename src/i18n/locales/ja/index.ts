@@ -616,6 +616,7 @@ export const ja: DeepPartial<Messages> = {
             milestone: "マイルストーン",
             tasksInThisMilestone: "このマイルストーンのタスク",
             refreshBranches: "ブランチを更新",
+            refreshPullRequests: "連携PRを更新",
         },
         buttons: {
             create: "作成",

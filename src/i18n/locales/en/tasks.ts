@@ -124,6 +124,7 @@ export const tasks = {
         milestone: "Milestone",
         tasksInThisMilestone: "Tasks in this milestone",
         refreshBranches: "Refresh branches",
+        refreshPullRequests: "Refresh linked PRs",
     },
 
     // Generic action button labels reused across screens.
