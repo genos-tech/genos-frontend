@@ -133,6 +133,13 @@ export type TaskProps = {
         url: string;
         title: string;
         isGitHub: boolean;
+        // True when this link was auto-appended by the PR auto-link
+        // mechanism (branch head ref contained the task's display ID).
+        // Manually pasted links from DynamicURLManager omit this flag.
+        // Used by the PR column so it can keep surfacing the PR badge
+        // even after the source branch has been deleted (typical
+        // post-merge cleanup).
+        isAutoLinked?: boolean;
     }[];
     attachments: AttachmentFileProps[];
     parentTaskId: number | null;
