@@ -12,10 +12,11 @@ import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import LocalOfferOutlinedIcon from "@mui/icons-material/LocalOfferOutlined";
 import RestoreRoundedIcon from "@mui/icons-material/RestoreRounded";
 import TimelineRoundedIcon from "@mui/icons-material/TimelineRounded";
-import { Box, Chip, Stack, Typography } from "@mui/joy";
+import { Avatar, Box, Chip, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { GitHubIcon } from "../../../../../../assets/GithubIcon";
 import { AvatarWithStatus } from "../../../../../../components/ui/avatars/avatarWithStatus";
 import { ChatManagementState } from "../../../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../../../hooks/common/useTeamManagement";
@@ -124,9 +125,169 @@ const actionIcon = (action: string) => {
         case "comment_edited":
         case "comment_deleted":
             return <ChatBubbleOutlineRoundedIcon sx={{ fontSize: 18 }} />;
+        case "pr_comment_added":
+            return <GitHubIcon sx={{ fontSize: 18 }} />;
         default:
             return <HistoryRoundedIcon sx={{ fontSize: 18 }} />;
     }
+};
+
+// Derive "owner/repo#number" from a PR URL like
+// "https://github.com/acme/rocket/pull/42". Returns null when the URL
+// doesn't fit the canonical PR shape — defensive against malformed
+// activity metadata.
+const formatPrRefFromUrl = (url: unknown): string | null => {
+    if (typeof url !== "string") return null;
+    const m = url.match(/^https:\/\/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)/);
+    return m ? `${m[1]}/${m[2]}#${m[3]}` : null;
+};
+
+// Render branch for `pr_comment_added` activity rows. The row's actor
+// is `null` (GitHub commenters aren't Genos users); identity comes from
+// `metadata.github_username` + `metadata.github_avatar_url`. Layout
+// breaks out of the parent's one-line `Stack` so we can fit a header
+// line + an italic excerpt block underneath.
+const PrCommentActivityRow = ({
+    activity,
+    isDark,
+}: {
+    activity: TaskActivityProps;
+    isDark: boolean;
+}) => {
+    const metadata = activity.metadata ?? {};
+    const githubUsername =
+        typeof metadata.github_username === "string" ? metadata.github_username : "GitHub user";
+    const githubAvatarUrl =
+        typeof metadata.github_avatar_url === "string"
+            ? (metadata.github_avatar_url as string)
+            : undefined;
+    const commentUrl =
+        typeof metadata.comment_url === "string" ? (metadata.comment_url as string) : undefined;
+    const commentExcerpt =
+        typeof metadata.comment_excerpt === "string" ? (metadata.comment_excerpt as string) : "";
+    const prRef = formatPrRefFromUrl(metadata.pr_url);
+    const commentKind =
+        metadata.comment_kind === "review" ? "review" : ("issue" as "review" | "issue");
+    const filePath = typeof metadata.file_path === "string" ? metadata.file_path : null;
+    const line = typeof metadata.line === "number" ? metadata.line : null;
+    // The backend caps excerpts at 280 chars — show "…" so the user
+    // knows there may be more content behind the link.
+    const wasTruncated = commentExcerpt.length === 280;
+
+    return (
+        <Stack
+            component={commentUrl ? "a" : "div"}
+            href={commentUrl}
+            target={commentUrl ? "_blank" : undefined}
+            rel={commentUrl ? "noopener noreferrer" : undefined}
+            direction="row"
+            alignItems="flex-start"
+            spacing={1.25}
+            sx={{
+                py: 1,
+                px: 1,
+                borderRadius: "8px",
+                textDecoration: "none",
+                color: "inherit",
+                cursor: commentUrl ? "pointer" : "default",
+                "&:hover": {
+                    background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)",
+                },
+            }}
+        >
+            <Avatar size="sm" src={githubAvatarUrl} sx={{ width: 24, height: 24, fontSize: 11 }}>
+                {githubUsername[0]?.toUpperCase()}
+            </Avatar>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Stack
+                    direction="row"
+                    alignItems="center"
+                    spacing={0.75}
+                    sx={{ flexWrap: "wrap", rowGap: 0.25 }}
+                >
+                    <Box
+                        sx={{
+                            color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.5)",
+                            display: "flex",
+                            alignItems: "center",
+                        }}
+                    >
+                        <GitHubIcon sx={{ fontSize: 16 }} />
+                    </Box>
+                    <Typography level="body-sm" sx={{ fontWeight: 600 }}>
+                        @{githubUsername}
+                    </Typography>
+                    <Typography
+                        level="body-sm"
+                        sx={{
+                            color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.65)",
+                        }}
+                    >
+                        commented on
+                    </Typography>
+                    {prRef && (
+                        <Typography
+                            level="body-sm"
+                            sx={{
+                                fontFamily: "monospace",
+                                fontSize: "0.8rem",
+                                color: isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.75)",
+                            }}
+                        >
+                            {prRef}
+                        </Typography>
+                    )}
+                    {commentKind === "review" && filePath && (
+                        <Typography
+                            level="body-xs"
+                            sx={{
+                                fontFamily: "monospace",
+                                color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.45)",
+                            }}
+                        >
+                            on {filePath}
+                            {line != null ? `:${line}` : ""}
+                        </Typography>
+                    )}
+                    <Box sx={{ flexGrow: 1 }} />
+                    <Typography
+                        level="body-xs"
+                        sx={{
+                            color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
+                            whiteSpace: "nowrap",
+                        }}
+                    >
+                        {formatRelative(activity.tsCreatedAt)}
+                    </Typography>
+                </Stack>
+                {commentExcerpt && (
+                    <Box
+                        sx={{
+                            mt: 0.5,
+                            ml: 3,
+                            pl: 1.5,
+                            py: 0.5,
+                            borderLeft: "2px solid",
+                            borderLeftColor: isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.1)",
+                        }}
+                    >
+                        <Typography
+                            level="body-sm"
+                            sx={{
+                                color: isDark ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.65)",
+                                fontStyle: "italic",
+                                whiteSpace: "pre-wrap",
+                                overflowWrap: "anywhere",
+                            }}
+                        >
+                            {commentExcerpt}
+                            {wasTruncated ? "…" : ""}
+                        </Typography>
+                    </Box>
+                )}
+            </Box>
+        </Stack>
+    );
 };
 
 // Smaller-than-Intl.RelativeTimeFormat formatter so we don't pull in a
@@ -379,6 +540,18 @@ export const TaskActivityFeed = ({
             )}
 
             {activities.map((row) => {
+                // PR-comment rows render in a custom layout (GitHub
+                // identity, expandable excerpt). Branch out early so we
+                // don't fall through the generic actor/verb/chip path.
+                if (row.actionType === "pr_comment_added") {
+                    return (
+                        <PrCommentActivityRow
+                            key={row.activityId}
+                            activity={row}
+                            isDark={isDark}
+                        />
+                    );
+                }
                 const actorName = row.actor?.userName ?? "Someone";
                 const oldFmt = formatValue(
                     row.oldValue,
