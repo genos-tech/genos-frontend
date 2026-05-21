@@ -277,7 +277,11 @@ export const Sidebar = (props: SidebarProps) => {
                             placement="right"
                             size="sm"
                             sx={{ zIndex: 10020 }}
-                            title={isMac() ? "⌘ + K" : "Ctrl + K"}
+                            title={
+                                isMac()
+                                    ? t.sidebar.tooltips.spotlightShortcut.mac
+                                    : t.sidebar.tooltips.spotlightShortcut.windows
+                            }
                             variant="outlined"
                         >
                             <ListItemButton
@@ -349,6 +353,23 @@ export const Sidebar = (props: SidebarProps) => {
                         const isActive = location.pathname.includes(item.path);
                         const badgeCount = getBadgeCount(item.id);
                         const color = isDark ? item.colorScheme.dark : item.colorScheme.light;
+                        // Items with a dedicated letter shortcut show
+                        // it directly; the rest fall back to the cycle
+                        // gesture (which IS their only global way in).
+                        let tooltipText: string;
+                        if (item.labelKey === "tasks") {
+                            tooltipText = isMac()
+                                ? t.sidebar.tooltips.tasksShortcut.mac
+                                : t.sidebar.tooltips.tasksShortcut.windows;
+                        } else if (item.labelKey === "notes") {
+                            tooltipText = isMac()
+                                ? t.sidebar.tooltips.notesShortcut.mac
+                                : t.sidebar.tooltips.notesShortcut.windows;
+                        } else {
+                            tooltipText = isMac()
+                                ? t.sidebar.tooltips.switchServiceMac
+                                : t.sidebar.tooltips.switchServiceOther;
+                        }
 
                         return (
                             <ListItem key={item.id}>
@@ -356,11 +377,7 @@ export const Sidebar = (props: SidebarProps) => {
                                     placement="right"
                                     size="sm"
                                     sx={{ zIndex: 10020 }}
-                                    title={
-                                        isMac()
-                                            ? t.sidebar.tooltips.switchServiceMac
-                                            : t.sidebar.tooltips.switchServiceOther
-                                    }
+                                    title={tooltipText}
                                     variant="outlined"
                                 >
                                     <ListItemButton
