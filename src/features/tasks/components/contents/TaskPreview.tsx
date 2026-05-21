@@ -17,7 +17,6 @@ import {
     Divider,
     IconButton,
     Input,
-    Sheet,
     Stack,
     Tooltip,
     Typography,
@@ -68,6 +67,7 @@ import { effortLevels, priorities } from "../../utils/taskMeta";
 import { TaskBodyBlock } from "./base/TaskBodyBlock";
 import { TaskCustomBarBlock } from "./base/TaskCustomBarBlock";
 import { TaskMainBlock } from "./base/TaskMainBlock";
+import { TaskPreviewLayout } from "./base/TaskPreviewLayout";
 import { TaskSubTasksBlock } from "./base/TaskSubTasksBlock";
 import { TaskTabBlock } from "./base/TaskTabBlock";
 import { TaskTitleBlock } from "./base/TaskTitleBlock";
@@ -637,56 +637,26 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     return (
         <>
             {taskEditState.tmpCurrentTaskContent?.id && (
-                <Sheet
+                <TaskPreviewLayout
                     ref={sheetRef}
-                    className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-                    sx={{
-                        minHeight: 500,
-                        borderRadius: "16px",
-                        p: 0,
-                        overflowY: "auto",
-                        overflowX: "hidden",
-                        background: isDark
-                            ? "linear-gradient(180deg, rgba(22,22,28,0.98) 0%, rgba(18,18,24,1) 100%)"
-                            : "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(252,252,255,1) 100%)",
-                        border: "1px solid",
-                        borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
-                        boxShadow: isDark
-                            ? "0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03)"
-                            : "0 8px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8)",
-                        position: "relative",
-                        animation: "slideIn 0.3s ease-out",
-                        "@keyframes slideIn": {
-                            from: { opacity: 0, transform: "translateY(8px)" },
-                            to: { opacity: 1, transform: "translateY(0)" },
-                        },
-                    }}
-                >
-                    {/* Gradient accent at top */}
-                    <Box
-                        sx={{
-                            position: "absolute",
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            height: "3px",
-                            background: isDark
-                                ? "linear-gradient(90deg, #6d28d9 0%, #7c3aed 50%, #9333ea 100%)"
-                                : "linear-gradient(90deg, #a78bfa 0%, #8b5cf6 50%, #c084fc 100%)",
-                            borderRadius: "16px 16px 0 0",
-                            opacity: 0.8,
-                        }}
-                    />
-
-                    {/* Header Section */}
-                    <Box
-                        sx={{
-                            p: 2.5,
-                            pt: 3,
-                            borderBottom: "1px solid",
-                            borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
-                        }}
-                    >
+                    isDark={isDark}
+                    accent={
+                        <Box
+                            sx={{
+                                position: "absolute",
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                height: "3px",
+                                background: isDark
+                                    ? "linear-gradient(90deg, #6d28d9 0%, #7c3aed 50%, #9333ea 100%)"
+                                    : "linear-gradient(90deg, #a78bfa 0%, #8b5cf6 50%, #c084fc 100%)",
+                                borderRadius: "16px 16px 0 0",
+                                opacity: 0.8,
+                            }}
+                        />
+                    }
+                    header={
                         <TaskTitleBlock
                             isMilestone={previewTaskKind === "milestone"}
                             isPreviewMode={true}
@@ -705,149 +675,141 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                             useTM={useTM}
                             useUISM={useUISM}
                         />
-                    </Box>
+                    }
+                    mainContent={
+                        <>
+                            <SectionHeader isDark={isDark}>
+                                {t.tasks.preview.taskDetails}
+                            </SectionHeader>
+                            <Box
+                                sx={{
+                                    p: 2,
+                                    borderRadius: "12px",
+                                    background: isDark
+                                        ? "rgba(255,255,255,0.02)"
+                                        : "rgba(0,0,0,0.015)",
+                                    border: "1px solid",
+                                    borderColor: isDark
+                                        ? "rgba(255,255,255,0.04)"
+                                        : "rgba(0,0,0,0.04)",
+                                }}
+                            >
+                                <TaskMainBlock
+                                    assignee={assignee}
+                                    isMilestone={previewTaskKind === "milestone"}
+                                    isOpenProjectList={isOpenProjectList}
+                                    isOpenTagList={isOpenTagList}
+                                    isOpenTeamMembersList={isOpenTeamMembersList}
+                                    isPreviewMode={true}
+                                    isSubTask={previewTaskKind === "subtask"}
+                                    myself={myself}
+                                    projectTags={projectTags}
+                                    reporter={reporter}
+                                    setAssignee={setAssignee}
+                                    setIsOpenProjectList={setIsOpenProjectList}
+                                    setIsOpenTagList={setIsOpenTagList}
+                                    setIsOpenTeamMembersList={setIsOpenTeamMembersList}
+                                    setMyself={setMyself}
+                                    setProjectTags={setProjectTags}
+                                    setReporter={setReporter}
+                                    setTaskContent={taskEditState.setTmpCurrentTaskContent}
+                                    setTaskStatusUpdated={taskEditState.setTaskStatusUpdated}
+                                    setTaskUpdated={taskEditState.setTaskUpdated}
+                                    socket={socket}
+                                    taskContent={taskEditState.tmpCurrentTaskContent}
+                                    useCM={useCM}
+                                    usePM={usePM}
+                                    useSM={useSM}
+                                    useTEM={useTEM}
+                                    useTM={useTM}
+                                    useUISM={useUISM}
+                                />
+                            </Box>
 
-                    {/* Main Content Section */}
-                    <Box sx={{ p: 2.5 }}>
-                        <SectionHeader isDark={isDark}>
-                            {t.tasks.preview.taskDetails}
-                        </SectionHeader>
-                        <Box
-                            sx={{
-                                p: 2,
-                                borderRadius: "12px",
-                                background: isDark
-                                    ? "rgba(255,255,255,0.02)"
-                                    : "rgba(0,0,0,0.015)",
-                                border: "1px solid",
-                                borderColor: isDark
-                                    ? "rgba(255,255,255,0.04)"
-                                    : "rgba(0,0,0,0.04)",
-                            }}
-                        >
-                            <TaskMainBlock
-                                assignee={assignee}
-                                isMilestone={previewTaskKind === "milestone"}
-                                isOpenProjectList={isOpenProjectList}
-                                isOpenTagList={isOpenTagList}
-                                isOpenTeamMembersList={isOpenTeamMembersList}
-                                isPreviewMode={true}
-                                isSubTask={previewTaskKind === "subtask"}
+                            {(() => {
+                                // Auto-detect PR URLs in the task's Links list and
+                                // surface a rich card per PR. Source of truth is
+                                // `links`; no separate column / input.
+                                const prUrls = (taskEditState.tmpCurrentTaskContent.links ?? [])
+                                    .map((l) => l.url)
+                                    .filter((u) => parsePrUrl(u) !== null);
+                                if (prUrls.length === 0) return null;
+                                return (
+                                    <>
+                                        <SectionDivider isDark={isDark} />
+                                        <SectionHeader isDark={isDark}>
+                                            {t.tasks.linkedPr.header}
+                                        </SectionHeader>
+                                        <Stack spacing={1}>
+                                            {prUrls.map((url) => (
+                                                <LinkedPrCard
+                                                    key={url}
+                                                    accessToken={accessToken ?? ""}
+                                                    url={url}
+                                                />
+                                            ))}
+                                        </Stack>
+                                    </>
+                                );
+                            })()}
+
+                            <SectionDivider isDark={isDark} />
+
+                            <Stack direction="row">
+                                {/* Body Section */}
+                                <SectionHeader isDark={isDark}>
+                                    {t.tasks.preview.description}
+                                </SectionHeader>
+                                {/* Custom Bar */}
+                                <TaskCustomBarBlock taskBodySaved={taskEditState.taskBodySaved} />
+                            </Stack>
+                            <Box
+                                sx={{
+                                    p: 2,
+                                    borderRadius: "12px",
+                                    background: isDark
+                                        ? "rgba(255,255,255,0.02)"
+                                        : "rgba(0,0,0,0.015)",
+                                    border: "1px solid",
+                                    borderColor: isDark
+                                        ? "rgba(255,255,255,0.04)"
+                                        : "rgba(0,0,0,0.04)",
+                                    minHeight: 150,
+                                }}
+                            >
+                                <TaskBodyBlock
+                                    key={`TaskBodyBlock-${taskEditState.tmpCurrentTaskContent.id}`}
+                                    body={taskEditState.body}
+                                    myself={myself}
+                                    setBody={taskEditState.setBody}
+                                    setMyself={setMyself}
+                                    setTaskBodyEdited={taskEditState.setTaskBodyEdited}
+                                    setTaskBodySaved={taskEditState.setTaskBodySaved}
+                                    socket={socket}
+                                    taskId={taskEditState.tmpCurrentTaskContent.id}
+                                    useCM={useCM}
+                                    useTEM={useTEM}
+                                    useUISM={useUISM}
+                                />
+                            </Box>
+
+                            <SectionDivider isDark={isDark} />
+
+                            {/* Subtasks Section */}
+                            <TaskSubTasksBlock
+                                currentTaskContent={taskEditState.tmpCurrentTaskContent}
                                 myself={myself}
-                                projectTags={projectTags}
-                                reporter={reporter}
-                                setAssignee={setAssignee}
-                                setIsOpenProjectList={setIsOpenProjectList}
-                                setIsOpenTagList={setIsOpenTagList}
-                                setIsOpenTeamMembersList={setIsOpenTeamMembersList}
+                                SectionHeader={SectionHeader}
                                 setMyself={setMyself}
-                                setProjectTags={setProjectTags}
-                                setReporter={setReporter}
-                                setTaskContent={taskEditState.setTmpCurrentTaskContent}
-                                setTaskStatusUpdated={taskEditState.setTaskStatusUpdated}
-                                setTaskUpdated={taskEditState.setTaskUpdated}
                                 socket={socket}
-                                taskContent={taskEditState.tmpCurrentTaskContent}
                                 useCM={useCM}
-                                usePM={usePM}
-                                useSM={useSM}
                                 useTEM={useTEM}
                                 useTM={useTM}
                                 useUISM={useUISM}
                             />
-                        </Box>
-
-                        {(() => {
-                            // Auto-detect PR URLs in the task's Links list and
-                            // surface a rich card per PR. Source of truth is
-                            // `links`; no separate column / input.
-                            const prUrls = (taskEditState.tmpCurrentTaskContent.links ?? [])
-                                .map((l) => l.url)
-                                .filter((u) => parsePrUrl(u) !== null);
-                            if (prUrls.length === 0) return null;
-                            return (
-                                <>
-                                    <SectionDivider isDark={isDark} />
-                                    <SectionHeader isDark={isDark}>
-                                        {t.tasks.linkedPr.header}
-                                    </SectionHeader>
-                                    <Stack spacing={1}>
-                                        {prUrls.map((url) => (
-                                            <LinkedPrCard
-                                                key={url}
-                                                url={url}
-                                                accessToken={accessToken ?? ""}
-                                            />
-                                        ))}
-                                    </Stack>
-                                </>
-                            );
-                        })()}
-
-                        <SectionDivider isDark={isDark} />
-
-                        <Stack direction="row">
-                            {/* Body Section */}
-                            <SectionHeader isDark={isDark}>
-                                {t.tasks.preview.description}
-                            </SectionHeader>
-                            {/* Custom Bar */}
-                            <TaskCustomBarBlock taskBodySaved={taskEditState.taskBodySaved} />
-                        </Stack>
-                        <Box
-                            sx={{
-                                p: 2,
-                                borderRadius: "12px",
-                                background: isDark
-                                    ? "rgba(255,255,255,0.02)"
-                                    : "rgba(0,0,0,0.015)",
-                                border: "1px solid",
-                                borderColor: isDark
-                                    ? "rgba(255,255,255,0.04)"
-                                    : "rgba(0,0,0,0.04)",
-                                minHeight: 150,
-                            }}
-                        >
-                            <TaskBodyBlock
-                                key={`TaskBodyBlock-${taskEditState.tmpCurrentTaskContent.id}`}
-                                body={taskEditState.body}
-                                myself={myself}
-                                setBody={taskEditState.setBody}
-                                setMyself={setMyself}
-                                setTaskBodyEdited={taskEditState.setTaskBodyEdited}
-                                setTaskBodySaved={taskEditState.setTaskBodySaved}
-                                socket={socket}
-                                taskId={taskEditState.tmpCurrentTaskContent.id}
-                                useCM={useCM}
-                                useTEM={useTEM}
-                                useUISM={useUISM}
-                            />
-                        </Box>
-
-                        <SectionDivider isDark={isDark} />
-
-                        {/* Subtasks Section */}
-                        <TaskSubTasksBlock
-                            currentTaskContent={taskEditState.tmpCurrentTaskContent}
-                            myself={myself}
-                            SectionHeader={SectionHeader}
-                            setMyself={setMyself}
-                            socket={socket}
-                            useCM={useCM}
-                            useTEM={useTEM}
-                            useTM={useTM}
-                            useUISM={useUISM}
-                        />
-                    </Box>
-
-                    {/* Tabs Section */}
-                    <Box
-                        sx={{
-                            borderTop: "1px solid",
-                            borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
-                            background: isDark ? "rgba(255,255,255,0.01)" : "rgba(0,0,0,0.01)",
-                        }}
-                    >
+                        </>
+                    }
+                    tabs={
                         <TaskTabBlock
                             editTargetComment={editTargetComment}
                             isInEdit={isInEdit}
@@ -880,8 +842,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                             useTM={useTM}
                             useUISM={useUISM}
                         />
-                    </Box>
-                </Sheet>
+                    }
+                />
             )}
         </>
     );
@@ -1588,476 +1550,452 @@ const MilestonePreviewInner = ({
     }
 
     return (
-        <Sheet
-            className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
-            sx={{
-                minHeight: 500,
-                borderRadius: "16px",
-                p: 0,
-                overflowY: "auto",
-                overflowX: "hidden",
-                background: isDark
-                    ? "linear-gradient(180deg, rgba(22,22,28,0.98) 0%, rgba(18,18,24,1) 100%)"
-                    : "linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(252,252,255,1) 100%)",
-                border: "1px solid",
-                borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
-                boxShadow: isDark
-                    ? "0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03)"
-                    : "0 8px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8)",
-                position: "relative",
-                animation: "slideIn 0.3s ease-out",
-                "@keyframes slideIn": {
-                    from: { opacity: 0, transform: "translateY(8px)" },
-                    to: { opacity: 1, transform: "translateY(0)" },
-                },
-            }}
-        >
-            <Box
-                sx={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: 3,
-                    background: "linear-gradient(90deg, #6d28d9 0%, #7c3aed 50%, #9333ea 100%)",
-                    borderRadius: "16px 16px 0 0",
-                }}
-            />
-
-            {/* Header */}
-            <Box
-                sx={{
-                    p: 2.5,
-                    pt: 3,
-                    borderBottom: "1px solid",
-                    borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
-                }}
-            >
-                <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 1.5 }}>
-                    <FlagRoundedIcon sx={{ color: "#f97316", fontSize: 18 }} />
-                    <Typography level="body-xs" sx={{ color: "neutral.500" }}>
-                        Milestone
-                    </Typography>
-                    {/* Status Transition Buttons — mirror the task-
+        <TaskPreviewLayout
+            isDark={isDark}
+            accent={
+                <Box
+                    sx={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: 3,
+                        background:
+                            "linear-gradient(90deg, #6d28d9 0%, #7c3aed 50%, #9333ea 100%)",
+                        borderRadius: "16px 16px 0 0",
+                    }}
+                />
+            }
+            header={
+                <>
+                    <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 1.5 }}>
+                        <FlagRoundedIcon sx={{ color: "#f97316", fontSize: 18 }} />
+                        <Typography level="body-xs" sx={{ color: "neutral.500" }}>
+                            Milestone
+                        </Typography>
+                        {/* Status Transition Buttons — mirror the task-
                         header buttons (TaskTitleBlock.tsx:135) so the
                         milestone preview gets the same one-click
                         Open/Pending → WIP → Closed flow. */}
-                    {(milestone.status === "Open" || milestone.status === "Pending") && (
-                        <Button
-                            size="sm"
-                            startDecorator={<PlayArrowRoundedIcon sx={{ fontSize: 16 }} />}
+                        {(milestone.status === "Open" || milestone.status === "Pending") && (
+                            <Button
+                                size="sm"
+                                startDecorator={<PlayArrowRoundedIcon sx={{ fontSize: 16 }} />}
+                                variant="soft"
+                                sx={{
+                                    fontWeight: 600,
+                                    fontSize: "12px",
+                                    borderRadius: "8px",
+                                    px: 1.5,
+                                    py: 0.5,
+                                    background:
+                                        "linear-gradient(135deg, #ff9500 0%, #ff6b00 100%)",
+                                    color: "white",
+                                    boxShadow: "0 2px 8px rgba(255, 140, 0, 0.25)",
+                                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                    "&:hover": {
+                                        background:
+                                            "linear-gradient(135deg, #ffa726 0%, #ff7043 100%)",
+                                        boxShadow: "0 4px 12px rgba(255, 140, 0, 0.35)",
+                                        transform: "translateY(-1px)",
+                                    },
+                                    "&:active": {
+                                        transform: "translateY(0)",
+                                        boxShadow: "0 2px 6px rgba(255, 140, 0, 0.2)",
+                                    },
+                                }}
+                                onClick={() => handleMilestoneStatusChange("WIP")}
+                            >
+                                Start Milestone
+                            </Button>
+                        )}
+                        {milestone.status === "WIP" && (
+                            <Button
+                                size="sm"
+                                startDecorator={<TaskAltRoundedIcon sx={{ fontSize: 16 }} />}
+                                variant="soft"
+                                sx={{
+                                    fontWeight: 600,
+                                    fontSize: "12px",
+                                    borderRadius: "8px",
+                                    px: 1.5,
+                                    py: 0.5,
+                                    background:
+                                        "linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)",
+                                    color: "white",
+                                    boxShadow: "0 2px 8px rgba(76, 175, 80, 0.25)",
+                                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                    "&:hover": {
+                                        background:
+                                            "linear-gradient(135deg, #66bb6a 0%, #388e3c 100%)",
+                                        boxShadow: "0 4px 12px rgba(76, 175, 80, 0.35)",
+                                        transform: "translateY(-1px)",
+                                    },
+                                    "&:active": {
+                                        transform: "translateY(0)",
+                                        boxShadow: "0 2px 6px rgba(76, 175, 80, 0.2)",
+                                    },
+                                }}
+                                onClick={() => handleMilestoneStatusChange("Closed")}
+                            >
+                                Complete Milestone
+                            </Button>
+                        )}
+                        <Chip
+                            key={`milestone-status-${milestone.status}`}
+                            size="md"
                             variant="soft"
                             sx={{
-                                fontWeight: 600,
-                                fontSize: "12px",
                                 borderRadius: "8px",
-                                px: 1.5,
-                                py: 0.5,
-                                background: "linear-gradient(135deg, #ff9500 0%, #ff6b00 100%)",
-                                color: "white",
-                                boxShadow: "0 2px 8px rgba(255, 140, 0, 0.25)",
-                                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                "&:hover": {
-                                    background:
-                                        "linear-gradient(135deg, #ffa726 0%, #ff7043 100%)",
-                                    boxShadow: "0 4px 12px rgba(255, 140, 0, 0.35)",
-                                    transform: "translateY(-1px)",
-                                },
-                                "&:active": {
-                                    transform: "translateY(0)",
-                                    boxShadow: "0 2px 6px rgba(255, 140, 0, 0.2)",
-                                },
-                            }}
-                            onClick={() => handleMilestoneStatusChange("WIP")}
-                        >
-                            Start Milestone
-                        </Button>
-                    )}
-                    {milestone.status === "WIP" && (
-                        <Button
-                            size="sm"
-                            startDecorator={<TaskAltRoundedIcon sx={{ fontSize: 16 }} />}
-                            variant="soft"
-                            sx={{
                                 fontWeight: 600,
-                                fontSize: "12px",
-                                borderRadius: "8px",
+                                fontSize: "0.75rem",
                                 px: 1.5,
-                                py: 0.5,
-                                background: "linear-gradient(135deg, #4caf50 0%, #2e7d32 100%)",
-                                color: "white",
-                                boxShadow: "0 2px 8px rgba(76, 175, 80, 0.25)",
-                                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                "&:hover": {
-                                    background:
-                                        "linear-gradient(135deg, #66bb6a 0%, #388e3c 100%)",
-                                    boxShadow: "0 4px 12px rgba(76, 175, 80, 0.35)",
-                                    transform: "translateY(-1px)",
-                                },
-                                "&:active": {
-                                    transform: "translateY(0)",
-                                    boxShadow: "0 2px 6px rgba(76, 175, 80, 0.2)",
-                                },
+                                backgroundColor: alpha(
+                                    STATUS_COLOR[milestone.status as string] ?? "#666",
+                                    isDark ? 0.25 : 0.65
+                                ),
+                                color: "#ffffff",
+                                border: "1px solid",
+                                borderColor: alpha(
+                                    STATUS_COLOR[milestone.status as string] ?? "#666",
+                                    isDark ? 0.3 : 0.25
+                                ),
                             }}
-                            onClick={() => handleMilestoneStatusChange("Closed")}
                         >
-                            Complete Milestone
-                        </Button>
-                    )}
-                    <Chip
-                        key={`milestone-status-${milestone.status}`}
-                        size="md"
-                        variant="soft"
-                        sx={{
-                            borderRadius: "8px",
-                            fontWeight: 600,
-                            fontSize: "0.75rem",
-                            px: 1.5,
-                            backgroundColor: alpha(
-                                STATUS_COLOR[milestone.status as string] ?? "#666",
-                                isDark ? 0.25 : 0.65
-                            ),
-                            color: "#ffffff",
-                            border: "1px solid",
-                            borderColor: alpha(
-                                STATUS_COLOR[milestone.status as string] ?? "#666",
-                                isDark ? 0.3 : 0.25
-                            ),
-                        }}
-                    >
-                        {milestone.status}
-                    </Chip>
-                    <Box sx={{ flex: 1 }} />
-                    {(() => {
-                        const items: MoreMenuItem[] = [
-                            {
-                                id: "copyMilestoneLink",
-                                label: t.tasks.preview.menu.copyMilestoneLink,
-                                icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
-                                onClick: async () => {
-                                    if (milestone.projectId && milestone.milestoneId) {
-                                        const milestoneUrl = `${window.location.origin}/workspace/tasks/project/${milestone.projectId}/milestone/${milestone.milestoneId}`;
-                                        try {
-                                            await navigator.clipboard.writeText(milestoneUrl);
-                                        } catch (err) {
-                                            console.error("Failed to copy link:", err);
+                            {milestone.status}
+                        </Chip>
+                        <Box sx={{ flex: 1 }} />
+                        {(() => {
+                            const items: MoreMenuItem[] = [
+                                {
+                                    id: "copyMilestoneLink",
+                                    label: t.tasks.preview.menu.copyMilestoneLink,
+                                    icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
+                                    onClick: async () => {
+                                        if (milestone.projectId && milestone.milestoneId) {
+                                            const milestoneUrl = `${window.location.origin}/workspace/tasks/project/${milestone.projectId}/milestone/${milestone.milestoneId}`;
+                                            try {
+                                                await navigator.clipboard.writeText(milestoneUrl);
+                                            } catch (err) {
+                                                console.error("Failed to copy link:", err);
+                                            }
                                         }
-                                    }
+                                    },
                                 },
-                            },
-                            {
-                                id: "newTask",
-                                label: t.tasks.preview.menu.newTask,
-                                icon: <AssignmentRoundedIcon sx={{ fontSize: 18 }} />,
-                                onClick: () => {
-                                    if (milestone.taskId == null) return;
-                                    useTM.setIsCreatingTask({
-                                        flag: true,
-                                        parentTaskId: milestone.taskId,
-                                        rootTaskId: milestone.taskId,
-                                        creationKind: "task",
-                                        milestoneId: milestone.milestoneId,
-                                    });
-                                    useTM.setIsTaskTableVisible(false);
-                                },
-                            },
-                            {
-                                id: "openNote",
-                                label: t.tasks.preview.menu.openNote,
-                                icon: <NoteAltRoundedIcon sx={{ fontSize: 18 }} />,
-                                onClick: () => {
-                                    if (
-                                        useNM.setIsTaskNoteVisible &&
-                                        milestone.projectId &&
-                                        milestone.taskId != null
-                                    ) {
+                                {
+                                    id: "newTask",
+                                    label: t.tasks.preview.menu.newTask,
+                                    icon: <AssignmentRoundedIcon sx={{ fontSize: 18 }} />,
+                                    onClick: () => {
+                                        if (milestone.taskId == null) return;
+                                        useTM.setIsCreatingTask({
+                                            flag: true,
+                                            parentTaskId: milestone.taskId,
+                                            rootTaskId: milestone.taskId,
+                                            creationKind: "task",
+                                            milestoneId: milestone.milestoneId,
+                                        });
                                         useTM.setIsTaskTableVisible(false);
-                                        useNM.setIsTaskNoteVisible(true);
-                                        if (useNM.taskNoteMeta.length > 0) {
-                                            const meta = useNM.taskNoteMeta[0] as TaskNoteProps;
-                                            useNM.tabsApi.openTab({
-                                                kind: "task",
-                                                noteType: 2,
-                                                noteId: meta.noteId,
-                                                projectId: meta.projectId,
-                                                taskId: meta.taskId,
-                                                id: `task-${meta.noteId}`,
-                                                title: meta.title,
-                                                teamId: myself.teamId,
-                                            });
-                                        } else {
-                                            useNM.handleCreateNewTaskNote(
-                                                null,
-                                                milestone.projectId,
-                                                milestone.taskId,
-                                                milestone.title
-                                            );
+                                    },
+                                },
+                                {
+                                    id: "openNote",
+                                    label: t.tasks.preview.menu.openNote,
+                                    icon: <NoteAltRoundedIcon sx={{ fontSize: 18 }} />,
+                                    onClick: () => {
+                                        if (
+                                            useNM.setIsTaskNoteVisible &&
+                                            milestone.projectId &&
+                                            milestone.taskId != null
+                                        ) {
+                                            useTM.setIsTaskTableVisible(false);
+                                            useNM.setIsTaskNoteVisible(true);
+                                            if (useNM.taskNoteMeta.length > 0) {
+                                                const meta = useNM
+                                                    .taskNoteMeta[0] as TaskNoteProps;
+                                                useNM.tabsApi.openTab({
+                                                    kind: "task",
+                                                    noteType: 2,
+                                                    noteId: meta.noteId,
+                                                    projectId: meta.projectId,
+                                                    taskId: meta.taskId,
+                                                    id: `task-${meta.noteId}`,
+                                                    title: meta.title,
+                                                    teamId: myself.teamId,
+                                                });
+                                            } else {
+                                                useNM.handleCreateNewTaskNote(
+                                                    null,
+                                                    milestone.projectId,
+                                                    milestone.taskId,
+                                                    milestone.title
+                                                );
+                                            }
                                         }
-                                    }
+                                    },
                                 },
-                            },
-                            {
-                                id: "newTag",
-                                label: t.tasks.preview.menu.newTag,
-                                icon: <LocalOfferRoundedIcon sx={{ fontSize: 18 }} />,
-                                onClick: () => {
-                                    useTM.setOpenCreateTag(true);
+                                {
+                                    id: "newTag",
+                                    label: t.tasks.preview.menu.newTag,
+                                    icon: <LocalOfferRoundedIcon sx={{ fontSize: 18 }} />,
+                                    onClick: () => {
+                                        useTM.setOpenCreateTag(true);
+                                    },
                                 },
-                            },
-                            {
-                                id: "newProject",
-                                label: t.tasks.preview.menu.newProject,
-                                icon: <AddIcon sx={{ fontSize: 18 }} />,
-                                onClick: () => {
-                                    usePM.setOpenCreateProject(true);
+                                {
+                                    id: "newProject",
+                                    label: t.tasks.preview.menu.newProject,
+                                    icon: <AddIcon sx={{ fontSize: 18 }} />,
+                                    onClick: () => {
+                                        usePM.setOpenCreateProject(true);
+                                    },
                                 },
-                            },
-                            {
-                                id: "deleteMilestone",
-                                label: t.tasks.preview.menu.deleteMilestone,
-                                icon: <DeleteRoundedIcon sx={{ fontSize: 18 }} />,
-                                danger: true,
-                                onClick: async () => {
-                                    if (!confirm(t.tasks.preview.confirmDeleteMilestone)) return;
-                                    await useSM.removeMilestone(
-                                        milestone.milestoneId,
-                                        milestone.projectId
-                                    );
+                                {
+                                    id: "deleteMilestone",
+                                    label: t.tasks.preview.menu.deleteMilestone,
+                                    icon: <DeleteRoundedIcon sx={{ fontSize: 18 }} />,
+                                    danger: true,
+                                    onClick: async () => {
+                                        if (!confirm(t.tasks.preview.confirmDeleteMilestone))
+                                            return;
+                                        await useSM.removeMilestone(
+                                            milestone.milestoneId,
+                                            milestone.projectId
+                                        );
+                                        useTM.setCurrentPreviewKind("task");
+                                        useTM.setCurrentPreviewMilestoneId(-1);
+                                        useTM.setIsTaskPreviewVisible(false);
+                                        // Same dual-gate trap as the milestone Close
+                                        // button: when the preview was opened from a
+                                        // task note, the surrounding `TaskPreviewPanel`
+                                        // is mounted by `useNM.isTaskVisibleInNote`
+                                        // rather than `useTM`, so flipping `useTM`
+                                        // alone leaves the panel showing a now-deleted
+                                        // milestone. Clear the NM flag too.
+                                        if (useNM.setIsTaskVisibleInNote) {
+                                            useNM.setIsTaskVisibleInNote(false);
+                                        }
+                                    },
+                                },
+                            ];
+                            return (
+                                <MoreMenu
+                                    iconFontSize={20}
+                                    items={items}
+                                    menuMinWidth={220}
+                                    placement="bottom-end"
+                                    triggerSize={36}
+                                    triggerSx={{
+                                        background: styles.buttonBg,
+                                        border: `1px solid ${styles.buttonBorder}`,
+                                        borderRadius: "10px",
+                                    }}
+                                />
+                            );
+                        })()}
+
+                        <Tooltip
+                            size="sm"
+                            title={t.tasks.preview.closeTooltip}
+                            variant="outlined"
+                            sx={{
+                                background: styles.menuBg,
+                                border: `1px solid ${styles.menuBorder}`,
+                                borderRadius: "8px",
+                            }}
+                        >
+                            <IconButton
+                                size="sm"
+                                variant="plain"
+                                sx={{
+                                    background: styles.dangerBg,
+                                    border: `1px solid ${styles.dangerBorder}`,
+                                    borderRadius: "10px",
+                                    width: "36px",
+                                    height: "36px",
+                                    transition: "all 0.2s ease",
+                                    "&:hover": {
+                                        background: styles.dangerHover,
+                                        transform: "translateY(-1px)",
+                                    },
+                                }}
+                                onClick={() => {
+                                    useTM.setIsTaskPreviewVisible(false);
                                     useTM.setCurrentPreviewKind("task");
                                     useTM.setCurrentPreviewMilestoneId(-1);
-                                    useTM.setIsTaskPreviewVisible(false);
-                                    // Same dual-gate trap as the milestone Close
-                                    // button: when the preview was opened from a
-                                    // task note, the surrounding `TaskPreviewPanel`
-                                    // is mounted by `useNM.isTaskVisibleInNote`
-                                    // rather than `useTM`, so flipping `useTM`
-                                    // alone leaves the panel showing a now-deleted
-                                    // milestone. Clear the NM flag too.
+                                    useTM.setTableMilestoneFilterId(null);
+                                    if (
+                                        useTM.isTaskTableVisible === false &&
+                                        useTM.isSprintBoardVisible === false &&
+                                        useTM.isTaskDashboardVisible === false
+                                    ) {
+                                        useTM.setIsTaskTableVisible(true);
+                                    }
+
+                                    // When the milestone preview was opened from a
+                                    // task note (NoteHeaderActions → onOpenTask
+                                    // flips `useNM.isTaskVisibleInNote=true`), the
+                                    // surrounding `TaskPreviewPanel` is gated by
+                                    // that NM flag rather than by `useTM`. So the
+                                    // `setIsTaskPreviewVisible(false)` above has no
+                                    // visible effect — the panel only unmounts
+                                    // when we also clear the NM flag. Mirror the
+                                    // close path in `TaskTitleBlock.tsx`.
                                     if (useNM.setIsTaskVisibleInNote) {
                                         useNM.setIsTaskVisibleInNote(false);
                                     }
-                                },
-                            },
-                        ];
-                        return (
-                            <MoreMenu
-                                iconFontSize={20}
-                                items={items}
-                                triggerSize={36}
-                                menuMinWidth={220}
-                                placement="bottom-end"
-                                triggerSx={{
-                                    background: styles.buttonBg,
-                                    border: `1px solid ${styles.buttonBorder}`,
-                                    borderRadius: "10px",
                                 }}
-                            />
-                        );
-                    })()}
+                            >
+                                <CancelIcon
+                                    sx={{
+                                        fontSize: "20px",
+                                        color: isDark ? "#f87171" : "#dc2626",
+                                    }}
+                                />
+                            </IconButton>
+                        </Tooltip>
+                    </Stack>
 
-                    <Tooltip
-                        size="sm"
-                        title={t.tasks.preview.closeTooltip}
-                        variant="outlined"
+                    <Input
+                        size="lg"
+                        sx={{ fontSize: 18, fontWeight: 600 }}
+                        value={titleDraft}
+                        onBlur={saveTitle}
+                        onChange={(e) => setTitleDraft(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                        }}
+                    />
+                </>
+            }
+            mainContent={
+                <>
+                    <SectionHeader isDark={isDark}>
+                        {t.tasks.preview.milestoneDetails}
+                    </SectionHeader>
+                    <Box
                         sx={{
-                            background: styles.menuBg,
-                            border: `1px solid ${styles.menuBorder}`,
-                            borderRadius: "8px",
+                            p: 2,
+                            borderRadius: "12px",
+                            background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.015)",
+                            border: "1px solid",
+                            borderColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
                         }}
                     >
-                        <IconButton
-                            size="sm"
-                            variant="plain"
-                            sx={{
-                                background: styles.dangerBg,
-                                border: `1px solid ${styles.dangerBorder}`,
-                                borderRadius: "10px",
-                                width: "36px",
-                                height: "36px",
-                                transition: "all 0.2s ease",
-                                "&:hover": {
-                                    background: styles.dangerHover,
-                                    transform: "translateY(-1px)",
-                                },
+                        <TaskMainBlock
+                            assignee={assignee}
+                            isMilestone={true}
+                            isOpenProjectList={isOpenProjectList}
+                            isOpenTagList={isOpenTagList}
+                            isOpenTeamMembersList={isOpenTeamMembersList}
+                            isPreviewMode={true}
+                            myself={myself}
+                            projectTags={projectTags}
+                            reporter={reporter}
+                            setAssignee={setAssignee}
+                            setIsOpenProjectList={setIsOpenProjectList}
+                            setIsOpenTagList={setIsOpenTagList}
+                            setIsOpenTeamMembersList={setIsOpenTeamMembersList}
+                            setMyself={setMyself}
+                            setProjectTags={setProjectTags}
+                            setReporter={setReporter}
+                            setTaskUpdated={setTaskUpdated}
+                            socket={socket}
+                            taskContent={taskContentLike}
+                            useCM={useCM}
+                            usePM={usePM}
+                            useSM={useSM}
+                            useTEM={useTEM}
+                            useTM={useTM}
+                            useUISM={useUISM}
+                            setTaskContent={(next) => {
+                                setTaskContentLike(next);
+                                setTaskUpdated(true);
                             }}
-                            onClick={() => {
-                                useTM.setIsTaskPreviewVisible(false);
-                                useTM.setCurrentPreviewKind("task");
-                                useTM.setCurrentPreviewMilestoneId(-1);
-                                useTM.setTableMilestoneFilterId(null);
-                                if (
-                                    useTM.isTaskTableVisible === false &&
-                                    useTM.isSprintBoardVisible === false &&
-                                    useTM.isTaskDashboardVisible === false
-                                ) {
-                                    useTM.setIsTaskTableVisible(true);
-                                }
+                        />
+                    </Box>
 
-                                // When the milestone preview was opened from a
-                                // task note (NoteHeaderActions → onOpenTask
-                                // flips `useNM.isTaskVisibleInNote=true`), the
-                                // surrounding `TaskPreviewPanel` is gated by
-                                // that NM flag rather than by `useTM`. So the
-                                // `setIsTaskPreviewVisible(false)` above has no
-                                // visible effect — the panel only unmounts
-                                // when we also clear the NM flag. Mirror the
-                                // close path in `TaskTitleBlock.tsx`.
-                                if (useNM.setIsTaskVisibleInNote) {
-                                    useNM.setIsTaskVisibleInNote(false);
-                                }
+                    <SectionDivider isDark={isDark} />
+
+                    <Stack direction="row">
+                        <SectionHeader isDark={isDark}>
+                            {t.tasks.preview.description}
+                        </SectionHeader>
+                        <TaskCustomBarBlock taskBodySaved={bodySaved} />
+                    </Stack>
+                    <Box
+                        sx={{
+                            p: 2,
+                            borderRadius: "12px",
+                            background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.015)",
+                            border: "1px solid",
+                            borderColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
+                            minHeight: 150,
+                        }}
+                    >
+                        <TaskBodyBlock
+                            key={`MilestoneBody-${milestone.milestoneId}`}
+                            body={bodyDraft}
+                            myself={myself}
+                            setMyself={setMyself}
+                            setTaskBodyEdited={setBodyEdited}
+                            setTaskBodySaved={setBodySaved}
+                            taskId={milestone.taskId ?? milestone.milestoneId}
+                            useCM={useCM}
+                            socket={socket}
+                            // Body-attachment uploads (`POST /task/body/attachment/`)
+                            // resolve through `TaskBodyAttachmentFact.task` →
+                            // `TaskMaster.task_id`. Milestones don't have their
+                            // own row in TaskMaster, but each one is backed by
+                            // a real task row whose id is `milestone.taskId`.
+                            // Passing `milestoneId` here used to make the FK
+                            // lookup fail (silently-broken image / file
+                            // uploads in the milestone body editor); the
+                            // backing task id is what the server actually
+                            // accepts. We fall back to `milestoneId` only as a
+                            // belt-and-suspenders for partial server payloads
+                            // where `taskId` hasn't been backfilled yet.
+                            useTEM={useTEM}
+                            useUISM={useUISM}
+                            setBody={(next) => {
+                                setBodyDraft(next);
                             }}
-                        >
-                            <CancelIcon
-                                sx={{
-                                    fontSize: "20px",
-                                    color: isDark ? "#f87171" : "#dc2626",
-                                }}
-                            />
-                        </IconButton>
-                    </Tooltip>
-                </Stack>
+                        />
+                    </Box>
 
-                <Input
-                    size="lg"
-                    sx={{ fontSize: 18, fontWeight: 600 }}
-                    value={titleDraft}
-                    onBlur={saveTitle}
-                    onChange={(e) => setTitleDraft(e.target.value)}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-                    }}
-                />
-            </Box>
+                    <SectionDivider isDark={isDark} />
 
-            {/* Reuses the exact same layout as a normal task. */}
-            <Box sx={{ p: 2.5 }}>
-                <SectionHeader isDark={isDark}>{t.tasks.preview.milestoneDetails}</SectionHeader>
-                <Box
-                    sx={{
-                        p: 2,
-                        borderRadius: "12px",
-                        background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.015)",
-                        border: "1px solid",
-                        borderColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
-                    }}
-                >
-                    <TaskMainBlock
-                        assignee={assignee}
-                        isMilestone={true}
-                        isOpenProjectList={isOpenProjectList}
-                        isOpenTagList={isOpenTagList}
-                        isOpenTeamMembersList={isOpenTeamMembersList}
-                        isPreviewMode={true}
+                    {/* Tasks-in-this-milestone. Structurally identical to
+                        a normal task's "Sub Tasks" block — the only
+                        difference is that the parent here is the
+                        milestone's backing task (taskContentLike.id =
+                        milestone.taskId), so children created via the "+
+                        Task" button are persisted with that as their
+                        parent_task_id. */}
+                    <TaskSubTasksBlock
+                        buttonLabel={t.tasks.preview.taskButton}
+                        currentTaskContent={taskContentLike}
+                        emptyText={t.tasks.preview.emptyMilestoneTasks}
+                        forceLoad={true}
                         myself={myself}
-                        projectTags={projectTags}
-                        reporter={reporter}
-                        setAssignee={setAssignee}
-                        setIsOpenProjectList={setIsOpenProjectList}
-                        setIsOpenTagList={setIsOpenTagList}
-                        setIsOpenTeamMembersList={setIsOpenTeamMembersList}
+                        SectionHeader={SectionHeader}
                         setMyself={setMyself}
-                        setProjectTags={setProjectTags}
-                        setReporter={setReporter}
-                        setTaskUpdated={setTaskUpdated}
                         socket={socket}
-                        taskContent={taskContentLike}
+                        title={t.tasks.preview.tasksInThisMilestone}
                         useCM={useCM}
-                        usePM={usePM}
-                        useSM={useSM}
                         useTEM={useTEM}
                         useTM={useTM}
                         useUISM={useUISM}
-                        setTaskContent={(next) => {
-                            setTaskContentLike(next);
-                            setTaskUpdated(true);
-                        }}
                     />
-                </Box>
-
-                <SectionDivider isDark={isDark} />
-
-                <Stack direction="row">
-                    <SectionHeader isDark={isDark}>{t.tasks.preview.description}</SectionHeader>
-                    <TaskCustomBarBlock taskBodySaved={bodySaved} />
-                </Stack>
-                <Box
-                    sx={{
-                        p: 2,
-                        borderRadius: "12px",
-                        background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.015)",
-                        border: "1px solid",
-                        borderColor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.04)",
-                        minHeight: 150,
-                    }}
-                >
-                    <TaskBodyBlock
-                        key={`MilestoneBody-${milestone.milestoneId}`}
-                        body={bodyDraft}
-                        myself={myself}
-                        setMyself={setMyself}
-                        setTaskBodyEdited={setBodyEdited}
-                        setTaskBodySaved={setBodySaved}
-                        taskId={milestone.taskId ?? milestone.milestoneId}
-                        useCM={useCM}
-                        socket={socket}
-                        // Body-attachment uploads (`POST /task/body/attachment/`)
-                        // resolve through `TaskBodyAttachmentFact.task` →
-                        // `TaskMaster.task_id`. Milestones don't have their
-                        // own row in TaskMaster, but each one is backed by
-                        // a real task row whose id is `milestone.taskId`.
-                        // Passing `milestoneId` here used to make the FK
-                        // lookup fail (silently-broken image / file
-                        // uploads in the milestone body editor); the
-                        // backing task id is what the server actually
-                        // accepts. We fall back to `milestoneId` only as a
-                        // belt-and-suspenders for partial server payloads
-                        // where `taskId` hasn't been backfilled yet.
-                        useTEM={useTEM}
-                        useUISM={useUISM}
-                        setBody={(next) => {
-                            setBodyDraft(next);
-                        }}
-                    />
-                </Box>
-
-                <SectionDivider isDark={isDark} />
-
-                {/* Tasks-in-this-milestone. Structurally identical to
-                    a normal task's "Sub Tasks" block — the only
-                    difference is that the parent here is the
-                    milestone's backing task (taskContentLike.id =
-                    milestone.taskId), so children created via the "+
-                    Task" button are persisted with that as their
-                    parent_task_id. */}
-                <TaskSubTasksBlock
-                    buttonLabel={t.tasks.preview.taskButton}
-                    currentTaskContent={taskContentLike}
-                    emptyText={t.tasks.preview.emptyMilestoneTasks}
-                    forceLoad={true}
-                    myself={myself}
-                    SectionHeader={SectionHeader}
-                    setMyself={setMyself}
-                    socket={socket}
-                    title={t.tasks.preview.tasksInThisMilestone}
-                    useCM={useCM}
-                    useTEM={useTEM}
-                    useTM={useTM}
-                    useUISM={useUISM}
-                />
-            </Box>
-
-            {/* Tabs Section — comments / notes / attachments — same as
-                a normal task. The milestone's backing task id flows
-                through `taskContentLike.id`, so all task-* endpoints
-                operate transparently on the milestone. */}
-            {milestone.taskId != null && (
-                <Box
-                    sx={{
-                        borderTop: "1px solid",
-                        borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
-                        background: isDark ? "rgba(255,255,255,0.01)" : "rgba(0,0,0,0.01)",
-                    }}
-                >
+                </>
+            }
+            tabs={
+                // Comments / notes / attachments — same as a normal task.
+                // The milestone's backing task id flows through
+                // `taskContentLike.id`, so all task-* endpoints operate
+                // transparently on the milestone. Suppress the entire
+                // tabs wrapper while the backing task id is missing.
+                milestone.taskId != null ? (
                     <TaskTabBlock
                         editTargetComment={editTargetComment}
                         isInEdit={isInEdit}
@@ -2089,8 +2027,8 @@ const MilestonePreviewInner = ({
                         useTM={useTM}
                         useUISM={useUISM}
                     />
-                </Box>
-            )}
-        </Sheet>
+                ) : null
+            }
+        />
     );
 };
