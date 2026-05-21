@@ -126,7 +126,11 @@ export const CalendarEventModal = ({
             ? await updateEvent(accessToken, editingEventId, payload, reportError)
             : await createEvent(accessToken, payload, reportError);
         setSubmitting(false);
-        if (result) {
+        // `reportError` already surfaces the user-facing reason for
+        // string discriminators (google_not_connected /
+        // calendar_scope_missing); the modal just needs to skip the
+        // success path on anything that isn't a real event.
+        if (result && typeof result !== "string") {
             onSaved?.(result);
             onClose();
         }

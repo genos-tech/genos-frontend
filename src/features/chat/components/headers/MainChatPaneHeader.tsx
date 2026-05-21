@@ -22,6 +22,7 @@ import { MuteToggleButton } from "../../../../services/notifications/MuteToggleB
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../../types/chat";
 import { createEvent, deleteEvent, getEvent } from "../../../integrations/services/calendar";
+import { redirectToOAuthConnect } from "../../../integrations/services/oauth";
 import { useMarkAllChatActivityRead } from "../../hooks/useMarkAllChatActivityRead";
 import { sendTextMessage } from "../../services/sendTextMessage";
 import { ModalAddMembers } from "../modals/ModalAddMembers";
@@ -116,9 +117,12 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
     // can delete it on the user's behalf. Cleared on snackbar dismiss.
     const { accessToken } = useAuth();
     const [quickMeetLoading, setQuickMeetLoading] = useState(false);
+    // `needsGrant` swaps the snackbar's action button from Undo to a
+    // "Grant access" CTA that re-runs the connect-intent OAuth flow.
     const [quickMeetSnackbar, setQuickMeetSnackbar] = useState<{
         kind: "success" | "error" | "info";
         text: string;
+        needsGrant?: boolean;
     } | null>(null);
     const [lastQuickMeetEventId, setLastQuickMeetEventId] = useState<string | null>(null);
 
@@ -137,16 +141,38 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                 start: { dateTime: now.toISOString() },
                 summary: t.chat.headers.quickMeetEventTitle,
             },
+            // Generic error text path — the discriminator-based
+            // handling below decides scope-missing vs not-connected
+            // vs generic; this callback only fires on "other" axios
+            // errors and surfaces whatever Google / the backend
+            // returned in the snackbar.
             (err) => {
                 setQuickMeetSnackbar({
                     kind: "error",
-                    text:
-                        err === "Google account is not connected."
-                            ? t.chat.headers.quickMeetNotConnected
-                            : err || t.chat.headers.quickMeetFailed,
+                    text: err || t.chat.headers.quickMeetFailed,
                 });
             }
         );
+        // Domain-error discriminators set their own snackbar with
+        // the right CTA. `needsGrant` swaps Undo for a Grant-access
+        // button in the snackbar footer.
+        if (event === "google_not_connected") {
+            setQuickMeetLoading(false);
+            setQuickMeetSnackbar({
+                kind: "error",
+                text: t.chat.headers.quickMeetNotConnected,
+            });
+            return;
+        }
+        if (event === "calendar_scope_missing") {
+            setQuickMeetLoading(false);
+            setQuickMeetSnackbar({
+                kind: "error",
+                text: t.chat.headers.quickMeetScopeMissing,
+                needsGrant: true,
+            });
+            return;
+        }
         if (!event) {
             setQuickMeetLoading(false);
             return;
@@ -183,6 +209,15 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
         if (!id || !accessToken) return;
         await deleteEvent(accessToken, id);
         setQuickMeetSnackbar({ kind: "info", text: t.chat.headers.quickMeetUndone });
+    };
+
+    const handleQuickMeetGrant = () => {
+        if (!accessToken) return;
+        setQuickMeetSnackbar(null);
+        // Redirects to Google's OAuth consent page; on return the
+        // callback handler upgrades the existing ConnectedAccount's
+        // scopes in place.
+        void redirectToOAuthConnect("google", accessToken, undefined, () => undefined);
     };
 
     const { markAllAsRead } = useMarkAllChatActivityRead({ myself, useCM });
@@ -472,7 +507,11 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                 open={quickMeetSnackbar !== null}
                 variant="soft"
                 endDecorator={
-                    quickMeetSnackbar?.kind === "success" && lastQuickMeetEventId ? (
+                    quickMeetSnackbar?.needsGrant ? (
+                        <Button size="sm" variant="solid" onClick={handleQuickMeetGrant}>
+                            {t.chat.headers.quickMeetGrant}
+                        </Button>
+                    ) : quickMeetSnackbar?.kind === "success" && lastQuickMeetEventId ? (
                         <Button size="sm" variant="outlined" onClick={handleQuickMeetUndo}>
                             {t.chat.headers.quickMeetUndo}
                         </Button>

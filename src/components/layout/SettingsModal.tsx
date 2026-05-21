@@ -36,7 +36,12 @@ import {
 import { useColorScheme } from "@mui/joy/styles";
 
 import { useAuth } from "../../context/AuthContext";
-import { listConnections } from "../../features/integrations/services/connections";
+import {
+    findGoogleConnection,
+    hasCalendarScope,
+    listConnections,
+} from "../../features/integrations/services/connections";
+import { redirectToOAuthConnect } from "../../features/integrations/services/oauth";
 import {
     isSortDirection,
     isSortField,
@@ -474,10 +479,11 @@ const AutoSyncCalendarSection = () => {
         useAutoSyncCalendarPreference();
     const { accessToken } = useAuth();
     const { t } = useTranslation();
-    // Local connection probe — the SettingsModal doesn't already know
-    // Google's connection state, and the toggle's affordance depends
-    // on it. Null = still loading; false = explicitly not connected.
+    // Local connection probe. Two booleans because sign-in-via-Google
+    // produces "connected but no calendar scope" — the toggle is only
+    // useful when BOTH are true. Null = still loading.
     const [googleConnected, setGoogleConnected] = useState<boolean | null>(null);
+    const [calendarAuthorized, setCalendarAuthorized] = useState<boolean | null>(null);
     const [backfillMessage, setBackfillMessage] = useState<string | null>(null);
     const [backfillError, setBackfillError] = useState<string | null>(null);
 
@@ -485,12 +491,15 @@ const AutoSyncCalendarSection = () => {
         let cancelled = false;
         if (!accessToken) {
             setGoogleConnected(false);
+            setCalendarAuthorized(false);
             return;
         }
         (async () => {
             const res = await listConnections(accessToken);
             if (cancelled) return;
-            setGoogleConnected(!!res?.connections.find((c) => c.provider === "google"));
+            const google = findGoogleConnection(res);
+            setGoogleConnected(!!google);
+            setCalendarAuthorized(hasCalendarScope(google));
         })();
         return () => {
             cancelled = true;
@@ -508,7 +517,17 @@ const AutoSyncCalendarSection = () => {
         setBackfillMessage(fmt(t.settings.autoSyncCalendar.backfillSuccess, { count }));
     };
 
-    const togglesDisabled = loading || googleConnected === false;
+    // Toggle is disabled while we don't know the connection state, or
+    // when the user clearly can't use the feature yet (not connected,
+    // or connected without calendar scope).
+    const togglesDisabled = loading || googleConnected === false || calendarAuthorized === false;
+
+    let helperText: string = t.settings.autoSyncCalendar.toggleHelper;
+    if (googleConnected === false) {
+        helperText = t.settings.autoSyncCalendar.connectPrompt;
+    } else if (calendarAuthorized === false) {
+        helperText = t.settings.autoSyncCalendar.grantPrompt;
+    }
 
     return (
         <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
@@ -525,11 +544,7 @@ const AutoSyncCalendarSection = () => {
                     <Typography level="title-sm">
                         {t.settings.autoSyncCalendar.toggleLabel}
                     </Typography>
-                    <Typography level="body-xs">
-                        {googleConnected === false
-                            ? t.settings.autoSyncCalendar.connectPrompt
-                            : t.settings.autoSyncCalendar.toggleHelper}
-                    </Typography>
+                    <Typography level="body-xs">{helperText}</Typography>
                 </Box>
                 <Switch
                     checked={enabled}
@@ -538,7 +553,32 @@ const AutoSyncCalendarSection = () => {
                 />
             </Stack>
 
-            {enabled && googleConnected && (
+            {/* Connected but missing calendar scope → inline Grant
+                button. Skipping when not connected at all keeps the
+                prompt focused on the right action ("Connect Google
+                in Integrations" already lives there, redundant link
+                from settings would be noise). */}
+            {googleConnected === true && calendarAuthorized === false && accessToken && (
+                <Stack direction="row" justifyContent="flex-end" sx={{ mt: 1.5 }}>
+                    <Button
+                        size="sm"
+                        variant="solid"
+                        color="primary"
+                        onClick={() =>
+                            void redirectToOAuthConnect(
+                                "google",
+                                accessToken,
+                                undefined,
+                                () => undefined
+                            )
+                        }
+                    >
+                        {t.settings.autoSyncCalendar.grantButton}
+                    </Button>
+                </Stack>
+            )}
+
+            {enabled && googleConnected && calendarAuthorized && (
                 <>
                     <Divider sx={{ my: 1.5 }} />
                     <Stack

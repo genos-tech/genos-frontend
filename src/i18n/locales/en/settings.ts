@@ -112,6 +112,8 @@ export const settings = {
         toggleHelper:
             "Off by default. Only tasks assigned to you sync. Past-due tasks are skipped on backfill.",
         connectPrompt: "Connect Google Calendar in Integrations to enable this.",
+        grantPrompt: "Calendar access hasn't been granted yet — grant it to enable auto-sync.",
+        grantButton: "Grant Calendar access",
         backfillButton: "Sync existing tasks now",
         backfillRunning: "Syncing…",
         backfillSuccess: "Synced {count} task(s).",

@@ -9,6 +9,7 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import HubRoundedIcon from "@mui/icons-material/HubRounded";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import VideoCameraFrontRoundedIcon from "@mui/icons-material/VideoCameraFrontRounded";
@@ -40,6 +41,8 @@ import {
     Connection,
     ConnectionsResponse,
     disconnectProvider,
+    findGoogleConnection,
+    hasCalendarScope,
     listConnections,
 } from "./services/connections";
 import { GithubPullSummary, listMyPulls } from "./services/github";
@@ -125,6 +128,28 @@ const ConnectionsTab = ({
                             </Typography>
                         )}
                     </Box>
+                    {/* A Google account that came in via sign-in only
+                        has openid/email/profile scopes — no calendar
+                        access. Surface that explicitly with a Grant
+                        button that re-runs the OAuth flow under the
+                        connect intent (broader scopes). The callback
+                        upgrades scopes on the existing row. */}
+                    {c && provider === "google" && !hasCalendarScope(c) && (
+                        <Button
+                            variant="solid"
+                            color="primary"
+                            onClick={() => {
+                                void redirectToOAuthConnect(
+                                    provider,
+                                    accessToken,
+                                    undefined,
+                                    setError
+                                );
+                            }}
+                        >
+                            Grant Calendar access
+                        </Button>
+                    )}
                     {c ? (
                         <Tooltip
                             title={
@@ -167,6 +192,46 @@ const ConnectionsTab = ({
     return (
         <Stack spacing={2}>
             {error && <Alert color="danger">{error}</Alert>}
+
+            {/* User-facing notice: while our OAuth app is still in
+                Google's verification queue, only whitelisted Gmail
+                addresses can grant Google access. Anyone else hits
+                "Error 403: access_denied" on the consent screen.
+                Surfacing the support email lets users self-serve
+                instead of getting stuck mid-flow. */}
+            <Alert
+                color="neutral"
+                variant="soft"
+                startDecorator={<InfoOutlinedIcon />}
+                sx={{ alignItems: "flex-start" }}
+            >
+                <Box>
+                    <Typography level="body-sm" sx={{ fontWeight: 600 }}>
+                        First time connecting Google?
+                    </Typography>
+                    <Typography level="body-xs" sx={{ color: "text.secondary", mt: 0.25 }}>
+                        Our Google integration is still going through Google&apos;s verification
+                        process. If you see{" "}
+                        <Typography
+                            component="span"
+                            sx={{ fontFamily: "monospace", fontWeight: 600 }}
+                        >
+                            Error 403: access_denied
+                        </Typography>{" "}
+                        when granting access, please email{" "}
+                        <Typography
+                            component="a"
+                            href="mailto:genos.support@gmail.com?subject=Add%20me%20as%20Google%20test%20user"
+                            sx={{ color: "primary.500", textDecoration: "underline" }}
+                        >
+                            genos.support@gmail.com
+                        </Typography>{" "}
+                        with your Gmail address — we&apos;ll add you as a test user. Access works
+                        within a minute of confirmation.
+                    </Typography>
+                </Box>
+            </Alert>
+
             <Row
                 provider="google"
                 label="Google"
@@ -180,9 +245,14 @@ const ConnectionsTab = ({
 const CalendarTab = ({
     accessToken,
     googleConnected,
+    calendarAuthorized,
 }: {
     accessToken: string;
     googleConnected: boolean;
+    /** True only when the connected Google account has the
+     *  calendar.events scope. False means a sign-in-only user who
+     *  still needs to grant Calendar access. */
+    calendarAuthorized: boolean;
 }) => {
     const [events, setEvents] = useState<CalendarEvent[]>([]);
     const [loading, setLoading] = useState(true);
@@ -192,7 +262,7 @@ const CalendarTab = ({
     const [editingEventId, setEditingEventId] = useState<string | undefined>(undefined);
 
     const refresh = useCallback(async () => {
-        if (!googleConnected) {
+        if (!googleConnected || !calendarAuthorized) {
             setLoading(false);
             return;
         }
@@ -207,9 +277,13 @@ const CalendarTab = ({
             setError
         );
         setLoading(false);
-        if (res === "google_not_connected" || res === null) return;
+        // Any non-object return is a clean domain error (already
+        // surfaced through `setError`); leave the events list as it
+        // was and let the surrounding UI render the appropriate
+        // prompt (connect, grant scope, etc.).
+        if (!res || typeof res === "string") return;
         setEvents(res.items || []);
-    }, [accessToken, googleConnected]);
+    }, [accessToken, googleConnected, calendarAuthorized]);
 
     useEffect(() => {
         void refresh();
@@ -259,6 +333,31 @@ const CalendarTab = ({
                     sx={{ alignSelf: "flex-start" }}
                 >
                     Connect Google
+                </Button>
+            </Stack>
+        );
+    }
+
+    // Connected but no calendar.events scope. This is the
+    // sign-in-via-Google case — the token only carries openid /
+    // email / profile. The user has to go through the OAuth flow
+    // one more time under the connect intent (broader scopes).
+    if (!calendarAuthorized) {
+        return (
+            <Stack spacing={2}>
+                <Alert color="warning">
+                    Calendar access hasn't been granted yet. Grant it to read and manage events
+                    here. The chat header's Quick Meet, the task auto-sync, and the Calendar tab
+                    all need this permission.
+                </Alert>
+                <Button
+                    onClick={() => {
+                        void redirectToOAuthConnect("google", accessToken, undefined, setError);
+                    }}
+                    startDecorator={<LinkRoundedIcon />}
+                    sx={{ alignSelf: "flex-start" }}
+                >
+                    Grant Calendar access
                 </Button>
             </Stack>
         );
@@ -638,7 +737,9 @@ export const IntegrationsHome = () => {
         void reload();
     }, [reload]);
 
-    const googleConnected = !!data?.connections.find((c) => c.provider === "google");
+    const googleConnection = findGoogleConnection(data);
+    const googleConnected = !!googleConnection;
+    const googleCalendarAuthorized = hasCalendarScope(googleConnection);
     const githubConnected = !!data?.connections.find((c) => c.provider === "github");
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -696,7 +797,11 @@ export const IntegrationsHome = () => {
                     </TabPanel>
 
                     <TabPanel value="calendar" sx={{ px: 0 }}>
-                        <CalendarTab accessToken={accessToken} googleConnected={googleConnected} />
+                        <CalendarTab
+                            accessToken={accessToken}
+                            googleConnected={googleConnected}
+                            calendarAuthorized={googleCalendarAuthorized}
+                        />
                     </TabPanel>
 
                     <TabPanel value="github" sx={{ px: 0 }}>

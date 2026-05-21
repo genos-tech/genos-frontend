@@ -51,15 +51,23 @@ interface ErrorResponse {
     detail?: string;
 }
 
+export type CalendarErrorKind = "google_not_connected" | "calendar_scope_missing" | "other";
+
 const surfaceError = (
     error: unknown,
     setErrorMessage?: (value: string) => void
-): "google_not_connected" | "other" => {
+): CalendarErrorKind => {
     if (axios.isAxiosError(error)) {
         const detail = (error.response?.data as ErrorResponse | undefined)?.detail;
         if (detail === "google_not_connected") {
             setErrorMessage?.("Google account is not connected.");
             return "google_not_connected";
+        }
+        if (detail === "calendar_scope_missing") {
+            // Frontend can present a "Grant Calendar access" button
+            // that re-runs the connect-intent OAuth flow.
+            setErrorMessage?.("Calendar access not granted yet.");
+            return "calendar_scope_missing";
         }
         setErrorMessage?.(detail || "Calendar request failed.");
     } else {
@@ -68,19 +76,34 @@ const surfaceError = (
     return "other";
 };
 
+// Helper: map the surfaced error kind to the right discriminator
+// return shape used by all calendar service functions. Keeps each
+// function's catch block tight.
+const errorReturn = <T extends "google_not_connected" | "calendar_scope_missing">(
+    error: unknown,
+    setErrorMessage: ((value: string) => void) | undefined,
+    discriminators: readonly T[]
+): T | null => {
+    const kind = surfaceError(error, setErrorMessage);
+    return (discriminators as readonly CalendarErrorKind[]).includes(kind) ? (kind as T) : null;
+};
+
 export const listCalendars = async (
     accessToken: string,
     setErrorMessage?: (value: string) => void
-): Promise<{ calendars: CalendarSummary[] } | "google_not_connected" | null> => {
+): Promise<
+    { calendars: CalendarSummary[] } | "google_not_connected" | "calendar_scope_missing" | null
+> => {
     try {
         const api = authApi(accessToken);
         if (!api) return null;
         const res = await api.get<{ calendars: CalendarSummary[] }>("/calendar/list/");
         return res.data;
     } catch (error) {
-        return surfaceError(error, setErrorMessage) === "google_not_connected"
-            ? "google_not_connected"
-            : null;
+        return errorReturn(error, setErrorMessage, [
+            "google_not_connected",
+            "calendar_scope_missing",
+        ] as const);
     }
 };
 
@@ -89,7 +112,13 @@ export const getEvent = async (
     eventId: string,
     opts: { calendarId?: string } = {},
     setErrorMessage?: (value: string) => void
-): Promise<CalendarEvent | "google_not_connected" | "event_deleted_upstream" | null> => {
+): Promise<
+    | CalendarEvent
+    | "google_not_connected"
+    | "calendar_scope_missing"
+    | "event_deleted_upstream"
+    | null
+> => {
     try {
         const api = authApi(accessToken);
         if (!api) return null;
@@ -107,9 +136,10 @@ export const getEvent = async (
             const detail = (error.response?.data as ErrorResponse | undefined)?.detail;
             if (detail === "event_deleted_upstream") return "event_deleted_upstream";
         }
-        return surfaceError(error, setErrorMessage) === "google_not_connected"
-            ? "google_not_connected"
-            : null;
+        return errorReturn(error, setErrorMessage, [
+            "google_not_connected",
+            "calendar_scope_missing",
+        ] as const);
     }
 };
 
@@ -117,7 +147,9 @@ export const listEvents = async (
     accessToken: string,
     opts: { from?: string; to?: string; calendarId?: string },
     setErrorMessage?: (value: string) => void
-): Promise<{ items: CalendarEvent[] } | "google_not_connected" | null> => {
+): Promise<
+    { items: CalendarEvent[] } | "google_not_connected" | "calendar_scope_missing" | null
+> => {
     try {
         const api = authApi(accessToken);
         if (!api) return null;
@@ -130,9 +162,10 @@ export const listEvents = async (
         });
         return res.data;
     } catch (error) {
-        return surfaceError(error, setErrorMessage) === "google_not_connected"
-            ? "google_not_connected"
-            : null;
+        return errorReturn(error, setErrorMessage, [
+            "google_not_connected",
+            "calendar_scope_missing",
+        ] as const);
     }
 };
 
@@ -150,15 +183,17 @@ export const createEvent = async (
         summary: string;
     },
     setErrorMessage?: (value: string) => void
-): Promise<CalendarEvent | null> => {
+): Promise<CalendarEvent | "google_not_connected" | "calendar_scope_missing" | null> => {
     try {
         const api = authApi(accessToken);
         if (!api) return null;
         const res = await api.post<CalendarEvent>("/calendar/events/", body);
         return res.data;
     } catch (error) {
-        surfaceError(error, setErrorMessage);
-        return null;
+        return errorReturn(error, setErrorMessage, [
+            "google_not_connected",
+            "calendar_scope_missing",
+        ] as const);
     }
 };
 
@@ -177,15 +212,17 @@ export const updateEvent = async (
         summary: string;
     }>,
     setErrorMessage?: (value: string) => void
-): Promise<CalendarEvent | null> => {
+): Promise<CalendarEvent | "google_not_connected" | "calendar_scope_missing" | null> => {
     try {
         const api = authApi(accessToken);
         if (!api) return null;
         const res = await api.patch<CalendarEvent>(`/calendar/events/${eventId}/`, body);
         return res.data;
     } catch (error) {
-        surfaceError(error, setErrorMessage);
-        return null;
+        return errorReturn(error, setErrorMessage, [
+            "google_not_connected",
+            "calendar_scope_missing",
+        ] as const);
     }
 };
 

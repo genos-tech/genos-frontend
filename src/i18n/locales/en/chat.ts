@@ -116,6 +116,9 @@ export const chat = {
         quickMeetUndone: "Quick Meet event removed from your calendar.",
         quickMeetFailed: "Couldn't generate a Meet link. Try again.",
         quickMeetNotConnected: "Connect Google Calendar in Integrations to use Quick Meet.",
+        quickMeetScopeMissing:
+            "Calendar access hasn't been granted yet — grant it to use Quick Meet.",
+        quickMeetGrant: "Grant access",
     },
     threadTabs: {
         comments: "Comments",
