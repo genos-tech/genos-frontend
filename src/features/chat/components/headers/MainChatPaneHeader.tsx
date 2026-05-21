@@ -1,16 +1,20 @@
 import { useMemo, useState } from "react";
 import AddTaskRoundedIcon from "@mui/icons-material/AddTaskRounded";
+import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import ChecklistRoundedIcon from "@mui/icons-material/ChecklistRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DoneAllRoundedIcon from "@mui/icons-material/DoneAllRounded";
 import PersonAddRoundedIcon from "@mui/icons-material/PersonAddRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import SwapVertRoundedIcon from "@mui/icons-material/SwapVertRounded";
-import { Badge, IconButton, Stack, Tooltip } from "@mui/joy";
+import VideoCameraFrontRoundedIcon from "@mui/icons-material/VideoCameraFrontRounded";
+import { Badge, Button, CircularProgress, IconButton, Snackbar, Stack, Tooltip } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { ChatPaneHeaderStyles } from "../../../../components/ui/styles/commonStyle";
+import { useAuth } from "../../../../context/AuthContext";
+import { useCalendarModal } from "../../../../context/CalendarModalContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -19,7 +23,10 @@ import { useTranslation } from "../../../../i18n";
 import { MuteToggleButton } from "../../../../services/notifications/MuteToggleButton";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../../types/chat";
+import { createEvent, deleteEvent, getEvent } from "../../../integrations/services/calendar";
+import { redirectToOAuthConnect } from "../../../integrations/services/oauth";
 import { useMarkAllChatActivityRead } from "../../hooks/useMarkAllChatActivityRead";
+import { sendTextMessage } from "../../services/sendTextMessage";
 import { ModalAddMembers } from "../modals/ModalAddMembers";
 import { HeaderUserName } from "./HeaderUserName";
 
@@ -107,6 +114,139 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
 
     const [openAddMembers, setOpenAddMembers] = useState(false);
 
+    // Compact calendar modal — opener pulled from the global
+    // provider. Returns null outside the provider (e.g. pre-auth
+    // routes), in which case the IconButton renders nothing below.
+    const calendarModal = useCalendarModal();
+
+    // Quick Meet flow state. `lastQuickMeetEventId` carries the Google
+    // event id created by the most recent click so the snackbar's Undo
+    // can delete it on the user's behalf. Cleared on snackbar dismiss.
+    const { accessToken } = useAuth();
+    const [quickMeetLoading, setQuickMeetLoading] = useState(false);
+    // `needsGrant` swaps the snackbar's action button from Undo to a
+    // "Grant access" CTA that re-runs the connect-intent OAuth flow.
+    const [quickMeetSnackbar, setQuickMeetSnackbar] = useState<{
+        kind: "success" | "error" | "info";
+        text: string;
+        needsGrant?: boolean;
+    } | null>(null);
+    const [lastQuickMeetEventId, setLastQuickMeetEventId] = useState<string | null>(null);
+
+    const handleQuickMeet = async () => {
+        if (!accessToken || quickMeetLoading) return;
+        setQuickMeetLoading(true);
+        setQuickMeetSnackbar(null);
+
+        const now = new Date();
+        const inOneHour = new Date(now.getTime() + 60 * 60 * 1000);
+        // In a DM with a real Gmail address, invite the partner so
+        // the event lands on their calendar too — solo Quick Meets
+        // weren't useful. Other chat types stay solo because we
+        // don't easily have per-member emails on the frontend yet.
+        const partnerEmail = chat.chatType === 1 ? chat.dmPartnerUser?.userEmail : undefined;
+        const attendees =
+            partnerEmail && typeof partnerEmail === "string"
+                ? [{ email: partnerEmail, displayName: chat.dmPartnerUser.userName }]
+                : undefined;
+        const event = await createEvent(
+            accessToken,
+            {
+                add_meet: true,
+                ...(attendees ? { attendees } : {}),
+                end: { dateTime: inOneHour.toISOString() },
+                start: { dateTime: now.toISOString() },
+                summary: t.chat.headers.quickMeetEventTitle,
+            },
+            // Generic error text path — the discriminator-based
+            // handling below decides scope-missing vs not-connected
+            // vs generic; this callback only fires on "other" axios
+            // errors and surfaces whatever Google / the backend
+            // returned in the snackbar.
+            (err) => {
+                setQuickMeetSnackbar({
+                    kind: "error",
+                    text: err || t.chat.headers.quickMeetFailed,
+                });
+            }
+        );
+        // Domain-error discriminators set their own snackbar with
+        // the right CTA. `needsGrant` swaps Undo for a Grant-access
+        // button in the snackbar footer.
+        if (event === "google_not_connected") {
+            setQuickMeetLoading(false);
+            setQuickMeetSnackbar({
+                kind: "error",
+                text: t.chat.headers.quickMeetNotConnected,
+            });
+            return;
+        }
+        if (event === "calendar_scope_missing") {
+            setQuickMeetLoading(false);
+            setQuickMeetSnackbar({
+                kind: "error",
+                text: t.chat.headers.quickMeetScopeMissing,
+                needsGrant: true,
+            });
+            return;
+        }
+        if (!event) {
+            setQuickMeetLoading(false);
+            return;
+        }
+
+        // hangoutLink may not be present on the create response;
+        // conferenceData.createRequest.status.statusCode can be
+        // "pending". Poll up to ~5 s for the link to appear before
+        // giving up. Cheap; Google usually populates in <1 s.
+        let link = event.hangoutLink;
+        for (let i = 0; !link && i < 5; i++) {
+            await new Promise((r) => setTimeout(r, 1000));
+            const refreshed = await getEvent(accessToken, event.id);
+            if (refreshed && typeof refreshed === "object" && "hangoutLink" in refreshed) {
+                link = refreshed.hangoutLink;
+            }
+        }
+        setQuickMeetLoading(false);
+
+        if (!link) {
+            setQuickMeetSnackbar({ kind: "error", text: t.chat.headers.quickMeetFailed });
+            return;
+        }
+
+        sendTextMessage(socket, chat, link);
+        // Best-effort clipboard copy so the user can paste the link
+        // elsewhere without scrolling for the chat message. Fails
+        // silently under non-secure origin / iframe sandboxes; the
+        // snackbar text covers both cases since the link is already
+        // posted to chat regardless.
+        try {
+            await navigator.clipboard.writeText(link);
+        } catch {
+            /* clipboard not available — link is still in chat */
+        }
+        setLastQuickMeetEventId(event.id);
+        setQuickMeetSnackbar({ kind: "success", text: t.chat.headers.quickMeetSuccess });
+    };
+
+    const handleQuickMeetUndo = async () => {
+        const id = lastQuickMeetEventId;
+        setQuickMeetSnackbar(null);
+        setLastQuickMeetEventId(null);
+        if (!id || !accessToken) return;
+        await deleteEvent(accessToken, id);
+        setQuickMeetSnackbar({ kind: "info", text: t.chat.headers.quickMeetUndone });
+    };
+
+    const handleQuickMeetGrant = () => {
+        if (!accessToken) return;
+        setQuickMeetSnackbar(null);
+        // Redirects to Google's OAuth consent page; on return the
+        // callback handler upgrades the existing ConnectedAccount's
+        // scopes in place.
+        void redirectToOAuthConnect("google", accessToken, undefined, () => undefined);
+    };
+
     const { markAllAsRead } = useMarkAllChatActivityRead({ myself, useCM });
 
     const unreadActivityCount = useMemo(
@@ -185,6 +325,34 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                         </IconButton>
                     </Tooltip>
                 )}
+
+                {/* Quick Meet — instant Meet link, posted to current chat */}
+                <Tooltip
+                    size="sm"
+                    title={t.chat.headers.quickMeetTooltip}
+                    variant="outlined"
+                    sx={{ borderRadius: "8px" }}
+                >
+                    <IconButton
+                        size="sm"
+                        variant="plain"
+                        disabled={quickMeetLoading}
+                        sx={actionButtonStyle}
+                        onClick={handleQuickMeet}
+                        aria-label={t.chat.headers.quickMeetTooltip}
+                    >
+                        {quickMeetLoading ? (
+                            <CircularProgress
+                                size="sm"
+                                sx={{ "--CircularProgress-size": "18px" }}
+                            />
+                        ) : (
+                            <VideoCameraFrontRoundedIcon
+                                sx={{ fontSize: 18, color: styles.accentColor }}
+                            />
+                        )}
+                    </IconButton>
+                </Tooltip>
 
                 {/* Create Task Button */}
                 {chat.chatType === 3 && (
@@ -271,6 +439,32 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                                 </Badge>
                             </Tooltip>
                         )}
+
+                        {/* Compact Calendar modal — only surfaced
+                            in the DM-with-self header (per the
+                            Phase 3 plan). Keyboard shortcut
+                            Ctrl+Cmd+C / Ctrl+Alt+C is the other
+                            entry point. */}
+                        {calendarModal && (
+                            <Tooltip
+                                size="sm"
+                                title={t.calendar.openTooltip}
+                                variant="outlined"
+                                sx={{ borderRadius: "8px" }}
+                            >
+                                <IconButton
+                                    size="sm"
+                                    variant="plain"
+                                    sx={actionButtonStyle}
+                                    onClick={calendarModal.open}
+                                    aria-label={t.calendar.openTooltip}
+                                >
+                                    <CalendarMonthRoundedIcon
+                                        sx={{ fontSize: 18, color: styles.accentColor }}
+                                    />
+                                </IconButton>
+                            </Tooltip>
+                        )}
                     </>
                 )}
 
@@ -317,7 +511,12 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                 )}
 
                 {/* Close Button */}
-                <Tooltip size="sm" title={t.chat.headers.close} variant="outlined" sx={{ borderRadius: "8px" }}>
+                <Tooltip
+                    size="sm"
+                    title={t.chat.headers.close}
+                    variant="outlined"
+                    sx={{ borderRadius: "8px" }}
+                >
                     <IconButton
                         size="sm"
                         variant="plain"
@@ -343,6 +542,42 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
                     setMyself={setMyself}
                 />
             )}
+
+            {/* Quick Meet feedback snackbar — surfaces transparently
+                that a 1h calendar event was created, and offers Undo
+                (deletes the event but leaves the posted chat message
+                in place). */}
+            <Snackbar
+                anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+                autoHideDuration={quickMeetSnackbar?.kind === "success" ? 8000 : 4000}
+                color={
+                    quickMeetSnackbar?.kind === "error"
+                        ? "danger"
+                        : quickMeetSnackbar?.kind === "success"
+                          ? "success"
+                          : "neutral"
+                }
+                open={quickMeetSnackbar !== null}
+                variant="soft"
+                endDecorator={
+                    quickMeetSnackbar?.needsGrant ? (
+                        <Button size="sm" variant="solid" onClick={handleQuickMeetGrant}>
+                            {t.chat.headers.quickMeetGrant}
+                        </Button>
+                    ) : quickMeetSnackbar?.kind === "success" && lastQuickMeetEventId ? (
+                        <Button size="sm" variant="outlined" onClick={handleQuickMeetUndo}>
+                            {t.chat.headers.quickMeetUndo}
+                        </Button>
+                    ) : null
+                }
+                onClose={(_e, reason) => {
+                    if (reason === "clickaway") return;
+                    setQuickMeetSnackbar(null);
+                    setLastQuickMeetEventId(null);
+                }}
+            >
+                {quickMeetSnackbar?.text}
+            </Snackbar>
         </Stack>
     );
 };

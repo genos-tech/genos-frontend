@@ -7,6 +7,7 @@ export const settings = {
         spotlight: "Spotlight",
         notifications: "Notifications",
         shortcuts: "Shortcuts",
+        integrations: "Integrations",
     },
     appearance: {
         heading: "Appearance",
@@ -63,6 +64,7 @@ export const settings = {
                 spotlight: "Open Spotlight search",
                 tasksNew: "Open Tasks and start a new task",
                 notesNew: "Open Notes and create a new My Note",
+                calendar: "Open compact calendar",
                 cycle: "Cycle through services",
             },
             cycleCombo: {
@@ -103,6 +105,26 @@ export const settings = {
         toggleLabel: "Close my tasks when their PR merges",
         toggleHelper:
             "Disabled by default. Branch must follow the convention `…<TASK-ID>…` for the match to fire.",
+    },
+    autoSyncCalendar: {
+        heading: "Auto-sync to Google Calendar",
+        description:
+            "Automatically add tasks with due dates to your Google Calendar as all-day events. One-way: deleting an event on Google won't affect your tasks.",
+        toggleLabel: "Auto-sync task due dates",
+        toggleHelper:
+            "Off by default. Only tasks assigned to you sync. Past-due tasks are skipped on backfill.",
+        connectPrompt: "Connect Google Calendar in Integrations to enable this.",
+        grantPrompt: "Calendar access hasn't been granted yet — grant it to enable auto-sync.",
+        grantButton: "Grant Calendar access",
+        backfillButton: "Sync existing tasks now",
+        backfillRunning: "Syncing…",
+        backfillSuccess: "Synced {total} task(s) ({created} new, {patched} updated).",
+        backfillSuccessWithCleared:
+            "Synced {total} task(s) ({created} new, {patched} updated). Cleared {cleared} stale link(s) — events deleted on Google were NOT re-created.",
+        backfillOnlyCleared:
+            "Cleared {cleared} stale link(s) — events were deleted on Google. Per the never-re-create rule, no new events were posted.",
+        backfillUpToDate: "Already up to date — no tasks needed syncing.",
+        backfillFailed: "Backfill failed. Try again.",
     },
     taskSort: {
         heading: "Task sort",

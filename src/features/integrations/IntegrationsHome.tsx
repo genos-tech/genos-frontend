@@ -1,16 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
-import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import CallMergeRoundedIcon from "@mui/icons-material/CallMergeRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
-import GitHubIcon from "@mui/icons-material/GitHub";
 import HubRoundedIcon from "@mui/icons-material/HubRounded";
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
+import VideoCameraFrontRoundedIcon from "@mui/icons-material/VideoCameraFrontRounded";
 import {
     Alert,
     Box,
@@ -22,31 +21,24 @@ import {
     FormLabel,
     IconButton,
     Input,
-    Modal,
-    ModalDialog,
     Sheet,
     Stack,
     Tab,
     TabList,
     TabPanel,
     Tabs,
-    Textarea,
     Tooltip,
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { CalendarEventModal } from "./components/CalendarEventModal";
+import { ConnectionsSection } from "./components/ConnectionsSection";
+import { CalendarEvent, deleteEvent, listEvents } from "./services/calendar";
 import {
-    CalendarEvent,
-    createEvent,
-    deleteEvent,
-    listEvents,
-    updateEvent,
-} from "./services/calendar";
-import {
-    Connection,
     ConnectionsResponse,
-    disconnectProvider,
+    findGoogleConnection,
+    hasCalendarScope,
     listConnections,
 } from "./services/connections";
 import { GithubPullSummary, listMyPulls } from "./services/github";
@@ -56,29 +48,15 @@ import { useAuth } from "../../context/AuthContext";
 
 type TabKey = "connections" | "calendar" | "github";
 
-interface EventForm {
-    summary: string;
-    startISO: string;
-    endISO: string;
-    description: string;
+interface ModalInitial {
+    add_meet?: boolean;
+    attendees?: Array<{ email: string; displayName?: string }>;
+    calendar_id?: string;
+    description?: string;
+    end?: string;
+    start?: string;
+    summary?: string;
 }
-
-const emptyForm = (): EventForm => ({
-    summary: "",
-    startISO: "",
-    endISO: "",
-    description: "",
-});
-
-const toLocalInputValue = (iso: string | undefined): string => {
-    if (!iso) return "";
-    const d = new Date(iso);
-    if (isNaN(d.getTime())) return "";
-    const pad = (n: number) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-};
-
-const fromLocalInputValue = (value: string): string => new Date(value).toISOString();
 
 const eventStartLabel = (e: CalendarEvent): string => {
     const v = e.start?.dateTime || e.start?.date || "";
@@ -88,134 +66,27 @@ const eventStartLabel = (e: CalendarEvent): string => {
     return d.toLocaleString();
 };
 
-const ConnectionsTab = ({
-    data,
-    reload,
-    accessToken,
-}: {
-    data: ConnectionsResponse | null;
-    reload: () => void;
-    accessToken: string;
-}) => {
-    const [disconnecting, setDisconnecting] = useState<"google" | "github" | null>(null);
-    const [error, setError] = useState<string | null>(null);
-    const connected = useMemo(() => {
-        const m: Partial<Record<"google" | "github", Connection>> = {};
-        for (const c of data?.connections || []) m[c.provider] = c;
-        return m;
-    }, [data]);
-
-    const handleDisconnect = async (provider: "google" | "github") => {
-        setError(null);
-        setDisconnecting(provider);
-        const ok = await disconnectProvider(accessToken, provider, setError);
-        setDisconnecting(null);
-        if (ok) reload();
-    };
-
-    const Row = ({
-        provider,
-        label,
-        icon,
-    }: {
-        provider: "google" | "github";
-        label: string;
-        icon: React.ReactNode;
-    }) => {
-        const c = connected[provider];
-        const isPrimary = c?.is_primary === true;
-        return (
-            <Card variant="outlined" sx={{ p: 2 }}>
-                <Stack direction="row" alignItems="center" spacing={2}>
-                    <Box sx={{ fontSize: 32, display: "flex" }}>{icon}</Box>
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Stack direction="row" spacing={1} alignItems="center">
-                            <Typography level="title-md">{label}</Typography>
-                            {isPrimary && (
-                                <Chip size="sm" color="primary">
-                                    Primary login
-                                </Chip>
-                            )}
-                        </Stack>
-                        {c ? (
-                            <Typography level="body-sm" sx={{ color: "text.secondary" }}>
-                                {c.provider_email || "(no email shared)"}
-                            </Typography>
-                        ) : (
-                            <Typography level="body-sm" sx={{ color: "text.secondary" }}>
-                                Not connected
-                            </Typography>
-                        )}
-                    </Box>
-                    {c ? (
-                        <Tooltip
-                            title={
-                                isPrimary
-                                    ? "You can't disconnect the provider you signed up with."
-                                    : ""
-                            }
-                            placement="left"
-                        >
-                            <span>
-                                <Button
-                                    variant="outlined"
-                                    color="danger"
-                                    disabled={isPrimary || disconnecting === provider}
-                                    onClick={() => handleDisconnect(provider)}
-                                >
-                                    {disconnecting === provider ? "Disconnecting…" : "Disconnect"}
-                                </Button>
-                            </span>
-                        </Tooltip>
-                    ) : (
-                        <Button
-                            onClick={() => {
-                                void redirectToOAuthConnect(
-                                    provider,
-                                    accessToken,
-                                    undefined,
-                                    setError
-                                );
-                            }}
-                        >
-                            Connect
-                        </Button>
-                    )}
-                </Stack>
-            </Card>
-        );
-    };
-
-    return (
-        <Stack spacing={2}>
-            {error && <Alert color="danger">{error}</Alert>}
-            <Row
-                provider="google"
-                label="Google"
-                icon={<CalendarMonthRoundedIcon sx={{ color: "#4285f4" }} fontSize="inherit" />}
-            />
-            <Row provider="github" label="GitHub" icon={<GitHubIcon fontSize="inherit" />} />
-        </Stack>
-    );
-};
-
 const CalendarTab = ({
     accessToken,
     googleConnected,
+    calendarAuthorized,
 }: {
     accessToken: string;
     googleConnected: boolean;
+    /** True only when the connected Google account has the
+     *  calendar.events scope. False means a sign-in-only user who
+     *  still needs to grant Calendar access. */
+    calendarAuthorized: boolean;
 }) => {
     const [events, setEvents] = useState<CalendarEvent[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [editing, setEditing] = useState<CalendarEvent | null>(null);
-    const [showForm, setShowForm] = useState(false);
-    const [form, setForm] = useState<EventForm>(emptyForm());
-    const [submitting, setSubmitting] = useState(false);
+    const [modalOpen, setModalOpen] = useState(false);
+    const [modalInitial, setModalInitial] = useState<ModalInitial | undefined>(undefined);
+    const [editingEventId, setEditingEventId] = useState<string | undefined>(undefined);
 
     const refresh = useCallback(async () => {
-        if (!googleConnected) {
+        if (!googleConnected || !calendarAuthorized) {
             setLoading(false);
             return;
         }
@@ -230,9 +101,13 @@ const CalendarTab = ({
             setError
         );
         setLoading(false);
-        if (res === "google_not_connected" || res === null) return;
+        // Any non-object return is a clean domain error (already
+        // surfaced through `setError`); leave the events list as it
+        // was and let the surrounding UI render the appropriate
+        // prompt (connect, grant scope, etc.).
+        if (!res || typeof res === "string") return;
         setEvents(res.items || []);
-    }, [accessToken, googleConnected]);
+    }, [accessToken, googleConnected, calendarAuthorized]);
 
     useEffect(() => {
         void refresh();
@@ -242,47 +117,31 @@ const CalendarTab = ({
         const now = new Date();
         const oneHour = new Date(now);
         oneHour.setHours(now.getHours() + 1);
-        setEditing(null);
-        setForm({
-            summary: "",
-            startISO: toLocalInputValue(now.toISOString()),
-            endISO: toLocalInputValue(oneHour.toISOString()),
-            description: "",
+        setEditingEventId(undefined);
+        setModalInitial({
+            end: oneHour.toISOString(),
+            start: now.toISOString(),
         });
-        setShowForm(true);
+        setModalOpen(true);
     };
 
     const openEdit = (event: CalendarEvent) => {
-        setEditing(event);
-        setForm({
-            summary: event.summary || "",
-            startISO: toLocalInputValue(event.start?.dateTime),
-            endISO: toLocalInputValue(event.end?.dateTime),
-            description: event.description || "",
+        setEditingEventId(event.id);
+        setModalInitial({
+            add_meet: !!event.hangoutLink,
+            // Pre-populate the attendee picker (drop `self` entries
+            // so we don't try to re-invite the organizer / current
+            // user). External attendees without a team-member match
+            // still render — the picker handles bare emails.
+            attendees: (event.attendees ?? [])
+                .filter((a) => !a.self && !!a.email)
+                .map((a) => ({ email: a.email, displayName: a.displayName })),
+            description: event.description,
+            end: event.end?.dateTime,
+            start: event.start?.dateTime,
+            summary: event.summary,
         });
-        setShowForm(true);
-    };
-
-    const submitForm = async () => {
-        if (!form.summary || !form.startISO || !form.endISO) {
-            setError("Title, start, and end are required.");
-            return;
-        }
-        setSubmitting(true);
-        const payload = {
-            summary: form.summary,
-            description: form.description || undefined,
-            start: { dateTime: fromLocalInputValue(form.startISO) },
-            end: { dateTime: fromLocalInputValue(form.endISO) },
-        };
-        const result = editing
-            ? await updateEvent(accessToken, editing.id, payload, setError)
-            : await createEvent(accessToken, payload, setError);
-        setSubmitting(false);
-        if (result) {
-            setShowForm(false);
-            void refresh();
-        }
+        setModalOpen(true);
     };
 
     const handleDelete = async (event: CalendarEvent) => {
@@ -305,6 +164,31 @@ const CalendarTab = ({
                     sx={{ alignSelf: "flex-start" }}
                 >
                     Connect Google
+                </Button>
+            </Stack>
+        );
+    }
+
+    // Connected but no calendar.events scope. This is the
+    // sign-in-via-Google case — the token only carries openid /
+    // email / profile. The user has to go through the OAuth flow
+    // one more time under the connect intent (broader scopes).
+    if (!calendarAuthorized) {
+        return (
+            <Stack spacing={2}>
+                <Alert color="warning">
+                    Calendar access hasn't been granted yet. Grant it to read and manage events
+                    here. The chat header's Quick Meet, the task auto-sync, and the Calendar tab
+                    all need this permission.
+                </Alert>
+                <Button
+                    onClick={() => {
+                        void redirectToOAuthConnect("google", accessToken, undefined, setError);
+                    }}
+                    startDecorator={<LinkRoundedIcon />}
+                    sx={{ alignSelf: "flex-start" }}
+                >
+                    Grant Calendar access
                 </Button>
             </Stack>
         );
@@ -344,6 +228,22 @@ const CalendarTab = ({
                                         {eventStartLabel(e)}
                                     </Typography>
                                 </Box>
+                                {e.hangoutLink && (
+                                    <Tooltip size="sm" title="Join Google Meet">
+                                        <IconButton
+                                            size="sm"
+                                            variant="plain"
+                                            color="success"
+                                            component="a"
+                                            href={e.hangoutLink}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            aria-label="Join Google Meet"
+                                        >
+                                            <VideoCameraFrontRoundedIcon />
+                                        </IconButton>
+                                    </Tooltip>
+                                )}
                                 <IconButton
                                     size="sm"
                                     variant="plain"
@@ -380,62 +280,17 @@ const CalendarTab = ({
                 </Stack>
             )}
 
-            <Modal open={showForm} onClose={() => setShowForm(false)}>
-                <ModalDialog sx={{ minWidth: 400, p: 3 }}>
-                    <Typography level="title-lg" sx={{ mb: 2 }}>
-                        {editing ? "Edit event" : "New event"}
-                    </Typography>
-                    <Stack spacing={2}>
-                        <FormControl required>
-                            <FormLabel>Title</FormLabel>
-                            <Input
-                                value={form.summary}
-                                onChange={(e) =>
-                                    setForm((f) => ({ ...f, summary: e.target.value }))
-                                }
-                            />
-                        </FormControl>
-                        <FormControl required>
-                            <FormLabel>Start</FormLabel>
-                            <Input
-                                type="datetime-local"
-                                value={form.startISO}
-                                onChange={(e) =>
-                                    setForm((f) => ({ ...f, startISO: e.target.value }))
-                                }
-                            />
-                        </FormControl>
-                        <FormControl required>
-                            <FormLabel>End</FormLabel>
-                            <Input
-                                type="datetime-local"
-                                value={form.endISO}
-                                onChange={(e) =>
-                                    setForm((f) => ({ ...f, endISO: e.target.value }))
-                                }
-                            />
-                        </FormControl>
-                        <FormControl>
-                            <FormLabel>Description (optional)</FormLabel>
-                            <Textarea
-                                minRows={2}
-                                value={form.description}
-                                onChange={(e) =>
-                                    setForm((f) => ({ ...f, description: e.target.value }))
-                                }
-                            />
-                        </FormControl>
-                        <Stack direction="row" spacing={1} justifyContent="flex-end">
-                            <Button variant="plain" onClick={() => setShowForm(false)}>
-                                Cancel
-                            </Button>
-                            <Button onClick={submitForm} disabled={submitting}>
-                                {submitting ? "Saving…" : editing ? "Save" : "Create"}
-                            </Button>
-                        </Stack>
-                    </Stack>
-                </ModalDialog>
-            </Modal>
+            <CalendarEventModal
+                accessToken={accessToken}
+                open={modalOpen}
+                onClose={() => setModalOpen(false)}
+                initial={modalInitial}
+                editingEventId={editingEventId}
+                onSaved={() => {
+                    void refresh();
+                }}
+                onError={setError}
+            />
         </Stack>
     );
 };
@@ -713,7 +568,9 @@ export const IntegrationsHome = () => {
         void reload();
     }, [reload]);
 
-    const googleConnected = !!data?.connections.find((c) => c.provider === "google");
+    const googleConnection = findGoogleConnection(data);
+    const googleConnected = !!googleConnection;
+    const googleCalendarAuthorized = hasCalendarScope(googleConnection);
     const githubConnected = !!data?.connections.find((c) => c.provider === "github");
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -757,21 +614,21 @@ export const IntegrationsHome = () => {
                     </TabList>
 
                     <TabPanel value="connections" sx={{ px: 0 }}>
-                        {loadingConnections ? (
-                            <Stack alignItems="center" sx={{ py: 4 }}>
-                                <CircularProgress />
-                            </Stack>
-                        ) : (
-                            <ConnectionsTab
-                                data={data}
-                                reload={reload}
-                                accessToken={accessToken}
-                            />
-                        )}
+                        {/* Same component renders in Settings →
+                            Integrations. The page-level fetch above
+                            still populates `data` for the
+                            CalendarTab / GithubTab gates below; the
+                            section just does its own fetch — cheap
+                            and lets either surface render alone. */}
+                        <ConnectionsSection accessToken={accessToken} />
                     </TabPanel>
 
                     <TabPanel value="calendar" sx={{ px: 0 }}>
-                        <CalendarTab accessToken={accessToken} googleConnected={googleConnected} />
+                        <CalendarTab
+                            accessToken={accessToken}
+                            googleConnected={googleConnected}
+                            calendarAuthorized={googleCalendarAuthorized}
+                        />
                     </TabPanel>
 
                     <TabPanel value="github" sx={{ px: 0 }}>

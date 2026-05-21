@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
+import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
@@ -16,6 +17,7 @@ import SortRoundedIcon from "@mui/icons-material/SortRounded";
 import ViewStreamRoundedIcon from "@mui/icons-material/ViewStreamRounded";
 import {
     Box,
+    Button,
     Divider,
     IconButton,
     Modal,
@@ -33,6 +35,15 @@ import {
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { useAuth } from "../../context/AuthContext";
+import { ConnectionsSection } from "../../features/integrations/components/ConnectionsSection";
+import { OAUTH_INTEGRATIONS_ENABLED } from "../../features/integrations/featureFlags";
+import {
+    findGoogleConnection,
+    hasCalendarScope,
+    listConnections,
+} from "../../features/integrations/services/connections";
+import { redirectToOAuthConnect } from "../../features/integrations/services/oauth";
 import {
     isSortDirection,
     isSortField,
@@ -40,6 +51,7 @@ import {
 } from "../../features/tasks/utils/sortTask";
 import { useAnalyticsPreferences } from "../../hooks/common/useAnalyticsPreferences";
 import { useAutoCloseOnPrMergePreference } from "../../hooks/common/useAutoCloseOnPrMergePreference";
+import { useAutoSyncCalendarPreference } from "../../hooks/common/useAutoSyncCalendarPreference";
 import {
     BubbleStyle,
     useBubbleStylePreference,
@@ -48,7 +60,7 @@ import { useDoubleClickTodoPreference } from "../../hooks/common/useDoubleClickT
 import { useSpotlightPreferences } from "../../hooks/common/useSpotlightPreferences";
 import { SortTier, useTaskSortPreferences } from "../../hooks/common/useTaskSortPreferences";
 import { ThemePreference, useThemePreference } from "../../hooks/common/useThemePreference";
-import { Locale, useTranslation } from "../../i18n";
+import { fmt, Locale, useTranslation } from "../../i18n";
 import { NotificationSettingsPanel } from "../../services/notifications/NotificationSettingsPanel";
 import { getServiceShortcutModifierKeys, isMac } from "../../utils/platform";
 
@@ -464,6 +476,171 @@ const AutoCloseOnPrMergeSection = () => {
     );
 };
 
+const AutoSyncCalendarSection = () => {
+    const { enabled, loading, setEnabled, backfill, backfillRunning } =
+        useAutoSyncCalendarPreference();
+    const { accessToken } = useAuth();
+    const { t } = useTranslation();
+    // Local connection probe. Two booleans because sign-in-via-Google
+    // produces "connected but no calendar scope" — the toggle is only
+    // useful when BOTH are true. Null = still loading.
+    const [googleConnected, setGoogleConnected] = useState<boolean | null>(null);
+    const [calendarAuthorized, setCalendarAuthorized] = useState<boolean | null>(null);
+    const [backfillMessage, setBackfillMessage] = useState<string | null>(null);
+    const [backfillError, setBackfillError] = useState<string | null>(null);
+
+    useEffect(() => {
+        let cancelled = false;
+        if (!accessToken) {
+            setGoogleConnected(false);
+            setCalendarAuthorized(false);
+            return;
+        }
+        (async () => {
+            const res = await listConnections(accessToken);
+            if (cancelled) return;
+            const google = findGoogleConnection(res);
+            setGoogleConnected(!!google);
+            setCalendarAuthorized(hasCalendarScope(google));
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [accessToken]);
+
+    const handleBackfill = async () => {
+        setBackfillError(null);
+        setBackfillMessage(null);
+        const result = await backfill();
+        if (result === null) {
+            setBackfillError(t.settings.autoSyncCalendar.backfillFailed);
+            return;
+        }
+        // Three message branches keep the toast honest:
+        //  - nothing eligible → "up to date"
+        //  - only cleared links (events deleted on Google) → explain
+        //    what happened so the user doesn't think the sync did
+        //    something visible when it didn't
+        //  - any real sync, with or without clears → show the counts
+        if (result.synced === 0 && result.cleared === 0) {
+            setBackfillMessage(t.settings.autoSyncCalendar.backfillUpToDate);
+            return;
+        }
+        if (result.synced === 0 && result.cleared > 0) {
+            setBackfillMessage(
+                fmt(t.settings.autoSyncCalendar.backfillOnlyCleared, {
+                    cleared: result.cleared,
+                })
+            );
+            return;
+        }
+        const template =
+            result.cleared > 0
+                ? t.settings.autoSyncCalendar.backfillSuccessWithCleared
+                : t.settings.autoSyncCalendar.backfillSuccess;
+        setBackfillMessage(
+            fmt(template, {
+                total: result.synced,
+                created: result.created,
+                patched: result.patched,
+                cleared: result.cleared,
+            })
+        );
+    };
+
+    // Toggle is disabled while we don't know the connection state, or
+    // when the user clearly can't use the feature yet (not connected,
+    // or connected without calendar scope).
+    const togglesDisabled = loading || googleConnected === false || calendarAuthorized === false;
+
+    let helperText: string = t.settings.autoSyncCalendar.toggleHelper;
+    if (googleConnected === false) {
+        helperText = t.settings.autoSyncCalendar.connectPrompt;
+    } else if (calendarAuthorized === false) {
+        helperText = t.settings.autoSyncCalendar.grantPrompt;
+    }
+
+    return (
+        <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
+            <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
+                <CalendarMonthRoundedIcon />
+                <Typography level="title-md">{t.settings.autoSyncCalendar.heading}</Typography>
+            </Stack>
+            <Typography level="body-xs" sx={{ mb: 1.5 }}>
+                {t.settings.autoSyncCalendar.description}
+            </Typography>
+
+            <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={2}>
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography level="title-sm">
+                        {t.settings.autoSyncCalendar.toggleLabel}
+                    </Typography>
+                    <Typography level="body-xs">{helperText}</Typography>
+                </Box>
+                <Switch
+                    checked={enabled}
+                    disabled={togglesDisabled}
+                    onChange={(e) => setEnabled(e.target.checked)}
+                />
+            </Stack>
+
+            {/* Connected but missing calendar scope → inline Grant
+                button. Skipping when not connected at all keeps the
+                prompt focused on the right action ("Connect Google
+                in Integrations" already lives there, redundant link
+                from settings would be noise). */}
+            {googleConnected === true && calendarAuthorized === false && accessToken && (
+                <Stack direction="row" justifyContent="flex-end" sx={{ mt: 1.5 }}>
+                    <Button
+                        size="sm"
+                        variant="solid"
+                        color="primary"
+                        onClick={() =>
+                            void redirectToOAuthConnect(
+                                "google",
+                                accessToken,
+                                undefined,
+                                () => undefined
+                            )
+                        }
+                    >
+                        {t.settings.autoSyncCalendar.grantButton}
+                    </Button>
+                </Stack>
+            )}
+
+            {enabled && googleConnected && calendarAuthorized && (
+                <>
+                    <Divider sx={{ my: 1.5 }} />
+                    <Stack
+                        alignItems="center"
+                        direction="row"
+                        justifyContent="space-between"
+                        spacing={2}
+                    >
+                        <Typography
+                            level="body-xs"
+                            sx={{ color: backfillError ? "danger.500" : "text.tertiary" }}
+                        >
+                            {backfillError || backfillMessage || ""}
+                        </Typography>
+                        <Button
+                            size="sm"
+                            variant="outlined"
+                            disabled={backfillRunning}
+                            onClick={handleBackfill}
+                        >
+                            {backfillRunning
+                                ? t.settings.autoSyncCalendar.backfillRunning
+                                : t.settings.autoSyncCalendar.backfillButton}
+                        </Button>
+                    </Stack>
+                </>
+            )}
+        </Sheet>
+    );
+};
+
 const TaskSortSection = () => {
     const { sprintBoardSortTiers, setSprintBoardSortTiers, tableSortTiers, setTableSortTiers } =
         useTaskSortPreferences();
@@ -562,6 +739,10 @@ const KeyboardShortcutsSection = () => {
                 {
                     label: t.settings.shortcuts.global.rows.notesNew,
                     combo: [...modifierKeys, "N"],
+                },
+                {
+                    label: t.settings.shortcuts.global.rows.calendar,
+                    combo: [...modifierKeys, "C"],
                 },
                 {
                     label: t.settings.shortcuts.global.rows.cycle,
@@ -668,7 +849,28 @@ const KeyboardShortcutsSection = () => {
 // Tab keys mirror the i18n keys under `settings.tabs.*` and are kept
 // as a plain string union (rather than numeric indices) so reordering
 // or inserting a new tab doesn't silently shift selection.
-type SettingsTabKey = "general" | "chat" | "tasks" | "spotlight" | "notifications" | "shortcuts";
+type SettingsTabKey =
+    | "general"
+    | "chat"
+    | "tasks"
+    | "spotlight"
+    | "notifications"
+    | "shortcuts"
+    | "integrations";
+
+/**
+ * Settings → Integrations panel. Renders the same Connections UI
+ * (Google + GitHub Connect/Disconnect, Grant Calendar access, test-
+ * user notice) that the `/workspace/integrations` page surfaces, so
+ * users can manage their providers without leaving Settings. The
+ * `accessToken` gate keeps the panel quiet for pre-auth contexts
+ * (e.g., if the modal were ever rendered before sign-in completes).
+ */
+const IntegrationsSection = () => {
+    const { accessToken } = useAuth();
+    if (!accessToken) return null;
+    return <ConnectionsSection accessToken={accessToken} />;
+};
 
 export const SettingsModal = ({ open, onClose }: Props) => {
     const { mode } = useColorScheme();
@@ -740,6 +942,13 @@ export const SettingsModal = ({ open, onClose }: Props) => {
                         <Tab value="spotlight">{t.settings.tabs.spotlight}</Tab>
                         <Tab value="notifications">{t.settings.tabs.notifications}</Tab>
                         <Tab value="shortcuts">{t.settings.tabs.shortcuts}</Tab>
+                        {/* Integrations: same Connect/Disconnect surface
+                            the page route exposes. Gated on the same
+                            feature flag so disabled deploys don't show
+                            an empty tab. */}
+                        {OAUTH_INTEGRATIONS_ENABLED && (
+                            <Tab value="integrations">{t.settings.tabs.integrations}</Tab>
+                        )}
                     </TabList>
 
                     <TabPanel value="general" sx={{ px: 0, py: 2 }}>
@@ -759,6 +968,7 @@ export const SettingsModal = ({ open, onClose }: Props) => {
                         <Stack spacing={2}>
                             <TaskSortSection />
                             <AutoCloseOnPrMergeSection />
+                            <AutoSyncCalendarSection />
                         </Stack>
                     </TabPanel>
                     <TabPanel value="spotlight" sx={{ px: 0, py: 2 }}>
@@ -776,6 +986,13 @@ export const SettingsModal = ({ open, onClose }: Props) => {
                             <KeyboardShortcutsSection />
                         </Stack>
                     </TabPanel>
+                    {OAUTH_INTEGRATIONS_ENABLED && (
+                        <TabPanel value="integrations" sx={{ px: 0, py: 2 }}>
+                            <Stack spacing={2}>
+                                <IntegrationsSection />
+                            </Stack>
+                        </TabPanel>
+                    )}
                 </Tabs>
             </ModalDialog>
         </Modal>

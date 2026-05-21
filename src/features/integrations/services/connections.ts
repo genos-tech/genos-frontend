@@ -15,6 +15,21 @@ export interface ConnectionsResponse {
     connections: Connection[];
 }
 
+// Specific Google Calendar API scope needed to read/write events. A
+// sign-in-via-Google user starts with only `openid email profile` —
+// any calendar call against that token returns 403 with
+// `ACCESS_TOKEN_SCOPE_INSUFFICIENT`. The fix is to send the user back
+// through the OAuth flow with intent=connect (which uses
+// GOOGLE_CONNECT_SCOPES), and the existing account's scopes get
+// upgraded in place by the callback handler.
+export const CALENDAR_EVENTS_SCOPE = "https://www.googleapis.com/auth/calendar.events";
+
+export const hasCalendarScope = (connection: Connection | undefined): boolean =>
+    !!connection?.scopes?.includes(CALENDAR_EVENTS_SCOPE);
+
+export const findGoogleConnection = (data: ConnectionsResponse | null): Connection | undefined =>
+    data?.connections.find((c) => c.provider === "google");
+
 export const listConnections = async (
     accessToken: string,
     setErrorMessage?: (value: string) => void

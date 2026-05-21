@@ -1,5 +1,6 @@
 import { admin } from "./admin";
 import { app } from "./app";
+import { calendar } from "./calendar";
 import { chat } from "./chat";
 import { common } from "./common";
 import { inbox } from "./inbox";
@@ -24,4 +25,5 @@ export const en = {
     spotlight,
     services,
     admin,
+    calendar,
 } as const;

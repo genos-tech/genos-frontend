@@ -1,7 +1,6 @@
 import { useState } from "react";
 import AllInboxRoundedIcon from "@mui/icons-material/AllInboxRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
-import HubRoundedIcon from "@mui/icons-material/HubRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
@@ -26,7 +25,6 @@ import { Socket } from "socket.io-client";
 import { useAuth } from "../../context/AuthContext";
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
 import { TeamDropdown } from "../../features/admin/components/teamDropdown";
-import { OAUTH_INTEGRATIONS_ENABLED } from "../../features/integrations/featureFlags";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
@@ -84,18 +82,11 @@ const NAV_ITEMS = [
         shortcutKey: "N",
         colorScheme: NAV_ACCENT,
     },
-    ...(OAUTH_INTEGRATIONS_ENABLED
-        ? [
-              {
-                  id: 4,
-                  icon: HubRoundedIcon,
-                  labelKey: "integrations" as const,
-                  path: "/workspace/integrations",
-                  shortcutKey: "G",
-                  colorScheme: NAV_ACCENT,
-              },
-          ]
-        : []),
+    // Integrations is no longer surfaced from the sidebar — the
+    // Connect/Disconnect surface lives in Settings → Integrations
+    // now. The `/workspace/integrations` route remains alive for
+    // direct deep links (OAuth callback target, GitHub PR list,
+    // calendar event CRUD), it's just not advertised here anymore.
 ];
 
 type SidebarProps = {
