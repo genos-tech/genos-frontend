@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
+import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
 import KeyboardRoundedIcon from "@mui/icons-material/KeyboardRounded";
@@ -38,6 +39,7 @@ import {
     SORT_FIELD_OPTIONS,
 } from "../../features/tasks/utils/sortTask";
 import { useAnalyticsPreferences } from "../../hooks/common/useAnalyticsPreferences";
+import { useAutoCloseOnPrMergePreference } from "../../hooks/common/useAutoCloseOnPrMergePreference";
 import {
     BubbleStyle,
     useBubbleStylePreference,
@@ -430,6 +432,38 @@ const setTierAtIndex = (current: SortTier[], index: 0 | 1, next: SortTier | null
     return result;
 };
 
+const AutoCloseOnPrMergeSection = () => {
+    const { enabled, loading, setEnabled } = useAutoCloseOnPrMergePreference();
+    const { t } = useTranslation();
+    return (
+        <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
+            <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
+                <CheckCircleOutlineRoundedIcon />
+                <Typography level="title-md">{t.settings.autoCloseOnPrMerge.heading}</Typography>
+            </Stack>
+            <Typography level="body-xs" sx={{ mb: 1.5 }}>
+                {t.settings.autoCloseOnPrMerge.description}
+            </Typography>
+
+            <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={2}>
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography level="title-sm">
+                        {t.settings.autoCloseOnPrMerge.toggleLabel}
+                    </Typography>
+                    <Typography level="body-xs">
+                        {t.settings.autoCloseOnPrMerge.toggleHelper}
+                    </Typography>
+                </Box>
+                <Switch
+                    checked={enabled}
+                    disabled={loading}
+                    onChange={(e) => setEnabled(e.target.checked)}
+                />
+            </Stack>
+        </Sheet>
+    );
+};
+
 const TaskSortSection = () => {
     const { sprintBoardSortTiers, setSprintBoardSortTiers, tableSortTiers, setTableSortTiers } =
         useTaskSortPreferences();
@@ -724,6 +758,7 @@ export const SettingsModal = ({ open, onClose }: Props) => {
                     <TabPanel value="tasks" sx={{ px: 0, py: 2 }}>
                         <Stack spacing={2}>
                             <TaskSortSection />
+                            <AutoCloseOnPrMergeSection />
                         </Stack>
                     </TabPanel>
                     <TabPanel value="spotlight" sx={{ px: 0, py: 2 }}>
