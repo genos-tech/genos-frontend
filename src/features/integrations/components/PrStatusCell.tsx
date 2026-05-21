@@ -193,12 +193,16 @@ const SinglePrBadge = ({
                     textDecoration: "none",
                     color: "inherit",
                     borderRadius: "6px",
-                    transition: "background-color 0.15s ease",
-                    // Match the linked-branch chip in TaskMainBlock and
-                    // chat-message hover backgrounds so PR/branch chips
-                    // read as the same family of interactive element.
+                    // Brand-purple chip surface matching LinkedPrCard and
+                    // other "soft" chips across the app — same family of
+                    // interactive element, so the PR column reads as a
+                    // brand chip instead of a neutral grey badge.
+                    background: palette.chipBg,
+                    border: `1px solid ${palette.chipBorder}`,
+                    transition: "background-color 0.15s ease, border-color 0.15s ease",
                     "&:hover": {
-                        backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+                        background: palette.buttonBgHover,
+                        borderColor: palette.borderStrong,
                     },
                 }}
             >

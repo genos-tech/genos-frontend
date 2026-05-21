@@ -692,43 +692,47 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             minWidth: "85px",
                         }}
                     >
-                        <FieldLabel isDark={isDark}>{t.tasks.fields.links}</FieldLabel>
-                        <Tooltip
-                            title={t.tasks.tooltips.refreshPullRequests}
-                            variant="outlined"
-                            placement="top"
-                            arrow
-                        >
-                            <IconButton
-                                size="sm"
-                                variant="plain"
-                                color="neutral"
-                                disabled={pullsRefreshing}
-                                onClick={() => {
-                                    void fetchLinkedPullsRef.current({ bypassCache: true });
-                                }}
-                                sx={{
-                                    "--IconButton-size": "20px",
-                                    minHeight: "20px",
-                                    minWidth: "20px",
-                                    p: 0,
-                                    color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.5)",
-                                }}
+                        {(taskContent.links?.length ?? 0) > 0 && (
+                            <Tooltip
+                                title={t.tasks.tooltips.refreshPullRequests}
+                                variant="outlined"
+                                placement="top"
+                                arrow
                             >
-                                <RefreshRoundedIcon
-                                    sx={{
-                                        fontSize: "0.95rem",
-                                        animation: pullsRefreshing
-                                            ? "spin 0.9s linear infinite"
-                                            : "none",
-                                        "@keyframes spin": {
-                                            "0%": { transform: "rotate(0deg)" },
-                                            "100%": { transform: "rotate(360deg)" },
-                                        },
+                                <IconButton
+                                    size="sm"
+                                    variant="plain"
+                                    color="neutral"
+                                    disabled={pullsRefreshing}
+                                    onClick={() => {
+                                        void fetchLinkedPullsRef.current({ bypassCache: true });
                                     }}
-                                />
-                            </IconButton>
-                        </Tooltip>
+                                    sx={{
+                                        "--IconButton-size": "20px",
+                                        minHeight: "20px",
+                                        minWidth: "20px",
+                                        p: 0,
+                                        color: isDark
+                                            ? "rgba(255,255,255,0.5)"
+                                            : "rgba(0,0,0,0.5)",
+                                    }}
+                                >
+                                    <RefreshRoundedIcon
+                                        sx={{
+                                            fontSize: "0.95rem",
+                                            animation: pullsRefreshing
+                                                ? "spin 0.9s linear infinite"
+                                                : "none",
+                                            "@keyframes spin": {
+                                                "0%": { transform: "rotate(0deg)" },
+                                                "100%": { transform: "rotate(360deg)" },
+                                            },
+                                        }}
+                                    />
+                                </IconButton>
+                            </Tooltip>
+                        )}
+                        <FieldLabel isDark={isDark}>{t.tasks.fields.links}</FieldLabel>
                     </Box>
                     <DynamicURLManager
                         setTaskContent={setTaskContent}
