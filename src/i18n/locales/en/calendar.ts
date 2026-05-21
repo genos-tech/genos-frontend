@@ -20,4 +20,12 @@ export const calendar = {
     },
     allDay: "All day",
     nowLabel: "Now",
+    attendees: {
+        label: "Invite teammates",
+        placeholder: "Search by name or email…",
+        noResults: "No teammates match.",
+        emptyState: "No one invited yet.",
+        helperText:
+            "Invitees see this event on their Google Calendar. We don't send Google email invites — the chat handles notifications.",
+    },
 } as const;

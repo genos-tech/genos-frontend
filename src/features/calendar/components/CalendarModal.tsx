@@ -19,6 +19,7 @@ import {
 import dayjs, { Dayjs } from "dayjs";
 
 import { useAuth } from "../../../context/AuthContext";
+import { useCalendarViewPreference } from "../../../hooks/common/useCalendarViewPreference";
 import { useTranslation } from "../../../i18n";
 import { CalendarEventModal } from "../../integrations/components/CalendarEventModal";
 import { CalendarEvent, listEvents } from "../../integrations/services/calendar";
@@ -87,6 +88,7 @@ const groupEventsByDay = (
 
 interface ModalInitial {
     add_meet?: boolean;
+    attendees?: Array<{ email: string; displayName?: string }>;
     calendar_id?: string;
     description?: string;
     end?: string;
@@ -98,7 +100,11 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
     const { accessToken } = useAuth();
     const { t } = useTranslation();
 
-    const [view, setView] = useState<CalendarView>("month");
+    // View persisted to localStorage so reopening the modal lands
+    // on whatever granularity the user was last using. Anchor is
+    // intentionally NOT persisted — the user expects "Today" each
+    // time they reopen, not the calendar window from last week.
+    const [view, setView] = useCalendarViewPreference();
     // Anchor semantics depend on view: start-of-month for Month,
     // any day inside the visible window for Week (snapped via
     // `visibleRange`), the specific day for Day / 3-day.
@@ -195,9 +201,11 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
             setEvents([]);
             setPopoverDayKey(null);
             setError(null);
-            // Reset to current month on close so the next open
-            // never lands on a stale "April 2024" navigation.
-            setView("month");
+            // Reset the anchor (so the user always reopens onto
+            // "today") but preserve the view — the view is the
+            // user's persistent preference (see
+            // `useCalendarViewPreference`) and reopening should
+            // land them on the same granularity they left.
             setAnchor(dayjs().startOf("day"));
         }
     }, [open]);
@@ -273,6 +281,18 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
         setEditingEventId(e.id);
         setEventModalInitial({
             add_meet: !!e.hangoutLink,
+            // Pre-populate the attendee picker so the user sees
+            // who's already invited and can prune / add. We drop
+            // `self`-flagged entries (Google echoes the organizer
+            // back) so the modal doesn't insist on re-inviting the
+            // current user. External attendees without a team-member
+            // match still appear, with email used as displayName.
+            attendees: (e.attendees ?? [])
+                .filter((a) => !a.self && !!a.email)
+                .map((a) => ({
+                    email: a.email,
+                    displayName: a.displayName,
+                })),
             description: e.description,
             end: e.end?.dateTime,
             start: e.start?.dateTime,

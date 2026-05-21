@@ -32,7 +32,24 @@ export interface CalendarConferenceData {
     entryPoints?: CalendarConferenceEntryPoint[];
 }
 
+export interface CalendarEventAttendee {
+    email: string;
+    displayName?: string;
+    /** Google-side RSVP. Read-only on the wire from our perspective
+     *  — the modal doesn't surface it for v1; only used as a tag
+     *  for future "going / maybe / declined" rendering. */
+    responseStatus?: "needsAction" | "declined" | "tentative" | "accepted";
+    /** Self attendees can be flagged so the UI dedupes the user
+     *  out of attendee chips. */
+    self?: boolean;
+}
+
 export interface CalendarEvent {
+    /** Populated by Google when an event has invited attendees. The
+     *  organizer is implicit and may or may not appear here
+     *  depending on the calendar; never relied on as the source of
+     *  truth for "who created this". */
+    attendees?: CalendarEventAttendee[];
     conferenceData?: CalendarConferenceData;
     description?: string;
     end?: CalendarEventDateTime;
@@ -209,6 +226,12 @@ export const updateEvent = async (
          *  false removes any existing Meet. Omit entirely to leave
          *  the event's Meet state untouched. */
         add_meet: boolean;
+        /** Sends the full attendee list — Google overwrites any
+         *  existing list when this is provided. Omit to leave
+         *  attendees untouched. The backend forwards
+         *  `sendUpdates=none` when present to suppress email
+         *  invites (chat-driven workflows do their own notify). */
+        attendees: Array<{ email: string; displayName?: string }>;
         calendar_id: string;
         description: string;
         end: CalendarEventDateTime;

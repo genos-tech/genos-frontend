@@ -54,6 +54,7 @@ type TabKey = "connections" | "calendar" | "github";
 
 interface ModalInitial {
     add_meet?: boolean;
+    attendees?: Array<{ email: string; displayName?: string }>;
     calendar_id?: string;
     description?: string;
     end?: string;
@@ -305,6 +306,13 @@ const CalendarTab = ({
         setEditingEventId(event.id);
         setModalInitial({
             add_meet: !!event.hangoutLink,
+            // Pre-populate the attendee picker (drop `self` entries
+            // so we don't try to re-invite the organizer / current
+            // user). External attendees without a team-member match
+            // still render — the picker handles bare emails.
+            attendees: (event.attendees ?? [])
+                .filter((a) => !a.self && !!a.email)
+                .map((a) => ({ email: a.email, displayName: a.displayName })),
             description: event.description,
             end: event.end?.dateTime,
             start: event.start?.dateTime,

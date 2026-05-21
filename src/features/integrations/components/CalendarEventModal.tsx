@@ -1,11 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import VideoCameraFrontRoundedIcon from "@mui/icons-material/VideoCameraFrontRounded";
 import {
+    Autocomplete,
+    AutocompleteOption,
+    Avatar,
     Button,
     Checkbox,
     FormControl,
+    FormHelperText,
     FormLabel,
     Input,
+    ListItemContent,
+    ListItemDecorator,
     Modal,
     ModalDialog,
     Stack,
@@ -13,13 +19,35 @@ import {
     Typography,
 } from "@mui/joy";
 
+import { useOptionalAvatarContext } from "../../../components/ui/avatars/AvatarContext";
+import { useTranslation } from "../../../i18n";
 import { CalendarEvent, createEvent, updateEvent } from "../services/calendar";
+
+const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
+
+/** What the Autocomplete options + selection both speak. Decoupled
+ *  from `UserProps` so the picker can later accept free-form
+ *  external emails without restructuring. */
+interface AttendeeOption {
+    email: string;
+    displayName: string;
+    /** Optional — driven from team-member profiles when available
+     *  so the option list shows avatars. External / pre-existing
+     *  attendees on edit may not have one. */
+    avatarImgPath?: string;
+}
+
+const attendeeKey = (a: AttendeeOption) => a.email.trim().toLowerCase();
 
 interface EventFormInitial {
     /** Pre-check the "Add Google Meet" box. Callers typically derive
      *  this from `!!event.hangoutLink` when editing an existing
      *  event. */
     add_meet?: boolean;
+    /** Pre-populate the attendees picker when editing. Callers pass
+     *  the event's existing attendees so the user sees who's
+     *  already invited and can prune / add. */
+    attendees?: Array<{ email: string; displayName?: string }>;
     /** Optional calendar id. Empty/undefined → primary. */
     calendar_id?: string;
     description?: string;
@@ -53,6 +81,7 @@ interface CalendarEventModalProps {
 
 interface FormState {
     addMeet: boolean;
+    attendees: AttendeeOption[];
     calendarId: string;
     description: string;
     endISO: string;
@@ -72,6 +101,10 @@ const fromLocalInputValue = (value: string): string => new Date(value).toISOStri
 
 const formFromInitial = (initial: EventFormInitial | undefined): FormState => ({
     addMeet: initial?.add_meet ?? false,
+    attendees: (initial?.attendees ?? []).map((a) => ({
+        email: a.email,
+        displayName: a.displayName || a.email,
+    })),
     calendarId: initial?.calendar_id ?? "",
     description: initial?.description ?? "",
     endISO: toLocalInputValue(initial?.end),
@@ -88,19 +121,54 @@ export const CalendarEventModal = ({
     onSaved,
     onError,
 }: CalendarEventModalProps) => {
+    const { t } = useTranslation();
     const [form, setForm] = useState<FormState>(formFromInitial(initial));
     const [submitting, setSubmitting] = useState(false);
     const [localError, setLocalError] = useState<string | null>(null);
 
+    // Team-member directory — sourced from `AvatarContext` so the
+    // modal doesn't take a teamMembers prop. `useOptional` returns
+    // null pre-auth (e.g. signin sandbox) so the picker just shows
+    // an empty option list rather than crashing.
+    const avatarCtx = useOptionalAvatarContext();
+    const teamOptions: AttendeeOption[] = useMemo(() => {
+        if (!avatarCtx) return [];
+        const out: AttendeeOption[] = [];
+        const me = avatarCtx.myself;
+        for (const u of Object.values(avatarCtx.teamMemberProfiles)) {
+            if (!u.userEmail) continue;
+            if (me && String(u.userId) === String(me.userId)) continue; // skip self
+            out.push({
+                email: u.userEmail,
+                displayName: u.userName || u.userEmail,
+                avatarImgPath: u.avatarImgPath,
+            });
+        }
+        // Pre-fill avatar/displayName for any attendees that already
+        // map to a team member (covers the edit-existing-event case
+        // where `initial.attendees` arrives as bare email strings).
+        return out.sort((a, b) =>
+            a.displayName.localeCompare(b.displayName, undefined, { sensitivity: "base" })
+        );
+    }, [avatarCtx]);
+
     // Re-seed when the modal is (re)opened with new initial values.
-    // Without this, opening with a different `initial` would silently
-    // reuse stale state from the previous open.
+    // Also re-decorate any pre-populated attendees with team-member
+    // avatars when the directory finally arrives.
     useEffect(() => {
         if (open) {
-            setForm(formFromInitial(initial));
+            const seeded = formFromInitial(initial);
+            // Merge team avatars onto seeded attendees by email key.
+            const byEmail: Record<string, AttendeeOption> = {};
+            for (const o of teamOptions) byEmail[attendeeKey(o)] = o;
+            seeded.attendees = seeded.attendees.map((a) => {
+                const match = byEmail[attendeeKey(a)];
+                return match ? { ...a, ...match } : a;
+            });
+            setForm(seeded);
             setLocalError(null);
         }
-    }, [open, initial]);
+    }, [open, initial, teamOptions]);
 
     const reportError = (message: string) => {
         setLocalError(message);
@@ -116,6 +184,19 @@ export const CalendarEventModal = ({
         setLocalError(null);
         const payload = {
             add_meet: form.addMeet,
+            // Only include attendees in the body when the user has
+            // something selected. An empty list on PATCH would
+            // clear an existing attendee list on Google's side; on
+            // create it'd just send nothing. Either way omitting is
+            // safer than sending [].
+            ...(form.attendees.length > 0
+                ? {
+                      attendees: form.attendees.map((a) => ({
+                          email: a.email,
+                          displayName: a.displayName,
+                      })),
+                  }
+                : {}),
             ...(form.calendarId ? { calendar_id: form.calendarId } : {}),
             description: form.description || undefined,
             end: { dateTime: fromLocalInputValue(form.endISO) },
@@ -138,7 +219,7 @@ export const CalendarEventModal = ({
 
     return (
         <Modal open={open} onClose={onClose}>
-            <ModalDialog sx={{ minWidth: 400, p: 3 }}>
+            <ModalDialog sx={{ minWidth: 480, maxWidth: 560, p: 3 }}>
                 <Typography level="title-lg" sx={{ mb: 2 }}>
                     {editingEventId ? "Edit event" : "New event"}
                 </Typography>
@@ -180,6 +261,70 @@ export const CalendarEventModal = ({
                                 setForm((f) => ({ ...f, description: e.target.value }))
                             }
                         />
+                    </FormControl>
+                    <FormControl>
+                        <FormLabel>{t.calendar.attendees.label}</FormLabel>
+                        <Autocomplete
+                            multiple
+                            options={teamOptions}
+                            value={form.attendees}
+                            // Equality by email so options the user
+                            // already picked render with the "selected"
+                            // indicator and don't appear duplicated in
+                            // the dropdown.
+                            isOptionEqualToValue={(a, b) => attendeeKey(a) === attendeeKey(b)}
+                            getOptionLabel={(o) => o.displayName}
+                            // Filter manually so "alice" matches both
+                            // name AND email — Joy's default only
+                            // searches the label string.
+                            filterOptions={(opts, { inputValue }) => {
+                                const q = inputValue.trim().toLowerCase();
+                                if (!q) return opts;
+                                return opts.filter(
+                                    (o) =>
+                                        o.displayName.toLowerCase().includes(q) ||
+                                        o.email.toLowerCase().includes(q)
+                                );
+                            }}
+                            placeholder={
+                                form.attendees.length === 0 ? t.calendar.attendees.placeholder : ""
+                            }
+                            noOptionsText={t.calendar.attendees.noResults}
+                            onChange={(_e, next) => setForm((f) => ({ ...f, attendees: next }))}
+                            renderOption={(props, option) => (
+                                <AutocompleteOption {...props} key={attendeeKey(option)}>
+                                    <ListItemDecorator>
+                                        <Avatar
+                                            size="sm"
+                                            src={
+                                                option.avatarImgPath
+                                                    ? `${media_url}/${option.avatarImgPath}`
+                                                    : undefined
+                                            }
+                                        >
+                                            {option.displayName.charAt(0).toUpperCase()}
+                                        </Avatar>
+                                    </ListItemDecorator>
+                                    <ListItemContent sx={{ minWidth: 0 }}>
+                                        <Typography level="body-sm" noWrap>
+                                            {option.displayName}
+                                        </Typography>
+                                        <Typography
+                                            level="body-xs"
+                                            sx={{ color: "text.tertiary" }}
+                                            noWrap
+                                        >
+                                            {option.email}
+                                        </Typography>
+                                    </ListItemContent>
+                                </AutocompleteOption>
+                            )}
+                        />
+                        <FormHelperText>
+                            {form.attendees.length === 0
+                                ? t.calendar.attendees.emptyState
+                                : t.calendar.attendees.helperText}
+                        </FormHelperText>
                     </FormControl>
                     <Checkbox
                         checked={form.addMeet}
