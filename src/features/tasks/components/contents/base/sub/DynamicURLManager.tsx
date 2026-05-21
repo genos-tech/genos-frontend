@@ -15,6 +15,11 @@ type LinkItem = {
     url: string;
     title: string;
     isGitHub: boolean;
+    // Carried through from `task.links` so saves preserve the flag.
+    // Without this, the initial mapping below would strip it and every
+    // save would wipe `isAutoLinked` from every link, breaking the
+    // PR-column persistence path (Source 2 in `pulls-for-task`).
+    isAutoLinked?: boolean;
 };
 
 type DynamicURLManagerProps = {
@@ -65,6 +70,7 @@ export const DynamicURLManager = (props: DynamicURLManagerProps) => {
                     url: link.url,
                     title: link.title,
                     isGitHub: isGitHubURL(link.url),
+                    isAutoLinked: link.isAutoLinked,
                 }))
             );
         }
@@ -323,15 +329,36 @@ const LinkDisplay = ({ link, editingId, onEdit, onSave, onDelete }: LinkDisplayP
                     {link.title}
                 </a>
             </Typography>
+            {/* Auto-linked entries (Source 2 in `pulls-for-task` uses
+                the `isAutoLinked` flag for PR-column persistence) are
+                managed by the auto-discovery effect in TaskMainBlock —
+                editing or deleting them by hand would either reintroduce
+                the flag on the next discovery pass or break the column.
+                The wrapping span keeps the tooltip visible while the
+                IconButton itself is disabled. */}
             <Tooltip size="sm" title={t.tasks.dynamicUrl.editTooltip} variant="outlined">
-                <IconButton color="neutral" size="sm" onClick={() => onEdit(link.id)}>
-                    <EditIcon />
-                </IconButton>
+                <span>
+                    <IconButton
+                        color="neutral"
+                        size="sm"
+                        disabled={link.isAutoLinked === true}
+                        onClick={() => onEdit(link.id)}
+                    >
+                        <EditIcon />
+                    </IconButton>
+                </span>
             </Tooltip>
             <Tooltip size="sm" title={t.tasks.dynamicUrl.deleteTooltip} variant="outlined">
-                <IconButton color="danger" size="sm" onClick={() => onDelete(link.id)}>
-                    <DeleteIcon />
-                </IconButton>
+                <span>
+                    <IconButton
+                        color="danger"
+                        size="sm"
+                        disabled={link.isAutoLinked === true}
+                        onClick={() => onDelete(link.id)}
+                    >
+                        <DeleteIcon />
+                    </IconButton>
+                </span>
             </Tooltip>
         </Stack>
     );
