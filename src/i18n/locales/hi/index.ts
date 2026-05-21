@@ -269,6 +269,14 @@ export const hi: DeepPartial<Messages> = {
             arabic: "العربية",
             hindi: "हिन्दी",
         },
+        autoCloseOnPrMerge: {
+            heading: "PR मर्ज पर ऑटो-क्लोज़",
+            description:
+                "जब GitHub PR मर्ज होता है, यदि PR की हेड ब्रांच के नाम में टास्क ID है (जैसे ब्रांच `feature/GEN-42-foo` टास्क GEN-42 को बंद करती है), तो टास्क को स्वतः बंद कर दें। केवल आपको असाइन की गई टास्क पर ही लागू होता है।",
+            toggleLabel: "PR मर्ज होने पर मेरी टास्क बंद करें",
+            toggleHelper:
+                "डिफ़ॉल्ट रूप से बंद। मैच के लिए ब्रांच नाम `…<TASK-ID>…` फ़ॉर्मेट का होना चाहिए।",
+        },
         taskSort: {
             heading: "टास्क क्रम",
             description:

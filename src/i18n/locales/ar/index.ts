@@ -269,6 +269,14 @@ export const ar: DeepPartial<Messages> = {
             arabic: "العربية",
             hindi: "हिन्दी",
         },
+        autoCloseOnPrMerge: {
+            heading: "إغلاق تلقائي عند دمج PR",
+            description:
+                "عند دمج طلب سحب GitHub، يتم إغلاق المهمة التي يحتوي اسم فرعها على معرّف المهمة تلقائياً (مثال: الفرع `feature/GEN-42-foo` يغلق المهمة GEN-42). يعمل فقط على المهام المُسندة إليك.",
+            toggleLabel: "إغلاق مهامي عند دمج طلب السحب",
+            toggleHelper:
+                "معطّل افتراضياً. يجب أن يتبع اسم الفرع نمط `…<TASK-ID>…` لتفعيل المطابقة.",
+        },
         taskSort: {
             heading: "ترتيب المهام",
             description:

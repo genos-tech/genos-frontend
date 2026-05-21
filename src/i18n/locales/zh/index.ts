@@ -260,6 +260,14 @@ export const zh: DeepPartial<Messages> = {
             french: "Français",
             chinese: "中文",
         },
+        autoCloseOnPrMerge: {
+            heading: "PR 合并时自动关闭",
+            description:
+                "当 GitHub PR 被合并时,如果 PR 的源分支名称中包含任务 ID(例如分支 `feature/GEN-42-foo` 会关闭任务 GEN-42),则自动关闭对应任务。仅对您负责的任务生效。",
+            toggleLabel: "PR 合并时关闭我的任务",
+            toggleHelper:
+                "默认关闭。分支名称必须遵循 `…<任务ID>…` 格式才能触发。",
+        },
         taskSort: {
             heading: "任务排序",
             description:

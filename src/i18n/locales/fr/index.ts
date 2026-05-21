@@ -270,6 +270,14 @@ export const fr: DeepPartial<Messages> = {
             french: "Français",
             chinese: "中文",
         },
+        autoCloseOnPrMerge: {
+            heading: "Fermeture auto à la fusion de PR",
+            description:
+                "Lorsqu'une PR GitHub est fusionnée, ferme automatiquement la tâche dont l'ID apparaît dans le nom de la branche source (ex. branche `feature/GEN-42-foo` ferme la tâche GEN-42). Ne s'applique qu'aux tâches qui vous sont assignées.",
+            toggleLabel: "Fermer mes tâches lors de la fusion de leur PR",
+            toggleHelper:
+                "Désactivé par défaut. Le nom de la branche doit suivre le format `…<TASK-ID>…` pour déclencher la correspondance.",
+        },
         taskSort: {
             heading: "Tri des tâches",
             description:

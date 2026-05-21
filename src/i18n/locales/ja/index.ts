@@ -266,6 +266,14 @@ export const ja: DeepPartial<Messages> = {
             french: "Français",
             chinese: "中文",
         },
+        autoCloseOnPrMerge: {
+            heading: "PRマージ時に自動クローズ",
+            description:
+                "GitHubのPRがマージされた際、PRのヘッドブランチ名にタスクIDが含まれていれば(例: ブランチ `feature/GEN-42-foo` でタスクGEN-42をクローズ)、自動的にタスクをクローズします。自分が担当のタスクのみ対象です。",
+            toggleLabel: "PRがマージされたら担当タスクをクローズ",
+            toggleHelper:
+                "デフォルトは無効。ブランチ名は `…<タスクID>…` 形式に従う必要があります。",
+        },
         taskSort: {
             heading: "タスクの並び替え",
             description:
