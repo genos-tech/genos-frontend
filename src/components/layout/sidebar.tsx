@@ -8,7 +8,6 @@ import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import {
-    Avatar,
     Badge,
     Box,
     Divider,
@@ -38,11 +37,11 @@ import { purplePalette } from "../../theme/purplePalette";
 import { UserProps } from "../../types/admin";
 import { clearAllEditorDrafts } from "../../utils/editorDraftStorage";
 import { isMac } from "../../utils/platform";
+import { AvatarWithStatus } from "../ui/avatars/avatarWithStatus";
 import { ColorSchemeToggle } from "./colorSchemeToggle";
 import { SettingsModal } from "./SettingsModal";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
-const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 // Navigation item configuration. `shortcutKey` mirrors `SERVICE_BY_KEY` in
 // `hooks/common/useGlobalServiceShortcut.ts` — keep them in sync so the
@@ -610,16 +609,19 @@ export const Sidebar = (props: SidebarProps) => {
 
             <Divider sx={{ opacity: isDark ? 0.06 : 0.08, mx: 1.5 }} />
 
-            {/* User Avatar Section */}
+            {/* User Avatar Section — `<AvatarWithStatus>` delegates to
+                `<UserAvatar>`, which renders its own PulseDot for
+                online/offline state and opens the profile modal on
+                click. The gradient halo around it is kept purely as
+                decoration (the sidebar's signature affordance for
+                "you"). */}
             <Box
                 sx={{
                     display: "flex",
                     justifyContent: "center",
                     py: 1.5,
-                    cursor: "pointer",
                     position: "relative",
                 }}
-                onClick={() => setOpenUserProfile(true)}
             >
                 <Tooltip
                     placement="right"
@@ -653,62 +655,18 @@ export const Sidebar = (props: SidebarProps) => {
                             },
                         }}
                     >
-                        <Avatar
-                            size="sm"
-                            src={`${media_url}/${myself.avatarImgPath}`}
-                            variant="solid"
-                            sx={{
-                                width: 34,
-                                height: 34,
-                                border: "2px solid",
-                                borderColor: sidebarBg,
-                            }}
-                        >
-                            {myself.userName[0].toUpperCase()}
-                        </Avatar>
+                        <AvatarWithStatus
+                            avatarSize={34}
+                            isYou={true}
+                            myself={myself}
+                            setMyself={setMyself}
+                            socket={socket}
+                            useCM={useCM}
+                            useUISM={useUISM}
+                        />
                     </Box>
                 </Tooltip>
-
-                {/* Online status indicator */}
-                <Box
-                    sx={{
-                        position: "absolute",
-                        bottom: 12,
-                        right: 12,
-                        width: 12,
-                        height: 12,
-                        borderRadius: "50%",
-                        background:
-                            myself?.isOfflineForced !== "true"
-                                ? isDark
-                                    ? "linear-gradient(135deg, #4ade80 0%, #22c55e 100%)"
-                                    : "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)"
-                                : isDark
-                                  ? "#6b7280"
-                                  : "#9ca3af",
-                        border: "2px solid",
-                        borderColor: sidebarBg,
-                        boxShadow:
-                            myself?.isOfflineForced !== "true"
-                                ? isDark
-                                    ? "0 2px 8px rgba(74,222,128,0.4)"
-                                    : "0 2px 8px rgba(34,197,94,0.35)"
-                                : "none",
-                    }}
-                />
             </Box>
-
-            <UserProfile
-                isYou={true}
-                myself={myself}
-                openUserProfile={openUserProfile}
-                setMyself={setMyself}
-                setOpenUserProfile={setOpenUserProfile}
-                socket={socket}
-                useCM={useCM}
-                user={useTEM.teamMemberProfiles[myself.userId]}
-                useUISM={useUISM}
-            />
 
             {/* User profile for team members */}
             {avatarUserId && (
