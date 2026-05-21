@@ -15,14 +15,36 @@ export interface CalendarEventDateTime {
     timeZone?: string;
 }
 
+export interface CalendarConferenceEntryPoint {
+    entryPointType?: string;
+    label?: string;
+    uri?: string;
+}
+
+export interface CalendarConferenceData {
+    /** Present when Meet generation is in progress; see
+     *  `status.statusCode === "pending"`. */
+    createRequest?: {
+        requestId?: string;
+        status?: { statusCode?: "pending" | "success" | "failure" };
+    };
+    /** Present on already-created Meet conferences. */
+    entryPoints?: CalendarConferenceEntryPoint[];
+}
+
 export interface CalendarEvent {
-    id: string;
-    summary?: string;
+    conferenceData?: CalendarConferenceData;
     description?: string;
-    start?: CalendarEventDateTime;
     end?: CalendarEventDateTime;
+    /** Populated by Google when an event has an attached Meet. May be
+     *  absent on the create response if generation is still pending —
+     *  poll `getEvent` to await population. */
+    hangoutLink?: string;
     htmlLink?: string;
+    id: string;
+    start?: CalendarEventDateTime;
     status?: string;
+    summary?: string;
 }
 
 interface ErrorResponse {
@@ -62,6 +84,35 @@ export const listCalendars = async (
     }
 };
 
+export const getEvent = async (
+    accessToken: string,
+    eventId: string,
+    opts: { calendarId?: string } = {},
+    setErrorMessage?: (value: string) => void
+): Promise<CalendarEvent | "google_not_connected" | "event_deleted_upstream" | null> => {
+    try {
+        const api = authApi(accessToken);
+        if (!api) return null;
+        const res = await api.get<CalendarEvent>(`/calendar/events/${eventId}/`, {
+            params: opts.calendarId ? { calendar_id: opts.calendarId } : undefined,
+        });
+        return res.data;
+    } catch (error) {
+        // Inspect the response before delegating: a 404 with
+        // `event_deleted_upstream` is a domain signal (the linked event
+        // was removed on Google), not a network failure. We surface it
+        // as a distinct return so callers can offer "Unlink" instead of
+        // a generic retry.
+        if (axios.isAxiosError(error)) {
+            const detail = (error.response?.data as ErrorResponse | undefined)?.detail;
+            if (detail === "event_deleted_upstream") return "event_deleted_upstream";
+        }
+        return surfaceError(error, setErrorMessage) === "google_not_connected"
+            ? "google_not_connected"
+            : null;
+    }
+};
+
 export const listEvents = async (
     accessToken: string,
     opts: { from?: string; to?: string; calendarId?: string },
@@ -88,11 +139,15 @@ export const listEvents = async (
 export const createEvent = async (
     accessToken: string,
     body: {
-        summary: string;
-        start: CalendarEventDateTime;
-        end: CalendarEventDateTime;
-        description?: string;
+        /** When true, attach a Google Meet `createRequest`. The
+         *  response's `hangoutLink` may be absent if generation is
+         *  pending — callers can poll `getEvent` to await it. */
+        add_meet?: boolean;
         calendar_id?: string;
+        description?: string;
+        end: CalendarEventDateTime;
+        start: CalendarEventDateTime;
+        summary: string;
     },
     setErrorMessage?: (value: string) => void
 ): Promise<CalendarEvent | null> => {
@@ -111,11 +166,15 @@ export const updateEvent = async (
     accessToken: string,
     eventId: string,
     body: Partial<{
-        summary: string;
-        start: CalendarEventDateTime;
-        end: CalendarEventDateTime;
-        description: string;
+        /** Explicitly toggling: true adds a Meet (or keeps one),
+         *  false removes any existing Meet. Omit entirely to leave
+         *  the event's Meet state untouched. */
+        add_meet: boolean;
         calendar_id: string;
+        description: string;
+        end: CalendarEventDateTime;
+        start: CalendarEventDateTime;
+        summary: string;
     }>,
     setErrorMessage?: (value: string) => void
 ): Promise<CalendarEvent | null> => {

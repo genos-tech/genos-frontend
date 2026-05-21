@@ -172,7 +172,6 @@ export const ChatHome = (props: ChatHomeProps) => {
     const [ignoreCount, setIgnoreCount] = useState<number>(0);
     const [initialTaskPreviewVisible, setInitialTaskPreviewVisible] = useState<boolean>(false);
     useEffect(() => {
-        console.log("ignoreCount:", ignoreCount);
         if (ignoreCount > 1 && useTM.isTaskPreviewVisible === true) {
             setInitialTaskPreviewVisible(true);
         }

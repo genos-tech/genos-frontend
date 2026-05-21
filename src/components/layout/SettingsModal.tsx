@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
+import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
@@ -16,6 +17,7 @@ import SortRoundedIcon from "@mui/icons-material/SortRounded";
 import ViewStreamRoundedIcon from "@mui/icons-material/ViewStreamRounded";
 import {
     Box,
+    Button,
     Divider,
     IconButton,
     Modal,
@@ -33,6 +35,8 @@ import {
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { useAuth } from "../../context/AuthContext";
+import { listConnections } from "../../features/integrations/services/connections";
 import {
     isSortDirection,
     isSortField,
@@ -40,6 +44,7 @@ import {
 } from "../../features/tasks/utils/sortTask";
 import { useAnalyticsPreferences } from "../../hooks/common/useAnalyticsPreferences";
 import { useAutoCloseOnPrMergePreference } from "../../hooks/common/useAutoCloseOnPrMergePreference";
+import { useAutoSyncCalendarPreference } from "../../hooks/common/useAutoSyncCalendarPreference";
 import {
     BubbleStyle,
     useBubbleStylePreference,
@@ -48,7 +53,7 @@ import { useDoubleClickTodoPreference } from "../../hooks/common/useDoubleClickT
 import { useSpotlightPreferences } from "../../hooks/common/useSpotlightPreferences";
 import { SortTier, useTaskSortPreferences } from "../../hooks/common/useTaskSortPreferences";
 import { ThemePreference, useThemePreference } from "../../hooks/common/useThemePreference";
-import { Locale, useTranslation } from "../../i18n";
+import { fmt, Locale, useTranslation } from "../../i18n";
 import { NotificationSettingsPanel } from "../../services/notifications/NotificationSettingsPanel";
 import { getServiceShortcutModifierKeys, isMac } from "../../utils/platform";
 
@@ -464,6 +469,107 @@ const AutoCloseOnPrMergeSection = () => {
     );
 };
 
+const AutoSyncCalendarSection = () => {
+    const { enabled, loading, setEnabled, backfill, backfillRunning } =
+        useAutoSyncCalendarPreference();
+    const { accessToken } = useAuth();
+    const { t } = useTranslation();
+    // Local connection probe — the SettingsModal doesn't already know
+    // Google's connection state, and the toggle's affordance depends
+    // on it. Null = still loading; false = explicitly not connected.
+    const [googleConnected, setGoogleConnected] = useState<boolean | null>(null);
+    const [backfillMessage, setBackfillMessage] = useState<string | null>(null);
+    const [backfillError, setBackfillError] = useState<string | null>(null);
+
+    useEffect(() => {
+        let cancelled = false;
+        if (!accessToken) {
+            setGoogleConnected(false);
+            return;
+        }
+        (async () => {
+            const res = await listConnections(accessToken);
+            if (cancelled) return;
+            setGoogleConnected(!!res?.connections.find((c) => c.provider === "google"));
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [accessToken]);
+
+    const handleBackfill = async () => {
+        setBackfillError(null);
+        setBackfillMessage(null);
+        const count = await backfill();
+        if (count === null) {
+            setBackfillError(t.settings.autoSyncCalendar.backfillFailed);
+            return;
+        }
+        setBackfillMessage(fmt(t.settings.autoSyncCalendar.backfillSuccess, { count }));
+    };
+
+    const togglesDisabled = loading || googleConnected === false;
+
+    return (
+        <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
+            <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
+                <CalendarMonthRoundedIcon />
+                <Typography level="title-md">{t.settings.autoSyncCalendar.heading}</Typography>
+            </Stack>
+            <Typography level="body-xs" sx={{ mb: 1.5 }}>
+                {t.settings.autoSyncCalendar.description}
+            </Typography>
+
+            <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={2}>
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography level="title-sm">
+                        {t.settings.autoSyncCalendar.toggleLabel}
+                    </Typography>
+                    <Typography level="body-xs">
+                        {googleConnected === false
+                            ? t.settings.autoSyncCalendar.connectPrompt
+                            : t.settings.autoSyncCalendar.toggleHelper}
+                    </Typography>
+                </Box>
+                <Switch
+                    checked={enabled}
+                    disabled={togglesDisabled}
+                    onChange={(e) => setEnabled(e.target.checked)}
+                />
+            </Stack>
+
+            {enabled && googleConnected && (
+                <>
+                    <Divider sx={{ my: 1.5 }} />
+                    <Stack
+                        alignItems="center"
+                        direction="row"
+                        justifyContent="space-between"
+                        spacing={2}
+                    >
+                        <Typography
+                            level="body-xs"
+                            sx={{ color: backfillError ? "danger.500" : "text.tertiary" }}
+                        >
+                            {backfillError || backfillMessage || ""}
+                        </Typography>
+                        <Button
+                            size="sm"
+                            variant="outlined"
+                            disabled={backfillRunning}
+                            onClick={handleBackfill}
+                        >
+                            {backfillRunning
+                                ? t.settings.autoSyncCalendar.backfillRunning
+                                : t.settings.autoSyncCalendar.backfillButton}
+                        </Button>
+                    </Stack>
+                </>
+            )}
+        </Sheet>
+    );
+};
+
 const TaskSortSection = () => {
     const { sprintBoardSortTiers, setSprintBoardSortTiers, tableSortTiers, setTableSortTiers } =
         useTaskSortPreferences();
@@ -759,6 +865,7 @@ export const SettingsModal = ({ open, onClose }: Props) => {
                         <Stack spacing={2}>
                             <TaskSortSection />
                             <AutoCloseOnPrMergeSection />
+                            <AutoSyncCalendarSection />
                         </Stack>
                     </TabPanel>
                     <TabPanel value="spotlight" sx={{ px: 0, py: 2 }}>

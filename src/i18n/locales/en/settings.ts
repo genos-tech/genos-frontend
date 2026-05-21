@@ -104,6 +104,19 @@ export const settings = {
         toggleHelper:
             "Disabled by default. Branch must follow the convention `…<TASK-ID>…` for the match to fire.",
     },
+    autoSyncCalendar: {
+        heading: "Auto-sync to Google Calendar",
+        description:
+            "Automatically add tasks with due dates to your Google Calendar as all-day events. One-way: deleting an event on Google won't affect your tasks.",
+        toggleLabel: "Auto-sync task due dates",
+        toggleHelper:
+            "Off by default. Only tasks assigned to you sync. Past-due tasks are skipped on backfill.",
+        connectPrompt: "Connect Google Calendar in Integrations to enable this.",
+        backfillButton: "Sync existing tasks now",
+        backfillRunning: "Syncing…",
+        backfillSuccess: "Synced {count} task(s).",
+        backfillFailed: "Backfill failed. Try again.",
+    },
     taskSort: {
         heading: "Task sort",
         description:
