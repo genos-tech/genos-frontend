@@ -10,4 +10,14 @@ export const calendar = {
     scopePrompt: "Calendar access hasn't been granted yet. Grant it to read and manage events.",
     grantButton: "Grant Calendar access",
     openTooltip: "Open calendar",
+    prev: "Previous",
+    next: "Next",
+    views: {
+        month: "Month",
+        week: "Week",
+        threeDay: "3 days",
+        day: "Day",
+    },
+    allDay: "All day",
+    nowLabel: "Now",
 } as const;

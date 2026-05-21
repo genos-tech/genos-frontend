@@ -48,6 +48,41 @@ export const monthVisibleRange = (
     return { start, end };
 };
 
+/** The four view modes the Calendar modal supports. `"day"` shows
+ *  a single column, `"3day"` three, `"week"` seven (week-aligned),
+ *  `"month"` the 6×7 grid. */
+export type CalendarView = "month" | "week" | "3day" | "day";
+
+/** Visible window for one of the view modes, in the same shape
+ *  `listEvents` accepts. For Week, the start is snapped to the
+ *  week boundary; for Day / 3-day, it starts on the anchor itself
+ *  so navigating forward by 1 day yields a deterministic shift. */
+export const visibleRange = (
+    view: CalendarView,
+    anchor: Dayjs,
+    weekStart: 0 | 1 = 0
+): { start: Dayjs; end: Dayjs } => {
+    if (view === "month") {
+        return monthVisibleRange(anchor.startOf("month"), weekStart);
+    }
+    const days = view === "week" ? 7 : view === "3day" ? 3 : 1;
+    const start = view === "week" ? anchor.startOf("week") : anchor.startOf("day");
+    return { start, end: start.add(days, "day").subtract(1, "millisecond") };
+};
+
+/** Ordered array of day buckets the TimelineView renders as
+ *  columns. Convenience wrapper so the view doesn't have to
+ *  recompute the column offsets. dayjs's `startOf("week")` uses
+ *  locale-default week-start (Sunday in our default locale). */
+export const timelineDays = (view: CalendarView, anchor: Dayjs): Dayjs[] => {
+    if (view === "month") return []; // not applicable
+    const days = view === "week" ? 7 : view === "3day" ? 3 : 1;
+    const start = view === "week" ? anchor.startOf("week") : anchor.startOf("day");
+    const out: Dayjs[] = [];
+    for (let i = 0; i < days; i++) out.push(start.add(i, "day"));
+    return out;
+};
+
 /**
  * Weekday labels in the same order as the grid columns. Short form
  * suitable for header chips ("Sun", "Mon", ...). Locale-aware via
