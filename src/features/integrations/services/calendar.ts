@@ -176,6 +176,10 @@ export const createEvent = async (
          *  response's `hangoutLink` may be absent if generation is
          *  pending — callers can poll `getEvent` to await it. */
         add_meet?: boolean;
+        /** Other people to put on the event. Google still pushes
+         *  the event to each attendee's calendar; the backend sets
+         *  `sendUpdates=none` so no email invites go out. */
+        attendees?: Array<{ email: string; displayName?: string }>;
         calendar_id?: string;
         description?: string;
         end: CalendarEventDateTime;

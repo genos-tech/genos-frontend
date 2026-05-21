@@ -116,7 +116,12 @@ export const settings = {
         grantButton: "Grant Calendar access",
         backfillButton: "Sync existing tasks now",
         backfillRunning: "Syncing…",
-        backfillSuccess: "Synced {count} task(s).",
+        backfillSuccess: "Synced {total} task(s) ({created} new, {patched} updated).",
+        backfillSuccessWithCleared:
+            "Synced {total} task(s) ({created} new, {patched} updated). Cleared {cleared} stale link(s) — events deleted on Google were NOT re-created.",
+        backfillOnlyCleared:
+            "Cleared {cleared} stale link(s) — events were deleted on Google. Per the never-re-create rule, no new events were posted.",
+        backfillUpToDate: "Already up to date — no tasks needed syncing.",
         backfillFailed: "Backfill failed. Try again.",
     },
     taskSort: {

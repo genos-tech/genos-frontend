@@ -15,15 +15,33 @@ interface State {
     loading: boolean;
 }
 
+export interface BackfillResult {
+    /** Tasks that did NOT have a linked event before this run and
+     *  got a brand-new event created on Google. */
+    created: number;
+    /** Tasks that already had a linked event and got re-pushed
+     *  (idempotent on Google's side; counts non-zero on every
+     *  click after the first since linked events get PATCHed). */
+    patched: number;
+    /** Tasks whose linked event was missing on Google (hard-deleted
+     *  via 404 or soft-deleted via `status="cancelled"`). The link
+     *  columns are cleared in DB but per the never-re-create rule
+     *  no new event is posted. Surfaced so the toast doesn't lie
+     *  about how many real events were touched. */
+    cleared: number;
+    /** `created + patched`. Excludes `cleared` and failures. */
+    synced: number;
+}
+
 interface UseAutoSyncCalendarPreference {
     enabled: boolean;
     loading: boolean;
     setEnabled: (value: boolean) => Promise<void>;
-    /** POSTs the one-shot backfill. Resolves to the number of tasks
-     *  synced on success, or `null` on failure (caller surfaces an
+    /** POSTs the one-shot backfill. Resolves to the per-outcome
+     *  counts on success, or `null` on failure (caller surfaces an
      *  error toast). Pre-conditions enforced server-side: preference
      *  must be ON and Google must be connected. */
-    backfill: () => Promise<number | null>;
+    backfill: () => Promise<BackfillResult | null>;
     /** Tracks an in-flight backfill so the UI can disable the button
      *  without duplicating state in every consumer. */
     backfillRunning: boolean;
@@ -80,13 +98,26 @@ export const useAutoSyncCalendarPreference = (): UseAutoSyncCalendarPreference =
         [accessToken, state.enabled]
     );
 
-    const backfill = useCallback(async (): Promise<number | null> => {
+    const backfill = useCallback(async (): Promise<BackfillResult | null> => {
         const api = authApi(accessToken);
         if (!api) return null;
         setBackfillRunning(true);
         try {
-            const res = await api.post<{ synced: number }>("/user/calendar-sync/backfill/");
-            return typeof res.data.synced === "number" ? res.data.synced : null;
+            const res = await api.post<Partial<BackfillResult>>("/user/calendar-sync/backfill/");
+            const created = Number(res.data.created ?? 0);
+            const patched = Number(res.data.patched ?? 0);
+            const cleared = Number(res.data.cleared ?? 0);
+            // Defensive: only trust the response if the server gave
+            // us numbers. Bail to null on garbage so the UI surfaces
+            // a clean error rather than rendering "Synced NaN".
+            if (
+                !Number.isFinite(created) ||
+                !Number.isFinite(patched) ||
+                !Number.isFinite(cleared)
+            ) {
+                return null;
+            }
+            return { created, patched, cleared, synced: created + patched };
         } catch {
             return null;
         } finally {

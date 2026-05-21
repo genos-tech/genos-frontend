@@ -509,12 +509,41 @@ const AutoSyncCalendarSection = () => {
     const handleBackfill = async () => {
         setBackfillError(null);
         setBackfillMessage(null);
-        const count = await backfill();
-        if (count === null) {
+        const result = await backfill();
+        if (result === null) {
             setBackfillError(t.settings.autoSyncCalendar.backfillFailed);
             return;
         }
-        setBackfillMessage(fmt(t.settings.autoSyncCalendar.backfillSuccess, { count }));
+        // Three message branches keep the toast honest:
+        //  - nothing eligible → "up to date"
+        //  - only cleared links (events deleted on Google) → explain
+        //    what happened so the user doesn't think the sync did
+        //    something visible when it didn't
+        //  - any real sync, with or without clears → show the counts
+        if (result.synced === 0 && result.cleared === 0) {
+            setBackfillMessage(t.settings.autoSyncCalendar.backfillUpToDate);
+            return;
+        }
+        if (result.synced === 0 && result.cleared > 0) {
+            setBackfillMessage(
+                fmt(t.settings.autoSyncCalendar.backfillOnlyCleared, {
+                    cleared: result.cleared,
+                })
+            );
+            return;
+        }
+        const template =
+            result.cleared > 0
+                ? t.settings.autoSyncCalendar.backfillSuccessWithCleared
+                : t.settings.autoSyncCalendar.backfillSuccess;
+        setBackfillMessage(
+            fmt(template, {
+                total: result.synced,
+                created: result.created,
+                patched: result.patched,
+                cleared: result.cleared,
+            })
+        );
     };
 
     // Toggle is disabled while we don't know the connection state, or

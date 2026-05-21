@@ -111,7 +111,8 @@ export const chat = {
         quickMeetTooltip: "Start a Quick Meet — adds a 1h event and shares the link",
         quickMeetEventTitle: "Quick Meet",
         quickMeetGenerating: "Generating Meet link…",
-        quickMeetSuccess: "Meet link shared · 1h event added to your calendar",
+        quickMeetSuccess:
+            "Meet link shared · copied to clipboard · 1h event added to your calendar",
         quickMeetUndo: "Undo",
         quickMeetUndone: "Quick Meet event removed from your calendar.",
         quickMeetFailed: "Couldn't generate a Meet link. Try again.",

@@ -133,10 +133,20 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
 
         const now = new Date();
         const inOneHour = new Date(now.getTime() + 60 * 60 * 1000);
+        // In a DM with a real Gmail address, invite the partner so
+        // the event lands on their calendar too — solo Quick Meets
+        // weren't useful. Other chat types stay solo because we
+        // don't easily have per-member emails on the frontend yet.
+        const partnerEmail = chat.chatType === 1 ? chat.dmPartnerUser?.userEmail : undefined;
+        const attendees =
+            partnerEmail && typeof partnerEmail === "string"
+                ? [{ email: partnerEmail, displayName: chat.dmPartnerUser.userName }]
+                : undefined;
         const event = await createEvent(
             accessToken,
             {
                 add_meet: true,
+                ...(attendees ? { attendees } : {}),
                 end: { dateTime: inOneHour.toISOString() },
                 start: { dateTime: now.toISOString() },
                 summary: t.chat.headers.quickMeetEventTitle,
@@ -198,6 +208,16 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
         }
 
         sendTextMessage(socket, chat, link);
+        // Best-effort clipboard copy so the user can paste the link
+        // elsewhere without scrolling for the chat message. Fails
+        // silently under non-secure origin / iframe sandboxes; the
+        // snackbar text covers both cases since the link is already
+        // posted to chat regardless.
+        try {
+            await navigator.clipboard.writeText(link);
+        } catch {
+            /* clipboard not available — link is still in chat */
+        }
         setLastQuickMeetEventId(event.id);
         setQuickMeetSnackbar({ kind: "success", text: t.chat.headers.quickMeetSuccess });
     };
