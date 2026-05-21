@@ -5,9 +5,11 @@ import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineR
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
+import HubRoundedIcon from "@mui/icons-material/HubRounded";
 import KeyboardRoundedIcon from "@mui/icons-material/KeyboardRounded";
 import LanguageRoundedIcon from "@mui/icons-material/LanguageRounded";
 import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
+import NotificationsRoundedIcon from "@mui/icons-material/NotificationsRounded";
 import PaletteRoundedIcon from "@mui/icons-material/PaletteRounded";
 import PlaylistAddCheckRoundedIcon from "@mui/icons-material/PlaylistAddCheckRounded";
 import PrivacyTipRoundedIcon from "@mui/icons-material/PrivacyTipRounded";
@@ -98,6 +100,33 @@ const Kbd = ({ children }: { children: React.ReactNode }) => (
         {children}
     </Box>
 );
+
+// Pill-style active state replacing Joy's default left-bar indicator
+// on the modal's vertical sidebar. Reused on every Tab in the rail.
+const SIDEBAR_TAB_SX = {
+    justifyContent: "flex-start",
+    gap: 1.25,
+    borderRadius: "md",
+    px: 1.5,
+    py: 0.85,
+    minHeight: 36,
+    fontSize: "0.875rem",
+    fontWeight: 500,
+    color: "text.secondary",
+    transition: "background-color 0.12s ease, color 0.12s ease",
+    "&::after": { display: "none" },
+    "&:hover:not([aria-selected='true'])": {
+        bgcolor: "background.level1",
+        color: "text.primary",
+    },
+    "&[aria-selected='true']": {
+        bgcolor: "primary.softBg",
+        color: "primary.softColor",
+        fontWeight: 600,
+    },
+} as const;
+
+const SIDEBAR_TAB_ICON_SX = { fontSize: 18, flexShrink: 0 } as const;
 
 const AppearanceSection = () => {
     const { preference, setPreference } = useThemePreference();
@@ -921,33 +950,44 @@ export const SettingsModal = ({ open, onClose }: Props) => {
                 >
                     <TabList
                         sx={{
-                            // Fixed sidebar width keeps the panel area
-                            // predictable across translated labels.
-                            // The panel itself can scroll independently
-                            // (ModalDialog handles overflow).
-                            minWidth: 160,
+                            minWidth: 184,
                             flexShrink: 0,
-                            // Drop the default underline indicator —
-                            // vertical tabs read better with a left
-                            // border on the active item, which Joy's
-                            // theme handles for `orientation="vertical"`.
-                            // Hide any horizontal-scroll affordance.
+                            gap: 0.25,
                             overflow: "visible",
                             scrollbarWidth: "none",
                         }}
                     >
-                        <Tab value="general">{t.settings.tabs.general}</Tab>
-                        <Tab value="chat">{t.settings.tabs.chat}</Tab>
-                        <Tab value="tasks">{t.settings.tabs.tasks}</Tab>
-                        <Tab value="spotlight">{t.settings.tabs.spotlight}</Tab>
-                        <Tab value="notifications">{t.settings.tabs.notifications}</Tab>
-                        <Tab value="shortcuts">{t.settings.tabs.shortcuts}</Tab>
-                        {/* Integrations: same Connect/Disconnect surface
-                            the page route exposes. Gated on the same
-                            feature flag so disabled deploys don't show
-                            an empty tab. */}
+                        <Tab value="general" sx={SIDEBAR_TAB_SX}>
+                            <SettingsRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
+                            {t.settings.tabs.general}
+                        </Tab>
+                        <Tab value="chat" sx={SIDEBAR_TAB_SX}>
+                            <ChatBubbleOutlineRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
+                            {t.settings.tabs.chat}
+                        </Tab>
+                        <Tab value="tasks" sx={SIDEBAR_TAB_SX}>
+                            <PlaylistAddCheckRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
+                            {t.settings.tabs.tasks}
+                        </Tab>
+                        <Tab value="spotlight" sx={SIDEBAR_TAB_SX}>
+                            <AutoAwesomeRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
+                            {t.settings.tabs.spotlight}
+                        </Tab>
+                        <Tab value="notifications" sx={SIDEBAR_TAB_SX}>
+                            <NotificationsRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
+                            {t.settings.tabs.notifications}
+                        </Tab>
+                        <Tab value="shortcuts" sx={SIDEBAR_TAB_SX}>
+                            <KeyboardRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
+                            {t.settings.tabs.shortcuts}
+                        </Tab>
+                        {/* Feature-flagged so disabled deploys don't
+                            show an empty tab. */}
                         {OAUTH_INTEGRATIONS_ENABLED && (
-                            <Tab value="integrations">{t.settings.tabs.integrations}</Tab>
+                            <Tab value="integrations" sx={SIDEBAR_TAB_SX}>
+                                <HubRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
+                                {t.settings.tabs.integrations}
+                            </Tab>
                         )}
                     </TabList>
 
