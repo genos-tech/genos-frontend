@@ -1,9 +1,9 @@
+import { useEffect, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import LinkIcon from "@mui/icons-material/Link";
 import { Box, Button, IconButton, Input, Snackbar, Stack, Tooltip, Typography } from "@mui/joy";
-import { useEffect, useState } from "react";
 
 import { GitHubIcon } from "../../../../../../assets/GithubIcon";
 import { useTranslation } from "../../../../../../i18n";
@@ -49,22 +49,25 @@ export const DynamicURLManager = (props: DynamicURLManagerProps) => {
         }
     };
 
-    // Initialize links from taskContent
+    // Initialize links from taskContent. We use `link.id` as-is rather
+    // than re-prefixing it — earlier this re-mapped to `link-${link.id}`
+    // which (a) wrote prefixed ids back into `taskContent.links` and
+    // (b) re-prefixed them on every render, so the local-state id and
+    // the persisted id drifted apart over time. With ids stable, the
+    // delete handler's filter matches reliably and the save round-trip
+    // preserves the same id end-to-end.
     useEffect(() => {
         const initialLinks: LinkItem[] = [];
-
-        // Load existing GitHub link
         if (taskContent?.links) {
             initialLinks.push(
                 ...taskContent.links.map((link) => ({
-                    id: `link-${link.id}`,
+                    id: link.id,
                     url: link.url,
                     title: link.title,
                     isGitHub: isGitHubURL(link.url),
                 }))
             );
         }
-
         setLinks(initialLinks);
     }, [taskContent?.links]);
 

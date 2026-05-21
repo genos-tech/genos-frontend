@@ -186,13 +186,20 @@ const SinglePrBadge = ({
                 sx={{
                     display: "inline-flex",
                     alignItems: "center",
-                    gap: 0.25,
-                    px: 0.25,
+                    gap: 0.5,
+                    px: 0.75,
+                    py: 0.25,
                     cursor: "pointer",
                     textDecoration: "none",
                     color: "inherit",
-                    borderRadius: 1,
-                    "&:hover": { opacity: 0.7 },
+                    borderRadius: "6px",
+                    transition: "background-color 0.15s ease",
+                    // Match the linked-branch chip in TaskMainBlock and
+                    // chat-message hover backgrounds so PR/branch chips
+                    // read as the same family of interactive element.
+                    "&:hover": {
+                        backgroundColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+                    },
                 }}
             >
                 <PrStateIcon state={prState} />

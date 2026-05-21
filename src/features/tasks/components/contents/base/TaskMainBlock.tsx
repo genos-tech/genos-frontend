@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import { Box, Chip, Grid, IconButton, List, ListItem, Stack, Tooltip, Typography } from "@mui/joy";
@@ -17,7 +17,11 @@ import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagemen
 import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { TagListProps, TaskProps } from "../../../../../types/tasks";
-import { LinkedBranch, loadLinkedBranches } from "../../../../integrations/services/github";
+import {
+    LinkedBranch,
+    loadLinkedBranches,
+    loadLinkedPulls,
+} from "../../../../integrations/services/github";
 import { extractPrUrlsFromBlocks } from "../../../../integrations/utils/extractPrUrls";
 import { parsePrUrl } from "../../../../integrations/utils/parsePrUrl";
 import { loadSpecificTask } from "../../../services/loadSpecificTask";
@@ -170,6 +174,57 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
         return () => {
             cancelled = true;
         };
+    }, [taskContent.id, taskContent.displayId, accessToken]);
+
+    // Mirror auto-linked PR URLs (PRs whose head branch matches this
+    // task's display ID) into `taskContent.links`. Parallels the body-
+    // mirror effect below, but the source is the `pulls-for-task`
+    // endpoint instead of the BlockNote document. Add-only: if the user
+    // deletes the auto-appended link from the Links section, it stays
+    // deleted until the task is re-opened (matching the existing
+    // body-mirror's "add-only" semantics — silently re-adding deletes
+    // would be surprising).
+    //
+    // We use a ref to track URLs we've already appended in this mount
+    // so back-to-back fetches (e.g. due to render churn) don't re-add
+    // the same URL after a user deletion within the same task open.
+    const appendedPrUrlsRef = useRef<Set<string>>(new Set());
+    useEffect(() => {
+        // Reset the dedup set when the previewed task changes — a fresh
+        // task open should re-evaluate its own auto-link set.
+        appendedPrUrlsRef.current = new Set();
+    }, [taskContent.id]);
+    useEffect(() => {
+        let cancelled = false;
+        const displayId = taskContent.displayId;
+        if (!taskContent.id || !displayId || displayId.startsWith("#")) return;
+        (async () => {
+            const pulls = await loadLinkedPulls(accessToken, taskContent.id!);
+            if (cancelled || pulls.length === 0) return;
+            const existingUrls = new Set((taskContent.links ?? []).map((l) => l.url));
+            const newPulls = pulls.filter(
+                (p) => !existingUrls.has(p.html_url) && !appendedPrUrlsRef.current.has(p.html_url)
+            );
+            if (newPulls.length === 0) return;
+            const newLinks = newPulls.map((p) => ({
+                id: `link-pr-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                url: p.html_url,
+                title: `${p.owner}/${p.repo}#${p.number}`,
+                isGitHub: true,
+            }));
+            for (const p of newPulls) appendedPrUrlsRef.current.add(p.html_url);
+            setTaskContent({
+                ...taskContent,
+                links: [...(taskContent.links ?? []), ...newLinks],
+            });
+            setTaskUpdated?.(true);
+        })();
+        return () => {
+            cancelled = true;
+        };
+        // Watch taskContent.id / displayId / accessToken — re-running
+        // when `links` changes would loop (we mutate it inside).
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [taskContent.id, taskContent.displayId, accessToken]);
 
     // Mirror PR URLs from the BlockNote task body into the Links list so
