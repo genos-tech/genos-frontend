@@ -33,6 +33,10 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { extractYYYYMMDD } from "../../../../utils/dateUtils";
+import {
+    bumpUserProfileImageVersion,
+    useUserProfileImageVersion,
+} from "../../../../utils/userProfileImageVersion";
 import { loadDMIdByUserId } from "../../../chat/services/loadDMIdByUserId";
 import { moveToDMChat } from "../../../chat/services/moveToChat";
 import { UserProfileBaseCountry } from "./sub/UserProfileBaseCountry";
@@ -98,6 +102,13 @@ export const UserProfile = (props: UserProfileProps) => {
             setProfileUser(user);
         }
     }, [user, myself]);
+
+    // Cache-buster shared across every user-avatar consumer. Bumped at
+    // the end of `handleSelectedFiles` so this modal *and* every
+    // mounted `UserAvatar` refetch the new image — needed because
+    // `UserProfileImageView` deletes the previous file so the new
+    // upload reuses the canonical filename.
+    const imageVersion = useUserProfileImageVersion(profileUser?.userId);
 
     // Profile image file upload manager
     const inputRef = useRef<HTMLInputElement | null>(null);
@@ -181,6 +192,13 @@ export const UserProfile = (props: UserProfileProps) => {
             } catch (err) {
                 console.error("Failed to persist avatar update to IndexedDB:", err);
             }
+
+            // Force every mounted user-avatar consumer to refetch.
+            // `UserProfileImageView` deletes the previous file so
+            // `newPath` is byte-identical to the prior value — without
+            // this bump the browser keeps serving the cached image
+            // even though `myself.avatarImgPath` "changed".
+            bumpUserProfileImageVersion(myself.userId);
         }
     };
 
@@ -306,7 +324,11 @@ export const UserProfile = (props: UserProfileProps) => {
                                         }}
                                     >
                                         <Avatar
-                                            src={`${media_url}/${profileUser?.avatarImgPath}`}
+                                            src={
+                                                profileUser?.avatarImgPath
+                                                    ? `${media_url}/${profileUser.avatarImgPath}${imageVersion > 0 ? `?v=${imageVersion}` : ""}`
+                                                    : undefined
+                                            }
                                             sx={{
                                                 width: 150,
                                                 height: 150,

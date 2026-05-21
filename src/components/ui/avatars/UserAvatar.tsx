@@ -2,6 +2,7 @@ import { memo, useCallback, useMemo, useState } from "react";
 import { Avatar, Box, Stack, Typography } from "@mui/joy";
 
 import { UserProfile } from "../../../features/admin/components/modals/ModalUserProfile";
+import { useUserProfileImageVersion } from "../../../utils/userProfileImageVersion";
 import { PulseDot } from "../misc/PulseDot";
 import { useAvatarContext, useUserProfile } from "./AvatarContext";
 
@@ -68,10 +69,18 @@ const UserAvatarInner = (props: UserAvatarProps) => {
         return profile.isOnline === true && profile.isOfflineForced !== "true";
     }, [isYou, ctx.myself.isOfflineForced, profile]);
 
-    const src = useMemo(
-        () => buildSrc(isYou ? ctx.myself.avatarImgPath : profile?.avatarImgPath),
-        [isYou, ctx.myself.avatarImgPath, profile?.avatarImgPath]
-    );
+    // `UserProfileImageView` deletes the previous file before saving
+    // so the upload reuses the canonical filename. Without a version
+    // suffix the browser would keep serving the cached image even
+    // after `avatarImgPath` "updates" to the same string — see
+    // `utils/userProfileImageVersion.ts`.
+    const resolvedUserId = isYou ? ctx.myself.userId : userId;
+    const imageVersion = useUserProfileImageVersion(resolvedUserId);
+    const src = useMemo(() => {
+        const base = buildSrc(isYou ? ctx.myself.avatarImgPath : profile?.avatarImgPath);
+        if (!base || imageVersion <= 0) return base;
+        return `${base}?v=${imageVersion}`;
+    }, [isYou, ctx.myself.avatarImgPath, profile?.avatarImgPath, imageVersion]);
 
     const initial = useMemo(
         () =>
