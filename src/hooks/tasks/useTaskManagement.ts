@@ -10,11 +10,18 @@ import {
 
 import { popSpecificProjectTasks } from "../../features/chat/services/popSpecificProjectTasks";
 import { loadTaskMeta } from "../../features/notes/task-notes/services/loadTaskMeta";
+import {
+    createTaskDependency,
+    CreateTaskDependencyResult,
+} from "../../features/tasks/services/createTaskDependency";
+import { deleteTaskDependency } from "../../features/tasks/services/deleteTaskDependency";
 import { loadSpecificTask } from "../../features/tasks/services/loadSpecificTask";
+import { loadTaskDependencies } from "../../features/tasks/services/loadTaskDependencies";
 import { buildTaskTree } from "../../features/tasks/utils/buildTaskTree";
 import { UserProps } from "../../types/admin";
 import {
     TaskCommentProps,
+    TaskDependencies,
     TaskMetaProps,
     TaskMetaTreeNode,
     TaskProps,
@@ -175,6 +182,17 @@ export interface TaskManagementState {
     // Task visibility
     isTaskVisibleInNote: boolean;
     setIsTaskVisibleInNote: (visible: boolean) => void;
+
+    // Task dependencies (blocking / blocked-by). Keyed by task id so
+    // multiple previews can coexist without thrashing the same slot.
+    taskDependencies: Record<number, TaskDependencies>;
+    loadTaskDependenciesFor: (taskId: number) => Promise<void>;
+    addTaskDependency: (args: {
+        blockerTaskId: number;
+        blockedTaskId: number;
+        focusedTaskId: number;
+    }) => Promise<CreateTaskDependencyResult>;
+    removeTaskDependency: (dependencyId: number, focusedTaskId: number) => Promise<boolean>;
 
     // Functions
     loadTask: (projectId: number, taskId: number) => Promise<void>;
@@ -497,6 +515,65 @@ export const useTaskManagement = (
         }
     };
 
+    // Task dependencies state. Refetch is the only way to mutate this
+    // — add/remove call through and re-pull the affected task's entry.
+    // We deliberately refresh BOTH endpoints when we have them so the
+    // other task's preview (if it's also open in the table or another
+    // pane) sees the new edge without a manual reload.
+    const [taskDependencies, setTaskDependencies] = useState<Record<number, TaskDependencies>>({});
+
+    const loadTaskDependenciesFor = useCallback(
+        async (taskId: number) => {
+            const result = await loadTaskDependencies(taskId, accessToken);
+            if (result) {
+                setTaskDependencies((prev) => ({ ...prev, [taskId]: result }));
+            }
+        },
+        [accessToken]
+    );
+
+    const addTaskDependency = useCallback(
+        async (args: {
+            blockerTaskId: number;
+            blockedTaskId: number;
+            focusedTaskId: number;
+        }): Promise<CreateTaskDependencyResult> => {
+            const result = await createTaskDependency(
+                args.blockerTaskId,
+                args.blockedTaskId,
+                accessToken
+            );
+            if (result.ok) {
+                // Refresh both endpoints if cached, plus the explicit
+                // focused id (covers the rare case where the focused id
+                // is neither — shouldn't happen but cheap to be safe).
+                await loadTaskDependenciesFor(args.focusedTaskId);
+                if (args.blockerTaskId !== args.focusedTaskId) {
+                    await loadTaskDependenciesFor(args.blockerTaskId);
+                }
+                if (
+                    args.blockedTaskId !== args.focusedTaskId &&
+                    args.blockedTaskId !== args.blockerTaskId
+                ) {
+                    await loadTaskDependenciesFor(args.blockedTaskId);
+                }
+            }
+            return result;
+        },
+        [accessToken, loadTaskDependenciesFor]
+    );
+
+    const removeTaskDependency = useCallback(
+        async (dependencyId: number, focusedTaskId: number): Promise<boolean> => {
+            const result = await deleteTaskDependency(dependencyId, accessToken);
+            if (result.ok) {
+                await loadTaskDependenciesFor(focusedTaskId);
+            }
+            return result.ok;
+        },
+        [accessToken, loadTaskDependenciesFor]
+    );
+
     const fetchProjectTasks = async (projectId: number) => {
         setTsLastLoadProjectTasks(Date.now());
         setIsLoadingTasks(true);
@@ -681,6 +758,12 @@ export const useTaskManagement = (
         // Task visibility
         isTaskVisibleInNote,
         setIsTaskVisibleInNote,
+
+        // Task dependencies
+        taskDependencies,
+        loadTaskDependenciesFor,
+        addTaskDependency,
+        removeTaskDependency,
 
         // Functions
         loadTask,

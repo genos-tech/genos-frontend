@@ -422,6 +422,15 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         };
     }, [taskEditState.currentTaskId, useNM.taskNoteMeta]);
 
+    // Pull this task's dependency edges (blocking / blocked-by) on
+    // open. TaskMainBlock reads from `useTM.taskDependencies` so no
+    // prop plumbing is needed — just trigger the fetch.
+    useEffect(() => {
+        const id = Number(useTM.currentPreviewTask?.id);
+        if (!Number.isFinite(id) || id <= 0) return;
+        void useTM.loadTaskDependenciesFor(id);
+    }, [taskEditState.currentTaskId]);
+
     // Task comments are hoisted into `useTM` (shared with the chat
     // thread's new "Comments" tab so both views read the same list).
     // We keep the load effect here because TaskPreview is the path

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import { Box, Chip, Grid, IconButton, List, ListItem, Stack, Tooltip, Typography } from "@mui/joy";
@@ -38,6 +39,7 @@ import { CopyableTaskIdChip } from "../../CopyableTaskId";
 import { ModalManageTags } from "../../modals/ModalManageTags";
 import { DynamicURLManager } from "./sub/DynamicURLManager";
 import { TaskDueDateInput } from "./sub/TaskDueDateInput";
+import { isCurrentlyBlocked, TaskDependenciesBlock } from "./TaskDependenciesBlock";
 
 // Label component for consistent styling
 const FieldLabel = ({ children, isDark }: { children: React.ReactNode; isDark: boolean }) => (
@@ -393,6 +395,9 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [taskContent.body]);
 
+    const taskIdNum = taskContent.id ?? null;
+    const blocked = isCurrentlyBlocked(taskIdNum, useTM);
+
     return (
         <Box
             sx={{
@@ -401,6 +406,29 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                 gap: 0.5,
             }}
         >
+            {/* Blocked badge — only when at least one blocker is still
+                open (i.e. not Closed). Sits above the metadata list so
+                it's visible the moment the task opens. */}
+            {blocked && (
+                <Box sx={{ mb: 0.5 }}>
+                    <Tooltip
+                        title="This task has open blockers."
+                        placement="top"
+                        arrow
+                        variant="outlined"
+                    >
+                        <Chip
+                            size="sm"
+                            color="warning"
+                            variant="soft"
+                            startDecorator={<BlockRoundedIcon sx={{ fontSize: 14 }} />}
+                            sx={{ fontWeight: 600 }}
+                        >
+                            Blocked
+                        </Chip>
+                    </Tooltip>
+                </Box>
+            )}
             <List
                 sx={{
                     gap: 0.5,
@@ -874,6 +902,17 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         </Box>
                     </ListItem>
                 )}
+
+                {/* Dependencies (blocking / blocked-by). Hidden in
+                    create mode by the block itself — empty-task rows
+                    pre-persistence shouldn't accept dependencies. */}
+                <TaskDependenciesBlock
+                    taskContent={taskContent}
+                    myself={myself}
+                    usePM={usePM}
+                    useTM={useTM}
+                    isPreviewMode={isPreviewMode}
+                />
 
                 {/* Parent Task (only if exists) */}
                 {parentTask !== undefined && (
