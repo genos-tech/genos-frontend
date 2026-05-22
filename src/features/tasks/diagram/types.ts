@@ -10,6 +10,8 @@ export type EditableFields = {
     title?: string;
     startDate?: string | null;
     dueDate?: string | null;
+    status?: string;
+    statusCode?: number | null;
 };
 
 // Data attached to a `task` or `milestone` React Flow node. The card

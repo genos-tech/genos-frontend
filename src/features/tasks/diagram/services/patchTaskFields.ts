@@ -15,6 +15,8 @@ export type TaskPatchPayload = {
     title?: string;
     start_date?: string | null;
     due_date?: string | null;
+    status?: string;
+    status_code?: number | null;
     parent_task_id?: number | null;
     // milestone is explicitly nullable on the backend; surface it so
     // re-parenting across a milestone boundary works.

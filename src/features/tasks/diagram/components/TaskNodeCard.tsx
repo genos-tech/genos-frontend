@@ -9,10 +9,14 @@ import {
     Box,
     Button,
     Chip,
+    Dropdown,
     FormControl,
     FormLabel,
     IconButton,
     Input,
+    Menu,
+    MenuButton,
+    MenuItem,
     Modal,
     ModalDialog,
     Stack,
@@ -23,6 +27,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 import { Handle, NodeProps, Position } from "@xyflow/react";
 
+import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { purplePalette } from "../../../../theme/purplePalette";
 import { StatusChip } from "../../components/autocompletes/ACTaskSelector";
 import { CopyableTaskIdChip } from "../../components/CopyableTaskId";
@@ -54,15 +59,8 @@ export const TaskNodeCard = memo((props: NodeProps) => {
     const isDark = mode === "dark";
     const P = isDark ? purplePalette.dark : purplePalette.light;
 
-    const {
-        task,
-        isRoot,
-        isExternal,
-        openBlockerCount,
-        onChange,
-        onAddSubtask,
-        onOpenPreview,
-    } = props.data as unknown as TaskNodeData;
+    const { task, isRoot, isExternal, openBlockerCount, onChange, onAddSubtask, onOpenPreview } =
+        props.data as unknown as TaskNodeData;
 
     const [editing, setEditing] = useState(false);
     const [draftTitle, setDraftTitle] = useState(task.title ?? "");
@@ -248,7 +246,62 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                     variant="outlined"
                     sx={{ fontWeight: 600, fontFamily: "monospace", borderRadius: "5px" }}
                 />
-                <StatusChip meta={meta} isDark={isDark} />
+                {/* Status picker — ghosts stay read-only (their status
+                    lives in another tree). For everyone else the chip
+                    is a dropdown trigger so users can move a task
+                    Open → WIP → Closed without opening the preview. */}
+                {isExternal ? (
+                    <StatusChip meta={meta} isDark={isDark} />
+                ) : (
+                    <Dropdown>
+                        <MenuButton
+                            slots={{ root: Box }}
+                            slotProps={{
+                                root: {
+                                    sx: {
+                                        cursor: "pointer",
+                                        borderRadius: "5px",
+                                        transition: "filter 0.12s ease",
+                                        "&:hover": { filter: "brightness(1.08)" },
+                                    },
+                                },
+                            }}
+                        >
+                            <StatusChip meta={meta} isDark={isDark} />
+                        </MenuButton>
+                        <Menu size="sm" placement="bottom-start" sx={{ minWidth: 140 }}>
+                            {statuses.map((s) => {
+                                const isActive = s.status === task.status;
+                                return (
+                                    <MenuItem
+                                        key={s.status}
+                                        selected={isActive}
+                                        onClick={() => {
+                                            if (isActive || s.status == null) return;
+                                            void onChange({
+                                                status: s.status,
+                                                statusCode: s.code,
+                                            });
+                                        }}
+                                        sx={{ fontWeight: isActive ? 700 : 500 }}
+                                    >
+                                        <Box
+                                            sx={{
+                                                width: 10,
+                                                height: 10,
+                                                borderRadius: "50%",
+                                                background: s.color ?? "#94a3b8",
+                                                flexShrink: 0,
+                                                mr: 1,
+                                            }}
+                                        />
+                                        {s.status}
+                                    </MenuItem>
+                                );
+                            })}
+                        </Menu>
+                    </Dropdown>
+                )}
                 {openBlockerCount > 0 && !isExternal && (
                     <Tooltip
                         title={`${openBlockerCount} open blocker${openBlockerCount > 1 ? "s" : ""}`}
@@ -511,20 +564,27 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                         {projectName}
                     </Typography>
                 )}
-                {!isExternal && task.assigneeName && (
-                    <Typography
-                        level="body-xs"
-                        sx={{
-                            color: P.textMuted,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            flex: 1,
-                            minWidth: 0,
-                        }}
+                {!isExternal && task.assigneeId && (
+                    // Avatar instead of name text — packs more identity
+                    // into the same horizontal space and matches the
+                    // affordance used everywhere else in the app
+                    // (comments, table cells, modals). Tooltip with the
+                    // name covers the "who is this?" case.
+                    <Tooltip
+                        title={task.assigneeName ?? ""}
+                        placement="top"
+                        variant="outlined"
+                        arrow
+                        enterDelay={400}
                     >
-                        {task.assigneeName}
-                    </Typography>
+                        <Box sx={{ display: "inline-flex" }}>
+                            <UserAvatar
+                                userId={task.assigneeId}
+                                size={22}
+                                showNameAndEmail={false}
+                            />
+                        </Box>
+                    </Tooltip>
                 )}
                 <Box sx={{ flex: 1 }} />
                 {!isExternal && (
@@ -578,13 +638,8 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                             borderBottom: `1px solid ${P.border}`,
                         }}
                     >
-                        <CalendarMonthRoundedIcon
-                            sx={{ fontSize: 18, color: P.accentSoft }}
-                        />
-                        <Typography
-                            level="title-sm"
-                            sx={{ fontWeight: 700, color: P.text }}
-                        >
+                        <CalendarMonthRoundedIcon sx={{ fontSize: 18, color: P.accentSoft }} />
+                        <Typography level="title-sm" sx={{ fontWeight: 700, color: P.text }}>
                             Edit schedule
                         </Typography>
                     </Stack>

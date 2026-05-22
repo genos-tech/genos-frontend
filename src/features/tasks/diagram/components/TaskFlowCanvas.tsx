@@ -31,6 +31,7 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { purplePalette } from "../../../../theme/purplePalette";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
+import { addTask } from "../../services/addTask";
 import { createTaskDependency } from "../../services/createTaskDependency";
 import { deleteTaskDependency } from "../../services/deleteTaskDependency";
 import { Sprint } from "../../sprint-milestone/types";
@@ -482,6 +483,8 @@ const CanvasInner = ({
                     ...(patch.title !== undefined ? { title: patch.title } : {}),
                     ...(patch.startDate !== undefined ? { start_date: patch.startDate } : {}),
                     ...(patch.dueDate !== undefined ? { due_date: patch.dueDate } : {}),
+                    ...(patch.status !== undefined ? { status: patch.status } : {}),
+                    ...(patch.statusCode !== undefined ? { status_code: patch.statusCode } : {}),
                 },
                 accessToken
             );
@@ -489,26 +492,63 @@ const CanvasInner = ({
                 setError(res.error ?? "Update failed.");
                 return;
             }
-            // Reflect immediately in the visible card without a full reload.
+            // Build the merged row once and broadcast it to every cache
+            // layer the rest of the app reads from. Previously the
+            // diagram only updated its own node state, so closing the
+            // modal exposed stale data in the task table + preview
+            // until a hard refresh re-fetched from backend.
+            const buildMergedTask = (prev: TaskTableProps): TaskTableProps => ({
+                ...prev,
+                ...(patch.title !== undefined ? { title: patch.title } : {}),
+                ...(patch.startDate !== undefined ? { startDate: patch.startDate } : {}),
+                ...(patch.dueDate !== undefined ? { dueDate: patch.dueDate } : {}),
+                ...(patch.status !== undefined ? { status: patch.status } : {}),
+            });
+
+            // 1. Reflect immediately in the visible card.
             setNodes((prev) =>
                 prev.map((n) => {
                     if (n.id !== String(taskId)) return n;
                     const oldData = n.data as unknown as TaskNodeData;
-                    const merged: TaskTableProps = {
-                        ...oldData.task,
-                        ...(patch.title !== undefined ? { title: patch.title } : {}),
-                        ...(patch.startDate !== undefined ? { startDate: patch.startDate } : {}),
-                        ...(patch.dueDate !== undefined ? { dueDate: patch.dueDate } : {}),
-                    };
+                    const merged = buildMergedTask(oldData.task);
                     return {
                         ...n,
                         data: { ...oldData, task: merged } as unknown as Record<string, unknown>,
                     };
                 })
             );
-            // Background refresh — keeps the parent table consistent
-            // when the modal closes.
-            void useTM.loadUpdatedTask(projectId);
+
+            // 2. Mirror into useTM.allTasks (drives the project table /
+            //    sidebar) and the IDB cache (survives page refresh).
+            //    Without these writes, closing the modal would surface
+            //    stale title / dates / status in every other surface
+            //    until a full reload happened.
+            let mergedForCache: TaskTableProps | null = null;
+            useTM.setAllTasks((prev) =>
+                prev.map((t) => {
+                    if (t.id !== String(taskId)) return t;
+                    const merged = buildMergedTask(t);
+                    mergedForCache = merged;
+                    return merged;
+                })
+            );
+            // Fallback: if the row wasn't in allTasks (e.g. user opened
+            // the diagram before the project task list loaded), reach
+            // into the graph's snapshot to mint a row for IDB.
+            if (mergedForCache == null) {
+                const fromGraph = graphRef.current?.tasks.find((t) => Number(t.id) === taskId);
+                if (fromGraph) mergedForCache = buildMergedTask(fromGraph);
+            }
+            if (mergedForCache) {
+                void addTask(mergedForCache);
+            }
+
+            // 3. If the edited task IS the currently-previewed one,
+            //    refresh the preview state so its body / fields show
+            //    the fresh server values when the modal closes.
+            if (useTM.currentPreviewTaskId === taskId) {
+                void useTM.loadUpdatedTask(projectId);
+            }
         },
         [accessToken, projectId, useTM]
     );

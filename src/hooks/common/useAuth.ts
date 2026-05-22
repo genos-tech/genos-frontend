@@ -35,22 +35,7 @@ export const useMyself = (accessToken: string | null) => {
     });
 
     useEffect(() => {
-        const fetchUserData = (trigger: string, evt?: StorageEvent) => {
-            // DIAG: log what triggered the fetch so we can find whoever
-            // is firing storage events at 7-9s intervals in PROD.
-            console.log("[AUTH-DIAG] fetchUserData", {
-                trigger,
-                storageEventKey: evt?.key ?? null,
-                storageEventNewValue: evt?.newValue ?? null,
-                storageEventOldValue: evt?.oldValue ?? null,
-                storageEventUrl: evt?.url ?? null,
-                storageEventStorageArea:
-                    evt?.storageArea === window.localStorage
-                        ? "localStorage"
-                        : evt?.storageArea === window.sessionStorage
-                          ? "sessionStorage"
-                          : "other",
-            });
+        const fetchUserData = () => {
             const newMyself: UserProps = {
                 teamId: localStorage.getItem("teamId") || "",
                 teamName: localStorage.getItem("teamName") || "",
@@ -70,21 +55,20 @@ export const useMyself = (accessToken: string | null) => {
         };
 
         // Add a small delay to ensure localStorage is updated
-        setTimeout(() => fetchUserData("setTimeout"), 50);
+        setTimeout(fetchUserData, 50);
 
-        // Listen for storage updates in case another tab updates it.
-        // Filter by key: PostHog (and likely other third-party libs)
-        // re-writes its own localStorage entries from a separate document
-        // context, which fires `storage` events here. Re-pulling `myself`
-        // on those events created a new `tsLastSeen` every time and made
-        // every consumer that depends on `myself` (notably `useWebSocket`,
-        // which reconnects on dep change) churn. We only care about the
-        // keys actually read in `fetchUserData`; everything else is noise.
-        // `evt.key === null` covers `localStorage.clear()` — treat that as
-        // a real change since it wipes our keys too.
+        // Listen for cross-document storage updates. Filter by key —
+        // PostHog (and likely other third-party libs) re-writes its own
+        // localStorage entries from a separate document context, which
+        // fires `storage` events here. Re-pulling `myself` on those
+        // events generated a new `tsLastSeen` every time and forced
+        // every consumer of `myself` to churn — `useWebSocket`
+        // reconnected on every fire. Only react to keys this hook
+        // actually reads. `evt.key === null` covers `localStorage.clear()`,
+        // which wipes our keys too.
         const onStorage = (evt: StorageEvent) => {
             if (evt.key !== null && !WATCHED_STORAGE_KEYS.has(evt.key)) return;
-            fetchUserData("storage-event", evt);
+            fetchUserData();
         };
         window.addEventListener("storage", onStorage);
 
