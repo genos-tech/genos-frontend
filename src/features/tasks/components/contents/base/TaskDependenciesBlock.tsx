@@ -6,6 +6,7 @@ import { useColorScheme } from "@mui/joy/styles";
 
 import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
+import { fmt, useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { TaskDependencyRef, TaskProps } from "../../../../../types/tasks";
 import { StatusChip } from "../../autocompletes/ACTaskSelector";
@@ -47,6 +48,8 @@ export const TaskDependenciesBlock = ({
 }: Props) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const { t } = useTranslation();
+    const depsT = t.tasks.dependencies;
 
     const taskId = taskContent.id ?? null;
     const deps = (taskId != null && useTM.taskDependencies[taskId]) || {
@@ -89,13 +92,8 @@ export const TaskDependenciesBlock = ({
         <>
             {isEmpty ? (
                 <ListItem sx={{ display: "flex", alignItems: "center" }}>
-                    <FieldLabel isDark={isDark}>Dependencies</FieldLabel>
-                    <Tooltip
-                        placement="top"
-                        title="Link tasks that block this one, or that this one blocks."
-                        variant="outlined"
-                        arrow
-                    >
+                    <FieldLabel isDark={isDark}>{depsT.sectionLabel}</FieldLabel>
+                    <Tooltip placement="top" title={depsT.addCtaTooltip} variant="outlined" arrow>
                         <Box
                             sx={{
                                 cursor: "pointer",
@@ -118,7 +116,7 @@ export const TaskDependenciesBlock = ({
                         >
                             <AddRoundedIcon sx={{ fontSize: 18 }} />
                             <Typography level="body-sm" sx={{ fontWeight: 500 }}>
-                                Add dependencies
+                                {depsT.addCta}
                             </Typography>
                         </Box>
                     </Tooltip>
@@ -129,7 +127,9 @@ export const TaskDependenciesBlock = ({
                         deps={deps.blocking}
                         icon={<BlockRoundedIcon sx={{ fontSize: 14, color: "#ff8c00" }} />}
                         isDark={isDark}
-                        label="Blocking"
+                        label={depsT.blockingLabel}
+                        addTooltip={fmt(depsT.addRowTooltip, { label: depsT.blockingLabel })}
+                        noneLabel={depsT.noneLabel}
                         onAdd={() => openModal("blocking")}
                         onChipClick={handleChipClick}
                     />
@@ -137,7 +137,9 @@ export const TaskDependenciesBlock = ({
                         deps={deps.blockedBy}
                         icon={<BlockRoundedIcon sx={{ fontSize: 14, color: "#b91c1c" }} />}
                         isDark={isDark}
-                        label="Blocked by"
+                        label={depsT.blockedByLabel}
+                        addTooltip={fmt(depsT.addRowTooltip, { label: depsT.blockedByLabel })}
+                        noneLabel={depsT.noneLabel}
                         onAdd={() => openModal("blockedBy")}
                         onChipClick={handleChipClick}
                     />
@@ -162,6 +164,8 @@ const DependencyRow = ({
     icon,
     deps,
     isDark,
+    addTooltip,
+    noneLabel,
     onAdd,
     onChipClick,
 }: {
@@ -169,6 +173,8 @@ const DependencyRow = ({
     icon: React.ReactNode;
     deps: TaskDependencyRef[];
     isDark: boolean;
+    addTooltip: string;
+    noneLabel: string;
     onAdd: () => void;
     onChipClick: (ref_: TaskDependencyRef) => void;
 }) => (
@@ -203,10 +209,10 @@ const DependencyRow = ({
             ))}
             {deps.length === 0 && (
                 <Typography level="body-sm" sx={{ opacity: 0.55 }}>
-                    None
+                    {noneLabel}
                 </Typography>
             )}
-            <Tooltip placement="top" title={`Add ${label.toLowerCase()}`} variant="outlined" arrow>
+            <Tooltip placement="top" title={addTooltip} variant="outlined" arrow>
                 <IconButton
                     size="sm"
                     variant="plain"

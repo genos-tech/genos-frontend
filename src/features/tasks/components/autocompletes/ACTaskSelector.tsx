@@ -8,6 +8,7 @@ import { alpha } from "@mui/system";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { ProjectProps, TaskStatusProps, TaskTableProps } from "../../../../types/tasks";
 import { loadProjectTasksFromApi } from "../../services/loadProjectTasksFromApi";
@@ -91,6 +92,8 @@ export const ACTaskSelector = ({
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const { t } = useTranslation();
+    const pickerT = t.tasks.dependencies.picker;
 
     const projects = usePM.teamProjects;
     const initialProject =
@@ -162,7 +165,7 @@ export const ACTaskSelector = ({
                         isDark={isDark}
                         icon={<FolderRoundedIcon sx={CAPTION_ICON_SX} />}
                     >
-                        Project
+                        {pickerT.projectLabel}
                     </FieldCaption>
                     <Autocomplete
                         size={size}
@@ -171,7 +174,7 @@ export const ACTaskSelector = ({
                         getOptionLabel={(opt) => opt?.projectName ?? ""}
                         isOptionEqualToValue={(a, b) => a.projectId === b.projectId}
                         onChange={(_e, value) => setSelectedProject(value)}
-                        placeholder="Choose project…"
+                        placeholder={pickerT.projectPlaceholder}
                         startDecorator={<FolderRoundedIcon sx={{ fontSize: 18, opacity: 0.6 }} />}
                         slotProps={{
                             listbox: { className: scrollbarClass, sx: LISTBOX_SLOT_SX },
@@ -225,7 +228,7 @@ export const ACTaskSelector = ({
                         isDark={isDark}
                         icon={<AssignmentRoundedIcon sx={CAPTION_ICON_SX} />}
                     >
-                        Task
+                        {pickerT.taskLabel}
                     </FieldCaption>
                     <Autocomplete
                         size={size}
@@ -237,7 +240,9 @@ export const ACTaskSelector = ({
                         }
                         isOptionEqualToValue={(a, b) => a.id === b.id}
                         placeholder={
-                            selectedProject ? "Search by ID or title…" : "Pick a project first…"
+                            selectedProject
+                                ? pickerT.taskPlaceholder
+                                : pickerT.taskPlaceholderDisabled
                         }
                         disabled={!selectedProject}
                         startDecorator={<SearchRoundedIcon sx={{ fontSize: 18, opacity: 0.6 }} />}
@@ -295,9 +300,7 @@ export const ACTaskSelector = ({
                         }}
                         noOptionsText={
                             <Typography level="body-sm" sx={{ opacity: 0.6 }}>
-                                {selectedProject
-                                    ? "No matching tasks."
-                                    : "Select a project to see tasks."}
+                                {selectedProject ? pickerT.noTasks : pickerT.noProject}
                             </Typography>
                         }
                         sx={INPUT_SX}

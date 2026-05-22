@@ -5,7 +5,6 @@ import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import { Box, Chip, Grid, IconButton, List, ListItem, Stack, Tooltip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import { alpha } from "@mui/system";
 import { Socket } from "socket.io-client";
 
 import { AvatarWithStatus } from "../../../../../components/ui/avatars/avatarWithStatus";
@@ -32,6 +31,7 @@ import { SprintMilestonePicker } from "../../../sprint-milestone/components/Spri
 import { ACProjectTags } from "../../autocompletes/ACProjectTags";
 import { ACTaskEffortLevel } from "../../autocompletes/ACTaskEffortLevel";
 import { ACTaskPriority } from "../../autocompletes/ACTaskPriority";
+import { StatusChip } from "../../autocompletes/ACTaskSelector";
 import { ACTaskStatus } from "../../autocompletes/ACTaskStatus";
 import { ACTeamProjects } from "../../autocompletes/ACTeamProjects";
 import { ACTeamUsers } from "../../autocompletes/ACTeamUsers";
@@ -41,20 +41,62 @@ import { DynamicURLManager } from "./sub/DynamicURLManager";
 import { TaskDueDateInput } from "./sub/TaskDueDateInput";
 import { isCurrentlyBlocked, TaskDependenciesBlock } from "./TaskDependenciesBlock";
 
-// Label component for consistent styling
+// Single shared label for every row. Pinned width keeps the data
+// column flush across rows, the muted color reads as "metadata key"
+// without competing with the value next to it.
+const FIELD_LABEL_MIN_WIDTH = 96;
+
 const FieldLabel = ({ children, isDark }: { children: React.ReactNode; isDark: boolean }) => (
     <Typography
         level="body-sm"
         sx={{
-            minWidth: "85px",
+            minWidth: `${FIELD_LABEL_MIN_WIDTH}px`,
             fontWeight: 500,
-            fontSize: "0.8rem",
+            fontSize: "0.825rem",
+            letterSpacing: "0.01em",
             color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.5)",
         }}
     >
         {children}
     </Typography>
 );
+
+// Tiny, low-contrast icon button used for actions that should stay
+// out of the way (refresh, manage). Lifts opacity + background on
+// hover so users still see them respond.
+const subtleIconButtonSx = (isDark: boolean) =>
+    ({
+        "--IconButton-size": "24px",
+        minHeight: "24px",
+        minWidth: "24px",
+        p: 0,
+        borderRadius: "6px",
+        color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.5)",
+        opacity: 0.7,
+        transition: "opacity 0.15s ease, background 0.15s ease, color 0.15s ease",
+        "&:hover": {
+            opacity: 1,
+            background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
+            color: isDark ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.8)",
+        },
+    }) as const;
+
+// Card surface used for clickable relation rows (Parent task today,
+// open for future relations). Centralizes the hover/border treatment
+// that was previously inlined in three places with subtly different
+// values.
+const softCardSx = (isDark: boolean) =>
+    ({
+        background: isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.025)",
+        border: "1px solid",
+        borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)",
+        borderRadius: "10px",
+        transition: "background 0.15s ease, border-color 0.15s ease",
+        "&:hover": {
+            background: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)",
+            borderColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)",
+        },
+    }) as const;
 
 type TaskMainBlockProps = {
     useTEM: TeamManagementState;
@@ -410,9 +452,9 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                 open (i.e. not Closed). Sits above the metadata list so
                 it's visible the moment the task opens. */}
             {blocked && (
-                <Box sx={{ mb: 0.5 }}>
+                <Box sx={{ mb: 1 }}>
                     <Tooltip
-                        title="This task has open blockers."
+                        title={t.tasks.dependencies.blockedTooltip}
                         placement="top"
                         arrow
                         variant="outlined"
@@ -422,9 +464,15 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             color="warning"
                             variant="soft"
                             startDecorator={<BlockRoundedIcon sx={{ fontSize: 14 }} />}
-                            sx={{ fontWeight: 600 }}
+                            sx={{
+                                fontWeight: 700,
+                                letterSpacing: "0.04em",
+                                textTransform: "uppercase",
+                                fontSize: "0.7rem",
+                                borderRadius: "5px",
+                            }}
                         >
-                            Blocked
+                            {t.tasks.dependencies.blockedBadge}
                         </Chip>
                     </Tooltip>
                 </Box>
@@ -433,7 +481,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                 sx={{
                     gap: 0.5,
                     p: 0,
-                    "--ListItem-paddingY": "6px",
+                    "--ListItem-paddingY": "8px",
                     "--ListItem-paddingX": "0px",
                 }}
             >
@@ -525,17 +573,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     </Grid>
                     <Grid xs={6}>
                         <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
-                            <Typography
-                                level="body-sm"
-                                sx={{
-                                    minWidth: "40px",
-                                    fontWeight: 500,
-                                    fontSize: "0.8rem",
-                                    color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.5)",
-                                }}
-                            >
-                                Tags
-                            </Typography>
+                            <FieldLabel isDark={isDark}>{t.tasks.fields.tags}</FieldLabel>
                             <Tooltip
                                 size="sm"
                                 title={t.tasks.tooltips.createNewTag}
@@ -544,22 +582,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                 <IconButton
                                     size="sm"
                                     variant="plain"
-                                    sx={{
-                                        borderRadius: "8px",
-                                        minWidth: 28,
-                                        minHeight: 28,
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.5)"
-                                            : "rgba(0,0,0,0.45)",
-                                        "&:hover": {
-                                            background: isDark
-                                                ? "rgba(255,255,255,0.08)"
-                                                : "rgba(0,0,0,0.06)",
-                                            color: isDark
-                                                ? "rgba(255,255,255,0.8)"
-                                                : "rgba(0,0,0,0.7)",
-                                        },
-                                    }}
+                                    sx={subtleIconButtonSx(isDark)}
                                     onClick={() => useTM.setOpenCreateTag(true)}
                                 >
                                     <AddRoundedIcon sx={{ fontSize: 18 }} />
@@ -573,22 +596,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                 <IconButton
                                     size="sm"
                                     variant="plain"
-                                    sx={{
-                                        borderRadius: "8px",
-                                        minWidth: 28,
-                                        minHeight: 28,
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.5)"
-                                            : "rgba(0,0,0,0.45)",
-                                        "&:hover": {
-                                            background: isDark
-                                                ? "rgba(255,255,255,0.08)"
-                                                : "rgba(0,0,0,0.06)",
-                                            color: isDark
-                                                ? "rgba(255,255,255,0.8)"
-                                                : "rgba(0,0,0,0.7)",
-                                        },
-                                    }}
+                                    sx={subtleIconButtonSx(isDark)}
                                     onClick={() => setOpenManageTags(true)}
                                 >
                                     <SettingsRoundedIcon sx={{ fontSize: 16 }} />
@@ -626,7 +634,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                 {useSM && !isSubTask && (
                     <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
                         <FieldLabel isDark={isDark}>
-                            {isMilestone ? "Sprint" : "Milestone"}
+                            {isMilestone ? t.tasks.fields.sprint : t.tasks.fields.milestone}
                         </FieldLabel>
                         <Box sx={{ flex: 1, minWidth: 0 }}>
                             <SprintMilestonePicker
@@ -697,17 +705,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     </Grid>
                     <Grid xs={6}>
                         <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
-                            <Typography
-                                level="body-sm"
-                                sx={{
-                                    minWidth: "90px",
-                                    fontWeight: 500,
-                                    fontSize: "0.8rem",
-                                    color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.5)",
-                                }}
-                            >
-                                Effort Level
-                            </Typography>
+                            <FieldLabel isDark={isDark}>{t.tasks.fields.effortLevel}</FieldLabel>
                             <ACTaskEffortLevel
                                 setTaskContent={setTaskContent}
                                 setTaskUpdated={setTaskUpdated}
@@ -743,14 +741,13 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
 
                 {/* Links */}
                 <ListItem sx={{ display: "flex", alignItems: "flex-start" }}>
-                    <Box
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 0.25,
-                            minWidth: "85px",
-                        }}
+                    <Stack
+                        direction="row"
+                        alignItems="center"
+                        spacing={0.25}
+                        sx={{ minWidth: `${FIELD_LABEL_MIN_WIDTH}px` }}
                     >
+                        <FieldLabel isDark={isDark}>{t.tasks.fields.links}</FieldLabel>
                         {(taskContent.links?.length ?? 0) > 0 && (
                             <Tooltip
                                 title={t.tasks.tooltips.refreshPullRequests}
@@ -766,19 +763,11 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     onClick={() => {
                                         void fetchLinkedPullsRef.current({ bypassCache: true });
                                     }}
-                                    sx={{
-                                        "--IconButton-size": "20px",
-                                        minHeight: "20px",
-                                        minWidth: "20px",
-                                        p: 0,
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.5)"
-                                            : "rgba(0,0,0,0.5)",
-                                    }}
+                                    sx={subtleIconButtonSx(isDark)}
                                 >
                                     <RefreshRoundedIcon
                                         sx={{
-                                            fontSize: "0.95rem",
+                                            fontSize: "1rem",
                                             animation: pullsRefreshing
                                                 ? "spin 0.9s linear infinite"
                                                 : "none",
@@ -791,8 +780,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                 </IconButton>
                             </Tooltip>
                         )}
-                        <FieldLabel isDark={isDark}>{t.tasks.fields.links}</FieldLabel>
-                    </Box>
+                    </Stack>
                     <DynamicURLManager
                         setTaskContent={setTaskContent}
                         setTaskUpdated={setTaskUpdated}
@@ -805,13 +793,11 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     open the branch on GitHub. Hidden when none match. */}
                 {linkedBranches.length > 0 && (
                     <ListItem sx={{ display: "flex", alignItems: "flex-start" }}>
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 0.25,
-                                minWidth: "85px",
-                            }}
+                        <Stack
+                            direction="row"
+                            alignItems="center"
+                            spacing={0.25}
+                            sx={{ minWidth: `${FIELD_LABEL_MIN_WIDTH}px` }}
                         >
                             <FieldLabel isDark={isDark}>{t.tasks.fields.branches}</FieldLabel>
                             <Tooltip
@@ -828,19 +814,11 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     onClick={() => {
                                         void fetchLinkedBranches({ bypassCache: true });
                                     }}
-                                    sx={{
-                                        "--IconButton-size": "20px",
-                                        minHeight: "20px",
-                                        minWidth: "20px",
-                                        p: 0,
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.5)"
-                                            : "rgba(0,0,0,0.5)",
-                                    }}
+                                    sx={subtleIconButtonSx(isDark)}
                                 >
                                     <RefreshRoundedIcon
                                         sx={{
-                                            fontSize: "0.95rem",
+                                            fontSize: "1rem",
                                             animation: branchesRefreshing
                                                 ? "spin 0.9s linear infinite"
                                                 : "none",
@@ -852,7 +830,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     />
                                 </IconButton>
                             </Tooltip>
-                        </Box>
+                        </Stack>
                         <Box
                             sx={{
                                 display: "flex",
@@ -877,10 +855,9 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                         size="sm"
                                         variant="outlined"
                                         sx={{
-                                            borderRadius: "6px",
+                                            borderRadius: "5px",
                                             fontFamily: "monospace",
-                                            fontSize: "0.7rem",
-                                            px: 1,
+                                            fontWeight: 600,
                                             cursor: "pointer",
                                             background: isDark
                                                 ? "rgba(255,255,255,0.04)"
@@ -888,10 +865,15 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                             borderColor: isDark
                                                 ? "rgba(255,255,255,0.1)"
                                                 : "rgba(0,0,0,0.1)",
+                                            transition:
+                                                "background 0.15s ease, border-color 0.15s ease",
                                             "&:hover": {
                                                 background: isDark
                                                     ? "rgba(255,255,255,0.08)"
                                                     : "rgba(0,0,0,0.06)",
+                                                borderColor: isDark
+                                                    ? "rgba(255,255,255,0.16)"
+                                                    : "rgba(0,0,0,0.14)",
                                             },
                                         }}
                                     >
@@ -914,121 +896,75 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     isPreviewMode={isPreviewMode}
                 />
 
-                {/* Parent Task (only if exists) */}
+                {/* Parent Task (only if exists). Uses the same chip
+                    vocabulary as the dependency rows (monospace ID +
+                    StatusChip + title) so all cross-task relations
+                    look like a single family. */}
                 {parentTask !== undefined && (
                     <ListItem sx={{ display: "flex", alignItems: "center", mt: 1 }}>
+                        <FieldLabel isDark={isDark}>{t.tasks.fields.parentTask}</FieldLabel>
                         <Stack
                             alignItems="center"
                             direction="row"
                             spacing={1}
-                            sx={{ width: "100%" }}
+                            sx={{
+                                ...softCardSx(isDark),
+                                cursor: "pointer",
+                                px: 1.25,
+                                py: 0.85,
+                                flex: 1,
+                                minWidth: 0,
+                            }}
+                            onClick={() => {
+                                if (
+                                    parentTask.project &&
+                                    parentTask.project.projectId &&
+                                    parentTask.id
+                                ) {
+                                    usePM.setCurrentProject({
+                                        projectId: parentTask.project.projectId,
+                                        projectName: parentTask.project.projectName,
+                                        projectTags: parentTask.tags,
+                                        systemUserId: parentTask.project.systemUserId,
+                                    });
+                                    useTM.setCurrentPreviewTaskId(parentTask.id);
+                                }
+                            }}
                         >
-                            <FieldLabel isDark={isDark}>{t.tasks.fields.parentTask}</FieldLabel>
-                            <Box
+                            <AvatarWithStatus
+                                avatarUser={useTEM.teamMemberProfiles[assignee.userId]}
+                                useCM={useCM}
+                                isYou={myself.userId === assignee.userId}
+                                myself={myself}
+                                setMyself={setMyself}
+                                socket={socket}
+                                useUISM={useUISM}
+                            />
+                            <CopyableTaskIdChip
+                                task={parentTask}
+                                size="sm"
+                                variant="outlined"
                                 sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 1,
-                                    p: 1,
-                                    borderRadius: "10px",
-                                    background: isDark
-                                        ? "rgba(255,255,255,0.03)"
-                                        : "rgba(0,0,0,0.025)",
-                                    border: "1px solid",
-                                    borderColor: isDark
-                                        ? "rgba(255,255,255,0.06)"
-                                        : "rgba(0,0,0,0.05)",
+                                    fontFamily: "monospace",
+                                    fontWeight: 600,
+                                    borderRadius: "5px",
+                                }}
+                            />
+                            <StatusChip meta={parentTask.status} isDark={isDark} />
+                            <Typography
+                                level="body-sm"
+                                sx={{
+                                    fontWeight: 500,
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
                                     flex: 1,
-                                    cursor: "pointer",
-                                    transition: "all 0.2s ease",
-                                    "&:hover": {
-                                        background: isDark
-                                            ? "rgba(255,255,255,0.05)"
-                                            : "rgba(0,0,0,0.04)",
-                                        borderColor: isDark
-                                            ? "rgba(255,255,255,0.1)"
-                                            : "rgba(0,0,0,0.08)",
-                                    },
+                                    minWidth: 0,
                                 }}
-                                onClick={() => {
-                                    if (
-                                        parentTask.project &&
-                                        parentTask.project.projectId &&
-                                        parentTask.id
-                                    ) {
-                                        usePM.setCurrentProject({
-                                            projectId: parentTask.project.projectId,
-                                            projectName: parentTask.project.projectName,
-                                            projectTags: parentTask.tags,
-                                            systemUserId: parentTask.project.systemUserId,
-                                        });
-                                        useTM.setCurrentPreviewTaskId(parentTask.id);
-                                    }
-                                }}
+                                noWrap
                             >
-                                <AvatarWithStatus
-                                    avatarUser={useTEM.teamMemberProfiles[assignee.userId]}
-                                    useCM={useCM}
-                                    isYou={myself.userId === assignee.userId}
-                                    myself={myself}
-                                    setMyself={setMyself}
-                                    socket={socket}
-                                    useUISM={useUISM}
-                                />
-                                <CopyableTaskIdChip
-                                    task={parentTask}
-                                    size="sm"
-                                    variant="outlined"
-                                    sx={{
-                                        borderRadius: "6px",
-                                        fontWeight: 600,
-                                        fontSize: "0.7rem",
-                                        px: 1,
-                                        background: isDark
-                                            ? "rgba(255,255,255,0.04)"
-                                            : "rgba(0,0,0,0.03)",
-                                        borderColor: isDark
-                                            ? "rgba(255,255,255,0.1)"
-                                            : "rgba(0,0,0,0.1)",
-                                    }}
-                                />
-                                <Chip
-                                    size="sm"
-                                    variant="soft"
-                                    sx={{
-                                        borderRadius: "6px",
-                                        fontWeight: 600,
-                                        fontSize: "0.7rem",
-                                        px: 1,
-                                        backgroundColor: parentTask.status.color
-                                            ? alpha(parentTask.status.color, isDark ? 0.2 : 0.15)
-                                            : "transparent",
-                                        color: isDark
-                                            ? alpha(parentTask.status.color || "#fff", 0.9)
-                                            : parentTask.status.color || "#000",
-                                        border: "1px solid",
-                                        borderColor: alpha(
-                                            parentTask.status.color || "#666",
-                                            isDark ? 0.25 : 0.2
-                                        ),
-                                    }}
-                                >
-                                    {parentTask.status.status}
-                                </Chip>
-                                <Typography
-                                    level="body-sm"
-                                    sx={{
-                                        fontWeight: 500,
-                                        overflow: "hidden",
-                                        textOverflow: "ellipsis",
-                                        whiteSpace: "nowrap",
-                                        flex: 1,
-                                    }}
-                                    noWrap
-                                >
-                                    {parentTask.title}
-                                </Typography>
-                            </Box>
+                                {parentTask.title}
+                            </Typography>
                         </Stack>
                     </ListItem>
                 )}

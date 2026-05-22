@@ -24,6 +24,7 @@ import { alpha } from "@mui/system";
 
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TaskDependencyRef, TaskProps } from "../../../../types/tasks";
 import { ACTaskSelector, StatusChip } from "../autocompletes/ACTaskSelector";
@@ -40,25 +41,21 @@ type Props = {
     focus?: "blocking" | "blockedBy";
 };
 
-// Visual palette per direction. "Blocking" things outward = warm amber,
-// "Blocked by" inward = cool red. Reusing Joy tokens for the soft fills
-// would have been tempting but the chips already use those, so we'd
-// lose the visual distinction between section accent and content chips.
+// Visual atoms per direction (color + icon only). Title/description
+// strings come from i18n at the call site — keeping them out of this
+// constant means the file works for every locale without bundling
+// English copy into the visual palette.
 const DIRECTION_ACCENT: Record<
     "blocking" | "blockedBy",
-    { color: string; icon: React.ReactNode; title: string; description: string }
+    { color: string; icon: React.ReactNode }
 > = {
     blocking: {
         color: "#ff8c00",
         icon: <ArrowUpwardRoundedIcon sx={{ fontSize: 14 }} />,
-        title: "Blocking",
-        description: "These tasks can't move forward until this one is done.",
     },
     blockedBy: {
         color: "#b91c1c",
         icon: <ArrowDownwardRoundedIcon sx={{ fontSize: 14 }} />,
-        title: "Blocked by",
-        description: "These tasks must finish before this one can move.",
     },
 };
 
@@ -66,10 +63,12 @@ const DependencyRow = ({
     ref_,
     onRemove,
     isDark,
+    removeTooltip,
 }: {
     ref_: TaskDependencyRef;
     onRemove: () => void;
     isDark: boolean;
+    removeTooltip: string;
 }) => {
     return (
         <Stack
@@ -120,7 +119,7 @@ const DependencyRow = ({
                     </Chip>
                 </Tooltip>
             )}
-            <Tooltip placement="top" title="Remove dependency" variant="outlined" arrow>
+            <Tooltip placement="top" title={removeTooltip} variant="outlined" arrow>
                 <IconButton
                     color="danger"
                     size="sm"
@@ -150,6 +149,8 @@ export const ModalManageDependencies = ({
 }: Props) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const { t } = useTranslation();
+    const depsT = t.tasks.dependencies;
 
     const taskId = taskContent.id ?? null;
     const deps = (taskId != null && useTM.taskDependencies[taskId]) || {
@@ -205,7 +206,7 @@ export const ModalManageDependencies = ({
         setBusy(true);
         try {
             const ok = await useTM.removeTaskDependency(dependencyId, taskId);
-            if (!ok) setError("Failed to remove dependency.");
+            if (!ok) setError(depsT.modal.removeFailed);
         } finally {
             setBusy(false);
         }
@@ -276,10 +277,10 @@ export const ModalManageDependencies = ({
                         </Box>
                         <Stack spacing={0}>
                             <Typography level="title-md" sx={{ fontWeight: 700 }}>
-                                Manage dependencies
+                                {depsT.modal.title}
                             </Typography>
                             <Typography level="body-xs" sx={{ opacity: 0.7 }}>
-                                Cross-project links allowed within the same team.
+                                {depsT.modal.subtitle}
                             </Typography>
                         </Stack>
                     </Stack>
@@ -320,10 +321,20 @@ export const ModalManageDependencies = ({
                     <Stack spacing={2}>
                         {order.map((k) => {
                             const { items, resetKey } = sectionDataFor(k);
+                            const title =
+                                k === "blocking" ? depsT.blockingLabel : depsT.blockedByLabel;
+                            const description =
+                                k === "blocking"
+                                    ? depsT.modal.blockingDescription
+                                    : depsT.modal.blockedByDescription;
                             return (
                                 <DependencySection
                                     key={k}
                                     kind={k}
+                                    title={title}
+                                    description={description}
+                                    emptyLabel={depsT.modal.emptySection}
+                                    removeTooltip={depsT.modal.removeTooltip}
                                     deps={items}
                                     excludeIds={excludeIds}
                                     isDark={isDark}
@@ -343,7 +354,7 @@ export const ModalManageDependencies = ({
                 <Divider />
                 <Stack direction="row" justifyContent="flex-end" sx={{ px: 3, py: 1.5 }}>
                     <Button color="neutral" variant="plain" onClick={onClose}>
-                        Done
+                        {depsT.modal.doneButton}
                     </Button>
                 </Stack>
             </ModalDialog>
@@ -353,6 +364,10 @@ export const ModalManageDependencies = ({
 
 type SectionProps = {
     kind: "blocking" | "blockedBy";
+    title: string;
+    description: string;
+    emptyLabel: string;
+    removeTooltip: string;
     deps: TaskDependencyRef[];
     excludeIds: Set<number>;
     isDark: boolean;
@@ -367,6 +382,10 @@ type SectionProps = {
 
 const DependencySection = ({
     kind,
+    title,
+    description,
+    emptyLabel,
+    removeTooltip,
     deps,
     excludeIds,
     isDark,
@@ -405,13 +424,13 @@ const DependencySection = ({
                     {accent.icon}
                 </Box>
                 <Typography level="title-md" sx={{ fontWeight: 700 }}>
-                    {accent.title}
+                    {title}
                 </Typography>
                 <Chip size="sm" variant="soft" sx={{ fontWeight: 600, borderRadius: "5px" }}>
                     {deps.length}
                 </Chip>
                 <Typography level="body-sm" sx={{ opacity: 0.7, flex: 1 }}>
-                    {accent.description}
+                    {description}
                 </Typography>
             </Stack>
 
@@ -422,6 +441,7 @@ const DependencySection = ({
                             key={d.dependencyId}
                             isDark={isDark}
                             ref_={d}
+                            removeTooltip={removeTooltip}
                             onRemove={() => onRemove(d.dependencyId)}
                         />
                     ))}
@@ -439,7 +459,7 @@ const DependencySection = ({
                     }}
                 >
                     <Typography level="body-sm" sx={{ opacity: 0.6 }}>
-                        Nothing here yet.
+                        {emptyLabel}
                     </Typography>
                 </Box>
             )}

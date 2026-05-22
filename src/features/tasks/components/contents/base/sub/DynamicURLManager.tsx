@@ -224,29 +224,36 @@ export const DynamicURLManager = (props: DynamicURLManagerProps) => {
                 // empty-state in `TaskDependenciesBlock` so the two
                 // metadata-panel call-to-actions read as a single
                 // visual system rather than competing button styles.
-                <Box
-                    sx={{
-                        cursor: "pointer",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 0.6,
-                        p: 0.6,
-                        px: 1.4,
-                        borderRadius: "8px",
-                        color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.6)",
-                        transition: "background 0.15s ease, color 0.15s ease",
-                        "&:hover": {
-                            background: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)",
-                            color: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.9)",
-                        },
-                    }}
-                    onClick={() => setIsAddingNew(true)}
+                <Tooltip
+                    placement="top"
+                    title={t.tasks.dynamicUrl.addLinkTooltip}
+                    variant="outlined"
+                    arrow
                 >
-                    <AddRoundedIcon sx={{ fontSize: 18 }} />
-                    <Typography level="body-sm" sx={{ fontWeight: 500 }}>
-                        {t.tasks.dynamicUrl.addLinkButton}
-                    </Typography>
-                </Box>
+                    <Box
+                        sx={{
+                            cursor: "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 0.6,
+                            px: 0.85,
+                            py: 0.35,
+                            borderRadius: "8px",
+                            color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.6)",
+                            transition: "background 0.15s ease, color 0.15s ease",
+                            "&:hover": {
+                                background: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)",
+                                color: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.9)",
+                            },
+                        }}
+                        onClick={() => setIsAddingNew(true)}
+                    >
+                        <AddRoundedIcon sx={{ fontSize: 18 }} />
+                        <Typography level="body-sm" sx={{ fontWeight: 500 }}>
+                            {t.tasks.dynamicUrl.addLinkButton}
+                        </Typography>
+                    </Box>
+                </Tooltip>
             )}
 
             {/* Error Snackbar */}

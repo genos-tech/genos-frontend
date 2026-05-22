@@ -24,7 +24,7 @@ import {
 import { GitHubIcon } from "../assets/GithubIcon";
 import GenosAIHubSection from "./GenosAIHubSection";
 
-const APP_URL = "https://genos.up.railway.app";
+const APP_URL = "https://genosai.dev";
 const LINKEDIN_URL = "https://www.linkedin.com/in/kentaro-kamiya-jp/";
 const CONTACT_EMAIL = "genos.support@gmail.com";
 const GOOGLE_FORM_URL =

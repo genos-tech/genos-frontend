@@ -384,6 +384,11 @@ export const tasks = {
         links: "Links",
         parentTask: "Parent Task",
         branches: "Branches",
+        tags: "Tags",
+        effortLevel: "Effort Level",
+        sprint: "Sprint",
+        milestone: "Milestone",
+        dependencies: "Dependencies",
     },
 
     // Filter labels (TaskFilterMenu).
@@ -416,7 +421,45 @@ export const tasks = {
         cancelButton: "Cancel",
         saveButton: "Save",
         addLinkButton: "Add Link",
+        addLinkTooltip: "Attach a related URL, doc, or pull request.",
         invalidUrl: "Please enter a valid URL.",
+    },
+
+    // Dependency feature — blocking / blocked-by relations between
+    // tasks (or milestones via their backing task).
+    dependencies: {
+        sectionLabel: "Dependencies",
+        addCta: "Add dependencies",
+        addCtaTooltip: "Link tasks that block this one, or that this one blocks.",
+        blockingLabel: "Blocking",
+        blockedByLabel: "Blocked by",
+        // Used by the "+" tooltips on each row — interpolated with the
+        // section label so plurals stay consistent.
+        addRowTooltip: "Add to {label}",
+        noneLabel: "None",
+        blockedBadge: "Blocked",
+        blockedTooltip: "One or more open blockers — see Dependencies below.",
+        modal: {
+            title: "Manage dependencies",
+            subtitle: "Cross-project links allowed within the same team.",
+            intro: "Link this task to others that must finish first (Blocked by) or that depend on it finishing (Blocking). Cross-project links are allowed within the same team.",
+            blockingDescription: "These tasks can't move forward until this one is done.",
+            blockedByDescription: "These tasks must finish before this one can move.",
+            emptySection: "Nothing here yet.",
+            doneButton: "Done",
+            removeTooltip: "Remove dependency",
+            closeTooltip: "Close",
+            removeFailed: "Failed to remove dependency.",
+        },
+        picker: {
+            projectLabel: "Project",
+            taskLabel: "Task",
+            projectPlaceholder: "Choose project…",
+            taskPlaceholder: "Search by ID or title…",
+            taskPlaceholderDisabled: "Pick a project first…",
+            noTasks: "No matching tasks.",
+            noProject: "Select a project to see tasks.",
+        },
     },
 
     // Comment bubble.
