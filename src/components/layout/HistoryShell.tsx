@@ -47,7 +47,7 @@ export const HistoryShell = ({ open, onClose, useCM, useTM, useSM, useNM, usePM 
     // Captures every chat/thread/task/milestone/note open into the
     // History context, fired by transitions on the canonical preview
     // setters in each management hook.
-    useHistoryTracker({ useCM, useTM, useSM, useNM });
+    useHistoryTracker({ useCM, useTM, useSM, useNM, usePM });
 
     // Navigation callbacks — wired inside this component so they can
     // call into the existing management primitives directly rather than
@@ -162,6 +162,10 @@ export const HistoryShell = ({ open, onClose, useCM, useTM, useSM, useNM, usePM 
     return (
         <HistoryModal
             open={open}
+            useCM={useCM}
+            usePM={usePM}
+            useSM={useSM}
+            useTM={useTM}
             onClose={onClose}
             onOpenChat={onOpenChat}
             onOpenMilestone={onOpenMilestone}
