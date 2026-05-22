@@ -844,6 +844,7 @@ export const ja: DeepPartial<Messages> = {
             title: "サブタスク",
             buttonLabel: "サブタスク",
             emptyText: "まだサブタスクはありません",
+            quickAddLabel: "クイックタスク",
             quickAddPlaceholder: "タイトルを入力して Enter で作成",
             quickAddError: "作成できませんでした。もう一度お試しください",
         },

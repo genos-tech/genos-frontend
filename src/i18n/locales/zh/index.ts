@@ -830,6 +830,7 @@ export const zh: DeepPartial<Messages> = {
             title: "子任务",
             buttonLabel: "子任务",
             emptyText: "暂无子任务",
+            quickAddLabel: "快速任务",
             quickAddPlaceholder: "输入标题，按 Enter 创建",
             quickAddError: "创建失败，请重试",
         },

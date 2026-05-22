@@ -371,6 +371,7 @@ export const tasks = {
         title: "Sub Tasks",
         buttonLabel: "Sub Task",
         emptyText: "No sub tasks yet",
+        quickAddLabel: "Quick Task",
         quickAddPlaceholder: "Type a title and press Enter…",
         quickAddError: "Couldn't create — try again",
     },

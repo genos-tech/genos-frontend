@@ -192,101 +192,63 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                 sx={{ alignItems: "center", justifyContent: "space-between", pb: 0.5 }}
             >
                 <SectionHeader isDark={isDark}>{title}</SectionHeader>
-                {!isQuickAdding && (
-                    <IconButton
-                        size="sm"
-                        sx={{
-                            background: styles.createButtonBg,
-                            color: "#fff",
-                            borderRadius: "10px",
-                            px: 1.5,
-                            py: 0.75,
-                            fontSize: "13px",
-                            fontWeight: 600,
-                            gap: 0.5,
+                <IconButton
+                    size="sm"
+                    sx={{
+                        background: styles.createButtonBg,
+                        color: "#fff",
+                        borderRadius: "10px",
+                        px: 1.5,
+                        py: 0.75,
+                        fontSize: "13px",
+                        fontWeight: 600,
+                        gap: 0.5,
+                        boxShadow: isDark
+                            ? "0 2px 8px rgba(124,58,237,0.4)"
+                            : "0 2px 8px rgba(124,58,237,0.3)",
+                        transition: "all 0.2s ease",
+                        "&:hover": {
+                            background: styles.createButtonHover,
+                            transform: "translateY(-1px)",
                             boxShadow: isDark
-                                ? "0 2px 8px rgba(124,58,237,0.4)"
-                                : "0 2px 8px rgba(124,58,237,0.3)",
-                            transition: "all 0.2s ease",
-                            "&:hover": {
-                                background: styles.createButtonHover,
-                                transform: "translateY(-1px)",
-                                boxShadow: isDark
-                                    ? "0 4px 12px rgba(124,58,237,0.5)"
-                                    : "0 4px 12px rgba(124,58,237,0.4)",
-                            },
-                        }}
-                        onClick={() => {
-                            // Guard: parent task must be persisted before we
-                            // can attach a child. Same precondition the old
-                            // CreateTaskForm-opening onClick enforced.
-                            if (
-                                currentTaskContent.id == null ||
-                                currentTaskContent.rootTaskId == null
-                            ) {
-                                console.error("Task ID not defined error.");
-                                return;
-                            }
-                            setQuickError(null);
-                            setQuickTitle("");
-                            setIsQuickAdding(true);
-                        }}
-                    >
-                        <AddIcon sx={{ fontSize: "18px" }} />
-                        {buttonLabel}
-                    </IconButton>
-                )}
-            </Stack>
+                                ? "0 4px 12px rgba(124,58,237,0.5)"
+                                : "0 4px 12px rgba(124,58,237,0.4)",
+                        },
+                    }}
+                    onClick={() => {
+                        if (
+                            currentTaskContent.id !== undefined &&
+                            currentTaskContent.rootTaskId != null
+                        ) {
+                            // When the parent is a milestone (or a task
+                            // already inside a milestone chain), inherit
+                            // its milestoneId so the child task lands in
+                            // the same milestone context. The CreateTaskForm
+                            // uses this to hide the Milestone toggle and
+                            // pre-select the milestone in the picker.
+                            const inheritedMilestoneId: number | null =
+                                (currentTaskContent as any).isMilestone === true
+                                    ? ((currentTaskContent as any).milestoneId ?? null)
+                                    : ((currentTaskContent as any).milestoneId ?? null);
+                            useTM.setIsCreatingTask({
+                                flag: true,
+                                parentTaskId: currentTaskContent.id,
+                                rootTaskId: currentTaskContent.rootTaskId,
+                                creationKind: "task",
+                                milestoneId: inheritedMilestoneId,
+                            });
 
-            {isQuickAdding && (
-                <Stack direction="column" spacing={0.5} sx={{ pb: 1 }}>
-                    <Input
-                        autoFocus
-                        disabled={isSubmittingQuick}
-                        placeholder={t.tasks.subTasks.quickAddPlaceholder}
-                        size="sm"
-                        slotProps={{
-                            input: { "aria-label": t.tasks.subTasks.quickAddPlaceholder },
-                        }}
-                        sx={{ borderRadius: "8px" }}
-                        value={quickTitle}
-                        endDecorator={
-                            isSubmittingQuick ? (
-                                <CircularProgress
-                                    size="sm"
-                                    sx={{ "--CircularProgress-size": "16px" }}
-                                />
-                            ) : null
+                            // Close task-home when creating a sub task.
+                            useTM.setIsTaskTableVisible(false);
+                        } else {
+                            console.error("Task ID nod defined error.");
                         }
-                        onBlur={() => {
-                            // Blur with an empty input cancels. If the user
-                            // typed something, keep the input open so a
-                            // misclick doesn't drop their draft.
-                            if (quickTitle.trim() === "" && !isSubmittingQuick) {
-                                cancelQuickAdd();
-                            }
-                        }}
-                        onChange={(e) => {
-                            setQuickTitle(e.target.value);
-                            if (quickError) setQuickError(null);
-                        }}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter" && !isSubmittingQuick) {
-                                e.preventDefault();
-                                void submitQuickTask();
-                            } else if (e.key === "Escape" && !isSubmittingQuick) {
-                                e.preventDefault();
-                                cancelQuickAdd();
-                            }
-                        }}
-                    />
-                    {quickError && (
-                        <Typography level="body-xs" sx={{ color: "danger.500", px: 0.5 }}>
-                            {quickError}
-                        </Typography>
-                    )}
-                </Stack>
-            )}
+                    }}
+                >
+                    <AddIcon sx={{ fontSize: "18px" }} />
+                    {buttonLabel}
+                </IconButton>
+            </Stack>
 
             {childTasks.length > 0 && (
                 <Stack
@@ -431,6 +393,105 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                     {emptyText}
                 </Typography>
             )}
+
+            {/* Quick Task row. Always visible at the bottom regardless of
+                whether the list above has items or is empty. Collapsed:
+                a subtle "+ Quick Task" row that mirrors the look of the
+                child task rows above. Expanded: an inline title input
+                that creates a title-only task on Enter and immediately
+                refetches the list so the new row appears above. */}
+            <Box sx={{ mt: 1 }}>
+                {!isQuickAdding ? (
+                    <ListItemButton
+                        sx={{
+                            borderRadius: "8px",
+                            border: "1px dashed",
+                            borderColor: isDark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.15)",
+                            color: isDark ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.6)",
+                            gap: 1,
+                            py: 0.75,
+                            px: 1.25,
+                            transition: "all 0.15s ease",
+                            "&:hover": {
+                                borderColor: isDark
+                                    ? "rgba(167,139,250,0.6)"
+                                    : "rgba(124,58,237,0.5)",
+                                color: isDark ? "#a78bfa" : "#7c3aed",
+                                backgroundColor: isDark
+                                    ? "rgba(124,58,237,0.06)"
+                                    : "rgba(124,58,237,0.04)",
+                            },
+                        }}
+                        onClick={() => {
+                            if (
+                                currentTaskContent.id == null ||
+                                currentTaskContent.rootTaskId == null
+                            ) {
+                                console.error("Task ID not defined error.");
+                                return;
+                            }
+                            setQuickError(null);
+                            setQuickTitle("");
+                            setIsQuickAdding(true);
+                        }}
+                    >
+                        <AddIcon sx={{ fontSize: "18px" }} />
+                        <Typography level="body-sm" sx={{ fontWeight: 500, color: "inherit" }}>
+                            {t.tasks.subTasks.quickAddLabel}
+                        </Typography>
+                    </ListItemButton>
+                ) : (
+                    <Stack direction="column" spacing={0.5}>
+                        <Input
+                            autoFocus
+                            disabled={isSubmittingQuick}
+                            placeholder={t.tasks.subTasks.quickAddPlaceholder}
+                            size="sm"
+                            slotProps={{
+                                input: {
+                                    "aria-label": t.tasks.subTasks.quickAddPlaceholder,
+                                },
+                            }}
+                            sx={{ borderRadius: "8px" }}
+                            value={quickTitle}
+                            endDecorator={
+                                isSubmittingQuick ? (
+                                    <CircularProgress
+                                        size="sm"
+                                        sx={{ "--CircularProgress-size": "16px" }}
+                                    />
+                                ) : null
+                            }
+                            onBlur={() => {
+                                // Blur with an empty input cancels. If the
+                                // user typed something, keep the input open
+                                // so a misclick doesn't drop their draft.
+                                if (quickTitle.trim() === "" && !isSubmittingQuick) {
+                                    cancelQuickAdd();
+                                }
+                            }}
+                            onChange={(e) => {
+                                setQuickTitle(e.target.value);
+                                if (quickError) setQuickError(null);
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter" && !isSubmittingQuick) {
+                                    e.preventDefault();
+                                    void submitQuickTask();
+                                } else if (e.key === "Escape" && !isSubmittingQuick) {
+                                    e.preventDefault();
+                                    cancelQuickAdd();
+                                }
+                            }}
+                        />
+                        {quickError && (
+                            <Typography level="body-xs" sx={{ color: "danger.500", px: 0.5 }}>
+                                {quickError}
+                            </Typography>
+                        )}
+                    </Stack>
+                )}
+            </Box>
         </>
     );
 };
