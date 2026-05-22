@@ -1,4 +1,5 @@
 import { UserProps } from "../../../types/admin";
+import { taskContentTemplate } from "../utils/taskTemplates";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -39,7 +40,12 @@ export const createQuickTask = async (props: CreateQuickTaskProps): Promise<void
         priority: null,
         effort_level: null,
         status: "Open",
-        content: [],
+        // Ship the same default body scaffold the rich CreateTaskForm starts
+        // with. A title-only task that opens to an empty BlockNote editor
+        // feels unfinished and gives the user nothing to flesh out — the
+        // default template's Summary / Motivation / Acceptance / Notes
+        // sections are the prompt to add detail later.
+        content: taskContentTemplate,
         due_date: null,
         links: null,
         tags: [],
