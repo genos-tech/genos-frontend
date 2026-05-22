@@ -27,6 +27,7 @@ import {
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { alpha } from "@mui/system";
 
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import {
@@ -406,10 +407,32 @@ const STATUS_COLOR: Record<string, string> = {
     Deleted: "#94a3b8",
 };
 
-const statusChipColor = (status: string | null | undefined): { light: string; dark: string } => {
-    const key = (status ?? "").trim();
-    const c = STATUS_COLOR[key] ?? "#94a3b8";
-    return { light: c, dark: c };
+// Matches the chip styling in TaskTitleBlock.tsx: solid-feel saturated
+// soft background (alpha 0.65 light / 0.25 dark), white text, soft 8px
+// radius border that picks up the same status color. Different visual
+// weight from the SmallChip used for thread / milestone / note-type
+// tags, on purpose — task status is the row's primary signal, the
+// others are secondary.
+const TaskStatusChip = ({ status, isDark }: { status: string; isDark: boolean }) => {
+    const color = STATUS_COLOR[status.trim()] ?? "#94a3b8";
+    return (
+        <Chip
+            size="md"
+            sx={{
+                borderRadius: "8px",
+                fontWeight: 600,
+                fontSize: "0.75rem",
+                px: 1.5,
+                backgroundColor: alpha(color, isDark ? 0.25 : 0.65),
+                color: "#ffffff",
+                border: "1px solid",
+                borderColor: alpha(color, isDark ? 0.3 : 0.25),
+            }}
+            variant="soft"
+        >
+            {status}
+        </Chip>
+    );
 };
 
 export const HistoryModal = ({
@@ -477,15 +500,7 @@ export const HistoryModal = ({
                     <HistoryRow
                         key={`task-${entry.taskId}-${entry.openedAt}`}
                         avatar={renderProjectAvatar(useCM.allChats, entry.projectId, isDark)}
-                        chips={
-                            status ? (
-                                <SmallChip
-                                    color={statusChipColor(status)}
-                                    isDark={isDark}
-                                    label={status}
-                                />
-                            ) : null
-                        }
+                        chips={status ? <TaskStatusChip isDark={isDark} status={status} /> : null}
                         chipsBeforeLabel
                         isDark={isDark}
                         label={entry.label}
