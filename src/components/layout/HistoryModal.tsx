@@ -112,7 +112,12 @@ const TAB_SX = {
 
 const TAB_ICON_SX = { fontSize: 18, flexShrink: 0 } as const;
 
-const AVATAR_SIZE = 28;
+// `UserAvatar`'s PulseDot baseline math is calibrated for size 26 and 32.
+// At in-between values (28/30) the dot floats just outside the visible
+// avatar circle. Use 32 so the status dot lands cleanly on the circle's
+// bottom-right edge.
+const AVATAR_SIZE = 32;
+const AVATAR_FALLBACK_ICON_SIZE = 18;
 
 // Build a media URL for an Avatar `src`. Mirrors the helper in
 // UserAvatar so empty paths don't trigger broken-image requests.
@@ -164,7 +169,7 @@ const renderChatAvatar = (
     if (chatType === 2 || chatType === 4) {
         return (
             <GroupOrProjectAvatar
-                fallback={<GroupsRoundedIcon sx={{ fontSize: 16 }} />}
+                fallback={<GroupsRoundedIcon sx={{ fontSize: AVATAR_FALLBACK_ICON_SIZE }} />}
                 isDark={isDark}
                 src={buildMediaSrc(chat?.profileImagePath)}
             />
@@ -174,7 +179,7 @@ const renderChatAvatar = (
     if (chatType === 3) {
         return (
             <GroupOrProjectAvatar
-                fallback={<AccountTreeRoundedIcon sx={{ fontSize: 16 }} />}
+                fallback={<AccountTreeRoundedIcon sx={{ fontSize: AVATAR_FALLBACK_ICON_SIZE }} />}
                 isDark={isDark}
                 src={buildMediaSrc(chat?.profileImagePath)}
             />
@@ -182,7 +187,9 @@ const renderChatAvatar = (
     }
     return (
         <GroupOrProjectAvatar
-            fallback={<ChatBubbleOutlineRoundedIcon sx={{ fontSize: 16 }} />}
+            fallback={
+                <ChatBubbleOutlineRoundedIcon sx={{ fontSize: AVATAR_FALLBACK_ICON_SIZE }} />
+            }
             isDark={isDark}
             src={undefined}
         />
@@ -202,7 +209,7 @@ const renderProjectAvatar = (
             : undefined;
     return (
         <GroupOrProjectAvatar
-            fallback={<AccountTreeRoundedIcon sx={{ fontSize: 16 }} />}
+            fallback={<AccountTreeRoundedIcon sx={{ fontSize: AVATAR_FALLBACK_ICON_SIZE }} />}
             isDark={isDark}
             src={buildMediaSrc(pmChat?.profileImagePath)}
         />
@@ -239,12 +246,26 @@ type RowProps = {
     label: string;
     subtitle?: string | null;
     chips?: React.ReactNode;
+    // When true the chip(s) render BEFORE the label — used by notes
+    // where the chip is the type identifier the eye should hit first.
+    // Threads / milestones / task-status keep the default chip-after
+    // since the chip is a tag on the row, not the row's category.
+    chipsBeforeLabel?: boolean;
     timestamp: number;
     onClick: () => void;
     isDark: boolean;
 };
 
-const HistoryRow = ({ avatar, label, subtitle, chips, timestamp, onClick, isDark }: RowProps) => (
+const HistoryRow = ({
+    avatar,
+    label,
+    subtitle,
+    chips,
+    chipsBeforeLabel,
+    timestamp,
+    onClick,
+    isDark,
+}: RowProps) => (
     <Box
         sx={{
             display: "flex",
@@ -275,6 +296,7 @@ const HistoryRow = ({ avatar, label, subtitle, chips, timestamp, onClick, isDark
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
             <Stack alignItems="center" direction="row" spacing={0.75}>
+                {chipsBeforeLabel ? chips : null}
                 <Typography
                     level="body-sm"
                     sx={{
@@ -287,7 +309,7 @@ const HistoryRow = ({ avatar, label, subtitle, chips, timestamp, onClick, isDark
                 >
                     {label}
                 </Typography>
-                {chips}
+                {chipsBeforeLabel ? null : chips}
             </Stack>
             {subtitle ? (
                 <Typography
@@ -501,7 +523,11 @@ export const HistoryModal = ({
                         key={`note-${entry.noteType}-${entry.noteId}-${entry.openedAt}`}
                         avatar={
                             <GroupOrProjectAvatar
-                                fallback={<NoteAltRoundedIcon sx={{ fontSize: 16 }} />}
+                                fallback={
+                                    <NoteAltRoundedIcon
+                                        sx={{ fontSize: AVATAR_FALLBACK_ICON_SIZE }}
+                                    />
+                                }
                                 isDark={isDark}
                                 src={undefined}
                             />
@@ -516,6 +542,7 @@ export const HistoryModal = ({
                                 />
                             ) : null
                         }
+                        chipsBeforeLabel
                         isDark={isDark}
                         label={entry.label}
                         subtitle={subtitle || undefined}
