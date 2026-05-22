@@ -371,6 +371,8 @@ export const tasks = {
         title: "Sub Tasks",
         buttonLabel: "Sub Task",
         emptyText: "No sub tasks yet",
+        quickAddPlaceholder: "Type a title and press Enter…",
+        quickAddError: "Couldn't create — try again",
     },
 
     // Field labels used in TaskMainBlock.

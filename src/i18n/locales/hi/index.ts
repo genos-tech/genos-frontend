@@ -847,6 +847,8 @@ export const hi: DeepPartial<Messages> = {
             title: "सब टास्क",
             buttonLabel: "सब टास्क",
             emptyText: "अभी कोई सब टास्क नहीं",
+            quickAddPlaceholder: "टाइटल लिखें और Enter दबाएँ",
+            quickAddError: "बना नहीं सका — फिर से कोशिश करें",
         },
         fields: {
             assignee: "असाइनी",

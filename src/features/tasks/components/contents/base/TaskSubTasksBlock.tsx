@@ -3,7 +3,9 @@ import AddIcon from "@mui/icons-material/Add";
 import {
     Box,
     Chip,
+    CircularProgress,
     IconButton,
+    Input,
     List,
     ListItem,
     ListItemButton,
@@ -24,6 +26,7 @@ import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagemen
 import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { TaskProps } from "../../../../../types/tasks";
+import { createQuickTask } from "../../../services/createQuickTask";
 import { loadSpecificChildTasks } from "../../../services/loadSpecificChildTasks";
 import { formatTaskDisplayId } from "../../../utils/taskDisplayId";
 
@@ -72,6 +75,17 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
     const styles = isDark ? ActionButtonStyles.dark : ActionButtonStyles.light;
     const [childTasks, setChildTasks] = useState<TaskProps[]>([]);
 
+    // Inline quick-create state. The button up top toggles `isQuickAdding`;
+    // when on, an inline title input takes its place. Enter on a non-empty
+    // trimmed value POSTs a title-only task, refetches the child list, and
+    // keeps focus so the user can type-Enter-type-Enter through several
+    // sub-tasks without re-clicking. Escape (or blur with an empty value)
+    // hides the input and restores the button.
+    const [isQuickAdding, setIsQuickAdding] = useState(false);
+    const [quickTitle, setQuickTitle] = useState("");
+    const [isSubmittingQuick, setIsSubmittingQuick] = useState(false);
+    const [quickError, setQuickError] = useState<string | null>(null);
+
     useEffect(() => {
         // Cancelled-flag guard: slow child-task responses for an old
         // taskId must not overwrite the freshly-selected task's
@@ -102,6 +116,74 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
         };
     }, [currentTaskContent, forceLoad]);
 
+    // Reset the quick-add UI when the user navigates between preview
+    // cards. Without this, an open input on task A would survive a click
+    // to task B and dump the next Enter into B's child set.
+    useEffect(() => {
+        setIsQuickAdding(false);
+        setQuickTitle("");
+        setQuickError(null);
+    }, [currentTaskContent.id]);
+
+    const submitQuickTask = async () => {
+        const trimmed = quickTitle.trim();
+        if (trimmed === "") return;
+        if (
+            currentTaskContent.id == null ||
+            currentTaskContent.rootTaskId == null ||
+            currentTaskContent.project == null
+        ) {
+            return;
+        }
+        // Same milestone-inheritance the legacy onClick used: a quick
+        // sub-task under a milestone backing row inherits that milestone's
+        // id; a sub-task under a regular task in a milestone chain inherits
+        // the chain's milestoneId (null when outside a milestone).
+        const inheritedMilestoneId: number | null =
+            (currentTaskContent as any).milestoneId ?? null;
+
+        setIsSubmittingQuick(true);
+        setQuickError(null);
+        try {
+            await createQuickTask({
+                myself,
+                accessToken,
+                projectId: currentTaskContent.project.projectId,
+                title: trimmed,
+                parentTaskId: currentTaskContent.id,
+                rootTaskId: currentTaskContent.rootTaskId,
+                milestoneId: inheritedMilestoneId,
+            });
+            // Refetch from the same endpoint the load-effect uses so the
+            // appended row carries every server-derived field (displayId,
+            // project_task_number, etc.) without a manual snake→camel map.
+            const loaded: TaskProps[] = await loadSpecificChildTasks(
+                myself,
+                currentTaskContent.project.projectId,
+                currentTaskContent.id,
+                accessToken
+            );
+            setChildTasks(loaded?.length ? loaded : []);
+            // Trigger the project-wide refresh so an open table/board picks
+            // up the new row too. Now cheap thanks to the Redis-cached
+            // GetProjectTasksView + signal-driven invalidation.
+            useTM.setIsNewTaskCreated(true);
+            // Clear the input but keep it open + focused for the next
+            // rapid add. Power-user pattern.
+            setQuickTitle("");
+        } catch (err) {
+            setQuickError(t.tasks.subTasks.quickAddError);
+        } finally {
+            setIsSubmittingQuick(false);
+        }
+    };
+
+    const cancelQuickAdd = () => {
+        setIsQuickAdding(false);
+        setQuickTitle("");
+        setQuickError(null);
+    };
+
     return (
         <>
             <Stack
@@ -110,63 +192,101 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                 sx={{ alignItems: "center", justifyContent: "space-between", pb: 0.5 }}
             >
                 <SectionHeader isDark={isDark}>{title}</SectionHeader>
-                <IconButton
-                    size="sm"
-                    sx={{
-                        background: styles.createButtonBg,
-                        color: "#fff",
-                        borderRadius: "10px",
-                        px: 1.5,
-                        py: 0.75,
-                        fontSize: "13px",
-                        fontWeight: 600,
-                        gap: 0.5,
-                        boxShadow: isDark
-                            ? "0 2px 8px rgba(124,58,237,0.4)"
-                            : "0 2px 8px rgba(124,58,237,0.3)",
-                        transition: "all 0.2s ease",
-                        "&:hover": {
-                            background: styles.createButtonHover,
-                            transform: "translateY(-1px)",
+                {!isQuickAdding && (
+                    <IconButton
+                        size="sm"
+                        sx={{
+                            background: styles.createButtonBg,
+                            color: "#fff",
+                            borderRadius: "10px",
+                            px: 1.5,
+                            py: 0.75,
+                            fontSize: "13px",
+                            fontWeight: 600,
+                            gap: 0.5,
                             boxShadow: isDark
-                                ? "0 4px 12px rgba(124,58,237,0.5)"
-                                : "0 4px 12px rgba(124,58,237,0.4)",
-                        },
-                    }}
-                    onClick={() => {
-                        if (
-                            currentTaskContent.id !== undefined &&
-                            currentTaskContent.rootTaskId != null
-                        ) {
-                            // When the parent is a milestone (or a task
-                            // already inside a milestone chain), inherit
-                            // its milestoneId so the child task lands in
-                            // the same milestone context. The CreateTaskForm
-                            // uses this to hide the Milestone toggle and
-                            // pre-select the milestone in the picker.
-                            const inheritedMilestoneId: number | null =
-                                (currentTaskContent as any).isMilestone === true
-                                    ? ((currentTaskContent as any).milestoneId ?? null)
-                                    : ((currentTaskContent as any).milestoneId ?? null);
-                            useTM.setIsCreatingTask({
-                                flag: true,
-                                parentTaskId: currentTaskContent.id,
-                                rootTaskId: currentTaskContent.rootTaskId,
-                                creationKind: "task",
-                                milestoneId: inheritedMilestoneId,
-                            });
-
-                            // Close task-home when creating a sub task.
-                            useTM.setIsTaskTableVisible(false);
-                        } else {
-                            console.error("Task ID nod defined error.");
-                        }
-                    }}
-                >
-                    <AddIcon sx={{ fontSize: "18px" }} />
-                    {buttonLabel}
-                </IconButton>
+                                ? "0 2px 8px rgba(124,58,237,0.4)"
+                                : "0 2px 8px rgba(124,58,237,0.3)",
+                            transition: "all 0.2s ease",
+                            "&:hover": {
+                                background: styles.createButtonHover,
+                                transform: "translateY(-1px)",
+                                boxShadow: isDark
+                                    ? "0 4px 12px rgba(124,58,237,0.5)"
+                                    : "0 4px 12px rgba(124,58,237,0.4)",
+                            },
+                        }}
+                        onClick={() => {
+                            // Guard: parent task must be persisted before we
+                            // can attach a child. Same precondition the old
+                            // CreateTaskForm-opening onClick enforced.
+                            if (
+                                currentTaskContent.id == null ||
+                                currentTaskContent.rootTaskId == null
+                            ) {
+                                console.error("Task ID not defined error.");
+                                return;
+                            }
+                            setQuickError(null);
+                            setQuickTitle("");
+                            setIsQuickAdding(true);
+                        }}
+                    >
+                        <AddIcon sx={{ fontSize: "18px" }} />
+                        {buttonLabel}
+                    </IconButton>
+                )}
             </Stack>
+
+            {isQuickAdding && (
+                <Stack direction="column" spacing={0.5} sx={{ pb: 1 }}>
+                    <Input
+                        autoFocus
+                        disabled={isSubmittingQuick}
+                        placeholder={t.tasks.subTasks.quickAddPlaceholder}
+                        size="sm"
+                        slotProps={{
+                            input: { "aria-label": t.tasks.subTasks.quickAddPlaceholder },
+                        }}
+                        sx={{ borderRadius: "8px" }}
+                        value={quickTitle}
+                        endDecorator={
+                            isSubmittingQuick ? (
+                                <CircularProgress
+                                    size="sm"
+                                    sx={{ "--CircularProgress-size": "16px" }}
+                                />
+                            ) : null
+                        }
+                        onBlur={() => {
+                            // Blur with an empty input cancels. If the user
+                            // typed something, keep the input open so a
+                            // misclick doesn't drop their draft.
+                            if (quickTitle.trim() === "" && !isSubmittingQuick) {
+                                cancelQuickAdd();
+                            }
+                        }}
+                        onChange={(e) => {
+                            setQuickTitle(e.target.value);
+                            if (quickError) setQuickError(null);
+                        }}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter" && !isSubmittingQuick) {
+                                e.preventDefault();
+                                void submitQuickTask();
+                            } else if (e.key === "Escape" && !isSubmittingQuick) {
+                                e.preventDefault();
+                                cancelQuickAdd();
+                            }
+                        }}
+                    />
+                    {quickError && (
+                        <Typography level="body-xs" sx={{ color: "danger.500", px: 0.5 }}>
+                            {quickError}
+                        </Typography>
+                    )}
+                </Stack>
+            )}
 
             {childTasks.length > 0 && (
                 <Stack
