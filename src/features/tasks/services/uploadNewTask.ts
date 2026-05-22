@@ -71,6 +71,7 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                     status: taskContent.status.status !== "" ? taskContent.status.status : null,
                     content: taskContent.body.length !== 0 ? taskContent.body : [],
                     due_date: taskContent.dueDate !== "" ? taskContent.dueDate : null,
+                    start_date: taskContent.startDate ?? null,
                     links: taskContent.links,
                     tags: taskContent.tags,
                     chat_type: taskContent.chatType,

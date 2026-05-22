@@ -39,6 +39,7 @@ import { CopyableTaskIdChip } from "../../CopyableTaskId";
 import { ModalManageTags } from "../../modals/ModalManageTags";
 import { DynamicURLManager } from "./sub/DynamicURLManager";
 import { TaskDueDateInput } from "./sub/TaskDueDateInput";
+import { TaskStartDateInput } from "./sub/TaskStartDateInput";
 import { isCurrentlyBlocked, TaskDependenciesBlock } from "./TaskDependenciesBlock";
 
 // Single shared label for every row. Pinned width keeps the data
@@ -729,6 +730,24 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     </ListItem>
                 )}
 
+                {/* Start Date — only shown in preview mode (we don't
+                    nag users with an optional field on the create form)
+                    AND only when there's already a value OR the user
+                    wants to set one. We render the input row only when
+                    `startDate` is non-null; otherwise a single
+                    "+ Set start date" link sits next to the Due Date
+                    row. */}
+                {isPreviewMode && taskContent.startDate != null && (
+                    <ListItem sx={{ display: "flex", alignItems: "center" }}>
+                        <FieldLabel isDark={isDark}>{t.tasks.fields.startDate}</FieldLabel>
+                        <TaskStartDateInput
+                            setTaskContent={setTaskContent}
+                            setTaskUpdated={setTaskUpdated}
+                            taskContent={taskContent}
+                        />
+                    </ListItem>
+                )}
+
                 {/* Due Date */}
                 <ListItem sx={{ display: "flex", alignItems: "center" }}>
                     <FieldLabel isDark={isDark}>{t.tasks.fields.dueDate}</FieldLabel>
@@ -737,6 +756,48 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         setTaskUpdated={setTaskUpdated}
                         taskContent={taskContent}
                     />
+                    {isPreviewMode && taskContent.startDate == null && (
+                        <Tooltip
+                            title="Add an optional start date"
+                            placement="top"
+                            variant="outlined"
+                            arrow
+                        >
+                            <Box
+                                onClick={() => {
+                                    // Initialize to today so the input
+                                    // surfaces with a sensible default;
+                                    // user can adjust immediately.
+                                    setTaskContent({
+                                        ...taskContent,
+                                        startDate: new Date().toISOString().slice(0, 10),
+                                    });
+                                    setTaskUpdated?.(true);
+                                }}
+                                sx={{
+                                    cursor: "pointer",
+                                    ml: 1,
+                                    px: 1,
+                                    py: 0.25,
+                                    borderRadius: "6px",
+                                    fontSize: "0.75rem",
+                                    color: isDark
+                                        ? "rgba(255,255,255,0.5)"
+                                        : "rgba(0,0,0,0.55)",
+                                    "&:hover": {
+                                        background: isDark
+                                            ? "rgba(255,255,255,0.05)"
+                                            : "rgba(0,0,0,0.04)",
+                                        color: isDark
+                                            ? "rgba(255,255,255,0.85)"
+                                            : "rgba(0,0,0,0.85)",
+                                    },
+                                }}
+                            >
+                                + {t.tasks.fields.startDate}
+                            </Box>
+                        </Tooltip>
+                    )}
                 </ListItem>
 
                 {/* Links */}

@@ -141,6 +141,9 @@ export type TaskProps = {
     threadId: number | null;
     dueDate: string;
     daysLeft?: number;
+    // Optional planning start date. Backend serializes it as an
+    // ISO yyyy-mm-dd string (matching the dueDate shape) or null.
+    startDate?: string | null;
     createdDate?: string;
     updatedAt?: string;
     status: TaskStatusProps;
@@ -186,6 +189,8 @@ export type TaskTableProps = {
     updatedAt: string | null;
     dueDate: string | null;
     daysLeft: number | null;
+    // Optional planning start date — paired with dueDate.
+    startDate?: string | null;
     status: string | null;
     assigneeId: string | null;
     assigneeEmail: string | null;
