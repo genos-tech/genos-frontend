@@ -46,6 +46,14 @@ export const sendUpdatedSpecificTask = async (
                 status: updatedTask.status.status !== null ? updatedTask.status.status : null,
                 content: updatedTask.body.length !== 0 ? updatedTask.body : null,
                 due_date: updatedTask.dueDate !== "" ? updatedTask.dueDate : null,
+                // Always include `start_date` so a fresh value lands
+                // on the row and an explicit clear (null) survives the
+                // backend's None-strip via partial=True. Without this,
+                // the "+ Start Date" affordance on TaskMainBlock never
+                // persisted — the PUT payload omitted the field
+                // entirely so the next refetch wiped the optimistic
+                // local update.
+                start_date: updatedTask.startDate ?? null,
                 links: updatedTask.links,
                 tags: updatedTask.tags,
                 // Always send `milestone` (even when null) so the
@@ -148,6 +156,11 @@ export const sendUpdatedSpecificTask = async (
                         createdDate: updatedTask.createdDate || null,
                         updatedAt: updatedTask.updatedAt || null,
                         dueDate: updatedTask.dueDate,
+                        // Mirror start_date into the IDB row so the
+                        // optimistic local update survives the next
+                        // cache read (without this, the freshly-set
+                        // value would disappear on re-render).
+                        startDate: updatedTask.startDate ?? null,
                         daysLeft: hasDueDate ? updatedTask.daysLeft || null : null,
                         status: updatedTask.status.status,
                         assigneeId: updatedTask.assignee.userId,

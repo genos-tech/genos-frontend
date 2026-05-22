@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
 import AddIcon from "@mui/icons-material/Add";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import CancelIcon from "@mui/icons-material/Cancel";
@@ -41,11 +42,13 @@ import { ChatManagementState } from "../../../../../hooks/chats/useChatManagemen
 import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../../hooks/notes/useNoteManagement";
+import { SprintMilestoneManagementState } from "../../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { TaskNoteProps } from "../../../../../types/notes";
 import { TaskProps } from "../../../../../types/tasks";
+import { ModalTaskDiagram } from "../../../diagram/components/ModalTaskDiagram";
 import { deleteEmptyTask } from "../../../services/deleteEmptyTask";
 import { CopyableTaskIdChip } from "../../CopyableTaskId";
 import { ModalDeleteTask } from "../../modals/ModalDeleteTask";
@@ -68,6 +71,9 @@ type TaskTitleBlockProps = {
     useTM: TaskManagementState;
     useNM: NoteManagementState;
     usePM: ProjectManagementState;
+    /** Optional. Forwarded to the diagram modal so the canvas can
+     *  show sprint info on milestone nodes + the header overview. */
+    useSM?: SprintMilestoneManagementState;
     // When true, the create-mode badge reads "Milestone" instead of
     // "New Task". Only meaningful when `isPreviewMode` is false.
     isMilestone?: boolean;
@@ -98,6 +104,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         useTM,
         useNM,
         usePM,
+        useSM,
         isMilestone,
         isSubTask,
         isDirty = false,
@@ -116,6 +123,8 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
     const isOnTasksRoute = location.pathname.includes("/workspace/tasks");
     const [openDeleteTask, setOpenDeleteTask] = useState<boolean>(false);
     const [showCloseDiscardConfirm, setShowCloseDiscardConfirm] = useState(false);
+    // Opens the React Flow task-graph modal anchored on this task.
+    const [openTaskDiagram, setOpenTaskDiagram] = useState(false);
     const titleInputRef = useRef<HTMLInputElement | null>(null);
 
     // Teardown actually invoked by the X (close) button. Extracted from
@@ -504,6 +513,51 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                         </Tooltip>
                     )}
 
+                    {/* Diagram trigger — only meaningful for persisted
+                        tasks with a project (the diagram fetches
+                        project tasks to assemble the descendant tree).
+                        Styled to match the milestone preview's trigger
+                        treatment (36×36 padded button on tinted surface
+                        with a translateY hover) so the affordance reads
+                        consistently across both surfaces. */}
+                    {isOnTasksRoute &&
+                        isPreviewMode &&
+                        taskContent.id != null &&
+                        taskContent.project?.projectId != null && (
+                            <Tooltip
+                                size="sm"
+                                title="Open task graph"
+                                variant="outlined"
+                                sx={{
+                                    background: styles.menuBg,
+                                    border: `1px solid ${styles.menuBorder}`,
+                                    borderRadius: "8px",
+                                }}
+                            >
+                                <IconButton
+                                    size="sm"
+                                    variant="plain"
+                                    sx={{
+                                        background: styles.buttonBg,
+                                        border: `1px solid ${styles.buttonBorder}`,
+                                        borderRadius: "10px",
+                                        width: "36px",
+                                        height: "36px",
+                                        transition: "all 0.2s ease",
+                                        "&:hover": {
+                                            background: styles.buttonHover,
+                                            transform: "translateY(-1px)",
+                                        },
+                                    }}
+                                    onClick={() => setOpenTaskDiagram(true)}
+                                >
+                                    <AccountTreeRoundedIcon
+                                        sx={{ fontSize: 20, color: styles.textColor }}
+                                    />
+                                </IconButton>
+                            </Tooltip>
+                        )}
+
                     {isOnTasksRoute &&
                         (() => {
                             const items: MoreMenuItem[] = [
@@ -807,6 +861,27 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                 setTaskStatusUpdated={setTaskStatusUpdated}
                 setTaskUpdated={setTaskUpdated}
             />
+
+            {taskContent.id != null && taskContent.project?.projectId != null && (
+                <ModalTaskDiagram
+                    open={openTaskDiagram}
+                    onClose={() => setOpenTaskDiagram(false)}
+                    myself={myself}
+                    // Always anchor the diagram on the WHOLE hierarchy
+                    // the task lives in. `rootTaskId` walks up to the
+                    // top of the parent chain (or self for unparented
+                    // tasks). Without this fallback, opening the
+                    // diagram from a leaf sub-task would only show
+                    // that single node — the user expects to see the
+                    // milestone / parent + all siblings + sub-tree.
+                    rootTaskId={Number(taskContent.rootTaskId ?? taskContent.id)}
+                    projectId={Number(taskContent.project.projectId)}
+                    rootLabel={`${taskContent.displayId ?? `#${taskContent.id}`} · ${taskContent.title || "Untitled"}`}
+                    useTM={useTM}
+                    usePM={usePM}
+                    useSM={useSM}
+                />
+            )}
 
             {isPreviewMode === false && titleError && titleErrorOpen !== undefined && (
                 <Snackbar

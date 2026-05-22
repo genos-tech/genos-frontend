@@ -39,6 +39,7 @@ import { CopyableTaskIdChip } from "../../CopyableTaskId";
 import { ModalManageTags } from "../../modals/ModalManageTags";
 import { DynamicURLManager } from "./sub/DynamicURLManager";
 import { TaskDueDateInput } from "./sub/TaskDueDateInput";
+import { TaskStartDateInput } from "./sub/TaskStartDateInput";
 import { isCurrentlyBlocked, TaskDependenciesBlock } from "./TaskDependenciesBlock";
 
 // Single shared label for every row. Pinned width keeps the data
@@ -724,6 +725,26 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             setTaskStatusUpdated={setTaskStatusUpdated}
                             setTaskUpdated={setTaskUpdated}
                             socket={socket}
+                            taskContent={taskContent}
+                        />
+                    </ListItem>
+                )}
+
+                {/* Start Date — always shown in preview mode, mirroring
+                    the Due Date row's behavior. The previous
+                    conditional + "+ Set start date" affordance was
+                    brittle: a stale IDB cache row (legacy task without
+                    a startDate field) could flip the conditional false
+                    immediately after the user clicked, making the row
+                    appear to "disappear" mid-edit. Always-render is
+                    simpler and bug-free; the input shows its native
+                    placeholder when unset. */}
+                {isPreviewMode && (
+                    <ListItem sx={{ display: "flex", alignItems: "center" }}>
+                        <FieldLabel isDark={isDark}>{t.tasks.fields.startDate}</FieldLabel>
+                        <TaskStartDateInput
+                            setTaskContent={setTaskContent}
+                            setTaskUpdated={setTaskUpdated}
                             taskContent={taskContent}
                         />
                     </ListItem>

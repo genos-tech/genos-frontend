@@ -67,6 +67,7 @@ export type Milestone = {
     priorityCode: number | null;
     effortLevel?: string | null;
     effortLevelCode?: number | null;
+    startDate: string | null;
     dueDate: string | null;
     tags: unknown | null;
     // External links shown by the milestone preview's URL/Link section.

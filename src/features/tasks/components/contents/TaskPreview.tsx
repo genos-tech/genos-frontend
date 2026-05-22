@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
+import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
 import AddIcon from "@mui/icons-material/Add";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import CancelIcon from "@mui/icons-material/Cancel";
@@ -52,6 +53,7 @@ import {
 import { LinkedPrCard } from "../../../integrations/components/LinkedPrCard";
 import { parsePrUrl } from "../../../integrations/utils/parsePrUrl";
 import { loadTaskNotes } from "../../../notes/task-notes/services/loadTaskNotes";
+import { ModalTaskDiagram } from "../../diagram/components/ModalTaskDiagram";
 import { loadSpecificTask } from "../../services/loadSpecificTask";
 import { loadTaskActivities } from "../../services/loadTaskActivities";
 import { loadTaskComments } from "../../services/loadTaskComments";
@@ -682,6 +684,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                             useNM={useNM}
                             usePM={usePM}
                             useTM={useTM}
+                            useSM={useSM}
                             useUISM={useUISM}
                         />
                     }
@@ -913,6 +916,7 @@ const milestoneToTaskProps = (
         chatType: null,
         chatId: null,
         threadId: null,
+        startDate: m.startDate ?? null,
         dueDate: m.dueDate ?? "",
         status: {
             code: 0,
@@ -1084,6 +1088,8 @@ const MilestonePreviewInner = ({
     const [taskContentLike, setTaskContentLike] = useState<TaskProps>(() =>
         milestoneToTaskProps(milestone ?? ({} as Milestone), usePM.currentProject, myself)
     );
+    // Opens the React Flow task-graph modal anchored on this milestone.
+    const [openTaskDiagram, setOpenTaskDiagram] = useState(false);
     // Single-assignee state mirrors the normal-task UX. Milestones
     // still use the multi-assignee API under the hood, but the picker
     // is restricted to a single user for parity with regular tasks.
@@ -1398,6 +1404,9 @@ const MilestonePreviewInner = ({
         const patch: Parameters<typeof useSM.updateExistingMilestone>[0] = {
             milestoneId: milestone.milestoneId,
         };
+        if (next.startDate !== undefined && next.startDate !== milestone.startDate) {
+            patch.startDate = next.startDate || null;
+        }
         if (next.dueDate !== undefined && next.dueDate !== milestone.dueDate) {
             patch.dueDate = next.dueDate || null;
         }
@@ -1558,7 +1567,7 @@ const MilestonePreviewInner = ({
         );
     }
 
-    return (
+    const previewLayout = (
         <TaskPreviewLayout
             isDark={isDark}
             accent={
@@ -1674,6 +1683,45 @@ const MilestonePreviewInner = ({
                             {milestone.status}
                         </Chip>
                         <Box sx={{ flex: 1 }} />
+                        {/* Diagram trigger — opens the React Flow task
+                            graph anchored on this milestone. Gated on
+                            `taskId` (the backing TaskMaster row) because
+                            the diagram walks the parent_task_id tree
+                            from there. */}
+                        {milestone.taskId != null && milestone.projectId != null && (
+                            <Tooltip
+                                size="sm"
+                                title="Open task graph"
+                                variant="outlined"
+                                sx={{
+                                    background: styles.menuBg,
+                                    border: `1px solid ${styles.menuBorder}`,
+                                    borderRadius: "8px",
+                                }}
+                            >
+                                <IconButton
+                                    size="sm"
+                                    variant="plain"
+                                    sx={{
+                                        background: styles.buttonBg,
+                                        border: `1px solid ${styles.buttonBorder}`,
+                                        borderRadius: "10px",
+                                        width: "36px",
+                                        height: "36px",
+                                        transition: "all 0.2s ease",
+                                        "&:hover": {
+                                            background: styles.buttonHover,
+                                            transform: "translateY(-1px)",
+                                        },
+                                    }}
+                                    onClick={() => setOpenTaskDiagram(true)}
+                                >
+                                    <AccountTreeRoundedIcon
+                                        sx={{ fontSize: 20, color: styles.textColor }}
+                                    />
+                                </IconButton>
+                            </Tooltip>
+                        )}
                         {(() => {
                             const items: MoreMenuItem[] = [
                                 {
@@ -2039,5 +2087,27 @@ const MilestonePreviewInner = ({
                 ) : null
             }
         />
+    );
+
+    // Modal portals to body, so it lives as a sibling of the
+    // TaskPreviewLayout. Gated on `taskId` (the milestone's backing
+    // TaskMaster row) because that's the diagram's root.
+    return (
+        <>
+            {previewLayout}
+            {milestone.taskId != null && milestone.projectId != null && (
+                <ModalTaskDiagram
+                    open={openTaskDiagram}
+                    onClose={() => setOpenTaskDiagram(false)}
+                    myself={myself}
+                    rootTaskId={milestone.taskId}
+                    projectId={milestone.projectId}
+                    rootLabel={`${milestone.title || "Milestone"} · diagram`}
+                    useTM={useTM}
+                    usePM={usePM}
+                    useSM={useSM}
+                />
+            )}
+        </>
     );
 };

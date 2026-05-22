@@ -37,14 +37,6 @@ export const useWebSocket = (
     const [socketInstance, setSocketInstance] = useState<Socket | null>(null);
     const [showDisconnected, setShowDisconnected] = useState(false);
     const attemptCountRef = useRef(0);
-    // DIAG: remove after the PROD reconnect-loop is diagnosed. Holds the
-    // last-seen value of each dep so we can log which one changed when
-    // the WS-creation effect fires.
-    const prevDepsRef = useRef<{
-        myself: UserProps | undefined;
-        accessToken: string | null | undefined;
-        currentTeamId: string | undefined;
-    }>({ myself: undefined, accessToken: undefined, currentTeamId: undefined });
 
     const sendHeartBeat = useCallback(() => {
         if (socketInstance) {
@@ -72,27 +64,6 @@ export const useWebSocket = (
 
     // Initialize WebSocket connection
     useEffect(() => {
-        // DIAG: log which dep changed so we can see what's churning in PROD.
-        const prev = prevDepsRef.current;
-        const myselfRefChanged = prev.myself !== myself;
-        const tokenChanged = prev.accessToken !== accessToken;
-        const teamChanged = prev.currentTeamId !== currentTeamId;
-        // First run has all "undefined" prevs so everything is "changed";
-        // skip the first-run log so the diff log only highlights real churn.
-        if (prev.accessToken !== undefined || prev.currentTeamId !== undefined) {
-            console.log("[WS-DIAG] effect fired", {
-                myselfRefChanged,
-                tokenChanged,
-                teamChanged,
-                myselfUserId: myself?.userId,
-                myselfTeamId: myself?.teamId,
-                myselfTsLastSeen: myself?.tsLastSeen,
-                accessTokenHash: accessToken ? accessToken.slice(-8) : null,
-                currentTeamId,
-            });
-        }
-        prevDepsRef.current = { myself, accessToken, currentTeamId };
-
         if (accessToken) {
             console.log("[WS] Start establishing WS connection");
             const _socket = createSocket(accessToken);

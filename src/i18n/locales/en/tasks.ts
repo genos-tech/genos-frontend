@@ -384,6 +384,7 @@ export const tasks = {
         priority: "Priority",
         status: "Status",
         dueDate: "Due Date",
+        startDate: "Start Date",
         links: "Links",
         parentTask: "Parent Task",
         branches: "Branches",
