@@ -204,10 +204,10 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
                         when granting access, please email{" "}
                         <Typography
                             component="a"
-                            href="mailto:genos.support@gmail.com?subject=Add%20me%20as%20Google%20test%20user"
+                            href="mailto:genos.support@genosai.dev?subject=Add%20me%20as%20Google%20test%20user"
                             sx={{ color: "primary.500", textDecoration: "underline" }}
                         >
-                            genos.support@gmail.com
+                            genos.support@genosai.dev
                         </Typography>{" "}
                         with your Gmail address — we&apos;ll add you as a test user. Access works
                         within a minute of confirmation.
