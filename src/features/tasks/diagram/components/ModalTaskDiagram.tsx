@@ -1,8 +1,11 @@
 import { useState } from "react";
 import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
+import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
+import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import {
     Box,
     Chip,
@@ -22,6 +25,8 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { purplePalette } from "../../../../theme/purplePalette";
 import { UserProps } from "../../../../types/admin";
 import { ScheduleOverview } from "../types";
+import { HEALTH_JOY_COLOR, HEALTH_TONE_COLOR } from "../utils/scheduleStatus";
+import { BurndownSparkline } from "./BurndownSparkline";
 import { TaskFlowCanvas } from "./TaskFlowCanvas";
 
 type Props = {
@@ -180,6 +185,33 @@ export const ModalTaskDiagram = ({
                         </Typography>
                     </Stack>
 
+                    {/* Schedule-health chip — the headline verdict for
+                        the whole tree. Tooltip explains the maths so a
+                        "Behind" verdict isn't mysterious. Hidden when
+                        no window is available. */}
+                    {overview?.health && (
+                        <Tooltip
+                            title={`Closed ${Math.round(overview.health.actualPct)}% · Expected ${Math.round(overview.health.expectedPct)}%`}
+                            placement="bottom"
+                            variant="outlined"
+                            arrow
+                        >
+                            <Chip
+                                size="md"
+                                variant="soft"
+                                color={HEALTH_JOY_COLOR[overview.health.tone]}
+                                sx={{
+                                    fontWeight: 700,
+                                    borderRadius: "8px",
+                                    "--Chip-paddingInline": "10px",
+                                    "--Chip-minHeight": "28px",
+                                }}
+                            >
+                                {overview.health.label}
+                            </Chip>
+                        </Tooltip>
+                    )}
+
                     {/* Schedule overview pill — only renders when at
                         least one of (span, progress) is computable.
                         Tries to read as a quick at-a-glance summary
@@ -245,6 +277,71 @@ export const ModalTaskDiagram = ({
                                     )}
                                 </Stack>
                             )}
+                            {overview &&
+                                (overview.overdueCount > 0 ||
+                                    overview.dueSoonCount > 0 ||
+                                    overview.blockedCount > 0) && (
+                                    <Stack
+                                        direction="row"
+                                        alignItems="center"
+                                        spacing={0.5}
+                                        sx={{ flexWrap: "wrap", rowGap: 0.5 }}
+                                    >
+                                        {overview.overdueCount > 0 && (
+                                            <Chip
+                                                size="sm"
+                                                variant="soft"
+                                                color="danger"
+                                                startDecorator={
+                                                    <WarningAmberRoundedIcon
+                                                        sx={{ fontSize: 12 }}
+                                                    />
+                                                }
+                                                sx={{
+                                                    fontSize: "0.7rem",
+                                                    fontWeight: 700,
+                                                    borderRadius: "5px",
+                                                }}
+                                            >
+                                                {overview.overdueCount} overdue
+                                            </Chip>
+                                        )}
+                                        {overview.dueSoonCount > 0 && (
+                                            <Chip
+                                                size="sm"
+                                                variant="soft"
+                                                color="warning"
+                                                startDecorator={
+                                                    <ScheduleRoundedIcon sx={{ fontSize: 12 }} />
+                                                }
+                                                sx={{
+                                                    fontSize: "0.7rem",
+                                                    fontWeight: 700,
+                                                    borderRadius: "5px",
+                                                }}
+                                            >
+                                                {overview.dueSoonCount} due soon
+                                            </Chip>
+                                        )}
+                                        {overview.blockedCount > 0 && (
+                                            <Chip
+                                                size="sm"
+                                                variant="soft"
+                                                color="neutral"
+                                                startDecorator={
+                                                    <BlockRoundedIcon sx={{ fontSize: 12 }} />
+                                                }
+                                                sx={{
+                                                    fontSize: "0.7rem",
+                                                    fontWeight: 700,
+                                                    borderRadius: "5px",
+                                                }}
+                                            >
+                                                {overview.blockedCount} blocked
+                                            </Chip>
+                                        )}
+                                    </Stack>
+                                )}
                             {progressPct != null && overview && (
                                 <Stack
                                     direction="row"
@@ -252,7 +349,12 @@ export const ModalTaskDiagram = ({
                                     spacing={0.75}
                                     sx={{ minWidth: 140 }}
                                 >
-                                    <Box sx={{ flex: 1, minWidth: 60 }}>
+                                    {/* Progress bar with an absolutely-positioned
+                                        "expected by now" marker. The marker sits
+                                        at `expectedPct%`; visible gap between the
+                                        marker and the bar's filled edge IS the
+                                        schedule-health story. */}
+                                    <Box sx={{ flex: 1, minWidth: 60, position: "relative" }}>
                                         <LinearProgress
                                             determinate
                                             value={progressPct}
@@ -260,6 +362,33 @@ export const ModalTaskDiagram = ({
                                             color={progressPct === 100 ? "success" : "primary"}
                                             sx={{ "--LinearProgress-thickness": "6px" }}
                                         />
+                                        {overview.health && overview.total > 0 && (
+                                            <Tooltip
+                                                title={`Expected by today: ${Math.round(overview.health.expectedPct)}%`}
+                                                placement="top"
+                                                variant="outlined"
+                                                arrow
+                                            >
+                                                <Box
+                                                    sx={{
+                                                        position: "absolute",
+                                                        top: -2,
+                                                        bottom: -2,
+                                                        left: `${overview.health.expectedPct}%`,
+                                                        width: "2px",
+                                                        background:
+                                                            HEALTH_TONE_COLOR[
+                                                                overview.health.tone
+                                                            ],
+                                                        borderRadius: "1px",
+                                                        boxShadow: isDark
+                                                            ? "0 0 0 1px rgba(11,10,22,0.7)"
+                                                            : "0 0 0 1px rgba(255,255,255,0.85)",
+                                                        cursor: "help",
+                                                    }}
+                                                />
+                                            </Tooltip>
+                                        )}
                                     </Box>
                                     <Typography
                                         level="body-xs"
@@ -273,6 +402,16 @@ export const ModalTaskDiagram = ({
                                     </Typography>
                                 </Stack>
                             )}
+                            {overview?.burndown &&
+                                overview.burndown.length > 0 &&
+                                overview.health &&
+                                overview.total > 0 && (
+                                    <BurndownSparkline
+                                        data={overview.burndown}
+                                        total={overview.total}
+                                        tone={overview.health.tone}
+                                    />
+                                )}
                         </Stack>
                     )}
 

@@ -14,7 +14,13 @@ import { StatusChip } from "../../components/autocompletes/ACTaskSelector";
 import { CopyableTaskIdChip } from "../../components/CopyableTaskId";
 import { statuses } from "../../utils/taskMeta";
 import { HANDLE, TaskNodeData } from "../types";
-import { getScheduleStatus, TONE_COLOR } from "../utils/scheduleStatus";
+import {
+    computeHealth,
+    getMilestoneWindow,
+    getScheduleStatus,
+    HEALTH_JOY_COLOR,
+    TONE_COLOR,
+} from "../utils/scheduleStatus";
 
 const fmtDate = (iso: string | null | undefined): string => {
     if (!iso) return "";
@@ -63,6 +69,20 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
     const closed = closedDescendantCount ?? 0;
     const pct = total > 0 ? Math.round((closed / total) * 100) : 0;
     const progressColor = pct === 100 ? "success" : "primary";
+
+    // Per-milestone health verdict — same maths as the modal header
+    // but scoped to *this* milestone's own descendants and window.
+    // When a tree contains multiple milestones the user sees a
+    // verdict per milestone without opening each.
+    const health = computeHealth(
+        getMilestoneWindow({
+            sprint: sprint ? { startDate: sprint.startDate, endDate: sprint.endDate } : null,
+            spanStart: task.startDate ?? null,
+            spanEnd: task.dueDate ?? null,
+        }),
+        total,
+        closed
+    );
 
     const flagColor = "#f97316";
 
@@ -146,6 +166,32 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
                     sx={{ fontWeight: 600, fontFamily: "monospace", borderRadius: "5px" }}
                 />
                 <StatusChip meta={meta} isDark={isDark} />
+                {/* Schedule-health chip — visible per-milestone so the
+                    user spots a slipping milestone inside a multi-
+                    milestone tree without opening each card. Skipped
+                    when there's no window or no descendants. */}
+                {health && total > 0 && (
+                    <Tooltip
+                        title={`Closed ${Math.round(health.actualPct)}% · Expected ${Math.round(health.expectedPct)}%`}
+                        placement="top"
+                        variant="outlined"
+                        arrow
+                    >
+                        <Chip
+                            size="sm"
+                            variant="soft"
+                            color={HEALTH_JOY_COLOR[health.tone]}
+                            sx={{
+                                fontSize: "0.6rem",
+                                fontWeight: 700,
+                                borderRadius: "5px",
+                                "--Chip-paddingInline": "6px",
+                            }}
+                        >
+                            {health.label}
+                        </Chip>
+                    </Tooltip>
+                )}
                 <Box sx={{ flex: 1 }} />
                 <Tooltip title="Open milestone" placement="top" variant="outlined" arrow>
                     <IconButton
@@ -265,10 +311,13 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
                 </Stack>
             )}
 
-            {/* Progress bar — only when the milestone has descendants. */}
+            {/* Progress bar — only when the milestone has descendants.
+                A vertical "expected by now" marker overlays the bar at
+                health.expectedPct so the gap between actual progress
+                and expected progress is visible right on the card. */}
             {total > 0 && (
                 <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 0.5 }}>
-                    <Box sx={{ flex: 1 }}>
+                    <Box sx={{ flex: 1, position: "relative" }}>
                         <LinearProgress
                             determinate
                             value={pct}
@@ -276,6 +325,27 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
                             color={progressColor}
                             sx={{ "--LinearProgress-thickness": "5px" }}
                         />
+                        {health && (
+                            <Box
+                                sx={{
+                                    position: "absolute",
+                                    top: -2,
+                                    bottom: -2,
+                                    left: `${health.expectedPct}%`,
+                                    width: "2px",
+                                    background:
+                                        health.tone === "on-track"
+                                            ? "#16a34a"
+                                            : health.tone === "at-risk"
+                                              ? "#f59e0b"
+                                              : "#dc2626",
+                                    borderRadius: "1px",
+                                    boxShadow: isDark
+                                        ? "0 0 0 1px rgba(11,10,22,0.7)"
+                                        : "0 0 0 1px rgba(255,255,255,0.85)",
+                                }}
+                            />
+                        )}
                     </Box>
                     <Typography
                         level="body-xs"

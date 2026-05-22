@@ -1,3 +1,5 @@
+import { ScheduleHealth } from "./utils/scheduleStatus";
+
 import { TaskDependencyRef, TaskTableProps } from "../../../types/tasks";
 import { Sprint } from "../sprint-milestone/types";
 
@@ -135,4 +137,30 @@ export type ScheduleOverview = {
      * "Sprint N · start – end".
      */
     sprint?: Sprint | null;
+    /** Tasks past their due date and still open. */
+    overdueCount: number;
+    /** Tasks open and due within the next 7 days (inclusive of today). */
+    dueSoonCount: number;
+    /** Tasks with at least one open blocker in the visible set. */
+    blockedCount: number;
+    /**
+     * Milestone-level health verdict (On track / At risk / Behind).
+     * Null when the canvas can't compute a window (no sprint and no
+     * task dates). When non-null, callers also paint the
+     * "expected-by-now" marker on the progress bar at `expectedPct`.
+     */
+    health: ScheduleHealth | null;
+    /**
+     * Daily remaining-task series across the milestone window. Filled
+     * asynchronously after the graph loads (see `loadMilestoneBurndown`).
+     * Null while in flight or when the endpoint returned nothing usable.
+     */
+    burndown: BurndownPoint[] | null;
+};
+
+/** Single point on the burndown trend. `remaining` is open-task count
+ *  at end-of-day. Series is chronological. */
+export type BurndownPoint = {
+    date: string; // YYYY-MM-DD
+    remaining: number;
 };

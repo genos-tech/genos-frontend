@@ -37,6 +37,7 @@ import { Sprint } from "../../sprint-milestone/types";
 import { useDagreLayout } from "../hooks/useDagreLayout";
 import { createDiagramSubtask } from "../services/createDiagramSubtask";
 import { deleteDiagramTask } from "../services/deleteDiagramTask";
+import { loadMilestoneBurndown } from "../services/loadMilestoneBurndown";
 import { loadTaskGraph } from "../services/loadTaskGraph";
 import { patchTaskFields } from "../services/patchTaskFields";
 import {
@@ -50,6 +51,7 @@ import {
     TaskGraph,
     TaskNodeData,
 } from "../types";
+import { computeHealth, getMilestoneWindow } from "../utils/scheduleStatus";
 import { DependencyEdge } from "./DependencyEdge";
 import { DiagramLegend } from "./DiagramLegend";
 import { MilestoneNodeCard } from "./MilestoneNodeCard";
@@ -74,10 +76,43 @@ type Props = {
     onCloseModal: () => void;
 };
 
+// Hoisted so `computeOverview` and `buildNodesAndEdges` share one
+// source of truth — both surfaces need to know "which visible task is
+// blocked by how many open blockers" and recomputing it twice would
+// drift if the rules changed.
+const buildOpenBlockerCountByTask = (graph: TaskGraph): Map<number, number> => {
+    const out = new Map<number, number>();
+    for (const edge of graph.dependencyEdges) {
+        const blockerStatus = edge.otherStatus?.status?.toLowerCase?.() ?? "";
+        if (blockerStatus !== "closed") {
+            out.set(edge.blockedTaskId, (out.get(edge.blockedTaskId) ?? 0) + 1);
+        }
+    }
+    return out;
+};
+
+const todayIsoLocal = (): string => {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+};
+
+const addDaysIso = (iso: string, days: number): string => {
+    const d = new Date(iso);
+    d.setDate(d.getDate() + days);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+};
+
 const computeOverview = (
     graph: TaskGraph,
     rootTaskId: number,
-    sprintByTaskId: Map<number, Sprint>
+    sprintByTaskId: Map<number, Sprint>,
+    openBlockerCountByTask: Map<number, number>
 ): ScheduleOverview => {
     // Span: min(start) → max(due) across visible (non-ghost) tasks.
     let spanStart: string | null = null;
@@ -98,15 +133,53 @@ const computeOverview = (
     // Progress: descendants of the root task only (excludes root itself).
     let total = 0;
     let closed = 0;
+    // Aggregate counts: overdue / due-soon / blocked. Computed inline
+    // so we touch each task once. `today` and `today+7d` cutoffs are
+    // ISO strings so we can compare lexically (YYYY-MM-DD sorts as
+    // calendar order, dodging timezone churn).
+    const today = todayIsoLocal();
+    const dueSoonCutoff = addDaysIso(today, 7);
+    let overdueCount = 0;
+    let dueSoonCount = 0;
+    let blockedCount = 0;
     for (const t of graph.tasks) {
-        if (t.id == null || Number(t.id) === rootTaskId) continue;
-        total += 1;
-        if ((t.status ?? "").toLowerCase() === "closed") closed += 1;
+        if (t.id == null) continue;
+        const taskId = Number(t.id);
+        const isClosed = (t.status ?? "").toLowerCase() === "closed";
+        if (taskId !== rootTaskId) {
+            total += 1;
+            if (isClosed) closed += 1;
+        }
+        if (!isClosed && t.dueDate) {
+            if (t.dueDate < today) overdueCount += 1;
+            else if (t.dueDate <= dueSoonCutoff) dueSoonCount += 1;
+        }
+        if ((openBlockerCountByTask.get(taskId) ?? 0) > 0) blockedCount += 1;
     }
     // Pick up the sprint linked to the root task. If the root isn't a
     // milestone (or has no sprint), this is null.
     const sprint = sprintByTaskId.get(rootTaskId) ?? null;
-    return { spanStart, spanEnd, spanDays, total, closed, sprint };
+    const window = getMilestoneWindow({
+        sprint: sprint ? { startDate: sprint.startDate, endDate: sprint.endDate } : null,
+        spanStart,
+        spanEnd,
+    });
+    const health = computeHealth(window, total, closed);
+    return {
+        spanStart,
+        spanEnd,
+        spanDays,
+        total,
+        closed,
+        sprint,
+        overdueCount,
+        dueSoonCount,
+        blockedCount,
+        health,
+        // Filled in asynchronously by the burndown fetch. Null is the
+        // "loading" / "nothing yet" sentinel — caller handles both.
+        burndown: null,
+    };
 };
 
 /** Build `taskId → Sprint` for every milestone-backing task in the
@@ -192,6 +265,7 @@ const buildNodesAndEdges = (
     graph: TaskGraph,
     rootTaskId: number,
     sprintByTaskId: Map<number, Sprint>,
+    openBlockerCountByTask: Map<number, number>,
     handlers: {
         onChange: (taskId: number, patch: EditableFields) => void | Promise<void>;
         onAddSubtask: (parentTaskId: number) => void | Promise<void>;
@@ -199,19 +273,6 @@ const buildNodesAndEdges = (
         onOpenPreview: (taskId: number) => void;
     }
 ): { nodes: Node[]; edges: Edge[]; titleByTaskId: Map<number, string> } => {
-    // Count "open blockers" per task. Used by the warning badge in
-    // the node header.
-    const openBlockerCountByTask = new Map<number, number>();
-    for (const edge of graph.dependencyEdges) {
-        const blockerStatus = edge.otherStatus?.status?.toLowerCase?.() ?? "";
-        if (blockerStatus !== "closed") {
-            openBlockerCountByTask.set(
-                edge.blockedTaskId,
-                (openBlockerCountByTask.get(edge.blockedTaskId) ?? 0) + 1
-            );
-        }
-    }
-
     // Descendant counts power the milestone progress bar.
     const descendantCounts = computeDescendantCounts(graph.tasks);
 
@@ -370,10 +431,43 @@ const CanvasInner = ({
         graphRef.current = graph;
         // Notify the modal so its header pill can update. Computed
         // here (one source of truth) instead of in the modal so the
-        // modal stays a thin shell.
+        // modal stays a thin shell. Burndown trails behind the synch-
+        // ronous overview: we publish the cheap derivations first so
+        // the chip + counts paint immediately, then patch in the chart
+        // data after the (separately fetched) activity rollup lands.
         if (onOverviewChange) {
             const sprintByTaskId = buildSprintLookup(graph, useSM, projectId);
-            onOverviewChange(computeOverview(graph, rootTaskId, sprintByTaskId));
+            const blockerMap = buildOpenBlockerCountByTask(graph);
+            const overview = computeOverview(graph, rootTaskId, sprintByTaskId, blockerMap);
+            onOverviewChange(overview);
+
+            // Fire-and-forget burndown fetch. Uses the same window the
+            // health verdict came from (sprint dates when set, else
+            // task span). We don't await — the rest of the canvas
+            // renders immediately and the sparkline appears once data
+            // arrives.
+            const window = overview.health
+                ? overview.sprint
+                    ? {
+                          start: overview.sprint.startDate,
+                          end: overview.sprint.endDate,
+                      }
+                    : overview.spanStart && overview.spanEnd
+                      ? { start: overview.spanStart, end: overview.spanEnd }
+                      : null
+                : null;
+            if (window) {
+                const taskIds = graph.tasks
+                    .map((t) => (t.id == null ? null : Number(t.id)))
+                    .filter((n): n is number => n != null);
+                void loadMilestoneBurndown(taskIds, window.start, window.end, accessToken).then(
+                    (burndown) => {
+                        if (burndown != null) {
+                            onOverviewChange({ ...overview, burndown });
+                        }
+                    }
+                );
+            }
         }
         return graph;
     }, [myself, projectId, rootTaskId, accessToken, onOverviewChange, useSM]);
@@ -493,10 +587,12 @@ const CanvasInner = ({
     const assembleAndLayout = useCallback(
         (graph: TaskGraph) => {
             const sprintByTaskId = buildSprintLookup(graph, useSM, projectId);
+            const blockerMap = buildOpenBlockerCountByTask(graph);
             const { nodes: rawNodes, edges: rawEdges } = buildNodesAndEdges(
                 graph,
                 rootTaskId,
                 sprintByTaskId,
+                blockerMap,
                 {
                     onChange: (id, patch) => handlerBagRef.current.onChange(id, patch),
                     onAddSubtask: (id) => handlerBagRef.current.onAddSubtask(id),
