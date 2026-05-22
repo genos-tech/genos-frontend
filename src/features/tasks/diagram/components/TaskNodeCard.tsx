@@ -253,36 +253,20 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                 {isExternal ? (
                     <StatusChip meta={meta} isDark={isDark} />
                 ) : (
-                    <Dropdown
-                        onOpenChange={(_e, isOpen) => {
-                            // eslint-disable-next-line no-console
-                            console.log("[status-picker] onOpenChange ->", isOpen);
-                        }}
-                    >
+                    <Dropdown>
                         <MenuButton
                             slots={{ root: "button" }}
                             slotProps={{
                                 root: {
+                                    // `nodrag nopan nowheel` stops React
+                                    // Flow grabbing the gesture before
+                                    // Joy's MenuButton can handle it.
+                                    // Stopping pointerdown/mousedown is
+                                    // belt-and-suspenders because RF
+                                    // listens to pointer events too.
                                     className: "nodrag nopan nowheel",
-                                    onPointerDown: (e) => {
-                                        // eslint-disable-next-line no-console
-                                        console.log("[status-picker] pointerdown");
-                                        e.stopPropagation();
-                                    },
-                                    onMouseDown: (e) => {
-                                        // eslint-disable-next-line no-console
-                                        console.log("[status-picker] mousedown");
-                                        e.stopPropagation();
-                                    },
-                                    onClick: (e) => {
-                                        // eslint-disable-next-line no-console
-                                        console.log(
-                                            "[status-picker] click; aria-expanded:",
-                                            (e.currentTarget as HTMLElement).getAttribute(
-                                                "aria-expanded"
-                                            )
-                                        );
-                                    },
+                                    onPointerDown: (e) => e.stopPropagation(),
+                                    onMouseDown: (e) => e.stopPropagation(),
                                     style: {
                                         background: "transparent",
                                         border: "none",

@@ -231,6 +231,7 @@ export const MilestonesListItem = ({
                                                     socket={socket}
                                                     useCM={useCM}
                                                     useUISM={useUISM}
+                                                    showPulseDot={false}
                                                 />
                                             ) : (
                                                 <Avatar

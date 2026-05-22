@@ -1,5 +1,7 @@
 import { useCallback, useState } from "react";
 
+import { invalidateCachedFullTask } from "../../db/services/task-full.service";
+import { addTask } from "../../features/tasks/services/addTask";
 import {
     addMilestoneAssignee,
     createMilestone,
@@ -24,6 +26,66 @@ import {
     upsertSprintConfig,
 } from "../../features/tasks/sprint-milestone/services";
 import { Milestone, Sprint, SprintConfig } from "../../features/tasks/sprint-milestone/types";
+
+// Every milestone mutation goes through `_sync_backing_task` on the
+// backend, which mirrors the milestone's status / dates / sprint /
+// assignee / etc. onto the milestone's backing TaskMaster row. The
+// two frontend IDB caches that store that row do NOT get touched by
+// the milestone API roundtrip, though — so without this helper, any
+// surface that reads the backing task (parent-task chip in
+// TaskMainBlock, table row, diagram node) keeps replaying pre-update
+// values from cache until the user hard-refreshes.
+//
+//   1. `invalidateCachedFullTask` clears the TaskProps blob that
+//      `loadSpecificTask` returns to the parent-task / preview path.
+//   2. `addTask` upserts a fresh TaskTableProps row into the project
+//      table cache so table views also reflect the change.
+//
+// We synthesise the table-row from the fresh Milestone payload (which
+// the backend `_sync_backing_task` just copied INTO the backing task,
+// so it's the canonical source of truth right now). Single-assignee
+// = oldest assignee, falling back to the reporter — same convention
+// as the backend.
+const syncMilestoneBackingTaskCaches = (milestone: Milestone): void => {
+    if (milestone.taskId == null) return;
+    void invalidateCachedFullTask(milestone.taskId);
+    const firstAssignee = milestone.assignees?.[0];
+    const reporter = milestone.reporter ?? null;
+    void addTask({
+        id: String(milestone.taskId),
+        title: milestone.title ?? null,
+        priority: milestone.priority ?? null,
+        effortLevel: milestone.effortLevel ?? null,
+        createdDate: milestone.tsCreatedAt ?? null,
+        updatedAt: milestone.tsUpdatedAt ?? null,
+        dueDate: milestone.dueDate ?? null,
+        startDate: milestone.startDate ?? null,
+        daysLeft: null,
+        status: milestone.status ?? null,
+        assigneeId: firstAssignee?.userId
+            ? String(firstAssignee.userId)
+            : reporter?.userId
+              ? String(reporter.userId)
+              : null,
+        assigneeEmail: firstAssignee?.email ?? reporter?.email ?? null,
+        assigneeName: firstAssignee?.username ?? reporter?.username ?? null,
+        assigneeImgPath: firstAssignee?.profileImageUrl ?? reporter?.profileImageUrl ?? null,
+        parentTaskId: null,
+        threadId: null,
+        tags: (milestone.tags as never) ?? [],
+        concatTags: null,
+        teamId: milestone.teamId != null ? String(milestone.teamId) : null,
+        projectId: milestone.projectId,
+        isMilestone: true,
+        milestoneId: milestone.milestoneId,
+        sprintId: milestone.sprintId ?? null,
+    });
+};
+
+const removeMilestoneBackingTaskCaches = (taskId: number | null | undefined): void => {
+    if (taskId == null) return;
+    void invalidateCachedFullTask(taskId);
+};
 
 export interface SprintMilestoneManagementState {
     // Per-project sprint config (the cadence settings).
@@ -303,6 +365,7 @@ export const useSprintMilestoneManagement = (
                 if (currentMilestone?.milestoneId === res.milestone.milestoneId) {
                     setCurrentMilestone(res.milestone);
                 }
+                syncMilestoneBackingTaskCaches(res.milestone);
             }
             return res?.milestone ?? null;
         },
@@ -321,6 +384,7 @@ export const useSprintMilestoneManagement = (
                 if (currentMilestone?.milestoneId === res.milestone.milestoneId) {
                     setCurrentMilestone(res.milestone);
                 }
+                syncMilestoneBackingTaskCaches(res.milestone);
             }
             return res?.milestone ?? null;
         },
@@ -329,6 +393,12 @@ export const useSprintMilestoneManagement = (
 
     const removeMilestone = useCallback(
         async (milestoneId: number, projectId: number): Promise<boolean> => {
+            // Capture the backing-task id BEFORE the milestone gets
+            // removed from local state, so we can invalidate its full-
+            // task cache post-delete.
+            const milestoneTaskId =
+                (projectMilestones[projectId] ?? []).find((m) => m.milestoneId === milestoneId)
+                    ?.taskId ?? null;
             const ok = await deleteMilestone(milestoneId, accessToken);
             if (ok) {
                 setProjectMilestonesState((prev) => {
@@ -341,10 +411,12 @@ export const useSprintMilestoneManagement = (
                 if (currentMilestone?.milestoneId === milestoneId) {
                     setCurrentMilestone(null);
                 }
+                removeMilestoneBackingTaskCaches(milestoneTaskId);
             }
             return ok;
         },
-        [accessToken, currentMilestone]
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [accessToken, currentMilestone, projectMilestones]
     );
 
     const assignMilestoneMember = useCallback(
@@ -359,6 +431,7 @@ export const useSprintMilestoneManagement = (
                 if (currentMilestone?.milestoneId === res.milestone.milestoneId) {
                     setCurrentMilestone(res.milestone);
                 }
+                syncMilestoneBackingTaskCaches(res.milestone);
             }
             return res?.milestone ?? null;
         },
@@ -377,6 +450,7 @@ export const useSprintMilestoneManagement = (
                 if (currentMilestone?.milestoneId === res.milestone.milestoneId) {
                     setCurrentMilestone(res.milestone);
                 }
+                syncMilestoneBackingTaskCaches(res.milestone);
             }
             return res?.milestone ?? null;
         },

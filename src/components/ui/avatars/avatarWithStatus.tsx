@@ -23,6 +23,7 @@ type AvatarWithStatusProps = {
     useCM: ChatManagementState;
     showNameAndEmail?: boolean;
     useUISM: UIStateManagementState;
+    showPulseDot?: boolean;
 };
 
 // Resolve a fallback initial for the rare callsites where the avatar
@@ -58,8 +59,17 @@ const resolveFallbackInitial = (
  * adapts the legacy interface to that.
  */
 export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
-    const { myself, avatarSize, isYou, avatarUser, isForBubble, chat, thread, showNameAndEmail } =
-        props;
+    const {
+        myself,
+        avatarSize,
+        isYou,
+        avatarUser,
+        isForBubble,
+        chat,
+        thread,
+        showNameAndEmail,
+        showPulseDot,
+    } = props;
 
     // `isYou === true` callers always mean "the signed-in user". Falling
     // back to `avatarUser?.userId` covers the team-member / chat-row case.
@@ -73,6 +83,7 @@ export const AvatarWithStatus = (props: AvatarWithStatusProps) => {
             showNameAndEmail={showNameAndEmail}
             size={avatarSize}
             userId={targetUserId}
+            showPulseDot={showPulseDot}
         />
     );
 };
