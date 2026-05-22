@@ -28,6 +28,13 @@ export type ThreadHistoryEntry = {
     chatType: number;
     chatId: number;
     threadId: number;
+    // First line of the parent message's plain-text content (the
+    // bubble the thread hangs off of). Captured at open time so the
+    // history row can show what the conversation was about — the
+    // raw threadId on its own ("#4") is uninformative. Optional: old
+    // entries written before this field existed will fall back to
+    // just the parent chat name.
+    parentMessageText?: string | null;
     label: string;
     openedAt: number;
 };
@@ -36,6 +43,11 @@ export type TaskHistoryEntry = {
     kind: "task";
     taskId: number;
     projectId: number | null;
+    // Project display name, captured at open time for the row's
+    // subtitle. Live task status is looked up at render time from
+    // useTM.allTasks (it can change between opens), so we don't
+    // persist that.
+    projectName?: string | null;
     label: string;
     openedAt: number;
 };
@@ -44,6 +56,7 @@ export type MilestoneHistoryEntry = {
     kind: "milestone";
     milestoneId: number;
     projectId: number | null;
+    projectName?: string | null;
     label: string;
     openedAt: number;
 };
@@ -61,6 +74,13 @@ export type NoteHistoryEntry = {
     chatId?: number | null;
     threadId?: number | null;
     isThread?: boolean | null;
+    // Context labels for the row's subtitle — project name for task
+    // notes, chat name for chat notes. Personal notes have no
+    // subtitle. Captured at open time so a renamed project doesn't
+    // mutate old history rows.
+    projectName?: string | null;
+    taskTitle?: string | null;
+    chatName?: string | null;
     label: string;
     openedAt: number;
 };

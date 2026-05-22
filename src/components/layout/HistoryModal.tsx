@@ -1,14 +1,20 @@
 import { useState } from "react";
+import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import ForumRoundedIcon from "@mui/icons-material/ForumRounded";
+import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
+import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
+import WindowRoundedIcon from "@mui/icons-material/WindowRounded";
 import {
+    Avatar,
     Box,
     Button,
+    Chip,
     Divider,
     IconButton,
     Modal,
@@ -22,6 +28,7 @@ import {
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import {
     ChatHistoryEntry,
     HistoryEntry,
@@ -31,13 +38,24 @@ import {
     ThreadHistoryEntry,
     useHistory,
 } from "../../hooks/common/useHistory";
+import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
+import { SprintMilestoneManagementState } from "../../hooks/tasks/useSprintMilestoneManagement";
+import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../i18n";
+import { AllChatProps } from "../../types/chat";
+import { UserAvatar } from "../ui/avatars/UserAvatar";
+
+const MEDIA_URL = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type HistoryTabKey = "chats" | "tasks" | "notes";
 
 type Props = {
     open: boolean;
     onClose: () => void;
+    useCM: ChatManagementState;
+    useTM: TaskManagementState;
+    useSM: SprintMilestoneManagementState;
+    usePM: ProjectManagementState;
     onOpenChat: (entry: ChatHistoryEntry) => void;
     onOpenThread: (entry: ThreadHistoryEntry) => void;
     onOpenTask: (entry: TaskHistoryEntry) => void;
@@ -94,15 +112,139 @@ const TAB_SX = {
 
 const TAB_ICON_SX = { fontSize: 18, flexShrink: 0 } as const;
 
+const AVATAR_SIZE = 28;
+
+// Build a media URL for an Avatar `src`. Mirrors the helper in
+// UserAvatar so empty paths don't trigger broken-image requests.
+const buildMediaSrc = (path: string | null | undefined): string | undefined => {
+    if (!path) return undefined;
+    if (path.startsWith("http://") || path.startsWith("https://")) return path;
+    if (!MEDIA_URL) return undefined;
+    return `${MEDIA_URL}/${path}`;
+};
+
+// Visual-only group/project avatar. The full GMAvatar/ProjectAvatar
+// components open profile modals on click — undesirable inside a row
+// where the row itself is the click target.
+const GroupOrProjectAvatar = ({
+    src,
+    fallback,
+    isDark,
+}: {
+    src: string | undefined;
+    fallback: React.ReactNode;
+    isDark: boolean;
+}) => (
+    <Avatar
+        size="sm"
+        src={src}
+        sx={{
+            width: AVATAR_SIZE,
+            height: AVATAR_SIZE,
+            bgcolor: isDark ? "rgba(124,58,237,0.18)" : "rgba(124,58,237,0.12)",
+            color: isDark ? "#a78bfa" : "#7c3aed",
+        }}
+    >
+        {fallback}
+    </Avatar>
+);
+
+// Pick the right avatar for a chat-kind history row.
+const renderChatAvatar = (
+    chatType: number,
+    chat: AllChatProps | undefined,
+    isDark: boolean
+): React.ReactNode => {
+    // DM
+    if (chatType === 1) {
+        const partnerUserId = chat?.dmPartnerUser?.userId;
+        return <UserAvatar clickable={false} size={AVATAR_SIZE} userId={partnerUserId} />;
+    }
+    // GM or MDM
+    if (chatType === 2 || chatType === 4) {
+        return (
+            <GroupOrProjectAvatar
+                fallback={<GroupsRoundedIcon sx={{ fontSize: 16 }} />}
+                isDark={isDark}
+                src={buildMediaSrc(chat?.profileImagePath)}
+            />
+        );
+    }
+    // PM
+    if (chatType === 3) {
+        return (
+            <GroupOrProjectAvatar
+                fallback={<AccountTreeRoundedIcon sx={{ fontSize: 16 }} />}
+                isDark={isDark}
+                src={buildMediaSrc(chat?.profileImagePath)}
+            />
+        );
+    }
+    return (
+        <GroupOrProjectAvatar
+            fallback={<ChatBubbleOutlineRoundedIcon sx={{ fontSize: 16 }} />}
+            isDark={isDark}
+            src={undefined}
+        />
+    );
+};
+
+// Tasks: prefer the project's PM-chat profile image (same image the
+// project avatar shows elsewhere); fall back to a generic project icon.
+const renderProjectAvatar = (
+    chats: AllChatProps[],
+    projectId: number | null | undefined,
+    isDark: boolean
+): React.ReactNode => {
+    const pmChat =
+        projectId != null
+            ? chats.find((c) => c.chatType === 3 && c.project?.projectId === projectId)
+            : undefined;
+    return (
+        <GroupOrProjectAvatar
+            fallback={<AccountTreeRoundedIcon sx={{ fontSize: 16 }} />}
+            isDark={isDark}
+            src={buildMediaSrc(pmChat?.profileImagePath)}
+        />
+    );
+};
+
+// Per-note-type icon + color, matching RecentNoteItem.
+const NOTE_TYPE_VISUAL: Record<
+    number,
+    { label: string; icon: React.ReactNode; light: string; dark: string }
+> = {
+    1: {
+        label: "My note",
+        icon: <WindowRoundedIcon sx={{ fontSize: 14 }} />,
+        light: "#6366f1",
+        dark: "#818cf8",
+    },
+    2: {
+        label: "Task note",
+        icon: <AssignmentRoundedIcon sx={{ fontSize: 14 }} />,
+        light: "#22c55e",
+        dark: "#4ade80",
+    },
+    3: {
+        label: "Chat note",
+        icon: <QuestionAnswerRoundedIcon sx={{ fontSize: 14 }} />,
+        light: "#f97316",
+        dark: "#fb923c",
+    },
+};
+
 type RowProps = {
-    icon: React.ReactNode;
+    avatar: React.ReactNode;
     label: string;
+    subtitle?: string | null;
+    chips?: React.ReactNode;
     timestamp: number;
     onClick: () => void;
     isDark: boolean;
 };
 
-const HistoryRow = ({ icon, label, timestamp, onClick, isDark }: RowProps) => (
+const HistoryRow = ({ avatar, label, subtitle, chips, timestamp, onClick, isDark }: RowProps) => (
     <Box
         sx={{
             display: "flex",
@@ -121,32 +263,46 @@ const HistoryRow = ({ icon, label, timestamp, onClick, isDark }: RowProps) => (
     >
         <Box
             sx={{
-                width: 28,
-                height: 28,
-                borderRadius: "8px",
+                width: AVATAR_SIZE,
+                height: AVATAR_SIZE,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 flexShrink: 0,
-                backgroundColor: isDark ? "rgba(124,58,237,0.12)" : "rgba(124,58,237,0.08)",
-                color: isDark ? "#a78bfa" : "#7c3aed",
             }}
         >
-            {icon}
+            {avatar}
         </Box>
-        <Typography
-            level="body-sm"
-            sx={{
-                flex: 1,
-                minWidth: 0,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                fontWeight: 500,
-            }}
-        >
-            {label}
-        </Typography>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Stack alignItems="center" direction="row" spacing={0.75}>
+                <Typography
+                    level="body-sm"
+                    sx={{
+                        minWidth: 0,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        fontWeight: 500,
+                    }}
+                >
+                    {label}
+                </Typography>
+                {chips}
+            </Stack>
+            {subtitle ? (
+                <Typography
+                    level="body-xs"
+                    sx={{
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.45)",
+                    }}
+                >
+                    {subtitle}
+                </Typography>
+            ) : null}
+        </Box>
         <Typography
             level="body-xs"
             sx={{
@@ -178,9 +334,63 @@ const EmptyState = ({ message }: { message: string }) => (
     </Box>
 );
 
+// Small colored chip used by Thread / Milestone / Note-type indicators.
+const SmallChip = ({
+    icon,
+    label,
+    color,
+    isDark,
+}: {
+    icon?: React.ReactNode;
+    label: string;
+    color: { light: string; dark: string };
+    isDark: boolean;
+}) => {
+    const c = isDark ? color.dark : color.light;
+    return (
+        <Chip
+            size="sm"
+            startDecorator={icon}
+            sx={{
+                "--Chip-paddingInline": "6px",
+                "--Chip-minHeight": "18px",
+                fontSize: "0.65rem",
+                fontWeight: 600,
+                color: c,
+                bgcolor: isDark ? `${c}22` : `${c}1a`,
+                border: `1px solid ${isDark ? `${c}33` : `${c}26`}`,
+            }}
+            variant="soft"
+        >
+            {label}
+        </Chip>
+    );
+};
+
+const CHIP_COLORS = {
+    thread: { light: "#0ea5e9", dark: "#38bdf8" },
+    milestone: { light: "#7c3aed", dark: "#a78bfa" },
+    statusOpen: { light: "#64748b", dark: "#94a3b8" },
+    statusWip: { light: "#2563eb", dark: "#60a5fa" },
+    statusPending: { light: "#d97706", dark: "#fbbf24" },
+    statusClosed: { light: "#16a34a", dark: "#4ade80" },
+    statusDeleted: { light: "#dc2626", dark: "#f87171" },
+} as const;
+
+const statusChipColor = (status: string | null | undefined) => {
+    const s = (status ?? "").toLowerCase();
+    if (s === "wip" || s === "in progress" || s === "in_progress") return CHIP_COLORS.statusWip;
+    if (s === "pending") return CHIP_COLORS.statusPending;
+    if (s === "closed" || s === "done") return CHIP_COLORS.statusClosed;
+    if (s === "deleted") return CHIP_COLORS.statusDeleted;
+    return CHIP_COLORS.statusOpen;
+};
+
 export const HistoryModal = ({
     open,
     onClose,
+    useCM,
+    useTM,
     onOpenChat,
     onOpenThread,
     onOpenTask,
@@ -193,63 +403,127 @@ export const HistoryModal = ({
     const { chatsEntries, tasksEntries, notesEntries, clear } = useHistory();
     const [tab, setTab] = useState<HistoryTabKey>("chats");
 
+    const findChat = (chatType: number, chatId: number): AllChatProps | undefined =>
+        useCM.allChats.find((c) => c.chatType === chatType && c.chatId === chatId);
+
     const renderEntry = (entry: HistoryEntry) => {
         switch (entry.kind) {
-            case "chat":
+            case "chat": {
+                const chat = findChat(entry.chatType, entry.chatId);
                 return (
                     <HistoryRow
                         key={`chat-${entry.chatType}-${entry.chatId}-${entry.openedAt}`}
-                        icon={<ChatBubbleOutlineRoundedIcon sx={{ fontSize: 16 }} />}
+                        avatar={renderChatAvatar(entry.chatType, chat, isDark)}
                         isDark={isDark}
                         label={entry.label}
                         timestamp={entry.openedAt}
                         onClick={() => onOpenChat(entry)}
                     />
                 );
-            case "thread":
+            }
+            case "thread": {
+                const chat = findChat(entry.chatType, entry.chatId);
                 return (
                     <HistoryRow
                         key={`thread-${entry.chatType}-${entry.chatId}-${entry.threadId}-${entry.openedAt}`}
-                        icon={<ForumRoundedIcon sx={{ fontSize: 16 }} />}
+                        avatar={renderChatAvatar(entry.chatType, chat, isDark)}
+                        chips={
+                            <SmallChip
+                                color={CHIP_COLORS.thread}
+                                icon={<ForumRoundedIcon sx={{ fontSize: 12 }} />}
+                                isDark={isDark}
+                                label="Thread"
+                            />
+                        }
                         isDark={isDark}
                         label={entry.label}
+                        subtitle={entry.parentMessageText || undefined}
                         timestamp={entry.openedAt}
                         onClick={() => onOpenThread(entry)}
                     />
                 );
-            case "task":
+            }
+            case "task": {
+                const liveTask = useTM.allTasks.find((t) => Number(t.id) === Number(entry.taskId));
+                const status = liveTask?.status ?? null;
                 return (
                     <HistoryRow
                         key={`task-${entry.taskId}-${entry.openedAt}`}
-                        icon={<AssignmentRoundedIcon sx={{ fontSize: 16 }} />}
+                        avatar={renderProjectAvatar(useCM.allChats, entry.projectId, isDark)}
+                        chips={
+                            status ? (
+                                <SmallChip
+                                    color={statusChipColor(status)}
+                                    isDark={isDark}
+                                    label={status}
+                                />
+                            ) : null
+                        }
                         isDark={isDark}
                         label={entry.label}
+                        subtitle={entry.projectName || undefined}
                         timestamp={entry.openedAt}
                         onClick={() => onOpenTask(entry)}
                     />
                 );
-            case "milestone":
+            }
+            case "milestone": {
                 return (
                     <HistoryRow
                         key={`milestone-${entry.milestoneId}-${entry.openedAt}`}
-                        icon={<FlagRoundedIcon sx={{ fontSize: 16 }} />}
+                        avatar={renderProjectAvatar(useCM.allChats, entry.projectId, isDark)}
+                        chips={
+                            <SmallChip
+                                color={CHIP_COLORS.milestone}
+                                icon={<FlagRoundedIcon sx={{ fontSize: 12 }} />}
+                                isDark={isDark}
+                                label="Milestone"
+                            />
+                        }
                         isDark={isDark}
                         label={entry.label}
+                        subtitle={entry.projectName || undefined}
                         timestamp={entry.openedAt}
                         onClick={() => onOpenMilestone(entry)}
                     />
                 );
-            case "note":
+            }
+            case "note": {
+                const visual = NOTE_TYPE_VISUAL[entry.noteType];
+                const subtitle =
+                    entry.noteType === 2
+                        ? [entry.projectName, entry.taskTitle].filter(Boolean).join(" · ") || null
+                        : entry.noteType === 3
+                          ? entry.chatName || null
+                          : null;
                 return (
                     <HistoryRow
                         key={`note-${entry.noteType}-${entry.noteId}-${entry.openedAt}`}
-                        icon={<NoteAltRoundedIcon sx={{ fontSize: 16 }} />}
+                        avatar={
+                            <GroupOrProjectAvatar
+                                fallback={<NoteAltRoundedIcon sx={{ fontSize: 16 }} />}
+                                isDark={isDark}
+                                src={undefined}
+                            />
+                        }
+                        chips={
+                            visual ? (
+                                <SmallChip
+                                    color={{ light: visual.light, dark: visual.dark }}
+                                    icon={visual.icon}
+                                    isDark={isDark}
+                                    label={visual.label}
+                                />
+                            ) : null
+                        }
                         isDark={isDark}
                         label={entry.label}
+                        subtitle={subtitle || undefined}
                         timestamp={entry.openedAt}
                         onClick={() => onOpenNote(entry)}
                     />
                 );
+            }
         }
     };
 

@@ -5,6 +5,7 @@ import { NoteManagementState } from "../notes/useNoteManagement";
 import { SprintMilestoneManagementState } from "../tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../tasks/useTaskManagement";
 import { HistoryEntry, useHistory } from "./useHistory";
+import { ProjectManagementState } from "./useProjectManagement";
 
 // Effect-based observer mounted at App level. Watches the canonical
 // "currently open" state on each management hook and records a
@@ -17,9 +18,22 @@ type Props = {
     useTM: TaskManagementState;
     useSM: SprintMilestoneManagementState;
     useNM: NoteManagementState;
+    usePM: ProjectManagementState;
 };
 
-export const useHistoryTracker = ({ useCM, useTM, useSM, useNM }: Props) => {
+// Pull a short, single-line preview out of a message's plain text.
+// Strips control chars, collapses whitespace, takes the first 80 chars.
+const firstLine = (text: string | null | undefined): string | null => {
+    if (!text) return null;
+    const cleaned = text
+        .replace(/[\r\n]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    if (!cleaned) return null;
+    return cleaned.length > 80 ? cleaned.slice(0, 77) + "…" : cleaned;
+};
+
+export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) => {
     const { record } = useHistory();
 
     // Track the last-recorded key per channel so re-renders with
@@ -69,17 +83,34 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM }: Props) => {
         if (lastThreadKeyRef.current === key) return;
         lastThreadKeyRef.current = key;
         const parentName = currentThreadChat.chatName || `#${currentThreadChat.chatId}`;
-        const threadSuffix = currentThreadChat.displayId || `#${currentThreadChat.threadId}`;
+        // Find the parent message the thread hangs off of, in the
+        // currently-loaded main chat. If `currentMainChat` is the
+        // parent chat of this thread, its messages contain the bubble
+        // with the matching `threadId`. Falls back to null when the
+        // parent chat isn't loaded yet — the row will then show just
+        // the parent chat name + Thread chip.
+        let parentMessageText: string | null = null;
+        if (
+            currentMainChat &&
+            currentMainChat.chatType === currentThreadChat.chatType &&
+            currentMainChat.chatId === currentThreadChat.chatId
+        ) {
+            const parent = currentMainChat.messages.find(
+                (m) => m.threadId === currentThreadChat.threadId
+            );
+            if (parent) parentMessageText = firstLine(parent.contentText);
+        }
         const entry: HistoryEntry = {
             kind: "thread",
             chatType: currentThreadChat.chatType,
             chatId: currentThreadChat.chatId,
             threadId: currentThreadChat.threadId,
-            label: `${parentName} › ${threadSuffix}`,
+            parentMessageText,
+            label: parentName,
             openedAt: Date.now(),
         };
         record(entry);
-    }, [currentThreadChat, record]);
+    }, [currentThreadChat, currentMainChat, record]);
 
     // Tasks
     const currentPreviewTaskId = useTM.currentPreviewTaskId;
@@ -109,15 +140,27 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM }: Props) => {
         }
         if (!title) return;
         lastTaskKeyRef.current = key;
+        const projectName =
+            projectId != null
+                ? (usePM.teamProjects.find((p) => p.projectId === projectId)?.projectName ?? null)
+                : null;
         const entry: HistoryEntry = {
             kind: "task",
             taskId: currentPreviewTaskId,
             projectId,
+            projectName,
             label: title,
             openedAt: Date.now(),
         };
         record(entry);
-    }, [currentPreviewTaskId, currentPreviewKind, currentPreviewTask, allTasks, record]);
+    }, [
+        currentPreviewTaskId,
+        currentPreviewKind,
+        currentPreviewTask,
+        allTasks,
+        usePM.teamProjects,
+        record,
+    ]);
 
     // Milestones
     const currentPreviewMilestoneId = useTM.currentPreviewMilestoneId;
@@ -141,15 +184,26 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM }: Props) => {
         }
         if (!label) return;
         lastMilestoneKeyRef.current = key;
+        const projectName =
+            projectId != null
+                ? (usePM.teamProjects.find((p) => p.projectId === projectId)?.projectName ?? null)
+                : null;
         const entry: HistoryEntry = {
             kind: "milestone",
             milestoneId: currentPreviewMilestoneId,
             projectId,
+            projectName,
             label,
             openedAt: Date.now(),
         };
         record(entry);
-    }, [currentPreviewMilestoneId, currentPreviewKind, projectMilestones, record]);
+    }, [
+        currentPreviewMilestoneId,
+        currentPreviewKind,
+        projectMilestones,
+        usePM.teamProjects,
+        record,
+    ]);
 
     // Notes — three independent channels (My / Task / Chat). Only one
     // is set at a time in practice; the lastNoteKeyRef is shared so
@@ -172,29 +226,51 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM }: Props) => {
     }, [currentMyNote, record]);
 
     const currentTaskNote = useNM.currentTaskNote;
+    const allTasksForNotes = useTM.allTasks;
     useEffect(() => {
         if (!currentTaskNote || !currentTaskNote.noteId) return;
         const key = `note:${currentTaskNote.noteType}:${currentTaskNote.noteId}`;
         if (lastNoteKeyRef.current === key) return;
         lastNoteKeyRef.current = key;
+        const projectName =
+            currentTaskNote.projectId != null
+                ? (usePM.teamProjects.find((p) => p.projectId === currentTaskNote.projectId)
+                      ?.projectName ?? null)
+                : null;
+        const taskTitle =
+            currentTaskNote.taskId != null
+                ? (allTasksForNotes.find((t) => Number(t.id) === Number(currentTaskNote.taskId))
+                      ?.title ?? null)
+                : null;
         const entry: HistoryEntry = {
             kind: "note",
             noteType: currentTaskNote.noteType,
             noteId: currentTaskNote.noteId,
             projectId: currentTaskNote.projectId ?? null,
             taskId: currentTaskNote.taskId ?? null,
+            projectName,
+            taskTitle,
             label: currentTaskNote.title || `#${currentTaskNote.noteId}`,
             openedAt: Date.now(),
         };
         record(entry);
-    }, [currentTaskNote, record]);
+    }, [currentTaskNote, usePM.teamProjects, allTasksForNotes, record]);
 
     const currentChatNote = useNM.currentChatNote;
+    const allChatsForNotes = useCM.allChats;
     useEffect(() => {
         if (!currentChatNote || !currentChatNote.noteId) return;
         const key = `note:${currentChatNote.noteType}:${currentChatNote.noteId}`;
         if (lastNoteKeyRef.current === key) return;
         lastNoteKeyRef.current = key;
+        const chatName =
+            currentChatNote.chatType != null && currentChatNote.chatId != null
+                ? (allChatsForNotes.find(
+                      (c) =>
+                          c.chatType === currentChatNote.chatType &&
+                          c.chatId === currentChatNote.chatId
+                  )?.chatName ?? null)
+                : null;
         const entry: HistoryEntry = {
             kind: "note",
             noteType: currentChatNote.noteType,
@@ -203,9 +279,10 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM }: Props) => {
             chatId: currentChatNote.chatId ?? null,
             isThread: currentChatNote.isThread ?? null,
             threadId: currentChatNote.threadId ?? null,
+            chatName,
             label: currentChatNote.title || `#${currentChatNote.noteId}`,
             openedAt: Date.now(),
         };
         record(entry);
-    }, [currentChatNote, record]);
+    }, [currentChatNote, allChatsForNotes, record]);
 };
