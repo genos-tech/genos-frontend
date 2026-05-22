@@ -392,20 +392,24 @@ const SmallChip = ({
 const CHIP_COLORS = {
     thread: { light: "#0ea5e9", dark: "#38bdf8" },
     milestone: { light: "#7c3aed", dark: "#a78bfa" },
-    statusOpen: { light: "#64748b", dark: "#94a3b8" },
-    statusWip: { light: "#2563eb", dark: "#60a5fa" },
-    statusPending: { light: "#d97706", dark: "#fbbf24" },
-    statusClosed: { light: "#16a34a", dark: "#4ade80" },
-    statusDeleted: { light: "#dc2626", dark: "#f87171" },
 } as const;
 
-const statusChipColor = (status: string | null | undefined) => {
-    const s = (status ?? "").toLowerCase();
-    if (s === "wip" || s === "in progress" || s === "in_progress") return CHIP_COLORS.statusWip;
-    if (s === "pending") return CHIP_COLORS.statusPending;
-    if (s === "closed" || s === "done") return CHIP_COLORS.statusClosed;
-    if (s === "deleted") return CHIP_COLORS.statusDeleted;
-    return CHIP_COLORS.statusOpen;
+// Canonical task-status palette used everywhere else in the app
+// (TaskPreview, SprintMilestonesSection, SprintManagerDialog). Keep
+// these in sync — the user reads the same color in the row as on the
+// task page itself.
+const STATUS_COLOR: Record<string, string> = {
+    Open: "#0044c2",
+    WIP: "#ff8c00",
+    Pending: "#b900ff",
+    Closed: "#1dc200",
+    Deleted: "#94a3b8",
+};
+
+const statusChipColor = (status: string | null | undefined): { light: string; dark: string } => {
+    const key = (status ?? "").trim();
+    const c = STATUS_COLOR[key] ?? "#94a3b8";
+    return { light: c, dark: c };
 };
 
 export const HistoryModal = ({
@@ -457,6 +461,7 @@ export const HistoryModal = ({
                                 label="Thread"
                             />
                         }
+                        chipsBeforeLabel
                         isDark={isDark}
                         label={entry.label}
                         subtitle={entry.parentMessageText || undefined}
@@ -481,6 +486,7 @@ export const HistoryModal = ({
                                 />
                             ) : null
                         }
+                        chipsBeforeLabel
                         isDark={isDark}
                         label={entry.label}
                         subtitle={entry.projectName || undefined}
@@ -502,6 +508,7 @@ export const HistoryModal = ({
                                 label="Milestone"
                             />
                         }
+                        chipsBeforeLabel
                         isDark={isDark}
                         label={entry.label}
                         subtitle={entry.projectName || undefined}
