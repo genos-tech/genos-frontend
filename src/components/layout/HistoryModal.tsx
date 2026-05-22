@@ -409,20 +409,22 @@ const STATUS_COLOR: Record<string, string> = {
 
 // Matches the chip styling in TaskTitleBlock.tsx: solid-feel saturated
 // soft background (alpha 0.65 light / 0.25 dark), white text, soft 8px
-// radius border that picks up the same status color. Different visual
-// weight from the SmallChip used for thread / milestone / note-type
-// tags, on purpose — task status is the row's primary signal, the
-// others are secondary.
+// radius border that picks up the same status color. Sized to match
+// `SmallChip` (size="sm" + 6px inline padding + 18px min-height +
+// 0.65rem text) so the row's chip stack reads as one consistent set;
+// only the saturated bg / white text distinguishes the status chip
+// as the row's primary signal.
 const TaskStatusChip = ({ status, isDark }: { status: string; isDark: boolean }) => {
     const color = STATUS_COLOR[status.trim()] ?? "#94a3b8";
     return (
         <Chip
-            size="md"
+            size="sm"
             sx={{
+                "--Chip-paddingInline": "6px",
+                "--Chip-minHeight": "18px",
                 borderRadius: "8px",
                 fontWeight: 600,
-                fontSize: "0.75rem",
-                px: 1.5,
+                fontSize: "0.65rem",
                 backgroundColor: alpha(color, isDark ? 0.25 : 0.65),
                 color: "#ffffff",
                 border: "1px solid",

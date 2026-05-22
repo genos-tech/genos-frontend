@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import AssignmentIcon from "@mui/icons-material/Assignment";
 import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
@@ -265,7 +265,7 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                 },
                                             }}
                                         >
-                                            <AccountTreeIcon sx={{ fontSize: 100 }} />
+                                            <AssignmentIcon sx={{ fontSize: 100 }} />
                                         </Avatar>
 
                                         {myself.userId === teamProfile.teamOwnerId && (
@@ -568,10 +568,12 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                                 fontSize: "14px",
                                                                 transition: "all 0.2s ease",
                                                                 "&:hover": {
-                                                                    borderColor: styles.accentColor,
+                                                                    borderColor:
+                                                                        styles.accentColor,
                                                                 },
                                                                 "&:focus-within": {
-                                                                    borderColor: styles.accentColor,
+                                                                    borderColor:
+                                                                        styles.accentColor,
                                                                     boxShadow: isDark
                                                                         ? "0 0 0 2px rgba(124,58,237,0.2)"
                                                                         : "0 0 0 2px rgba(124,58,237,0.1)",

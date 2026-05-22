@@ -1,5 +1,5 @@
 import React from "react";
-import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import AssignmentIcon from "@mui/icons-material/Assignment";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import GroupsIcon from "@mui/icons-material/Groups";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
@@ -109,7 +109,7 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
         } else {
             return (
                 <Avatar size="sm">
-                    <AccountTreeIcon />
+                    <AssignmentIcon />
                 </Avatar>
             );
         }

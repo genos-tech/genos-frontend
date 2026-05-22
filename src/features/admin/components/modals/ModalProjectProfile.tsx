@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import AssignmentIcon from "@mui/icons-material/Assignment";
 import CloseIcon from "@mui/icons-material/Close";
 import EditIcon from "@mui/icons-material/Edit";
 import EmailRoundedIcon from "@mui/icons-material/EmailRounded";
@@ -320,7 +320,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                 },
                                             }}
                                         >
-                                            <AccountTreeIcon sx={{ fontSize: 100 }} />
+                                            <AssignmentIcon sx={{ fontSize: 100 }} />
                                         </Avatar>
 
                                         <Box

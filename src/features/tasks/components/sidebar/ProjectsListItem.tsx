@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import AssignmentIcon from "@mui/icons-material/Assignment";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
 import WorkIcon from "@mui/icons-material/Work";
@@ -281,7 +281,7 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                     },
                                                 }}
                                             >
-                                                <AccountTreeIcon
+                                                <AssignmentIcon
                                                     sx={{
                                                         fontSize: 16,
                                                         color: isSelected

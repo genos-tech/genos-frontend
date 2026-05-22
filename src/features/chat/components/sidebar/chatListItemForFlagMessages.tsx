@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useState } from "react";
-import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import AssignmentIcon from "@mui/icons-material/Assignment";
 import FlagIcon from "@mui/icons-material/Flag";
 import GroupsIcon from "@mui/icons-material/Groups";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
@@ -526,7 +526,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         }
         return (
             <Avatar size="sm">
-                <AccountTreeIcon />
+                <AssignmentIcon />
             </Avatar>
         );
     };
@@ -834,7 +834,8 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                                         {renderProjectChips()}
                                         {renderChatTypeChip()}
                                         {renderThreadChip()}
-                                        {chatRemoved && renderRemovedChip(t.chat.listItem.chatRemoved)}
+                                        {chatRemoved &&
+                                            renderRemovedChip(t.chat.listItem.chatRemoved)}
                                         {!chatRemoved &&
                                             sourceDeleted &&
                                             renderRemovedChip(t.chat.listItem.messageDeleted)}
@@ -854,7 +855,11 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                                 >
                                     {extractYYYYMMDDHHMM(flaggedMessage.tsSent)}
                                 </Typography>
-                                <Tooltip size="sm" title={t.chat.listItem.unflag} variant="outlined">
+                                <Tooltip
+                                    size="sm"
+                                    title={t.chat.listItem.unflag}
+                                    variant="outlined"
+                                >
                                     <IconButton
                                         color={tmpIsFlagged ? "danger" : "neutral"}
                                         size="sm"

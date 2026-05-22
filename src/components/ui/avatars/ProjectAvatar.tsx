@@ -1,5 +1,5 @@
 import { useState } from "react";
-import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import AssignmentIcon from "@mui/icons-material/Assignment";
 import { Avatar, Box } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
@@ -42,7 +42,7 @@ export const ProjectAvatar = (props: ProjectAvatarProps) => {
                     src={`${media_url}/${pmChat.profileImagePath}`}
                     sx={{ width: _avatarSize, height: _avatarSize }}
                 >
-                    <AccountTreeIcon sx={{ fontSize: 26 }} />
+                    <AssignmentIcon sx={{ fontSize: 26 }} />
                 </Avatar>
             </Box>
 
