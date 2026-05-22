@@ -1,4 +1,5 @@
 import { TaskDependencyRef, TaskTableProps } from "../../../types/tasks";
+import { Sprint } from "../sprint-milestone/types";
 
 // Editable fields that the node card can mutate. The diagram only
 // touches scheduling + title; everything else (status, assignee,
@@ -35,6 +36,12 @@ export type TaskNodeData = {
     totalDescendantCount: number;
     /** Open-blocker count. Renders a small "blocked" badge when > 0. */
     openBlockerCount: number;
+    /**
+     * Sprint metadata for milestone nodes. Looked up by the canvas
+     * from `useSM.projectSprints` via the milestone's `sprintId`.
+     * Always null for non-milestone nodes.
+     */
+    sprint?: Sprint | null;
     onChange: (patch: EditableFields) => void | Promise<void>;
     onAddSubtask: () => void | Promise<void>;
     onDelete: () => void | Promise<void>;
@@ -122,4 +129,10 @@ export type ScheduleOverview = {
     total: number;
     /** Of those descendants, how many are Closed. */
     closed: number;
+    /**
+     * Sprint linked to the root milestone (if the root is a milestone
+     * with a sprint). Used by the modal header pill to surface
+     * "Sprint N · start – end".
+     */
+    sprint?: Sprint | null;
 };

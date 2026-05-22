@@ -42,13 +42,14 @@ import { ChatManagementState } from "../../../../../hooks/chats/useChatManagemen
 import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../../hooks/notes/useNoteManagement";
+import { SprintMilestoneManagementState } from "../../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { TaskNoteProps } from "../../../../../types/notes";
 import { TaskProps } from "../../../../../types/tasks";
-import { deleteEmptyTask } from "../../../services/deleteEmptyTask";
 import { ModalTaskDiagram } from "../../../diagram/components/ModalTaskDiagram";
+import { deleteEmptyTask } from "../../../services/deleteEmptyTask";
 import { CopyableTaskIdChip } from "../../CopyableTaskId";
 import { ModalDeleteTask } from "../../modals/ModalDeleteTask";
 
@@ -70,6 +71,9 @@ type TaskTitleBlockProps = {
     useTM: TaskManagementState;
     useNM: NoteManagementState;
     usePM: ProjectManagementState;
+    /** Optional. Forwarded to the diagram modal so the canvas can
+     *  show sprint info on milestone nodes + the header overview. */
+    useSM?: SprintMilestoneManagementState;
     // When true, the create-mode badge reads "Milestone" instead of
     // "New Task". Only meaningful when `isPreviewMode` is false.
     isMilestone?: boolean;
@@ -100,6 +104,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         useTM,
         useNM,
         usePM,
+        useSM,
         isMilestone,
         isSubTask,
         isDirty = false,
@@ -515,11 +520,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                         isPreviewMode &&
                         taskContent.id != null &&
                         taskContent.project?.projectId != null && (
-                            <Tooltip
-                                size="sm"
-                                title="Open task graph"
-                                variant="outlined"
-                            >
+                            <Tooltip size="sm" title="Open task graph" variant="outlined">
                                 <IconButton
                                     size="sm"
                                     variant="plain"
@@ -865,6 +866,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                     rootLabel={`${taskContent.displayId ?? `#${taskContent.id}`} · ${taskContent.title || "Untitled"}`}
                     useTM={useTM}
                     usePM={usePM}
+                    useSM={useSM}
                 />
             )}
 

@@ -37,6 +37,14 @@ export const useWebSocket = (
     const [socketInstance, setSocketInstance] = useState<Socket | null>(null);
     const [showDisconnected, setShowDisconnected] = useState(false);
     const attemptCountRef = useRef(0);
+    // DIAG: remove after the PROD reconnect-loop is diagnosed. Holds the
+    // last-seen value of each dep so we can log which one changed when
+    // the WS-creation effect fires.
+    const prevDepsRef = useRef<{
+        myself: UserProps | undefined;
+        accessToken: string | null | undefined;
+        currentTeamId: string | undefined;
+    }>({ myself: undefined, accessToken: undefined, currentTeamId: undefined });
 
     const sendHeartBeat = useCallback(() => {
         if (socketInstance) {

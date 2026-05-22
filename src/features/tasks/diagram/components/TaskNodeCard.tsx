@@ -1,21 +1,20 @@
-import { memo, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
-import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import LaunchRoundedIcon from "@mui/icons-material/LaunchRounded";
-import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
 import {
     Box,
+    Button,
     Chip,
-    Dropdown,
+    FormControl,
+    FormLabel,
     IconButton,
     Input,
-    Menu,
-    MenuButton,
-    MenuItem,
+    Modal,
+    ModalDialog,
     Stack,
     Tooltip,
     Typography,
@@ -28,8 +27,8 @@ import { purplePalette } from "../../../../theme/purplePalette";
 import { StatusChip } from "../../components/autocompletes/ACTaskSelector";
 import { CopyableTaskIdChip } from "../../components/CopyableTaskId";
 import { statuses } from "../../utils/taskMeta";
-import { getScheduleStatus, TONE_COLOR } from "../utils/scheduleStatus";
 import { HANDLE, TaskNodeData } from "../types";
+import { getScheduleStatus, TONE_COLOR } from "../utils/scheduleStatus";
 
 const statusMeta = (label: string | null | undefined) => {
     const found = statuses.find((s) => s.status === label);
@@ -62,12 +61,44 @@ export const TaskNodeCard = memo((props: NodeProps) => {
         openBlockerCount,
         onChange,
         onAddSubtask,
-        onDelete,
         onOpenPreview,
     } = props.data as unknown as TaskNodeData;
 
     const [editing, setEditing] = useState(false);
     const [draftTitle, setDraftTitle] = useState(task.title ?? "");
+    // Inline date editor (Issue #5). A small Joy modal opens above the
+    // diagram when the user clicks the edit-calendar icon. We keep the
+    // drafts local and PUT both fields on Save so the user can pick a
+    // start/due pair in one motion instead of two round-trips.
+    const [dateEditorOpen, setDateEditorOpen] = useState(false);
+    const [draftStart, setDraftStart] = useState<string>(task.startDate ?? "");
+    const [draftDue, setDraftDue] = useState<string>(task.dueDate ?? "");
+
+    // Keep drafts in sync when task data changes externally (e.g. a
+    // graph refresh after a sibling edit). Only when the editor is
+    // closed — don't clobber in-progress input.
+    useEffect(() => {
+        if (!dateEditorOpen) {
+            setDraftStart(task.startDate ?? "");
+            setDraftDue(task.dueDate ?? "");
+        }
+    }, [task.startDate, task.dueDate, dateEditorOpen]);
+
+    const openDateEditor = () => {
+        setDraftStart(task.startDate ?? "");
+        setDraftDue(task.dueDate ?? "");
+        setDateEditorOpen(true);
+    };
+
+    const saveDateEditor = () => {
+        // Empty strings flow through as `null` so the user can clear
+        // a date by blanking the input.
+        void onChange({
+            startDate: draftStart || null,
+            dueDate: draftDue || null,
+        });
+        setDateEditorOpen(false);
+    };
 
     const meta = statusMeta(task.status);
     const schedule = getScheduleStatus(task.startDate, task.dueDate, task.status);
@@ -88,15 +119,29 @@ export const TaskNodeCard = memo((props: NodeProps) => {
         }
     };
 
-    // Visual treatment: ghosts dim, dashed, no glow. Internal cards
-    // get the existing accent treatment with an additional schedule
-    // tone stripe on the left edge (red wins on overdue).
+    // Visual treatment: ghosts stay neutral (dim + dashed). Internal
+    // cards mix the existing purple border with the task's *status*
+    // color so the board reads as "all the green cards are closed"
+    // at a glance, without the status chip having to do all the work.
+    // The schedule tone takes over the left edge stripe (red on
+    // overdue) so urgency still pops over status.
     const borderStyle = isExternal ? "dashed" : "solid";
+    // `color-mix` is widely supported (Chromium 111+ / Safari 16.2+ /
+    // Firefox 113+); we lean on CSS to blend so the result interpolates
+    // in both theme modes without two color stops to maintain manually.
+    const baseBorder = isRoot ? P.borderStrong : P.border;
+    const statusTintColor = meta.color;
     const borderColor = isExternal
-        ? P.borderMuted ?? P.border
-        : isRoot
-          ? P.borderStrong
-          : P.border;
+        ? (P.borderMuted ?? P.border)
+        : statusTintColor
+          ? `color-mix(in srgb, ${baseBorder}, ${statusTintColor} 38%)`
+          : baseBorder;
+    // Subtle status glow on non-ghost cards so the eye sweeps over
+    // closed (green) / WIP (orange) tasks as a group.
+    const statusGlow =
+        !isExternal && statusTintColor
+            ? `0 4px 18px ${alpha(statusTintColor, isDark ? 0.18 : 0.12)}`
+            : null;
     const stripeColor = isExternal
         ? null
         : schedule.tone === "neutral" || schedule.tone === "success"
@@ -120,8 +165,8 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                 boxShadow: isExternal
                     ? "none"
                     : isRoot
-                      ? `0 6px 22px ${P.glow}`
-                      : P.shadowSoft,
+                      ? `0 6px 22px ${P.glow}${statusGlow ? `, ${statusGlow}` : ""}`
+                      : (statusGlow ?? P.shadowSoft),
                 transition: "border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease",
                 position: "relative",
                 "&:hover": isExternal
@@ -141,37 +186,58 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                     : undefined,
             }}
         >
-            {/* Handles — inert for ghosts so users can't accidentally
-                build edges that wouldn't make sense (we don't know the
-                external task's structure, so a parent-child connection
-                would be wrong). Dependency handles stay active —
-                forming a NEW dependency to an external task is the same
-                op as forming one to any other task. */}
+            {/* Handles — fully inert for ghosts. External tasks are
+                a read-only window; editing relations from this diagram
+                would surprise the user (they'd need to manage them
+                from the other task's own preview/diagram). Structure
+                AND dependency handles both disable on ghosts. */}
             <Handle
                 type="target"
                 position={Position.Top}
                 id={HANDLE.structureTop}
-                style={{ ...HANDLE_BASE, background: P.accent, borderColor: P.accentSoft }}
+                style={{
+                    ...HANDLE_BASE,
+                    background: P.accent,
+                    borderColor: P.accentSoft,
+                    opacity: isExternal ? 0.35 : 1,
+                }}
                 isConnectable={!isExternal}
             />
             <Handle
                 type="source"
                 position={Position.Bottom}
                 id={HANDLE.structureBottom}
-                style={{ ...HANDLE_BASE, background: P.accent, borderColor: P.accentSoft }}
+                style={{
+                    ...HANDLE_BASE,
+                    background: P.accent,
+                    borderColor: P.accentSoft,
+                    opacity: isExternal ? 0.35 : 1,
+                }}
                 isConnectable={!isExternal}
             />
             <Handle
                 type="target"
                 position={Position.Left}
                 id={HANDLE.dependencyLeft}
-                style={{ ...HANDLE_BASE, background: "#ff8c00", borderColor: "#fbbf24" }}
+                style={{
+                    ...HANDLE_BASE,
+                    background: "#ff8c00",
+                    borderColor: "#fbbf24",
+                    opacity: isExternal ? 0.35 : 1,
+                }}
+                isConnectable={!isExternal}
             />
             <Handle
                 type="source"
                 position={Position.Right}
                 id={HANDLE.dependencyRight}
-                style={{ ...HANDLE_BASE, background: "#ff8c00", borderColor: "#fbbf24" }}
+                style={{
+                    ...HANDLE_BASE,
+                    background: "#ff8c00",
+                    borderColor: "#fbbf24",
+                    opacity: isExternal ? 0.35 : 1,
+                }}
+                isConnectable={!isExternal}
             />
 
             {/* Header row */}
@@ -222,35 +288,29 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                         />
                     </Tooltip>
                 ) : (
-                    <Dropdown>
-                        <MenuButton
-                            slots={{ root: IconButton }}
-                            slotProps={{
-                                root: {
-                                    size: "sm",
-                                    variant: "plain",
-                                    sx: {
-                                        "--IconButton-size": "22px",
-                                        color: P.textMuted,
-                                        opacity: 0.7,
-                                        "&:hover": { opacity: 1 },
-                                    },
+                    // Direct "open task" affordance. Clicking jumps to
+                    // the task preview and closes the diagram modal
+                    // (the canvas wires both into `onOpenPreview`).
+                    <Tooltip title="Open task" placement="top" variant="outlined" arrow>
+                        <IconButton
+                            size="sm"
+                            variant="plain"
+                            onClick={onOpenPreview}
+                            sx={{
+                                "--IconButton-size": "22px",
+                                color: P.textMuted,
+                                opacity: 0.7,
+                                borderRadius: "5px",
+                                "&:hover": {
+                                    opacity: 1,
+                                    background: P.hoverBg,
+                                    color: P.accentSoft,
                                 },
                             }}
                         >
-                            <MoreHorizRoundedIcon sx={{ fontSize: 16 }} />
-                        </MenuButton>
-                        <Menu size="sm" placement="bottom-end">
-                            <MenuItem onClick={onOpenPreview}>
-                                <LaunchRoundedIcon sx={{ fontSize: 16 }} />
-                                Open in preview
-                            </MenuItem>
-                            <MenuItem color="danger" onClick={() => void onDelete()}>
-                                <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />
-                                Delete task
-                            </MenuItem>
-                        </Menu>
-                    </Dropdown>
+                            <LaunchRoundedIcon sx={{ fontSize: 14 }} />
+                        </IconButton>
+                    </Tooltip>
                 )}
             </Stack>
 
@@ -318,19 +378,52 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                 <CalendarMonthRoundedIcon
                     sx={{ fontSize: 14, color: P.textMuted, opacity: 0.7 }}
                 />
-                {schedule.startLabel && schedule.dueLabel ? (
-                    <Typography level="body-xs" sx={{ color: P.text, fontWeight: 500 }}>
-                        {schedule.startLabel} – {schedule.dueLabel}
-                    </Typography>
-                ) : schedule.startLabel || schedule.dueLabel ? (
-                    <Typography level="body-xs" sx={{ color: P.text, fontWeight: 500 }}>
-                        {schedule.startLabel ?? schedule.dueLabel}
-                    </Typography>
-                ) : (
-                    <Typography level="body-xs" sx={{ color: P.textMuted, opacity: 0.6 }}>
-                        No dates
-                    </Typography>
-                )}
+                {/* Date label — clickable on non-external nodes so the
+                    user can edit start/due directly. Hover/focus give a
+                    subtle hint without a separate icon button. */}
+                {(() => {
+                    const dateText =
+                        schedule.startLabel && schedule.dueLabel
+                            ? `${schedule.startLabel} – ${schedule.dueLabel}`
+                            : (schedule.startLabel ?? schedule.dueLabel ?? null);
+                    const placeholder = "+ Set dates";
+                    const isEmpty = dateText == null;
+                    const labelText = isEmpty ? placeholder : dateText;
+                    const editable = !isExternal;
+                    return (
+                        <Tooltip
+                            title={editable ? "Click to edit dates" : ""}
+                            placement="top"
+                            variant="outlined"
+                            arrow
+                            enterDelay={500}
+                            disableHoverListener={!editable}
+                        >
+                            <Typography
+                                level="body-xs"
+                                onClick={editable ? openDateEditor : undefined}
+                                sx={{
+                                    color: isEmpty ? P.textMuted : P.text,
+                                    fontWeight: 500,
+                                    opacity: isEmpty ? 0.7 : 1,
+                                    cursor: editable ? "pointer" : "default",
+                                    borderRadius: "4px",
+                                    px: 0.5,
+                                    mx: -0.25,
+                                    transition: "background 0.12s ease, color 0.12s ease",
+                                    "&:hover": editable
+                                        ? {
+                                              background: P.hoverBg,
+                                              color: P.accentSoft,
+                                          }
+                                        : undefined,
+                                }}
+                            >
+                                {labelText}
+                            </Typography>
+                        </Tooltip>
+                    );
+                })()}
                 {schedule.durationDays != null && (
                     <Chip
                         size="sm"
@@ -453,6 +546,107 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                     </Tooltip>
                 )}
             </Stack>
+
+            {/* Inline date editor modal — opens above the diagram so
+                the user can adjust start/due without leaving the
+                canvas. Empty inputs flow as `null`, so the user can
+                clear a date by blanking the field. Plain Stack layout
+                instead of Joy's DialogTitle/DialogContent: those
+                wrappers ship their own padding/typography that fought
+                with the compact look we want here. */}
+            <Modal open={dateEditorOpen} onClose={() => setDateEditorOpen(false)}>
+                <ModalDialog
+                    variant="outlined"
+                    sx={{
+                        minWidth: 340,
+                        maxWidth: 380,
+                        p: 0,
+                        borderRadius: "12px",
+                        background: P.surfaceElevated,
+                        border: `1px solid ${P.border}`,
+                        boxShadow: P.shadow,
+                        overflow: "hidden",
+                    }}
+                >
+                    <Stack
+                        direction="row"
+                        alignItems="center"
+                        spacing={1}
+                        sx={{
+                            px: 2,
+                            py: 1.25,
+                            borderBottom: `1px solid ${P.border}`,
+                        }}
+                    >
+                        <CalendarMonthRoundedIcon
+                            sx={{ fontSize: 18, color: P.accentSoft }}
+                        />
+                        <Typography
+                            level="title-sm"
+                            sx={{ fontWeight: 700, color: P.text }}
+                        >
+                            Edit schedule
+                        </Typography>
+                    </Stack>
+                    <Stack spacing={1.5} sx={{ px: 2, py: 1.75 }}>
+                        <FormControl size="sm">
+                            <FormLabel sx={{ color: P.textMuted, fontWeight: 600 }}>
+                                Start date
+                            </FormLabel>
+                            <Input
+                                type="date"
+                                value={draftStart}
+                                onChange={(e) => setDraftStart(e.target.value)}
+                                sx={{
+                                    "& input::-webkit-calendar-picker-indicator": {
+                                        filter: isDark ? "invert()" : "none",
+                                        cursor: "pointer",
+                                    },
+                                }}
+                            />
+                        </FormControl>
+                        <FormControl size="sm">
+                            <FormLabel sx={{ color: P.textMuted, fontWeight: 600 }}>
+                                Due date
+                            </FormLabel>
+                            <Input
+                                type="date"
+                                value={draftDue}
+                                onChange={(e) => setDraftDue(e.target.value)}
+                                sx={{
+                                    "& input::-webkit-calendar-picker-indicator": {
+                                        filter: isDark ? "invert()" : "none",
+                                        cursor: "pointer",
+                                    },
+                                }}
+                            />
+                        </FormControl>
+                    </Stack>
+                    <Stack
+                        direction="row"
+                        spacing={1}
+                        justifyContent="flex-end"
+                        sx={{
+                            px: 2,
+                            py: 1.25,
+                            borderTop: `1px solid ${P.border}`,
+                            background: P.surface,
+                        }}
+                    >
+                        <Button
+                            size="sm"
+                            variant="plain"
+                            color="neutral"
+                            onClick={() => setDateEditorOpen(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button size="sm" variant="solid" onClick={saveDateEditor}>
+                            Save
+                        </Button>
+                    </Stack>
+                </ModalDialog>
+            </Modal>
         </Box>
     );
 });

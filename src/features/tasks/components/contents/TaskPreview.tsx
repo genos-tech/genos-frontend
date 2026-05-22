@@ -30,7 +30,6 @@ import { useInitialTabIndex } from "./utils/useInitialTabIndex";
 
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { TaskHeaderStyles } from "../../../../components/ui/styles/commonStyle";
-import { ModalTaskDiagram } from "../../diagram/components/ModalTaskDiagram";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
@@ -54,6 +53,7 @@ import {
 import { LinkedPrCard } from "../../../integrations/components/LinkedPrCard";
 import { parsePrUrl } from "../../../integrations/utils/parsePrUrl";
 import { loadTaskNotes } from "../../../notes/task-notes/services/loadTaskNotes";
+import { ModalTaskDiagram } from "../../diagram/components/ModalTaskDiagram";
 import { loadSpecificTask } from "../../services/loadSpecificTask";
 import { loadTaskActivities } from "../../services/loadTaskActivities";
 import { loadTaskComments } from "../../services/loadTaskComments";
@@ -684,6 +684,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                             useNM={useNM}
                             usePM={usePM}
                             useTM={useTM}
+                            useSM={useSM}
                             useUISM={useUISM}
                         />
                     }
@@ -915,6 +916,7 @@ const milestoneToTaskProps = (
         chatType: null,
         chatId: null,
         threadId: null,
+        startDate: m.startDate ?? null,
         dueDate: m.dueDate ?? "",
         status: {
             code: 0,
@@ -1402,6 +1404,9 @@ const MilestonePreviewInner = ({
         const patch: Parameters<typeof useSM.updateExistingMilestone>[0] = {
             milestoneId: milestone.milestoneId,
         };
+        if (next.startDate !== undefined && next.startDate !== milestone.startDate) {
+            patch.startDate = next.startDate || null;
+        }
         if (next.dueDate !== undefined && next.dueDate !== milestone.dueDate) {
             patch.dueDate = next.dueDate || null;
         }
@@ -2100,6 +2105,7 @@ const MilestonePreviewInner = ({
                     rootLabel={`${milestone.title || "Milestone"} · diagram`}
                     useTM={useTM}
                     usePM={usePM}
+                    useSM={useSM}
                 />
             )}
         </>

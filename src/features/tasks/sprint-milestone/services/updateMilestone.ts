@@ -14,6 +14,7 @@ export type UpdateMilestoneInput = {
     priorityCode?: number | null;
     effortLevel?: string | null;
     effortLevelCode?: number | null;
+    startDate?: string | null;
     dueDate?: string | null;
     tags?: unknown;
     // External links list (`{ id, url, title, isGitHub }[]`). Mirrors
@@ -45,6 +46,7 @@ export const updateMilestone = async (
             if (input.effortLevel !== undefined) body.effort_level = input.effortLevel;
             if (input.effortLevelCode !== undefined)
                 body.effort_level_code = input.effortLevelCode;
+            if (input.startDate !== undefined) body.start_date = input.startDate;
             if (input.dueDate !== undefined) body.due_date = input.dueDate;
             if (input.tags !== undefined) body.tags = input.tags;
             if (input.links !== undefined) body.links = input.links;

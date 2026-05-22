@@ -1,17 +1,10 @@
 import { memo } from "react";
+import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import LaunchRoundedIcon from "@mui/icons-material/LaunchRounded";
 import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
-import {
-    Box,
-    Chip,
-    IconButton,
-    LinearProgress,
-    Stack,
-    Tooltip,
-    Typography,
-} from "@mui/joy";
+import { Box, Chip, IconButton, LinearProgress, Stack, Tooltip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 import { Handle, NodeProps, Position } from "@xyflow/react";
@@ -20,8 +13,15 @@ import { purplePalette } from "../../../../theme/purplePalette";
 import { StatusChip } from "../../components/autocompletes/ACTaskSelector";
 import { CopyableTaskIdChip } from "../../components/CopyableTaskId";
 import { statuses } from "../../utils/taskMeta";
-import { getScheduleStatus, TONE_COLOR } from "../utils/scheduleStatus";
 import { HANDLE, TaskNodeData } from "../types";
+import { getScheduleStatus, TONE_COLOR } from "../utils/scheduleStatus";
+
+const fmtDate = (iso: string | null | undefined): string => {
+    if (!iso) return "";
+    const d = new Date(iso.length >= 10 ? iso.slice(0, 10) : iso);
+    if (Number.isNaN(d.getTime())) return iso;
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+};
 
 const statusMeta = (label: string | null | undefined) => {
     const found = statuses.find((s) => s.status === label);
@@ -52,8 +52,8 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
     const isDark = mode === "dark";
     const P = isDark ? purplePalette.dark : purplePalette.light;
 
-    const { task, closedDescendantCount, totalDescendantCount, onOpenPreview } = props
-        .data as unknown as TaskNodeData;
+    const { task, closedDescendantCount, totalDescendantCount, sprint, onOpenPreview } =
+        props.data as unknown as TaskNodeData;
 
     const meta = statusMeta(task.status);
     const schedule = getScheduleStatus(task.startDate, task.dueDate, task.status);
@@ -92,8 +92,7 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
                     right: 8,
                     height: "2px",
                     borderRadius: "0 0 2px 2px",
-                    background:
-                        "linear-gradient(90deg, #fbbf24 0%, #f97316 50%, #ef4444 100%)",
+                    background: "linear-gradient(90deg, #fbbf24 0%, #f97316 50%, #ef4444 100%)",
                     opacity: 0.9,
                 },
             }}
@@ -134,9 +133,7 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        background: isDark
-                            ? "rgba(249,115,22,0.18)"
-                            : "rgba(234,88,12,0.12)",
+                        background: isDark ? "rgba(249,115,22,0.18)" : "rgba(234,88,12,0.12)",
                         color: flagColor,
                     }}
                 >
@@ -242,14 +239,35 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
                 )}
             </Stack>
 
-            {/* Progress bar — only when the milestone has descendants. */}
-            {total > 0 && (
+            {/* Sprint linkage — when the milestone is attached to a
+                sprint we surface its name + date range so the milestone
+                reads as scheduled within a concrete cycle. Sits between
+                the schedule row and the progress bar so milestone
+                window and sprint cadence read side by side. */}
+            {sprint && (
                 <Stack
                     direction="row"
                     alignItems="center"
-                    spacing={1}
-                    sx={{ mt: 0.5 }}
+                    spacing={0.5}
+                    sx={{ mb: 0.75, minHeight: 22, flexWrap: "wrap", rowGap: 0.5 }}
                 >
+                    <BoltRoundedIcon sx={{ fontSize: 14, color: P.accentSoft, opacity: 0.9 }} />
+                    <Typography level="body-xs" sx={{ color: P.text, fontWeight: 600 }} noWrap>
+                        {sprint.name}
+                    </Typography>
+                    <Typography
+                        level="body-xs"
+                        sx={{ color: P.textMuted, fontWeight: 500 }}
+                        noWrap
+                    >
+                        {fmtDate(sprint.startDate)} – {fmtDate(sprint.endDate)}
+                    </Typography>
+                </Stack>
+            )}
+
+            {/* Progress bar — only when the milestone has descendants. */}
+            {total > 0 && (
+                <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 0.5 }}>
                     <Box sx={{ flex: 1 }}>
                         <LinearProgress
                             determinate
@@ -261,7 +279,12 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
                     </Box>
                     <Typography
                         level="body-xs"
-                        sx={{ color: P.textMuted, fontWeight: 600, minWidth: 42, textAlign: "right" }}
+                        sx={{
+                            color: P.textMuted,
+                            fontWeight: 600,
+                            minWidth: 42,
+                            textAlign: "right",
+                        }}
                     >
                         {closed}/{total}
                     </Typography>
@@ -284,9 +307,7 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
                         textTransform: "uppercase",
                         borderRadius: "4px",
                         "--Chip-paddingInline": "5px",
-                        background: isDark
-                            ? "rgba(249,115,22,0.15)"
-                            : "rgba(234,88,12,0.1)",
+                        background: isDark ? "rgba(249,115,22,0.15)" : "rgba(234,88,12,0.1)",
                         color: flagColor,
                     }}
                 >

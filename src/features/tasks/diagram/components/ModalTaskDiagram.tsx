@@ -1,5 +1,6 @@
 import { useState } from "react";
 import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
+import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import {
@@ -16,6 +17,7 @@ import {
 import { useColorScheme } from "@mui/joy/styles";
 
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { purplePalette } from "../../../../theme/purplePalette";
 import { UserProps } from "../../../../types/admin";
@@ -36,6 +38,9 @@ type Props = {
     /** Needed so a click on an external ghost can switch the current
      *  project before opening that task's preview. */
     usePM: ProjectManagementState;
+    /** Optional. When present, the canvas shows sprint info on
+     *  milestone nodes + in the header overview pill. */
+    useSM?: SprintMilestoneManagementState;
 };
 
 // Full-screen diagram modal. Substantially larger than every other
@@ -59,6 +64,7 @@ export const ModalTaskDiagram = ({
     rootLabel,
     useTM,
     usePM,
+    useSM,
 }: Props) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
@@ -68,20 +74,28 @@ export const ModalTaskDiagram = ({
     // Null while the first load is in flight.
     const [overview, setOverview] = useState<ScheduleOverview | null>(null);
 
-    const spanLabel = (() => {
+    const rawSpanLabel = (() => {
         if (!overview) return null;
         const start = fmtDateLabel(overview.spanStart);
         const end = fmtDateLabel(overview.spanEnd);
         if (start && end) return `${start} – ${end}`;
         return start ?? end ?? null;
     })();
+    const sprintLabel = overview?.sprint
+        ? `${fmtDateLabel(overview.sprint.startDate)} – ${fmtDateLabel(overview.sprint.endDate)}`
+        : null;
+    // Suppress the span row when it duplicates the sprint row — the
+    // sprint chip already carries that period, and showing the same
+    // dates twice in the header reads as a UI bug. Span still renders
+    // when no sprint is set or the task span actually differs from the
+    // sprint window.
+    const spanLabel = sprintLabel && rawSpanLabel === sprintLabel ? null : rawSpanLabel;
     const progressPct =
         overview && overview.total > 0
             ? Math.round((overview.closed / overview.total) * 100)
             : null;
     const showOverview =
-        overview != null &&
-        (spanLabel != null || overview.spanDays != null || overview.total > 0);
+        overview != null && (spanLabel != null || overview.total > 0 || overview.sprint != null);
 
     return (
         <Modal open={open} onClose={onClose}>
@@ -181,8 +195,29 @@ export const ModalTaskDiagram = ({
                                 borderRadius: "10px",
                                 background: P.surfaceElevated,
                                 border: `1px solid ${P.border}`,
+                                flexWrap: "wrap",
+                                rowGap: 0.5,
                             }}
                         >
+                            {overview?.sprint && (
+                                <Stack direction="row" alignItems="center" spacing={0.6}>
+                                    <BoltRoundedIcon sx={{ fontSize: 16, color: P.accentSoft }} />
+                                    <Typography
+                                        level="body-sm"
+                                        sx={{ color: P.text, fontWeight: 600 }}
+                                    >
+                                        {overview.sprint.name}
+                                    </Typography>
+                                    {sprintLabel && (
+                                        <Typography
+                                            level="body-xs"
+                                            sx={{ color: P.textMuted, fontWeight: 500 }}
+                                        >
+                                            {sprintLabel}
+                                        </Typography>
+                                    )}
+                                </Stack>
+                            )}
                             {spanLabel && (
                                 <Stack direction="row" alignItems="center" spacing={0.6}>
                                     <CalendarMonthRoundedIcon
@@ -263,6 +298,7 @@ export const ModalTaskDiagram = ({
                             projectId={projectId}
                             useTM={useTM}
                             usePM={usePM}
+                            useSM={useSM}
                             onOverviewChange={setOverview}
                             onCloseModal={onClose}
                         />

@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { Alert, Box, CircularProgress, IconButton, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import {
+    addEdge,
+    applyEdgeChanges,
+    applyNodeChanges,
     Background,
     BackgroundVariant,
     Connection,
@@ -15,9 +18,6 @@ import {
     NodeChange,
     ReactFlow,
     ReactFlowProvider,
-    addEdge,
-    applyEdgeChanges,
-    applyNodeChanges,
     reconnectEdge,
     useReactFlow,
 } from "@xyflow/react";
@@ -26,12 +26,14 @@ import "@xyflow/react/dist/style.css";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { purplePalette } from "../../../../theme/purplePalette";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
 import { createTaskDependency } from "../../services/createTaskDependency";
 import { deleteTaskDependency } from "../../services/deleteTaskDependency";
+import { Sprint } from "../../sprint-milestone/types";
 import { useDagreLayout } from "../hooks/useDagreLayout";
 import { createDiagramSubtask } from "../services/createDiagramSubtask";
 import { deleteDiagramTask } from "../services/deleteDiagramTask";
@@ -41,12 +43,12 @@ import {
     DependencyEdgeData,
     EditableFields,
     HANDLE,
+    isDependencyHandle,
+    isStructureHandle,
     ScheduleOverview,
     StructureEdgeData,
     TaskGraph,
     TaskNodeData,
-    isDependencyHandle,
-    isStructureHandle,
 } from "../types";
 import { DependencyEdge } from "./DependencyEdge";
 import { DiagramLegend } from "./DiagramLegend";
@@ -62,13 +64,21 @@ type Props = {
     /** Needed for cross-project navigation when the user clicks a
      *  ghost (external) node in another project. */
     usePM: ProjectManagementState;
+    /** Optional. When provided, the canvas looks up sprint info per
+     *  milestone-backing-task and surfaces it on the milestone card +
+     *  the modal header overview. */
+    useSM?: SprintMilestoneManagementState;
     /** Published after every graph load so the modal header can
      *  render its "Schedule overview" pill. */
     onOverviewChange?: (overview: ScheduleOverview) => void;
     onCloseModal: () => void;
 };
 
-const computeOverview = (graph: TaskGraph, rootTaskId: number): ScheduleOverview => {
+const computeOverview = (
+    graph: TaskGraph,
+    rootTaskId: number,
+    sprintByTaskId: Map<number, Sprint>
+): ScheduleOverview => {
     // Span: min(start) → max(due) across visible (non-ghost) tasks.
     let spanStart: string | null = null;
     let spanEnd: string | null = null;
@@ -93,7 +103,36 @@ const computeOverview = (graph: TaskGraph, rootTaskId: number): ScheduleOverview
         total += 1;
         if ((t.status ?? "").toLowerCase() === "closed") closed += 1;
     }
-    return { spanStart, spanEnd, spanDays, total, closed };
+    // Pick up the sprint linked to the root task. If the root isn't a
+    // milestone (or has no sprint), this is null.
+    const sprint = sprintByTaskId.get(rootTaskId) ?? null;
+    return { spanStart, spanEnd, spanDays, total, closed, sprint };
+};
+
+/** Build `taskId → Sprint` for every milestone-backing task in the
+ *  visible set that has a `sprintId`. Empty map when `useSM` isn't
+ *  available (e.g. diagram opened from a surface that doesn't carry
+ *  the sprint hook). */
+const buildSprintLookup = (
+    graph: TaskGraph,
+    useSM: SprintMilestoneManagementState | undefined,
+    projectId: number
+): Map<number, Sprint> => {
+    const out = new Map<number, Sprint>();
+    if (!useSM) return out;
+    const sprintsForProject = useSM.projectSprints[projectId] ?? [];
+    if (sprintsForProject.length === 0) return out;
+    const sprintById = new Map(sprintsForProject.map((s) => [s.sprintId, s]));
+    for (const t of graph.tasks) {
+        if (!t.isMilestone) continue;
+        const sprintId = t.sprintId ?? null;
+        if (sprintId == null) continue;
+        const taskId = t.id == null ? null : Number(t.id);
+        if (taskId == null) continue;
+        const sprint = sprintById.get(sprintId);
+        if (sprint) out.set(taskId, sprint);
+    }
+    return out;
 };
 
 // Stable node/edge type registries. Defined at module scope so React
@@ -152,6 +191,7 @@ const computeDescendantCounts = (
 const buildNodesAndEdges = (
     graph: TaskGraph,
     rootTaskId: number,
+    sprintByTaskId: Map<number, Sprint>,
     handlers: {
         onChange: (taskId: number, patch: EditableFields) => void | Promise<void>;
         onAddSubtask: (parentTaskId: number) => void | Promise<void>;
@@ -197,6 +237,7 @@ const buildNodesAndEdges = (
             openBlockerCount: openBlockerCountByTask.get(taskId) ?? 0,
             closedDescendantCount: counts.closed,
             totalDescendantCount: counts.total,
+            sprint: isMilestone ? (sprintByTaskId.get(taskId) ?? null) : null,
             onChange: (patch) => handlers.onChange(taskId, patch),
             onAddSubtask: () => handlers.onAddSubtask(taskId),
             onDelete: () => handlers.onDelete(taskId),
@@ -254,10 +295,7 @@ const buildNodesAndEdges = (
     // node array, both endpoints always resolve.
     const allRenderedIds = new Set(nodes.map((n) => Number(n.id)));
     const dependencyEdges: Edge[] = graph.dependencyEdges
-        .filter(
-            (d) =>
-                allRenderedIds.has(d.blockerTaskId) && allRenderedIds.has(d.blockedTaskId)
-        )
+        .filter((d) => allRenderedIds.has(d.blockerTaskId) && allRenderedIds.has(d.blockedTaskId))
         .map((d) => {
             const data: DependencyEdgeData = {
                 kind: "dependency",
@@ -299,6 +337,7 @@ const CanvasInner = ({
     projectId,
     useTM,
     usePM,
+    useSM,
     onOverviewChange,
     onCloseModal,
 }: Props) => {
@@ -333,10 +372,11 @@ const CanvasInner = ({
         // here (one source of truth) instead of in the modal so the
         // modal stays a thin shell.
         if (onOverviewChange) {
-            onOverviewChange(computeOverview(graph, rootTaskId));
+            const sprintByTaskId = buildSprintLookup(graph, useSM, projectId);
+            onOverviewChange(computeOverview(graph, rootTaskId, sprintByTaskId));
         }
         return graph;
-    }, [myself, projectId, rootTaskId, accessToken, onOverviewChange]);
+    }, [myself, projectId, rootTaskId, accessToken, onOverviewChange, useSM]);
 
     // CRUD handlers — defined before `assemble` so the assembly can
     // capture them in node data.
@@ -366,7 +406,10 @@ const CanvasInner = ({
                         ...(patch.startDate !== undefined ? { startDate: patch.startDate } : {}),
                         ...(patch.dueDate !== undefined ? { dueDate: patch.dueDate } : {}),
                     };
-                    return { ...n, data: { ...oldData, task: merged } as unknown as Record<string, unknown> };
+                    return {
+                        ...n,
+                        data: { ...oldData, task: merged } as unknown as Record<string, unknown>,
+                    };
                 })
             );
             // Background refresh — keeps the parent table consistent
@@ -417,12 +460,9 @@ const CanvasInner = ({
             // first or the preview pane won't be able to hydrate.
             // Mirrors the cross-project navigation in
             // TaskDependenciesBlock's chip click handler.
-            const ghost = graphRef.current?.externalTasks.find(
-                (t) => Number(t.id) === taskId
-            );
+            const ghost = graphRef.current?.externalTasks.find((t) => Number(t.id) === taskId);
             if (ghost && ghost.projectId != null && ghost.projectId !== projectId) {
-                const projectName = (ghost as { projectName?: string | null })
-                    .projectName ?? "";
+                const projectName = (ghost as { projectName?: string | null }).projectName ?? "";
                 usePM.setCurrentProject({
                     projectId: ghost.projectId,
                     projectName,
@@ -452,9 +492,11 @@ const CanvasInner = ({
 
     const assembleAndLayout = useCallback(
         (graph: TaskGraph) => {
+            const sprintByTaskId = buildSprintLookup(graph, useSM, projectId);
             const { nodes: rawNodes, edges: rawEdges } = buildNodesAndEdges(
                 graph,
                 rootTaskId,
+                sprintByTaskId,
                 {
                     onChange: (id, patch) => handlerBagRef.current.onChange(id, patch),
                     onAddSubtask: (id) => handlerBagRef.current.onAddSubtask(id),
@@ -469,7 +511,7 @@ const CanvasInner = ({
                 fitView({ padding: 0.15, duration: 300 });
             });
         },
-        [dagreLayout, fitView, rootTaskId]
+        [dagreLayout, fitView, rootTaskId, useSM, projectId]
     );
 
     // Initial load.
@@ -554,11 +596,7 @@ const CanvasInner = ({
                 isDependencyHandle(connection.sourceHandle) ||
                 isDependencyHandle(connection.targetHandle)
             ) {
-                const res = await createTaskDependency(
-                    sourceTaskId,
-                    targetTaskId,
-                    accessToken
-                );
+                const res = await createTaskDependency(sourceTaskId, targetTaskId, accessToken);
                 if (!res.ok) {
                     setError(res.error);
                     return;
