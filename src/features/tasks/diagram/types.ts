@@ -46,6 +46,14 @@ export type TaskNodeData = {
      * Always null for non-milestone nodes.
      */
     sprint?: Sprint | null;
+    /**
+     * Project name shown in the card footer. For internal nodes the
+     * canvas fills this from `usePM.currentProject.projectName` (all
+     * internal tasks share the diagram's project). For external
+     * ghosts it carries the ref's `projectName` so the card reads
+     * "this blocker lives in PROJECT-X".
+     */
+    projectName?: string | null;
     onChange: (patch: EditableFields) => void | Promise<void>;
     onAddSubtask: () => void | Promise<void>;
     onDelete: () => void | Promise<void>;

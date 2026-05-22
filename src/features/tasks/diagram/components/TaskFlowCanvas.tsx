@@ -268,6 +268,7 @@ const buildNodesAndEdges = (
     rootTaskId: number,
     sprintByTaskId: Map<number, Sprint>,
     openBlockerCountByTask: Map<number, number>,
+    diagramProjectName: string | null,
     handlers: {
         onChange: (taskId: number, patch: EditableFields) => void | Promise<void>;
         onAddSubtask: (parentTaskId: number) => void | Promise<void>;
@@ -292,6 +293,12 @@ const buildNodesAndEdges = (
         const taskId = Number(task.id);
         const isMilestone = task.isMilestone === true && !isExternal;
         const counts = descendantCounts.get(taskId) ?? { total: 0, closed: 0 };
+        // Project name: ghosts ship their own (stashed on the synthesised
+        // row by `refToGhostTask`); internal tasks fall back to the
+        // diagram's project name since every internal row is from that
+        // same project.
+        const ghostProjectName = (task as { projectName?: string | null }).projectName ?? null;
+        const projectName = isExternal ? ghostProjectName : diagramProjectName;
         const data: TaskNodeData = {
             task,
             isRoot: taskId === rootTaskId,
@@ -301,6 +308,7 @@ const buildNodesAndEdges = (
             closedDescendantCount: counts.closed,
             totalDescendantCount: counts.total,
             sprint: isMilestone ? (sprintByTaskId.get(taskId) ?? null) : null,
+            projectName,
             onChange: (patch) => handlers.onChange(taskId, patch),
             onAddSubtask: () => handlers.onAddSubtask(taskId),
             onDelete: () => handlers.onDelete(taskId),
@@ -642,11 +650,20 @@ const CanvasInner = ({
         (graph: TaskGraph) => {
             const sprintByTaskId = buildSprintLookup(graph, useSM, projectId);
             const blockerMap = buildOpenBlockerCountByTask(graph);
+            // Diagram project name — every internal task in `graph.tasks`
+            // is from `projectId` (loadProjectTasksFromApi is scoped to
+            // it), so the canvas-level project name applies uniformly.
+            // Ghosts get their own name from the dep-ref instead.
+            const diagramProjectName =
+                usePM.currentProject?.projectId === projectId
+                    ? (usePM.currentProject.projectName ?? null)
+                    : null;
             const { nodes: rawNodes, edges: rawEdges } = buildNodesAndEdges(
                 graph,
                 rootTaskId,
                 sprintByTaskId,
                 blockerMap,
+                diagramProjectName,
                 {
                     onChange: (id, patch) => handlerBagRef.current.onChange(id, patch),
                     onAddSubtask: (id) => handlerBagRef.current.onAddSubtask(id),
@@ -661,7 +678,7 @@ const CanvasInner = ({
                 fitView({ padding: 0.15, duration: 300 });
             });
         },
-        [dagreLayout, fitView, rootTaskId, useSM, projectId]
+        [dagreLayout, fitView, rootTaskId, useSM, projectId, usePM.currentProject]
     );
 
     // Initial load.

@@ -59,8 +59,16 @@ export const TaskNodeCard = memo((props: NodeProps) => {
     const isDark = mode === "dark";
     const P = isDark ? purplePalette.dark : purplePalette.light;
 
-    const { task, isRoot, isExternal, openBlockerCount, onChange, onAddSubtask, onOpenPreview } =
-        props.data as unknown as TaskNodeData;
+    const {
+        task,
+        isRoot,
+        isExternal,
+        openBlockerCount,
+        projectName,
+        onChange,
+        onAddSubtask,
+        onOpenPreview,
+    } = props.data as unknown as TaskNodeData;
 
     const [editing, setEditing] = useState(false);
     const [draftTitle, setDraftTitle] = useState(task.title ?? "");
@@ -101,11 +109,6 @@ export const TaskNodeCard = memo((props: NodeProps) => {
     const meta = statusMeta(task.status);
     const schedule = getScheduleStatus(task.startDate, task.dueDate, task.status);
     const toneColor = TONE_COLOR[schedule.tone];
-
-    // Ghost (external) project name is stashed on the task object via
-    // the `refToGhostTask` synthesizer. Falls back to a generic
-    // "External" label when missing.
-    const projectName = (task as { projectName?: string | null }).projectName ?? null;
 
     const commitTitle = () => {
         const next = draftTitle.trim();
@@ -540,6 +543,29 @@ export const TaskNodeCard = memo((props: NodeProps) => {
 
             {/* Footer row */}
             <Stack direction="row" alignItems="center" spacing={0.75}>
+                {!isExternal && task.assigneeId && (
+                    // Avatar instead of name text — packs more identity
+                    // into the same horizontal space and matches the
+                    // affordance used everywhere else in the app
+                    // (comments, table cells, modals). Tooltip with the
+                    // name covers the "who is this?" case.
+                    <Tooltip
+                        title={task.assigneeName ?? ""}
+                        placement="top"
+                        variant="outlined"
+                        arrow
+                        enterDelay={400}
+                    >
+                        <Box sx={{ display: "inline-flex" }}>
+                            <UserAvatar
+                                userId={task.assigneeId}
+                                size={22}
+                                showNameAndEmail={false}
+                                showPulseDot={false}
+                            />
+                        </Box>
+                    </Tooltip>
+                )}
                 {isExternal ? (
                     <Chip
                         size="sm"
@@ -584,37 +610,23 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                             overflow: "hidden",
                             textOverflow: "ellipsis",
                             whiteSpace: "nowrap",
+                            // `flex: 1` claims the remaining row width
+                            // so the project name can use it all before
+                            // ellipsising. Previously a sibling
+                            // `<Box flex:1>` spacer existed alongside
+                            // this one — two flex:1 elements split the
+                            // space and truncated the name long before
+                            // it had to.
                             flex: 1,
                             minWidth: 0,
+                            textAlign: "right",
+                            pr: 0.5,
                         }}
                     >
                         {projectName}
                     </Typography>
                 )}
-                {!isExternal && task.assigneeId && (
-                    // Avatar instead of name text — packs more identity
-                    // into the same horizontal space and matches the
-                    // affordance used everywhere else in the app
-                    // (comments, table cells, modals). Tooltip with the
-                    // name covers the "who is this?" case.
-                    <Tooltip
-                        title={task.assigneeName ?? ""}
-                        placement="top"
-                        variant="outlined"
-                        arrow
-                        enterDelay={400}
-                    >
-                        <Box sx={{ display: "inline-flex" }}>
-                            <UserAvatar
-                                userId={task.assigneeId}
-                                size={22}
-                                showNameAndEmail={false}
-                                showPulseDot={false}
-                            />
-                        </Box>
-                    </Tooltip>
-                )}
-                <Box sx={{ flex: 1 }} />
+                {!projectName && <Box sx={{ flex: 1 }} />}
                 {!isExternal && (
                     <Tooltip title="Add sub-task" placement="top" variant="outlined" arrow>
                         <IconButton

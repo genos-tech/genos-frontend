@@ -84,12 +84,11 @@ const refToGhostTask = (ref: TaskDependencyRef): TaskTableProps => {
         concatTags: null,
         teamId: null,
         projectId: ref.projectId,
-        // We keep ProjectName on a side channel via the ghost card —
-        // TaskTableProps has no projectName field, but the card reads
-        // it from a parallel lookup we build in TaskFlowCanvas. Here
-        // we stash it on a non-typed extension so the lookup is
-        // trivial: `(task as any).projectName` works without growing
-        // the shared TaskTableProps shape.
+        // Stash projectName on the row so the ghost card can show
+        // "blocker lives in PROJECT-X" — the canvas reads it via a
+        // cast (TaskTableProps proper has no `projectName` field;
+        // ghosts are the only producer of one inside this graph).
+        projectName: ref.projectName ?? null,
         isMilestone: ref.isMilestone,
         milestoneId: null,
         sprintId: null,
