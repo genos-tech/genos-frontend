@@ -101,7 +101,7 @@ export const TaskDependenciesBlock = ({
                                 alignItems: "center",
                                 gap: 0.6,
                                 p: 0.6,
-                                px: 1.1,
+                                px: 1.8,
                                 borderRadius: "8px",
                                 color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.6)",
                                 transition: "background 0.15s ease, color 0.15s ease",

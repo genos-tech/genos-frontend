@@ -3,7 +3,9 @@ import AddIcon from "@mui/icons-material/Add";
 import {
     Box,
     Chip,
+    CircularProgress,
     IconButton,
+    Input,
     List,
     ListItem,
     ListItemButton,
@@ -24,6 +26,7 @@ import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagemen
 import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import { TaskProps } from "../../../../../types/tasks";
+import { createQuickTask } from "../../../services/createQuickTask";
 import { loadSpecificChildTasks } from "../../../services/loadSpecificChildTasks";
 import { formatTaskDisplayId } from "../../../utils/taskDisplayId";
 
@@ -72,6 +75,17 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
     const styles = isDark ? ActionButtonStyles.dark : ActionButtonStyles.light;
     const [childTasks, setChildTasks] = useState<TaskProps[]>([]);
 
+    // Inline quick-create state. The button up top toggles `isQuickAdding`;
+    // when on, an inline title input takes its place. Enter on a non-empty
+    // trimmed value POSTs a title-only task, refetches the child list, and
+    // keeps focus so the user can type-Enter-type-Enter through several
+    // sub-tasks without re-clicking. Escape (or blur with an empty value)
+    // hides the input and restores the button.
+    const [isQuickAdding, setIsQuickAdding] = useState(false);
+    const [quickTitle, setQuickTitle] = useState("");
+    const [isSubmittingQuick, setIsSubmittingQuick] = useState(false);
+    const [quickError, setQuickError] = useState<string | null>(null);
+
     useEffect(() => {
         // Cancelled-flag guard: slow child-task responses for an old
         // taskId must not overwrite the freshly-selected task's
@@ -101,6 +115,74 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
             cancelled = true;
         };
     }, [currentTaskContent, forceLoad]);
+
+    // Reset the quick-add UI when the user navigates between preview
+    // cards. Without this, an open input on task A would survive a click
+    // to task B and dump the next Enter into B's child set.
+    useEffect(() => {
+        setIsQuickAdding(false);
+        setQuickTitle("");
+        setQuickError(null);
+    }, [currentTaskContent.id]);
+
+    const submitQuickTask = async () => {
+        const trimmed = quickTitle.trim();
+        if (trimmed === "") return;
+        if (
+            currentTaskContent.id == null ||
+            currentTaskContent.rootTaskId == null ||
+            currentTaskContent.project == null
+        ) {
+            return;
+        }
+        // Same milestone-inheritance the legacy onClick used: a quick
+        // sub-task under a milestone backing row inherits that milestone's
+        // id; a sub-task under a regular task in a milestone chain inherits
+        // the chain's milestoneId (null when outside a milestone).
+        const inheritedMilestoneId: number | null =
+            (currentTaskContent as any).milestoneId ?? null;
+
+        setIsSubmittingQuick(true);
+        setQuickError(null);
+        try {
+            await createQuickTask({
+                myself,
+                accessToken,
+                projectId: currentTaskContent.project.projectId,
+                title: trimmed,
+                parentTaskId: currentTaskContent.id,
+                rootTaskId: currentTaskContent.rootTaskId,
+                milestoneId: inheritedMilestoneId,
+            });
+            // Refetch from the same endpoint the load-effect uses so the
+            // appended row carries every server-derived field (displayId,
+            // project_task_number, etc.) without a manual snake→camel map.
+            const loaded: TaskProps[] = await loadSpecificChildTasks(
+                myself,
+                currentTaskContent.project.projectId,
+                currentTaskContent.id,
+                accessToken
+            );
+            setChildTasks(loaded?.length ? loaded : []);
+            // Trigger the project-wide refresh so an open table/board picks
+            // up the new row too. Now cheap thanks to the Redis-cached
+            // GetProjectTasksView + signal-driven invalidation.
+            useTM.setIsNewTaskCreated(true);
+            // Clear the input but keep it open + focused for the next
+            // rapid add. Power-user pattern.
+            setQuickTitle("");
+        } catch (err) {
+            setQuickError(t.tasks.subTasks.quickAddError);
+        } finally {
+            setIsSubmittingQuick(false);
+        }
+    };
+
+    const cancelQuickAdd = () => {
+        setIsQuickAdding(false);
+        setQuickTitle("");
+        setQuickError(null);
+    };
 
     return (
         <>
@@ -311,6 +393,105 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                     {emptyText}
                 </Typography>
             )}
+
+            {/* Quick Task row. Always visible at the bottom regardless of
+                whether the list above has items or is empty. Collapsed:
+                a subtle "+ Quick Task" row that mirrors the look of the
+                child task rows above. Expanded: an inline title input
+                that creates a title-only task on Enter and immediately
+                refetches the list so the new row appears above. */}
+            <Box sx={{ mt: 1 }}>
+                {!isQuickAdding ? (
+                    <ListItemButton
+                        sx={{
+                            borderRadius: "8px",
+                            border: "1px dashed",
+                            borderColor: isDark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.15)",
+                            color: isDark ? "rgba(255,255,255,0.65)" : "rgba(0,0,0,0.6)",
+                            gap: 1,
+                            py: 0.75,
+                            px: 1.25,
+                            transition: "all 0.15s ease",
+                            "&:hover": {
+                                borderColor: isDark
+                                    ? "rgba(167,139,250,0.6)"
+                                    : "rgba(124,58,237,0.5)",
+                                color: isDark ? "#a78bfa" : "#7c3aed",
+                                backgroundColor: isDark
+                                    ? "rgba(124,58,237,0.06)"
+                                    : "rgba(124,58,237,0.04)",
+                            },
+                        }}
+                        onClick={() => {
+                            if (
+                                currentTaskContent.id == null ||
+                                currentTaskContent.rootTaskId == null
+                            ) {
+                                console.error("Task ID not defined error.");
+                                return;
+                            }
+                            setQuickError(null);
+                            setQuickTitle("");
+                            setIsQuickAdding(true);
+                        }}
+                    >
+                        <AddIcon sx={{ fontSize: "18px" }} />
+                        <Typography level="body-sm" sx={{ fontWeight: 500, color: "inherit" }}>
+                            {t.tasks.subTasks.quickAddLabel}
+                        </Typography>
+                    </ListItemButton>
+                ) : (
+                    <Stack direction="column" spacing={0.5}>
+                        <Input
+                            autoFocus
+                            disabled={isSubmittingQuick}
+                            placeholder={t.tasks.subTasks.quickAddPlaceholder}
+                            size="sm"
+                            slotProps={{
+                                input: {
+                                    "aria-label": t.tasks.subTasks.quickAddPlaceholder,
+                                },
+                            }}
+                            sx={{ borderRadius: "8px" }}
+                            value={quickTitle}
+                            endDecorator={
+                                isSubmittingQuick ? (
+                                    <CircularProgress
+                                        size="sm"
+                                        sx={{ "--CircularProgress-size": "16px" }}
+                                    />
+                                ) : null
+                            }
+                            onBlur={() => {
+                                // Blur with an empty input cancels. If the
+                                // user typed something, keep the input open
+                                // so a misclick doesn't drop their draft.
+                                if (quickTitle.trim() === "" && !isSubmittingQuick) {
+                                    cancelQuickAdd();
+                                }
+                            }}
+                            onChange={(e) => {
+                                setQuickTitle(e.target.value);
+                                if (quickError) setQuickError(null);
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter" && !isSubmittingQuick) {
+                                    e.preventDefault();
+                                    void submitQuickTask();
+                                } else if (e.key === "Escape" && !isSubmittingQuick) {
+                                    e.preventDefault();
+                                    cancelQuickAdd();
+                                }
+                            }}
+                        />
+                        {quickError && (
+                            <Typography level="body-xs" sx={{ color: "danger.500", px: 0.5 }}>
+                                {quickError}
+                            </Typography>
+                        )}
+                    </Stack>
+                )}
+            </Box>
         </>
     );
 };
