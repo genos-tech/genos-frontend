@@ -17,7 +17,22 @@ export const useMyself = (accessToken: string | null) => {
     });
 
     useEffect(() => {
-        const fetchUserData = () => {
+        const fetchUserData = (trigger: string, evt?: StorageEvent) => {
+            // DIAG: log what triggered the fetch so we can find whoever
+            // is firing storage events at 7-9s intervals in PROD.
+            console.log("[AUTH-DIAG] fetchUserData", {
+                trigger,
+                storageEventKey: evt?.key ?? null,
+                storageEventNewValue: evt?.newValue ?? null,
+                storageEventOldValue: evt?.oldValue ?? null,
+                storageEventUrl: evt?.url ?? null,
+                storageEventStorageArea:
+                    evt?.storageArea === window.localStorage
+                        ? "localStorage"
+                        : evt?.storageArea === window.sessionStorage
+                          ? "sessionStorage"
+                          : "other",
+            });
             const newMyself: UserProps = {
                 teamId: localStorage.getItem("teamId") || "",
                 teamName: localStorage.getItem("teamName") || "",
@@ -37,13 +52,14 @@ export const useMyself = (accessToken: string | null) => {
         };
 
         // Add a small delay to ensure localStorage is updated
-        setTimeout(fetchUserData, 50);
+        setTimeout(() => fetchUserData("setTimeout"), 50);
 
         // Listen for storage updates in case another tab updates it
-        window.addEventListener("storage", fetchUserData);
+        const onStorage = (evt: StorageEvent) => fetchUserData("storage-event", evt);
+        window.addEventListener("storage", onStorage);
 
         return () => {
-            window.removeEventListener("storage", fetchUserData);
+            window.removeEventListener("storage", onStorage);
         };
     }, [accessToken]);
 
