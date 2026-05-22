@@ -154,6 +154,7 @@ export const hi: DeepPartial<Messages> = {
             openProfile: "मेरी प्रोफाइल खोलें",
             switchServiceMac: "⌘ दबाए रखें + Ctrl टैप करें",
             switchServiceOther: "Ctrl दबाए रखें + Alt टैप करें",
+            historyShortcut: { mac: "हिस्ट्री · Ctrl+⌘+H", windows: "हिस्ट्री · Ctrl+Alt+H" },
         },
     },
     layout: {
@@ -236,6 +237,7 @@ export const hi: DeepPartial<Messages> = {
                     spotlight: "Spotlight सर्च खोलें",
                     tasksNew: "टास्क खोलें और एक नया टास्क शुरू करें",
                     notesNew: "नोट खोलें और एक नया My Note बनाएँ",
+                    openHistory: "हिस्ट्री खोलें",
                     cycle: "सेवाओं के बीच साइकल करें",
                 },
                 cycleCombo: {
@@ -1589,5 +1591,15 @@ export const hi: DeepPartial<Messages> = {
         guard: {
             loading: "लोड हो रहा है…",
         },
+    },
+    history: {
+        title: "हिस्ट्री",
+        tabs: {
+            chats: "चैट",
+            tasks: "टास्क",
+            notes: "नोट्स",
+        },
+        empty: "अभी कुछ नहीं है।",
+        clear: "हिस्ट्री क्लियर करें",
     },
 };

@@ -80,6 +80,12 @@ export type GlobalServiceShortcutOptions = {
      * extract-link → delete-event flow; this hook just dispatches.
      */
     onQuickMeetClipboard?: () => void;
+    /**
+     * Fired on `Ctrl+Cmd+H` (mac) / `Ctrl+Alt+H` (other). Toggles the
+     * global History modal — a per-team activity log of chats / tasks /
+     * notes the user has opened.
+     */
+    onOpenHistory?: () => void;
 };
 
 /**
@@ -211,6 +217,12 @@ export const useGlobalServiceShortcut = (
                     e.preventDefault();
                     if (previewIndexRef.current !== null) setPreviewIndex(null);
                     optionsRef.current.onQuickMeetClipboard();
+                    return;
+                }
+                if (key === "h" && optionsRef.current?.onOpenHistory) {
+                    e.preventDefault();
+                    if (previewIndexRef.current !== null) setPreviewIndex(null);
+                    optionsRef.current.onOpenHistory();
                     return;
                 }
             }

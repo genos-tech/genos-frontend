@@ -20,5 +20,6 @@ export const sidebar = {
         spotlightShortcut: { mac: "⌘+K", windows: "Ctrl+K" },
         tasksShortcut: { mac: "Ctrl+⌘+T", windows: "Ctrl+Alt+T" },
         notesShortcut: { mac: "Ctrl+⌘+N", windows: "Ctrl+Alt+N" },
+        historyShortcut: { mac: "History · Ctrl+⌘+H", windows: "History · Ctrl+Alt+H" },
     },
 } as const;
