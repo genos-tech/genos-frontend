@@ -90,6 +90,26 @@ export type TaskStatusProps = {
     textColor: string | null;
 };
 
+// One row out of TaskDependency, hydrated against the "other" endpoint.
+// When this ref appears in `blocking`, `otherTaskId` is the blocked
+// task; when it appears in `blockedBy`, it's the blocker.
+export type TaskDependencyRef = {
+    dependencyId: number;
+    otherTaskId: number;
+    displayId: string | null;
+    projectId: number | null;
+    projectName: string | null;
+    title: string;
+    status: TaskStatusProps;
+    assigneeUserId: string | number | null;
+    isMilestone: boolean;
+};
+
+export type TaskDependencies = {
+    blocking: TaskDependencyRef[];
+    blockedBy: TaskDependencyRef[];
+};
+
 export type TaskListByTagProps = {
     projectId: number;
     projectName: string;

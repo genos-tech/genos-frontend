@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import AddIcon from "@mui/icons-material/Add";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import LinkIcon from "@mui/icons-material/Link";
 import { Box, Button, IconButton, Input, Snackbar, Stack, Tooltip, Typography } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 
 import { GitHubIcon } from "../../../../../../assets/GithubIcon";
 import { useTranslation } from "../../../../../../i18n";
@@ -31,6 +32,8 @@ type DynamicURLManagerProps = {
 export const DynamicURLManager = (props: DynamicURLManagerProps) => {
     const { taskContent, setTaskContent, setTaskUpdated } = props;
     const { t } = useTranslation();
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
     const [links, setLinks] = useState<LinkItem[]>([]);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [isAddingNew, setIsAddingNew] = useState(false);
@@ -217,15 +220,40 @@ export const DynamicURLManager = (props: DynamicURLManagerProps) => {
                     </Button>
                 </Stack>
             ) : (
-                <Button
-                    color="neutral"
-                    size="sm"
-                    startDecorator={<AddIcon />}
-                    variant="plain"
-                    onClick={() => setIsAddingNew(true)}
+                // Inline CTA pill, matching the "Add dependencies"
+                // empty-state in `TaskDependenciesBlock` so the two
+                // metadata-panel call-to-actions read as a single
+                // visual system rather than competing button styles.
+                <Tooltip
+                    placement="top"
+                    title={t.tasks.dynamicUrl.addLinkTooltip}
+                    variant="outlined"
+                    arrow
                 >
-                    {t.tasks.dynamicUrl.addLinkButton}
-                </Button>
+                    <Box
+                        sx={{
+                            cursor: "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 0.6,
+                            px: 0.85,
+                            py: 0.35,
+                            borderRadius: "8px",
+                            color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.6)",
+                            transition: "background 0.15s ease, color 0.15s ease",
+                            "&:hover": {
+                                background: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)",
+                                color: isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.9)",
+                            },
+                        }}
+                        onClick={() => setIsAddingNew(true)}
+                    >
+                        <AddRoundedIcon sx={{ fontSize: 18 }} />
+                        <Typography level="body-sm" sx={{ fontWeight: 500 }}>
+                            {t.tasks.dynamicUrl.addLinkButton}
+                        </Typography>
+                    </Box>
+                </Tooltip>
             )}
 
             {/* Error Snackbar */}
