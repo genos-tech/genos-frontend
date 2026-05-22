@@ -505,7 +505,26 @@ export const useTaskManagement = (
                 projectId,
                 taskTypes.all.statuses
             );
-            setAllTasks(_allTasks);
+            // Stable-identity guard. After the SWR pre-read in
+            // ProjectsListItem paints stale rows from IDB, the network
+            // round-trip completes and the `tsTasksLoadedToIDB` effect calls
+            // us again — at which point the fresh IDB read often matches the
+            // already-painted set exactly. Returning `prev` in that case keeps
+            // the array identity stable and avoids bouncing every downstream
+            // memo (childrenByParent / allChildrenByParent / displayRows /
+            // sort comparators) and re-rendering every row.
+            setAllTasks((prev) => {
+                if (prev.length !== _allTasks.length) return _allTasks;
+                for (let i = 0; i < prev.length; i++) {
+                    if (
+                        prev[i].id !== _allTasks[i].id ||
+                        prev[i].updatedAt !== _allTasks[i].updatedAt
+                    ) {
+                        return _allTasks;
+                    }
+                }
+                return prev;
+            });
         } finally {
             setIsLoadingTasks(false);
         }

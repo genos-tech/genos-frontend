@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
@@ -7,6 +8,7 @@ import ListItemButton from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { popSpecificProjectTasks } from "../../../../features/chat/services/popSpecificProjectTasks";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -19,6 +21,10 @@ import { Toggler } from "./common";
 import { JoinProjectListItem } from "./projects_subs/JoinProjectListItem";
 import { MilestonesListItem } from "./projects_subs/MilestonesListItem";
 import { NewProjectListItem } from "./projects_subs/NewProjectListItem";
+
+// Cover the full set used by `useTaskManagement.fetchProjectTasks` so the
+// stale read matches what the post-network refresh will pull from IDB.
+const ALL_TASK_STATUSES = ["Open", "WIP", "Pending", "Closed", "Deleted"];
 
 type ProjectsListItemProps = {
     usePM: ProjectManagementState;
@@ -58,6 +64,14 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const { t } = useTranslation();
+
+    // Tracks the most recently clicked project so the SWR (IDB pre-read)
+    // callback can short-circuit if the user has moved on to a different
+    // project before the worker returns. Without this, rapid switches
+    // (A → B click within 50 ms) could let A's IDB read paint A's tasks
+    // *after* B is selected, leaving the user staring at the wrong
+    // project's rows until B's network fetch completed seconds later.
+    const latestClickedProjectIdRef = useRef<number | null>(null);
 
     return (
         <ListItem nested>
@@ -164,8 +178,68 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                         // ids across project boundaries.
                                                         useTM.closeTaskPreview();
                                                         useTM.setTableMilestoneFilterId(null);
-                                                        // Reset the task table...
+                                                        // Reset the task table — the SWR read below
+                                                        // will repopulate it from IDB within ~10–50 ms
+                                                        // if we have cached rows for this project, so
+                                                        // the blank state is just a brief flash on
+                                                        // first visit (when IDB has nothing yet).
                                                         useTM.setAllTasks([]);
+
+                                                        // Record this click before kicking off the
+                                                        // async read so a later click can claim the
+                                                        // ref and invalidate our pending paint.
+                                                        latestClickedProjectIdRef.current =
+                                                            projectId;
+
+                                                        // Stale-while-revalidate: paint the IDB-cached
+                                                        // task set for the new project immediately so
+                                                        // the user sees rows without waiting for the
+                                                        // full network round-trip. The fresh fetch is
+                                                        // kicked off in parallel below; the existing
+                                                        // `tsTasksLoadedToIDB` effect in
+                                                        // useProjectTaskManagement will re-read IDB
+                                                        // once the network completes.
+                                                        //
+                                                        // Team-scope guard: IDB persists across team
+                                                        // switches, so without filtering on teamId we
+                                                        // could briefly render the previous team's
+                                                        // rows under a project that shares an id.
+                                                        //
+                                                        // Cross-project race guard: on rapid A → B
+                                                        // switches, A's IDB read can return after the
+                                                        // user has already clicked B. The ref check
+                                                        // drops the stale paint so we never flash
+                                                        // A's rows underneath B's selection.
+                                                        (async () => {
+                                                            const cached =
+                                                                await popSpecificProjectTasks(
+                                                                    projectId,
+                                                                    ALL_TASK_STATUSES
+                                                                );
+                                                            if (
+                                                                latestClickedProjectIdRef.current !==
+                                                                projectId
+                                                            ) {
+                                                                return;
+                                                            }
+                                                            const safeCached = cached.filter(
+                                                                (t) =>
+                                                                    String(t.teamId) ===
+                                                                    String(myself.teamId)
+                                                            );
+                                                            if (safeCached.length === 0) return;
+                                                            // Functional update so we never overwrite
+                                                            // a fresh network result that landed
+                                                            // before the IDB read returned (rare but
+                                                            // possible on a hot cache where the
+                                                            // network is faster than the worker).
+                                                            useTM.setAllTasks((prev) =>
+                                                                prev.length === 0
+                                                                    ? safeCached
+                                                                    : prev
+                                                            );
+                                                        })();
+
                                                         (async () => {
                                                             await usePM.loadProjectsAndTasks(
                                                                 projectId

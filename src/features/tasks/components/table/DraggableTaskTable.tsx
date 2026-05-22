@@ -23,7 +23,6 @@ import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
 import { popTeamMembers } from "../../../chat/services/popTeamMembers";
-import { loadProjectTags } from "../../services/loadProjectTags";
 import { updateTaskFromTable } from "../../services/updateTaskFromTable";
 import { FilterProps } from "../../types/TaskTableTypes";
 import { buildComparator, nullTier, SortTier } from "../../utils/sortTask";
@@ -580,45 +579,40 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
         getTeamMembers();
     }, []);
 
-    // Get Project tags
+    // Project-tag filters. Tags are already loaded into
+    // `usePM.currentProject.projectTags` by TaskSidebarMain whenever the active
+    // project changes — read from there instead of refetching the same
+    // /api/v2/project/tag/ endpoint on every allTasks change.
     const [predefinedTagsFilters, setPredefinedTagsFilters] = useState<FilterProps[]>([]);
-    const updateTagOptions = async () => {
-        if (useTM.allTasks.length > 0) {
-            const loadedProjectTags: TagListProps[] = await loadProjectTags(
-                myself,
-                useTM.allTasks[0].projectId || -1,
-                accessToken
-            );
-            if (loadedProjectTags.length > 0) {
-                const allTagFilter: FilterProps = {
-                    label: "All",
-                    labelKey: "all",
-                    filterModel: { items: [] },
-                    lightModeColor: "#6b7280",
-                    darkModeColor: "#9ca3af",
-                };
-                const tagBasedFilters: FilterProps[] = loadedProjectTags.map((tag) => ({
-                    label: tag.tagName,
-                    filterModel: {
-                        items: [
-                            {
-                                field: "concatTags",
-                                operator: "contains",
-                                value: `/${tag.tagName}/`,
-                            },
-                        ],
-                    },
-                    lightModeColor: tag.tagColor,
-                    darkModeColor: tag.tagColor,
-                }));
-                setPredefinedTagsFilters([allTagFilter, ...tagBasedFilters]);
-            }
-        }
-    };
-
     useEffect(() => {
-        updateTagOptions();
-    }, [usePM.currentProject, useTM.allTasks]);
+        const projectTags: TagListProps[] = usePM.currentProject?.projectTags || [];
+        if (projectTags.length === 0) {
+            setPredefinedTagsFilters([]);
+            return;
+        }
+        const allTagFilter: FilterProps = {
+            label: "All",
+            labelKey: "all",
+            filterModel: { items: [] },
+            lightModeColor: "#6b7280",
+            darkModeColor: "#9ca3af",
+        };
+        const tagBasedFilters: FilterProps[] = projectTags.map((tag) => ({
+            label: tag.tagName,
+            filterModel: {
+                items: [
+                    {
+                        field: "concatTags",
+                        operator: "contains",
+                        value: `/${tag.tagName}/`,
+                    },
+                ],
+            },
+            lightModeColor: tag.tagColor,
+            darkModeColor: tag.tagColor,
+        }));
+        setPredefinedTagsFilters([allTagFilter, ...tagBasedFilters]);
+    }, [usePM.currentProject?.projectTags]);
 
     // Sort tasks.
     //
