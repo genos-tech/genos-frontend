@@ -402,7 +402,7 @@ export const ModalTaskDiagram = ({
                                     </Typography>
                                 </Stack>
                             )}
-                            {overview?.burndown &&
+                            {/* {overview?.burndown &&
                                 overview.burndown.length > 0 &&
                                 overview.health &&
                                 overview.total > 0 && (
@@ -411,7 +411,7 @@ export const ModalTaskDiagram = ({
                                         total={overview.total}
                                         tone={overview.health.tone}
                                     />
-                                )}
+                                )} */}
                         </Stack>
                     )}
 

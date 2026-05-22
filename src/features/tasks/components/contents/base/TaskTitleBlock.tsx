@@ -515,32 +515,45 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
 
                     {/* Diagram trigger — only meaningful for persisted
                         tasks with a project (the diagram fetches
-                        project tasks to assemble the descendant tree). */}
+                        project tasks to assemble the descendant tree).
+                        Styled to match the milestone preview's trigger
+                        treatment (36×36 padded button on tinted surface
+                        with a translateY hover) so the affordance reads
+                        consistently across both surfaces. */}
                     {isOnTasksRoute &&
                         isPreviewMode &&
                         taskContent.id != null &&
                         taskContent.project?.projectId != null && (
-                            <Tooltip size="sm" title="Open task graph" variant="outlined">
+                            <Tooltip
+                                size="sm"
+                                title="Open task graph"
+                                variant="outlined"
+                                sx={{
+                                    background: styles.menuBg,
+                                    border: `1px solid ${styles.menuBorder}`,
+                                    borderRadius: "8px",
+                                }}
+                            >
                                 <IconButton
                                     size="sm"
                                     variant="plain"
                                     sx={{
-                                        borderRadius: "8px",
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.6)"
-                                            : "rgba(0,0,0,0.5)",
+                                        background: styles.buttonBg,
+                                        border: `1px solid ${styles.buttonBorder}`,
+                                        borderRadius: "10px",
+                                        width: "36px",
+                                        height: "36px",
+                                        transition: "all 0.2s ease",
                                         "&:hover": {
-                                            background: isDark
-                                                ? "rgba(255,255,255,0.08)"
-                                                : "rgba(0,0,0,0.06)",
-                                            color: isDark
-                                                ? "rgba(255,255,255,0.9)"
-                                                : "rgba(0,0,0,0.8)",
+                                            background: styles.buttonHover,
+                                            transform: "translateY(-1px)",
                                         },
                                     }}
                                     onClick={() => setOpenTaskDiagram(true)}
                                 >
-                                    <AccountTreeRoundedIcon sx={{ fontSize: 18 }} />
+                                    <AccountTreeRoundedIcon
+                                        sx={{ fontSize: 20, color: styles.textColor }}
+                                    />
                                 </IconButton>
                             </Tooltip>
                         )}

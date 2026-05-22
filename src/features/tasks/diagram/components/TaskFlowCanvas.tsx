@@ -25,6 +25,7 @@ import {
 import "@xyflow/react/dist/style.css";
 
 import { useAuth } from "../../../../context/AuthContext";
+import { invalidateCachedFullTask } from "../../../../db/services/task-full.service";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
@@ -543,9 +544,22 @@ const CanvasInner = ({
                 void addTask(mergedForCache);
             }
 
-            // 3. If the edited task IS the currently-previewed one,
-            //    refresh the preview state so its body / fields show
-            //    the fresh server values when the modal closes.
+            // 3. Invalidate the full-task IDB cache for this id.
+            //    `loadSpecificTask` returns the cached TaskProps when
+            //    present, so without this invalidation the very next
+            //    preview-open would replay the pre-edit values from
+            //    cache — that was the root cause of "diagram edits
+            //    don't show up in the preview until full page refresh".
+            void invalidateCachedFullTask(taskId);
+
+            // 4. If the edited task IS the currently-previewed one,
+            //    actively re-fetch + re-set `currentPreviewTask` so the
+            //    open preview pane updates immediately (the cache
+            //    invalidation above guarantees `loadSpecificTask` hits
+            //    the backend this time). For a non-previewed edit, the
+            //    invalidation alone is enough: the next time the user
+            //    opens that task's preview, the cache-miss forces a
+            //    backend fetch and they see the fresh values.
             if (useTM.currentPreviewTaskId === taskId) {
                 void useTM.loadUpdatedTask(projectId);
             }

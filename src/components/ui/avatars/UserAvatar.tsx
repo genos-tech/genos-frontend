@@ -16,6 +16,13 @@ type UserAvatarProps = {
     /** Render the user's display name and email next to the avatar. */
     showNameAndEmail?: boolean;
     /**
+     * Render the online/offline status dot at the avatar's bottom-right.
+     * Default `true`. Set to `false` for dense surfaces (task node
+     * cards, table cells) where presence is noise and the dot crowds
+     * the layout.
+     */
+    showPulseDot?: boolean;
+    /**
      * Optional initial override (e.g. chat-name initials in GM/PM bubbles
      * where the avatar represents the chat itself, not a single user).
      * When unset, falls back to the user's name -> email -> "?".
@@ -48,7 +55,14 @@ const buildInitial = (
 };
 
 const UserAvatarInner = (props: UserAvatarProps) => {
-    const { userId, size, clickable = true, showNameAndEmail, fallbackInitial } = props;
+    const {
+        userId,
+        size,
+        clickable = true,
+        showNameAndEmail,
+        showPulseDot = true,
+        fallbackInitial,
+    } = props;
 
     const ctx = useAvatarContext();
     const profile = useUserProfile(userId);
@@ -137,20 +151,22 @@ const UserAvatarInner = (props: UserAvatarProps) => {
                     <Avatar size="sm" src={src} sx={{ height: _size, width: _size }}>
                         {initial}
                     </Avatar>
-                    <Box
-                        bottom={dotInset + avatarBaselineBottom}
-                        height={dotSize}
-                        position="absolute"
-                        right={dotInset + avatarBaselineRight}
-                        width={dotSize}
-                        // PulseDot ships with `marginLeft: 4px` for the inline-
-                        // beside-text usage; zero it out here so the dot fills
-                        // the wrapper exactly and lands at the avatar's bottom-
-                        // right corner regardless of avatar size.
-                        sx={{ "& > span": { marginLeft: 0 } }}
-                    >
-                        <PulseDot color={isOnline ? "#4caf50" : "#999"} size={dotSize} />
-                    </Box>
+                    {showPulseDot && (
+                        <Box
+                            bottom={dotInset + avatarBaselineBottom}
+                            height={dotSize}
+                            position="absolute"
+                            right={dotInset + avatarBaselineRight}
+                            width={dotSize}
+                            // PulseDot ships with `marginLeft: 4px` for the inline-
+                            // beside-text usage; zero it out here so the dot fills
+                            // the wrapper exactly and lands at the avatar's bottom-
+                            // right corner regardless of avatar size.
+                            sx={{ "& > span": { marginLeft: 0 } }}
+                        >
+                            <PulseDot color={isOnline ? "#4caf50" : "#999"} size={dotSize} />
+                        </Box>
+                    )}
                 </Box>
                 {showNameAndEmail === true && (
                     <Typography
@@ -174,6 +190,7 @@ const UserAvatarInner = (props: UserAvatarProps) => {
             initial,
             isOnline,
             showNameAndEmail,
+            showPulseDot,
             displayName,
             displayEmail,
             handleOpen,

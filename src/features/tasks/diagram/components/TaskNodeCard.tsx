@@ -253,23 +253,66 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                 {isExternal ? (
                     <StatusChip meta={meta} isDark={isDark} />
                 ) : (
-                    <Dropdown>
+                    <Dropdown
+                        onOpenChange={(_e, isOpen) => {
+                            // eslint-disable-next-line no-console
+                            console.log("[status-picker] onOpenChange ->", isOpen);
+                        }}
+                    >
                         <MenuButton
-                            slots={{ root: Box }}
+                            slots={{ root: "button" }}
                             slotProps={{
                                 root: {
-                                    sx: {
+                                    className: "nodrag nopan nowheel",
+                                    onPointerDown: (e) => {
+                                        // eslint-disable-next-line no-console
+                                        console.log("[status-picker] pointerdown");
+                                        e.stopPropagation();
+                                    },
+                                    onMouseDown: (e) => {
+                                        // eslint-disable-next-line no-console
+                                        console.log("[status-picker] mousedown");
+                                        e.stopPropagation();
+                                    },
+                                    onClick: (e) => {
+                                        // eslint-disable-next-line no-console
+                                        console.log(
+                                            "[status-picker] click; aria-expanded:",
+                                            (e.currentTarget as HTMLElement).getAttribute(
+                                                "aria-expanded"
+                                            )
+                                        );
+                                    },
+                                    style: {
+                                        background: "transparent",
+                                        border: "none",
+                                        padding: 0,
                                         cursor: "pointer",
                                         borderRadius: "5px",
-                                        transition: "filter 0.12s ease",
-                                        "&:hover": { filter: "brightness(1.08)" },
+                                        display: "inline-flex",
+                                        alignItems: "center",
                                     },
                                 },
                             }}
                         >
                             <StatusChip meta={meta} isDark={isDark} />
                         </MenuButton>
-                        <Menu size="sm" placement="bottom-start" sx={{ minWidth: 140 }}>
+                        <Menu
+                            size="sm"
+                            placement="bottom-start"
+                            sx={{ minWidth: 140 }}
+                            slotProps={{
+                                // `slotProps.root` here spreads onto the
+                                // Popper `<ul>` directly. Joy's `sx` is
+                                // not processed on that slot (we saw it
+                                // serialise as `sx="[object Object]"` in
+                                // the DOM) — use plain `style` so the
+                                // z-index lands on the inline style and
+                                // out-ranks the diagram modal's stacking
+                                // context.
+                                root: { style: { zIndex: 10000 } },
+                            }}
+                        >
                             {statuses.map((s) => {
                                 const isActive = s.status === task.status;
                                 return (
@@ -582,6 +625,7 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                                 userId={task.assigneeId}
                                 size={22}
                                 showNameAndEmail={false}
+                                showPulseDot={false}
                             />
                         </Box>
                     </Tooltip>
