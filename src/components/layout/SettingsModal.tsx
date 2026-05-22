@@ -778,6 +778,10 @@ const KeyboardShortcutsSection = () => {
                     combo: [...modifierKeys, "M"],
                 },
                 {
+                    label: t.settings.shortcuts.global.rows.openHistory,
+                    combo: [...modifierKeys, "H"],
+                },
+                {
                     label: t.settings.shortcuts.global.rows.cycle,
                     combo: [
                         t.settings.shortcuts.global.cycleCombo.hold,

@@ -152,6 +152,7 @@ export const zh: DeepPartial<Messages> = {
             openProfile: "打开我的资料",
             switchServiceMac: "按住 ⌘ + 点按 Ctrl",
             switchServiceOther: "按住 Ctrl + 点按 Alt",
+            historyShortcut: { mac: "历史 · Ctrl+⌘+H", windows: "历史 · Ctrl+Alt+H" },
         },
     },
     layout: {
@@ -230,6 +231,7 @@ export const zh: DeepPartial<Messages> = {
                     spotlight: "打开 Spotlight 搜索",
                     tasksNew: "打开任务并新建任务",
                     notesNew: "打开笔记并新建“我的笔记”",
+                    openHistory: "打开历史记录",
                     cycle: "在各服务间循环切换",
                 },
                 cycleCombo: {
@@ -1561,5 +1563,15 @@ export const zh: DeepPartial<Messages> = {
         guard: {
             loading: "加载中…",
         },
+    },
+    history: {
+        title: "历史",
+        tabs: {
+            chats: "聊天",
+            tasks: "任务",
+            notes: "笔记",
+        },
+        empty: "暂无记录。",
+        clear: "清除历史",
     },
 };

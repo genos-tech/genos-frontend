@@ -1,6 +1,7 @@
 import { useState } from "react";
 import AllInboxRoundedIcon from "@mui/icons-material/AllInboxRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
@@ -98,10 +99,21 @@ type SidebarProps = {
     useCM: ChatManagementState;
     useUISM: UIStateManagementState;
     onOpenSpotlight: () => void;
+    onOpenHistory: () => void;
 };
 
 export const Sidebar = (props: SidebarProps) => {
-    const { useTEM, socket, myself, setMyself, useIM, useCM, useUISM, onOpenSpotlight } = props;
+    const {
+        useTEM,
+        socket,
+        myself,
+        setMyself,
+        useIM,
+        useCM,
+        useUISM,
+        onOpenSpotlight,
+        onOpenHistory,
+    } = props;
     const { setAccessToken } = useAuth();
     const { mode } = useColorScheme();
     const { t } = useTranslation();
@@ -158,6 +170,19 @@ export const Sidebar = (props: SidebarProps) => {
                 ];
                 keysToRemove.forEach((key) => localStorage.setItem(key, ""));
                 localStorage.setItem("isOfflineForced", "false");
+                // Wipe per-team history buckets ("weikiy.history.v1.<teamId>").
+                // The user may belong to several teams; logout should clear
+                // every team's history on this device, not just the active one.
+                try {
+                    const historyKeys: string[] = [];
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const k = localStorage.key(i);
+                        if (k && k.startsWith("weikiy.history.v1.")) historyKeys.push(k);
+                    }
+                    historyKeys.forEach((k) => localStorage.removeItem(k));
+                } catch {
+                    // ignore — storage may be unavailable in some embedded contexts
+                }
                 clearAllEditorDrafts();
                 analytics.reset();
 
@@ -502,6 +527,67 @@ export const Sidebar = (props: SidebarProps) => {
                         px: 1,
                     }}
                 >
+                    <ListItem>
+                        <Tooltip
+                            placement="right"
+                            size="sm"
+                            sx={{ zIndex: 10020 }}
+                            title={
+                                isMac()
+                                    ? t.sidebar.tooltips.historyShortcut.mac
+                                    : t.sidebar.tooltips.historyShortcut.windows
+                            }
+                            variant="outlined"
+                        >
+                            <ListItemButton
+                                sx={{
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                    py: 1,
+                                    px: 1.25,
+                                    borderRadius: "12px",
+                                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                    "&:hover": {
+                                        background: isDark
+                                            ? "rgba(255,255,255,0.06)"
+                                            : "rgba(0,0,0,0.04)",
+                                        "& .history-icon": {
+                                            color: isDark
+                                                ? "rgba(255,255,255,0.85)"
+                                                : "rgba(0,0,0,0.75)",
+                                        },
+                                    },
+                                }}
+                                onClick={onOpenHistory}
+                            >
+                                <Box
+                                    sx={{
+                                        width: 32,
+                                        height: 32,
+                                        borderRadius: "10px",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        background: isDark
+                                            ? "rgba(255,255,255,0.04)"
+                                            : "rgba(0,0,0,0.03)",
+                                        transition: "all 0.2s ease",
+                                    }}
+                                >
+                                    <HistoryRoundedIcon
+                                        className="history-icon"
+                                        sx={{
+                                            fontSize: 18,
+                                            color: isDark
+                                                ? "rgba(255,255,255,0.45)"
+                                                : "rgba(0,0,0,0.4)",
+                                            transition: "color 0.2s ease",
+                                        }}
+                                    />
+                                </Box>
+                            </ListItemButton>
+                        </Tooltip>
+                    </ListItem>
                     <ListItem>
                         <Tooltip
                             placement="right"

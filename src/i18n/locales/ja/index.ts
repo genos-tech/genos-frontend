@@ -153,6 +153,7 @@ export const ja: DeepPartial<Messages> = {
             openProfile: "マイプロフィールを開く",
             switchServiceMac: "⌘ を長押し ＋ Ctrl をタップ",
             switchServiceOther: "Ctrl を長押し ＋ Alt をタップ",
+            historyShortcut: { mac: "履歴 · Ctrl+⌘+H", windows: "履歴 · Ctrl+Alt+H" },
         },
     },
     layout: {
@@ -235,6 +236,7 @@ export const ja: DeepPartial<Messages> = {
                     spotlight: "Spotlight 検索を開く",
                     tasksNew: "タスクを開いて新規タスクを作成",
                     notesNew: "ノートを開いて新規マイノートを作成",
+                    openHistory: "履歴を開く",
                     cycle: "サービスを順に切り替え",
                 },
                 cycleCombo: {
@@ -1589,5 +1591,15 @@ export const ja: DeepPartial<Messages> = {
         guard: {
             loading: "読み込み中…",
         },
+    },
+    history: {
+        title: "履歴",
+        tabs: {
+            chats: "チャット",
+            tasks: "タスク",
+            notes: "ノート",
+        },
+        empty: "まだ何もありません。",
+        clear: "履歴をクリア",
     },
 };

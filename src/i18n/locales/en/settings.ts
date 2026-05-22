@@ -66,6 +66,7 @@ export const settings = {
                 notesNew: "Open Notes and create a new My Note",
                 calendar: "Open compact calendar",
                 meetClipboard: "Copy a fresh Meet link to clipboard",
+                openHistory: "Open history",
                 cycle: "Cycle through services",
             },
             cycleCombo: {
