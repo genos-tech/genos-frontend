@@ -50,6 +50,7 @@ import {
     TaskCommentProps,
     TaskProps,
 } from "../../../../types/tasks";
+import { getServiceShortcutModifierKeys } from "../../../../utils/platform";
 import { LinkedPrCard } from "../../../integrations/components/LinkedPrCard";
 import { parsePrUrl } from "../../../integrations/utils/parsePrUrl";
 import { loadTaskNotes } from "../../../notes/task-notes/services/loadTaskNotes";
@@ -1712,7 +1713,9 @@ const MilestonePreviewInner = ({
                         {milestone.taskId != null && milestone.projectId != null && (
                             <Tooltip
                                 size="sm"
-                                title="Open task graph"
+                                title={`Open task graph (${getServiceShortcutModifierKeys().join(
+                                    " + "
+                                )} + G)`}
                                 variant="outlined"
                                 sx={{
                                     background: styles.menuBg,
