@@ -2,6 +2,8 @@ import { ReactNode, useEffect, useRef } from "react";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { Box, Stack, Tooltip, Typography } from "@mui/joy";
 
+import { useIsMobile } from "../../../../hooks/common/useIsMobile";
+
 export interface BreadcrumbNode {
     noteId: number;
     title: string;
@@ -79,8 +81,14 @@ export const NoteBreadcrumbs = ({
     onNodeClick,
     maxTitleLength = 14,
 }: NoteBreadcrumbsProps) => {
+    const isMobile = useIsMobile();
     const scheme = colorSchemes[color];
     const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+    // Hidden on mobile per design — the compact mobile header already
+    // shows the current note title; the full breadcrumb trail is
+    // desktop chrome that would line-wrap awkwardly at 390px anyway.
+    if (isMobile) return null;
 
     // Auto-scroll to the rightmost position when noteChain changes
     useEffect(() => {

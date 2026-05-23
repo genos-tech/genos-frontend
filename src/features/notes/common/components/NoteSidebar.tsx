@@ -756,18 +756,27 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         <Sheet
             className="NoteSidebar"
             sx={{
-                position: { xs: "fixed", md: "sticky" },
+                // On mobile the sidebar renders inline inside
+                // MobileNoteHome, not as a slide-in overlay — so the
+                // translate transform and fixed positioning are
+                // desktop-only.
+                position: { xs: "relative", md: "sticky" },
                 transform: {
-                    xs: "translateX(calc(100% * (var(--SideNavigation-slideIn, 0) - 1)))",
+                    xs: "none",
                     md: "none",
                 },
                 transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                height: "100dvh",
+                // Mobile: fill the MobileNoteHome container (already
+                // clamped to viewport - tab bar by LayoutStyles.outerWrapper).
+                // Desktop: viewport height since the sticky Sheet has no
+                // explicit parent height.
+                height: { xs: "100%", md: "100dvh" },
                 width: "100%",
                 top: 0,
                 flexShrink: 0,
                 display: "flex",
                 flexDirection: "column",
+                minHeight: 0,
             }}
         >
             {/* Content */}

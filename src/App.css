@@ -911,17 +911,60 @@ div[data-floating-ui-focusable] {
         padding-left: 10px;
     }
 
+    /* Task / note body editors need horizontal padding for two reasons:
+       (1) drag handle / side menu appears in the left gutter on hover —
+       it's positioned at a negative offset relative to the block content,
+       so zero padding-left clips it off-screen; (2) the right edge wants
+       breathing room from the viewport. Top padding clears the
+       floating Comments toggle (top: 8) and the title rendered above
+       the editor box. Mirrors the desktop 30/50/55 figures, scaled down
+       so reading width isn't crushed at 390px. */
     .bn-task-body-box-light .bn-editor,
     .bn-task-body-box-dark .bn-editor {
-        padding: 15px 0;
+        padding: 32px 22px 20px 44px;
         height: var(--task-body-editor-height, 300px);
     }
 
     .bn-note-body-box-light .bn-editor,
     .bn-note-body-box-dark .bn-editor {
-        padding: 30px 0 15px;
+        padding: 56px 22px 20px 44px;
         height: 85dvh;
     }
+}
+
+/* BlockNote ships `.bn-root { --bn-ui-base-z-index: 0 }` and applies
+   its floating UI's z-index INLINE via
+   `calc(var(--bn-ui-base-z-index, 0) + …)`. The portal'd nodes can end
+   up either inside `.bn-root` (if BlockNote keeps the portal local) or
+   at `document.body` level (if it falls back to the body root). When
+   the editor sits inside MobileOverlay (z-index 1300), MUI Joy Modal
+   (z-index 1300 — used by ModalNoteView / ModalTaskView), or any other
+   high-z-index overlay, BlockNote's floating UI gets covered.
+
+   Three layers of override below, because the obvious paths each get
+   blocked by one of these gotchas:
+
+   1. `:root` and `html` plant the variable at the top of the cascade
+      so portal'd nodes anywhere in the document inherit it.
+   2. `.bn-root` overrides BlockNote's own default rule (same
+      specificity but ours loads later in the bundle).
+   3. The `!important z-index: 1400` selectors below beat the inline
+      `calc(…)` style on the actual floating wrappers, so we don't
+      depend on the variable making it through the cascade. */
+:root,
+html,
+.bn-root {
+    --bn-ui-base-z-index: 1400 !important;
+}
+
+.bn-side-menu,
+.bn-formatting-toolbar,
+.bn-suggestion-menu,
+.bn-link-toolbar,
+.bn-table-handle,
+.bn-grid-suggestion-menu,
+.bn-floating-toolbar {
+    z-index: 1400 !important;
 }
 
 /* Tablet optimizations */
