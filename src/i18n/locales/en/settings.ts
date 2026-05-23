@@ -68,6 +68,7 @@ export const settings = {
                 calendar: "Open compact calendar",
                 meetClipboard: "Copy a fresh Meet link to clipboard",
                 openHistory: "Open history",
+                openTaskDiagram: "Open task graph for the previewed task",
                 cycle: "Cycle through services",
             },
             cycleCombo: {

@@ -631,6 +631,10 @@ const KeyboardShortcutsSection = () => {
                     combo: [...modifierKeys, "H"],
                 },
                 {
+                    label: t.settings.shortcuts.global.rows.openTaskDiagram,
+                    combo: [...modifierKeys, "G"],
+                },
+                {
                     label: t.settings.shortcuts.global.rows.cycle,
                     combo: [
                         t.settings.shortcuts.global.cycleCombo.hold,
