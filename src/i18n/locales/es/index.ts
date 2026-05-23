@@ -179,6 +179,7 @@ export const es: DeepPartial<Messages> = {
             tasks: "Tareas",
             spotlight: "Spotlight",
             notifications: "Notificaciones",
+            mentionGroups: "Grupos de menciones",
             shortcuts: "Atajos",
         },
         appearance: {

@@ -30,12 +30,13 @@ import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import { taskThreadMessageForCommentAddedTemplate } from "../../features/tasks/utils/TaskMessageTemplate";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
-import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
-import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
+import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
 import { useEditorDraft } from "../../hooks/common/useEditorDraft";
+import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
@@ -45,7 +46,7 @@ import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
-import { CreateMentionSpec, MentionMenuItems } from "./Mention";
+import { CreateMentionGroupSpec, CreateMentionSpec, MentionMenuItems } from "./Mention";
 import {
     codeBlockEnterShortcut,
     getBlockTypeSelectItemsWithCodeBlock,
@@ -97,6 +98,8 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
 
     // Our schema with inline content specs, which contain the configs and
     // implementations for inline content  that we want our editor to use.
+    const { mentionGroups } = useMentionGroupsContext();
+
     const schema = BlockNoteSchema.create({
         inlineContentSpecs: {
             // Adds all default inline content.
@@ -110,6 +113,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                 useUISM,
                 useCM
             ),
+            mentionGroup: CreateMentionGroupSpec(),
         },
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
@@ -346,11 +350,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                 showEmojiPicker={showEmojiPicker}
                 useFixedPosition={true}
             />
-            <Box
-                ref={editorBoxRef}
-                className={bnBoxClassName}
-                sx={{ position: "relative" }}
-            >
+            <Box ref={editorBoxRef} className={bnBoxClassName} sx={{ position: "relative" }}>
                 <BlockNoteView
                     className="bn-box"
                     editor={editor}
@@ -446,7 +446,8 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                                 MentionMenuItems(
                                     useTEM.teamMemberProfiles,
                                     editor,
-                                    useTEM.teamMembers
+                                    useTEM.teamMembers,
+                                    mentionGroups
                                 ),
                                 query
                             )

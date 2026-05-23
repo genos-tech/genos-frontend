@@ -179,6 +179,7 @@ export const ja: DeepPartial<Messages> = {
             tasks: "タスク",
             spotlight: "スポットライト",
             notifications: "通知",
+            mentionGroups: "メンショングループ",
             shortcuts: "ショートカット",
         },
         appearance: {

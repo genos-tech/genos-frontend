@@ -5,6 +5,7 @@ import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineR
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
+import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
 import HubRoundedIcon from "@mui/icons-material/HubRounded";
 import KeyboardRoundedIcon from "@mui/icons-material/KeyboardRounded";
 import LanguageRoundedIcon from "@mui/icons-material/LanguageRounded";
@@ -58,10 +59,21 @@ import { ThemePreference, useThemePreference } from "../../hooks/common/useTheme
 import { fmt, Locale, useTranslation } from "../../i18n";
 import { NotificationSettingsPanel } from "../../services/notifications/NotificationSettingsPanel";
 import { getServiceShortcutModifierKeys, isMac } from "../../utils/platform";
+import { MentionGroupsPanel } from "./MentionGroupsPanel";
 
 type Props = {
     open: boolean;
     onClose: () => void;
+    // The following are only consumed by the Mention groups tab — the
+    // panel reads team members from `useTEM` for the add-member picker,
+    // and forwards `myself` / `setMyself` / `socket` / `useCM` /
+    // `useUISM` down to `AvatarWithStatus`.
+    useTEM?: import("../../hooks/common/useTeamManagement").TeamManagementState;
+    myself?: import("../../types/admin").UserProps;
+    setMyself?: (value: import("../../types/admin").UserProps) => void;
+    socket?: import("socket.io-client").Socket | null;
+    useCM?: import("../../hooks/chats/useChatManagement").ChatManagementState;
+    useUISM?: import("../../hooks/common/useUIStateManagement").UIStateManagementState;
 };
 
 /**
@@ -729,6 +741,7 @@ type SettingsTabKey =
     | "tasks"
     | "spotlight"
     | "notifications"
+    | "mentionGroups"
     | "shortcuts"
     | "integrations";
 
@@ -746,7 +759,16 @@ const IntegrationsSection = () => {
     return <ConnectionsSection accessToken={accessToken} />;
 };
 
-export const SettingsModal = ({ open, onClose }: Props) => {
+export const SettingsModal = ({
+    open,
+    onClose,
+    useTEM,
+    myself,
+    setMyself,
+    socket,
+    useCM,
+    useUISM,
+}: Props) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
@@ -761,7 +783,11 @@ export const SettingsModal = ({ open, onClose }: Props) => {
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 size="lg"
                 sx={{
-                    width: { xs: "92vw", sm: 550, md: 700 },
+                    // Widened at `lg` so the two-pane Mention groups
+                    // panel (group list + member editor) fits without
+                    // truncation. The other tabs still look fine in
+                    // the extra space — they're single-column sheets.
+                    width: { xs: "92vw", sm: 550, md: 700, lg: 920 },
                     maxHeight: "85vh",
                     overflowY: "auto",
                     overflowX: "hidden",
@@ -822,6 +848,10 @@ export const SettingsModal = ({ open, onClose }: Props) => {
                             <NotificationsRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
                             {t.settings.tabs.notifications}
                         </Tab>
+                        <Tab value="mentionGroups" sx={SIDEBAR_TAB_SX}>
+                            <GroupRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
+                            {t.settings.tabs.mentionGroups}
+                        </Tab>
                         <Tab value="shortcuts" sx={SIDEBAR_TAB_SX}>
                             <KeyboardRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
                             {t.settings.tabs.shortcuts}
@@ -870,6 +900,28 @@ export const SettingsModal = ({ open, onClose }: Props) => {
                     <TabPanel value="notifications" sx={{ px: 0, py: 2 }}>
                         <Stack spacing={2}>
                             <NotificationSettingsPanel />
+                        </Stack>
+                    </TabPanel>
+                    <TabPanel value="mentionGroups" sx={{ px: 0, py: 2 }}>
+                        <Stack spacing={2}>
+                            {/* All five auxiliary props are needed to
+                                render the panel's avatar rows. If any
+                                call site forgets them, fall back to a
+                                quiet placeholder rather than crash. */}
+                            {myself && setMyself && useCM && useUISM ? (
+                                <MentionGroupsPanel
+                                    useTEM={useTEM}
+                                    myself={myself}
+                                    setMyself={setMyself}
+                                    socket={socket ?? null}
+                                    useCM={useCM}
+                                    useUISM={useUISM}
+                                />
+                            ) : (
+                                <Typography level="body-sm" sx={{ opacity: 0.7 }}>
+                                    Loading…
+                                </Typography>
+                            )}
                         </Stack>
                     </TabPanel>
                     <TabPanel value="shortcuts" sx={{ px: 0, py: 2 }}>

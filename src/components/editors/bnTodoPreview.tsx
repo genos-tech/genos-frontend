@@ -24,12 +24,13 @@ import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
-import { CreateMentionSpec, MentionMenuItems } from "./Mention";
+import { CreateMentionGroupSpec, CreateMentionSpec, MentionMenuItems } from "./Mention";
 import {
     codeBlockEnterShortcut,
     getBlockTypeSelectItemsWithCodeBlock,
@@ -70,6 +71,8 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
     const { heading, table, file, audio, image, video, quote, ...remainingBlockSpecs } =
         defaultBlockSpecs;
 
+    const { mentionGroups } = useMentionGroupsContext();
+
     // Our schema with inline content specs, which contain the configs and
     // implementations for inline content  that we want our editor to use.
     const schema = BlockNoteSchema.create({
@@ -85,6 +88,7 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
                 useUISM,
                 useCM
             ),
+            mentionGroup: CreateMentionGroupSpec(),
         },
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
@@ -179,7 +183,8 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
                             MentionMenuItems(
                                 useTEM.teamMemberProfiles,
                                 editor,
-                                useTEM.teamMembers
+                                useTEM.teamMembers,
+                                mentionGroups
                             ),
                             query
                         )

@@ -179,6 +179,7 @@ export const ar: DeepPartial<Messages> = {
             tasks: "المهام",
             spotlight: "Spotlight",
             notifications: "الإشعارات",
+            mentionGroups: "مجموعات الإشارة",
             shortcuts: "الاختصارات",
         },
         appearance: {

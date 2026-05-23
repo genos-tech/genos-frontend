@@ -6,6 +6,7 @@ export const settings = {
         tasks: "Tasks",
         spotlight: "Spotlight",
         notifications: "Notifications",
+        mentionGroups: "Mention groups",
         shortcuts: "Shortcuts",
         integrations: "Integrations",
     },

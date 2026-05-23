@@ -180,6 +180,7 @@ export const hi: DeepPartial<Messages> = {
             tasks: "टास्क",
             spotlight: "स्पॉटलाइट",
             notifications: "सूचनाएँ",
+            mentionGroups: "मेंशन समूह",
             shortcuts: "शॉर्टकट",
         },
         appearance: {

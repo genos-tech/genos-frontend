@@ -29,7 +29,7 @@ import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
-import { CreateMentionSpec } from "./Mention";
+import { CreateMentionGroupSpec, CreateMentionSpec } from "./Mention";
 
 // Cap the number of inline PR previews per message body. Anyone pasting
 // more than this is abusing the channel; the rest are silently dropped.
@@ -62,6 +62,10 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
 
     // Our schema with inline content specs, which contain the configs and
     // implementations for inline content  that we want our editor to use.
+    // `mentionGroup` is registered here for read-only rendering of saved
+    // messages — no menu wiring needed since the preview can't be typed
+    // into. Without this, BlockNote rejects any historical message that
+    // contains a `mentionGroup` token with "node type not found in schema".
     const schema = BlockNoteSchema.create({
         inlineContentSpecs: {
             // Adds all default inline content.
@@ -75,6 +79,7 @@ export const BnChatPreview = (props: BnChatPreviewProps) => {
                 useUISM,
                 useCM
             ),
+            mentionGroup: CreateMentionGroupSpec(),
         },
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
