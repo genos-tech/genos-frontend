@@ -5,6 +5,7 @@ import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineR
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
+import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
 import HubRoundedIcon from "@mui/icons-material/HubRounded";
 import KeyboardRoundedIcon from "@mui/icons-material/KeyboardRounded";
 import LanguageRoundedIcon from "@mui/icons-material/LanguageRounded";
@@ -58,10 +59,14 @@ import { ThemePreference, useThemePreference } from "../../hooks/common/useTheme
 import { fmt, Locale, useTranslation } from "../../i18n";
 import { NotificationSettingsPanel } from "../../services/notifications/NotificationSettingsPanel";
 import { getServiceShortcutModifierKeys, isMac } from "../../utils/platform";
+import { MentionGroupsPanel } from "./MentionGroupsPanel";
 
 type Props = {
     open: boolean;
     onClose: () => void;
+    // Optional — only needed when the Mention groups tab is shown. The
+    // panel reads team members from here for its add-member picker.
+    useTEM?: import("../../hooks/common/useTeamManagement").TeamManagementState;
 };
 
 /**
@@ -729,6 +734,7 @@ type SettingsTabKey =
     | "tasks"
     | "spotlight"
     | "notifications"
+    | "mentionGroups"
     | "shortcuts"
     | "integrations";
 
@@ -746,7 +752,7 @@ const IntegrationsSection = () => {
     return <ConnectionsSection accessToken={accessToken} />;
 };
 
-export const SettingsModal = ({ open, onClose }: Props) => {
+export const SettingsModal = ({ open, onClose, useTEM }: Props) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
@@ -822,6 +828,10 @@ export const SettingsModal = ({ open, onClose }: Props) => {
                             <NotificationsRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
                             {t.settings.tabs.notifications}
                         </Tab>
+                        <Tab value="mentionGroups" sx={SIDEBAR_TAB_SX}>
+                            <GroupRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
+                            {t.settings.tabs.mentionGroups}
+                        </Tab>
                         <Tab value="shortcuts" sx={SIDEBAR_TAB_SX}>
                             <KeyboardRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
                             {t.settings.tabs.shortcuts}
@@ -870,6 +880,11 @@ export const SettingsModal = ({ open, onClose }: Props) => {
                     <TabPanel value="notifications" sx={{ px: 0, py: 2 }}>
                         <Stack spacing={2}>
                             <NotificationSettingsPanel />
+                        </Stack>
+                    </TabPanel>
+                    <TabPanel value="mentionGroups" sx={{ px: 0, py: 2 }}>
+                        <Stack spacing={2}>
+                            <MentionGroupsPanel useTEM={useTEM} />
                         </Stack>
                     </TabPanel>
                     <TabPanel value="shortcuts" sx={{ px: 0, py: 2 }}>

@@ -52,6 +52,7 @@ import { RiAlertFill } from "react-icons/ri";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
+import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import {
     getMyNoteRoleId,
     isNoteEditableForRole,
@@ -73,7 +74,7 @@ import { FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
 import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
 import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
-import { CreateMentionSpec, MentionMenuItems } from "./Mention";
+import { CreateMentionGroupSpec, CreateMentionSpec, MentionMenuItems } from "./Mention";
 import { Alert } from "./sub/Alert";
 import {
     codeBlockEnterShortcut,
@@ -157,6 +158,8 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
     // This is done by picking out the blocks you want to disable
     const { audio, video, ...remainingBlockSpecs } = defaultBlockSpecs;
 
+    const { mentionGroups } = useMentionGroupsContext();
+
     const schema = BlockNoteSchema.create({
         inlineContentSpecs: {
             // Adds all default inline content.
@@ -170,6 +173,7 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                 useUISM,
                 useCM
             ),
+            mentionGroup: CreateMentionGroupSpec(),
         },
         blockSpecs: {
             ...remainingBlockSpecs,
@@ -541,7 +545,8 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                                                 MentionMenuItems(
                                                     useTEM.teamMemberProfiles,
                                                     editor,
-                                                    useTEM.teamMembers
+                                                    useTEM.teamMembers,
+                                                    mentionGroups
                                                 ),
                                                 query
                                             )

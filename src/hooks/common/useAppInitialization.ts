@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { initDB } from "../../db/config/schema";
 import { DatabaseUtils } from "../../db/utils/database";
 import { useMyself } from "./useAuth";
+import { useMentionGroups } from "./useMentionGroups";
 import { useTeamManagement } from "./useTeamManagement";
 import { useUIStateManagement } from "./useUIStateManagement";
 
@@ -12,6 +13,11 @@ export const useAppInitialization = () => {
     const { myself, setMyself } = useMyself(accessToken);
     const useUISM = useUIStateManagement();
     const useTEM = useTeamManagement(myself, accessToken);
+    // Single instance of the mention-group cache for the whole app —
+    // surfaced via `MentionGroupsProvider` in App.tsx so every editor's
+    // `@` suggestion menu reads from the same fetched list instead of
+    // each editor instance hitting `/mention-group/` on its own.
+    const useMGM = useMentionGroups(myself, accessToken);
 
     // Track the team we last initialized for so we can detect a real switch
     // (vs. the initial mount where currentTeamId starts as "").
@@ -59,5 +65,6 @@ export const useAppInitialization = () => {
         setMyself,
         useUISM,
         useTEM,
+        useMGM,
     };
 };

@@ -34,10 +34,11 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
+import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
-import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { useTranslation } from "../../i18n";
@@ -50,7 +51,7 @@ import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
 import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
-import { CreateMentionSpec, MentionMenuItems } from "./Mention";
+import { CreateMentionGroupSpec, CreateMentionSpec, MentionMenuItems } from "./Mention";
 import {
     codeBlockEnterShortcut,
     getBlockTypeSelectItemsWithCodeBlock,
@@ -104,6 +105,8 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
 
     // Our schema with inline content specs, which contain the configs and
     // implementations for inline content  that we want our editor to use.
+    const { mentionGroups } = useMentionGroupsContext();
+
     const schema = BlockNoteSchema.create({
         inlineContentSpecs: {
             // Adds all default inline content.
@@ -117,6 +120,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                 useUISM,
                 useCM
             ),
+            mentionGroup: CreateMentionGroupSpec(),
         },
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
@@ -286,11 +290,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                 setShowEmojiPicker={setShowEmojiPicker}
                 showEmojiPicker={showEmojiPicker}
             />
-            <Box
-                ref={editorBoxRef}
-                className={bnBoxClassName}
-                sx={{ position: "relative" }}
-            >
+            <Box ref={editorBoxRef} className={bnBoxClassName} sx={{ position: "relative" }}>
                 <FileUploadStatusBadge count={editorUploadCount} />
                 <BlockNoteView
                     className="bn-box"
@@ -414,7 +414,8 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                                 MentionMenuItems(
                                     useTEM.teamMemberProfiles,
                                     editor,
-                                    useTEM.teamMembers
+                                    useTEM.teamMembers,
+                                    mentionGroups
                                 ),
                                 query
                             )

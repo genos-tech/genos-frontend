@@ -782,7 +782,11 @@ export const Sidebar = (props: SidebarProps) => {
                 />
             )}
 
-            <SettingsModal open={openSettings} onClose={() => setOpenSettings(false)} />
+            <SettingsModal
+                open={openSettings}
+                onClose={() => setOpenSettings(false)}
+                useTEM={useTEM}
+            />
         </Sheet>
     );
 };

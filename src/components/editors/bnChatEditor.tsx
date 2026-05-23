@@ -34,14 +34,15 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../context/AuthContext";
+import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import { addChat } from "../../features/chat/services/addChat";
 import { addMessage } from "../../features/chat/services/addMessage";
 import { getFirstLine } from "../../features/chat/utils/common";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
-import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
-import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
+import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
 import { useEditorDraft } from "../../hooks/common/useEditorDraft";
+import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { useTranslation } from "../../i18n";
@@ -55,7 +56,7 @@ import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
 import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
-import { CreateMentionSpec, MentionMenuItems } from "./Mention";
+import { CreateMentionGroupSpec, CreateMentionSpec, MentionMenuItems } from "./Mention";
 import {
     codeBlockEnterShortcut,
     getBlockTypeSelectItemsWithCodeBlock,
@@ -114,6 +115,14 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
         teamMemberProfilesRef.current = useTEM.teamMemberProfiles;
     }, [useTEM.teamMembers, useTEM.teamMemberProfiles]);
 
+    // Mention groups — sourced from the App-root provider so every
+    // editor instance shares one fetch.
+    const { mentionGroups } = useMentionGroupsContext();
+    const mentionGroupsRef = useRef(mentionGroups);
+    useEffect(() => {
+        mentionGroupsRef.current = mentionGroups;
+    }, [mentionGroups]);
+
     // Disable the Audio and Image blocks from the built-in schema
     // This is done by picking out the blocks you want to disable
     const { audio, video, ...remainingBlockSpecs } = defaultBlockSpecs;
@@ -133,6 +142,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                 useUISM,
                 useCM
             ),
+            mentionGroup: CreateMentionGroupSpec(),
         },
         blockSpecs: {
             // remainingBlockSpecs contains all the other blocks
@@ -459,11 +469,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                 setShowEmojiPicker={setShowEmojiPicker}
                 showEmojiPicker={showEmojiPicker}
             />
-            <Box
-                ref={editorBoxRef}
-                className={bnBoxClassName}
-                sx={{ position: "relative" }}
-            >
+            <Box ref={editorBoxRef} className={bnBoxClassName} sx={{ position: "relative" }}>
                 <FileUploadStatusBadge count={editorUploadCount} />
                 <FileUploadOverlay
                     label={t.common.ui.fileUpload.uploadingDroppedFiles}
@@ -572,7 +578,8 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                                 MentionMenuItems(
                                     teamMemberProfilesRef.current,
                                     editor,
-                                    teamMembersRef.current
+                                    teamMembersRef.current,
+                                    mentionGroupsRef.current
                                 ),
                                 query
                             )
