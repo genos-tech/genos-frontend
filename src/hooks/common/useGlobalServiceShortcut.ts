@@ -86,6 +86,13 @@ export type GlobalServiceShortcutOptions = {
      * notes the user has opened.
      */
     onOpenHistory?: () => void;
+    /**
+     * Fired on `Ctrl+Cmd+G` (mac) / `Ctrl+Alt+G` (other). Opens the task
+     * graph (React Flow diagram) for the currently previewed task. The
+     * handler owns the "no preview task → do nothing" gate; this hook
+     * just dispatches the keypress.
+     */
+    onOpenTaskDiagram?: () => void;
 };
 
 /**
@@ -111,6 +118,8 @@ export type GlobalServiceShortcutOptions = {
  *   - `N` -> open Notes AND create a new My Note (via `onOpenNotesAndCreate`).
  *   - `C` -> open the compact calendar modal (via `onOpenCalendarModal`).
  *   - `M` -> generate a Meet link and copy to clipboard (via `onQuickMeetClipboard`).
+ *   - `H` -> toggle the global History modal (via `onOpenHistory`).
+ *   - `G` -> open the task graph for the current preview task (via `onOpenTaskDiagram`).
  *   - If a letter shortcut fires while a cycle preview is in progress, the
  *     preview is canceled and the letter target wins.
  *   - Each letter is wired through a callback so this hook stays free of
@@ -223,6 +232,12 @@ export const useGlobalServiceShortcut = (
                     e.preventDefault();
                     if (previewIndexRef.current !== null) setPreviewIndex(null);
                     optionsRef.current.onOpenHistory();
+                    return;
+                }
+                if (key === "g" && optionsRef.current?.onOpenTaskDiagram) {
+                    e.preventDefault();
+                    if (previewIndexRef.current !== null) setPreviewIndex(null);
+                    optionsRef.current.onOpenTaskDiagram();
                     return;
                 }
             }
