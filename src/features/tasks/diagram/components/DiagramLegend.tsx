@@ -1,10 +1,12 @@
 import { useState } from "react";
 import HelpOutlineRoundedIcon from "@mui/icons-material/HelpOutlineRounded";
-import { Box, IconButton, Sheet, Stack, Tooltip, Typography } from "@mui/joy";
+import { Box, IconButton, Sheet, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-
-import { purplePalette } from "../../../../theme/purplePalette";
 import { Panel } from "@xyflow/react";
+
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { useTranslation } from "../../../../i18n";
+import { purplePalette } from "../../../../theme/purplePalette";
 
 // Bottom-left floating legend. Explains the edge grammar:
 //   - Solid purple line = parent-child structure
@@ -14,6 +16,7 @@ import { Panel } from "@xyflow/react";
 // the corner during pan/zoom.
 export const DiagramLegend = () => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const P = isDark ? purplePalette.dark : purplePalette.light;
     const [open, setOpen] = useState(true);
@@ -60,11 +63,13 @@ export const DiagramLegend = () => {
                     >
                         Legend
                     </Typography>
-                    <Tooltip
-                        title={open ? "Collapse" : "Expand"}
+                    <AppTooltip
+                        title={
+                            open
+                                ? t.tasks.diagram.tooltips.collapse
+                                : t.tasks.diagram.tooltips.expand
+                        }
                         placement="right"
-                        variant="outlined"
-                        arrow
                     >
                         <IconButton
                             size="sm"
@@ -75,14 +80,20 @@ export const DiagramLegend = () => {
                                 opacity: 0.7,
                             }}
                         >
-                            <Typography level="body-xs" sx={{ fontSize: "0.65rem", lineHeight: 1 }}>
+                            <Typography
+                                level="body-xs"
+                                sx={{ fontSize: "0.65rem", lineHeight: 1 }}
+                            >
                                 {open ? "−" : "+"}
                             </Typography>
                         </IconButton>
-                    </Tooltip>
+                    </AppTooltip>
                 </Stack>
                 {open && (
-                    <Stack spacing={0.5} sx={{ px: 1.25, py: 0.75, borderTop: `1px solid ${P.border}` }}>
+                    <Stack
+                        spacing={0.5}
+                        sx={{ px: 1.25, py: 0.75, borderTop: `1px solid ${P.border}` }}
+                    >
                         <Stack direction="row" alignItems="center" spacing={0.75}>
                             <Box
                                 aria-hidden

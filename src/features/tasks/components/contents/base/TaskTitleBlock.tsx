@@ -28,13 +28,13 @@ import {
     ModalDialog,
     Snackbar,
     Stack,
-    Tooltip,
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 import { useLocation } from "react-router-dom";
 
+import { AppTooltip } from "../../../../../components/ui/AppTooltip";
 import { MoreMenu, MoreMenuItem } from "../../../../../components/ui/MoreMenu";
 import { TaskHeaderStyles } from "../../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../../context/AuthContext";
@@ -469,11 +469,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                 {/* Right side: Action buttons */}
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, ml: "auto" }}>
                     {isOnTasksRoute && taskContent.threadId !== null && (
-                        <Tooltip
-                            size="sm"
-                            title={t.tasks.titleBlock.checkThread}
-                            variant="outlined"
-                        >
+                        <AppTooltip title={t.tasks.titleBlock.checkThread}>
                             <IconButton
                                 size="sm"
                                 variant="plain"
@@ -510,7 +506,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             >
                                 <QuestionAnswerRoundedIcon sx={{ fontSize: 18 }} />
                             </IconButton>
-                        </Tooltip>
+                        </AppTooltip>
                     )}
 
                     {/* Diagram trigger — only meaningful for persisted
@@ -524,16 +520,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                         isPreviewMode &&
                         taskContent.id != null &&
                         taskContent.project?.projectId != null && (
-                            <Tooltip
-                                size="sm"
-                                title="Open task graph"
-                                variant="outlined"
-                                sx={{
-                                    background: styles.menuBg,
-                                    border: `1px solid ${styles.menuBorder}`,
-                                    borderRadius: "8px",
-                                }}
-                            >
+                            <AppTooltip title={t.tasks.tooltips.openTaskGraph}>
                                 <IconButton
                                     size="sm"
                                     variant="plain"
@@ -555,7 +542,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                         sx={{ fontSize: 20, color: styles.textColor }}
                                     />
                                 </IconButton>
-                            </Tooltip>
+                            </AppTooltip>
                         )}
 
                     {isOnTasksRoute &&
@@ -705,16 +692,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             );
                         })()}
 
-                    <Tooltip
-                        size="sm"
-                        title={t.tasks.titleBlock.closeTooltip}
-                        variant="outlined"
-                        sx={{
-                            background: styles.menuBg,
-                            border: `1px solid ${styles.menuBorder}`,
-                            borderRadius: "8px",
-                        }}
-                    >
+                    <AppTooltip title={t.tasks.titleBlock.closeTooltip}>
                         <IconButton
                             size="sm"
                             variant="plain"
@@ -739,7 +717,7 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                                 }}
                             />
                         </IconButton>
-                    </Tooltip>
+                    </AppTooltip>
                 </Box>
             </Stack>
 

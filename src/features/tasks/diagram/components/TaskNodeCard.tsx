@@ -20,14 +20,15 @@ import {
     Modal,
     ModalDialog,
     Stack,
-    Tooltip,
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 import { Handle, NodeProps, Position } from "@xyflow/react";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
+import { fmt, useTranslation } from "../../../../i18n";
 import { purplePalette } from "../../../../theme/purplePalette";
 import { StatusChip } from "../../components/autocompletes/ACTaskSelector";
 import { CopyableTaskIdChip } from "../../components/CopyableTaskId";
@@ -56,6 +57,7 @@ const HANDLE_BASE = {
 
 export const TaskNodeCard = memo((props: NodeProps) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const P = isDark ? purplePalette.dark : purplePalette.light;
 
@@ -333,11 +335,13 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                     </Dropdown>
                 )}
                 {openBlockerCount > 0 && !isExternal && (
-                    <Tooltip
-                        title={`${openBlockerCount} open blocker${openBlockerCount > 1 ? "s" : ""}`}
-                        placement="top"
-                        variant="outlined"
-                        arrow
+                    <AppTooltip
+                        title={fmt(
+                            openBlockerCount === 1
+                                ? t.tasks.diagram.tooltips.openBlockerOne
+                                : t.tasks.diagram.tooltips.openBlockerOther,
+                            { count: openBlockerCount }
+                        )}
                     >
                         <Chip
                             size="sm"
@@ -353,28 +357,23 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                         >
                             {openBlockerCount}
                         </Chip>
-                    </Tooltip>
+                    </AppTooltip>
                 )}
                 <Box sx={{ flex: 1 }} />
                 {isExternal ? (
                     // Ghost cards don't get the "…" menu — instead, a
                     // small "open in preview" hint so the click target
                     // is obvious.
-                    <Tooltip
-                        title="Open this task in preview"
-                        placement="top"
-                        variant="outlined"
-                        arrow
-                    >
+                    <AppTooltip title={t.tasks.diagram.tooltips.openTaskInPreview}>
                         <OpenInNewRoundedIcon
                             sx={{ fontSize: 14, color: P.textMuted, opacity: 0.7 }}
                         />
-                    </Tooltip>
+                    </AppTooltip>
                 ) : (
                     // Direct "open task" affordance. Clicking jumps to
                     // the task preview and closes the diagram modal
                     // (the canvas wires both into `onOpenPreview`).
-                    <Tooltip title="Open task" placement="top" variant="outlined" arrow>
+                    <AppTooltip title={t.tasks.diagram.tooltips.openTask}>
                         <IconButton
                             size="sm"
                             variant="plain"
@@ -393,7 +392,7 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                         >
                             <LaunchRoundedIcon sx={{ fontSize: 14 }} />
                         </IconButton>
-                    </Tooltip>
+                    </AppTooltip>
                 )}
             </Stack>
 
@@ -415,11 +414,8 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                     sx={{ mb: 0.75, fontWeight: 600 }}
                 />
             ) : (
-                <Tooltip
-                    title={isExternal ? "" : "Double-click to rename"}
-                    placement="top"
-                    variant="outlined"
-                    arrow
+                <AppTooltip
+                    title={isExternal ? "" : t.tasks.diagram.tooltips.doubleClickToRename}
                     enterDelay={500}
                     disableHoverListener={isExternal}
                 >
@@ -446,7 +442,7 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                     >
                         {task.title || "Untitled"}
                     </Typography>
-                </Tooltip>
+                </AppTooltip>
             )}
 
             {/* Schedule row — dates + duration + relative status. The
@@ -474,11 +470,8 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                     const labelText = isEmpty ? placeholder : dateText;
                     const editable = !isExternal;
                     return (
-                        <Tooltip
-                            title={editable ? "Click to edit dates" : ""}
-                            placement="top"
-                            variant="outlined"
-                            arrow
+                        <AppTooltip
+                            title={editable ? t.tasks.diagram.tooltips.clickToEditDates : ""}
                             enterDelay={500}
                             disableHoverListener={!editable}
                         >
@@ -504,7 +497,7 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                             >
                                 {labelText}
                             </Typography>
-                        </Tooltip>
+                        </AppTooltip>
                     );
                 })()}
                 {schedule.durationDays != null && (
@@ -549,13 +542,7 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                     // affordance used everywhere else in the app
                     // (comments, table cells, modals). Tooltip with the
                     // name covers the "who is this?" case.
-                    <Tooltip
-                        title={task.assigneeName ?? ""}
-                        placement="top"
-                        variant="outlined"
-                        arrow
-                        enterDelay={400}
-                    >
+                    <AppTooltip title={task.assigneeName ?? ""} enterDelay={400}>
                         <Box sx={{ display: "inline-flex" }}>
                             <UserAvatar
                                 userId={task.assigneeId}
@@ -564,7 +551,7 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                                 showPulseDot={false}
                             />
                         </Box>
-                    </Tooltip>
+                    </AppTooltip>
                 )}
                 {isExternal ? (
                     <Chip
@@ -628,7 +615,7 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                 )}
                 {!projectName && <Box sx={{ flex: 1 }} />}
                 {!isExternal && (
-                    <Tooltip title="Add sub-task" placement="top" variant="outlined" arrow>
+                    <AppTooltip title={t.tasks.diagram.tooltips.addSubTask}>
                         <IconButton
                             size="sm"
                             variant="plain"
@@ -643,7 +630,7 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                         >
                             <AddRoundedIcon sx={{ fontSize: 16 }} />
                         </IconButton>
-                    </Tooltip>
+                    </AppTooltip>
                 )}
             </Stack>
 

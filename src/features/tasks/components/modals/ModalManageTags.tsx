@@ -15,12 +15,12 @@ import {
     Modal,
     ModalDialog,
     Stack,
-    Tooltip,
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { useAuth } from "../../../../context/AuthContext";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
@@ -326,10 +326,8 @@ export const ModalManageTags: React.FC<Props> = ({
                                     >
                                         {editName || t.tasks.modals.manageTags.previewName}
                                     </Chip>
-                                    <Tooltip
+                                    <AppTooltip
                                         title={t.tasks.modals.manageTags.saveTooltip}
-                                        size="sm"
-                                        variant="outlined"
                                     >
                                         <IconButton
                                             size="sm"
@@ -343,11 +341,9 @@ export const ModalManageTags: React.FC<Props> = ({
                                         >
                                             <CheckRoundedIcon sx={{ fontSize: 18 }} />
                                         </IconButton>
-                                    </Tooltip>
-                                    <Tooltip
+                                    </AppTooltip>
+                                    <AppTooltip
                                         title={t.tasks.modals.manageTags.cancelTooltip}
-                                        size="sm"
-                                        variant="outlined"
                                     >
                                         <IconButton
                                             size="sm"
@@ -360,7 +356,7 @@ export const ModalManageTags: React.FC<Props> = ({
                                         >
                                             <CloseRoundedIcon sx={{ fontSize: 18 }} />
                                         </IconButton>
-                                    </Tooltip>
+                                    </AppTooltip>
                                 </>
                             ) : (
                                 <>
@@ -420,10 +416,8 @@ export const ModalManageTags: React.FC<Props> = ({
                                         </Stack>
                                     ) : (
                                         <>
-                                            <Tooltip
+                                            <AppTooltip
                                                 title={t.tasks.modals.manageTags.editTooltip}
-                                                size="sm"
-                                                variant="outlined"
                                             >
                                                 <IconButton
                                                     size="sm"
@@ -438,11 +432,9 @@ export const ModalManageTags: React.FC<Props> = ({
                                                 >
                                                     <EditRoundedIcon sx={{ fontSize: 16 }} />
                                                 </IconButton>
-                                            </Tooltip>
-                                            <Tooltip
+                                            </AppTooltip>
+                                            <AppTooltip
                                                 title={t.tasks.modals.manageTags.deleteTooltip}
-                                                size="sm"
-                                                variant="outlined"
                                             >
                                                 <IconButton
                                                     size="sm"
@@ -462,7 +454,7 @@ export const ModalManageTags: React.FC<Props> = ({
                                                         sx={{ fontSize: 16 }}
                                                     />
                                                 </IconButton>
-                                            </Tooltip>
+                                            </AppTooltip>
                                         </>
                                     )}
                                 </>

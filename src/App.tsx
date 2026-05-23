@@ -34,6 +34,7 @@ import { OAUTH_INTEGRATIONS_ENABLED } from "./features/integrations/featureFlags
 import { SpotlightOverlay } from "./features/spotlight/SpotlightOverlay";
 import { CHAT_TYPE_CODE, SpotlightResult } from "./features/spotlight/types";
 import { useSpotlight } from "./features/spotlight/useSpotlight";
+import { ModalTaskDiagram } from "./features/tasks/diagram/components/ModalTaskDiagram";
 import { UrlLinkModalProvider } from "./hooks/common/UrlLinkModalContext";
 import { useAnalyticsIdentity } from "./hooks/common/useAnalyticsIdentity";
 import { useAnalyticsPageviews } from "./hooks/common/useAnalyticsPageviews";
@@ -202,6 +203,12 @@ export const App = () => {
     const openHistory = useCallback(() => setHistoryOpen(true), []);
     const closeHistory = useCallback(() => setHistoryOpen(false), []);
 
+    // Task graph modal — opened by the Ctrl+Cmd+G / Ctrl+Alt+G shortcut.
+    // Anchored on the currently previewed task, so it's a no-op when no
+    // task is in the preview pane (or the task has no project, since the
+    // diagram fetches by project).
+    const [taskDiagramOpen, setTaskDiagramOpen] = useState(false);
+
     const { previewIndex: serviceSwitcherPreviewIndex, mruOrder: serviceSwitcherMruOrder } =
         useGlobalServiceShortcut({
             onOpenTasksAndCreate: () => {
@@ -215,6 +222,13 @@ export const App = () => {
             onOpenCalendarModal: calendarModal.open,
             onQuickMeetClipboard: () => meetClipboardRef.current?.trigger(),
             onOpenHistory: openHistory,
+            onOpenTaskDiagram: () => {
+                const task = useTM.currentPreviewTask;
+                if (useTM.currentPreviewKind !== "task" || !task?.id || !task.project?.projectId) {
+                    return;
+                }
+                setTaskDiagramOpen(true);
+            },
         });
 
     // Click-to-open: jump to the chat / thread / task / inbox that the
@@ -612,6 +626,69 @@ export const App = () => {
                                                                                     closeHistory
                                                                                 }
                                                                             />
+                                                                            {/* Task graph modal —
+                                                                                opened by the
+                                                                                Ctrl+Cmd+G /
+                                                                                Ctrl+Alt+G
+                                                                                shortcut. Gated on
+                                                                                a previewed task
+                                                                                that has a project,
+                                                                                since the diagram
+                                                                                walks the parent
+                                                                                tree within that
+                                                                                project. */}
+                                                                            {taskDiagramOpen &&
+                                                                                useTM
+                                                                                    .currentPreviewTask
+                                                                                    ?.id != null &&
+                                                                                useTM
+                                                                                    .currentPreviewTask
+                                                                                    ?.project
+                                                                                    ?.projectId !=
+                                                                                    null && (
+                                                                                    <ModalTaskDiagram
+                                                                                        open={
+                                                                                            taskDiagramOpen
+                                                                                        }
+                                                                                        onClose={() =>
+                                                                                            setTaskDiagramOpen(
+                                                                                                false
+                                                                                            )
+                                                                                        }
+                                                                                        myself={
+                                                                                            myself
+                                                                                        }
+                                                                                        rootTaskId={Number(
+                                                                                            useTM
+                                                                                                .currentPreviewTask
+                                                                                                .id
+                                                                                        )}
+                                                                                        projectId={
+                                                                                            useTM
+                                                                                                .currentPreviewTask
+                                                                                                .project
+                                                                                                .projectId
+                                                                                        }
+                                                                                        rootLabel={
+                                                                                            useTM
+                                                                                                .currentPreviewTask
+                                                                                                .displayId
+                                                                                                ? `${useTM.currentPreviewTask.displayId} · ${useTM.currentPreviewTask.title}`
+                                                                                                : useTM
+                                                                                                      .currentPreviewTask
+                                                                                                      .title
+                                                                                        }
+                                                                                        useTM={
+                                                                                            useTM
+                                                                                        }
+                                                                                        usePM={
+                                                                                            usePM
+                                                                                        }
+                                                                                        useSM={
+                                                                                            useSM
+                                                                                        }
+                                                                                    />
+                                                                                )}
                                                                             <Box
                                                                                 sx={{
                                                                                     display:

@@ -127,6 +127,13 @@ export const tasks = {
         refreshBranches: "Refresh branches",
         refreshPullRequests: "Refresh linked PRs",
         addStartDate: "Add start date",
+        // Shared diagram-trigger tooltip used by the milestone-pane
+        // button and the TaskTitleBlock graph button. The "WithShortcut"
+        // variant suffixes the keyboard combo for the TaskPreview button,
+        // which is the only entry point reachable via Ctrl+Cmd+G /
+        // Ctrl+Alt+G.
+        openTaskGraph: "Open task graph",
+        openTaskGraphWithShortcut: "Open task graph ({shortcut})",
     },
 
     // Generic action button labels reused across screens.
@@ -630,5 +637,37 @@ export const tasks = {
         movedThisTaskTo: " moved this task to ",
         newCommentFrom: "💬 New comment from ",
         newMilestoneCreatedBy: "🚩 New milestone created by ",
+    },
+
+    // Task graph (React Flow diagram) — tooltips on nodes and modal chrome.
+    diagram: {
+        tooltips: {
+            // BurndownSparkline header chip.
+            tasksRemaining: "{remaining} of {total} tasks remaining",
+            // Health chip — used both on milestone nodes and the modal header.
+            healthSummary: "Closed {actualPct}% · Expected {expectedPct}%",
+            // ModalTaskDiagram progress-bar "expected by now" marker.
+            expectedByToday: "Expected by today: {expectedPct}%",
+            // TaskNodeCard blocker badge. Single vs plural — call site
+            // picks one based on the count rather than the template
+            // carrying a JS ternary.
+            openBlockerOne: "{count} open blocker",
+            openBlockerOther: "{count} open blockers",
+            // TaskNodeCard hover affordances.
+            openTaskInPreview: "Open this task in preview",
+            openTask: "Open task",
+            doubleClickToRename: "Double-click to rename",
+            clickToEditDates: "Click to edit dates",
+            addSubTask: "Add sub-task",
+            // MilestoneNodeCard "open" button.
+            openMilestone: "Open milestone",
+            // ModalTaskDiagram chrome.
+            hideClosed: "Hide closed tasks",
+            showClosed: "Show closed tasks",
+            close: "Close",
+            // DiagramLegend collapse / expand chevron.
+            collapse: "Collapse",
+            expand: "Expand",
+        },
     },
 } as const;

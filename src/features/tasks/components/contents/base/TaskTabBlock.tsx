@@ -20,7 +20,6 @@ import {
     TabList,
     TabPanel,
     Tabs,
-    Tooltip,
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -28,6 +27,7 @@ import Tab, { tabClasses } from "@mui/joy/Tab";
 import { useLocation } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
+import { AppTooltip } from "../../../../../components/ui/AppTooltip";
 import { FileSizeRejectionSnackbar } from "../../../../../components/ui/feedback/FileSizeRejectionSnackbar";
 import { UploadingTileBadge } from "../../../../../components/ui/feedback/FileUploadProgress";
 import { useFileSizeGuard } from "../../../../../components/ui/feedback/useFileSizeGuard";
@@ -918,13 +918,10 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                 sx={{ fontSize: 12, color: "#ef4444" }}
                                             />
                                         </IconButton>
-                                        <Tooltip
-                                            placement="top"
-                                            size="sm"
+                                        <AppTooltip
                                             title={fmt(t.tasks.tabs.downloadFileTooltip, {
                                                 name: file.name,
                                             })}
-                                            variant="outlined"
                                         >
                                             <div
                                                 style={{
@@ -944,7 +941,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                     }}
                                                 />
                                             </div>
-                                        </Tooltip>
+                                        </AppTooltip>
                                         <Typography
                                             level="body-xs"
                                             sx={{
@@ -1121,11 +1118,9 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                 maxHeight: "80vh",
                                             }}
                                         />
-                                        <Tooltip
+                                        <AppTooltip
                                             placement="left"
-                                            size="sm"
                                             title={t.tasks.tabs.downloadTooltip}
-                                            variant="outlined"
                                         >
                                             <IconButton
                                                 variant="solid"
@@ -1144,7 +1139,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                             >
                                                 <DownloadRoundedIcon sx={{ color: "white" }} />
                                             </IconButton>
-                                        </Tooltip>
+                                        </AppTooltip>
                                     </Box>
                                 )}
                             </ModalDialog>

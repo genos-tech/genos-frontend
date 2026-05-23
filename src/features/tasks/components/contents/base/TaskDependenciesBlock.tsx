@@ -1,9 +1,10 @@
 import { useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
-import { Box, Chip, IconButton, ListItem, Tooltip, Typography } from "@mui/joy";
+import { Box, Chip, IconButton, ListItem, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { AppTooltip } from "../../../../../components/ui/AppTooltip";
 import { ProjectManagementState } from "../../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../../i18n";
@@ -93,7 +94,7 @@ export const TaskDependenciesBlock = ({
             {isEmpty ? (
                 <ListItem sx={{ display: "flex", alignItems: "center" }}>
                     <FieldLabel isDark={isDark}>{depsT.sectionLabel}</FieldLabel>
-                    <Tooltip placement="top" title={depsT.addCtaTooltip} variant="outlined" arrow>
+                    <AppTooltip title={depsT.addCtaTooltip}>
                         <Box
                             sx={{
                                 cursor: "pointer",
@@ -119,7 +120,7 @@ export const TaskDependenciesBlock = ({
                                 {depsT.addCta}
                             </Typography>
                         </Box>
-                    </Tooltip>
+                    </AppTooltip>
                 </ListItem>
             ) : (
                 <>
@@ -212,7 +213,7 @@ const DependencyRow = ({
                     {noneLabel}
                 </Typography>
             )}
-            <Tooltip placement="top" title={addTooltip} variant="outlined" arrow>
+            <AppTooltip title={addTooltip}>
                 <IconButton
                     size="sm"
                     variant="plain"
@@ -227,7 +228,7 @@ const DependencyRow = ({
                 >
                     <AddRoundedIcon sx={{ fontSize: 18 }} />
                 </IconButton>
-            </Tooltip>
+            </AppTooltip>
         </Box>
     </ListItem>
 );
@@ -246,7 +247,7 @@ const DependencyChip = ({
         ? `${ref_.projectName} · ${statusLabel || "—"}`
         : statusLabel || "";
     return (
-        <Tooltip placement="top" title={tip} variant="outlined" arrow>
+        <AppTooltip title={tip}>
             <Box
                 sx={{
                     display: "inline-flex",
@@ -294,7 +295,7 @@ const DependencyChip = ({
                     {ref_.title}
                 </Typography>
             </Box>
-        </Tooltip>
+        </AppTooltip>
     );
 };
 

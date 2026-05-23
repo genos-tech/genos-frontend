@@ -4,11 +4,13 @@ import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import LaunchRoundedIcon from "@mui/icons-material/LaunchRounded";
 import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
-import { Box, Chip, IconButton, LinearProgress, Stack, Tooltip, Typography } from "@mui/joy";
+import { Box, Chip, IconButton, LinearProgress, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 import { Handle, NodeProps, Position } from "@xyflow/react";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { fmt, useTranslation } from "../../../../i18n";
 import { purplePalette } from "../../../../theme/purplePalette";
 import { StatusChip } from "../../components/autocompletes/ACTaskSelector";
 import { CopyableTaskIdChip } from "../../components/CopyableTaskId";
@@ -55,6 +57,7 @@ const HANDLE_BASE = {
 // "header" of its tree.
 export const MilestoneNodeCard = memo((props: NodeProps) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const P = isDark ? purplePalette.dark : purplePalette.light;
 
@@ -171,11 +174,11 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
                     milestone tree without opening each card. Skipped
                     when there's no window or no descendants. */}
                 {health && total > 0 && (
-                    <Tooltip
-                        title={`Closed ${Math.round(health.actualPct)}% · Expected ${Math.round(health.expectedPct)}%`}
-                        placement="top"
-                        variant="outlined"
-                        arrow
+                    <AppTooltip
+                        title={fmt(t.tasks.diagram.tooltips.healthSummary, {
+                            actualPct: Math.round(health.actualPct),
+                            expectedPct: Math.round(health.expectedPct),
+                        })}
                     >
                         <Chip
                             size="sm"
@@ -190,10 +193,10 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
                         >
                             {health.label}
                         </Chip>
-                    </Tooltip>
+                    </AppTooltip>
                 )}
                 <Box sx={{ flex: 1 }} />
-                <Tooltip title="Open milestone" placement="top" variant="outlined" arrow>
+                <AppTooltip title={t.tasks.diagram.tooltips.openMilestone}>
                     <IconButton
                         size="sm"
                         variant="plain"
@@ -207,7 +210,7 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
                     >
                         <LaunchRoundedIcon sx={{ fontSize: 14 }} />
                     </IconButton>
-                </Tooltip>
+                </AppTooltip>
             </Stack>
 
             <Typography

@@ -16,14 +16,15 @@ import {
     Modal,
     ModalDialog,
     Stack,
-    Tooltip,
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { fmt, useTranslation } from "../../../../i18n";
 import { purplePalette } from "../../../../theme/purplePalette";
 import { UserProps } from "../../../../types/admin";
 import { ScheduleOverview } from "../types";
@@ -74,6 +75,7 @@ export const ModalTaskDiagram = ({
     useSM,
 }: Props) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const P = isDark ? purplePalette.dark : purplePalette.light;
 
@@ -198,11 +200,12 @@ export const ModalTaskDiagram = ({
                         "Behind" verdict isn't mysterious. Hidden when
                         no window is available. */}
                     {overview?.health && (
-                        <Tooltip
-                            title={`Closed ${Math.round(overview.health.actualPct)}% · Expected ${Math.round(overview.health.expectedPct)}%`}
+                        <AppTooltip
+                            title={fmt(t.tasks.diagram.tooltips.healthSummary, {
+                                actualPct: Math.round(overview.health.actualPct),
+                                expectedPct: Math.round(overview.health.expectedPct),
+                            })}
                             placement="bottom"
-                            variant="outlined"
-                            arrow
                         >
                             <Chip
                                 size="md"
@@ -217,7 +220,7 @@ export const ModalTaskDiagram = ({
                             >
                                 {overview.health.label}
                             </Chip>
-                        </Tooltip>
+                        </AppTooltip>
                     )}
 
                     {/* Schedule overview pill — only renders when at
@@ -371,11 +374,15 @@ export const ModalTaskDiagram = ({
                                             sx={{ "--LinearProgress-thickness": "6px" }}
                                         />
                                         {overview.health && overview.total > 0 && (
-                                            <Tooltip
-                                                title={`Expected by today: ${Math.round(overview.health.expectedPct)}%`}
-                                                placement="top"
-                                                variant="outlined"
-                                                arrow
+                                            <AppTooltip
+                                                title={fmt(
+                                                    t.tasks.diagram.tooltips.expectedByToday,
+                                                    {
+                                                        expectedPct: Math.round(
+                                                            overview.health.expectedPct
+                                                        ),
+                                                    }
+                                                )}
                                             >
                                                 <Box
                                                     sx={{
@@ -395,7 +402,7 @@ export const ModalTaskDiagram = ({
                                                         cursor: "help",
                                                     }}
                                                 />
-                                            </Tooltip>
+                                            </AppTooltip>
                                         )}
                                     </Box>
                                     <Typography
@@ -428,11 +435,13 @@ export const ModalTaskDiagram = ({
                         otherwise-clean tree would be a no-op and the
                         button would be confusing. */}
                     {(overview?.closed ?? 0) > 0 && (
-                        <Tooltip
-                            title={hideClosed ? "Show closed tasks" : "Hide closed tasks"}
+                        <AppTooltip
+                            title={
+                                hideClosed
+                                    ? t.tasks.diagram.tooltips.showClosed
+                                    : t.tasks.diagram.tooltips.hideClosed
+                            }
                             placement="bottom"
-                            variant="outlined"
-                            arrow
                         >
                             <IconButton
                                 variant="plain"
@@ -450,10 +459,10 @@ export const ModalTaskDiagram = ({
                                     <VisibilityRoundedIcon />
                                 )}
                             </IconButton>
-                        </Tooltip>
+                        </AppTooltip>
                     )}
 
-                    <Tooltip title="Close" placement="left" variant="outlined" arrow>
+                    <AppTooltip title={t.tasks.diagram.tooltips.close} placement="left">
                         <IconButton
                             variant="plain"
                             color="neutral"
@@ -463,7 +472,7 @@ export const ModalTaskDiagram = ({
                         >
                             <CloseRoundedIcon />
                         </IconButton>
-                    </Tooltip>
+                    </AppTooltip>
                 </Stack>
 
                 {/* Canvas fills the rest of the dialog */}

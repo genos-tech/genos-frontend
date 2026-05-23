@@ -13,11 +13,11 @@ import {
     Select,
     Stack,
     Switch,
-    Tooltip,
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { SortTier, useTaskSortPreferences } from "../../../../hooks/common/useTaskSortPreferences";
 import { useTaskTableColumnPreferences } from "../../../../hooks/common/useTaskTableColumnPreferences";
 import { useTranslation } from "../../../../i18n";
@@ -217,11 +217,7 @@ export const TaskTableColumnSettings = ({ open, onClose }: Props) => {
                     spacing={1}
                     sx={{ mb: 2, justifyContent: "flex-end" }}
                 >
-                    <Tooltip
-                        size="sm"
-                        title={t.tasks.table.columnSettings.resetTooltip}
-                        variant="outlined"
-                    >
+                    <AppTooltip title={t.tasks.table.columnSettings.resetTooltip}>
                         <IconButton
                             size="sm"
                             variant="plain"
@@ -230,7 +226,7 @@ export const TaskTableColumnSettings = ({ open, onClose }: Props) => {
                         >
                             <RestartAltRoundedIcon />
                         </IconButton>
-                    </Tooltip>
+                    </AppTooltip>
                     <IconButton
                         size="sm"
                         variant="plain"

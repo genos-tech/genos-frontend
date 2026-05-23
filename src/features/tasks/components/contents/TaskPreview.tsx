@@ -11,23 +11,14 @@ import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
-import {
-    Box,
-    Button,
-    Chip,
-    Divider,
-    IconButton,
-    Input,
-    Stack,
-    Tooltip,
-    Typography,
-} from "@mui/joy";
+import { Box, Button, Chip, Divider, IconButton, Input, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 import { Socket } from "socket.io-client";
 
 import { useInitialTabIndex } from "./utils/useInitialTabIndex";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { TaskHeaderStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
@@ -40,7 +31,7 @@ import { useSendUpdatedTask } from "../../../../hooks/tasks/useSendUpdatedTask";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { useTaskEditState } from "../../../../hooks/tasks/useTaskEditState";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
-import { useTranslation } from "../../../../i18n";
+import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../../../types/chat";
 import { TaskNoteProps } from "../../../../types/notes";
@@ -50,6 +41,7 @@ import {
     TaskCommentProps,
     TaskProps,
 } from "../../../../types/tasks";
+import { getServiceShortcutModifierKeys } from "../../../../utils/platform";
 import { LinkedPrCard } from "../../../integrations/components/LinkedPrCard";
 import { parsePrUrl } from "../../../integrations/utils/parsePrUrl";
 import { loadTaskNotes } from "../../../notes/task-notes/services/loadTaskNotes";
@@ -1710,15 +1702,12 @@ const MilestonePreviewInner = ({
                             the diagram walks the parent_task_id tree
                             from there. */}
                         {milestone.taskId != null && milestone.projectId != null && (
-                            <Tooltip
-                                size="sm"
-                                title="Open task graph"
-                                variant="outlined"
-                                sx={{
-                                    background: styles.menuBg,
-                                    border: `1px solid ${styles.menuBorder}`,
-                                    borderRadius: "8px",
-                                }}
+                            <AppTooltip
+                                title={fmt(t.tasks.tooltips.openTaskGraphWithShortcut, {
+                                    shortcut: `${getServiceShortcutModifierKeys().join(
+                                        " + "
+                                    )} + G`,
+                                })}
                             >
                                 <IconButton
                                     size="sm"
@@ -1741,7 +1730,7 @@ const MilestonePreviewInner = ({
                                         sx={{ fontSize: 20, color: styles.textColor }}
                                     />
                                 </IconButton>
-                            </Tooltip>
+                            </AppTooltip>
                         )}
                         {(() => {
                             const items: MoreMenuItem[] = [
@@ -1872,16 +1861,7 @@ const MilestonePreviewInner = ({
                             );
                         })()}
 
-                        <Tooltip
-                            size="sm"
-                            title={t.tasks.preview.closeTooltip}
-                            variant="outlined"
-                            sx={{
-                                background: styles.menuBg,
-                                border: `1px solid ${styles.menuBorder}`,
-                                borderRadius: "8px",
-                            }}
-                        >
+                        <AppTooltip title={t.tasks.preview.closeTooltip}>
                             <IconButton
                                 size="sm"
                                 variant="plain"
@@ -1931,7 +1911,7 @@ const MilestonePreviewInner = ({
                                     }}
                                 />
                             </IconButton>
-                        </Tooltip>
+                        </AppTooltip>
                     </Stack>
 
                     {/* Per-status task progress for this milestone.
