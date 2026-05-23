@@ -39,6 +39,7 @@ import { addMessage } from "../../features/chat/services/addMessage";
 import { getFirstLine } from "../../features/chat/utils/common";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
+import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useEditorDraft } from "../../hooks/common/useEditorDraft";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
@@ -95,6 +96,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
     const { t } = useTranslation();
+    const isMobile = useIsMobile();
     const urlLinkModal = useUrlLinkModal();
     const editorBoxRef = useRef<HTMLDivElement>(null);
     useAnchorClickIntercept(editorBoxRef, urlLinkModal);
@@ -537,7 +539,14 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                             />
 
                             <ColorStyleButton key={"colorStyleButton"} />
-                            <CreateLinkButton key={"createLinkButton"} />
+                            {/* Link + Emoji buttons are hidden on
+                                mobile — the toolbar is positioned
+                                absolutely (fixed width) and clipping
+                                the tail off-screen on narrow viewports.
+                                Slash-command alternatives still work:
+                                paste-as-link works inline; the "/" menu
+                                offers Emoji. */}
+                            {!isMobile && <CreateLinkButton key={"createLinkButton"} />}
                             <FileCaptionButton key={"fileCaptionButton"} />
                             <FileReplaceButton key={"replaceFileButton"} />
                             <FileDeleteButton key={"fileDeleteButton"} />
@@ -546,10 +555,12 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                             <FileRenameButton key={"fileRenameButton"} />
 
                             {/* Extra button to toggle blue text & background */}
-                            <CustomEmojiToolbar
-                                key={"customButton"}
-                                setShowEmojiPicker={setShowEmojiPicker}
-                            />
+                            {!isMobile && (
+                                <CustomEmojiToolbar
+                                    key={"customButton"}
+                                    setShowEmojiPicker={setShowEmojiPicker}
+                                />
+                            )}
                         </FormattingToolbar>
                     </Box>
 

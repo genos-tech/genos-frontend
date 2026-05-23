@@ -172,9 +172,12 @@ export const ModalManageTags: React.FC<Props> = ({
                     borderRadius: "16px",
                     boxShadow:
                         "0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(124,58,237,0.1)",
-                    minWidth: "400px",
-                    maxHeight: "70vh",
-                    p: 3,
+                    width: { xs: "calc(100vw - 24px)", md: "auto" },
+                    minWidth: { xs: 0, md: "400px" },
+                    maxWidth: { xs: "100vw", md: "600px" },
+                    maxHeight: { xs: "calc(100dvh - 32px)", md: "70vh" },
+                    p: { xs: 2, md: 3 },
+                    overflow: "auto",
                 }}
             >
                 {/* Header */}

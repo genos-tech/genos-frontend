@@ -15,6 +15,7 @@ import { ThreadPanel } from "./components/panels/ThreadPanel";
 import { ResizeHandle } from "./components/shared/ResizeHandle";
 import { ChatSidebar } from "./components/sidebar/ChatSidebar";
 import { useChatRouting } from "./hooks/useChatRouting";
+import { MobileChatHome } from "./MobileChatHome";
 import { appendTodoContent, createNewTodo } from "./services/createNewTodo";
 import { getFirstLine } from "./utils/common";
 import { defaultTodoContent } from "./utils/defaults";
@@ -22,6 +23,7 @@ import { defaultTodoContent } from "./utils/defaults";
 import { LayoutStyles } from "../../components/ui/styles/commonStyle";
 import { useAuth } from "../../context/AuthContext";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
@@ -64,6 +66,7 @@ export const ChatHome = (props: ChatHomeProps) => {
     // Common
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
+    const isMobile = useIsMobile();
 
     // Chat Related
     const [currentMainChatId, setCurrentMainChatId] = useState<number>(-1);
@@ -265,6 +268,33 @@ export const ChatHome = (props: ChatHomeProps) => {
                     <Box sx={ls.decorTopRight} />
                     <Box sx={ls.decorBottomLeft} />
 
+                    {isMobile ? (
+                        <MobileChatHome
+                            useTEM={useTEM}
+                            socket={socket}
+                            myself={myself}
+                            setMyself={setMyself}
+                            useCM={useCM}
+                            useUISM={useUISM}
+                            useNM={useNM}
+                            usePM={usePM}
+                            useTM={useTM}
+                            useSM={useSM}
+                            chatRouting={chatRouting}
+                            currentMainChatId={currentMainChatId}
+                            currentThreadChatId={currentThreadChatId}
+                            currentWindowHeight={height}
+                            mainChatPanelSize={mainChatPanelSize}
+                            incompleteTodoCount={incompleteTodoCount}
+                            isExistingTodaysTodo={isExistingTodaysTodo}
+                            setIsExistingTodaysTodo={setIsExistingTodaysTodo}
+                            isToDoVisible={isToDoVisible}
+                            setIsToDoVisible={setIsToDoVisible}
+                            todos={todos}
+                            setTodos={setTodos}
+                            setTodoFromMessageBubble={setTodoFromMessageBubble}
+                        />
+                    ) : (
                     <PanelGroup
                         autoSaveId="conditional"
                         direction="horizontal"
@@ -474,12 +504,14 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 </>
                             )}
 
-                        {/* Modal for creating a new project */}
-                        <ModalCreateProject myself={myself} usePM={usePM} />
-
-                        {/* Modal for creating a new tag */}
-                        <ModalCreateTag myself={myself} useTM={useTM} usePM={usePM} />
                     </PanelGroup>
+                    )}
+
+                    {/* Modal for creating a new project — global flag-gated */}
+                    <ModalCreateProject myself={myself} usePM={usePM} />
+
+                    {/* Modal for creating a new tag — global flag-gated */}
+                    <ModalCreateTag myself={myself} useTM={useTM} usePM={usePM} />
                 </Sheet>
 
                 {/* Hover Animation with CSS */}

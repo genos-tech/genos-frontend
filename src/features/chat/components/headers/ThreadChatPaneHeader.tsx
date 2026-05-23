@@ -1,15 +1,29 @@
 import AddTaskRoundedIcon from "@mui/icons-material/AddTaskRounded";
+import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import ReplyRoundedIcon from "@mui/icons-material/ReplyRounded";
-import { Box, IconButton, Stack, Tooltip, Typography } from "@mui/joy";
+import {
+    Box,
+    Dropdown,
+    IconButton,
+    Menu,
+    MenuButton,
+    MenuItem,
+    Stack,
+    Tooltip,
+    Typography,
+} from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
+import { useNavigate } from "react-router-dom";
 
 import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
 import { ThreadChatPaneHeaderStyles } from "../../../../components/ui/styles/commonStyle";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
@@ -32,6 +46,8 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
+    const isMobile = useIsMobile();
+    const navigate = useNavigate();
     const styles = isDark ? ThreadChatPaneHeaderStyles.dark : ThreadChatPaneHeaderStyles.light;
     const { currentThreadTaskId } = useChatContext();
 
@@ -79,6 +95,177 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
         messages: [],
         TSLastMessage: useCM.currentThreadChat?.TSLastMessage as string,
     };
+
+    // Mobile back: navigate up one URL segment from
+    // `/workspace/chat/:type/:id/thread/:tid` to `/workspace/chat/:type/:id`.
+    // useChatRouting picks up the missing thread segment and clears
+    // isThreadVisible, so the main chat pane takes over.
+    const handleMobileBack = () => {
+        const CHAT_TYPE_TO_PATH: Record<number, string> = {
+            1: "dm",
+            2: "gm",
+            3: "pm",
+            4: "mdm",
+            5: "activity",
+            6: "flagged",
+        };
+        const chatType = useCM.currentThreadChat?.chatType;
+        const chatId = useCM.currentThreadChat?.chatId;
+        const typePath = chatType !== undefined ? CHAT_TYPE_TO_PATH[chatType] : undefined;
+        if (typePath && chatId !== undefined) {
+            navigate(`/workspace/chat/${typePath}/${chatId}`);
+        }
+        useCM.setIsMainChatVisible(true);
+        useCM.setIsThreadVisible(false);
+        useCM.setCurrentThreadChat(dummyThreadChat);
+    };
+
+    const openTaskHandler = () => {
+        useCM.setIsMainChatVisible(false);
+        useCM.setIsThreadVisible(true);
+        useTM.setCurrentPreviewTaskId(currentThreadTaskId);
+        useTM.setIsTaskPreviewVisible(true);
+        useTM.setIsCreatingTask({
+            flag: false,
+            parentTaskId: null,
+            rootTaskId: null,
+            creationKind: "task",
+            milestoneId: null,
+        });
+    };
+
+    const createTaskHandler = () => {
+        useCM.setIsMainChatVisible(true);
+        useCM.setIsThreadVisible(true);
+        useTM.setIsTaskPreviewVisible(false);
+        useTM.setIsCreatingTask({
+            flag: true,
+            parentTaskId: null,
+            rootTaskId: null,
+            creationKind: "task",
+            milestoneId: null,
+        });
+    };
+
+    const openNoteHandler = () => {
+        const chatType = useCM.currentThreadChat?.chatType;
+        const chatId = useCM.currentThreadChat?.chatId;
+        const matchedChat = useCM.allChats.find(
+            (c) => c.chatId === chatId && c.chatType === chatType
+        );
+        let chatName =
+            matchedChat?.chatName ||
+            useCM.currentMainChat?.chatName ||
+            useCM.currentThreadChat?.chatName;
+        if (
+            chatType === 4 &&
+            matchedChat?.mdmMembers &&
+            matchedChat.mdmMembers.length > 0
+        ) {
+            const MAX_DISPLAY = 3;
+            const names = matchedChat.mdmMembers.map((m) => m.userName);
+            chatName =
+                names.length <= MAX_DISPLAY
+                    ? names.join(", ")
+                    : `${names.slice(0, MAX_DISPLAY).join(", ")} +${names.length - MAX_DISPLAY}`;
+        }
+        useNM.chatPanelApi.openOrCreate(
+            chatType as number,
+            chatId as number,
+            true,
+            useCM.currentThreadChat?.threadId as number,
+            chatName
+        );
+        useCM.setIsChatNoteVisibleInChat(true);
+        useCM.setIsMainChatVisible(false);
+        useCM.setIsThreadVisible(true);
+        useTM.setIsTaskPreviewVisible(false);
+        useTM.setIsCreatingTask((prev) => ({ ...prev, flag: false }));
+    };
+
+    if (isMobile) {
+        const hasTask = currentThreadTaskId !== -1;
+        const chatType = useCM.currentThreadChat?.chatType;
+        return (
+            <Stack
+                direction="row"
+                sx={{
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    px: 1,
+                    background: styles.containerBg,
+                    backdropFilter: "blur(12px)",
+                    borderBottom: `1px solid ${styles.containerBorder}`,
+                    minHeight: "56px",
+                    gap: 0.5,
+                }}
+            >
+                <IconButton
+                    size="sm"
+                    variant="plain"
+                    onClick={handleMobileBack}
+                    aria-label="Back"
+                    sx={{ flexShrink: 0 }}
+                >
+                    <ArrowBackIosNewRoundedIcon sx={{ fontSize: 18 }} />
+                </IconButton>
+
+                <Stack
+                    direction="row"
+                    spacing={0.75}
+                    sx={{ alignItems: "center", flex: 1, minWidth: 0, overflow: "hidden" }}
+                >
+                    <ReplyRoundedIcon
+                        sx={{ fontSize: 16, color: styles.accentColor, flexShrink: 0 }}
+                    />
+                    <Typography
+                        level="body-sm"
+                        sx={{
+                            fontWeight: 600,
+                            color: styles.textColor,
+                            letterSpacing: "-0.01em",
+                        }}
+                        noWrap
+                    >
+                        {useCM.currentThreadChat?.chatName || "Thread"}
+                    </Typography>
+                </Stack>
+
+                <Dropdown>
+                    <MenuButton
+                        slots={{ root: IconButton }}
+                        slotProps={{ root: { size: "sm", variant: "plain" } }}
+                    >
+                        <MoreVertRoundedIcon sx={{ fontSize: 20 }} />
+                    </MenuButton>
+                    <Menu size="sm" placement="bottom-end" sx={{ minWidth: 200 }}>
+                        {hasTask && (
+                            <MenuItem onClick={openTaskHandler}>
+                                <AssignmentRoundedIcon
+                                    sx={{ fontSize: 18, color: styles.accentColor }}
+                                />
+                                {t.chat.headers.openTask}
+                            </MenuItem>
+                        )}
+                        {!hasTask && chatType !== 3 && (
+                            <MenuItem onClick={createTaskHandler}>
+                                <AddTaskRoundedIcon sx={{ fontSize: 18, color: "#fff" }} />
+                                {t.chat.headers.newTaskTooltip}
+                            </MenuItem>
+                        )}
+                        {chatType !== 3 && (
+                            <MenuItem onClick={openNoteHandler}>
+                                <NoteAltRoundedIcon
+                                    sx={{ fontSize: 18, color: styles.accentColor }}
+                                />
+                                {t.chat.headers.openNoteTooltip}
+                            </MenuItem>
+                        )}
+                    </Menu>
+                </Dropdown>
+            </Stack>
+        );
+    }
 
     return (
         <Stack

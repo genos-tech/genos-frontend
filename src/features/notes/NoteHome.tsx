@@ -6,6 +6,7 @@ import { Socket } from "socket.io-client";
 import { ResizeHandle } from "../../components/ui/ResizeHandle";
 import { LayoutStyles } from "../../components/ui/styles/commonStyle";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { ProjectManagementState } from "../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
@@ -17,6 +18,7 @@ import { UserProps } from "../../types/admin";
 import { NoteContentRenderer } from "./common/components/NoteContentRenderer";
 import { NoteSidebar } from "./common/components/NoteSidebar";
 import { useNoteRouting } from "./common/hooks/useNoteRouting";
+import { MobileNoteHome } from "./MobileNoteHome";
 import { TaskPreviewPanel } from "./task-notes/components/TaskPreviewPanel";
 
 type NoteHomeProps = {
@@ -40,6 +42,7 @@ export const NoteHome = (props: NoteHomeProps) => {
     useNoteRouting({ useNM });
 
     const { mode } = useColorScheme();
+    const isMobile = useIsMobile();
 
     const ls = mode === "dark" ? LayoutStyles.dark : LayoutStyles.light;
 
@@ -96,30 +99,45 @@ export const NoteHome = (props: NoteHomeProps) => {
                 <Box sx={ls.decorTopRight} />
                 <Box sx={ls.decorBottomLeft} />
 
-                <PanelGroup direction="horizontal" style={{ flex: 1 }}>
-                    <Panel id={"1"} maxSize={25} minSize={10} order={1}>
-                        <Box sx={ls.sidebarPanel}>
-                            <NoteSidebar useNM={useNM} allChats={useCM.allChats} />
-                        </Box>
-                    </Panel>
-
-                    <ResizeHandle className="note-resize-handle" />
-
-                    {renderMainContent()}
-
-                    <TaskPreviewPanel
-                        useCM={useCM}
-                        myself={myself}
-                        useNM={useNM}
-                        usePM={usePM}
-                        setMyself={setMyself}
-                        socket={socket}
+                {isMobile ? (
+                    <MobileNoteHome
                         useTEM={useTEM}
+                        socket={socket}
+                        myself={myself}
+                        setMyself={setMyself}
+                        useUISM={useUISM}
+                        useNM={useNM}
+                        useCM={useCM}
+                        usePM={usePM}
                         useTM={useTM}
                         useSM={useSM}
-                        useUISM={useUISM}
                     />
-                </PanelGroup>
+                ) : (
+                    <PanelGroup direction="horizontal" style={{ flex: 1 }}>
+                        <Panel id={"1"} maxSize={25} minSize={10} order={1}>
+                            <Box sx={ls.sidebarPanel}>
+                                <NoteSidebar useNM={useNM} allChats={useCM.allChats} />
+                            </Box>
+                        </Panel>
+
+                        <ResizeHandle className="note-resize-handle" />
+
+                        {renderMainContent()}
+
+                        <TaskPreviewPanel
+                            useCM={useCM}
+                            myself={myself}
+                            useNM={useNM}
+                            usePM={usePM}
+                            setMyself={setMyself}
+                            socket={socket}
+                            useTEM={useTEM}
+                            useTM={useTM}
+                            useSM={useSM}
+                            useUISM={useUISM}
+                        />
+                    </PanelGroup>
+                )}
             </Sheet>
 
             {/* Hover Animation with CSS */}

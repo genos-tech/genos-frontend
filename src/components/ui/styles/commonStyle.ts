@@ -493,10 +493,21 @@ export const TaskFilterMenuStyles = {
 // Home (chat, tasks, notes, inbox). Consumers pick dark or light based on
 // `useColorScheme()`, then spread the relevant sub-object into their sx prop.
 export const LayoutStyles = {
-    // Mode-independent: the outermost Box every Home renders
+    // Mode-independent: the outermost Box every Home renders.
+    // On mobile we reserve room for the BottomTabBar (position: fixed,
+    // bottom: 0) by capping the wrapper at viewport-minus-tab-bar so
+    // the feature content ends above the tab bar instead of being
+    // covered by it.
     outerWrapper: {
         display: "flex",
-        minHeight: "100dvh",
+        minHeight: {
+            xs: "calc(100dvh - var(--BottomTabBar-height, 60px))",
+            md: "100dvh",
+        },
+        height: {
+            xs: "calc(100dvh - var(--BottomTabBar-height, 60px))",
+            md: "auto",
+        },
         flex: 1,
         minWidth: 0,
     } as const,

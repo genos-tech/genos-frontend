@@ -12,6 +12,8 @@ import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useBubbleStylePreference } from "../../../../hooks/common/useBubbleStylePreference";
 import { useDoubleClickTodoPreference } from "../../../../hooks/common/useDoubleClickTodoPreference";
+import { useIsMobile } from "../../../../hooks/common/useIsMobile";
+import { useLongPress } from "../../../../hooks/common/useLongPress";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -131,6 +133,14 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
     // the bubble's "reply" button uses (loads thread messages, opens the
     // thread pane, navigates to the `/thread/...` URL).
     const handleMessageClick = (e: React.MouseEvent) => {
+        // A long-press on mobile fires a synthetic click on touchend.
+        // Swallow it so the bubble doesn't ALSO navigate to the
+        // message URL — the long-press only meant "show the toolbar".
+        if (longPress.consumedTap()) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
         if (e.metaKey || e.altKey) {
             replayHandler(e);
             return;
@@ -290,7 +300,16 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
     };
 
     // Reaction handling
-    const [showUnderBarOption, setShowUnderBarOption] = useState(false);
+    // On mobile the toolbar is summoned by a long-press (~500ms hold)
+    // on the bubble — there's no hover signal on touch, but always-on
+    // is visually noisy. Long-press → toolbar appears for that bubble;
+    // tapping anywhere outside (or sending one of its actions)
+    // dismisses it. Desktop keeps the existing hover-driven behavior.
+    const isMobile = useIsMobile();
+    const [showUnderBarHovered, setShowUnderBarOption] = useState(false);
+    const [mobileToolbarOpen, setMobileToolbarOpen] = useState(false);
+    const showUnderBarOption = isMobile ? mobileToolbarOpen : showUnderBarHovered;
+    const longPress = useLongPress(() => setMobileToolbarOpen(true), { threshold: 500 });
     const [reactions, setReactions] = useState<ReactionProps[]>([]);
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
@@ -348,6 +367,25 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
     useEffect(() => {
         setReactions(message.reactions || []);
     }, [message]);
+
+    // Dismiss the mobile long-press toolbar when the user taps anywhere
+    // that isn't the bubble itself. Without this the toolbar would stay
+    // sticky forever (no hover-out signal on touch).
+    useEffect(() => {
+        if (!mobileToolbarOpen) return;
+        const handler = (e: TouchEvent | MouseEvent) => {
+            const target = e.target as Node | null;
+            if (!target) return;
+            if (bubbleRef.current && bubbleRef.current.contains(target)) return;
+            setMobileToolbarOpen(false);
+        };
+        document.addEventListener("touchstart", handler, { passive: true });
+        document.addEventListener("mousedown", handler);
+        return () => {
+            document.removeEventListener("touchstart", handler);
+            document.removeEventListener("mousedown", handler);
+        };
+    }, [mobileToolbarOpen]);
 
     useEffect(() => {
         if (selectedEmoji !== null) {
@@ -672,6 +710,10 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                 onDoubleClick={doubleClickTodoEnabled ? handleAddMessageToToDo : undefined}
                 onMouseEnter={() => setShowUnderBarOption(true)}
                 onMouseLeave={() => setShowUnderBarOption(false)}
+                onTouchStart={longPress.onTouchStart}
+                onTouchEnd={longPress.onTouchEnd}
+                onTouchMove={longPress.onTouchMove}
+                onTouchCancel={longPress.onTouchCancel}
             >
                 {emojiPickerPositionCalculated === true && (
                     <EmojiPicker
@@ -872,6 +914,10 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                             }
                             onMouseEnter={() => setShowUnderBarOption(true)}
                             onMouseLeave={() => setShowUnderBarOption(false)}
+                            onTouchStart={longPress.onTouchStart}
+                            onTouchEnd={longPress.onTouchEnd}
+                            onTouchMove={longPress.onTouchMove}
+                            onTouchCancel={longPress.onTouchCancel}
                         >
                             {/* Subtle highlight for sent messages */}
                             {isSent && !isFocused && (

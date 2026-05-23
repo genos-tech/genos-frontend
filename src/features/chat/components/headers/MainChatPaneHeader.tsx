@@ -1,21 +1,37 @@
 import { useMemo, useState } from "react";
 import AddTaskRoundedIcon from "@mui/icons-material/AddTaskRounded";
+import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import ChecklistRoundedIcon from "@mui/icons-material/ChecklistRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DoneAllRoundedIcon from "@mui/icons-material/DoneAllRounded";
+import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import PersonAddRoundedIcon from "@mui/icons-material/PersonAddRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import SwapVertRoundedIcon from "@mui/icons-material/SwapVertRounded";
 import VideoCameraFrontRoundedIcon from "@mui/icons-material/VideoCameraFrontRounded";
-import { Badge, Button, CircularProgress, IconButton, Snackbar, Stack, Tooltip } from "@mui/joy";
+import {
+    Badge,
+    Button,
+    CircularProgress,
+    Dropdown,
+    IconButton,
+    Menu,
+    MenuButton,
+    MenuItem,
+    Snackbar,
+    Stack,
+    Tooltip,
+} from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
 import { ChatPaneHeaderStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { useCalendarModal } from "../../../../context/CalendarModalContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
@@ -63,6 +79,8 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
+    const isMobile = useIsMobile();
+    const navigate = useNavigate();
     const styles = isDark ? ChatPaneHeaderStyles.dark : ChatPaneHeaderStyles.light;
 
     const isYou: boolean = myself.userId === chat.dmPartnerUser.userId;
@@ -272,6 +290,233 @@ export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
         useCM.setCurrentMainChat(useCM.currentSubChat as ChatProps);
         useCM.setCurrentSubChat(chat);
     };
+
+    // Mobile back navigation. Mirrors useChatRouting's
+    // CHAT_TYPE_REVERSE_MAP; duplicated here to avoid plumbing the whole
+    // routing hook through this component's prop surface.
+    const CHAT_TYPE_TO_PATH: Record<number, string> = {
+        1: "dm",
+        2: "gm",
+        3: "pm",
+        4: "mdm",
+        5: "activity",
+        6: "flagged",
+    };
+    const handleMobileBack = () => {
+        const typePath = CHAT_TYPE_TO_PATH[chat.chatType] ?? "dm";
+        navigate(`/workspace/chat/${typePath}`);
+    };
+
+    if (isMobile) {
+        return (
+            <Stack
+                direction="row"
+                sx={{
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    px: 1,
+                    background: styles.containerBg,
+                    backdropFilter: "blur(12px)",
+                    borderBottom: `1px solid ${styles.containerBorder}`,
+                    minHeight: "56px",
+                    gap: 0.5,
+                }}
+            >
+                <IconButton
+                    size="sm"
+                    variant="plain"
+                    onClick={handleMobileBack}
+                    aria-label="Back"
+                    sx={{ flexShrink: 0 }}
+                >
+                    <ArrowBackIosNewRoundedIcon sx={{ fontSize: 18 }} />
+                </IconButton>
+
+                <Stack
+                    direction="row"
+                    sx={{ alignItems: "center", flex: 1, minWidth: 0, overflow: "hidden" }}
+                >
+                    <HeaderUserName
+                        chat={chat}
+                        useCM={useCM}
+                        isYou={isYou}
+                        myself={myself}
+                        setMyself={setMyself}
+                        socket={socket}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
+                    />
+                </Stack>
+
+                <Stack direction="row" sx={{ alignItems: "center", gap: 0.25, flexShrink: 0 }}>
+                    {/* Per-chat mute toggle stays surfaced — it's the
+                        most-used header action and mobile users will
+                        otherwise need an extra tap. */}
+                    <MuteToggleButton
+                        chatType={chat.chatType}
+                        chatId={chat.chatId}
+                        chatName={chat.chatName}
+                    />
+
+                    <Dropdown>
+                        <MenuButton
+                            slots={{ root: IconButton }}
+                            slotProps={{ root: { size: "sm", variant: "plain" } }}
+                        >
+                            <MoreVertRoundedIcon sx={{ fontSize: 20 }} />
+                        </MenuButton>
+                        <Menu size="sm" placement="bottom-end" sx={{ minWidth: 200 }}>
+                            {unreadActivityCount > 0 && (
+                                <MenuItem
+                                    onClick={() => markAllAsRead(chat.chatType, chat.chatId)}
+                                >
+                                    <DoneAllRoundedIcon
+                                        sx={{ fontSize: 18, color: styles.accentColor }}
+                                    />
+                                    {t.chat.headers.markAllReadAria}
+                                </MenuItem>
+                            )}
+
+                            <MenuItem
+                                disabled={quickMeetLoading}
+                                onClick={handleQuickMeet}
+                            >
+                                {quickMeetLoading ? (
+                                    <CircularProgress
+                                        size="sm"
+                                        sx={{ "--CircularProgress-size": "18px" }}
+                                    />
+                                ) : (
+                                    <VideoCameraFrontRoundedIcon
+                                        sx={{ fontSize: 18, color: styles.accentColor }}
+                                    />
+                                )}
+                                {t.chat.headers.quickMeetTooltip}
+                            </MenuItem>
+
+                            {chat.chatType === 3 && (
+                                <MenuItem
+                                    onClick={() => {
+                                        useCM.setIsMainChatVisible(true);
+                                        useCM.setIsThreadVisible(false);
+                                        useTM.setIsTaskPreviewVisible(false);
+                                        useTM.setIsCreatingTask({
+                                            flag: true,
+                                            parentTaskId: null,
+                                            rootTaskId: null,
+                                            creationKind: "task",
+                                            milestoneId: null,
+                                        });
+                                    }}
+                                >
+                                    <AddTaskRoundedIcon sx={{ fontSize: 18, color: "#fff" }} />
+                                    {t.chat.headers.createNewTaskTooltip}
+                                </MenuItem>
+                            )}
+
+                            {isYou === true && (
+                                <MenuItem
+                                    onClick={() => setIsToDoVisible(!isToDoVisible)}
+                                >
+                                    {isToDoVisible ? (
+                                        <QuestionAnswerRoundedIcon
+                                            sx={{ fontSize: 18, color: styles.accentColor }}
+                                        />
+                                    ) : (
+                                        <Badge
+                                            badgeContent={incompleteTodoCount}
+                                            color="primary"
+                                            size="sm"
+                                        >
+                                            <ChecklistRoundedIcon
+                                                sx={{ fontSize: 18, color: styles.accentColor }}
+                                            />
+                                        </Badge>
+                                    )}
+                                    {isToDoVisible
+                                        ? t.chat.headers.backToChat
+                                        : t.chat.headers.todoTooltip}
+                                </MenuItem>
+                            )}
+
+                            {isYou === true && calendarModal && (
+                                <MenuItem onClick={calendarModal.open}>
+                                    <CalendarMonthRoundedIcon
+                                        sx={{ fontSize: 18, color: styles.accentColor }}
+                                    />
+                                    {t.calendar.openTooltip}
+                                </MenuItem>
+                            )}
+
+                            {useCM.isSubChatVisible && (
+                                <MenuItem onClick={() => swapChat()}>
+                                    <SwapVertRoundedIcon
+                                        sx={{ fontSize: 18, color: styles.accentColor }}
+                                    />
+                                    {t.chat.headers.swapChats}
+                                </MenuItem>
+                            )}
+
+                            {(chat.chatType === 4 || chat.chatType === 1) && (
+                                <MenuItem onClick={() => setOpenAddMembers(true)}>
+                                    <PersonAddRoundedIcon
+                                        sx={{ fontSize: 18, color: styles.accentColor }}
+                                    />
+                                    {t.chat.headers.addMembers}
+                                </MenuItem>
+                            )}
+                        </Menu>
+                    </Dropdown>
+                </Stack>
+
+                {/* Modals and snackbars still need to render in mobile mode */}
+                {(chat.chatType === 4 || chat.chatType === 1) && (
+                    <ModalAddMembers
+                        socket={socket}
+                        myself={myself}
+                        chat={chat as unknown as AllChatProps}
+                        open={openAddMembers}
+                        setOpen={setOpenAddMembers}
+                        useCM={useCM}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
+                        setMyself={setMyself}
+                    />
+                )}
+                <Snackbar
+                    anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+                    autoHideDuration={quickMeetSnackbar?.kind === "success" ? 8000 : 4000}
+                    color={
+                        quickMeetSnackbar?.kind === "error"
+                            ? "danger"
+                            : quickMeetSnackbar?.kind === "success"
+                              ? "success"
+                              : "neutral"
+                    }
+                    open={quickMeetSnackbar !== null}
+                    variant="soft"
+                    endDecorator={
+                        quickMeetSnackbar?.needsGrant ? (
+                            <Button size="sm" variant="solid" onClick={handleQuickMeetGrant}>
+                                {t.chat.headers.quickMeetGrant}
+                            </Button>
+                        ) : quickMeetSnackbar?.kind === "success" && lastQuickMeetEventId ? (
+                            <Button size="sm" variant="outlined" onClick={handleQuickMeetUndo}>
+                                {t.chat.headers.quickMeetUndo}
+                            </Button>
+                        ) : null
+                    }
+                    onClose={(_e, reason) => {
+                        if (reason === "clickaway") return;
+                        setQuickMeetSnackbar(null);
+                        setLastQuickMeetEventId(null);
+                    }}
+                >
+                    {quickMeetSnackbar?.text}
+                </Snackbar>
+            </Stack>
+        );
+    }
 
     return (
         <Stack

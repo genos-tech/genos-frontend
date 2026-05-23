@@ -35,7 +35,15 @@ export const DeleteSprintModal = ({
 
     return (
         <Modal open={open} onClose={() => !busy && onClose()}>
-            <ModalDialog sx={{ minWidth: 420 }}>
+            <ModalDialog
+                sx={{
+                    width: { xs: "calc(100vw - 24px)", md: "auto" },
+                    minWidth: { xs: 0, md: 420 },
+                    maxWidth: { xs: "100vw", md: 600 },
+                    maxHeight: { xs: "calc(100dvh - 32px)", md: "85vh" },
+                    overflow: "auto",
+                }}
+            >
                 <DialogTitle>{t.tasks.deleteSprint.title}</DialogTitle>
                 <Divider />
                 <DialogContent>

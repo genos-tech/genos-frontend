@@ -328,7 +328,15 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                     editor={editor as any}
                     emojiPicker={false}
                     formattingToolbar={false}
-                    sideMenu={true}
+                    // `false` so the custom `<SideMenuController>` below
+                    // is the only side-menu controller attached. When
+                    // this is `true`, BlockNote registers its own
+                    // internal side menu and the custom one (with
+                    // CustomDragHandleMenu) silently never wires up —
+                    // hovering a line shows nothing. Mirrors the
+                    // bnMyNoteEditor / bnTaskNoteEditor / bnChatNoteEditor
+                    // setup.
+                    sideMenu={false}
                     theme={mode === "dark" ? "dark" : "light"}
                     data-changing-font-demo
                     onChange={() => {

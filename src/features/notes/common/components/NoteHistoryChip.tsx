@@ -4,6 +4,7 @@ import { Box, Tooltip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { fmt, Messages, useTranslation } from "../../../../i18n";
@@ -53,6 +54,7 @@ export const NoteHistoryChip = ({
 }: NoteHistoryChipProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const isMobile = useIsMobile();
     const { t } = useTranslation();
 
     // Periodic re-render so the relative time advances without waiting
@@ -67,6 +69,10 @@ export const NoteHistoryChip = ({
 
     const head = useNM.currentNoteVersions[0];
     if (!head || noteId <= 0) return null;
+    // Hidden on mobile per design — the chip's "edited by X · 2m ago"
+    // metadata is desktop chrome; the history modal is reachable from
+    // the note's overflow menu when needed.
+    if (isMobile) return null;
 
     const editorName = head.editor?.userName ?? t.notes.defaults.someone;
     const tsForChip = head.tsUpdatedAt || head.tsCreatedAt;

@@ -212,12 +212,23 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                         background: styles.bg,
                         border: `1px solid ${styles.border}`,
                         boxShadow: styles.shadow,
-                        borderRadius: "20px",
-                        overflow: "hidden",
+                        borderRadius: { xs: "0", md: "20px" },
+                        overflow: "auto",
                         transition: "all 0.3s ease",
+                        width: { xs: "100vw", md: "auto" },
+                        height: { xs: "100dvh", md: "auto" },
+                        maxWidth: { xs: "100vw", md: "1000px" },
+                        maxHeight: { xs: "100dvh", md: "90vh" },
+                        m: { xs: 0, md: "auto" },
                     }}
                 >
-                    <Box sx={{ flex: 1, width: "1000px" }}>
+                    <Box
+                        sx={{
+                            flex: 1,
+                            width: { xs: "100%", md: "1000px" },
+                            maxWidth: "100%",
+                        }}
+                    >
                         {/* Header */}
                         <Box
                             sx={{

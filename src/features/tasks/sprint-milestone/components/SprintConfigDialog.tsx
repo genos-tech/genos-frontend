@@ -245,7 +245,15 @@ export const SprintConfigDialog = ({ open, onClose, projectId, useSM }: Props) =
 
     return (
         <Modal open={open} onClose={onClose}>
-            <ModalDialog sx={{ minWidth: 460, maxHeight: "85vh" }}>
+            <ModalDialog
+                sx={{
+                    width: { xs: "calc(100vw - 24px)", md: "auto" },
+                    minWidth: { xs: 0, md: 460 },
+                    maxWidth: { xs: "100vw", md: 700 },
+                    maxHeight: { xs: "calc(100dvh - 32px)", md: "85vh" },
+                    overflow: "auto",
+                }}
+            >
                 <DialogTitle>{t.tasks.sprint.configDialogTitle}</DialogTitle>
                 <Divider />
                 <DialogContent sx={{ overflowY: "auto" }}>

@@ -14,6 +14,7 @@ import {
     QuickMeetClipboardHandle,
     QuickMeetClipboardHost,
 } from "./components/layout/QuickMeetClipboardHost";
+import { BottomTabBar } from "./components/layout/BottomTabBar";
 import { ServiceSwitcherOverlay } from "./components/layout/ServiceSwitcherOverlay";
 import { Sidebar } from "./components/layout/sidebar";
 import { TooSmallScreen } from "./components/layout/TooSmallScreen";
@@ -423,16 +424,16 @@ export const App = () => {
         notificationManager: useNotif.manager,
     });
 
-    if (isTooSmall) {
-        return (
-            <CssVarsProvider theme={purpleTheme} disableTransitionOnChange>
-                <CssBaseline />
-                <I18nProvider>
-                    <TooSmallScreen />
-                </I18nProvider>
-            </CssVarsProvider>
-        );
-    }
+    // if (isTooSmall) {
+    //     return (
+    //         <CssVarsProvider theme={purpleTheme} disableTransitionOnChange>
+    //             <CssBaseline />
+    //             <I18nProvider>
+    //                 <TooSmallScreen />
+    //             </I18nProvider>
+    //         </CssVarsProvider>
+    //     );
+    // }
 
     return (
         <CssVarsProvider theme={purpleTheme} disableTransitionOnChange>
@@ -797,6 +798,10 @@ export const App = () => {
                                                                                 }
                                                                             />
                                                                         </Routes>
+                                                                        <BottomTabBar
+                                                                            useCM={useCM}
+                                                                            useIM={useIM}
+                                                                        />
                                                                     </Box>
                                                                 </HistoryProvider>
                                                             </CalendarModalProvider>

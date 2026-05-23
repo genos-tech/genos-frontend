@@ -27,6 +27,7 @@ import { useAuth } from "../../context/AuthContext";
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
 import { TeamDropdown } from "../../features/admin/components/teamDropdown";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { InboxManagementState } from "../../hooks/inbox/useInboxManagement";
@@ -117,6 +118,7 @@ export const Sidebar = (props: SidebarProps) => {
     const { setAccessToken } = useAuth();
     const { mode } = useColorScheme();
     const { t } = useTranslation();
+    const isMobile = useIsMobile();
     const isDark = mode === "dark";
     const palette = isDark ? purplePalette.dark : purplePalette.light;
     // Solid bg color used to "cut out" badges and avatar borders against
@@ -211,6 +213,9 @@ export const Sidebar = (props: SidebarProps) => {
                 return 0;
         }
     };
+
+    // On mobile we use BottomTabBar for top-level navigation instead.
+    if (isMobile) return null;
 
     return (
         <Sheet

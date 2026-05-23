@@ -10,6 +10,7 @@ import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { PulseDot } from "../../../../components/ui/misc/PulseDot";
 import { HeaderUserNameStyles } from "../../../../components/ui/styles/commonStyle";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { useTranslation } from "../../../../i18n";
@@ -32,6 +33,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
+    const isMobile = useIsMobile();
     const styles = isDark ? HeaderUserNameStyles.dark : HeaderUserNameStyles.light;
 
     const mdmMembers =
@@ -189,7 +191,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                     )}
 
                     {/* Online/Offline status chip */}
-                    {chat && chat.chatType === 1 && (
+                    {chat && chat.chatType === 1 && !isMobile && (
                         <Chip
                             size="sm"
                             variant="soft"
