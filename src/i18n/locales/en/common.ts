@@ -75,6 +75,13 @@ export const common = {
             multipleReacted: "{names} and more reacted",
             moreLabel: "+{count} more",
         },
+        // Click-to-copy chips / inline labels (e.g. CopyableTaskId).
+        // `copied` swaps in for `clickToCopy` for the brief feedback
+        // window after a successful clipboard write.
+        copy: {
+            clickToCopy: "Click to copy",
+            copied: "Copied!",
+        },
     },
     initialLoad: {
         loading: "Loading",

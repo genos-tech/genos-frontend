@@ -4,16 +4,9 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import InsertDriveFileRoundedIcon from "@mui/icons-material/InsertDriveFileRounded";
-import {
-    Box,
-    IconButton,
-    Modal,
-    ModalDialog,
-    Tooltip,
-    Typography,
-    useColorScheme,
-} from "@mui/joy";
+import { Box, IconButton, Modal, ModalDialog, Typography, useColorScheme } from "@mui/joy";
 
+import { AppTooltip } from "../../../../../components/ui/AppTooltip";
 import { FileSizeRejectionSnackbar } from "../../../../../components/ui/feedback/FileSizeRejectionSnackbar";
 import {
     FileUploadOverlay,
@@ -338,11 +331,8 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                         >
                             <CloseRoundedIcon sx={{ fontSize: 12, color: "#ef4444" }} />
                         </IconButton>
-                        <Tooltip
-                            placement="top"
-                            size="sm"
+                        <AppTooltip
                             title={fmt(t.tasks.tabs.downloadFileTooltip, { name: file.name })}
-                            variant="outlined"
                         >
                             <div
                                 style={{ cursor: isUploading ? "default" : "pointer" }}
@@ -360,7 +350,7 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                                     }}
                                 />
                             </div>
-                        </Tooltip>
+                        </AppTooltip>
                         <Typography
                             level="body-xs"
                             sx={{
@@ -511,12 +501,7 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                                     maxHeight: "80vh",
                                 }}
                             />
-                            <Tooltip
-                                placement="left"
-                                size="sm"
-                                title={t.tasks.tooltips.download}
-                                variant="outlined"
-                            >
+                            <AppTooltip placement="left" title={t.tasks.tooltips.download}>
                                 <IconButton
                                     variant="solid"
                                     sx={{
@@ -534,7 +519,7 @@ export const TaskCreateAttachmentBlock = (props: TaskCreateAttachmentBlockProps)
                                 >
                                     <DownloadRoundedIcon sx={{ color: "white" }} />
                                 </IconButton>
-                            </Tooltip>
+                            </AppTooltip>
                         </Box>
                     )}
                 </ModalDialog>

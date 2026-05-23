@@ -6,9 +6,10 @@ import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
-import { Box, IconButton, Tooltip, Typography } from "@mui/joy";
+import { Box, IconButton, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { TaskHeaderStyles } from "../../../../components/ui/styles/commonStyle";
@@ -179,11 +180,7 @@ export const TaskHeader = ({
                         {usePM.currentProject?.projectName}
                     </Typography>
                     {usePM.currentProject?.isPrivate === true && (
-                        <Tooltip
-                            size="sm"
-                            title={t.tasks.header.privateProject}
-                            variant="outlined"
-                        >
+                        <AppTooltip title={t.tasks.header.privateProject}>
                             <LockOutlineIcon
                                 sx={{
                                     fontSize: "18px",
@@ -191,7 +188,7 @@ export const TaskHeader = ({
                                     filter: `drop-shadow(0 0 4px ${styles.lockColor})`,
                                 }}
                             />
-                        </Tooltip>
+                        </AppTooltip>
                     )}
                 </Box>
             </Box>
@@ -211,14 +208,7 @@ export const TaskHeader = ({
             {/* Action Buttons */}
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 {/* Create Task Button */}
-                <Tooltip
-                    size="sm"
-                    variant="outlined"
-                    sx={{
-                        background: styles.menuBg,
-                        border: `1px solid ${styles.menuBorder}`,
-                        borderRadius: "8px",
-                    }}
+                <AppTooltip
                     title={
                         <Box
                             sx={{
@@ -269,20 +259,11 @@ export const TaskHeader = ({
                         <AddIcon sx={{ fontSize: "18px" }} />
                         {t.tasks.header.taskButton}
                     </IconButton>
-                </Tooltip>
+                </AppTooltip>
 
                 {/* Refresh Button to re-load task list */}
                 {usePM.currentProject?.projectId && (
-                    <Tooltip
-                        size="sm"
-                        title={t.tasks.header.refreshTasks}
-                        variant="outlined"
-                        sx={{
-                            background: styles.menuBg,
-                            border: `1px solid ${styles.menuBorder}`,
-                            borderRadius: "8px",
-                        }}
-                    >
+                    <AppTooltip title={t.tasks.header.refreshTasks}>
                         <IconButton
                             size="sm"
                             sx={{
@@ -307,7 +288,7 @@ export const TaskHeader = ({
                         >
                             <RefreshRoundedIcon sx={{ fontSize: "18px" }} />
                         </IconButton>
-                    </Tooltip>
+                    </AppTooltip>
                 )}
 
                 {/* More Options Dropdown */}
@@ -370,16 +351,7 @@ export const TaskHeader = ({
 
                 {/* Close Button */}
                 {(useTM.isTaskPreviewVisible === true || useTM.isCreatingTask.flag === true) && (
-                    <Tooltip
-                        size="sm"
-                        title={t.tasks.header.closePanel}
-                        variant="outlined"
-                        sx={{
-                            background: styles.menuBg,
-                            border: `1px solid ${styles.menuBorder}`,
-                            borderRadius: "8px",
-                        }}
-                    >
+                    <AppTooltip title={t.tasks.header.closePanel}>
                         <IconButton
                             size="sm"
                             sx={{
@@ -403,7 +375,7 @@ export const TaskHeader = ({
                                 }}
                             />
                         </IconButton>
-                    </Tooltip>
+                    </AppTooltip>
                 )}
             </Box>
         </Box>

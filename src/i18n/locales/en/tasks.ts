@@ -127,6 +127,13 @@ export const tasks = {
         refreshBranches: "Refresh branches",
         refreshPullRequests: "Refresh linked PRs",
         addStartDate: "Add start date",
+        // Shared diagram-trigger tooltip used by the milestone-pane
+        // button and the TaskTitleBlock graph button. The "WithShortcut"
+        // variant suffixes the keyboard combo for the TaskPreview button,
+        // which is the only entry point reachable via Ctrl+Cmd+G /
+        // Ctrl+Alt+G.
+        openTaskGraph: "Open task graph",
+        openTaskGraphWithShortcut: "Open task graph ({shortcut})",
     },
 
     // Generic action button labels reused across screens.

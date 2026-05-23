@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { Chip, ChipProps, Tooltip, Typography, TypographyProps } from "@mui/joy";
+import { Chip, ChipProps, Typography, TypographyProps } from "@mui/joy";
 
+import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { useTranslation } from "../../../i18n";
 import { formatTaskDisplayId } from "../utils/taskDisplayId";
 
 // Shared by both variants — any object that the formatter can resolve
@@ -36,8 +38,6 @@ const useCopyState = () => {
     return { copied, onClick };
 };
 
-const tooltipTitle = (copied: boolean) => (copied ? "Copied!" : "Click to copy");
-
 // ─────────────────────────────────────────────────────────────────────
 // Chip variant: used where the task ID is rendered as a Joy <Chip>.
 // Drop-in replacement for `<Chip ...>{formatTaskDisplayId(task)}</Chip>`.
@@ -57,8 +57,9 @@ export const CopyableTaskIdChip = ({
 }: CopyableTaskIdChipProps) => {
     const text = formatTaskDisplayId(task) || fallback;
     const { copied, onClick } = useCopyState();
+    const { t } = useTranslation();
     return (
-        <Tooltip arrow placement="top" title={tooltipTitle(copied)} variant="outlined">
+        <AppTooltip title={copied ? t.common.ui.copy.copied : t.common.ui.copy.clickToCopy}>
             <Chip
                 {...rest}
                 onClick={onClick(text)}
@@ -66,7 +67,7 @@ export const CopyableTaskIdChip = ({
             >
                 {text}
             </Chip>
-        </Tooltip>
+        </AppTooltip>
     );
 };
 
@@ -95,8 +96,9 @@ export const CopyableTaskIdText = ({
 }: CopyableTaskIdTextProps) => {
     const text = formatTaskDisplayId(task) || fallback;
     const { copied, onClick } = useCopyState();
+    const { t } = useTranslation();
     return (
-        <Tooltip arrow placement="top" title={tooltipTitle(copied)}>
+        <AppTooltip title={copied ? t.common.ui.copy.copied : t.common.ui.copy.clickToCopy}>
             <Typography
                 {...rest}
                 component="span"
@@ -106,6 +108,6 @@ export const CopyableTaskIdText = ({
                 {prefix}
                 {text}
             </Typography>
-        </Tooltip>
+        </AppTooltip>
     );
 };

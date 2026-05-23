@@ -3,10 +3,11 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import LinkIcon from "@mui/icons-material/Link";
-import { Box, Button, IconButton, Input, Snackbar, Stack, Tooltip, Typography } from "@mui/joy";
+import { Box, Button, IconButton, Input, Snackbar, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
 import { GitHubIcon } from "../../../../../../assets/GithubIcon";
+import { AppTooltip } from "../../../../../../components/ui/AppTooltip";
 import { useTranslation } from "../../../../../../i18n";
 import { TaskProps } from "../../../../../../types/tasks";
 import { getPageTitle } from "../../../../utils/getPageTitle";
@@ -224,12 +225,7 @@ export const DynamicURLManager = (props: DynamicURLManagerProps) => {
                 // empty-state in `TaskDependenciesBlock` so the two
                 // metadata-panel call-to-actions read as a single
                 // visual system rather than competing button styles.
-                <Tooltip
-                    placement="top"
-                    title={t.tasks.dynamicUrl.addLinkTooltip}
-                    variant="outlined"
-                    arrow
-                >
+                <AppTooltip title={t.tasks.dynamicUrl.addLinkTooltip}>
                     <Box
                         sx={{
                             cursor: "pointer",
@@ -253,7 +249,7 @@ export const DynamicURLManager = (props: DynamicURLManagerProps) => {
                             {t.tasks.dynamicUrl.addLinkButton}
                         </Typography>
                     </Box>
-                </Tooltip>
+                </AppTooltip>
             )}
 
             {/* Error Snackbar */}
@@ -365,16 +361,16 @@ const LinkDisplay = ({ link, editingId, onEdit, onSave, onDelete }: LinkDisplayP
                 next discovery pass or break the column. */}
             {!link.isAutoLinked && (
                 <>
-                    <Tooltip size="sm" title={t.tasks.dynamicUrl.editTooltip} variant="outlined">
+                    <AppTooltip title={t.tasks.dynamicUrl.editTooltip}>
                         <IconButton color="neutral" size="sm" onClick={() => onEdit(link.id)}>
                             <EditIcon />
                         </IconButton>
-                    </Tooltip>
-                    <Tooltip size="sm" title={t.tasks.dynamicUrl.deleteTooltip} variant="outlined">
+                    </AppTooltip>
+                    <AppTooltip title={t.tasks.dynamicUrl.deleteTooltip}>
                         <IconButton color="danger" size="sm" onClick={() => onDelete(link.id)}>
                             <DeleteIcon />
                         </IconButton>
-                    </Tooltip>
+                    </AppTooltip>
                 </>
             )}
         </Stack>

@@ -16,12 +16,12 @@ import {
     Modal,
     ModalDialog,
     Stack,
-    Tooltip,
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
@@ -105,7 +105,7 @@ const DependencyRow = ({
                 {ref_.title}
             </Typography>
             {ref_.projectName && (
-                <Tooltip placement="top" title={ref_.projectName} variant="outlined" arrow>
+                <AppTooltip title={ref_.projectName}>
                     <Chip
                         size="sm"
                         variant="outlined"
@@ -117,9 +117,9 @@ const DependencyRow = ({
                     >
                         {ref_.projectName}
                     </Chip>
-                </Tooltip>
+                </AppTooltip>
             )}
-            <Tooltip placement="top" title={removeTooltip} variant="outlined" arrow>
+            <AppTooltip title={removeTooltip}>
                 <IconButton
                     color="danger"
                     size="sm"
@@ -133,7 +133,7 @@ const DependencyRow = ({
                 >
                     <LinkOffRoundedIcon sx={{ fontSize: 18 }} />
                 </IconButton>
-            </Tooltip>
+            </AppTooltip>
         </Stack>
     );
 };

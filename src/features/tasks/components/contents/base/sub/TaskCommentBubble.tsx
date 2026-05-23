@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import EditIcon from "@mui/icons-material/Edit";
-import { Box, IconButton, Sheet, Stack, Tooltip, Typography } from "@mui/joy";
+import { Box, IconButton, Sheet, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { BnChatPreview } from "../../../../../../components/editors/bnChatPreview";
+import { AppTooltip } from "../../../../../../components/ui/AppTooltip";
 import { UserAvatar } from "../../../../../../components/ui/avatars/UserAvatar";
 import { EmojiPicker } from "../../../../../../components/ui/emoji/EmojiPicker";
 import { ReactionTaskCommentEmojiDisplay } from "../../../../../../components/ui/emoji/ReactionTaskCommentEmojiDisplay";
@@ -213,13 +214,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
     }
 
     const editButton = (
-        <Tooltip
-            placement="top"
-            size="sm"
-            sx={{ borderRadius: "8px", fontSize: "0.75rem" }}
-            title={t.tasks.comment.editTooltip}
-            variant="outlined"
-        >
+        <AppTooltip title={t.tasks.comment.editTooltip}>
             <IconButton
                 size="sm"
                 sx={{
@@ -242,7 +237,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
             >
                 <EditIcon sx={{ fontSize: 16 }} />
             </IconButton>
-        </Tooltip>
+        </AppTooltip>
     );
 
     const reactionsDisplay = (

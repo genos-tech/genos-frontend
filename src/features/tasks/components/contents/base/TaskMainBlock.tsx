@@ -3,10 +3,11 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
-import { Box, Chip, Grid, IconButton, List, ListItem, Stack, Tooltip, Typography } from "@mui/joy";
+import { Box, Chip, Grid, IconButton, List, ListItem, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { AppTooltip } from "../../../../../components/ui/AppTooltip";
 import { AvatarWithStatus } from "../../../../../components/ui/avatars/avatarWithStatus";
 import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
@@ -462,12 +463,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                 it's visible the moment the task opens. */}
             {blocked && (
                 <Box sx={{ mb: 1 }}>
-                    <Tooltip
-                        title={t.tasks.dependencies.blockedTooltip}
-                        placement="top"
-                        arrow
-                        variant="outlined"
-                    >
+                    <AppTooltip title={t.tasks.dependencies.blockedTooltip}>
                         <Chip
                             size="sm"
                             color="warning"
@@ -483,7 +479,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         >
                             {t.tasks.dependencies.blockedBadge}
                         </Chip>
-                    </Tooltip>
+                    </AppTooltip>
                 </Box>
             )}
             <List
@@ -594,11 +590,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     <Grid xs={12} sm={6}>
                         <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
                             <FieldLabel isDark={isDark}>{t.tasks.fields.tags}</FieldLabel>
-                            <Tooltip
-                                size="sm"
-                                title={t.tasks.tooltips.createNewTag}
-                                variant="outlined"
-                            >
+                            <AppTooltip title={t.tasks.tooltips.createNewTag}>
                                 <IconButton
                                     size="sm"
                                     variant="plain"
@@ -607,12 +599,8 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                 >
                                     <AddRoundedIcon sx={{ fontSize: 18 }} />
                                 </IconButton>
-                            </Tooltip>
-                            <Tooltip
-                                size="sm"
-                                title={t.tasks.tooltips.manageTags}
-                                variant="outlined"
-                            >
+                            </AppTooltip>
+                            <AppTooltip title={t.tasks.tooltips.manageTags}>
                                 <IconButton
                                     size="sm"
                                     variant="plain"
@@ -621,7 +609,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                 >
                                     <SettingsRoundedIcon sx={{ fontSize: 16 }} />
                                 </IconButton>
-                            </Tooltip>
+                            </AppTooltip>
                             <ModalManageTags
                                 myself={myself}
                                 usePM={usePM}
@@ -791,11 +779,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             taskContent={taskContent}
                         />
                         {!showStartDate && (
-                            <Tooltip
-                                size="sm"
-                                title={t.tasks.tooltips.addStartDate}
-                                variant="outlined"
-                            >
+                            <AppTooltip title={t.tasks.tooltips.addStartDate}>
                                 <IconButton
                                     size="sm"
                                     variant="plain"
@@ -804,7 +788,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                 >
                                     <AddRoundedIcon sx={{ fontSize: 18 }} />
                                 </IconButton>
-                            </Tooltip>
+                            </AppTooltip>
                         )}
                     </Stack>
                 </ListItem>
@@ -819,12 +803,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     >
                         <FieldLabel isDark={isDark}>{t.tasks.fields.links}</FieldLabel>
                         {(taskContent.links?.length ?? 0) > 0 && (
-                            <Tooltip
-                                title={t.tasks.tooltips.refreshPullRequests}
-                                variant="outlined"
-                                placement="top"
-                                arrow
-                            >
+                            <AppTooltip title={t.tasks.tooltips.refreshPullRequests}>
                                 <IconButton
                                     size="sm"
                                     variant="plain"
@@ -848,7 +827,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                         }}
                                     />
                                 </IconButton>
-                            </Tooltip>
+                            </AppTooltip>
                         )}
                     </Stack>
                     <DynamicURLManager
@@ -870,12 +849,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             sx={{ minWidth: `${FIELD_LABEL_MIN_WIDTH}px` }}
                         >
                             <FieldLabel isDark={isDark}>{t.tasks.fields.branches}</FieldLabel>
-                            <Tooltip
-                                title={t.tasks.tooltips.refreshBranches}
-                                variant="outlined"
-                                placement="top"
-                                arrow
-                            >
+                            <AppTooltip title={t.tasks.tooltips.refreshBranches}>
                                 <IconButton
                                     size="sm"
                                     variant="plain"
@@ -899,7 +873,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                         }}
                                     />
                                 </IconButton>
-                            </Tooltip>
+                            </AppTooltip>
                         </Stack>
                         <Box
                             sx={{
@@ -910,12 +884,9 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             }}
                         >
                             {linkedBranches.map((b) => (
-                                <Tooltip
+                                <AppTooltip
                                     key={`${b.owner}/${b.repo}/${b.name}`}
                                     title={`${b.owner}/${b.repo}`}
-                                    variant="outlined"
-                                    placement="top"
-                                    arrow
                                 >
                                     <Chip
                                         component="a"
@@ -949,7 +920,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     >
                                         {b.name}
                                     </Chip>
-                                </Tooltip>
+                                </AppTooltip>
                             ))}
                         </Box>
                     </ListItem>

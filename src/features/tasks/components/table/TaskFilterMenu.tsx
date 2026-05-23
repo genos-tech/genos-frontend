@@ -5,15 +5,15 @@ import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import { useColorScheme } from "@mui/joy/styles";
-import { Box, Chip, Stack, Tooltip, Typography } from "@mui/material";
+import { Box, Chip, Stack, Typography } from "@mui/material";
 import Button from "@mui/material/Button";
 import Fade from "@mui/material/Fade";
 import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-import { tooltipClasses } from "@mui/material/Tooltip";
 import { alpha } from "@mui/system";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { TaskFilterMenuStyles } from "../../../../components/ui/styles/commonStyle";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
@@ -679,25 +679,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                         column-layout state, so it omits the prop and
                         the icon stays hidden there. */}
                     {onOpenColumnSettings && (
-                        <Tooltip
-                            placement="top"
-                            title={t.tasks.table.columnSettings.openTooltip}
-                            slotProps={{
-                                popper: {
-                                    sx: {
-                                        [`& .${tooltipClasses.tooltip}`]: {
-                                            background: styles.menuBg,
-                                            color: styles.textColor,
-                                            border: `1px solid ${styles.menuBorder}`,
-                                            fontSize: 11,
-                                            borderRadius: "8px",
-                                            px: 1.5,
-                                            py: 0.5,
-                                        },
-                                    },
-                                },
-                            }}
-                        >
+                        <AppTooltip title={t.tasks.table.columnSettings.openTooltip}>
                             <IconButton
                                 size="small"
                                 aria-label={t.tasks.table.columnSettings.openTooltip}
@@ -713,7 +695,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                             >
                                 <TuneRoundedIcon sx={{ fontSize: 16 }} />
                             </IconButton>
-                        </Tooltip>
+                        </AppTooltip>
                     )}
                 </Stack>
 
@@ -734,26 +716,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                     two competing milestone narrowing controls. */}
                 {useSM && useTM.tableMilestoneFilterId == null && (
                     <>
-                        <Tooltip
-                            placement="top"
-                            slotProps={{
-                                popper: {
-                                    sx: {
-                                        [`& .${tooltipClasses.tooltip}`]: {
-                                            background: styles.menuBg,
-                                            color: styles.textColor,
-                                            border: `1px solid ${styles.menuBorder}`,
-                                            boxShadow: isDark
-                                                ? "0 4px 12px rgba(0,0,0,0.4)"
-                                                : "0 4px 12px rgba(0,0,0,0.1)",
-                                            fontSize: 11,
-                                            borderRadius: "8px",
-                                            px: 1.5,
-                                            py: 0.5,
-                                        },
-                                    },
-                                },
-                            }}
+                        <AppTooltip
                             title={(() => {
                                 if (
                                     selectedMilestoneKeys.length === 1 &&
@@ -859,7 +822,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                     />
                                 )}
                             </Button>
-                        </Tooltip>
+                        </AppTooltip>
                         <Menu
                             anchorEl={anchorElMilestoneFilter}
                             open={openMilestoneFilter}
@@ -1148,27 +1111,8 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                 {/* Status Filter */}
                 {!hideStatusFilter && (
                     <>
-                        <Tooltip
-                            placement="top"
+                        <AppTooltip
                             title={selectedStatus.map((status) => filterLabel(status)).join(", ")}
-                            slotProps={{
-                                popper: {
-                                    sx: {
-                                        [`& .${tooltipClasses.tooltip}`]: {
-                                            background: styles.menuBg,
-                                            color: styles.textColor,
-                                            border: `1px solid ${styles.menuBorder}`,
-                                            boxShadow: isDark
-                                                ? "0 4px 12px rgba(0,0,0,0.4)"
-                                                : "0 4px 12px rgba(0,0,0,0.1)",
-                                            fontSize: 11,
-                                            borderRadius: "8px",
-                                            px: 1.5,
-                                            py: 0.5,
-                                        },
-                                    },
-                                },
-                            }}
                         >
                             <Button
                                 aria-controls={openStatusFilter ? "fade-menu" : undefined}
@@ -1198,7 +1142,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                     />
                                 )}
                             </Button>
-                        </Tooltip>
+                        </AppTooltip>
                         <Menu
                             anchorEl={anchorElStatusFilter}
                             id="fade-menu"
@@ -1305,28 +1249,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                 {/* Tags Filter */}
                 {selectedTags.length > 0 && (
                     <>
-                        <Tooltip
-                            placement="top"
-                            title={selectedTags.map((tag) => filterLabel(tag)).join(", ")}
-                            slotProps={{
-                                popper: {
-                                    sx: {
-                                        [`& .${tooltipClasses.tooltip}`]: {
-                                            background: styles.menuBg,
-                                            color: styles.textColor,
-                                            border: `1px solid ${styles.menuBorder}`,
-                                            boxShadow: isDark
-                                                ? "0 4px 12px rgba(0,0,0,0.4)"
-                                                : "0 4px 12px rgba(0,0,0,0.1)",
-                                            fontSize: 11,
-                                            borderRadius: "8px",
-                                            px: 1.5,
-                                            py: 0.5,
-                                        },
-                                    },
-                                },
-                            }}
-                        >
+                        <AppTooltip title={selectedTags.map((tag) => filterLabel(tag)).join(", ")}>
                             <Button
                                 aria-controls={openTagsFilter ? "fade-menu" : undefined}
                                 aria-expanded={openTagsFilter ? "true" : undefined}
@@ -1354,7 +1277,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                     />
                                 )}
                             </Button>
-                        </Tooltip>
+                        </AppTooltip>
                         <Menu
                             anchorEl={anchorElTagsFilter}
                             open={openTagsFilter}
@@ -1457,27 +1380,8 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                 )}
 
                 {/* Priority Filter */}
-                <Tooltip
-                    placement="top"
+                <AppTooltip
                     title={selectedPriorities.map((priority) => filterLabel(priority)).join(", ")}
-                    slotProps={{
-                        popper: {
-                            sx: {
-                                [`& .${tooltipClasses.tooltip}`]: {
-                                    background: styles.menuBg,
-                                    color: styles.textColor,
-                                    border: `1px solid ${styles.menuBorder}`,
-                                    boxShadow: isDark
-                                        ? "0 4px 12px rgba(0,0,0,0.4)"
-                                        : "0 4px 12px rgba(0,0,0,0.1)",
-                                    fontSize: 11,
-                                    borderRadius: "8px",
-                                    px: 1.5,
-                                    py: 0.5,
-                                },
-                            },
-                        },
-                    }}
                 >
                     <Button
                         aria-controls={openPriorityFilter ? "fade-menu" : undefined}
@@ -1506,7 +1410,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                             />
                         )}
                     </Button>
-                </Tooltip>
+                </AppTooltip>
                 <Menu
                     anchorEl={anchorElPriorityFilter}
                     open={openPriorityFilter}
@@ -1605,29 +1509,10 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                 </Menu>
 
                 {/* Effort Level Filter */}
-                <Tooltip
-                    placement="top"
+                <AppTooltip
                     title={selectedEffortLevels
                         .map((effortLevel) => filterLabel(effortLevel))
                         .join(", ")}
-                    slotProps={{
-                        popper: {
-                            sx: {
-                                [`& .${tooltipClasses.tooltip}`]: {
-                                    background: styles.menuBg,
-                                    color: styles.textColor,
-                                    border: `1px solid ${styles.menuBorder}`,
-                                    boxShadow: isDark
-                                        ? "0 4px 12px rgba(0,0,0,0.4)"
-                                        : "0 4px 12px rgba(0,0,0,0.1)",
-                                    fontSize: 11,
-                                    borderRadius: "8px",
-                                    px: 1.5,
-                                    py: 0.5,
-                                },
-                            },
-                        },
-                    }}
                 >
                     <Button
                         aria-controls={openEffortLevelFilter ? "fade-menu" : undefined}
@@ -1656,7 +1541,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                             />
                         )}
                     </Button>
-                </Tooltip>
+                </AppTooltip>
                 <Menu
                     anchorEl={anchorElEffortLevelFilter}
                     open={openEffortLevelFilter}
@@ -1757,25 +1642,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                 <Box sx={{ flex: 1 }} />
 
                 {/* Reset Filters Button */}
-                <Tooltip
-                    placement="top"
-                    title={t.tasks.tooltips.resetFilters}
-                    slotProps={{
-                        popper: {
-                            sx: {
-                                [`& .${tooltipClasses.tooltip}`]: {
-                                    background: styles.menuBg,
-                                    color: styles.textColor,
-                                    border: `1px solid ${styles.menuBorder}`,
-                                    fontSize: 11,
-                                    borderRadius: "8px",
-                                    px: 1.5,
-                                    py: 0.5,
-                                },
-                            },
-                        },
-                    }}
-                >
+                <AppTooltip title={t.tasks.tooltips.resetFilters}>
                     <Button
                         startIcon={<RestartAltIcon sx={{ fontSize: "16px" }} />}
                         variant="outlined"
@@ -1804,7 +1671,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                     >
                         Reset
                     </Button>
-                </Tooltip>
+                </AppTooltip>
             </Stack>
         </Box>
     );

@@ -30,13 +30,13 @@ import {
     Select,
     Stack,
     Table,
-    Tooltip,
     Typography,
 } from "@mui/joy";
 import Avatar from "@mui/joy/Avatar";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { TaskHeaderStyles } from "../../../../components/ui/styles/commonStyle";
@@ -623,12 +623,7 @@ export const TaskHomeContent = ({
         >
             {segments.map((seg, i) =>
                 seg.value > 0 ? (
-                    <Tooltip
-                        key={i}
-                        size="sm"
-                        title={`${Math.round((seg.value / total) * 100)}%`}
-                        variant="outlined"
-                    >
+                    <AppTooltip key={i} title={`${Math.round((seg.value / total) * 100)}%`}>
                         <Box
                             sx={{
                                 width: `${(seg.value / total) * 100}%`,
@@ -636,7 +631,7 @@ export const TaskHomeContent = ({
                                 transition: "width 0.3s ease",
                             }}
                         />
-                    </Tooltip>
+                    </AppTooltip>
                 ) : null
             )}
         </Box>
@@ -818,16 +813,7 @@ export const TaskHomeContent = ({
                             </Typography>
                             {(useTM.isTaskPreviewVisible === true ||
                                 useTM.isCreatingTask.flag === true) && (
-                                <Tooltip
-                                    size="sm"
-                                    title={t.tasks.dashboard.closePanel}
-                                    variant="outlined"
-                                    sx={{
-                                        background: headerStyles.menuBg,
-                                        border: `1px solid ${headerStyles.menuBorder}`,
-                                        borderRadius: "8px",
-                                    }}
-                                >
+                                <AppTooltip title={t.tasks.dashboard.closePanel}>
                                     <IconButton
                                         size="sm"
                                         sx={{
@@ -851,7 +837,7 @@ export const TaskHomeContent = ({
                                             }}
                                         />
                                     </IconButton>
-                                </Tooltip>
+                                </AppTooltip>
                             )}
                         </Stack>
                     </Stack>
@@ -1097,14 +1083,9 @@ export const TaskHomeContent = ({
                                                 }
                                             )}
                                         </Select>
-                                        <Stack
-                                            direction="row"
-                                            spacing={1}
-                                            alignItems="center"
-                                        >
-                                            <Tooltip
+                                        <Stack direction="row" spacing={1} alignItems="center">
+                                            <AppTooltip
                                                 title={t.tasks.dashboard.sprintSettingsTooltip}
-                                                variant="outlined"
                                             >
                                                 <IconButton
                                                     disabled={!usePM.currentProject?.projectId}
@@ -1114,10 +1095,9 @@ export const TaskHomeContent = ({
                                                 >
                                                     <SettingsRoundedIcon />
                                                 </IconButton>
-                                            </Tooltip>
-                                            <Tooltip
+                                            </AppTooltip>
+                                            <AppTooltip
                                                 title={t.tasks.dashboard.manageSprintsTooltip}
-                                                variant="outlined"
                                             >
                                                 <IconButton
                                                     disabled={!usePM.currentProject?.projectId}
@@ -1127,12 +1107,8 @@ export const TaskHomeContent = ({
                                                 >
                                                     <TuneRoundedIcon />
                                                 </IconButton>
-                                            </Tooltip>
-                                            <Tooltip
-                                                size="sm"
-                                                title={t.tasks.dashboard.burndownTooltip}
-                                                variant="outlined"
-                                            >
+                                            </AppTooltip>
+                                            <AppTooltip title={t.tasks.dashboard.burndownTooltip}>
                                                 <Chip
                                                     size="lg"
                                                     variant="soft"
@@ -1149,7 +1125,7 @@ export const TaskHomeContent = ({
                                                 >
                                                     {sprintProgressPct}%
                                                 </Chip>
-                                            </Tooltip>
+                                            </AppTooltip>
                                         </Stack>
                                     </Stack>
                                 </Stack>
@@ -1507,13 +1483,11 @@ export const TaskHomeContent = ({
                                                                         }}
                                                                     />
                                                                     {task.isMilestone === true && (
-                                                                        <Tooltip
-                                                                            size="sm"
+                                                                        <AppTooltip
                                                                             title={
                                                                                 t.tasks.dashboard
                                                                                     .milestoneTooltip
                                                                             }
-                                                                            variant="outlined"
                                                                         >
                                                                             <FlagRoundedIcon
                                                                                 sx={{
@@ -1521,7 +1495,7 @@ export const TaskHomeContent = ({
                                                                                     color: "#f97316",
                                                                                 }}
                                                                             />
-                                                                        </Tooltip>
+                                                                        </AppTooltip>
                                                                     )}
                                                                 </Stack>
                                                                 <Chip
