@@ -1,6 +1,8 @@
-import { Box, Tooltip } from "@mui/joy";
+import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
+import { fmt, useTranslation } from "../../../../i18n";
 import { purplePalette } from "../../../../theme/purplePalette";
 import { BurndownPoint } from "../types";
 import { HEALTH_TONE_COLOR, ScheduleHealthTone } from "../utils/scheduleStatus";
@@ -18,6 +20,7 @@ type Props = {
 // precise numbers live in the chips next to it.
 export const BurndownSparkline = ({ data, total, tone, width = 220, height = 44 }: Props) => {
     const { mode } = useColorScheme();
+    const { t } = useTranslation();
     const isDark = mode === "dark";
     const P = isDark ? purplePalette.dark : purplePalette.light;
     const actualColor = HEALTH_TONE_COLOR[tone];
@@ -49,11 +52,11 @@ export const BurndownSparkline = ({ data, total, tone, width = 220, height = 44 
     const lastY = yAt(last.remaining);
 
     return (
-        <Tooltip
-            title={`${last.remaining} of ${total} tasks remaining`}
-            placement="top"
-            variant="outlined"
-            arrow
+        <AppTooltip
+            title={fmt(t.tasks.diagram.tooltips.tasksRemaining, {
+                remaining: last.remaining,
+                total,
+            })}
         >
             <Box
                 sx={{
@@ -84,6 +87,6 @@ export const BurndownSparkline = ({ data, total, tone, width = 220, height = 44 
                     <circle cx={lastX} cy={lastY} r={3} fill={actualColor} />
                 </svg>
             </Box>
-        </Tooltip>
+        </AppTooltip>
     );
 };
