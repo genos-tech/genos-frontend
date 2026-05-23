@@ -601,7 +601,7 @@ export const TaskActivityFeed = ({
                         }}
                     >
                         <AvatarWithStatus
-                            avatarSize={24}
+                            avatarSize={30}
                             avatarUser={avatarUser}
                             isYou={actorId != null && String(myself.userId) === String(actorId)}
                             myself={myself}

@@ -124,7 +124,10 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     const [taskContent, setTaskContent] = useState<TaskProps>();
     const [taskTitle, setTaskTitle] = useState<string>("");
     const [body, setBody] = useState<PartialBlock[]>(taskContentTemplate);
-    const [assignee, setAssignee] = useState<UserProps>(myself);
+    // New tasks/milestones/subtasks start unassigned by design — the
+    // creator picks an assignee if/when they're ready. Reporter still
+    // defaults to the creator (the form has no obvious other choice).
+    const [assignee, setAssignee] = useState<UserProps | null>(null);
     const [reporter, setReporter] = useState<UserProps>(myself);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isCreatingMilestone, setIsCreatingMilestone] = useState(false);
@@ -317,7 +320,8 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                 project: usePM.currentProject,
                 title: "",
                 body: taskContentTemplate,
-                assignee: myself,
+                // New tasks start unassigned; reporter is the creator.
+                assignee: null,
                 reporter: myself,
                 chatType: chatType,
                 chatId: useCM.currentMainChat?.chatId || null,

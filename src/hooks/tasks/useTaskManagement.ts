@@ -41,7 +41,7 @@ export type TaskDraft = {
     taskContent: TaskProps;
     taskTitle: string;
     body: any[];
-    assignee: UserProps;
+    assignee: UserProps | null;
     reporter: UserProps;
     templateId: "default" | "bug" | "spike" | "milestone";
     savedAt: string;
@@ -464,10 +464,10 @@ export const useTaskManagement = (
                     dueDate: loadedTask[0].dueDate || null,
                     daysLeft: loadedTask[0].daysLeft || null,
                     status: loadedTask[0].status.status || null,
-                    assigneeId: loadedTask[0].assignee.userId || null,
-                    assigneeEmail: loadedTask[0].assignee.userEmail || null,
-                    assigneeName: loadedTask[0].assignee.userName || null,
-                    assigneeImgPath: loadedTask[0].assignee.avatarImgPath || null,
+                    assigneeId: loadedTask[0].assignee?.userId ?? null,
+                    assigneeEmail: loadedTask[0].assignee?.userEmail ?? null,
+                    assigneeName: loadedTask[0].assignee?.userName ?? null,
+                    assigneeImgPath: loadedTask[0].assignee?.avatarImgPath ?? null,
                     parentTaskId: loadedTask[0].parentTaskId
                         ? String(loadedTask[0].parentTaskId)
                         : null,
@@ -644,13 +644,13 @@ export const useTaskManagement = (
                               dueDate: currentPreviewTask.dueDate ?? task.dueDate,
                               daysLeft: currentPreviewTask.daysLeft ?? task.daysLeft,
                               status: currentPreviewTask.status.status || task.status,
-                              assigneeId: currentPreviewTask.assignee.userId ?? task.assigneeId,
+                              assigneeId: currentPreviewTask.assignee?.userId ?? task.assigneeId,
                               assigneeEmail:
-                                  currentPreviewTask.assignee.userEmail ?? task.assigneeEmail,
+                                  currentPreviewTask.assignee?.userEmail ?? task.assigneeEmail,
                               assigneeName:
-                                  currentPreviewTask.assignee.userName ?? task.assigneeName,
+                                  currentPreviewTask.assignee?.userName ?? task.assigneeName,
                               assigneeImgPath:
-                                  currentPreviewTask.assignee.avatarImgPath ??
+                                  currentPreviewTask.assignee?.avatarImgPath ??
                                   task.assigneeImgPath,
                               parentTaskId: currentPreviewTask.parentTaskId
                                   ? String(currentPreviewTask.parentTaskId)

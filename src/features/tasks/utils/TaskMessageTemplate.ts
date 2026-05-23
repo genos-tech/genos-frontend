@@ -173,7 +173,13 @@ export const taskMessageTemplate = (myself: UserProps, task: TaskProps) => {
         },
         {
             children: [],
-            content: [labelText(m.assigneeLabel), mentionNode(myself, task.assignee)],
+            content: [
+                labelText(m.assigneeLabel),
+                // `task.assignee` is nullable — a task can legitimately
+                // be unassigned. Fall back to italic "Unassigned" text
+                // instead of crashing inside `mentionNode`.
+                task.assignee ? mentionNode(myself, task.assignee) : plainText(m.unassigned),
+            ],
             props: DEFAULT_BLOCK_PROPS,
             type: "paragraph",
         },

@@ -23,7 +23,10 @@ export const createEmptyTask = async (props: createEmptyTaskProps) => {
             body: JSON.stringify({
                 team: myself.teamId,
                 project: projectId,
-                assignee: myself.userId,
+                // Empty-task scaffold starts unassigned to match the
+                // form's default — the real submit PUT overwrites the
+                // assignee with whatever the user picks (or leaves null).
+                assignee: null,
                 reporter: myself.userId,
                 title: "<new task>",
                 priority: null,

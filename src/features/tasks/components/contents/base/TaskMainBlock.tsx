@@ -109,8 +109,8 @@ type TaskMainBlockProps = {
     setProjectTags: (tags: TagListProps[]) => void;
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    assignee: UserProps;
-    setAssignee: (value: UserProps) => void;
+    assignee: UserProps | null;
+    setAssignee: (value: UserProps | null) => void;
     reporter: UserProps;
     setReporter: (value: UserProps) => void;
     isOpenTeamMembersList: boolean;
@@ -504,9 +504,15 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         }}
                     >
                         <AvatarWithStatus
-                            avatarUser={useTEM.teamMemberProfiles[assignee.userId]}
+                            // `assignee` is now nullable (a task can be
+                            // unassigned). When null, render the empty
+                            // placeholder avatar — `AvatarWithStatus`
+                            // already handles `avatarUser=undefined`.
+                            avatarUser={
+                                assignee ? useTEM.teamMemberProfiles[assignee.userId] : undefined
+                            }
                             useCM={useCM}
-                            isYou={myself.userId === assignee.userId}
+                            isYou={!!assignee && myself.userId === assignee.userId}
                             myself={myself}
                             setMyself={setMyself}
                             socket={socket}
@@ -563,7 +569,14 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             setMyself={setMyself}
                             setTaskContent={setTaskContent}
                             setTaskUpdated={setTaskUpdated}
-                            setUser={setReporter}
+                            // Adapt the non-nullable reporter setter to the
+                            // wider `setUser: UserProps | null` signature
+                            // ACTeamUsers needs. The picker only emits null
+                            // for the assignee branch (isAssignee=true), so
+                            // this null is unreachable in practice.
+                            setUser={(value) => {
+                                if (value) setReporter(value);
+                            }}
                             socket={socket}
                             taskContent={taskContent}
                             useTEM={useTEM}
@@ -973,9 +986,13 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             }}
                         >
                             <AvatarWithStatus
-                                avatarUser={useTEM.teamMemberProfiles[assignee.userId]}
+                                avatarUser={
+                                    assignee
+                                        ? useTEM.teamMemberProfiles[assignee.userId]
+                                        : undefined
+                                }
                                 useCM={useCM}
-                                isYou={myself.userId === assignee.userId}
+                                isYou={!!assignee && myself.userId === assignee.userId}
                                 myself={myself}
                                 setMyself={setMyself}
                                 socket={socket}

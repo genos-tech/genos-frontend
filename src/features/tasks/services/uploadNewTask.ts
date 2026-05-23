@@ -57,7 +57,10 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                     team: myself.teamId,
                     task_id: taskContent.id,
                     project: taskContent.project.projectId,
-                    assignee: taskContent.assignee.userId,
+                    // `assignee` is now nullable — a fresh task starts
+                    // unassigned. Django's TaskMaster.assignee FK is
+                    // already `null=True`, so passing null is valid.
+                    assignee: taskContent.assignee?.userId ?? null,
                     reporter: taskContent.reporter.userId,
                     title: taskContent.title,
                     priority:
@@ -170,10 +173,10 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                     dueDate: taskContent.dueDate,
                     daysLeft: taskContent.daysLeft || null,
                     status: taskContent.status.status,
-                    assigneeId: taskContent.assignee.userId,
-                    assigneeEmail: taskContent.assignee.userEmail,
-                    assigneeName: taskContent.assignee.userName,
-                    assigneeImgPath: taskContent.assignee.avatarImgPath,
+                    assigneeId: taskContent.assignee?.userId ?? null,
+                    assigneeEmail: taskContent.assignee?.userEmail ?? null,
+                    assigneeName: taskContent.assignee?.userName ?? null,
+                    assigneeImgPath: taskContent.assignee?.avatarImgPath ?? null,
                     parentTaskId: String(taskContent.parentTaskId),
                     threadId: taskContent.threadId,
                     tags: taskContent.tags,

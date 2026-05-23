@@ -132,8 +132,11 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     const [taskClosed, setTaskClosed] = useState(false);
     const [isAttachmentDeleted, setIsAttachmentDeleted] = useState(false);
     const [deletedAttachmentId, setDeletedAttachmentId] = useState<number>(-1);
-    const [assignee, setAssignee] = useState<UserProps>(
-        useTM.currentPreviewTask?.assignee || myself
+    // Mirror the actual task: `null` means unassigned. Don't silently
+    // substitute `myself` here — that would mislead the user into
+    // thinking they were the assignee of an unassigned task.
+    const [assignee, setAssignee] = useState<UserProps | null>(
+        useTM.currentPreviewTask?.assignee ?? null
     );
     const [reporter, setReporter] = useState<UserProps>(
         useTM.currentPreviewTask?.reporter || myself
@@ -357,7 +360,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                     ...taskEditState.tmpCurrentTaskContent,
                     attachments: taskEditState.uploadedFiles,
                 });
-                setAssignee(taskEditState.tmpCurrentTaskContent.assignee ?? myself);
+                setAssignee(taskEditState.tmpCurrentTaskContent.assignee ?? null);
                 setReporter(taskEditState.tmpCurrentTaskContent.reporter ?? myself);
             })();
         }
@@ -371,7 +374,7 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         if (useTM.isTaskUpdated === false) {
             useTM.setCurrentPreviewTask(taskEditState.tmpCurrentTaskContent);
             useTM.setIsTaskUpdated(true);
-            setAssignee(taskEditState.tmpCurrentTaskContent?.assignee || myself);
+            setAssignee(taskEditState.tmpCurrentTaskContent?.assignee ?? null);
             setReporter(taskEditState.tmpCurrentTaskContent?.reporter || myself);
         }
     }, [taskEditState.tmpCurrentTaskContent]);
@@ -1106,7 +1109,11 @@ const MilestonePreviewInner = ({
     // Single-assignee state mirrors the normal-task UX. Milestones
     // still use the multi-assignee API under the hood, but the picker
     // is restricted to a single user for parity with regular tasks.
-    const [assignee, setAssignee] = useState<UserProps>(myself);
+    // Starts unassigned (`null`) so a freshly-opened milestone preview
+    // doesn't briefly show "myself" as the assignee before the actual
+    // milestone data resolves; the assignee sync effect below populates
+    // it from the loaded milestone.
+    const [assignee, setAssignee] = useState<UserProps | null>(null);
     // Reporter follows the same lookup pattern as assignee but resolves
     // from the milestone's FK reporter (single user, like normal tasks).
     const [reporter, setReporter] = useState<UserProps>(myself);

@@ -14,10 +14,13 @@ import { TaskProps } from "../../../../types/tasks";
 type ACTeamUsersProps = {
     myself: UserProps;
     setMyself: (value: UserProps) => void;
-    initialUser: UserProps;
+    // Nullable so the assignee field can be empty / cleared. The
+    // reporter field always passes a value; widening the type doesn't
+    // affect it.
+    initialUser: UserProps | null;
     taskContent: TaskProps;
     setTaskContent: (value: TaskProps) => void;
-    setUser: (value: UserProps) => void;
+    setUser: (value: UserProps | null) => void;
     isOpenTeamMembersList: boolean;
     setIsOpenTeamMembersList: (value: boolean) => void;
     isAssignee: boolean;
@@ -55,7 +58,12 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
             options={useTEM.teamMembers}
             size="sm"
             sx={{ width: "100%" }}
-            value={initialUser || myself}
+            // Pass `null` through so an unassigned task renders an empty
+            // picker (built-in placeholder), not a silent fallback to
+            // `myself` that would mislead the user into thinking they
+            // were the assignee.
+            value={initialUser}
+            placeholder={isAssignee ? t.tasks.messageTemplate.unassigned : undefined}
             getOptionLabel={(option) =>
                 option.userEmail === myself.userEmail
                     ? `${option.userName} ${youSuffix} - ${option.userEmail}`
@@ -91,25 +99,29 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
             }}
             onOpen={() => setIsOpenTeamMembersList(!isOpenTeamMembersList)}
             onChange={(event, value) => {
-                if (value !== null) {
-                    if (isAssignee) {
-                        setTaskContent({
-                            ...taskContent,
-                            assignee: value,
-                        });
-                        if (setTaskUpdated) {
-                            setTaskUpdated(true);
-                        }
-                    } else {
-                        setTaskContent({
-                            ...taskContent,
-                            reporter: value,
-                        });
-                        if (setTaskUpdated) {
-                            setTaskUpdated(true);
-                        }
-                    }
+                // Assignee accepts null (clear → "Unassigned").
+                // Reporter must always have a value, so swallow the
+                // null event for the reporter case (the Autocomplete's
+                // clear button still renders, but clicking it leaves
+                // the previous reporter in place).
+                if (isAssignee) {
+                    setTaskContent({
+                        ...taskContent,
+                        assignee: value,
+                    });
                     setUser(value);
+                    if (setTaskUpdated) {
+                        setTaskUpdated(true);
+                    }
+                } else if (value !== null) {
+                    setTaskContent({
+                        ...taskContent,
+                        reporter: value,
+                    });
+                    setUser(value);
+                    if (setTaskUpdated) {
+                        setTaskUpdated(true);
+                    }
                 }
             }}
         />

@@ -134,7 +134,11 @@ export type TaskProps = {
     project: ProjectProps | null;
     title: string;
     body: PartialBlock[];
-    assignee: UserProps;
+    // `null` means "Unassigned" — backend `TaskMaster.assignee` is a
+    // SET_NULL FK so a task can legitimately have no assignee, and
+    // creating one defaults to null. Reporter is always set (the
+    // creator) and stays non-nullable.
+    assignee: UserProps | null;
     reporter: UserProps;
     chatType: number | null;
     chatId: number | null;

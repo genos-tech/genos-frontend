@@ -276,13 +276,19 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                                                 setMyself={setMyself}
                                                 socket={socket}
                                                 useUISM={useUISM}
+                                                // Sub-tasks can be unassigned —
+                                                // fall back to the empty avatar
+                                                // that AvatarWithStatus renders
+                                                // when `avatarUser` is undefined.
                                                 avatarUser={
-                                                    useTEM.teamMemberProfiles[assignee.userId]
+                                                    assignee
+                                                        ? useTEM.teamMemberProfiles[
+                                                              assignee.userId
+                                                          ]
+                                                        : undefined
                                                 }
                                                 isYou={
-                                                    myself.userId === assignee.userId
-                                                        ? true
-                                                        : false
+                                                    !!assignee && myself.userId === assignee.userId
                                                 }
                                             />
                                             <ListItemButton

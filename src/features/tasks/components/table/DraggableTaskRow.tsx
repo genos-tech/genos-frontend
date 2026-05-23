@@ -36,8 +36,6 @@ import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { effortLevels, priorities } from "../../utils/taskMeta";
 import { ColumnDef, statusOptions } from "./DraggableTaskTable";
 
-const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
-
 // Depth-based background colors for nested task rows
 const DEPTH_COLORS_DARK = [
     "transparent",
@@ -878,10 +876,29 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                         onClick={() => handleStartEdit("assigneeId", task.assigneeId || "")}
                     >
                         <Box sx={{ position: "relative", display: "inline-flex" }}>
-                            {task.assigneeId && <UserAvatar userId={task.assigneeId} />}
-                            {task.assigneeId === null && (
-                                <Avatar size="sm" src={`${media_url}/${myself.avatarImgPath}`}>
-                                    {myself.userName[0].toUpperCase()}
+                            {task.assigneeId ? (
+                                <UserAvatar userId={task.assigneeId} />
+                            ) : (
+                                // Unassigned task — render a neutral
+                                // placeholder, NOT `myself`'s avatar (the
+                                // old fallback was a leftover from when
+                                // every task was forced to have an
+                                // assignee on create).
+                                <Avatar
+                                    size="sm"
+                                    sx={{
+                                        bgcolor:
+                                            mode === "dark"
+                                                ? "rgba(255,255,255,0.08)"
+                                                : "rgba(0,0,0,0.06)",
+                                        color:
+                                            mode === "dark"
+                                                ? "rgba(255,255,255,0.45)"
+                                                : "rgba(0,0,0,0.45)",
+                                        fontSize: "0.7rem",
+                                    }}
+                                >
+                                    ?
                                 </Avatar>
                             )}
                         </Box>
@@ -893,9 +910,20 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                                     textOverflow: "ellipsis",
                                     whiteSpace: "nowrap",
                                     fontWeight: 500,
+                                    // Italicize + dim the placeholder
+                                    // so "Unassigned" reads as a
+                                    // state, not a name.
+                                    fontStyle: task.assigneeId ? "normal" : "italic",
+                                    color: task.assigneeId
+                                        ? undefined
+                                        : mode === "dark"
+                                          ? "rgba(255,255,255,0.5)"
+                                          : "rgba(0,0,0,0.5)",
                                 }}
                             >
-                                {task.assigneeName}
+                                {task.assigneeId
+                                    ? task.assigneeName
+                                    : t.tasks.messageTemplate.unassigned}
                             </Typography>
                         </Box>
                     </Box>
