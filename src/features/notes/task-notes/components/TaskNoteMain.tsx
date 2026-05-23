@@ -65,6 +65,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
         currentTaskNote: useNM.currentTaskNote,
         myself,
         accessToken: accessToken || "",
+        socket,
         resyncSignal: useNM.noteResyncNonce,
         onNoteUpdate: (updatedNote: TaskNoteProps) => {
             // Push the latest title into the new tabs API so the strip

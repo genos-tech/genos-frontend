@@ -1,4 +1,5 @@
 import { PartialBlock } from "@blocknote/core";
+import { Socket } from "socket.io-client";
 
 import { UserProps } from "../../../../types/admin";
 import { MyNoteProps } from "../../../../types/notes";
@@ -26,6 +27,7 @@ export interface NoteEditorProps {
     currentMyNote: MyNoteProps | null;
     myself: UserProps;
     accessToken: string | null;
+    socket: Socket | null;
     onNoteUpdate: (updatedNote: MyNoteProps) => void;
 }
 

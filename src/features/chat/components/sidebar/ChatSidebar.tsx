@@ -29,6 +29,7 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
@@ -105,6 +106,7 @@ type ChatSidebarProps = {
     useCM: ChatManagementState;
     useTM: TaskManagementState;
     usePM: ProjectManagementState;
+    useNM?: NoteManagementState;
     chatRouting: ReturnType<typeof useChatRouting>;
 };
 
@@ -121,6 +123,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
         useCM,
         useTM,
         usePM,
+        useNM,
         chatRouting,
     } = props;
     const { mode } = useColorScheme();
@@ -524,8 +527,12 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         }}
                     >
                         {(() => {
-                            const navItem = NAV_ITEMS.find((item) => item.type === useCM.currentChatPaneType);
-                            return navItem ? t.chat.sidebar[navItem.labelKey] : t.chat.sidebar.currentSectionFallback;
+                            const navItem = NAV_ITEMS.find(
+                                (item) => item.type === useCM.currentChatPaneType
+                            );
+                            return navItem
+                                ? t.chat.sidebar[navItem.labelKey]
+                                : t.chat.sidebar.currentSectionFallback;
                         })()}
                     </Typography>
                 </Box>
@@ -613,6 +620,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             useTEM={useTEM}
                             useUISM={useUISM}
                             useTM={useTM}
+                            useNM={useNM}
                             actions={{ setIsToDoVisible }}
                             data={{ myself, setMyself }}
                             state={{ showOnlyUnreadItems, incompleteTodoCount, isToDoVisible }}

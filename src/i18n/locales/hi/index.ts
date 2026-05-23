@@ -391,6 +391,10 @@ export const hi: DeepPartial<Messages> = {
             chipReaction: "रिएक्शन",
             chipMention: "मेंशन",
             chipThread: "थ्रेड",
+            chipTaskBody: "टास्क बॉडी",
+            chipPersonalNote: "व्यक्तिगत नोट",
+            chipTaskNote: "टास्क नोट",
+            chipChatNote: "चैट नोट",
         },
         headers: {
             markAllReadAria: "इस चैट में सब कुछ पढ़ा हुआ चिह्नित करें",

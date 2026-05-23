@@ -70,8 +70,16 @@ export const ActivityHeader: React.FC<ActivityHeaderProps> = ({
                     />
                 </Box>
 
-                {/* Name for DM and GM only */}
-                {activity.chatType !== 3 && activity.chatType !== 4 && (
+                {/* Surface title. For DM / GM we render the chat name +
+                    "(you)" suffix on DMs to your own user. For task-body
+                    and note mentions (chat_type 5-8) `chatName` is the
+                    task title / note title — render it the same way so
+                    the user can scan "Mentioned in: <title>" at a glance.
+                    PM (3) and chat_type=4 surfaces self-label via the
+                    chips and have no separate human name to show. */}
+                {(activity.chatType === 1 ||
+                    activity.chatType === 2 ||
+                    activity.chatType >= 5) && (
                     <Typography
                         level="title-sm"
                         noWrap
@@ -83,7 +91,9 @@ export const ActivityHeader: React.FC<ActivityHeaderProps> = ({
                             minWidth: 0,
                         }}
                     >
-                        {isYou ? `${activity.chatName} (you)` : activity.chatName}
+                        {activity.chatType === 1 && isYou
+                            ? `${activity.chatName} (you)`
+                            : activity.chatName}
                     </Typography>
                 )}
 

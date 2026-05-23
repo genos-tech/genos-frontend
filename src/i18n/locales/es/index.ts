@@ -387,6 +387,10 @@ export const es: DeepPartial<Messages> = {
             chipReaction: "Reacción",
             chipMention: "Mención",
             chipThread: "Hilo",
+            chipTaskBody: "Cuerpo de tarea",
+            chipPersonalNote: "Nota personal",
+            chipTaskNote: "Nota de tarea",
+            chipChatNote: "Nota de chat",
         },
         headers: {
             markAllReadAria: "Marcar todo este chat como leído",

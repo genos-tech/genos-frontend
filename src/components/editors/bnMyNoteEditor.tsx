@@ -134,6 +134,16 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
     const myRoleId = getMyNoteRoleId(currentNoteMembers, myself.userId);
     const isEditable = isNoteEditableForRole(myRoleId);
 
+    // Restrict the @-suggestion picker to users who have explicit
+    // access to this note (the owner + anyone granted a role via
+    // `NotePermissionMaster`). Personal notes have no implicit access
+    // path, so this is the canonical list. Preventative UX only —
+    // backend still notifies via the `note_mention` socket event for
+    // any user who slips through (e.g., role revoked mid-session).
+    const mentionableUsers = currentNoteMembers
+        .map((m) => useTEM.teamMemberProfiles[m.userId])
+        .filter((u): u is NonNullable<typeof u> => !!u);
+
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
     const { t } = useTranslation();
@@ -545,7 +555,7 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                                                 MentionMenuItems(
                                                     useTEM.teamMemberProfiles,
                                                     editor,
-                                                    useTEM.teamMembers,
+                                                    mentionableUsers,
                                                     mentionGroups
                                                 ),
                                                 query

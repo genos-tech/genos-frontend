@@ -328,6 +328,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                         useUISM={useUISM}
                                         useTM={useTM}
                                         usePM={usePM}
+                                        useNM={useNM}
                                     />
                                 </Sheet>
                             </Box>
