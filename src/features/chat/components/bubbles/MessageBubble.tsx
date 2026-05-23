@@ -12,6 +12,7 @@ import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useBubbleStylePreference } from "../../../../hooks/common/useBubbleStylePreference";
 import { useDoubleClickTodoPreference } from "../../../../hooks/common/useDoubleClickTodoPreference";
+import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -290,7 +291,13 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
     };
 
     // Reaction handling
-    const [showUnderBarOption, setShowUnderBarOption] = useState(false);
+    // On mobile we force the bubble's hover toolbar on permanently —
+    // there's no hover signal on touch, so the EmojiReaction / "more"
+    // menu would otherwise be unreachable. Desktop keeps the existing
+    // hover-driven behavior.
+    const isMobile = useIsMobile();
+    const [showUnderBarHovered, setShowUnderBarOption] = useState(false);
+    const showUnderBarOption = isMobile || showUnderBarHovered;
     const [reactions, setReactions] = useState<ReactionProps[]>([]);
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
