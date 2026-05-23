@@ -161,18 +161,26 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
         <Sheet
             className="TaskSidebar"
             sx={{
-                position: { xs: "fixed", md: "sticky" },
+                // On mobile (MobileTaskHome) we render the sidebar inline,
+                // not as a slide-in overlay, so the translate transform
+                // and fixed positioning are desktop-only.
+                position: { xs: "relative", md: "sticky" },
                 transform: {
-                    xs: "translateX(calc(100% * (var(--SideNavigation-slideIn, 0) - 1)))",
+                    xs: "none",
                     md: "none",
                 },
                 transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                height: "100dvh",
+                // Mobile: fill the MobileTaskHome container (already
+                // clamped to viewport - tab bar). Desktop: viewport
+                // height since the sticky Sheet has no explicit parent
+                // height.
+                height: { xs: "100%", md: "100dvh" },
                 width: "100%",
                 top: 0,
                 flexShrink: 0,
                 display: "flex",
                 flexDirection: "column",
+                minHeight: 0,
             }}
         >
             {/* Search Box */}

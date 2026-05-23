@@ -5,9 +5,11 @@ import { useColorScheme } from "@mui/joy/styles";
 import { TaskHomeLayout } from "./components/layout/TaskHomeLayout";
 import { TaskHomeModals } from "./components/modals/TaskHomeModals";
 import { useTaskRouting } from "./hooks/useTaskRouting";
+import { MobileTaskHome } from "./MobileTaskHome";
 import { TaskHomeProps } from "./types/TaskHomeTypes";
 
 import { LayoutStyles } from "../../components/ui/styles/commonStyle";
+import { useIsMobile } from "../../hooks/common/useIsMobile";
 
 export const TaskHome = (props: TaskHomeProps) => {
     const { useTEM, socket, myself, setMyself, useUISM, useCM, useNM, usePM, useTM, useSM } =
@@ -54,6 +56,7 @@ export const TaskHome = (props: TaskHomeProps) => {
 
     const { mode } = useColorScheme();
     const ls = mode === "dark" ? LayoutStyles.dark : LayoutStyles.light;
+    const isMobile = useIsMobile();
 
     return (
         <Box sx={LayoutStyles.outerWrapper}>
@@ -61,23 +64,40 @@ export const TaskHome = (props: TaskHomeProps) => {
                 <Box sx={ls.decorTopRight} />
                 <Box sx={ls.decorBottomLeft} />
 
-                <TaskHomeLayout
-                    useCM={useCM}
-                    myself={myself}
-                    useNM={useNM}
-                    usePM={usePM}
-                    setMyself={setMyself}
-                    socket={socket}
-                    useTEM={useTEM}
-                    useTM={useTM}
-                    useSM={useSM}
-                    useUISM={useUISM}
-                    onCloseTaskHome={handleCloseTaskHome}
-                    onCreateProject={handleCreateProject}
-                    onCreateTag={handleCreateTag}
-                    onDeleteProject={handleDeleteProject}
-                    setOpenJoinProject={setOpenJoinProject}
-                />
+                {isMobile ? (
+                    <MobileTaskHome
+                        useCM={useCM}
+                        myself={myself}
+                        useNM={useNM}
+                        usePM={usePM}
+                        setMyself={setMyself}
+                        socket={socket}
+                        useTEM={useTEM}
+                        useTM={useTM}
+                        useSM={useSM}
+                        useUISM={useUISM}
+                        onCloseTaskHome={handleCloseTaskHome}
+                        setOpenJoinProject={setOpenJoinProject}
+                    />
+                ) : (
+                    <TaskHomeLayout
+                        useCM={useCM}
+                        myself={myself}
+                        useNM={useNM}
+                        usePM={usePM}
+                        setMyself={setMyself}
+                        socket={socket}
+                        useTEM={useTEM}
+                        useTM={useTM}
+                        useSM={useSM}
+                        useUISM={useUISM}
+                        onCloseTaskHome={handleCloseTaskHome}
+                        onCreateProject={handleCreateProject}
+                        onCreateTag={handleCreateTag}
+                        onDeleteProject={handleDeleteProject}
+                        setOpenJoinProject={setOpenJoinProject}
+                    />
+                )}
 
                 <TaskHomeModals
                     useCM={useCM}

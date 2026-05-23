@@ -229,9 +229,10 @@ export const ModalManageDependencies = ({
                 size="md"
                 variant="outlined"
                 sx={{
-                    minWidth: 620,
-                    maxWidth: 780,
-                    maxHeight: "85vh",
+                    width: { xs: "calc(100vw - 24px)", md: "auto" },
+                    minWidth: { xs: 0, md: 620 },
+                    maxWidth: { xs: "100vw", md: 780 },
+                    maxHeight: { xs: "calc(100dvh - 32px)", md: "85vh" },
                     overflowY: "auto",
                     p: 0,
                     background: isDark

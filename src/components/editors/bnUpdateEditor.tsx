@@ -36,6 +36,7 @@ import { Socket } from "socket.io-client";
 import { useAuth } from "../../context/AuthContext";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
+import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
@@ -87,6 +88,7 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
         useCM,
     } = props;
     const { mode } = useColorScheme();
+    const isMobile = useIsMobile();
     const { accessToken } = useAuth();
     const { t } = useTranslation();
     const urlLinkModal = useUrlLinkModal();
@@ -365,7 +367,7 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
                             />
 
                             <ColorStyleButton key={"colorStyleButton"} />
-                            <CreateLinkButton key={"createLinkButton"} />
+                            {!isMobile && <CreateLinkButton key={"createLinkButton"} />}
                             <FileCaptionButton key={"fileCaptionButton"} />
                             <FileReplaceButton key={"replaceFileButton"} />
                             <FileDeleteButton key={"fileDeleteButton"} />
@@ -374,10 +376,12 @@ export const BnUpdateEditor = (props: BnUpdateEditorProps) => {
                             <FileRenameButton key={"fileRenameButton"} />
 
                             {/* Extra button to toggle blue text & background */}
-                            <CustomEmojiToolbar
-                                key={"customButton"}
-                                setShowEmojiPicker={setShowEmojiPicker}
-                            />
+                            {!isMobile && (
+                                <CustomEmojiToolbar
+                                    key={"customButton"}
+                                    setShowEmojiPicker={setShowEmojiPicker}
+                                />
+                            )}
                         </FormattingToolbar>
                     </Box>
 

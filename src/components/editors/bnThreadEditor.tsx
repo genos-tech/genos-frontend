@@ -38,6 +38,7 @@ import { addThreadMessage } from "../../features/chat/services/addThreadMessage"
 import { getFirstLine } from "../../features/chat/utils/common";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
+import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useEditorDraft } from "../../hooks/common/useEditorDraft";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
@@ -96,6 +97,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
     const { t } = useTranslation();
+    const isMobile = useIsMobile();
     const urlLinkModal = useUrlLinkModal();
     const editorBoxRef = useRef<HTMLDivElement>(null);
     useAnchorClickIntercept(editorBoxRef, urlLinkModal);
@@ -478,7 +480,12 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                             />
 
                             <ColorStyleButton key={"colorStyleButton"} />
-                            <CreateLinkButton key={"createLinkButton"} />
+                            {/* Link + Emoji buttons hidden on mobile —
+                                the toolbar is absolutely-positioned and
+                                clips the tail off-screen on narrow
+                                viewports. The "/" slash menu still
+                                exposes both. */}
+                            {!isMobile && <CreateLinkButton key={"createLinkButton"} />}
                             <FileCaptionButton key={"fileCaptionButton"} />
                             <FileReplaceButton key={"replaceFileButton"} />
                             <FileDeleteButton key={"fileDeleteButton"} />
@@ -487,10 +494,12 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                             <FileRenameButton key={"fileRenameButton"} />
 
                             {/* Extra button to toggle blue text & background */}
-                            <CustomEmojiToolbar
-                                key={"customButton"}
-                                setShowEmojiPicker={setShowEmojiPicker}
-                            />
+                            {!isMobile && (
+                                <CustomEmojiToolbar
+                                    key={"customButton"}
+                                    setShowEmojiPicker={setShowEmojiPicker}
+                                />
+                            )}
                         </FormattingToolbar>
                     </Box>
 

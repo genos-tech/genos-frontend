@@ -36,6 +36,7 @@ import { Socket } from "socket.io-client";
 import { useAuth } from "../../context/AuthContext";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
+import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
@@ -91,6 +92,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
     const { mode } = useColorScheme();
     const { accessToken } = useAuth();
     const { t } = useTranslation();
+    const isMobile = useIsMobile();
     const urlLinkModal = useUrlLinkModal();
     const editorBoxRef = useRef<HTMLDivElement>(null);
     useAnchorClickIntercept(editorBoxRef, urlLinkModal);
@@ -385,7 +387,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                             />
 
                             <ColorStyleButton key={"colorStyleButton"} />
-                            <CreateLinkButton key={"createLinkButton"} />
+                            {!isMobile && <CreateLinkButton key={"createLinkButton"} />}
                             <FileCaptionButton key={"fileCaptionButton"} />
                             <FileReplaceButton key={"replaceFileButton"} />
                             <FileDeleteButton key={"fileDeleteButton"} />
@@ -394,10 +396,12 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                             <FileRenameButton key={"fileRenameButton"} />
 
                             {/* Extra button to toggle blue text & background */}
-                            <CustomEmojiToolbar
-                                key={"customButton"}
-                                setShowEmojiPicker={setShowEmojiPicker}
-                            />
+                            {!isMobile && (
+                                <CustomEmojiToolbar
+                                    key={"customButton"}
+                                    setShowEmojiPicker={setShowEmojiPicker}
+                                />
+                            )}
                         </FormattingToolbar>
                     </Box>
 

@@ -995,8 +995,17 @@ export const TaskHomeContent = ({
                                         </Box>
                                     </Stack>
 
-                                    {/* Sprint period selector */}
-                                    <Stack alignItems="center" direction="row" spacing={1}>
+                                    {/* Sprint period selector — on mobile
+                                        the Select takes a full row and
+                                        the action icons + progress chip
+                                        wrap onto the next row so a
+                                        390px viewport doesn't clip them. */}
+                                    <Stack
+                                        alignItems={{ xs: "stretch", sm: "center" }}
+                                        direction={{ xs: "column", sm: "row" }}
+                                        spacing={1}
+                                        sx={{ width: "100%" }}
+                                    >
                                         <Select<number | string>
                                             indicator={<KeyboardArrowDownRoundedIcon />}
                                             size="sm"
@@ -1023,7 +1032,8 @@ export const TaskHomeContent = ({
                                                 <CalendarMonthRoundedIcon sx={{ fontSize: 18 }} />
                                             }
                                             sx={{
-                                                minWidth: 220,
+                                                minWidth: { xs: 0, sm: 220 },
+                                                width: { xs: "100%", sm: "auto" },
                                                 fontWeight: 600,
                                                 color: isDark ? "#a78bfa" : "#7c3aed",
                                                 backgroundColor: isDark
@@ -1087,53 +1097,60 @@ export const TaskHomeContent = ({
                                                 }
                                             )}
                                         </Select>
-                                        <Tooltip
-                                            title={t.tasks.dashboard.sprintSettingsTooltip}
-                                            variant="outlined"
+                                        <Stack
+                                            direction="row"
+                                            spacing={1}
+                                            alignItems="center"
                                         >
-                                            <IconButton
-                                                disabled={!usePM.currentProject?.projectId}
+                                            <Tooltip
+                                                title={t.tasks.dashboard.sprintSettingsTooltip}
+                                                variant="outlined"
+                                            >
+                                                <IconButton
+                                                    disabled={!usePM.currentProject?.projectId}
+                                                    size="sm"
+                                                    variant="soft"
+                                                    onClick={() => setSprintConfigOpen(true)}
+                                                >
+                                                    <SettingsRoundedIcon />
+                                                </IconButton>
+                                            </Tooltip>
+                                            <Tooltip
+                                                title={t.tasks.dashboard.manageSprintsTooltip}
+                                                variant="outlined"
+                                            >
+                                                <IconButton
+                                                    disabled={!usePM.currentProject?.projectId}
+                                                    size="sm"
+                                                    variant="soft"
+                                                    onClick={() => setSprintManagerOpen(true)}
+                                                >
+                                                    <TuneRoundedIcon />
+                                                </IconButton>
+                                            </Tooltip>
+                                            <Tooltip
                                                 size="sm"
-                                                variant="soft"
-                                                onClick={() => setSprintConfigOpen(true)}
+                                                title={t.tasks.dashboard.burndownTooltip}
+                                                variant="outlined"
                                             >
-                                                <SettingsRoundedIcon />
-                                            </IconButton>
-                                        </Tooltip>
-                                        <Tooltip
-                                            title={t.tasks.dashboard.manageSprintsTooltip}
-                                            variant="outlined"
-                                        >
-                                            <IconButton
-                                                disabled={!usePM.currentProject?.projectId}
-                                                size="sm"
-                                                variant="soft"
-                                                onClick={() => setSprintManagerOpen(true)}
-                                            >
-                                                <TuneRoundedIcon />
-                                            </IconButton>
-                                        </Tooltip>
-                                        <Tooltip
-                                            size="sm"
-                                            title={t.tasks.dashboard.burndownTooltip}
-                                            variant="outlined"
-                                        >
-                                            <Chip
-                                                size="lg"
-                                                variant="soft"
-                                                sx={{
-                                                    backgroundColor: isDark
-                                                        ? "rgba(34,197,94,0.12)"
-                                                        : "rgba(34,197,94,0.1)",
-                                                    color: "#22c55e",
-                                                    fontWeight: 700,
-                                                    fontSize: "0.95rem",
-                                                    px: 2,
-                                                }}
-                                            >
-                                                {sprintProgressPct}%
-                                            </Chip>
-                                        </Tooltip>
+                                                <Chip
+                                                    size="lg"
+                                                    variant="soft"
+                                                    sx={{
+                                                        backgroundColor: isDark
+                                                            ? "rgba(34,197,94,0.12)"
+                                                            : "rgba(34,197,94,0.1)",
+                                                        color: "#22c55e",
+                                                        fontWeight: 700,
+                                                        fontSize: "0.95rem",
+                                                        px: 2,
+                                                        ml: { xs: "auto", sm: 0 },
+                                                    }}
+                                                >
+                                                    {sprintProgressPct}%
+                                                </Chip>
+                                            </Tooltip>
+                                        </Stack>
                                     </Stack>
                                 </Stack>
 

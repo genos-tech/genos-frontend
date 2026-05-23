@@ -178,6 +178,15 @@ export const ProjectsListItem = (props: ProjectsListItemProps) => {
                                                         // ids across project boundaries.
                                                         useTM.closeTaskPreview();
                                                         useTM.setTableMilestoneFilterId(null);
+                                                        // Switch out of the global "Home" dashboard
+                                                        // view when a specific project is opened.
+                                                        // Without this, clicking a project from the
+                                                        // Home view would leave the dashboard flag
+                                                        // on, and on mobile the dashboard would
+                                                        // remain showing instead of the project's
+                                                        // task list.
+                                                        useTM.setIsTaskDashboardVisible(false);
+                                                        useTM.setIsTaskTableVisible(true);
                                                         // Reset the task table — the SWR read below
                                                         // will repopulate it from IDB within ~10–50 ms
                                                         // if we have cached rows for this project, so

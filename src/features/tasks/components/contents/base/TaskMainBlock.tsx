@@ -494,7 +494,9 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             display: "flex",
                             alignItems: "center",
                             gap: 1,
-                            width: "40%",
+                            width: { xs: "auto", sm: "40%" },
+                            flex: { xs: 1, sm: "0 0 auto" },
+                            minWidth: 0,
                         }}
                     >
                         <AvatarWithStatus
@@ -528,7 +530,16 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                 {/* Reporter */}
                 <ListItem sx={{ display: "flex", alignItems: "center" }}>
                     <FieldLabel isDark={isDark}>{t.tasks.fields.reporter}</FieldLabel>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, width: "40%" }}>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                            width: { xs: "auto", sm: "40%" },
+                            flex: { xs: 1, sm: "0 0 auto" },
+                            minWidth: 0,
+                        }}
+                    >
                         <AvatarWithStatus
                             avatarUser={useTEM.teamMemberProfiles[reporter.userId]}
                             useCM={useCM}
@@ -559,7 +570,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
 
                 {/* Project and Tags Row */}
                 <Grid spacing={1} container sx={{ mt: 0.5 }}>
-                    <Grid xs={6}>
+                    <Grid xs={12} sm={6}>
                         <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
                             <FieldLabel isDark={isDark}>{t.tasks.fields.project}</FieldLabel>
                             <ACTeamProjects
@@ -572,7 +583,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             />
                         </ListItem>
                     </Grid>
-                    <Grid xs={6}>
+                    <Grid xs={12} sm={6}>
                         <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
                             <FieldLabel isDark={isDark}>{t.tasks.fields.tags}</FieldLabel>
                             <Tooltip
@@ -694,7 +705,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
 
                 {/* Priority and Effort Level Row */}
                 <Grid spacing={1} container>
-                    <Grid xs={6}>
+                    <Grid xs={12} sm={6}>
                         <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
                             <FieldLabel isDark={isDark}>{t.tasks.fields.priority}</FieldLabel>
                             <ACTaskPriority
@@ -704,7 +715,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                             />
                         </ListItem>
                     </Grid>
-                    <Grid xs={6}>
+                    <Grid xs={12} sm={6}>
                         <ListItem sx={{ display: "flex", alignItems: "center", p: 0 }}>
                             <FieldLabel isDark={isDark}>{t.tasks.fields.effortLevel}</FieldLabel>
                             <ACTaskEffortLevel
@@ -718,7 +729,13 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
 
                 {/* Status (only in preview mode) */}
                 {isPreviewMode && (
-                    <ListItem sx={{ display: "flex", alignItems: "center", width: "49%" }}>
+                    <ListItem
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            width: { xs: "100%", sm: "49%" },
+                        }}
+                    >
                         <FieldLabel isDark={isDark}>{t.tasks.fields.status}</FieldLabel>
                         <ACTaskStatus
                             setTaskContent={setTaskContent}

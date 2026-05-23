@@ -32,6 +32,7 @@ import { Socket } from "socket.io-client";
 
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
+import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
@@ -93,6 +94,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
         useTM,
     } = props;
     const { mode } = useColorScheme();
+    const isMobile = useIsMobile();
     const urlLinkModal = useUrlLinkModal();
     const editorBoxRef = useRef<HTMLDivElement>(null);
     useAnchorClickIntercept(editorBoxRef, urlLinkModal);
@@ -407,13 +409,15 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                             />
 
                             <ColorStyleButton key={"colorStyleButton"} />
-                            <CreateLinkButton key={"createLinkButton"} />
+                            {!isMobile && <CreateLinkButton key={"createLinkButton"} />}
 
                             {/* Extra button to toggle blue text & background */}
-                            <CustomEmojiToolbar
-                                key={"customButton"}
-                                setShowEmojiPicker={setShowEmojiPicker}
-                            />
+                            {!isMobile && (
+                                <CustomEmojiToolbar
+                                    key={"customButton"}
+                                    setShowEmojiPicker={setShowEmojiPicker}
+                                />
+                            )}
                         </FormattingToolbar>
                     </Box>
 
