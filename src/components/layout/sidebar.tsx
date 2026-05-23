@@ -786,6 +786,11 @@ export const Sidebar = (props: SidebarProps) => {
                 open={openSettings}
                 onClose={() => setOpenSettings(false)}
                 useTEM={useTEM}
+                myself={myself}
+                setMyself={setMyself}
+                socket={socket}
+                useCM={useCM}
+                useUISM={useUISM}
             />
         </Sheet>
     );

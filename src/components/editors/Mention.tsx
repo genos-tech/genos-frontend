@@ -4,6 +4,7 @@ import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
 import { Avatar, Box, Chip, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
+import { useMentionGroupModal } from "../../context/MentionGroupModalContext";
 import { UserProfile } from "../../features/admin/components/modals/ModalUserProfile";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
@@ -12,6 +13,50 @@ import { UserProps } from "../../types/admin";
 import { PulseDot } from "../ui/misc/PulseDot";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
+
+// Shared visual treatment for every mention chip (user OR group). The
+// only difference between variants is the colour palette; the pill
+// shape, padding, hover transition, and typography stay identical so
+// the two kinds of mention read as siblings instead of unrelated
+// styles. To change the look of a mention, change `mentionChipSx`
+// here and both chips update together.
+type MentionPalette = { bg: string; bgHover: string; text: string };
+
+const mentionChipSx = (palette: MentionPalette) =>
+    ({
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 0.5,
+        backgroundColor: palette.bg,
+        borderRadius: "12px",
+        px: 1,
+        py: 0.5,
+        cursor: "pointer",
+        userSelect: "none",
+        fontSize: "0.875rem",
+        transition: "background-color 0.15s ease",
+        "&:hover": { backgroundColor: palette.bgHover },
+    }) as const;
+
+// User mention palettes. The "self" variant is kept distinct because
+// it's a useful UX signal — when *you* are the one being mentioned, the
+// chip pops with a different colour so the eye lands on it during a
+// scan of a long message list.
+const USER_SELF_PALETTE: MentionPalette = {
+    bg: "rgba(245, 158, 11, 0.18)",
+    bgHover: "rgba(245, 158, 11, 0.32)",
+    text: "#d97706",
+};
+const USER_OTHER_PALETTE: MentionPalette = {
+    bg: "rgba(236, 72, 153, 0.15)",
+    bgHover: "rgba(236, 72, 153, 0.28)",
+    text: "#db2777",
+};
+const GROUP_PALETTE: MentionPalette = {
+    bg: "rgba(34, 197, 94, 0.15)",
+    bgHover: "rgba(34, 197, 94, 0.28)",
+    text: "#16a34a",
+};
 
 // The Mention inline content
 export const CreateMentionSpec = (
@@ -42,24 +87,11 @@ export const CreateMentionSpec = (
 
                 const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
 
+                const palette = myself.userId === userId ? USER_SELF_PALETTE : USER_OTHER_PALETTE;
                 return (
                     <>
                         <Box
-                            sx={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: 0.5,
-                                backgroundColor:
-                                    myself.userId === userId
-                                        ? "#ddff003e"
-                                        : "rgba(255, 0, 238, 0.15)",
-                                borderRadius: "12px",
-                                px: 1,
-                                py: 0.5,
-                                cursor: "pointer",
-                                userSelect: "none",
-                                fontSize: "0.875rem",
-                            }}
+                            sx={mentionChipSx(palette)}
                             onClick={() => {
                                 setOpenUserProfile(true);
                             }}
@@ -67,9 +99,7 @@ export const CreateMentionSpec = (
                             <Typography
                                 fontWeight={"bold"}
                                 level="body-sm"
-                                sx={{
-                                    color: myself.userId === userId ? "#ff7700ff" : "#ff0077fd",
-                                }}
+                                sx={{ color: palette.text }}
                             >
                                 @{userName}
                             </Typography>
@@ -111,29 +141,34 @@ export const CreateMentionGroupSpec = () =>
         {
             render: (props) => {
                 const groupName = props.inlineContent.props.groupName;
+                const groupId = props.inlineContent.props.groupId;
                 const memberCount = props.inlineContent.props.memberCount;
+                // Click opens the single-group modal mounted at the App
+                // root via `MentionGroupModalContext`. Same UX as the
+                // user-mention chip, which opens `UserProfile`.
+                const { openGroupModal } = useMentionGroupModal();
+                const handleClick = (e: React.MouseEvent) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const parsed = Number(groupId);
+                    if (Number.isFinite(parsed) && parsed > 0) openGroupModal(parsed);
+                };
                 return (
-                    <Box
-                        sx={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 0.5,
-                            backgroundColor: "rgba(34, 197, 94, 0.15)",
-                            borderRadius: "12px",
-                            px: 1,
-                            py: 0.5,
-                            userSelect: "none",
-                            fontSize: "0.875rem",
-                        }}
-                    >
-                        <GroupRoundedIcon sx={{ fontSize: 14, color: "#16a34a", mr: 0.25 }} />
-                        <Typography fontWeight={"bold"} level="body-sm" sx={{ color: "#16a34a" }}>
+                    <Box sx={mentionChipSx(GROUP_PALETTE)} onClick={handleClick}>
+                        <GroupRoundedIcon
+                            sx={{ fontSize: 14, color: GROUP_PALETTE.text, mr: 0.25 }}
+                        />
+                        <Typography
+                            fontWeight={"bold"}
+                            level="body-sm"
+                            sx={{ color: GROUP_PALETTE.text }}
+                        >
                             @{groupName}
                         </Typography>
                         {Number(memberCount) > 0 && (
                             <Typography
                                 level="body-xs"
-                                sx={{ color: "#16a34a", opacity: 0.7, ml: 0.25 }}
+                                sx={{ color: GROUP_PALETTE.text, opacity: 0.7, ml: 0.25 }}
                             >
                                 ({memberCount})
                             </Typography>

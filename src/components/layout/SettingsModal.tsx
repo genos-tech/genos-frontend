@@ -64,9 +64,16 @@ import { MentionGroupsPanel } from "./MentionGroupsPanel";
 type Props = {
     open: boolean;
     onClose: () => void;
-    // Optional — only needed when the Mention groups tab is shown. The
-    // panel reads team members from here for its add-member picker.
+    // The following are only consumed by the Mention groups tab — the
+    // panel reads team members from `useTEM` for the add-member picker,
+    // and forwards `myself` / `setMyself` / `socket` / `useCM` /
+    // `useUISM` down to `AvatarWithStatus`.
     useTEM?: import("../../hooks/common/useTeamManagement").TeamManagementState;
+    myself?: import("../../types/admin").UserProps;
+    setMyself?: (value: import("../../types/admin").UserProps) => void;
+    socket?: import("socket.io-client").Socket | null;
+    useCM?: import("../../hooks/chats/useChatManagement").ChatManagementState;
+    useUISM?: import("../../hooks/common/useUIStateManagement").UIStateManagementState;
 };
 
 /**
@@ -752,7 +759,16 @@ const IntegrationsSection = () => {
     return <ConnectionsSection accessToken={accessToken} />;
 };
 
-export const SettingsModal = ({ open, onClose, useTEM }: Props) => {
+export const SettingsModal = ({
+    open,
+    onClose,
+    useTEM,
+    myself,
+    setMyself,
+    socket,
+    useCM,
+    useUISM,
+}: Props) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
@@ -888,7 +904,24 @@ export const SettingsModal = ({ open, onClose, useTEM }: Props) => {
                     </TabPanel>
                     <TabPanel value="mentionGroups" sx={{ px: 0, py: 2 }}>
                         <Stack spacing={2}>
-                            <MentionGroupsPanel useTEM={useTEM} />
+                            {/* All five auxiliary props are needed to
+                                render the panel's avatar rows. If any
+                                call site forgets them, fall back to a
+                                quiet placeholder rather than crash. */}
+                            {myself && setMyself && useCM && useUISM ? (
+                                <MentionGroupsPanel
+                                    useTEM={useTEM}
+                                    myself={myself}
+                                    setMyself={setMyself}
+                                    socket={socket ?? null}
+                                    useCM={useCM}
+                                    useUISM={useUISM}
+                                />
+                            ) : (
+                                <Typography level="body-sm" sx={{ opacity: 0.7 }}>
+                                    Loading…
+                                </Typography>
+                            )}
                         </Stack>
                     </TabPanel>
                     <TabPanel value="shortcuts" sx={{ px: 0, py: 2 }}>

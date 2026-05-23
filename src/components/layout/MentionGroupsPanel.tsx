@@ -1,17 +1,10 @@
 import { useMemo, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
-import PersonAddAltRoundedIcon from "@mui/icons-material/PersonAddAltRounded";
-import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import {
-    Avatar,
     Box,
     Button,
     Chip,
-    Divider,
     IconButton,
     Input,
     List,
@@ -23,45 +16,53 @@ import {
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
+import { Socket } from "socket.io-client";
 
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
+import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
+import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { MentionGroup } from "../../services/mentionGroupsApi";
 import { UserProps } from "../../types/admin";
-
-const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
+import { MentionGroupEditor } from "./MentionGroupEditor";
 
 type Props = {
     useTEM: TeamManagementState | undefined;
+    // Threaded through to `MentionGroupEditor` for `AvatarWithStatus`.
+    myself: UserProps;
+    setMyself: (value: UserProps) => void;
+    socket: Socket | null;
+    useCM: ChatManagementState;
+    useUISM: UIStateManagementState;
 };
 
 // Two-pane management UI for team-scoped @group mentions. Left: list of
-// groups + "+ New group" button. Right: members of the selected group,
-// inline add/remove via a member picker, plus delete-group action.
-// Keeps the modal's overall layout calm by reusing Joy primitives the
-// rest of SettingsModal already uses.
-export const MentionGroupsPanel = ({ useTEM }: Props) => {
+// groups + "+ New group" button. Right: the shared `MentionGroupEditor`
+// scoped to the selected group. The editor is the same component the
+// click-an-@group-chip modal opens, so behaviour stays consistent
+// across both surfaces.
+export const MentionGroupsPanel = ({
+    useTEM,
+    myself,
+    setMyself,
+    socket,
+    useCM,
+    useUISM,
+}: Props) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
 
-    const { mentionGroups, createGroup, updateGroup, deleteGroup, addMembers, removeMember } =
-        useMentionGroupsContext();
+    const { mentionGroups, createGroup } = useMentionGroupsContext();
 
     const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
     const [creating, setCreating] = useState(false);
     const [newName, setNewName] = useState("");
     const [newDescription, setNewDescription] = useState("");
-    const [editingName, setEditingName] = useState<string | null>(null);
-    const [editingDescription, setEditingDescription] = useState<string | null>(null);
-    const [memberPickerQuery, setMemberPickerQuery] = useState("");
 
     const selectedGroup: MentionGroup | undefined = useMemo(
         () => mentionGroups.find((g) => g.groupId === selectedGroupId),
         [mentionGroups, selectedGroupId]
     );
-
-    const teamMembers: UserProps[] = useTEM?.teamMembers ?? [];
-    const teamMemberProfiles = useTEM?.teamMemberProfiles ?? {};
 
     const handleCreate = async () => {
         const trimmed = newName.trim();
@@ -74,58 +75,6 @@ export const MentionGroupsPanel = ({ useTEM }: Props) => {
             setNewDescription("");
         }
     };
-
-    const handleRename = async () => {
-        if (!selectedGroup || editingName == null) return;
-        const trimmed = editingName.trim();
-        if (!trimmed || trimmed === selectedGroup.groupName) {
-            setEditingName(null);
-            return;
-        }
-        await updateGroup(selectedGroup.groupId, { groupName: trimmed });
-        setEditingName(null);
-    };
-
-    const handleDescriptionSave = async () => {
-        if (!selectedGroup || editingDescription == null) return;
-        if (editingDescription === selectedGroup.description) {
-            setEditingDescription(null);
-            return;
-        }
-        await updateGroup(selectedGroup.groupId, { description: editingDescription });
-        setEditingDescription(null);
-    };
-
-    const handleDelete = async () => {
-        if (!selectedGroup) return;
-        const ok = window.confirm(`Delete @${selectedGroup.groupName}? This cannot be undone.`);
-        if (!ok) return;
-        await deleteGroup(selectedGroup.groupId);
-        setSelectedGroupId(null);
-    };
-
-    // Members eligible to be added: team members not already in the group.
-    const candidateMembers = useMemo(() => {
-        if (!selectedGroup) return [];
-        const existing = new Set(selectedGroup.memberUserIds);
-        const q = memberPickerQuery.trim().toLowerCase();
-        return teamMembers.filter((u) => {
-            if (existing.has(u.userId)) return false;
-            if (!q) return true;
-            return (
-                (u.userName || "").toLowerCase().includes(q) ||
-                (u.userEmail || "").toLowerCase().includes(q)
-            );
-        });
-    }, [selectedGroup, teamMembers, memberPickerQuery]);
-
-    const memberRows = useMemo(() => {
-        if (!selectedGroup) return [];
-        return selectedGroup.memberUserIds.map((uid) => ({
-            userId: uid,
-            user: teamMemberProfiles[uid] ?? teamMembers.find((u) => u.userId === uid),
-        }));
-    }, [selectedGroup, teamMembers, teamMemberProfiles]);
 
     return (
         <Sheet variant="outlined" sx={{ borderRadius: "lg", p: 2 }}>
@@ -258,7 +207,8 @@ export const MentionGroupsPanel = ({ useTEM }: Props) => {
                     </List>
                 </Box>
 
-                {/* Right pane — member editor for the selected group */}
+                {/* Right pane — single-group editor shared with the
+                    click-an-@group-chip modal. */}
                 <Box sx={{ flex: 2, minWidth: 0 }}>
                     {!selectedGroup ? (
                         <Box
@@ -276,213 +226,16 @@ export const MentionGroupsPanel = ({ useTEM }: Props) => {
                             </Typography>
                         </Box>
                     ) : (
-                        <Stack spacing={1.5}>
-                            {/* Name + delete */}
-                            <Stack direction="row" alignItems="center" spacing={1}>
-                                {editingName != null ? (
-                                    <Input
-                                        autoFocus
-                                        size="sm"
-                                        value={editingName}
-                                        onChange={(e) => setEditingName(e.target.value)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Enter") void handleRename();
-                                            if (e.key === "Escape") setEditingName(null);
-                                        }}
-                                        onBlur={() => void handleRename()}
-                                        sx={{ flex: 1 }}
-                                    />
-                                ) : (
-                                    <Typography
-                                        level="title-md"
-                                        sx={{ flex: 1, cursor: "pointer" }}
-                                        onClick={() => setEditingName(selectedGroup.groupName)}
-                                    >
-                                        @{selectedGroup.groupName}
-                                    </Typography>
-                                )}
-                                <Tooltip title="Delete group" size="sm" variant="outlined">
-                                    <IconButton
-                                        size="sm"
-                                        variant="plain"
-                                        color="danger"
-                                        onClick={() => void handleDelete()}
-                                    >
-                                        <DeleteOutlineRoundedIcon />
-                                    </IconButton>
-                                </Tooltip>
-                            </Stack>
-
-                            {/* Description */}
-                            {editingDescription != null ? (
-                                <Input
-                                    autoFocus
-                                    size="sm"
-                                    placeholder="Description (optional)"
-                                    value={editingDescription}
-                                    onChange={(e) => setEditingDescription(e.target.value)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") void handleDescriptionSave();
-                                        if (e.key === "Escape") setEditingDescription(null);
-                                    }}
-                                    onBlur={() => void handleDescriptionSave()}
-                                />
-                            ) : (
-                                <Typography
-                                    level="body-sm"
-                                    sx={{
-                                        opacity: 0.75,
-                                        cursor: "pointer",
-                                        fontStyle: selectedGroup.description ? "normal" : "italic",
-                                    }}
-                                    onClick={() =>
-                                        setEditingDescription(selectedGroup.description || "")
-                                    }
-                                >
-                                    {selectedGroup.description || "Add a description…"}
-                                </Typography>
-                            )}
-
-                            <Divider />
-
-                            {/* Members */}
-                            <Stack direction="row" alignItems="center" spacing={1}>
-                                <PersonRoundedIcon sx={{ fontSize: 16, opacity: 0.7 }} />
-                                <Typography level="title-sm">
-                                    Members ({selectedGroup.memberCount})
-                                </Typography>
-                            </Stack>
-                            {memberRows.length === 0 ? (
-                                <Typography level="body-xs" sx={{ opacity: 0.7 }}>
-                                    No members yet. Add some below.
-                                </Typography>
-                            ) : (
-                                <List sx={{ "--ListItem-paddingY": "4px" }}>
-                                    {memberRows.map((row) => (
-                                        <ListItem
-                                            key={row.userId}
-                                            sx={{ display: "flex", alignItems: "center" }}
-                                        >
-                                            <Avatar
-                                                size="sm"
-                                                src={
-                                                    row.user?.avatarImgPath
-                                                        ? `${media_url}/${row.user.avatarImgPath}`
-                                                        : undefined
-                                                }
-                                                sx={{ width: 24, height: 24, mr: 1 }}
-                                            >
-                                                {(row.user?.userName?.[0] || "?").toUpperCase()}
-                                            </Avatar>
-                                            <Box sx={{ flex: 1, minWidth: 0 }}>
-                                                <Typography level="body-sm" noWrap>
-                                                    {row.user?.userName || row.userId}
-                                                </Typography>
-                                                <Typography
-                                                    level="body-xs"
-                                                    sx={{ opacity: 0.6 }}
-                                                    noWrap
-                                                >
-                                                    {row.user?.userEmail || ""}
-                                                </Typography>
-                                            </Box>
-                                            <Tooltip
-                                                title="Remove member"
-                                                size="sm"
-                                                variant="outlined"
-                                            >
-                                                <IconButton
-                                                    size="sm"
-                                                    variant="plain"
-                                                    color="neutral"
-                                                    onClick={() =>
-                                                        void removeMember(
-                                                            selectedGroup.groupId,
-                                                            row.userId
-                                                        )
-                                                    }
-                                                >
-                                                    <CloseRoundedIcon />
-                                                </IconButton>
-                                            </Tooltip>
-                                        </ListItem>
-                                    ))}
-                                </List>
-                            )}
-
-                            <Divider />
-
-                            {/* Add member picker */}
-                            <Stack direction="row" alignItems="center" spacing={1}>
-                                <PersonAddAltRoundedIcon sx={{ fontSize: 16, opacity: 0.7 }} />
-                                <Typography level="title-sm">Add members</Typography>
-                            </Stack>
-                            <Input
-                                size="sm"
-                                placeholder="Search team members…"
-                                value={memberPickerQuery}
-                                onChange={(e) => setMemberPickerQuery(e.target.value)}
-                            />
-                            <List
-                                sx={{
-                                    "--ListItem-paddingY": "4px",
-                                    maxHeight: 220,
-                                    overflowY: "auto",
-                                    border: "1px solid",
-                                    borderColor: isDark
-                                        ? "rgba(255,255,255,0.06)"
-                                        : "rgba(0,0,0,0.06)",
-                                    borderRadius: "md",
-                                }}
-                            >
-                                {candidateMembers.length === 0 && (
-                                    <ListItem>
-                                        <Typography level="body-xs" sx={{ opacity: 0.7 }}>
-                                            {memberPickerQuery
-                                                ? "No matching team members."
-                                                : "Everyone is already a member."}
-                                        </Typography>
-                                    </ListItem>
-                                )}
-                                {candidateMembers.map((u) => (
-                                    <ListItem key={u.userId} sx={{ p: 0 }}>
-                                        <ListItemButton
-                                            sx={{ px: 1.25, py: 0.5 }}
-                                            onClick={() =>
-                                                void addMembers(selectedGroup.groupId, [u.userId])
-                                            }
-                                        >
-                                            <Avatar
-                                                size="sm"
-                                                src={
-                                                    u.avatarImgPath
-                                                        ? `${media_url}/${u.avatarImgPath}`
-                                                        : undefined
-                                                }
-                                                sx={{ width: 24, height: 24, mr: 1 }}
-                                            >
-                                                {(u.userName?.[0] || "?").toUpperCase()}
-                                            </Avatar>
-                                            <Box sx={{ flex: 1, minWidth: 0 }}>
-                                                <Typography level="body-sm" noWrap>
-                                                    {u.userName}
-                                                </Typography>
-                                                <Typography
-                                                    level="body-xs"
-                                                    sx={{ opacity: 0.6 }}
-                                                    noWrap
-                                                >
-                                                    {u.userEmail}
-                                                </Typography>
-                                            </Box>
-                                            <CheckRoundedIcon
-                                                sx={{ fontSize: 16, color: "primary.500" }}
-                                            />
-                                        </ListItemButton>
-                                    </ListItem>
-                                ))}
-                            </List>
-                        </Stack>
+                        <MentionGroupEditor
+                            groupId={selectedGroup.groupId}
+                            useTEM={useTEM}
+                            myself={myself}
+                            setMyself={setMyself}
+                            socket={socket}
+                            useCM={useCM}
+                            useUISM={useUISM}
+                            onDeleted={() => setSelectedGroupId(null)}
+                        />
                     )}
                 </Box>
             </Stack>
