@@ -8,8 +8,9 @@ import { createContext, ReactNode, useCallback, useContext, useEffect, useState 
  *   button renders disabled with an explanatory tooltip.
  * - `webSearch`: sub-option of `aiAnswers`. When off, the frontend tells
  *   the agent backend to omit its web-browse tool from the tool list.
+ *   Defaults to off — web browsing adds latency and external calls, so
+ *   it's opt-in rather than on-by-default.
  *
- * Both default to `true` so existing users see no behaviour change.
  * Persistence is a single JSON blob in localStorage; context fans
  * updates out so the Settings modal and Spotlight overlay stay in sync.
  */
@@ -22,7 +23,7 @@ export interface SpotlightPreferences {
 const STORAGE_KEY = "weikiy-spotlight-preferences:v1";
 const DEFAULTS: SpotlightPreferences = {
     aiAnswers: true,
-    webSearch: true,
+    webSearch: false,
 };
 
 const readPreferences = (): SpotlightPreferences => {

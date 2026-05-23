@@ -15,7 +15,7 @@ import {
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { useTranslation } from "../../../../i18n";
 import { Milestone, Sprint } from "../types";
-import { compareMilestones } from "../utils/sortMilestones";
+import { selectVisibleMilestones, selectVisibleSprints } from "../utils/sortMilestones";
 
 type SprintOption = { kind: "sprint"; id: number | null; label: string; sprint: Sprint | null };
 type MilestoneOption = {
@@ -142,40 +142,55 @@ export const SprintMilestonePicker = ({
         [projectId, useSM.projectMilestones]
     );
 
+    // Sprint options are limited to "currently relevant" sprints (active
+    // and upcoming) so the picker doesn't accumulate finished sprints.
+    // The currently-selected sprint is re-admitted if filtering would
+    // otherwise drop it, so a task already linked to a completed sprint
+    // still shows its real selection (and can be changed) instead of
+    // silently appearing as "No sprint".
     const sprintOptions: SprintOption[] = useMemo(() => {
+        const visible = selectVisibleSprints(sprints);
+        const list =
+            sprintId != null && !visible.some((s) => s.sprintId === sprintId)
+                ? [...visible, ...sprints.filter((s) => s.sprintId === sprintId)]
+                : visible;
         return [
             NO_SPRINT,
-            ...sprints.map<SprintOption>((s) => ({
+            ...list.map<SprintOption>((s) => ({
                 kind: "sprint",
                 id: s.sprintId,
                 label: `${s.name} (${s.startDate}→${s.endDate})`,
                 sprint: s,
             })),
         ];
-    }, [sprints, NO_SPRINT]);
+    }, [sprints, sprintId, NO_SPRINT]);
 
-    // Milestone options always show every milestone in the project so a
-    // sprint change doesn't make the currently-selected milestone vanish
-    // from the dropdown. The selected milestone is the source of truth
-    // for the sprint linkage (see the milestone Autocomplete's onChange
-    // below, which auto-syncs the sprint to match the milestone).
+    // Milestone options use the same visibility selector as the sidebar
+    // (`MilestonesListItem`) — hides soft-deleted / `Deleted` and any
+    // `Closed` whose sprint has ended. The currently-selected milestone
+    // is re-admitted if filtering would drop it, so we never silently
+    // flip a Closed-in-old-sprint linkage to "No milestone".
     //
-    // Sort matches the sidebar (`MilestonesListItem`) — three levels:
-    // due-date asc (null last) → custom status order → title asc — so
-    // both surfaces show milestones in the same order. `NO_MILESTONE`
-    // is prepended after sort so the sentinel always stays on top.
+    // Sort comes from `selectVisibleMilestones` (three-level: due-date
+    // asc → custom status order → title asc). The orphan/fallback row
+    // (if any) is appended last so "this is the current value but no
+    // longer in your active set" is visually distinct.
     const milestoneOptions: MilestoneOption[] = useMemo(() => {
-        const sorted = [...milestones].sort(compareMilestones);
+        const visible = selectVisibleMilestones(milestones, sprints);
+        const list =
+            milestoneId != null && !visible.some((m) => m.milestoneId === milestoneId)
+                ? [...visible, ...milestones.filter((m) => m.milestoneId === milestoneId)]
+                : visible;
         return [
             NO_MILESTONE,
-            ...sorted.map<MilestoneOption>((m) => ({
+            ...list.map<MilestoneOption>((m) => ({
                 kind: "milestone",
                 id: m.milestoneId,
                 label: m.title,
                 milestone: m,
             })),
         ];
-    }, [milestones, NO_MILESTONE]);
+    }, [milestones, sprints, milestoneId, NO_MILESTONE]);
 
     const selectedSprint = sprintOptions.find((o) => o.id === (sprintId ?? null)) ?? NO_SPRINT;
     const selectedMilestone =

@@ -97,6 +97,17 @@ export const ENDED_SPRINT_STATUSES = new Set<Sprint["status"]>(["completed", "ar
  * Output is sorted via `compareMilestones` (3-level: due-date → status
  * → title) so callers don't need to re-sort.
  */
+/**
+ * Sibling of `selectVisibleMilestones` for sprints. Returns the sprints
+ * that count as "currently relevant" — anything not soft-deleted and
+ * not already in an ended state (`completed` / `archived`). Order is
+ * preserved from the input; callers that need a specific order should
+ * sort themselves (the picker relies on the upstream order from
+ * `useSM.projectSprints`).
+ */
+export const selectVisibleSprints = (sprints: Sprint[]): Sprint[] =>
+    sprints.filter((s) => !s.isDeleted && !ENDED_SPRINT_STATUSES.has(s.status));
+
 export const selectVisibleMilestones = (
     milestones: Milestone[],
     sprints: Sprint[]
