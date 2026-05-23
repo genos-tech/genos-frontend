@@ -767,7 +767,11 @@ export const SettingsModal = ({ open, onClose, useTEM }: Props) => {
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 size="lg"
                 sx={{
-                    width: { xs: "92vw", sm: 550, md: 700 },
+                    // Widened at `lg` so the two-pane Mention groups
+                    // panel (group list + member editor) fits without
+                    // truncation. The other tabs still look fine in
+                    // the extra space — they're single-column sheets.
+                    width: { xs: "92vw", sm: 550, md: 700, lg: 920 },
                     maxHeight: "85vh",
                     overflowY: "auto",
                     overflowX: "hidden",

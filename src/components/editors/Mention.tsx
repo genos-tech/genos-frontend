@@ -153,7 +153,13 @@ export const MentionMenuItems = (
     mentionGroups: MentionGroup[] = []
 ): DefaultReactSuggestionItem[] => {
     const groupItems: DefaultReactSuggestionItem[] = mentionGroups.map((g) => ({
-        title: `@${g.groupName}`,
+        // `title` is what BlockNote's `filterSuggestionItems` searches.
+        // The `@` trigger character is consumed before the query is
+        // passed in, so a title that *starts* with `@` produces a
+        // mismatch the user can't see (typing `d` against `@design`
+        // doesn't startsWith). Use the bare name here; the icon below
+        // still shows the `@` prefix for visual identity.
+        title: g.groupName,
         badge: `${g.memberCount} member${g.memberCount === 1 ? "" : "s"}`,
         onItemClick: () => {
             editor.insertInlineContent([
@@ -247,6 +253,9 @@ export const MentionMenuItems = (
         ),
     }));
 
-    // Groups first — they're rarer and people scan top-down.
-    return [...groupItems, ...userItems];
+    // Users first — they're the common case, and the BlockNote
+    // suggestion popup only shows a few items above the fold. Putting
+    // groups at the top pushed individual @user picks out of view and
+    // looked like users weren't surfaced at all.
+    return [...userItems, ...groupItems];
 };

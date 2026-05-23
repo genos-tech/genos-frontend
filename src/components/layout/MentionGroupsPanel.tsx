@@ -139,12 +139,15 @@ export const MentionGroupsPanel = ({ useTEM }: Props) => {
             </Typography>
 
             <Stack
-                direction={{ xs: "column", md: "row" }}
+                direction={{ xs: "column", lg: "row" }}
                 spacing={2}
                 sx={{ alignItems: "stretch" }}
             >
-                {/* Left pane — group list */}
-                <Box sx={{ flex: 1, minWidth: 0, width: { xs: "100%", md: 240 } }}>
+                {/* Left pane — group list. Side-by-side layout kicks in
+                    at `lg` (matches the SettingsModal width breakpoint);
+                    below that the two panes stack vertically so they
+                    don't truncate the modal. */}
+                <Box sx={{ flex: 1, minWidth: 0, width: { xs: "100%", lg: 260 } }}>
                     <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
                         <Typography level="title-sm" sx={{ flex: 1 }}>
                             Groups
