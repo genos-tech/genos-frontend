@@ -9,6 +9,7 @@ import { useAuth } from "../../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
+import { NoteManagementState } from "../../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../../types/admin";
 import {
@@ -18,9 +19,11 @@ import {
     ThreadMessageProps,
     ThreadProps,
 } from "../../../../../types/chat";
+import { ChatNoteProps, MyNoteProps, TaskNoteProps } from "../../../../../types/notes";
 import { ProjectProps, TaskProps } from "../../../../../types/tasks";
 import { getLocalCurrentTimestamp } from "../../../../../utils/dateUtils";
 import { toggleMessagesPane } from "../../../../../utils/sidebarUtils";
+import { loadSpecificNote } from "../../../../notes/common/services/loadSpecificNote";
 import { loadSpecificTask } from "../../../../tasks/services/loadSpecificTask";
 import { useActivityStatus } from "../../../hooks/useActivityStatus";
 import { loadSpecificThreadMessages } from "../../../services/loadSpecificThreadMessages";
@@ -54,6 +57,10 @@ type ChatListItemForActivityProps = {
     useTEM: TeamManagementState;
     useCM: ChatManagementState;
     useTM: TaskManagementState;
+    // Optional — only needed for click-through into note mentions
+    // (chat_type 6/7/8). Activities from chat / task / task-comment
+    // surfaces don't touch it.
+    useNM?: NoteManagementState;
 };
 
 export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => {
@@ -70,6 +77,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         setCurrentProject,
         useCM,
         useTM,
+        useNM,
     } = props;
 
     const { mode } = useColorScheme();
@@ -109,6 +117,18 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
     // the project chat. MDM activities (chat_type=4 without taskId) are
     // their own chats and must NOT be remapped to PM.
     const isTaskComment = activity.chatType === 4 && !!activity.taskId;
+    // Task-body mentions (chat_type=5, post-1D) — `chat_id = project_id`
+    // and `task_id` is set. Click opens the task preview, no chat hop.
+    const isTaskBody = activity.chatType === 5;
+    // Note-mention chat-types reserved by the activity-id namespace
+    // (6=Personal, 7=Task, 8=Chat). The fan-out routes by `mentionedUserIds`
+    // so this branch only ever fires for notes the user is mentioned in.
+    const NOTE_CHAT_TYPE_TO_NOTE_TYPE: Record<number, 1 | 2 | 3> = {
+        6: 1,
+        7: 2,
+        8: 3,
+    };
+    const noteTypeForActivity = NOTE_CHAT_TYPE_TO_NOTE_TYPE[activity.chatType];
 
     const defineNewChat = (messages: any, moveToSpecificIndex: string) => {
         const chatType: number = isTaskComment ? 3 : activity.chatType;
@@ -352,13 +372,94 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         }
     };
 
+    // Open a task body whose body was mentioned (chat_type=5). Mirrors
+    // the task-comment open flow but stops at the task preview; there's
+    // no comment-thread hop because the mention lives in the task body
+    // itself.
+    const handleTaskBodyActivity = async () => {
+        if (!activity.projectId || !activity.taskId) return;
+        setCurrentProject({
+            projectId: activity.projectId,
+            projectName: activity.projectName || "",
+            projectTags: [],
+        });
+        const loadedTask: TaskProps[] = await loadSpecificTask(
+            myself,
+            activity.projectId,
+            activity.taskId,
+            accessToken
+        );
+        if (loadedTask.length > 0) {
+            useTM.setCurrentPreviewTask(loadedTask[0]);
+            useTM.setCurrentPreviewTaskId(activity.taskId);
+            useTM.setIsTaskPreviewVisible(true);
+        }
+    };
+
+    // Open a note whose body mentioned the user (chat_type=6/7/8). The
+    // activity payload only carries the note_id (packed as `chat_id`),
+    // so we fetch the full note to recover the deep-link coordinates
+    // for task / chat notes. A 403 from the fetch means the user was
+    // mentioned but no longer has access — surface a console warning
+    // and bail (matching chat-mention behaviour on revoked access).
+    const handleNoteActivity = async () => {
+        if (!useNM || !noteTypeForActivity) return;
+        const noteId = activity.chatId;
+        const fetched = await loadSpecificNote(myself, noteTypeForActivity, noteId, accessToken);
+        if (!fetched) {
+            console.warn("Note mention activity: could not load note", noteId);
+            return;
+        }
+        if (noteTypeForActivity === 1) {
+            useNM.setCurrentNoteType(1);
+            useNM.setCurrentMyNote(fetched as MyNoteProps);
+            navigate(`/workspace/notes/my/${noteId}`);
+            return;
+        }
+        if (noteTypeForActivity === 2) {
+            const note = fetched as TaskNoteProps;
+            useNM.setCurrentNoteType(2);
+            useNM.setCurrentTaskNote(note);
+            if (note.projectId && note.taskId) {
+                navigate(
+                    `/workspace/notes/task/project/${note.projectId}` +
+                        `/task/${note.taskId}/note/${noteId}`
+                );
+            } else {
+                navigate("/workspace/notes");
+            }
+            return;
+        }
+        if (noteTypeForActivity === 3) {
+            const note = fetched as ChatNoteProps;
+            useNM.setCurrentNoteType(3);
+            useNM.setCurrentChatNote(note);
+            const chatTypePath = ["", "dm", "gm", "pm", "mdm"][note.chatType] ?? null;
+            if (chatTypePath && note.chatId && note.threadId !== undefined) {
+                navigate(
+                    `/workspace/notes/chat/${chatTypePath}` +
+                        `/${note.chatId}/thread/${note.threadId}/note/${noteId}`
+                );
+            } else {
+                navigate("/workspace/notes");
+            }
+        }
+    };
+
     const onClickHandler = async () => {
         // set to true to not move chat pane type
         useCM.setNotMoveChatPaneType(true);
 
         setSelectedActivityId(activity.activityId);
 
-        if (activity.isThread === false) {
+        if (noteTypeForActivity) {
+            // Note mention — chat_type 6/7/8 routes into the notes
+            // workspace, no chat navigation involved.
+            await handleNoteActivity();
+        } else if (isTaskBody) {
+            // Task-body mention — open the task preview directly.
+            await handleTaskBodyActivity();
+        } else if (activity.isThread === false) {
             if (isTaskComment) {
                 // Handling a task-comment activity (chat_type=4 + taskId)
                 await handleTaskCommentActivity();

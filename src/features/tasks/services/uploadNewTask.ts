@@ -98,19 +98,29 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
             if (!taskCreateResponse.ok) {
                 throw new Error(errMsgs.createTaskFailed);
             } else {
-                if (taskCreateData.newly_mentioned_user_ids) {
-                    const newly_mentioned_user_ids: string[] =
-                        taskCreateData.newly_mentioned_user_ids;
-                    if (socket && newly_mentioned_user_ids.length > 0) {
-                        socket.emit("task_body_mention", {
-                            task_id: taskContent.id,
-                            task_title: taskContent.title,
-                            project_id: taskContent.project.projectId,
-                            project_name: taskContent.project.projectName,
-                            ts_mentioned_at: taskCreateData.task.updatedAt,
-                            mentioned_user_ids: newly_mentioned_user_ids,
-                        });
-                    }
+                const newly_mentioned_user_ids: string[] =
+                    taskCreateData.newly_mentioned_user_ids ?? [];
+                const all_mentioned_user_ids: string[] =
+                    taskCreateData.all_mentioned_user_ids ?? newly_mentioned_user_ids;
+                const removed_user_ids: string[] = taskCreateData.removed_user_ids ?? [];
+                if (
+                    socket &&
+                    (newly_mentioned_user_ids.length > 0 || removed_user_ids.length > 0)
+                ) {
+                    socket.emit("task_body_mention", {
+                        task_id: taskContent.id,
+                        task_title: taskContent.title,
+                        project_id: taskContent.project.projectId,
+                        project_name: taskContent.project.projectName,
+                        ts_mentioned_at: taskCreateData.task.updatedAt,
+                        // Per-user real-time toast goes to `newly_*`; the
+                        // activity row stores `all_*` so prior recipients
+                        // keep their feed entry across edits. Handler
+                        // DELETEs the row when `all_*` is empty.
+                        newly_mentioned_user_ids,
+                        all_mentioned_user_ids,
+                        removed_user_ids,
+                    });
                 }
 
                 if (useCM.currentThreadChat) {

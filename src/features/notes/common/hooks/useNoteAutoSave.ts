@@ -1,4 +1,5 @@
 import { PartialBlock } from "@blocknote/core";
+import { Socket } from "socket.io-client";
 
 import { UserProps } from "../../../../types/admin";
 import { TaskNoteProps } from "../../../../types/notes";
@@ -8,6 +9,7 @@ interface UseNoteAutoSaveProps {
     currentTaskNote: TaskNoteProps | null;
     myself: UserProps;
     accessToken: string;
+    socket: Socket | null;
     onNoteUpdate?: (updatedNote: TaskNoteProps) => void;
     resyncSignal?: number | string;
 }
@@ -43,6 +45,7 @@ export const useNoteAutoSave = ({
     currentTaskNote,
     myself,
     accessToken,
+    socket,
     onNoteUpdate,
     resyncSignal,
 }: UseNoteAutoSaveProps): UseNoteAutoSaveReturn => {
@@ -50,6 +53,7 @@ export const useNoteAutoSave = ({
         currentNote: currentTaskNote,
         myself,
         accessToken,
+        socket,
         onNoteUpdate,
         resyncSignal,
     });

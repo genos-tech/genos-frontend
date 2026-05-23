@@ -160,6 +160,7 @@ export const MobileChatHome = (props: MobileChatHomeProps) => {
                         useUISM={useUISM}
                         useTM={useTM}
                         usePM={usePM}
+                        useNM={useNM}
                     />
                 </Box>
             )}

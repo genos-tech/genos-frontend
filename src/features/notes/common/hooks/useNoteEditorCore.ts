@@ -1,5 +1,6 @@
 import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
+import { Socket } from "socket.io-client";
 
 import { UserProps } from "../../../../types/admin";
 import { EditableNote, saveNote } from "../services/saveNote";
@@ -11,6 +12,9 @@ export interface UseNoteEditorCoreProps<T extends EditableNote> {
     currentNote: T | null;
     myself: UserProps;
     accessToken: string | null;
+    // Threaded into `saveNote` so the PUT response can emit the
+    // `note_mention` event when the body's mention set changes.
+    socket: Socket | null;
     onNoteUpdate?: (updatedNote: T) => void;
     // Bumped externally to force a re-sync of local `title`/`body` from
     // `currentNote` even when the note identity hasn't changed (e.g.
@@ -72,6 +76,7 @@ export function useNoteEditorCore<T extends EditableNote>({
     currentNote,
     myself,
     accessToken,
+    socket,
     onNoteUpdate,
     resyncSignal,
 }: UseNoteEditorCoreProps<T>): UseNoteEditorCoreReturn {
@@ -123,7 +128,7 @@ export function useNoteEditorCore<T extends EditableNote>({
         } as T;
 
         try {
-            await saveNote(newNote, myself, accessToken);
+            await saveNote(newNote, myself, accessToken, socket);
             setNoteBodyEdited(false);
             setNoteBodySaved(true);
             onNoteUpdate?.(newNote);
@@ -136,6 +141,7 @@ export function useNoteEditorCore<T extends EditableNote>({
         body,
         myself,
         accessToken,
+        socket,
         onNoteUpdate,
         syncedIdentityKey,
         resyncSignal,

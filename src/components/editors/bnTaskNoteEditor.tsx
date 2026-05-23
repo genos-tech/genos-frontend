@@ -512,6 +512,13 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                                 />
 
                                 {isEditable && (
+                                    // Task notes inherit access from
+                                    // project membership plus explicit
+                                    // NotePermissionMaster grants. Picker
+                                    // stays scoped to the team for now —
+                                    // same rationale as bnChatNoteEditor.
+                                    // Always-notify + 403-on-click handles
+                                    // any out-of-scope selections.
                                     <SuggestionMenuController
                                         triggerCharacter={"@"}
                                         getItems={async (query) =>
