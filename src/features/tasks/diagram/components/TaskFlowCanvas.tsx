@@ -76,6 +76,10 @@ type Props = {
      *  render its "Schedule overview" pill. */
     onOverviewChange?: (overview: ScheduleOverview) => void;
     onCloseModal: () => void;
+    /** When true, the canvas drops every Closed task (except the root,
+     *  which stays so the focal point doesn't vanish) and any edge
+     *  touching one. Layout re-runs automatically when this flips. */
+    hideClosed: boolean;
 };
 
 // Hoisted so `computeOverview` and `buildNodesAndEdges` share one
@@ -274,7 +278,8 @@ const buildNodesAndEdges = (
         onAddSubtask: (parentTaskId: number) => void | Promise<void>;
         onDelete: (taskId: number) => void | Promise<void>;
         onOpenPreview: (taskId: number) => void;
-    }
+    },
+    hideClosed: boolean
 ): { nodes: Node[]; edges: Edge[]; titleByTaskId: Map<number, string> } => {
     // Descendant counts power the milestone progress bar.
     const descendantCounts = computeDescendantCounts(graph.tasks);
@@ -328,16 +333,41 @@ const buildNodesAndEdges = (
         };
     };
 
+    // Hidden-task set for the "Hide closed tasks" toggle. The root is
+    // always kept — hiding the focal point would just empty the canvas
+    // and look broken. External (ghost) tasks aren't filtered either:
+    // they're outside-tree references; dependency edges that touch a
+    // hidden internal task get dropped further down via the rendered-
+    // id set, so disconnected ghosts simply fall out on their own.
+    const hiddenTaskIds = new Set<number>();
+    if (hideClosed) {
+        for (const t of graph.tasks) {
+            if (t.id == null) continue;
+            const taskId = Number(t.id);
+            if (taskId === rootTaskId) continue;
+            if ((t.status ?? "").toLowerCase() === "closed") {
+                hiddenTaskIds.add(taskId);
+            }
+        }
+    }
+    const visibleInternalTasks = graph.tasks.filter(
+        (t) => t.id != null && !hiddenTaskIds.has(Number(t.id))
+    );
+
     const nodes: Node[] = [
-        ...graph.tasks.map((t) => makeNode(t, false)),
+        ...visibleInternalTasks.map((t) => makeNode(t, false)),
         ...graph.externalTasks.map((t) => makeNode(t, true)),
     ];
 
     // Structure edges from parent_task_id (visible-tree only —
-    // ghosts have no structure edges into the visible set).
+    // ghosts have no structure edges into the visible set). Iterates
+    // the already-filtered list so an edge can't survive when either
+    // endpoint was dropped by `hideClosed`. Children of a hidden
+    // parent become root-level siblings in dagre — acceptable since
+    // their original parent has gone away from the user's view.
     const structureEdges: Edge[] = [];
-    const visibleIdSet = new Set(graph.tasks.map((t) => Number(t.id)));
-    for (const task of graph.tasks) {
+    const visibleIdSet = new Set(visibleInternalTasks.map((t) => Number(t.id)));
+    for (const task of visibleInternalTasks) {
         const taskId = Number(task.id);
         const parentId = task.parentTaskId == null ? null : Number(task.parentTaskId);
         if (parentId == null || !visibleIdSet.has(parentId)) continue;
@@ -411,6 +441,7 @@ const CanvasInner = ({
     useSM,
     onOverviewChange,
     onCloseModal,
+    hideClosed,
 }: Props) => {
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
@@ -669,7 +700,8 @@ const CanvasInner = ({
                     onAddSubtask: (id) => handlerBagRef.current.onAddSubtask(id),
                     onDelete: (id) => handlerBagRef.current.onDelete(id),
                     onOpenPreview: (id) => handlerBagRef.current.onOpenPreview(id),
-                }
+                },
+                hideClosed
             );
             const positioned = dagreLayout(rawNodes, rawEdges, "TB");
             setNodes(positioned);
@@ -678,8 +710,22 @@ const CanvasInner = ({
                 fitView({ padding: 0.15, duration: 300 });
             });
         },
-        [dagreLayout, fitView, rootTaskId, useSM, projectId, usePM.currentProject]
+        [dagreLayout, fitView, rootTaskId, useSM, projectId, usePM.currentProject, hideClosed]
     );
+
+    // Re-run layout when the hide-closed toggle flips so closed nodes
+    // (and their edges) disappear / reappear in place without waiting
+    // for the next graph refresh. `graphRef` holds the last-loaded
+    // graph; if it's null (initial load still in flight) the regular
+    // initial-load effect will handle layout when the fetch completes.
+    useEffect(() => {
+        if (graphRef.current) assembleAndLayout(graphRef.current);
+        // `assembleAndLayout` already includes `hideClosed` in its
+        // deps, so this effect would fire on `assembleAndLayout`
+        // identity change too. Listing `hideClosed` explicitly keeps
+        // the intent visible at the call site.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [hideClosed]);
 
     // Initial load.
     useEffect(() => {

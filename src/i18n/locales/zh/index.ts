@@ -588,6 +588,7 @@ export const zh: DeepPartial<Messages> = {
             taskButton: "任务",
             newTagMenuItem: "新建标签",
             newProjectMenuItem: "新建项目",
+            newMilestoneMenuItem: "新建里程碑",
             deleteProjectMenuItem: "删除项目",
         },
         tooltips: {

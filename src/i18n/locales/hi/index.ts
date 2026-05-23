@@ -601,6 +601,7 @@ export const hi: DeepPartial<Messages> = {
             taskButton: "टास्क",
             newTagMenuItem: "नया टैग",
             newProjectMenuItem: "नया प्रोजेक्ट",
+            newMilestoneMenuItem: "नया माइलस्टोन",
             deleteProjectMenuItem: "प्रोजेक्ट हटाएँ",
         },
         tooltips: {

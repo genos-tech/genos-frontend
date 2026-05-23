@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DeleteIcon from "@mui/icons-material/Delete";
+import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
@@ -312,6 +313,26 @@ export const TaskHeader = ({
                 {/* More Options Dropdown */}
                 {(() => {
                     const items: MoreMenuItem[] = [
+                        {
+                            // Mirrors the sidebar's "Add milestone" row
+                            // in `MilestonesListItem` — same payload
+                            // (`creationKind: "milestone"`, null parent
+                            // / root / milestone fk) and the same
+                            // teardown of the task table view.
+                            id: "newMilestone",
+                            label: t.tasks.header.newMilestoneMenuItem,
+                            icon: <FlagRoundedIcon sx={{ fontSize: 18, color: "#f97316" }} />,
+                            onClick: () => {
+                                useTM.setIsCreatingTask({
+                                    flag: true,
+                                    parentTaskId: null,
+                                    rootTaskId: null,
+                                    creationKind: "milestone",
+                                    milestoneId: null,
+                                });
+                                useTM.setIsTaskTableVisible(false);
+                            },
+                        },
                         {
                             id: "newTag",
                             label: t.tasks.header.newTagMenuItem,

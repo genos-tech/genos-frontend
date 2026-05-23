@@ -597,6 +597,7 @@ export const ja: DeepPartial<Messages> = {
             taskButton: "タスク",
             newTagMenuItem: "新規タグ",
             newProjectMenuItem: "新規プロジェクト",
+            newMilestoneMenuItem: "新規マイルストーン",
             deleteProjectMenuItem: "プロジェクトを削除",
         },
         tooltips: {

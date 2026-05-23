@@ -5,6 +5,8 @@ import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
+import VisibilityOffRoundedIcon from "@mui/icons-material/VisibilityOffRounded";
+import VisibilityRoundedIcon from "@mui/icons-material/VisibilityRounded";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import {
     Box,
@@ -78,6 +80,12 @@ export const ModalTaskDiagram = ({
     // Schedule rollup published by the canvas after each graph load.
     // Null while the first load is in flight.
     const [overview, setOverview] = useState<ScheduleOverview | null>(null);
+
+    // When on, the canvas drops every Closed task (and any edge that
+    // touches one) from the graph, then re-runs dagre so the remaining
+    // tree fills the canvas. Off by default — the diagram is usually
+    // opened to inspect the whole tree, hiding closed work is opt-in.
+    const [hideClosed, setHideClosed] = useState(false);
 
     const rawSpanLabel = (() => {
         if (!overview) return null;
@@ -415,6 +423,36 @@ export const ModalTaskDiagram = ({
                         </Stack>
                     )}
 
+                    {/* Hide / show closed tasks. Gated on having at
+                        least one closed descendant — toggling on an
+                        otherwise-clean tree would be a no-op and the
+                        button would be confusing. */}
+                    {(overview?.closed ?? 0) > 0 && (
+                        <Tooltip
+                            title={hideClosed ? "Show closed tasks" : "Hide closed tasks"}
+                            placement="bottom"
+                            variant="outlined"
+                            arrow
+                        >
+                            <IconButton
+                                variant="plain"
+                                color="neutral"
+                                size="sm"
+                                onClick={() => setHideClosed((v) => !v)}
+                                sx={{
+                                    color: hideClosed ? P.accent : P.textMuted,
+                                    "&:hover": { color: P.text },
+                                }}
+                            >
+                                {hideClosed ? (
+                                    <VisibilityOffRoundedIcon />
+                                ) : (
+                                    <VisibilityRoundedIcon />
+                                )}
+                            </IconButton>
+                        </Tooltip>
+                    )}
+
                     <Tooltip title="Close" placement="left" variant="outlined" arrow>
                         <IconButton
                             variant="plain"
@@ -440,6 +478,7 @@ export const ModalTaskDiagram = ({
                             useSM={useSM}
                             onOverviewChange={setOverview}
                             onCloseModal={onClose}
+                            hideClosed={hideClosed}
                         />
                     )}
                 </Box>

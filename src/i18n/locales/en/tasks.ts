@@ -101,6 +101,7 @@ export const tasks = {
         taskButton: "Task",
         newTagMenuItem: "New Tag",
         newProjectMenuItem: "New Project",
+        newMilestoneMenuItem: "New Milestone",
         deleteProjectMenuItem: "Delete Project",
     },
 

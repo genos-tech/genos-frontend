@@ -600,6 +600,7 @@ export const ar: DeepPartial<Messages> = {
             taskButton: "مهمة",
             newTagMenuItem: "وسم جديد",
             newProjectMenuItem: "مشروع جديد",
+            newMilestoneMenuItem: "معلم جديد",
             deleteProjectMenuItem: "حذف المشروع",
         },
         tooltips: {

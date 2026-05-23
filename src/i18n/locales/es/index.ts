@@ -599,6 +599,7 @@ export const es: DeepPartial<Messages> = {
             taskButton: "Tarea",
             newTagMenuItem: "Nueva etiqueta",
             newProjectMenuItem: "Nuevo proyecto",
+            newMilestoneMenuItem: "Nuevo hito",
             deleteProjectMenuItem: "Eliminar proyecto",
         },
         tooltips: {
