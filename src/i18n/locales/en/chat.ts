@@ -92,6 +92,10 @@ export const chat = {
         chipReaction: "Reaction",
         chipMention: "Mention",
         chipThread: "Thread",
+        chipTaskBody: "Task Body",
+        chipPersonalNote: "Personal Note",
+        chipTaskNote: "Task Note",
+        chipChatNote: "Chat Note",
     },
     headers: {
         markAllReadAria: "Mark all in this chat as read",

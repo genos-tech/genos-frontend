@@ -389,6 +389,10 @@ export const ar: DeepPartial<Messages> = {
             chipReaction: "تفاعل",
             chipMention: "إشارة",
             chipThread: "موضوع",
+            chipTaskBody: "نص المهمة",
+            chipPersonalNote: "ملاحظة شخصية",
+            chipTaskNote: "ملاحظة المهمة",
+            chipChatNote: "ملاحظة الدردشة",
         },
         headers: {
             markAllReadAria: "وضع علامة مقروء على الكل في هذه المحادثة",

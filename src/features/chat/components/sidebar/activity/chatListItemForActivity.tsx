@@ -11,6 +11,7 @@ import { TeamManagementState } from "../../../../../hooks/common/useTeamManageme
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
 import {
     ActivityMessageProps,
@@ -83,6 +84,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const { accessToken } = useAuth();
+    const { t } = useTranslation();
     const navigate = useNavigate();
 
     const { groupedReactions, updateActivityReadStatus } = useActivityStatus({
@@ -484,14 +486,21 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         }
     };
 
-    // ActivityTypeChips replaces the chat-type label with "MDM" / "Task"
-    // when activity.chatType === 4 (using `taskId` as the discriminator),
-    // so this map only needs to cover the unambiguous DM / GM / PM cases.
+    // Surface labels rendered as the right-most chip in `ActivityTypeChips`.
+    // 1-4 are the user-facing chat types. 5-8 are activity-id namespaces
+    // for the @mention surfaces that aren't chats at all (task body +
+    // three note types) — see activity_views.py docstring. `chat_type=4`
+    // is dual-purpose (task comment vs MDM) and is special-cased in
+    // ActivityTypeChips via the `taskId` discriminator.
     const chatTypeLookup: { [key: number]: string } = {
         1: "DM",
         2: "GM",
         3: "PM",
         4: "MDM",
+        5: t.chat.activity.chipTaskBody,
+        6: t.chat.activity.chipPersonalNote,
+        7: t.chat.activity.chipTaskNote,
+        8: t.chat.activity.chipChatNote,
     };
 
     return (

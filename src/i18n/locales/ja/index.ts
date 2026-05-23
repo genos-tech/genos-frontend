@@ -388,6 +388,10 @@ export const ja: DeepPartial<Messages> = {
             chipReaction: "リアクション",
             chipMention: "メンション",
             chipThread: "スレッド",
+            chipTaskBody: "タスク本文",
+            chipPersonalNote: "個人ノート",
+            chipTaskNote: "タスクノート",
+            chipChatNote: "チャットノート",
         },
         headers: {
             markAllReadAria: "このチャットをすべて既読にする",
