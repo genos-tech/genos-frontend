@@ -44,8 +44,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-import { fmt, useTranslation } from "../../i18n";
-import type { Messages } from "../../i18n";
+import { fmt, useTranslation, type Messages } from "../../i18n";
 import type { AgentUsage, PendingApprovalPayload } from "../../services/agentApi";
 import { purplePalette } from "../../theme/purplePalette";
 import {
@@ -227,7 +226,11 @@ export const SpotlightOverlay = ({
                 display: "flex",
                 alignItems: "flex-start",
                 justifyContent: "center",
-                pt: "12vh",
+                // Sit closer to the top on mobile so the overlay uses
+                // more of the (already cramped) viewport, and clears
+                // the iPhone notch / status bar.
+                pt: { xs: "calc(env(safe-area-inset-top, 0px) + 12px)", sm: "12vh" },
+                px: { xs: 1, sm: 0 },
                 background: isDark ? "rgba(0,0,0,0.45)" : "rgba(15,15,30,0.25)",
                 backdropFilter: "blur(2px)",
                 WebkitBackdropFilter: "blur(2px)",
@@ -239,8 +242,16 @@ export const SpotlightOverlay = ({
             <Sheet
                 variant="soft"
                 sx={{
-                    width: "min(700px, 92vw)",
-                    maxHeight: "70vh",
+                    // Mobile: use nearly full width so the Ask button
+                    // fits on the same row as the input + search icon.
+                    // Desktop unchanged.
+                    width: { xs: "100%", sm: "min(700px, 92vw)" },
+                    // Reserve room for the BottomTabBar so the overlay's
+                    // bottom edge doesn't slide under it on mobile.
+                    maxHeight: {
+                        xs: "calc(100dvh - 24px - var(--BottomTabBar-height, 60px) - env(safe-area-inset-top, 0px))",
+                        sm: "70vh",
+                    },
                     display: "flex",
                     flexDirection: "column",
                     borderRadius: "16px",
@@ -260,14 +271,22 @@ export const SpotlightOverlay = ({
                     sx={{
                         display: "flex",
                         alignItems: "center",
-                        gap: 1,
-                        px: 2,
-                        py: 1.5,
+                        // Tighter on mobile so SearchIcon + input + Ask
+                        // all fit on a 390px-wide viewport.
+                        gap: { xs: 0.5, sm: 1 },
+                        px: { xs: 1, sm: 2 },
+                        py: { xs: 1, sm: 1.5 },
                         borderBottom: "1px solid",
                         borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
                     }}
                 >
-                    <SearchRoundedIcon sx={{ opacity: 0.7 }} />
+                    <SearchRoundedIcon
+                        sx={{
+                            opacity: 0.7,
+                            fontSize: { xs: 18, sm: 24 },
+                            flexShrink: 0,
+                        }}
+                    />
                     <Box
                         ref={inputRef}
                         component="input"
@@ -283,11 +302,12 @@ export const SpotlightOverlay = ({
                         value={localInput}
                         sx={{
                             flex: 1,
+                            minWidth: 0,
                             border: "none",
                             outline: "none",
                             background: "transparent",
                             color: isDark ? DARK_TEXT_STRONG : "inherit",
-                            fontSize: "1.0625rem",
+                            fontSize: { xs: "0.9375rem", sm: "1.0625rem" },
                             fontFamily: "inherit",
                             "::placeholder": isDark
                                 ? { color: DARK_TEXT_SOFT, opacity: 1 }
@@ -327,11 +347,15 @@ export const SpotlightOverlay = ({
                             }
                         }}
                     />
-                    {/* Daily usage pill — hidden for unlimited users */}
+                    {/* Daily usage pill — hidden for unlimited users.
+                        Also hidden on mobile so the Ask button stays
+                        on-row; the limit still applies, just isn't
+                        chrome at 390px. */}
                     {dailyUsage && !dailyUsage.is_unlimited && (
                         <Typography
                             level="body-sm"
                             sx={{
+                                display: { xs: "none", sm: "block" },
                                 whiteSpace: "nowrap",
                                 fontVariantNumeric: "tabular-nums",
                                 opacity:
@@ -375,7 +399,7 @@ export const SpotlightOverlay = ({
                         {/* Span wrapper lets the tooltip fire over a
                             disabled button (pointer events on a disabled
                             <button> are suppressed in Chromium). */}
-                        <Box component="span" sx={{ display: "inline-flex" }}>
+                        <Box component="span" sx={{ display: "inline-flex", flexShrink: 0 }}>
                             <Button
                                 color="primary"
                                 disabled={!hasQuery || askDisabled}
@@ -383,8 +407,24 @@ export const SpotlightOverlay = ({
                                 startDecorator={<AutoAwesomeRoundedIcon sx={{ fontSize: 16 }} />}
                                 variant="solid"
                                 onClick={() => onAsk()}
+                                sx={{
+                                    // Mobile: collapse to an icon-only
+                                    // square so the row stays single-line
+                                    // at 390px. The startDecorator icon is
+                                    // visually clear ("Ask AI") on its own.
+                                    px: { xs: 1, sm: 1.5 },
+                                    minWidth: 0,
+                                    "& .MuiButton-startDecorator": {
+                                        m: { xs: 0, sm: undefined },
+                                    },
+                                }}
                             >
-                                {t.spotlight.actions.ask}
+                                <Box
+                                    component="span"
+                                    sx={{ display: { xs: "none", sm: "inline" } }}
+                                >
+                                    {t.spotlight.actions.ask}
+                                </Box>
                             </Button>
                         </Box>
                     </Tooltip>
@@ -420,9 +460,7 @@ export const SpotlightOverlay = ({
                         display: hasConversation ? "none" : undefined,
                     }}
                 >
-                    {!hasQuery && (
-                        <EmptyHint text={t.spotlight.empty.initial} isDark={isDark} />
-                    )}
+                    {!hasQuery && <EmptyHint text={t.spotlight.empty.initial} isDark={isDark} />}
 
                     {hasQuery && isLoading && !hasResults && (
                         <Box

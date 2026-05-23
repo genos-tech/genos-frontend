@@ -8,13 +8,14 @@ import { Navigate, Route, Routes, useNavigate } from "react-router-dom";
 
 import { CalendarModalProvider, useCalendarModalState } from "./context/CalendarModalContext";
 import { FeatureErrorBoundary } from "./components/FeatureErrorBoundary";
+import { BottomTabBar } from "./components/layout/BottomTabBar";
 import { ConnectionStatusSnackbar } from "./components/layout/ConnectionStatusSnackbar";
 import { HistoryShell } from "./components/layout/HistoryShell";
+import { MobileSpotlightFab } from "./components/layout/MobileSpotlightFab";
 import {
     QuickMeetClipboardHandle,
     QuickMeetClipboardHost,
 } from "./components/layout/QuickMeetClipboardHost";
-import { BottomTabBar } from "./components/layout/BottomTabBar";
 import { ServiceSwitcherOverlay } from "./components/layout/ServiceSwitcherOverlay";
 import { Sidebar } from "./components/layout/sidebar";
 import { TooSmallScreen } from "./components/layout/TooSmallScreen";
@@ -801,6 +802,11 @@ export const App = () => {
                                                                         <BottomTabBar
                                                                             useCM={useCM}
                                                                             useIM={useIM}
+                                                                        />
+                                                                        <MobileSpotlightFab
+                                                                            onOpenSpotlight={
+                                                                                spotlight.open
+                                                                            }
                                                                         />
                                                                     </Box>
                                                                 </HistoryProvider>
