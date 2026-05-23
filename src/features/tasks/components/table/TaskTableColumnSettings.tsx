@@ -5,9 +5,12 @@ import RestartAltRoundedIcon from "@mui/icons-material/RestartAltRounded";
 import {
     Box,
     Button,
+    Divider,
     IconButton,
     Modal,
     ModalDialog,
+    Option,
+    Select,
     Stack,
     Switch,
     Tooltip,
@@ -15,13 +18,104 @@ import {
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { SortTier, useTaskSortPreferences } from "../../../../hooks/common/useTaskSortPreferences";
 import { useTaskTableColumnPreferences } from "../../../../hooks/common/useTaskTableColumnPreferences";
 import { useTranslation } from "../../../../i18n";
+import { isSortDirection, isSortField, SORT_FIELD_OPTIONS } from "../../utils/sortTask";
 import { ColumnDef, defaultColumns, FIXED_LEADING_FIELDS } from "./DraggableTaskTable";
 
 type Props = {
     open: boolean;
     onClose: () => void;
+};
+
+// One row in the 2-tier sort UI. Migrated from `SettingsModal` so the
+// task-side sort config lives next to the column settings (its
+// nearest neighbour in user intent) rather than the global user
+// preferences tab. The pick-a-field + pick-a-direction shape is
+// unchanged from the prior settings panel; only the host is new.
+const SortTierRow = ({
+    label,
+    tier,
+    onChange,
+    /** Disable the entire row (used to grey out the secondary tier
+     *  when no primary is selected). */
+    disabled,
+}: {
+    label: string;
+    tier: SortTier | undefined;
+    onChange: (next: SortTier | null) => void;
+    disabled?: boolean;
+}) => {
+    const { t } = useTranslation();
+    const field = tier?.field ?? "none";
+    const direction = tier?.direction ?? "asc";
+    return (
+        <Stack alignItems="center" direction="row" spacing={1} sx={{ minWidth: 0 }}>
+            <Typography
+                level="body-sm"
+                sx={{ minWidth: 80, color: disabled ? "neutral.500" : undefined }}
+            >
+                {label}
+            </Typography>
+            <Select
+                disabled={disabled}
+                size="sm"
+                sx={{ minWidth: 140 }}
+                value={field}
+                onChange={(_e, value) => {
+                    if (value === "none") {
+                        onChange(null);
+                        return;
+                    }
+                    if (!isSortField(value)) return;
+                    onChange({ field: value, direction });
+                }}
+            >
+                <Option value="none">{t.settings.taskSort.fieldNone}</Option>
+                {SORT_FIELD_OPTIONS.map((opt) => (
+                    <Option key={opt.value} value={opt.value}>
+                        {t.tasks.table.columns[opt.labelKey]}
+                    </Option>
+                ))}
+            </Select>
+            <Select
+                disabled={disabled || tier == null}
+                size="sm"
+                sx={{ minWidth: 110 }}
+                value={direction}
+                onChange={(_e, value) => {
+                    if (!isSortDirection(value)) return;
+                    if (tier == null) return;
+                    onChange({ field: tier.field, direction: value });
+                }}
+            >
+                <Option value="asc">{t.settings.taskSort.directionAsc}</Option>
+                <Option value="desc">{t.settings.taskSort.directionDesc}</Option>
+            </Select>
+        </Stack>
+    );
+};
+
+// Helper: build a new tier array after a single row's edit. If the
+// primary is cleared, the secondary collapses up (or also clears).
+// If the secondary equals the new primary's field, drop it to avoid
+// useless duplicate sorts.
+const setTierAtIndex = (current: SortTier[], index: 0 | 1, next: SortTier | null): SortTier[] => {
+    const primary = index === 0 ? next : (current[0] ?? null);
+    let secondary = index === 1 ? next : (current[1] ?? null);
+    if (primary && secondary && primary.field === secondary.field) {
+        secondary = null;
+    }
+    if (!primary && secondary) {
+        // No primary → promote secondary to primary so the user's
+        // intent (sort by something) isn't silently lost.
+        return [secondary];
+    }
+    const result: SortTier[] = [];
+    if (primary) result.push(primary);
+    if (secondary) result.push(secondary);
+    return result;
 };
 
 /**
@@ -47,6 +141,8 @@ export const TaskTableColumnSettings = ({ open, onClose }: Props) => {
     const isDark = mode === "dark";
     const { fieldOrder, visibilityOverrides, setVisibility, setFieldOrder, reset } =
         useTaskTableColumnPreferences();
+    const { sprintBoardSortTiers, setSprintBoardSortTiers, tableSortTiers, setTableSortTiers } =
+        useTaskSortPreferences();
 
     // Toggleable columns in their current displayed order. Mirrors the
     // resolution logic in `DraggableTaskTable.visibleColumns` so users
@@ -224,6 +320,83 @@ export const TaskTableColumnSettings = ({ open, onClose }: Props) => {
                         )}
                     </Droppable>
                 </DragDropContext>
+
+                {/* ──────────────────────────────────────────────────
+                    Sort settings — migrated here from the global
+                    Settings modal because the configuration is
+                    task-view-specific (not a user-level preference).
+                    The translation keys still live under
+                    `t.settings.taskSort.*` since they're shared with
+                    the older copy site and there's no win in
+                    duplicating them. */}
+                <Divider sx={{ my: 2 }} />
+                <Box>
+                    <Typography level="title-md" sx={{ mb: 0.5 }}>
+                        {t.settings.taskSort.heading}
+                    </Typography>
+                    <Typography level="body-xs" sx={{ mb: 1.5 }}>
+                        {t.settings.taskSort.description}
+                    </Typography>
+
+                    {/* Task table — up to 2 tiers. Listed first since
+                        this modal is "the" task-table settings dialog. */}
+                    <Box sx={{ mb: 1.5 }}>
+                        <Typography level="title-sm">{t.settings.taskSort.tableLabel}</Typography>
+                        <Typography level="body-xs" sx={{ mb: 1 }}>
+                            {t.settings.taskSort.tableHelper}
+                        </Typography>
+                        <Stack spacing={1}>
+                            <SortTierRow
+                                label={t.settings.taskSort.primaryLabel}
+                                tier={tableSortTiers[0]}
+                                onChange={(next) =>
+                                    setTableSortTiers(setTierAtIndex(tableSortTiers, 0, next))
+                                }
+                            />
+                            <SortTierRow
+                                disabled={tableSortTiers.length === 0}
+                                label={t.settings.taskSort.secondaryLabel}
+                                tier={tableSortTiers[1]}
+                                onChange={(next) =>
+                                    setTableSortTiers(setTierAtIndex(tableSortTiers, 1, next))
+                                }
+                            />
+                        </Stack>
+                    </Box>
+
+                    <Divider />
+
+                    {/* Sprint board — up to 2 tiers, default = []. */}
+                    <Box sx={{ mt: 1.5 }}>
+                        <Typography level="title-sm">
+                            {t.settings.taskSort.sprintBoardLabel}
+                        </Typography>
+                        <Typography level="body-xs" sx={{ mb: 1 }}>
+                            {t.settings.taskSort.sprintBoardHelper}
+                        </Typography>
+                        <Stack spacing={1}>
+                            <SortTierRow
+                                label={t.settings.taskSort.primaryLabel}
+                                tier={sprintBoardSortTiers[0]}
+                                onChange={(next) =>
+                                    setSprintBoardSortTiers(
+                                        setTierAtIndex(sprintBoardSortTiers, 0, next)
+                                    )
+                                }
+                            />
+                            <SortTierRow
+                                disabled={sprintBoardSortTiers.length === 0}
+                                label={t.settings.taskSort.secondaryLabel}
+                                tier={sprintBoardSortTiers[1]}
+                                onChange={(next) =>
+                                    setSprintBoardSortTiers(
+                                        setTierAtIndex(sprintBoardSortTiers, 1, next)
+                                    )
+                                }
+                            />
+                        </Stack>
+                    </Box>
+                </Box>
 
                 <Stack direction="row" justifyContent="flex-end" sx={{ mt: 2 }}>
                     <Button size="sm" variant="solid" onClick={onClose}>

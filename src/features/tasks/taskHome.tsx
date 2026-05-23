@@ -5,11 +5,11 @@ import { useColorScheme } from "@mui/joy/styles";
 import { TaskHomeLayout } from "./components/layout/TaskHomeLayout";
 import { TaskHomeModals } from "./components/modals/TaskHomeModals";
 import { useTaskRouting } from "./hooks/useTaskRouting";
-import { MobileTaskHome } from "./MobileTaskHome";
 import { TaskHomeProps } from "./types/TaskHomeTypes";
 
 import { LayoutStyles } from "../../components/ui/styles/commonStyle";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
+import { MobileTaskHome } from "./MobileTaskHome";
 
 export const TaskHome = (props: TaskHomeProps) => {
     const { useTEM, socket, myself, setMyself, useUISM, useCM, useNM, usePM, useTM, useSM } =
@@ -51,7 +51,14 @@ export const TaskHome = (props: TaskHomeProps) => {
     };
 
     const handleCloseTaskHome = () => {
+        // Clear every view flag so the close button works regardless
+        // of which view is showing. Previously this only flipped
+        // `isTaskTableVisible`, which left the dashboard / sprint
+        // board open if the user was on those — making the close
+        // button look broken when clicked from the Home dashboard.
         useTM.setIsTaskTableVisible(false);
+        useTM.setIsTaskDashboardVisible(false);
+        useTM.setIsSprintBoardVisible(false);
     };
 
     const { mode } = useColorScheme();

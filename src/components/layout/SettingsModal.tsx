@@ -15,7 +15,6 @@ import PlaylistAddCheckRoundedIcon from "@mui/icons-material/PlaylistAddCheckRou
 import PrivacyTipRoundedIcon from "@mui/icons-material/PrivacyTipRounded";
 import SettingsBrightnessRoundedIcon from "@mui/icons-material/SettingsBrightnessRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
-import SortRoundedIcon from "@mui/icons-material/SortRounded";
 import ViewStreamRoundedIcon from "@mui/icons-material/ViewStreamRounded";
 import {
     Box,
@@ -46,11 +45,6 @@ import {
     listConnections,
 } from "../../features/integrations/services/connections";
 import { redirectToOAuthConnect } from "../../features/integrations/services/oauth";
-import {
-    isSortDirection,
-    isSortField,
-    SORT_FIELD_OPTIONS,
-} from "../../features/tasks/utils/sortTask";
 import { useAnalyticsPreferences } from "../../hooks/common/useAnalyticsPreferences";
 import { useAutoCloseOnPrMergePreference } from "../../hooks/common/useAutoCloseOnPrMergePreference";
 import { useAutoSyncCalendarPreference } from "../../hooks/common/useAutoSyncCalendarPreference";
@@ -60,7 +54,6 @@ import {
 } from "../../hooks/common/useBubbleStylePreference";
 import { useDoubleClickTodoPreference } from "../../hooks/common/useDoubleClickTodoPreference";
 import { useSpotlightPreferences } from "../../hooks/common/useSpotlightPreferences";
-import { SortTier, useTaskSortPreferences } from "../../hooks/common/useTaskSortPreferences";
 import { ThemePreference, useThemePreference } from "../../hooks/common/useThemePreference";
 import { fmt, Locale, useTranslation } from "../../i18n";
 import { NotificationSettingsPanel } from "../../services/notifications/NotificationSettingsPanel";
@@ -386,93 +379,6 @@ const LanguageSection = () => {
     );
 };
 
-// One row in the 2-tier sort UI. The user picks a field (or "none" to
-// drop the tier) and a direction (asc/desc). When the field is "none"
-// the direction Select is disabled — its value is irrelevant.
-const SortTierRow = ({
-    label,
-    tier,
-    onChange,
-    /** Disable the entire row (used to grey out the secondary tier
-     *  when no primary is selected). */
-    disabled,
-}: {
-    label: string;
-    tier: SortTier | undefined;
-    onChange: (next: SortTier | null) => void;
-    disabled?: boolean;
-}) => {
-    const { t } = useTranslation();
-    const field = tier?.field ?? "none";
-    const direction = tier?.direction ?? "asc";
-    return (
-        <Stack alignItems="center" direction="row" spacing={1} sx={{ minWidth: 0 }}>
-            <Typography
-                level="body-sm"
-                sx={{ minWidth: 80, color: disabled ? "neutral.500" : undefined }}
-            >
-                {label}
-            </Typography>
-            <Select
-                disabled={disabled}
-                size="sm"
-                sx={{ minWidth: 140 }}
-                value={field}
-                onChange={(_e, value) => {
-                    if (value === "none") {
-                        onChange(null);
-                        return;
-                    }
-                    if (!isSortField(value)) return;
-                    onChange({ field: value, direction });
-                }}
-            >
-                <Option value="none">{t.settings.taskSort.fieldNone}</Option>
-                {SORT_FIELD_OPTIONS.map((opt) => (
-                    <Option key={opt.value} value={opt.value}>
-                        {t.tasks.table.columns[opt.labelKey]}
-                    </Option>
-                ))}
-            </Select>
-            <Select
-                disabled={disabled || tier == null}
-                size="sm"
-                sx={{ minWidth: 110 }}
-                value={direction}
-                onChange={(_e, value) => {
-                    if (!isSortDirection(value)) return;
-                    if (tier == null) return;
-                    onChange({ field: tier.field, direction: value });
-                }}
-            >
-                <Option value="asc">{t.settings.taskSort.directionAsc}</Option>
-                <Option value="desc">{t.settings.taskSort.directionDesc}</Option>
-            </Select>
-        </Stack>
-    );
-};
-
-// Helper: build a new tier array after a single row's edit. If the
-// primary is cleared, the secondary collapses up (or also clears).
-// If the secondary equals the new primary's field, drop it to avoid
-// useless duplicate sorts.
-const setTierAtIndex = (current: SortTier[], index: 0 | 1, next: SortTier | null): SortTier[] => {
-    const primary = index === 0 ? next : (current[0] ?? null);
-    let secondary = index === 1 ? next : (current[1] ?? null);
-    if (primary && secondary && primary.field === secondary.field) {
-        secondary = null;
-    }
-    if (!primary && secondary) {
-        // No primary → promote secondary to primary so the user's
-        // intent (sort by something) isn't silently lost.
-        return [secondary];
-    }
-    const result: SortTier[] = [];
-    if (primary) result.push(primary);
-    if (secondary) result.push(secondary);
-    return result;
-};
-
 const AutoCloseOnPrMergeSection = () => {
     const { enabled, loading, setEnabled } = useAutoCloseOnPrMergePreference();
     const { t } = useTranslation();
@@ -666,75 +572,6 @@ const AutoSyncCalendarSection = () => {
                     </Stack>
                 </>
             )}
-        </Sheet>
-    );
-};
-
-const TaskSortSection = () => {
-    const { sprintBoardSortTiers, setSprintBoardSortTiers, tableSortTiers, setTableSortTiers } =
-        useTaskSortPreferences();
-    const { t } = useTranslation();
-    return (
-        <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
-            <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
-                <SortRoundedIcon />
-                <Typography level="title-md">{t.settings.taskSort.heading}</Typography>
-            </Stack>
-            <Typography level="body-xs" sx={{ mb: 1.5 }}>
-                {t.settings.taskSort.description}
-            </Typography>
-
-            {/* Sprint board — up to 2 tiers, default = [] (no sort). */}
-            <Box sx={{ mb: 1.5 }}>
-                <Typography level="title-sm">{t.settings.taskSort.sprintBoardLabel}</Typography>
-                <Typography level="body-xs" sx={{ mb: 1 }}>
-                    {t.settings.taskSort.sprintBoardHelper}
-                </Typography>
-                <Stack spacing={1}>
-                    <SortTierRow
-                        label={t.settings.taskSort.primaryLabel}
-                        tier={sprintBoardSortTiers[0]}
-                        onChange={(next) =>
-                            setSprintBoardSortTiers(setTierAtIndex(sprintBoardSortTiers, 0, next))
-                        }
-                    />
-                    <SortTierRow
-                        disabled={sprintBoardSortTiers.length === 0}
-                        label={t.settings.taskSort.secondaryLabel}
-                        tier={sprintBoardSortTiers[1]}
-                        onChange={(next) =>
-                            setSprintBoardSortTiers(setTierAtIndex(sprintBoardSortTiers, 1, next))
-                        }
-                    />
-                </Stack>
-            </Box>
-
-            <Divider />
-
-            {/* Task table — up to 2 tiers, default = [{priority, desc}]. */}
-            <Box sx={{ mt: 1.5 }}>
-                <Typography level="title-sm">{t.settings.taskSort.tableLabel}</Typography>
-                <Typography level="body-xs" sx={{ mb: 1 }}>
-                    {t.settings.taskSort.tableHelper}
-                </Typography>
-                <Stack spacing={1}>
-                    <SortTierRow
-                        label={t.settings.taskSort.primaryLabel}
-                        tier={tableSortTiers[0]}
-                        onChange={(next) =>
-                            setTableSortTiers(setTierAtIndex(tableSortTiers, 0, next))
-                        }
-                    />
-                    <SortTierRow
-                        disabled={tableSortTiers.length === 0}
-                        label={t.settings.taskSort.secondaryLabel}
-                        tier={tableSortTiers[1]}
-                        onChange={(next) =>
-                            setTableSortTiers(setTierAtIndex(tableSortTiers, 1, next))
-                        }
-                    />
-                </Stack>
-            </Box>
         </Sheet>
     );
 };
@@ -1014,7 +851,13 @@ export const SettingsModal = ({ open, onClose }: Props) => {
                     </TabPanel>
                     <TabPanel value="tasks" sx={{ px: 0, py: 2 }}>
                         <Stack spacing={2}>
-                            <TaskSortSection />
+                            {/* Sort settings now live in
+                                `TaskTableColumnSettings` (task table /
+                                board view config), since they're
+                                view-level prefs rather than user-level
+                                ones. The two integrations below stay
+                                here because they affect cross-feature
+                                behaviour. */}
                             <AutoCloseOnPrMergeSection />
                             <AutoSyncCalendarSection />
                         </Stack>
