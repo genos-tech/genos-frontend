@@ -518,6 +518,9 @@ export const CalendarModal = ({ open, onClose }: CalendarModalProps) => {
                         onSaved={() => {
                             refreshCurrent();
                         }}
+                        onDeleted={() => {
+                            refreshCurrent();
+                        }}
                         onError={setError}
                     />
                 )}

@@ -186,7 +186,7 @@ export const SprintMilestonesSection = ({
                                                 return profile ? (
                                                     <AvatarWithStatus
                                                         key={userIdKey || `idx-${idx}`}
-                                                        avatarSize={26}
+                                                        avatarSize={32}
                                                         avatarUser={profile}
                                                         isYou={String(myself.userId) === userIdKey}
                                                         myself={myself}

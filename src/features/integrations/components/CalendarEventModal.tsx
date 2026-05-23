@@ -4,6 +4,7 @@ import {
     Autocomplete,
     AutocompleteOption,
     Avatar,
+    Box,
     Button,
     Checkbox,
     FormControl,
@@ -21,7 +22,7 @@ import {
 
 import { useOptionalAvatarContext } from "../../../components/ui/avatars/AvatarContext";
 import { useTranslation } from "../../../i18n";
-import { CalendarEvent, createEvent, updateEvent } from "../services/calendar";
+import { CalendarEvent, createEvent, deleteEvent, updateEvent } from "../services/calendar";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
@@ -75,6 +76,10 @@ interface CalendarEventModalProps {
      *  event payload. Callers wire task-side persistence (e.g. saving
      *  `event.id` to `linked_calendar_event_id`) through this. */
     onSaved?: (event: CalendarEvent) => void;
+    /** Fires after a successful delete with the upstream event id.
+     *  Caller is expected to refresh its list / clear any cached
+     *  reference to the deleted event. */
+    onDeleted?: (eventId: string) => void;
     /** Optional error sink — defaults to displaying inside the modal. */
     onError?: (message: string) => void;
 }
@@ -119,11 +124,17 @@ export const CalendarEventModal = ({
     initial,
     editingEventId,
     onSaved,
+    onDeleted,
     onError,
 }: CalendarEventModalProps) => {
     const { t } = useTranslation();
     const [form, setForm] = useState<FormState>(formFromInitial(initial));
     const [submitting, setSubmitting] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+    // Two-step delete: first click arms a confirm state, second click
+    // commits. Auto-resets after a few seconds so a stray click can't
+    // dismiss the confirmation.
+    const [deleteConfirm, setDeleteConfirm] = useState(false);
     const [localError, setLocalError] = useState<string | null>(null);
 
     // Team-member directory — sourced from `AvatarContext` so the
@@ -167,8 +178,17 @@ export const CalendarEventModal = ({
             });
             setForm(seeded);
             setLocalError(null);
+            setDeleteConfirm(false);
         }
     }, [open, initial, teamOptions]);
+
+    // Auto-revert the delete confirm state after a short window so a
+    // stray "Delete" click doesn't sit primed indefinitely.
+    useEffect(() => {
+        if (!deleteConfirm) return;
+        const id = window.setTimeout(() => setDeleteConfirm(false), 4000);
+        return () => window.clearTimeout(id);
+    }, [deleteConfirm]);
 
     const reportError = (message: string) => {
         setLocalError(message);
@@ -214,6 +234,35 @@ export const CalendarEventModal = ({
         if (result && typeof result !== "string") {
             onSaved?.(result);
             onClose();
+        }
+    };
+
+    // Two-step delete. First click flips `deleteConfirm` to true so
+    // the button re-labels itself "Confirm delete?"; the second click
+    // (within the 4 s auto-revert window) actually fires the API call.
+    // Prevents a misclick from silently nuking a real calendar entry.
+    const handleDelete = async () => {
+        if (!editingEventId) return;
+        if (!deleteConfirm) {
+            setDeleteConfirm(true);
+            return;
+        }
+        setDeleting(true);
+        setLocalError(null);
+        const ok = await deleteEvent(
+            accessToken,
+            editingEventId,
+            form.calendarId ? { calendarId: form.calendarId } : {},
+            reportError
+        );
+        setDeleting(false);
+        if (ok) {
+            onDeleted?.(editingEventId);
+            onClose();
+        } else {
+            // Failed — drop the primed state so the user can retry
+            // intentionally.
+            setDeleteConfirm(false);
         }
     };
 
@@ -336,11 +385,35 @@ export const CalendarEventModal = ({
                         }
                         onChange={(e) => setForm((f) => ({ ...f, addMeet: e.target.checked }))}
                     />
-                    <Stack direction="row" justifyContent="flex-end" spacing={1}>
-                        <Button variant="plain" onClick={onClose}>
+                    <Stack
+                        direction="row"
+                        alignItems="center"
+                        spacing={1}
+                        sx={{ flexWrap: "wrap" }}
+                    >
+                        {/* Delete only on edit. Two-step (first click
+                            arms, second click commits); the label
+                            flips to "Confirm delete?" until clicked
+                            again or the 4 s timer reverts it. */}
+                        {editingEventId && (
+                            <Button
+                                variant={deleteConfirm ? "solid" : "outlined"}
+                                color="danger"
+                                disabled={deleting || submitting}
+                                onClick={handleDelete}
+                            >
+                                {deleting
+                                    ? "Deleting…"
+                                    : deleteConfirm
+                                      ? "Confirm delete?"
+                                      : "Delete"}
+                            </Button>
+                        )}
+                        <Box sx={{ flex: 1 }} />
+                        <Button variant="plain" disabled={deleting} onClick={onClose}>
                             Cancel
                         </Button>
-                        <Button disabled={submitting} onClick={submitForm}>
+                        <Button disabled={submitting || deleting} onClick={submitForm}>
                             {submitting ? "Saving…" : editingEventId ? "Save" : "Create"}
                         </Button>
                     </Stack>
