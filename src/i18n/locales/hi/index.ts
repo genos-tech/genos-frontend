@@ -623,6 +623,7 @@ export const hi: DeepPartial<Messages> = {
             tasksInThisMilestone: "इस माइलस्टोन के टास्क",
             refreshBranches: "ब्रांच रिफ्रेश करें",
             refreshPullRequests: "लिंक्ड PR रिफ्रेश करें",
+            addStartDate: "प्रारंभ तिथि जोड़ें",
         },
         buttons: {
             create: "बनाएँ",

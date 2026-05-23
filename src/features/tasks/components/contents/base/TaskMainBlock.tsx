@@ -181,6 +181,14 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
 
     const [openManageTags, setOpenManageTags] = useState(false);
     const [parentTask, setParentTask] = useState<TaskProps>();
+    // Start date is collapsed by default — the user opts in via the `+`
+    // affordance in the Due Date row. Reset when switching tasks so each
+    // task opens in its own "collapsed unless `startDate` is set" state.
+    const [explicitlyShowStartDate, setExplicitlyShowStartDate] = useState(false);
+    useEffect(() => {
+        setExplicitlyShowStartDate(false);
+    }, [taskContent.id]);
+    const showStartDate = !!taskContent.startDate || explicitlyShowStartDate;
     const [linkedBranches, setLinkedBranches] = useState<LinkedBranch[]>([]);
     useEffect(() => {
         (async () => {
@@ -747,34 +755,58 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                     </ListItem>
                 )}
 
-                {/* Start Date — always shown in preview mode, mirroring
-                    the Due Date row's behavior. The previous
-                    conditional + "+ Set start date" affordance was
-                    brittle: a stale IDB cache row (legacy task without
-                    a startDate field) could flip the conditional false
-                    immediately after the user clicked, making the row
-                    appear to "disappear" mid-edit. Always-render is
-                    simpler and bug-free; the input shows its native
-                    placeholder when unset. */}
-                {isPreviewMode && (
-                    <ListItem sx={{ display: "flex", alignItems: "center" }}>
-                        <FieldLabel isDark={isDark}>{t.tasks.fields.startDate}</FieldLabel>
-                        <TaskStartDateInput
+                {/* Due Date — the only date field shown by default.
+                    Start Date is a secondary, opt-in attribute: a small
+                    `+` button on the right reveals the start input
+                    inline to the left, separated by a `→` arrow. Once
+                    a start date is set, the row stays expanded across
+                    re-renders; the inline `Clear` button inside
+                    TaskStartDateInput resets the value. The dedicated
+                    Start Date row is gone — chronologically less
+                    important than Due Date, so it didn't deserve its
+                    own labelled slot in every task. */}
+                <ListItem sx={{ display: "flex", alignItems: "center" }}>
+                    <FieldLabel isDark={isDark}>{t.tasks.fields.dueDate}</FieldLabel>
+                    <Stack
+                        direction="row"
+                        alignItems="center"
+                        spacing={1}
+                        sx={{ flex: 1, minWidth: 0, flexWrap: "wrap" }}
+                    >
+                        {showStartDate && (
+                            <>
+                                <TaskStartDateInput
+                                    setTaskContent={setTaskContent}
+                                    setTaskUpdated={setTaskUpdated}
+                                    taskContent={taskContent}
+                                />
+                                <Typography level="body-sm" sx={{ opacity: 0.5 }}>
+                                    →
+                                </Typography>
+                            </>
+                        )}
+                        <TaskDueDateInput
                             setTaskContent={setTaskContent}
                             setTaskUpdated={setTaskUpdated}
                             taskContent={taskContent}
                         />
-                    </ListItem>
-                )}
-
-                {/* Due Date */}
-                <ListItem sx={{ display: "flex", alignItems: "center" }}>
-                    <FieldLabel isDark={isDark}>{t.tasks.fields.dueDate}</FieldLabel>
-                    <TaskDueDateInput
-                        setTaskContent={setTaskContent}
-                        setTaskUpdated={setTaskUpdated}
-                        taskContent={taskContent}
-                    />
+                        {!showStartDate && (
+                            <Tooltip
+                                size="sm"
+                                title={t.tasks.tooltips.addStartDate}
+                                variant="outlined"
+                            >
+                                <IconButton
+                                    size="sm"
+                                    variant="plain"
+                                    sx={subtleIconButtonSx(isDark)}
+                                    onClick={() => setExplicitlyShowStartDate(true)}
+                                >
+                                    <AddRoundedIcon sx={{ fontSize: 18 }} />
+                                </IconButton>
+                            </Tooltip>
+                        )}
+                    </Stack>
                 </ListItem>
 
                 {/* Links */}

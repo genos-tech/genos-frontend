@@ -619,6 +619,7 @@ export const ja: DeepPartial<Messages> = {
             tasksInThisMilestone: "このマイルストーンのタスク",
             refreshBranches: "ブランチを更新",
             refreshPullRequests: "連携PRを更新",
+            addStartDate: "開始日を追加",
         },
         buttons: {
             create: "作成",

@@ -622,6 +622,7 @@ export const ar: DeepPartial<Messages> = {
             tasksInThisMilestone: "المهام في هذا المعلم",
             refreshBranches: "تحديث الفروع",
             refreshPullRequests: "تحديث طلبات السحب المرتبطة",
+            addStartDate: "إضافة تاريخ البدء",
         },
         buttons: {
             create: "إنشاء",
