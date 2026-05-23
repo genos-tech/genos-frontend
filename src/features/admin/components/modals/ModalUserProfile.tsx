@@ -12,6 +12,7 @@ import {
     FormLabel,
     IconButton,
     Modal,
+    ModalClose,
     ModalDialog,
     Stack,
     Tooltip,
@@ -201,15 +202,36 @@ export const UserProfile = (props: UserProfileProps) => {
                         background: styles.bg,
                         border: `1px solid ${styles.border}`,
                         boxShadow: styles.shadow,
-                        borderRadius: "20px",
-                        overflow: "hidden",
+                        borderRadius: { xs: "0", md: "20px" },
+                        // Clip horizontal overflow on mobile so over-wide
+                        // children (UUID monospace strings, long status
+                        // chips) can't make the dialog scroll sideways.
+                        // Vertical scroll is delegated to the inner Box.
+                        overflowX: "hidden",
+                        overflowY: { xs: "hidden", md: "auto" },
                         transition: "all 0.3s ease",
-                        width: "min(900px, 90vw)",
-                        maxWidth: "900px",
+                        width: { xs: "100vw", md: "min(900px, 90vw)" },
+                        height: { xs: "100dvh", md: "auto" },
+                        maxWidth: { xs: "100vw", md: "900px" },
+                        maxHeight: { xs: "100dvh", md: "90vh" },
+                        m: { xs: 0, md: "auto" },
                         p: 0,
                     }}
                 >
-                    <Box sx={{ flex: 1, width: "100%", p: 2 }}>
+                    <Box
+                        sx={{
+                            flex: 1,
+                            width: "100%",
+                            maxWidth: "100%",
+                            minWidth: 0,
+                            // Vertical scroll lives here so the dialog's
+                            // outer overflow can stay clipped.
+                            overflowY: { xs: "auto", md: "visible" },
+                            overflowX: "hidden",
+                            height: { xs: "100%", md: "auto" },
+                            p: { xs: 1.5, md: 2 },
+                        }}
+                    >
                         {/* `useFixedPosition` portals the picker to document.body
                         with position:fixed + z-index 99999, side-stepping both
                         the modal's `overflow: hidden` clipping and the zero-
@@ -236,7 +258,8 @@ export const UserProfile = (props: UserProfileProps) => {
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "space-between",
-                                    px: 3,
+                                    gap: 1,
+                                    px: { xs: 2, md: 3 },
                                 }}
                             >
                                 <Typography
@@ -245,13 +268,17 @@ export const UserProfile = (props: UserProfileProps) => {
                                     sx={{
                                         mt: 1,
                                         mb: 1,
+                                        flex: 1,
+                                        minWidth: 0,
                                         background: styles.headerGradient,
                                         backgroundClip: "text",
                                         WebkitBackgroundClip: "text",
                                         WebkitTextFillColor: "transparent",
                                         fontWeight: 700,
                                         letterSpacing: "-0.02em",
+                                        fontSize: { xs: "1.4rem", md: "1.875rem" },
                                     }}
+                                    noWrap
                                 >
                                     {isYou === true
                                         ? t.admin.userProfile.myProfile
@@ -263,6 +290,17 @@ export const UserProfile = (props: UserProfileProps) => {
                                               : t.admin.userProfile.profileFallback
                                           : t.admin.userProfile.myProfile}
                                 </Typography>
+                                {/* Close button — without it mobile users
+                                    have no way to dismiss the modal,
+                                    since it's full-screen on xs and
+                                    there's no backdrop to click. */}
+                                <ModalClose
+                                    variant="plain"
+                                    sx={{
+                                        position: "static",
+                                        flexShrink: 0,
+                                    }}
+                                />
                             </Box>
                         </Box>
 
@@ -295,22 +333,24 @@ export const UserProfile = (props: UserProfileProps) => {
                             >
                                 <Stack
                                     direction={{ xs: "column", md: "row" }}
-                                    spacing={6}
-                                    alignItems={{ xs: "center", md: "flex-start" }}
+                                    spacing={{ xs: 2, md: 6 }}
+                                    alignItems={{ xs: "stretch", md: "flex-start" }}
+                                    sx={{ width: "100%", minWidth: 0 }}
                                 >
                                     <Box
                                         sx={{
                                             position: "relative",
                                             display: "flex",
                                             flexShrink: 0,
+                                            alignSelf: { xs: "center", md: "auto" },
                                         }}
                                     >
                                         <Avatar
                                             src={`${media_url}/${profileUser?.avatarImgPath}`}
                                             sx={{
-                                                width: 150,
-                                                height: 150,
-                                                fontSize: "48px",
+                                                width: { xs: 100, md: 150 },
+                                                height: { xs: 100, md: 150 },
+                                                fontSize: { xs: "36px", md: "48px" },
                                                 boxShadow: styles.avatarGlow,
                                                 border: `3px solid ${styles.border}`,
                                                 cursor: "pointer",
@@ -379,7 +419,15 @@ export const UserProfile = (props: UserProfileProps) => {
                                         )}
                                     </Box>
 
-                                    <Stack spacing={2} sx={{ flexGrow: 1, minWidth: 0 }}>
+                                    <Stack
+                                        spacing={2}
+                                        sx={{
+                                            flexGrow: 1,
+                                            minWidth: 0,
+                                            width: "100%",
+                                            maxWidth: "100%",
+                                        }}
+                                    >
                                         <UserProfileStatus
                                             isYou={isYou}
                                             myself={myself}
@@ -479,8 +527,18 @@ export const UserProfile = (props: UserProfileProps) => {
                                         </FormControl>
 
                                         {/* IDs Row */}
-                                        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                                            <FormControl sx={{ flex: 1, minWidth: 0 }}>
+                                        <Stack
+                                            direction={{ xs: "column", sm: "row" }}
+                                            spacing={2}
+                                            sx={{ width: "100%", minWidth: 0 }}
+                                        >
+                                            <FormControl
+                                                sx={{
+                                                    flex: 1,
+                                                    minWidth: 0,
+                                                    width: "100%",
+                                                }}
+                                            >
                                                 <FormLabel
                                                     sx={{
                                                         color: styles.labelColor,
@@ -503,6 +561,9 @@ export const UserProfile = (props: UserProfileProps) => {
                                                             : "rgba(124,58,237,0.05)",
                                                         border: `1px solid ${styles.border}`,
                                                         overflow: "hidden",
+                                                        width: "100%",
+                                                        maxWidth: "100%",
+                                                        minWidth: 0,
                                                     }}
                                                 >
                                                     <Typography
@@ -521,7 +582,13 @@ export const UserProfile = (props: UserProfileProps) => {
                                                     </Typography>
                                                 </Box>
                                             </FormControl>
-                                            <FormControl sx={{ flex: 1, minWidth: 0 }}>
+                                            <FormControl
+                                                sx={{
+                                                    flex: 1,
+                                                    minWidth: 0,
+                                                    width: "100%",
+                                                }}
+                                            >
                                                 <FormLabel
                                                     sx={{
                                                         color: styles.labelColor,
@@ -544,6 +611,9 @@ export const UserProfile = (props: UserProfileProps) => {
                                                             : "rgba(124,58,237,0.05)",
                                                         border: `1px solid ${styles.border}`,
                                                         overflow: "hidden",
+                                                        width: "100%",
+                                                        maxWidth: "100%",
+                                                        minWidth: 0,
                                                     }}
                                                 >
                                                     <Typography

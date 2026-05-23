@@ -7,6 +7,7 @@ import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -61,6 +62,7 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
     const { accessToken } = useAuth();
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
+    const isMobile = useIsMobile();
     const { t } = useTranslation();
 
     // =======================================================================
@@ -287,25 +289,35 @@ export const TaskSidebar = (props: TaskSidebarProps) => {
                         </ListItemButton>
                     </ListItem>
 
-                    {/* Section Header - Views */}
-                    <Box sx={{ pt: 1.5, pb: 0.5, px: 1 }}>
-                        <Typography
-                            level="body-xs"
-                            sx={{
-                                fontWeight: 600,
-                                textTransform: "uppercase",
-                                letterSpacing: "0.08em",
-                                fontSize: 10,
-                                color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
-                            }}
-                        >
-                            {t.tasks.sidebar.viewsHeader}
-                        </Typography>
-                    </Box>
-
-                    <TaskTableListItem useTM={useTM} />
-
-                    <SprintBoardListItem useTM={useTM} />
+                    {/* Section Header - Views — Table and Sprint Board
+                        aren't reachable on mobile (MobileTaskHome only
+                        renders the dashboard or MobileTaskList), so the
+                        whole Views section is dropped on xs. The flags
+                        (`isTaskTableVisible` / `isSprintBoardVisible`)
+                        still drive the desktop layout when the user
+                        resizes back to ≥md. */}
+                    {!isMobile && (
+                        <>
+                            <Box sx={{ pt: 1.5, pb: 0.5, px: 1 }}>
+                                <Typography
+                                    level="body-xs"
+                                    sx={{
+                                        fontWeight: 600,
+                                        textTransform: "uppercase",
+                                        letterSpacing: "0.08em",
+                                        fontSize: 10,
+                                        color: isDark
+                                            ? "rgba(255,255,255,0.4)"
+                                            : "rgba(0,0,0,0.4)",
+                                    }}
+                                >
+                                    {t.tasks.sidebar.viewsHeader}
+                                </Typography>
+                            </Box>
+                            <TaskTableListItem useTM={useTM} />
+                            <SprintBoardListItem useTM={useTM} />
+                        </>
+                    )}
 
                     {/* Section Header - Tasks */}
                     <Box sx={{ pt: 1.5, pb: 0.5, px: 1 }}>

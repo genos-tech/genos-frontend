@@ -93,18 +93,18 @@ export const MobileNoteHome = (props: MobileNoteHomeProps) => {
         useNM.tabsApi.activeTabId !== null || useNM.currentNoteType === 0 ? "content" : "sidebar"
     );
 
-    // Detect "user opened a note from the sidebar" by watching for
-    // activeTabId changes. Even tapping a previously-open tab counts —
-    // the user clearly wants to view that note, so we flip to content.
-    const lastActiveTabIdRef = useRef(useNM.tabsApi.activeTabId);
+    // Detect "user opened a note from the sidebar" by watching
+    // `openTick`, a counter that `useNoteTabs.openTab` bumps on every
+    // call — even when the requested tab is already active (where
+    // `activeTabId` wouldn't change and a plain state-diff effect
+    // would silently miss the repeat click). Skip the very first run
+    // so a rehydrated openTick doesn't auto-flip on mount.
+    const lastOpenTickRef = useRef(useNM.tabsApi.openTick);
     useEffect(() => {
-        if (useNM.tabsApi.activeTabId !== lastActiveTabIdRef.current) {
-            lastActiveTabIdRef.current = useNM.tabsApi.activeTabId;
-            if (useNM.tabsApi.activeTabId !== null) {
-                setMobileViewMode("content");
-            }
-        }
-    }, [useNM.tabsApi.activeTabId]);
+        if (useNM.tabsApi.openTick === lastOpenTickRef.current) return;
+        lastOpenTickRef.current = useNM.tabsApi.openTick;
+        setMobileViewMode("content");
+    }, [useNM.tabsApi.openTick]);
 
     // Same detection for "user tapped Home in the sidebar". Home isn't
     // a tab (currentNoteType=0 has no tab item) so it needs its own

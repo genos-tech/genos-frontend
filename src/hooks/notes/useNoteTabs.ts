@@ -47,6 +47,12 @@ export interface NoteTabsApi {
     tabs: NoteTab[];
     activeTab: NoteTab | null;
     activeTabId: string | null;
+    // Bumped on every `openTab` call, even when the requested tab is
+    // already the active one (where React's `setActiveTabId` would
+    // otherwise no-op and emit no signal). Mobile uses this to detect
+    // repeat clicks on the already-open note in the sidebar tree so it
+    // can switch the view back to the content pane.
+    openTick: number;
 
     openTab: (tab: NoteTab) => void;
     switchTab: (tabId: string) => void;
@@ -83,6 +89,10 @@ interface UseNoteTabsOptions {
 export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTabsApi => {
     const [tabs, setTabs] = useState<NoteTab[]>([]);
     const [activeTabId, setActiveTabId] = useState<string | null>(null);
+    // Counter bumped on every openTab call so consumers can observe
+    // "user requested a note open" even when the requested tab is
+    // already active (setActiveTabId with the same id is a no-op).
+    const [openTick, setOpenTick] = useState(0);
     const hasHydratedRef = useRef(false);
     const lastTeamIdRef = useRef<string | null>(null);
 
@@ -242,6 +252,11 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
             if (!tab.teamId || tab.teamId !== myself.teamId) {
                 return;
             }
+            // Bump on every call (even when setActiveTabId below is a
+            // no-op because the tab is already active) so consumers
+            // can detect "user requested an open" as an event, not a
+            // state diff.
+            setOpenTick((n) => n + 1);
             const current = tabsRef.current;
             const existingIdx = current.findIndex((t) => t.id === tab.id);
             if (existingIdx !== -1) {
@@ -385,6 +400,7 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
         tabs,
         activeTab,
         activeTabId,
+        openTick,
         openTab,
         switchTab,
         closeTab,

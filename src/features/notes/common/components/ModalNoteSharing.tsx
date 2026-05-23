@@ -128,12 +128,21 @@ export const ModalNoteSharing = ({
         <Modal open={open} onClose={onClose}>
             <Sheet
                 sx={{
-                    width: 520,
-                    maxWidth: "calc(100vw - 32px)",
-                    maxHeight: "calc(100vh - 64px)",
+                    width: { xs: "calc(100vw - 16px)", sm: 520 },
+                    maxWidth: { xs: "100vw", sm: "calc(100vw - 32px)" },
+                    // Mobile: clamp to viewport minus a small gutter +
+                    // BottomTabBar height so the sheet never lives under
+                    // the tab bar or off-screen.
+                    maxHeight: {
+                        xs: "calc(100dvh - 24px - var(--BottomTabBar-height, 60px) - env(safe-area-inset-bottom, 0px))",
+                        sm: "calc(100vh - 64px)",
+                    },
                     mx: "auto",
-                    my: "10vh",
-                    p: 2.5,
+                    // 10vh vertical margin works on desktop but
+                    // pushes the sheet half off-screen on a 700-tall
+                    // mobile viewport. Use a small fixed margin on xs.
+                    my: { xs: "12px", sm: "10vh" },
+                    p: { xs: 2, sm: 2.5 },
                     borderRadius: "12px",
                     overflow: "hidden",
                     display: "flex",

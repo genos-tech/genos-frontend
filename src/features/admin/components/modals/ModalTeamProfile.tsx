@@ -15,6 +15,7 @@ import {
     Input,
     ListItemButton,
     Modal,
+    ModalClose,
     ModalDialog,
     Stack,
     Tooltip,
@@ -169,12 +170,26 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                         background: styles.bg,
                         border: `1px solid ${styles.border}`,
                         boxShadow: styles.shadow,
-                        borderRadius: "20px",
-                        overflow: "hidden",
+                        borderRadius: { xs: "0", md: "20px" },
+                        overflow: "auto",
                         transition: "all 0.3s ease",
+                        // Fill the viewport on mobile so the modal feels
+                        // native; cap at 1000px on desktop to match the
+                        // original layout.
+                        width: { xs: "100vw", md: "auto" },
+                        height: { xs: "100dvh", md: "auto" },
+                        maxWidth: { xs: "100vw", md: "1000px" },
+                        maxHeight: { xs: "100dvh", md: "90vh" },
+                        m: { xs: 0, md: "auto" },
                     }}
                 >
-                    <Box sx={{ flex: 1, width: "1000px" }}>
+                    <Box
+                        sx={{
+                            flex: 1,
+                            width: { xs: "100%", md: "1000px" },
+                            maxWidth: "100%",
+                        }}
+                    >
                         <Box
                             sx={{
                                 position: "sticky",
@@ -187,7 +202,8 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "space-between",
-                                    px: 3,
+                                    gap: 1,
+                                    px: { xs: 2, md: 3 },
                                 }}
                             >
                                 <Typography
@@ -196,18 +212,33 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                     sx={{
                                         mt: 1,
                                         mb: 1,
+                                        flex: 1,
+                                        minWidth: 0,
                                         background: styles.headerGradient,
                                         backgroundClip: "text",
                                         WebkitBackgroundClip: "text",
                                         WebkitTextFillColor: "transparent",
                                         fontWeight: 700,
                                         letterSpacing: "-0.02em",
+                                        fontSize: { xs: "1.4rem", md: "1.875rem" },
                                     }}
+                                    noWrap
                                 >
                                     {fmt(t.admin.teamProfile.title, {
                                         teamName: myself.teamName,
                                     })}
                                 </Typography>
+                                {/* Close button — without it mobile users
+                                    have no way to dismiss the modal,
+                                    since it's full-screen on xs and
+                                    there's no backdrop to click. */}
+                                <ModalClose
+                                    variant="plain"
+                                    sx={{
+                                        position: "static",
+                                        flexShrink: 0,
+                                    }}
+                                />
                             </Box>
                         </Box>
 
@@ -237,15 +268,23 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                 }}
                             >
                                 <Stack
-                                    direction="row"
-                                    sx={{ display: { xs: "none", md: "flex" }, my: 1 }}
+                                    direction={{ xs: "column", md: "row" }}
+                                    alignItems={{ xs: "stretch", md: "flex-start" }}
+                                    sx={{
+                                        display: "flex",
+                                        my: 1,
+                                        width: "100%",
+                                        minWidth: 0,
+                                    }}
                                 >
                                     <Box
                                         sx={{
-                                            pl: "20px",
-                                            pr: "40px",
+                                            pl: { xs: 0, md: "20px" },
+                                            pr: { xs: 0, md: "40px" },
+                                            mb: { xs: 2, md: 0 },
                                             position: "relative",
                                             display: "inline-block",
+                                            alignSelf: { xs: "center", md: "auto" },
                                         }}
                                     >
                                         <Avatar
@@ -321,7 +360,15 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                         )}
                                     </Box>
 
-                                    <Stack spacing={2} sx={{ flexGrow: 1 }}>
+                                    <Stack
+                                        spacing={2}
+                                        sx={{
+                                            flexGrow: 1,
+                                            minWidth: 0,
+                                            width: "100%",
+                                            maxWidth: "100%",
+                                        }}
+                                    >
                                         <Stack direction="column" spacing={1.5}>
                                             <Stack direction="row" spacing={4}>
                                                 <FormControl sx={{ flex: 1 }}>
@@ -494,9 +541,13 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                             {teamProfile.teamMembers.length > 0 && (
                                                 <FormControl>
                                                     <Stack
-                                                        direction="row"
-                                                        alignItems="center"
+                                                        direction={{ xs: "column", sm: "row" }}
+                                                        alignItems={{
+                                                            xs: "stretch",
+                                                            sm: "center",
+                                                        }}
                                                         justifyContent="space-between"
+                                                        spacing={{ xs: 1, sm: 0 }}
                                                         sx={{ mb: 1 }}
                                                     >
                                                         <FormLabel
@@ -558,7 +609,8 @@ export const ModalTeamProfile = (props: ModalTeamProfileProps) => {
                                                                 )
                                                             }
                                                             sx={{
-                                                                width: "220px",
+                                                                width: { xs: "100%", sm: "220px" },
+                                                                maxWidth: "100%",
                                                                 "--Input-focusedThickness": "1px",
                                                                 "--Input-radius": "8px",
                                                                 background: isDark

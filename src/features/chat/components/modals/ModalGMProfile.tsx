@@ -15,6 +15,7 @@ import {
     Input,
     ListItemButton,
     Modal,
+    ModalClose,
     ModalDialog,
     Stack,
     Tooltip,
@@ -242,7 +243,8 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                     display: "flex",
                                     alignItems: "center",
                                     justifyContent: "space-between",
-                                    px: 3,
+                                    gap: 1,
+                                    px: { xs: 2, md: 3 },
                                 }}
                             >
                                 <Typography
@@ -251,16 +253,31 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                     sx={{
                                         mt: 1,
                                         mb: 1,
+                                        flex: 1,
+                                        minWidth: 0,
                                         background: styles.headerGradient,
                                         backgroundClip: "text",
                                         WebkitBackgroundClip: "text",
                                         WebkitTextFillColor: "transparent",
                                         fontWeight: 700,
                                         letterSpacing: "-0.02em",
+                                        fontSize: { xs: "1.4rem", md: "1.875rem" },
                                     }}
+                                    noWrap
                                 >
                                     Group Message Profile - {gmChat.chatName}
                                 </Typography>
+                                {/* Close button — without it mobile users
+                                    have no way to dismiss the modal,
+                                    since it's full-screen on xs and
+                                    there's no backdrop to click. */}
+                                <ModalClose
+                                    variant="plain"
+                                    sx={{
+                                        position: "static",
+                                        flexShrink: 0,
+                                    }}
+                                />
                             </Box>
                         </Box>
 
@@ -341,7 +358,9 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                             <Tooltip
                                                 size="sm"
                                                 sx={{ zIndex: 9000 }}
-                                                title={t.chat.modals.gmProfile.editProfileImageTooltip}
+                                                title={
+                                                    t.chat.modals.gmProfile.editProfileImageTooltip
+                                                }
                                                 variant="outlined"
                                             >
                                                 <IconButton
@@ -485,13 +504,21 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                             mb: 0,
                                                         }}
                                                     >
-                                                        {fmt(t.chat.modals.gmProfile.membersCount, {
-                                                            filtered: filteredMembers.length,
-                                                            total: gmProfile?.gmMembers?.length || 0,
-                                                        })}
+                                                        {fmt(
+                                                            t.chat.modals.gmProfile.membersCount,
+                                                            {
+                                                                filtered: filteredMembers.length,
+                                                                total:
+                                                                    gmProfile?.gmMembers?.length ||
+                                                                    0,
+                                                            }
+                                                        )}
                                                     </FormLabel>
                                                     <Input
-                                                        placeholder={t.chat.modals.gmProfile.searchMembersPlaceholder}
+                                                        placeholder={
+                                                            t.chat.modals.gmProfile
+                                                                .searchMembersPlaceholder
+                                                        }
                                                         value={memberSearchQuery}
                                                         onChange={(e) =>
                                                             setMemberSearchQuery(e.target.value)
@@ -598,7 +625,11 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                             }}
                                                         >
                                                             <Typography level="body-sm">
-                                                                {fmt(t.chat.modals.gmProfile.noMembersFound, { query: memberSearchQuery })}
+                                                                {fmt(
+                                                                    t.chat.modals.gmProfile
+                                                                        .noMembersFound,
+                                                                    { query: memberSearchQuery }
+                                                                )}
                                                             </Typography>
                                                         </Box>
                                                     )}
@@ -653,7 +684,9 @@ export const ModalGMProfile = (props: ModalGMProfileProps) => {
                                                                       : "#9333ea",
                                                             }}
                                                         >
-                                                            {gmProfile?.isPrivate ? t.chat.modals.gmProfile.yes : t.chat.modals.gmProfile.no}
+                                                            {gmProfile?.isPrivate
+                                                                ? t.chat.modals.gmProfile.yes
+                                                                : t.chat.modals.gmProfile.no}
                                                         </Typography>
                                                     </Box>
                                                 </FormControl>

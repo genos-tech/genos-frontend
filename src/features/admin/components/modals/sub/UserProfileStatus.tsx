@@ -137,14 +137,34 @@ export const UserProfileStatus = ({
     } as const;
 
     return (
-        <Stack direction="column" spacing={1}>
+        <Stack direction="column" spacing={1} sx={{ width: "100%", minWidth: 0 }}>
             <Typography
                 component="div"
-                fontSize={28}
+                fontSize={{ xs: 22, md: 28 }}
                 fontWeight="bold"
-                noWrap
+                // Allow the username + chips row to wrap on mobile so
+                // the "Update Status" chip doesn't get clipped at the
+                // right edge of the modal. Desktop stays single-line.
+                sx={{
+                    display: "flex",
+                    flexWrap: { xs: "wrap", md: "nowrap" },
+                    alignItems: "center",
+                    gap: 1,
+                    minWidth: 0,
+                    "& > :first-of-type": {
+                        whiteSpace: { xs: "normal", md: "nowrap" },
+                        overflow: { xs: "visible", md: "hidden" },
+                        textOverflow: { xs: "clip", md: "ellipsis" },
+                        wordBreak: "break-word",
+                        minWidth: 0,
+                    },
+                }}
                 endDecorator={
-                    <Stack direction="row" spacing={0.5}>
+                    <Stack
+                        direction="row"
+                        spacing={0.5}
+                        sx={{ flexWrap: "wrap", gap: 0.5, minWidth: 0 }}
+                    >
                         {/* Presence chip — dropdown for self, static for others */}
                         <Dropdown>
                             <MenuButton
