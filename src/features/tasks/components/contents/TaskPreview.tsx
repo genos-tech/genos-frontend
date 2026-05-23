@@ -64,6 +64,7 @@ import {
 } from "../../services/updateTaskAutoCompleteOptions";
 import { uploadTaskAttachments } from "../../services/uploadTaskAttachments";
 import { Milestone } from "../../sprint-milestone/types";
+import { MILESTONE_STATUS_CHIP_COLORS } from "../../sprint-milestone/utils/sortMilestones";
 import { getTaskKind } from "../../utils/taskKind";
 import { effortLevels, priorities } from "../../utils/taskMeta";
 import { TaskBodyBlock } from "./base/TaskBodyBlock";
@@ -1037,6 +1038,26 @@ const MilestonePreviewInner = ({
         );
     }, [usePM.currentProject?.projectId, useSM.projectMilestones, milestoneId]);
 
+    // Per-status task counts for this milestone, computed from
+    // `useTM.allTasks` (the Milestone payload only carries `tasksTotal`
+    // / `tasksClosed`, not the per-status breakdown). Statuses outside
+    // the four headline ones are silently dropped — the strip is a
+    // quick at-a-glance breakdown, not a reconciliation against
+    // `total`. Excludes the milestone's own backing task row.
+    const milestoneTaskCounts = useMemo(() => {
+        if (!milestone) return null;
+        const counts = { Open: 0, WIP: 0, Pending: 0, Closed: 0 };
+        let total = 0;
+        for (const task of useTM.allTasks) {
+            if (task.milestoneId !== milestone.milestoneId) continue;
+            if (task.isMilestone) continue;
+            total += 1;
+            const s = task.status;
+            if (s && s in counts) counts[s as keyof typeof counts] += 1;
+        }
+        return { counts, total };
+    }, [milestone, useTM.allTasks]);
+
     // Pull the latest copy from the server when this milestone is
     // first opened so child-task aggregates and assignees are fresh.
     useEffect(() => {
@@ -1912,6 +1933,74 @@ const MilestonePreviewInner = ({
                             </IconButton>
                         </Tooltip>
                     </Stack>
+
+                    {/* Per-status task progress for this milestone.
+                        Hidden when the milestone has no child tasks so
+                        empty milestones don't show a row of zeros.
+                        Colors mirror the milestone status palette used
+                        on the sidebar / picker (Open=blue, WIP=orange,
+                        Pending=purple, Closed=green) so the chips read
+                        consistently across the app. */}
+                    {milestoneTaskCounts && milestoneTaskCounts.total > 0 && (
+                        <Stack
+                            direction="row"
+                            spacing={0.75}
+                            sx={{
+                                flexWrap: "wrap",
+                                alignItems: "center",
+                                rowGap: 0.75,
+                                mb: 1.5,
+                            }}
+                        >
+                            <Typography
+                                level="body-xs"
+                                sx={{
+                                    fontWeight: 700,
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.05em",
+                                    color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.5)",
+                                    mr: 0.25,
+                                }}
+                            >
+                                Task progress
+                            </Typography>
+                            {(["Open", "WIP", "Pending", "Closed"] as const).map((s) => {
+                                const tone = MILESTONE_STATUS_CHIP_COLORS[s];
+                                return (
+                                    <Chip
+                                        key={s}
+                                        size="sm"
+                                        variant="soft"
+                                        sx={{
+                                            backgroundColor: alpha(
+                                                tone.color,
+                                                isDark ? 0.28 : 0.14
+                                            ),
+                                            color: isDark ? "rgba(255,255,255,0.92)" : tone.color,
+                                            border: "1px solid",
+                                            borderColor: alpha(tone.color, isDark ? 0.4 : 0.3),
+                                            fontWeight: 600,
+                                            fontSize: "0.72rem",
+                                            borderRadius: "6px",
+                                            px: 1,
+                                        }}
+                                    >
+                                        {s}: {milestoneTaskCounts.counts[s]}
+                                    </Chip>
+                                );
+                            })}
+                            <Typography
+                                level="body-xs"
+                                sx={{
+                                    opacity: 0.6,
+                                    color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.55)",
+                                    ml: 0.5,
+                                }}
+                            >
+                                · {milestoneTaskCounts.total} total
+                            </Typography>
+                        </Stack>
+                    )}
 
                     <Input
                         size="lg"
