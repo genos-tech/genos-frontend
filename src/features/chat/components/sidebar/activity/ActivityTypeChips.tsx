@@ -20,7 +20,25 @@ const CHIP_COLORS = {
     task: { dark: "#c084fc", light: "#a855f7" },
     chatType: { dark: "#94a3b8", light: "#64748b" },
     thread: { dark: "#22d3ee", light: "#06b6d4" },
+    // Surface-specific colors for the @mention surfaces that aren't
+    // chats — keeps task-body and the three note types visually
+    // distinct from generic "chat type" tags so the user can scan the
+    // feed and tell where each mention came from at a glance.
+    taskBody: { dark: "#fb923c", light: "#ea580c" },
+    personalNote: { dark: "#a78bfa", light: "#7c3aed" },
+    taskNote: { dark: "#34d399", light: "#10b981" },
+    chatNote: { dark: "#38bdf8", light: "#0284c7" },
 } as const;
+
+// Map chat_type → which palette to use for the surface chip. 1-4 use
+// the generic neutral palette; 5-8 (task body + three note types) get
+// the per-surface tints declared above.
+const SURFACE_CHIP_COLOR: Record<number, (typeof CHIP_COLORS)[keyof typeof CHIP_COLORS]> = {
+    5: CHIP_COLORS.taskBody,
+    6: CHIP_COLORS.personalNote,
+    7: CHIP_COLORS.taskNote,
+    8: CHIP_COLORS.chatNote,
+};
 
 interface ModernChipProps {
     label: string;
@@ -131,17 +149,31 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
     // or get labeled "Task".
     const isTaskComment = activity.chatType === 4 && !!activity.taskId;
     const isMDM = activity.chatType === 4 && !activity.taskId;
+    const isTaskBody = activity.chatType === 5;
+    const isTaskNote = activity.chatType === 7;
+    const isNote = activity.chatType >= 6 && activity.chatType <= 8;
 
     const chatTypeLabel = isMDM
         ? "MDM"
         : isTaskComment
           ? t.chat.activity.chipTaskComment
           : chatTypeLookup[activity.chatType];
+    // Tinted surface palette for task-body + note types; everything
+    // else keeps the existing neutral "chatType" grey.
+    const surfaceChipColor = SURFACE_CHIP_COLOR[activity.chatType] ?? CHIP_COLORS.chatType;
+    // Filled variant for the new surfaces so the colored tint actually
+    // shows; soft is the neutral default for plain chat types.
+    const surfaceChipVariant: "soft" | "filled" = SURFACE_CHIP_COLOR[activity.chatType]
+        ? "filled"
+        : "soft";
 
-    // The "project + #taskId" pair only makes sense for PM messages and for
-    // task comments. For MDM we let the chat-name show up in the header
-    // (ActivityHeader) and skip the project chip entirely.
-    const showProjectAndTaskChips = activity.chatType === 3 || isTaskComment;
+    // PM messages and task comments get the existing "project + #taskId"
+    // pair. Task body (chat_type=5) carries the same shape — `chatName`
+    // is the project name and `taskId` is set. Task note (chat_type=7)
+    // gets the task chip only when the backend populated `taskId`
+    // (project/task FK columns on `ActivityFact`).
+    const showProjectAndTaskChips =
+        activity.chatType === 3 || isTaskComment || isTaskBody || isTaskNote;
 
     return (
         <Stack
@@ -154,12 +186,19 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
         >
             {showProjectAndTaskChips && (
                 <>
-                    <ModernChip
-                        label={activity.chatName}
-                        colorScheme={CHIP_COLORS.project}
-                        isDark={isDark}
-                        variant="filled"
-                    />
+                    {/* Project chip only when we have a non-empty name.
+                        Task note activities currently omit `chatName`
+                        (set to the note title, not the project name) so
+                        this gracefully falls back to just the task ID
+                        chip. */}
+                    {!!activity.chatName && !isTaskNote && (
+                        <ModernChip
+                            label={activity.chatName}
+                            colorScheme={CHIP_COLORS.project}
+                            isDark={isDark}
+                            variant="filled"
+                        />
+                    )}
                     {!!activity.taskId && (
                         <ModernChip
                             label={formatTaskDisplayId(activity)}
@@ -173,9 +212,11 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
             )}
 
             {/* "Reply" only applies to inline messages, not task comments
-                (which already self-label as "Task") and not MDM messages
-                (which already self-label as "MDM"). */}
-            {activity.activityType === 1 && activity.chatType !== 4 && (
+                (which already self-label as "Task"), not MDM messages
+                (which already self-label as "MDM"), and not the
+                task-body / note surfaces (chat_type 5-8) which have
+                their own surface chip and no notion of "replying". */}
+            {activity.activityType === 1 && activity.chatType !== 4 && !isTaskBody && !isNote && (
                 <ModernChip
                     label={t.chat.activity.chipReply}
                     colorScheme={CHIP_COLORS.reply}
@@ -204,9 +245,9 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
 
             <ModernChip
                 label={chatTypeLabel}
-                colorScheme={CHIP_COLORS.chatType}
+                colorScheme={surfaceChipColor}
                 isDark={isDark}
-                variant="soft"
+                variant={surfaceChipVariant}
             />
 
             {activity.isThread === true && (

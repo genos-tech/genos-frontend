@@ -1,8 +1,11 @@
 import React from "react";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import DescriptionRoundedIcon from "@mui/icons-material/DescriptionRounded";
 import GroupsIcon from "@mui/icons-material/Groups";
+import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
+import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
 import { Avatar } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
@@ -156,6 +159,42 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
                 </Avatar>
             );
         }
+    }
+
+    // Non-chat mention surfaces — each gets its own tinted icon avatar so
+    // the user can tell at a glance which surface produced the notification.
+    // Colors mirror SURFACE_CHIP_COLOR in ActivityTypeChips.
+    if (activity.chatType === 5) {
+        // Task body mention
+        return (
+            <Avatar size="sm" sx={{ background: "rgba(234, 88, 12, 0.15)", color: "#ea580c" }}>
+                <AssignmentRoundedIcon />
+            </Avatar>
+        );
+    }
+    if (activity.chatType === 6) {
+        // Personal note mention (shared)
+        return (
+            <Avatar size="sm" sx={{ background: "rgba(124, 58, 237, 0.15)", color: "#7c3aed" }}>
+                <StickyNote2RoundedIcon />
+            </Avatar>
+        );
+    }
+    if (activity.chatType === 7) {
+        // Task note mention
+        return (
+            <Avatar size="sm" sx={{ background: "rgba(16, 185, 129, 0.15)", color: "#10b981" }}>
+                <NoteAltRoundedIcon />
+            </Avatar>
+        );
+    }
+    if (activity.chatType === 8) {
+        // Chat note mention
+        return (
+            <Avatar size="sm" sx={{ background: "rgba(2, 132, 199, 0.15)", color: "#0284c7" }}>
+                <DescriptionRoundedIcon />
+            </Avatar>
+        );
     }
 
     return null;

@@ -523,6 +523,16 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
                                 />
 
                                 {isEditable && (
+                                    // Chat notes inherit access from the
+                                    // underlying chat (DM partner / GM /
+                                    // project / MDM members) plus explicit
+                                    // NotePermissionMaster grants. The
+                                    // picker stays scoped to the whole
+                                    // team for now — most teams are small
+                                    // enough that non-members in the list
+                                    // are rare, and the backend's
+                                    // always-notify rule + 403-on-click
+                                    // path covers the rest.
                                     <SuggestionMenuController
                                         triggerCharacter={"@"}
                                         getItems={async (query) =>

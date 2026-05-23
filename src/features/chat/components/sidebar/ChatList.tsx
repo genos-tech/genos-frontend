@@ -11,9 +11,9 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
-import { useTranslation } from "../../../../i18n";
-import type { Messages } from "../../../../i18n";
+import { useTranslation, type Messages } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { ActivityMessageProps, AllChatProps, FlaggedMessageProps } from "../../../../types/chat";
 import { isMac } from "../../../../utils/platform";
@@ -120,6 +120,10 @@ type ChatListProps = {
     useTEM: TeamManagementState;
     useTM: TaskManagementState;
     usePM: ProjectManagementState;
+    // Optional — only needed when rendering activity-feed items so the
+    // note-mention click handler can dispatch via `useNM`. Chat / task
+    // lists don't pass it.
+    useNM?: NoteManagementState;
     chatRouting: ReturnType<typeof useChatRouting>;
 };
 
@@ -355,6 +359,7 @@ const ActivityListRenderer = ({
     useTEM,
     useTM,
     usePM,
+    useNM,
     isDark,
 }: {
     tmpActivityMessages: ActivityMessageProps[];
@@ -369,6 +374,7 @@ const ActivityListRenderer = ({
     useCM: ChatManagementState;
     useTM: TaskManagementState;
     usePM: ProjectManagementState;
+    useNM?: NoteManagementState;
     isDark: boolean;
 }) => (
     <Virtuoso
@@ -408,6 +414,7 @@ const ActivityListRenderer = ({
                             useTEM={useTEM}
                             useUISM={useUISM}
                             useTM={useTM}
+                            useNM={useNM}
                         />
                     </Stack>
                 </Box>
@@ -502,6 +509,7 @@ export const ChatList = (props: ChatListProps) => {
         useCM,
         useTM,
         usePM,
+        useNM,
         chatRouting,
     } = props;
 
@@ -796,6 +804,7 @@ export const ChatList = (props: ChatListProps) => {
                     useUISM={useUISM}
                     virtuosoRef={virtuosoActivityRef}
                     useTM={useTM}
+                    useNM={useNM}
                 />
             );
         }

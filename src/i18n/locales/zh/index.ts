@@ -379,6 +379,10 @@ export const zh: DeepPartial<Messages> = {
             chipReaction: "表情回应",
             chipMention: "提及",
             chipThread: "话题",
+            chipTaskBody: "任务正文",
+            chipPersonalNote: "个人笔记",
+            chipTaskNote: "任务笔记",
+            chipChatNote: "聊天笔记",
         },
         headers: {
             markAllReadAria: "将此聊天全部标为已读",

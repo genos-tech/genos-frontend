@@ -17,6 +17,7 @@ export const useNoteEditor = ({
     currentMyNote,
     myself,
     accessToken,
+    socket,
     onNoteUpdate,
     resyncSignal,
 }: NoteEditorProps & { resyncSignal?: number | string }): UseNoteEditorReturn => {
@@ -24,6 +25,7 @@ export const useNoteEditor = ({
         currentNote: currentMyNote,
         myself,
         accessToken,
+        socket,
         onNoteUpdate,
         resyncSignal,
     });

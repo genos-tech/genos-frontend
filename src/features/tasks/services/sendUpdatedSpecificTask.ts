@@ -79,16 +79,29 @@ export const sendUpdatedSpecificTask = async (
                 await cacheFullTask(updatedTask);
             }
 
-            if (res && res.data.newly_mentioned_user_ids) {
-                const newly_mentioned_user_ids: string[] = res.data.newly_mentioned_user_ids;
-                if (socket && newly_mentioned_user_ids.length > 0) {
+            if (res) {
+                const newly_mentioned_user_ids: string[] = res.data.newly_mentioned_user_ids ?? [];
+                const all_mentioned_user_ids: string[] =
+                    res.data.all_mentioned_user_ids ?? newly_mentioned_user_ids;
+                const removed_user_ids: string[] = res.data.removed_user_ids ?? [];
+                if (
+                    socket &&
+                    (newly_mentioned_user_ids.length > 0 || removed_user_ids.length > 0)
+                ) {
                     socket.emit("task_body_mention", {
                         task_id: updatedTask.id,
                         task_title: updatedTask.title,
                         project_id: updatedTask.project.projectId,
                         project_name: updatedTask.project.projectName,
                         ts_mentioned_at: res.data.task.ts_updated_at,
-                        mentioned_user_ids: newly_mentioned_user_ids,
+                        // `newly_*` drives the real-time per-user toast,
+                        // `all_*` is written to the ActivityFact row so
+                        // prior recipients keep their feed entry, and
+                        // `removed_*` triggers a DELETE when the body
+                        // has zero mentions left.
+                        newly_mentioned_user_ids,
+                        all_mentioned_user_ids,
+                        removed_user_ids,
                     });
                 }
             }

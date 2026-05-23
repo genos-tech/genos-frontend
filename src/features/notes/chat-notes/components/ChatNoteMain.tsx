@@ -78,6 +78,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
         currentChatNote: activeChatNote,
         myself,
         accessToken,
+        socket,
         resyncSignal: useNM.noteResyncNonce,
         onNoteUpdate: (updatedNote: ChatNoteProps) => {
             // Cache write-through so the per-tab data hook sees the

@@ -50,6 +50,7 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
         currentMyNote: useNM.currentMyNote,
         myself,
         accessToken,
+        socket,
         resyncSignal: useNM.noteResyncNonce,
         onNoteUpdate: (updatedNote: MyNoteProps) => {
             // Push the latest title into the new tabs API so the strip

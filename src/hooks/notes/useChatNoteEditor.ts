@@ -1,4 +1,5 @@
 import { PartialBlock } from "@blocknote/core";
+import { Socket } from "socket.io-client";
 
 import { useNoteEditorCore } from "../../features/notes/common/hooks/useNoteEditorCore";
 import { UserProps } from "../../types/admin";
@@ -27,6 +28,7 @@ export interface ChatNoteEditorProps {
     currentChatNote: ChatNoteProps | null;
     myself: UserProps;
     accessToken: string | null;
+    socket: Socket | null;
     onNoteUpdate: (updatedNote: ChatNoteProps) => void;
     resyncSignal?: number | string;
 }
@@ -42,6 +44,7 @@ export const useChatNoteEditor = ({
     currentChatNote,
     myself,
     accessToken,
+    socket,
     onNoteUpdate,
     resyncSignal,
 }: ChatNoteEditorProps): UseChatNoteEditorReturn => {
@@ -49,6 +52,7 @@ export const useChatNoteEditor = ({
         currentNote: currentChatNote,
         myself,
         accessToken,
+        socket,
         onNoteUpdate,
         resyncSignal,
     });
