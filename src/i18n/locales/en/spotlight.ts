@@ -69,6 +69,6 @@ export const spotlight = {
         chatPlain: "{subtitle} (#{id}){sep}",
         noteThread: "{subtitle} (thread) (#{id}){sep}",
         notePlain: "{subtitle} (#{id}){sep}",
-        projectPlain: "{subtitle} (#{id}){sep}",
+        projectPlain: "{subtitle}{sep}",
     },
 } as const;

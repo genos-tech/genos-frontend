@@ -1324,7 +1324,7 @@ export const ar: DeepPartial<Messages> = {
             chatPlain: "{subtitle} (#{id}){sep}",
             noteThread: "{subtitle} (موضوع) (#{id}){sep}",
             notePlain: "{subtitle} (#{id}){sep}",
-            projectPlain: "{subtitle} (#{id}){sep}",
+            projectPlain: "{subtitle}{sep}",
         },
     },
     services: {

@@ -1329,7 +1329,7 @@ export const hi: DeepPartial<Messages> = {
             chatPlain: "{subtitle} (#{id}){sep}",
             noteThread: "{subtitle} (थ्रेड) (#{id}){sep}",
             notePlain: "{subtitle} (#{id}){sep}",
-            projectPlain: "{subtitle} (#{id}){sep}",
+            projectPlain: "{subtitle}{sep}",
         },
     },
     services: {

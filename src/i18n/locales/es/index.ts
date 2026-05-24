@@ -1326,7 +1326,7 @@ export const es: DeepPartial<Messages> = {
             chatPlain: "{subtitle} (n.º{id}){sep}",
             noteThread: "{subtitle} (hilo) (n.º{id}){sep}",
             notePlain: "{subtitle} (n.º{id}){sep}",
-            projectPlain: "{subtitle} (n.º{id}){sep}",
+            projectPlain: "{subtitle}{sep}",
         },
     },
     services: {

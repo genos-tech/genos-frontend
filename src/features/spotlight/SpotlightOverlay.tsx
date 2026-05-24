@@ -657,6 +657,7 @@ const ConversationPanel = memo(
         return (
             <Box
                 ref={scrollRef}
+                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 sx={{
                     maxHeight: "40vh",
                     overflowY: "auto",
@@ -973,6 +974,25 @@ const TurnViewInner = ({
         [answer, sourcesById, ts]
     );
 
+    // Only chip the sources the model actually cited in the answer body.
+    // Search/structured tools return everything they found (sometimes 10+
+    // entities); without this filter the chip row drowns the answer.
+    // The list grows progressively as the model emits each citation
+    // token during streaming.
+    const citedSources = useMemo(() => {
+        if (!answer) return [];
+        const cited = new Set<string>();
+        for (const match of answer.matchAll(CITATION_PATTERN)) {
+            cited.add(match[1]);
+        }
+        return answerSources.filter((s) => {
+            const tokenKey = s.entity_id.startsWith(`${s.entity_type}:`)
+                ? s.entity_id
+                : `${s.entity_type}:${s.entity_id}`;
+            return cited.has(tokenKey);
+        });
+    }, [answer, answerSources]);
+
     const handleCopy = useCallback(() => {
         if (!answer) return;
         navigator.clipboard
@@ -1115,7 +1135,7 @@ const TurnViewInner = ({
                                 lineHeight: 1.65,
                                 fontSize: "1rem",
                                 color: isDark ? DARK_TEXT_STRONG : undefined,
-                                mb: answerSources.length > 0 ? 0.75 : 0,
+                                mb: citedSources.length > 0 ? 0.75 : 0,
                                 // paragraphs — reset default browser margins
                                 "& p": { m: 0, mb: 0.75 },
                                 "& p:last-child": { mb: 0 },
@@ -1204,11 +1224,6 @@ const TurnViewInner = ({
                                 // hrefs untouched; delegate everything else
                                 // to the library default so the existing
                                 // XSS guards still apply.
-                                urlTransform={(url) =>
-                                    url.startsWith(CITATION_HREF_PREFIX)
-                                        ? url
-                                        : defaultUrlTransform(url)
-                                }
                                 components={{
                                     a: ({ href, children }) => (
                                         <CitationLink
@@ -1221,6 +1236,11 @@ const TurnViewInner = ({
                                         </CitationLink>
                                     ),
                                 }}
+                                urlTransform={(url) =>
+                                    url.startsWith(CITATION_HREF_PREFIX)
+                                        ? url
+                                        : defaultUrlTransform(url)
+                                }
                             >
                                 {answerForRender}
                             </ReactMarkdown>
@@ -1239,12 +1259,12 @@ const TurnViewInner = ({
                         </Typography>
                     )}
 
-                    {answerSources.length > 0 &&
+                    {citedSources.length > 0 &&
                         (() => {
                             const visible = showAllSources
-                                ? answerSources
-                                : answerSources.slice(0, CHIPS_INITIAL);
-                            const hiddenCount = answerSources.length - CHIPS_INITIAL;
+                                ? citedSources
+                                : citedSources.slice(0, CHIPS_INITIAL);
+                            const hiddenCount = citedSources.length - CHIPS_INITIAL;
                             return (
                                 <Box
                                     sx={{
@@ -1301,7 +1321,7 @@ const TurnViewInner = ({
                                             {fmt(ts.actions.moreCount, { count: hiddenCount })}
                                         </Button>
                                     )}
-                                    {showAllSources && answerSources.length > CHIPS_INITIAL && (
+                                    {showAllSources && citedSources.length > CHIPS_INITIAL && (
                                         <Button
                                             color="neutral"
                                             size="sm"

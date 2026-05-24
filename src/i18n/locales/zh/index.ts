@@ -1306,7 +1306,7 @@ export const zh: DeepPartial<Messages> = {
             chatPlain: "{subtitle}（#{id}）{sep}",
             noteThread: "{subtitle}（话题）（#{id}）{sep}",
             notePlain: "{subtitle}（#{id}）{sep}",
-            projectPlain: "{subtitle}（#{id}）{sep}",
+            projectPlain: "{subtitle}{sep}",
         },
     },
     services: {
