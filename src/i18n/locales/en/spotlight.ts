@@ -63,12 +63,12 @@ export const spotlight = {
         comment: "Comment",
     },
     chip: {
-        taskComment: "{subtitle} comment (#{id}){sep}",
-        taskPlain: "{subtitle} (#{id}){sep}",
-        chatThread: "{subtitle} thread (#{id}){sep}",
-        chatPlain: "{subtitle} (#{id}){sep}",
-        noteThread: "{subtitle} (thread) (#{id}){sep}",
-        notePlain: "{subtitle} (#{id}){sep}",
+        taskComment: "{subtitle} {id} comment{sep}",
+        taskPlain: "{subtitle} {id}{sep}",
+        chatThread: "{subtitle} thread{sep}",
+        chatPlain: "{subtitle}{sep}",
+        noteThread: "{subtitle} (thread){sep}",
+        notePlain: "{subtitle}{sep}",
         projectPlain: "{subtitle}{sep}",
     },
 } as const;

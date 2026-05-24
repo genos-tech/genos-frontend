@@ -974,25 +974,6 @@ const TurnViewInner = ({
         [answer, sourcesById, ts]
     );
 
-    // Only chip the sources the model actually cited in the answer body.
-    // Search/structured tools return everything they found (sometimes 10+
-    // entities); without this filter the chip row drowns the answer.
-    // The list grows progressively as the model emits each citation
-    // token during streaming.
-    const citedSources = useMemo(() => {
-        if (!answer) return [];
-        const cited = new Set<string>();
-        for (const match of answer.matchAll(CITATION_PATTERN)) {
-            cited.add(match[1]);
-        }
-        return answerSources.filter((s) => {
-            const tokenKey = s.entity_id.startsWith(`${s.entity_type}:`)
-                ? s.entity_id
-                : `${s.entity_type}:${s.entity_id}`;
-            return cited.has(tokenKey);
-        });
-    }, [answer, answerSources]);
-
     const handleCopy = useCallback(() => {
         if (!answer) return;
         navigator.clipboard
@@ -1135,7 +1116,7 @@ const TurnViewInner = ({
                                 lineHeight: 1.65,
                                 fontSize: "1rem",
                                 color: isDark ? DARK_TEXT_STRONG : undefined,
-                                mb: citedSources.length > 0 ? 0.75 : 0,
+                                mb: answerSources.length > 0 ? 0.75 : 0,
                                 // paragraphs — reset default browser margins
                                 "& p": { m: 0, mb: 0.75 },
                                 "& p:last-child": { mb: 0 },
@@ -1259,12 +1240,12 @@ const TurnViewInner = ({
                         </Typography>
                     )}
 
-                    {citedSources.length > 0 &&
+                    {answerSources.length > 0 &&
                         (() => {
                             const visible = showAllSources
-                                ? citedSources
-                                : citedSources.slice(0, CHIPS_INITIAL);
-                            const hiddenCount = citedSources.length - CHIPS_INITIAL;
+                                ? answerSources
+                                : answerSources.slice(0, CHIPS_INITIAL);
+                            const hiddenCount = answerSources.length - CHIPS_INITIAL;
                             return (
                                 <Box
                                     sx={{
@@ -1321,7 +1302,7 @@ const TurnViewInner = ({
                                             {fmt(ts.actions.moreCount, { count: hiddenCount })}
                                         </Button>
                                     )}
-                                    {showAllSources && citedSources.length > CHIPS_INITIAL && (
+                                    {showAllSources && answerSources.length > CHIPS_INITIAL && (
                                         <Button
                                             color="neutral"
                                             size="sm"
@@ -1511,18 +1492,21 @@ function _chipLabel(s: SpotlightResult, ts: SpotlightMessages): string {
 
     if (s.entity_type === "task" && s.task_id) {
         const template = badge === "comment" ? ts.chip.taskComment : ts.chip.taskPlain;
-        return fmt(template, { subtitle, id: s.task_id, sep });
+        // Prefer human-readable PRJ-123. Falls back to the raw numeric
+        // task_id only for legacy rows or tasks without a project.
+        const id = s.task_display_id || s.task_id;
+        return fmt(template, { subtitle, id, sep });
     }
     if (s.entity_type === "chat" && s.chat_id) {
         const template = badge === "thread" ? ts.chip.chatThread : ts.chip.chatPlain;
-        return fmt(template, { subtitle, id: s.chat_id, sep });
+        return fmt(template, { subtitle, sep });
     }
     if (s.entity_type === "note" && s.note_id) {
         const template = badge === "thread" ? ts.chip.noteThread : ts.chip.notePlain;
-        return fmt(template, { subtitle, id: s.note_id, sep });
+        return fmt(template, { subtitle, sep });
     }
     if (s.entity_type === "project" && s.project_id) {
-        return fmt(ts.chip.projectPlain, { subtitle, id: s.project_id, sep });
+        return fmt(ts.chip.projectPlain, { subtitle, sep });
     }
     // Fallback to raw entity_id if specific ids are absent.
     return title ? `${s.entity_id}: ${title}` : s.entity_id;

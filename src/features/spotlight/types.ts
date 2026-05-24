@@ -39,6 +39,10 @@ export interface SpotlightResult {
 
     // Task-specific
     task_id: string | null;
+    // Human-readable task identifier ("<project.code>-<project_task_number>",
+    // e.g. "PRJ-42"). Always shown to end users in place of the raw
+    // task_id. Null on legacy rows or when the task lacks a project.
+    task_display_id: string | null;
 
     // Note-specific
     note_id: string | null;
