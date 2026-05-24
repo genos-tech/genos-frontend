@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Box, Sheet, Snackbar } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Panel, PanelGroup } from "react-resizable-panels";
@@ -15,7 +15,6 @@ import { ThreadPanel } from "./components/panels/ThreadPanel";
 import { ResizeHandle } from "./components/shared/ResizeHandle";
 import { ChatSidebar } from "./components/sidebar/ChatSidebar";
 import { useChatRouting } from "./hooks/useChatRouting";
-import { MobileChatHome } from "./MobileChatHome";
 import { appendTodoContent, createNewTodo } from "./services/createNewTodo";
 import { getFirstLine } from "./utils/common";
 import { defaultTodoContent } from "./utils/defaults";
@@ -40,6 +39,7 @@ import { TaskCommentProps } from "../../types/tasks";
 import { getLocalCurrentDate } from "../../utils/dateUtils";
 import { ModalCreateProject } from "../tasks/components/modals/ModalCreateProject";
 import { ModalCreateTag } from "../tasks/components/modals/ModalCreateTag";
+import { MobileChatHome } from "./MobileChatHome";
 
 type ChatHomeProps = {
     useTEM: TeamManagementState;
@@ -171,14 +171,28 @@ export const ChatHome = (props: ChatHomeProps) => {
         setTodoAddedFromMessageOpen(true);
     };
 
-    // Task preview closed as default, but once it's opened, it should stay open.
-    const [ignoreCount, setIgnoreCount] = useState<number>(0);
+    // Task preview is closed by default on chat. `useTM.isTaskPreviewVisible`
+    // may already be true on mount because it's shared with other pages (e.g.
+    // task home) — we must not auto-open the panel in that case. The sticky
+    // flag flips only when the user actively opens (false → true) or switches
+    // tasks while on the chat page; once true it stays true for this mount.
     const [initialTaskPreviewVisible, setInitialTaskPreviewVisible] = useState<boolean>(false);
+    const prevPreviewRef = useRef({
+        visible: useTM.isTaskPreviewVisible,
+        taskId: useTM.currentPreviewTaskId,
+    });
     useEffect(() => {
-        if (ignoreCount > 1 && useTM.isTaskPreviewVisible === true) {
+        const opened = !prevPreviewRef.current.visible && useTM.isTaskPreviewVisible;
+        const switched =
+            useTM.isTaskPreviewVisible &&
+            prevPreviewRef.current.taskId !== useTM.currentPreviewTaskId;
+        if (opened || switched) {
             setInitialTaskPreviewVisible(true);
         }
-        setIgnoreCount(ignoreCount + 1);
+        prevPreviewRef.current = {
+            visible: useTM.isTaskPreviewVisible,
+            taskId: useTM.currentPreviewTaskId,
+        };
     }, [useTM.isTaskPreviewVisible, useTM.currentPreviewTaskId]);
 
     // Add a new todo from a message
@@ -295,157 +309,159 @@ export const ChatHome = (props: ChatHomeProps) => {
                             setTodoFromMessageBubble={setTodoFromMessageBubble}
                         />
                     ) : (
-                    <PanelGroup
-                        autoSaveId="conditional"
-                        direction="horizontal"
-                        style={{ flex: 1 }}
-                    >
-                        {/* Chat Sidebar pane which is always visible */}
-                        <Panel id={"1"} maxSize={30} minSize={10} order={1}>
-                            <Box sx={ls.sidebarPanel}>
-                                <Sheet
-                                    sx={{
-                                        position: { xs: "fixed", sm: "sticky" },
-                                        transform: {
-                                            xs: "translateX(calc(100% * (var(--MessagesPane-slideIn, 0) - 1)))",
-                                            sm: "none",
-                                        },
-                                        transition: "transform 0.4s, width 0.4s",
-                                        zIndex: 100,
-                                        top: 10,
-                                    }}
-                                >
-                                    <ChatSidebar
+                        <PanelGroup
+                            autoSaveId="conditional"
+                            direction="horizontal"
+                            style={{ flex: 1 }}
+                        >
+                            {/* Chat Sidebar pane which is always visible */}
+                            <Panel id={"1"} maxSize={30} minSize={10} order={1}>
+                                <Box sx={ls.sidebarPanel}>
+                                    <Sheet
+                                        sx={{
+                                            position: { xs: "fixed", sm: "sticky" },
+                                            transform: {
+                                                xs: "translateX(calc(100% * (var(--MessagesPane-slideIn, 0) - 1)))",
+                                                sm: "none",
+                                            },
+                                            transition: "transform 0.4s, width 0.4s",
+                                            zIndex: 100,
+                                            top: 10,
+                                        }}
+                                    >
+                                        <ChatSidebar
+                                            useCM={useCM}
+                                            chatRouting={chatRouting}
+                                            incompleteTodoCount={incompleteTodoCount}
+                                            myself={myself}
+                                            setIsToDoVisible={setIsToDoVisible}
+                                            isToDoVisible={isToDoVisible}
+                                            setMyself={setMyself}
+                                            socket={socket}
+                                            useTEM={useTEM}
+                                            useUISM={useUISM}
+                                            useTM={useTM}
+                                            usePM={usePM}
+                                            useNM={useNM}
+                                        />
+                                    </Sheet>
+                                </Box>
+                            </Panel>
+
+                            {/* Main Chat and Sub Chat Pane */}
+                            {useCM.isMainChatVisible === true && (
+                                <>
+                                    <ResizeHandle key="main-chat-resize-handle" />
+                                    <Panel id={"2"} maxSize={85} minSize={25} order={2}>
+                                        <PanelGroup autoSaveId="conditional" direction="vertical">
+                                            {/* Sub Chat Pane */}
+                                            {useCM.isSubChatVisible === true && (
+                                                <>
+                                                    <SubChatPanel
+                                                        useCM={useCM}
+                                                        currentSubChatId={currentSubChatId}
+                                                        currentWindowHeight={height}
+                                                        incompleteTodoCount={incompleteTodoCount}
+                                                        isExistingTodaysTodo={isExistingTodaysTodo}
+                                                        isToDoVisible={isToDoVisible}
+                                                        myself={myself}
+                                                        usePM={usePM}
+                                                        setIsExistingTodaysTodo={
+                                                            setIsExistingTodaysTodo
+                                                        }
+                                                        setMyself={setMyself}
+                                                        setSubChatPanelSize={setSubChatPanelSize}
+                                                        setTodos={setTodos}
+                                                        socket={socket}
+                                                        subChatPanelSize={subChatPanelSize}
+                                                        useTEM={useTEM}
+                                                        useTM={useTM}
+                                                        todos={todos}
+                                                        useUISM={useUISM}
+                                                        todoFromMessageBubble={
+                                                            todoFromMessageBubble
+                                                        }
+                                                        setTodoFromMessageBubble={
+                                                            setTodoFromMessageBubble
+                                                        }
+                                                    />
+                                                    <ResizeHandle
+                                                        key="sub-chat-resize-handle"
+                                                        className="chat-resize-handle-ver"
+                                                    />
+                                                </>
+                                            )}
+
+                                            {/* Main Chat Pane */}
+                                            <MainChatPanel
+                                                useCM={useCM}
+                                                currentMainChatId={currentMainChatId}
+                                                currentWindowHeight={height}
+                                                incompleteTodoCount={incompleteTodoCount}
+                                                isExistingTodaysTodo={isExistingTodaysTodo}
+                                                isToDoVisible={isToDoVisible}
+                                                mainChatPanelSize={mainChatPanelSize}
+                                                myself={myself}
+                                                usePM={usePM}
+                                                setIsExistingTodaysTodo={setIsExistingTodaysTodo}
+                                                setIsToDoVisible={setIsToDoVisible}
+                                                setMainChatPanelSize={setMainChatPanelSize}
+                                                setMyself={setMyself}
+                                                setTodos={setTodos}
+                                                socket={socket}
+                                                useTEM={useTEM}
+                                                useTM={useTM}
+                                                todos={todos}
+                                                useUISM={useUISM}
+                                                todoFromMessageBubble={todoFromMessageBubble}
+                                                setTodoFromMessageBubble={setTodoFromMessageBubble}
+                                            />
+                                        </PanelGroup>
+                                    </Panel>
+                                </>
+                            )}
+
+                            {/* Thread Chat Pane */}
+                            {useCM.isThreadVisible === true && useCM.currentThreadChat && (
+                                <>
+                                    <ResizeHandle key="thread-chat-resize-handle" />
+                                    <ThreadPanel
                                         useCM={useCM}
-                                        chatRouting={chatRouting}
-                                        incompleteTodoCount={incompleteTodoCount}
+                                        currentThreadChatId={currentThreadChatId}
+                                        currentWindowHeight={height}
                                         myself={myself}
-                                        setIsToDoVisible={setIsToDoVisible}
-                                        isToDoVisible={isToDoVisible}
+                                        useNM={useNM}
+                                        usePM={usePM}
                                         setMyself={setMyself}
                                         socket={socket}
                                         useTEM={useTEM}
-                                        useUISM={useUISM}
                                         useTM={useTM}
-                                        usePM={usePM}
-                                        useNM={useNM}
+                                        useUISM={useUISM}
+                                        setTodoFromMessageBubble={setTodoFromMessageBubble}
                                     />
-                                </Sheet>
-                            </Box>
-                        </Panel>
+                                </>
+                            )}
 
-                        {/* Main Chat and Sub Chat Pane */}
-                        {useCM.isMainChatVisible === true && (
-                            <>
-                                <ResizeHandle key="main-chat-resize-handle" />
-                                <Panel id={"2"} maxSize={85} minSize={25} order={2}>
-                                    <PanelGroup autoSaveId="conditional" direction="vertical">
-                                        {/* Sub Chat Pane */}
-                                        {useCM.isSubChatVisible === true && (
-                                            <>
-                                                <SubChatPanel
-                                                    useCM={useCM}
-                                                    currentSubChatId={currentSubChatId}
-                                                    currentWindowHeight={height}
-                                                    incompleteTodoCount={incompleteTodoCount}
-                                                    isExistingTodaysTodo={isExistingTodaysTodo}
-                                                    isToDoVisible={isToDoVisible}
-                                                    myself={myself}
-                                                    usePM={usePM}
-                                                    setIsExistingTodaysTodo={
-                                                        setIsExistingTodaysTodo
-                                                    }
-                                                    setMyself={setMyself}
-                                                    setSubChatPanelSize={setSubChatPanelSize}
-                                                    setTodos={setTodos}
-                                                    socket={socket}
-                                                    subChatPanelSize={subChatPanelSize}
-                                                    useTEM={useTEM}
-                                                    useTM={useTM}
-                                                    todos={todos}
-                                                    useUISM={useUISM}
-                                                    todoFromMessageBubble={todoFromMessageBubble}
-                                                    setTodoFromMessageBubble={
-                                                        setTodoFromMessageBubble
-                                                    }
-                                                />
-                                                <ResizeHandle
-                                                    key="sub-chat-resize-handle"
-                                                    className="chat-resize-handle-ver"
-                                                />
-                                            </>
-                                        )}
+                            {/* Create Task Pane */}
+                            {useTM.isCreatingTask.flag === true && (
+                                <>
+                                    <ResizeHandle key="create-task-resize-handle" />
+                                    <CreateTaskPanel
+                                        useCM={useCM}
+                                        myself={myself}
+                                        usePM={usePM}
+                                        setMyself={setMyself}
+                                        socket={socket}
+                                        useTEM={useTEM}
+                                        useTM={useTM}
+                                        useUISM={useUISM}
+                                        useNM={useNM}
+                                        useSM={useSM}
+                                    />
+                                </>
+                            )}
 
-                                        {/* Main Chat Pane */}
-                                        <MainChatPanel
-                                            useCM={useCM}
-                                            currentMainChatId={currentMainChatId}
-                                            currentWindowHeight={height}
-                                            incompleteTodoCount={incompleteTodoCount}
-                                            isExistingTodaysTodo={isExistingTodaysTodo}
-                                            isToDoVisible={isToDoVisible}
-                                            mainChatPanelSize={mainChatPanelSize}
-                                            myself={myself}
-                                            usePM={usePM}
-                                            setIsExistingTodaysTodo={setIsExistingTodaysTodo}
-                                            setIsToDoVisible={setIsToDoVisible}
-                                            setMainChatPanelSize={setMainChatPanelSize}
-                                            setMyself={setMyself}
-                                            setTodos={setTodos}
-                                            socket={socket}
-                                            useTEM={useTEM}
-                                            useTM={useTM}
-                                            todos={todos}
-                                            useUISM={useUISM}
-                                            todoFromMessageBubble={todoFromMessageBubble}
-                                            setTodoFromMessageBubble={setTodoFromMessageBubble}
-                                        />
-                                    </PanelGroup>
-                                </Panel>
-                            </>
-                        )}
-
-                        {/* Thread Chat Pane */}
-                        {useCM.isThreadVisible === true && useCM.currentThreadChat && (
-                            <>
-                                <ResizeHandle key="thread-chat-resize-handle" />
-                                <ThreadPanel
-                                    useCM={useCM}
-                                    currentThreadChatId={currentThreadChatId}
-                                    currentWindowHeight={height}
-                                    myself={myself}
-                                    useNM={useNM}
-                                    usePM={usePM}
-                                    setMyself={setMyself}
-                                    socket={socket}
-                                    useTEM={useTEM}
-                                    useTM={useTM}
-                                    useUISM={useUISM}
-                                    setTodoFromMessageBubble={setTodoFromMessageBubble}
-                                />
-                            </>
-                        )}
-
-                        {/* Create Task Pane */}
-                        {useTM.isCreatingTask.flag === true && (
-                            <>
-                                <ResizeHandle key="create-task-resize-handle" />
-                                <CreateTaskPanel
-                                    useCM={useCM}
-                                    myself={myself}
-                                    usePM={usePM}
-                                    setMyself={setMyself}
-                                    socket={socket}
-                                    useTEM={useTEM}
-                                    useTM={useTM}
-                                    useUISM={useUISM}
-                                    useNM={useNM}
-                                    useSM={useSM}
-                                />
-                            </>
-                        )}
-
-                        {/* Task Preview Pane.
+                            {/* Task Preview Pane.
                         Milestone previews intentionally leave
                         `currentPreviewTask` undefined and route via
                         `currentPreviewKind === "milestone"` +
@@ -453,13 +469,33 @@ export const ChatHome = (props: ChatHomeProps) => {
                         so the gate has to accept either case. Without the
                         milestone branch, freshly-created milestones don't
                         render here. Mirrors TaskHomeLayout.tsx. */}
-                        {initialTaskPreviewVisible &&
-                            useTM.isTaskPreviewVisible === true &&
-                            (useTM.currentPreviewTask ||
-                                useTM.currentPreviewKind === "milestone") && (
+                            {initialTaskPreviewVisible &&
+                                useTM.isTaskPreviewVisible === true &&
+                                (useTM.currentPreviewTask ||
+                                    useTM.currentPreviewKind === "milestone") && (
+                                    <>
+                                        <ResizeHandle key="task-preview-resize-handle" />
+                                        <TaskPreviewPanel
+                                            useCM={useCM}
+                                            myself={myself}
+                                            useNM={useNM}
+                                            usePM={usePM}
+                                            setMyself={setMyself}
+                                            socket={socket}
+                                            useTEM={useTEM}
+                                            useTM={useTM}
+                                            useSM={useSM}
+                                            useUISM={useUISM}
+                                            setTodoFromMessageBubble={setTodoFromMessageBubble}
+                                        />
+                                    </>
+                                )}
+
+                            {/* Chat Note Pane */}
+                            {useCM.isChatNoteVisibleInChat === true && (
                                 <>
-                                    <ResizeHandle key="task-preview-resize-handle" />
-                                    <TaskPreviewPanel
+                                    <ResizeHandle key="chat-note-resize-handle" />
+                                    <ChatNotePanel
                                         useCM={useCM}
                                         myself={myself}
                                         useNM={useNM}
@@ -468,44 +504,25 @@ export const ChatHome = (props: ChatHomeProps) => {
                                         socket={socket}
                                         useTEM={useTEM}
                                         useTM={useTM}
-                                        useSM={useSM}
                                         useUISM={useUISM}
-                                        setTodoFromMessageBubble={setTodoFromMessageBubble}
                                     />
                                 </>
                             )}
 
-                        {/* Chat Note Pane */}
-                        {useCM.isChatNoteVisibleInChat === true && (
-                            <>
-                                <ResizeHandle key="chat-note-resize-handle" />
-                                <ChatNotePanel
-                                    useCM={useCM}
-                                    myself={myself}
-                                    useNM={useNM}
-                                    usePM={usePM}
-                                    setMyself={setMyself}
-                                    socket={socket}
-                                    useTEM={useTEM}
-                                    useTM={useTM}
-                                    useUISM={useUISM}
-                                />
-                            </>
-                        )}
-
-                        {/* Select Chat Pane if no pane is visible */}
-                        {useCM.isMainChatVisible === false &&
-                            useCM.isThreadVisible === false &&
-                            useTM.isCreatingTask.flag === false &&
-                            useTM.isTaskPreviewVisible === false &&
-                            useCM.isChatNoteVisibleInChat === false && (
-                                <>
-                                    <ResizeHandle key="select-chat-resize-handle" />
-                                    <SelectChatPanel setMainChatPanelSize={setMainChatPanelSize} />
-                                </>
-                            )}
-
-                    </PanelGroup>
+                            {/* Select Chat Pane if no pane is visible */}
+                            {useCM.isMainChatVisible === false &&
+                                useCM.isThreadVisible === false &&
+                                useTM.isCreatingTask.flag === false &&
+                                useTM.isTaskPreviewVisible === false &&
+                                useCM.isChatNoteVisibleInChat === false && (
+                                    <>
+                                        <ResizeHandle key="select-chat-resize-handle" />
+                                        <SelectChatPanel
+                                            setMainChatPanelSize={setMainChatPanelSize}
+                                        />
+                                    </>
+                                )}
+                        </PanelGroup>
                     )}
 
                     {/* Modal for creating a new project — global flag-gated */}
