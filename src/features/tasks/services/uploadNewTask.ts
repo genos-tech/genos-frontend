@@ -115,6 +115,10 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                         task_title: taskContent.title,
                         project_id: taskContent.project.projectId,
                         project_name: taskContent.project.projectName,
+                        // Surfaced on the task PUT response so the live
+                        // mention activity broadcast can render
+                        // "<code>-<n>" without waiting for a refetch.
+                        display_id: taskCreateData.task.displayId,
                         ts_mentioned_at: taskCreateData.task.updatedAt,
                         // Per-user real-time toast goes to `newly_*`; the
                         // activity row stores `all_*` so prior recipients
@@ -213,6 +217,7 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                                         chatType: 3,
                                         dmPartnerUserId: null,
                                         taskId: taskCreateData.task.task_id,
+                                        displayId: taskCreateData.task.displayId,
                                         taskStatus: taskCreateData.task.status,
                                         systemUserId: taskContent.project.systemUserId,
                                         messageIdForPut: null,
@@ -236,6 +241,7 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                                                 destCGName: taskContent.project.projectName,
                                                 destCGId: taskContent.project.projectId,
                                                 taskId: taskCreateData.task.task_id,
+                                                displayId: taskCreateData.task.displayId,
                                                 systemUserId: taskContent.project.systemUserId,
                                                 messageIdForPut: null,
                                             });
@@ -264,6 +270,7 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                                         dmPartnerUserId:
                                             useCM.currentMainChat.dmPartnerUser.userId,
                                         taskId: taskCreateData.task.task_id,
+                                        displayId: taskCreateData.task.displayId,
                                         taskStatus: taskCreateData.task.status,
                                         systemUserId: taskContent.project.systemUserId,
                                         messageIdForPut: useCM.currentThreadChat.threadId,
@@ -286,6 +293,7 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
                                         destCGName: useCM.currentThreadChat.chatName,
                                         destCGId: useCM.currentThreadChat.chatId,
                                         taskId: taskCreateData.task.task_id,
+                                        displayId: taskCreateData.task.displayId,
                                         taskStatus: taskCreateData.task.status,
                                         systemUserId: taskContent.project.systemUserId,
                                         messageIdForPut: null,
