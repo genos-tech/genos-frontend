@@ -18,9 +18,21 @@ const SUPPORTED_KINDS: ReadonlySet<ModalTarget["kind"]> = new Set([
     "taskNote",
 ]);
 
+export type OpenModalByHrefOptions = {
+    // Override the modal's stacking context. Default (omitted) uses
+    // UrlLinkModal's own default (10020), correct for the chat-message
+    // link case. Callers that open the preview from a higher surface
+    // (e.g. the Spotlight overlay at z=13100) pass a value above it.
+    zIndex?: number;
+};
+
 export type UrlLinkModalState = {
     target: ModalTarget | null;
-    openModalByHref: (href: string) => "opened" | "navigated" | "external";
+    zIndex: number | undefined;
+    openModalByHref: (
+        href: string,
+        opts?: OpenModalByHrefOptions
+    ) => "opened" | "navigated" | "external";
     closeModal: () => void;
 };
 
@@ -32,11 +44,15 @@ export const useUrlLinkModalState = ({
     navigate,
 }: UseUrlLinkModalStateProps): UrlLinkModalState => {
     const [target, setTarget] = useState<ModalTarget | null>(null);
+    const [zIndex, setZIndex] = useState<number | undefined>(undefined);
 
-    const closeModal = useCallback(() => setTarget(null), []);
+    const closeModal = useCallback(() => {
+        setTarget(null);
+        setZIndex(undefined);
+    }, []);
 
     const openModalByHref = useCallback(
-        (href: string): "opened" | "navigated" | "external" => {
+        (href: string, opts?: OpenModalByHrefOptions): "opened" | "navigated" | "external" => {
             const classified = parseInternalUrl(href);
 
             if (classified.kind === "external") {
@@ -50,6 +66,7 @@ export const useUrlLinkModalState = ({
             }
 
             if (SUPPORTED_KINDS.has(classified.kind)) {
+                setZIndex(opts?.zIndex);
                 setTarget(classified);
                 return "opened";
             }
@@ -62,5 +79,5 @@ export const useUrlLinkModalState = ({
         [navigate]
     );
 
-    return { closeModal, openModalByHref, target };
+    return { closeModal, openModalByHref, target, zIndex };
 };

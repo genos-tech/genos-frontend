@@ -1289,6 +1289,7 @@ export const zh: DeepPartial<Messages> = {
             pm: "项目聊天",
             chatFallback: "聊天",
             task: "任务",
+            project: "项目",
             notePersonal: "个人笔记",
             noteTask: "任务笔记",
             noteChat: "聊天笔记",
@@ -1305,6 +1306,7 @@ export const zh: DeepPartial<Messages> = {
             chatPlain: "{subtitle}（#{id}）{sep}",
             noteThread: "{subtitle}（话题）（#{id}）{sep}",
             notePlain: "{subtitle}（#{id}）{sep}",
+            projectPlain: "{subtitle}（#{id}）{sep}",
         },
     },
     services: {

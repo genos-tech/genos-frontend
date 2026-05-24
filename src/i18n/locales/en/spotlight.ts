@@ -52,6 +52,7 @@ export const spotlight = {
         pm: "Project chat",
         chatFallback: "Chat",
         task: "Task",
+        project: "Project",
         notePersonal: "Personal note",
         noteTask: "Task note",
         noteChat: "Chat note",
@@ -68,5 +69,6 @@ export const spotlight = {
         chatPlain: "{subtitle} (#{id}){sep}",
         noteThread: "{subtitle} (thread) (#{id}){sep}",
         notePlain: "{subtitle} (#{id}){sep}",
+        projectPlain: "{subtitle} (#{id}){sep}",
     },
 } as const;

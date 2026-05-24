@@ -90,6 +90,45 @@ const IntegrationsHome = lazy(() =>
 
 const API_DOWN_THRESHOLD = 3;
 
+// Build the canonical in-app URL for a SpotlightResult so we can feed
+// it to UrlLinkModalProvider.openModalByHref (which parses URLs via
+// parseInternalUrl into a ModalTarget). Returns null when there's no
+// modal-capable URL — either the entity_type doesn't have a modal view
+// yet (project) or the source is missing the ids needed to deep-link.
+// Mirrors the URL shapes encoded in `handleSpotlightSelect` below.
+const canonicalSpotlightHref = (r: SpotlightResult): string | null => {
+    if (r.entity_type === "task" && r.task_id && r.project_id) {
+        return `/workspace/tasks/project/${r.project_id}/task/${r.task_id}`;
+    }
+    if (r.entity_type === "chat" && r.chat_type && r.chat_id) {
+        const base = `/workspace/chat/${r.chat_type}/${r.chat_id}`;
+        const withThread = r.thread_id ? `${base}/thread/${r.thread_id}` : base;
+        return r.message_id ? `${withThread}/message/${r.message_id}` : withThread;
+    }
+    if (r.entity_type === "note" && r.note_id) {
+        if (r.note_type === "personal") {
+            return `/workspace/notes/my/${r.note_id}`;
+        }
+        if (r.note_type === "task" && r.project_id && r.task_id) {
+            return (
+                `/workspace/notes/task/project/${r.project_id}` +
+                `/task/${r.task_id}/note/${r.note_id}`
+            );
+        }
+        if (r.note_type === "chat" && r.chat_type && r.chat_id) {
+            // Chat notes can live on a thread or on the main channel;
+            // thread_id=0 is the sentinel for "not in a thread" per the
+            // existing parseInternalUrl convention.
+            const tid = r.thread_id ?? "0";
+            return (
+                `/workspace/notes/chat/${r.chat_type}` +
+                `/${r.chat_id}/thread/${tid}/note/${r.note_id}`
+            );
+        }
+    }
+    return null;
+};
+
 export const App = () => {
     const isTooSmall = useWindowSize();
     const navigate = useNavigate();
@@ -311,6 +350,13 @@ export const App = () => {
                 return;
             }
 
+            // Project chips have no preview modal; route to the project's
+            // task-list view (the closest "open the project" affordance).
+            if (r.entity_type === "project" && r.project_id) {
+                navigate(`/workspace/tasks/project/${r.project_id}`);
+                return;
+            }
+
             if (r.entity_type === "chat" && r.chat_type && r.chat_id) {
                 // Use the chat-management helper rather than a bare
                 // `navigate(...)`: for a chat the user hasn't opened
@@ -414,6 +460,33 @@ export const App = () => {
         [spotlight, navigate, useCM, useTM, usePM]
     );
 
+    // Inline-citation preview. Opens the existing UrlLinkModal (the same
+    // surface chat-message links use) on top of the Spotlight overlay so
+    // the user can quick-look the entity without losing their place in
+    // the conversation. Spotlight sits at z=13100; we pass z=13200 to
+    // keep the preview on top.
+    //
+    // For project citations there is no preview modal yet — fall through
+    // to handleSpotlightSelect which closes Spotlight and routes to the
+    // project's task list.
+    const handleSpotlightPreview = useCallback(
+        (r: SpotlightResult) => {
+            const href = canonicalSpotlightHref(r);
+            if (!href) {
+                handleSpotlightSelect(r);
+                return;
+            }
+            const outcome = urlLinkModal.openModalByHref(href, { zIndex: 13200 });
+            if (outcome !== "opened") {
+                // Either parseInternalUrl rejected our URL (shouldn't
+                // happen for the shapes we build) or the kind isn't
+                // modal-able. Fall back to navigating.
+                handleSpotlightSelect(r);
+            }
+        },
+        [handleSpotlightSelect, urlLinkModal]
+    );
+
     // Tell the manager which chat / thread / task is currently in view so it
     // can suppress notifications for that surface.
     useEffect(() => {
@@ -495,6 +568,7 @@ export const App = () => {
                                                 onCancel={spotlight.onCancel}
                                                 onClose={spotlight.close}
                                                 onNewConversation={spotlight.onNewConversation}
+                                                onPreview={handleSpotlightPreview}
                                                 onQueryChange={spotlight.setQuery}
                                                 onReject={spotlight.onReject}
                                                 onSelect={handleSpotlightSelect}
@@ -504,8 +578,8 @@ export const App = () => {
                                                 showWsDisconnected={showWsDisconnected}
                                             />
                                             <QuickMeetClipboardHost
-                                                accessToken={accessToken}
                                                 ref={meetClipboardRef}
+                                                accessToken={accessToken}
                                             />
                                             {useUISM.isLoading ? (
                                                 <InitialLoad
@@ -516,10 +590,10 @@ export const App = () => {
                                             ) : (
                                                 <div className="main-container">
                                                     <PermissionBanner
+                                                        permission={useNotif.permission}
                                                         masterEnabled={
                                                             useNotif.preferences.masterEnabled
                                                         }
-                                                        permission={useNotif.permission}
                                                         requestPermission={
                                                             useNotif.requestPermission
                                                         }
@@ -571,10 +645,17 @@ export const App = () => {
                                                                             }
                                                                         >
                                                                             <UrlLinkModal
+                                                                                myself={myself}
+                                                                                useCM={useCM}
+                                                                                useNM={useNM}
+                                                                                usePM={usePM}
+                                                                                useSM={useSM}
+                                                                                useTEM={useTEM}
+                                                                                useTM={useTM}
+                                                                                useUISM={useUISM}
                                                                                 accessToken={
                                                                                     accessToken
                                                                                 }
-                                                                                myself={myself}
                                                                                 setMyself={
                                                                                     setMyself
                                                                                 }
@@ -584,13 +665,9 @@ export const App = () => {
                                                                                 target={
                                                                                     urlLinkModal.target
                                                                                 }
-                                                                                useCM={useCM}
-                                                                                useNM={useNM}
-                                                                                usePM={usePM}
-                                                                                useSM={useSM}
-                                                                                useTEM={useTEM}
-                                                                                useTM={useTM}
-                                                                                useUISM={useUISM}
+                                                                                zIndex={
+                                                                                    urlLinkModal.zIndex
+                                                                                }
                                                                                 onClose={
                                                                                     urlLinkModal.closeModal
                                                                                 }
@@ -604,22 +681,22 @@ export const App = () => {
                                                                                 }
                                                                             />
                                                                             <MentionGroupModal
-                                                                                useTEM={useTEM}
                                                                                 myself={myself}
+                                                                                useCM={useCM}
+                                                                                useTEM={useTEM}
+                                                                                useUISM={useUISM}
                                                                                 setMyself={
                                                                                     setMyself
                                                                                 }
                                                                                 socket={
                                                                                     socketInstance
                                                                                 }
-                                                                                useCM={useCM}
-                                                                                useUISM={useUISM}
                                                                             />
                                                                             <HistoryShell
                                                                                 open={historyOpen}
-                                                                                usePM={usePM}
                                                                                 useCM={useCM}
                                                                                 useNM={useNM}
+                                                                                usePM={usePM}
                                                                                 useSM={useSM}
                                                                                 useTM={useTM}
                                                                                 onClose={
@@ -647,22 +724,12 @@ export const App = () => {
                                                                                     ?.projectId !=
                                                                                     null && (
                                                                                     <ModalTaskDiagram
-                                                                                        open={
-                                                                                            taskDiagramOpen
-                                                                                        }
-                                                                                        onClose={() =>
-                                                                                            setTaskDiagramOpen(
-                                                                                                false
-                                                                                            )
-                                                                                        }
                                                                                         myself={
                                                                                             myself
                                                                                         }
-                                                                                        rootTaskId={Number(
-                                                                                            useTM
-                                                                                                .currentPreviewTask
-                                                                                                .id
-                                                                                        )}
+                                                                                        open={
+                                                                                            taskDiagramOpen
+                                                                                        }
                                                                                         projectId={
                                                                                             useTM
                                                                                                 .currentPreviewTask
@@ -678,14 +745,24 @@ export const App = () => {
                                                                                                       .currentPreviewTask
                                                                                                       .title
                                                                                         }
-                                                                                        useTM={
+                                                                                        rootTaskId={Number(
                                                                                             useTM
-                                                                                        }
+                                                                                                .currentPreviewTask
+                                                                                                .id
+                                                                                        )}
                                                                                         usePM={
                                                                                             usePM
                                                                                         }
                                                                                         useSM={
                                                                                             useSM
+                                                                                        }
+                                                                                        useTM={
+                                                                                            useTM
+                                                                                        }
+                                                                                        onClose={() =>
+                                                                                            setTaskDiagramOpen(
+                                                                                                false
+                                                                                            )
                                                                                         }
                                                                                     />
                                                                                 )}
@@ -700,15 +777,15 @@ export const App = () => {
                                                                             >
                                                                                 <Sidebar
                                                                                     myself={myself}
+                                                                                    useCM={useCM}
+                                                                                    useIM={useIM}
+                                                                                    useTEM={useTEM}
                                                                                     setMyself={
                                                                                         setMyself
                                                                                     }
                                                                                     socket={
                                                                                         socketInstance
                                                                                     }
-                                                                                    useCM={useCM}
-                                                                                    useIM={useIM}
-                                                                                    useTEM={useTEM}
                                                                                     useUISM={
                                                                                         useUISM
                                                                                     }

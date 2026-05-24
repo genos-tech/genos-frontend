@@ -6,7 +6,10 @@
 
 export type ChatTypeLabel = "dm" | "gm" | "mdm" | "pm";
 export type NoteTypeLabel = "personal" | "task" | "chat";
-export type EntityType = "chat" | "task" | "note";
+// "project" only appears in agent-emitted citation chips (the search
+// backend never returns project rows). It links to the project's
+// task-list view; no project-preview modal exists.
+export type EntityType = "chat" | "task" | "note" | "project";
 
 export interface SpotlightResult {
     entity_type: EntityType;

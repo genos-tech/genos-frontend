@@ -5,13 +5,13 @@
 
 import { memo } from "react";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import { Box, Chip, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
-import { useTranslation } from "../../i18n";
-import type { Messages } from "../../i18n";
+import { useTranslation, type Messages } from "../../i18n";
 import { purplePalette } from "../../theme/purplePalette";
 import type { SpotlightResult } from "./types";
 
@@ -28,12 +28,14 @@ const ENTITY_ICON = {
     chat: QuestionAnswerRoundedIcon,
     task: AssignmentRoundedIcon,
     note: NoteAltRoundedIcon,
+    project: FolderRoundedIcon,
 };
 
 const ENTITY_ICON_GRADIENT: Record<string, string> = {
     chat: "linear-gradient(135deg, #fb923c 0%, #f59e0b 100%)",
     task: "linear-gradient(135deg, #22c55e 0%, #10b981 100%)",
     note: "linear-gradient(135deg, #818cf8 0%, #6366f1 100%)",
+    project: "linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)",
 };
 
 // Dark-mode text colors tuned for the translucent purple sheet behind
@@ -65,6 +67,7 @@ export const entitySubtitle = (r: SpotlightResult, ts: SpotlightMessages): strin
         }
     }
     if (r.entity_type === "task") return ts.entitySubtitle.task;
+    if (r.entity_type === "project") return ts.entitySubtitle.project;
     if (r.entity_type === "note") {
         switch (r.note_type) {
             case "personal":
@@ -293,9 +296,9 @@ const SpotlightResultItemInner = ({ result, query, isHighlighted, onSelect }: Pr
                     >
                         {result.title ? (
                             <HighlightedText
-                                text={result.title}
-                                query={query}
                                 extraTerms={result.matched_terms}
+                                query={query}
+                                text={result.title}
                             />
                         ) : (
                             t.spotlight.states.untitled
@@ -321,9 +324,9 @@ const SpotlightResultItemInner = ({ result, query, isHighlighted, onSelect }: Pr
                         // the rest of the overlay's accent treatment.
                         return (
                             <Chip
+                                color="primary"
                                 size="sm"
                                 variant="soft"
-                                color="primary"
                                 sx={{
                                     fontSize: "0.6rem",
                                     fontWeight: 700,
@@ -355,10 +358,10 @@ const SpotlightResultItemInner = ({ result, query, isHighlighted, onSelect }: Pr
                         }}
                     >
                         <HighlightedText
-                            text={windowAroundMatch(result.snippet, query, result.matched_terms)}
-                            query={query}
-                            extraTerms={result.matched_terms}
                             boldColor={isDark ? DARK_TEXT_STRONG : undefined}
+                            extraTerms={result.matched_terms}
+                            query={query}
+                            text={windowAroundMatch(result.snippet, query, result.matched_terms)}
                         />
                     </Typography>
                 )}

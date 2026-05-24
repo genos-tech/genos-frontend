@@ -1312,6 +1312,7 @@ export const hi: DeepPartial<Messages> = {
             pm: "प्रोजेक्ट चैट",
             chatFallback: "चैट",
             task: "टास्क",
+            project: "प्रोजेक्ट",
             notePersonal: "पर्सनल नोट",
             noteTask: "टास्क नोट",
             noteChat: "चैट नोट",
@@ -1328,6 +1329,7 @@ export const hi: DeepPartial<Messages> = {
             chatPlain: "{subtitle} (#{id}){sep}",
             noteThread: "{subtitle} (थ्रेड) (#{id}){sep}",
             notePlain: "{subtitle} (#{id}){sep}",
+            projectPlain: "{subtitle} (#{id}){sep}",
         },
     },
     services: {
