@@ -36,12 +36,20 @@ export type TaskNoteMetaProps = {
     taskId: number;
     projectName?: string;
     taskTitle?: string;
+    // Human-readable id of the note's task ("GEN-42"). Used as the
+    // sidebar task-folder label; falls back via `formatTaskDisplayId`
+    // to "#<taskId>" when absent.
+    displayId?: string | null;
     // Task-hierarchy hints used by the sidebar to nest notes under
     // Project → Milestone → Task → Subtask. Optional for backwards-
     // compatibility with older API responses; missing fields fall the
     // note back to a "loose task at project level".
     parentTaskId?: number | null;
     parentTaskTitle?: string | null;
+    // Parent task's human-readable id, for the L3-subtask-collapse
+    // case where the sidebar groups the note under the parent task's
+    // folder.
+    parentTaskDisplayId?: string | null;
     parentTaskIsMilestone?: boolean | null;
     isMilestone?: boolean;
     milestoneId?: number | null;

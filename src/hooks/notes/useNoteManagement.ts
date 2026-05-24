@@ -511,10 +511,17 @@ export const useNoteManagement = (
                         taskId: taskNote.taskId,
                         projectName: newNoteAny.projectName,
                         taskTitle: newNoteAny.taskTitle ?? title,
+                        // Carry the human-readable id so the sidebar's
+                        // task-folder label renders "<code>-<n>"
+                        // immediately. Falls back via
+                        // `formatTaskDisplayId` to "#<taskId>" when the
+                        // create response didn't populate it.
+                        displayId: newNoteAny.displayId,
                         title: taskNote.title,
                         tsUpdated: taskNote.tsUpdated,
                         parentTaskId: newNoteAny.parentTaskId,
                         parentTaskTitle: newNoteAny.parentTaskTitle,
+                        parentTaskDisplayId: newNoteAny.parentTaskDisplayId,
                         parentTaskIsMilestone: newNoteAny.parentTaskIsMilestone,
                         isMilestone: newNoteAny.isMilestone,
                         milestoneId: newNoteAny.milestoneId,

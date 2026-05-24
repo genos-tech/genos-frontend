@@ -19,6 +19,7 @@ import {
     SharedNoteMetaTreeNode,
     TaskNoteMetaProps,
 } from "../../../../types/notes";
+import { formatTaskDisplayId } from "../../../tasks/utils/taskDisplayId";
 import { ChildNoteCreator } from "../../chat-notes/components/ChildNoteCreator";
 import { useNoteTreeState } from "../hooks/useNoteTreeState";
 import { ChatNoteMetaTreeNode, TaskNoteMetaTreeNode } from "../types/noteTypes";
@@ -35,12 +36,18 @@ import { RecentNoteItem } from "./RecentNoteItem";
 // parent task — strict-3-level UX.
 interface SubtaskGroup {
     taskId: number;
+    // Human-readable id for the folder label; null when the backend
+    // hasn't backfilled `project_task_number` yet — the render falls
+    // back to `#<taskId>` via `formatTaskDisplayId`.
+    displayId: string | null;
     taskTitle: string;
     notes: TaskNoteMetaTreeNode[];
 }
 
 interface TaskGroup {
     taskId: number;
+    // Same as SubtaskGroup.displayId — null falls back to `#<taskId>`.
+    displayId: string | null;
     taskTitle: string;
     notes: TaskNoteMetaTreeNode[];
     subtasks: SubtaskGroup[];
@@ -123,17 +130,24 @@ function groupTaskNotes(notes: TaskNoteMetaTreeNode[], t: Messages): ProjectGrou
     const findOrCreateTaskGroup = (
         tasks: TaskGroup[],
         taskId: number,
-        taskTitle: string
+        taskTitle: string,
+        displayId: string | null
     ): TaskGroup => {
         let tg = tasks.find((tt) => tt.taskId === taskId);
         if (!tg) {
             tg = {
                 taskId,
+                displayId,
                 taskTitle: taskTitle || fmt(t.notes.defaults.taskFallback, { taskId }),
                 notes: [],
                 subtasks: [],
             };
             tasks.push(tg);
+        } else if (tg.displayId == null && displayId != null) {
+            // First note in the group may have lacked displayId (e.g.
+            // an in-flight optimistic write); upgrade as soon as a
+            // sibling note carrying displayId joins the same folder.
+            tg.displayId = displayId;
         }
         return tg;
     };
@@ -141,16 +155,20 @@ function groupTaskNotes(notes: TaskNoteMetaTreeNode[], t: Messages): ProjectGrou
     const findOrCreateSubtaskGroup = (
         tg: TaskGroup,
         taskId: number,
-        taskTitle: string
+        taskTitle: string,
+        displayId: string | null
     ): SubtaskGroup => {
         let sg = tg.subtasks.find((s) => s.taskId === taskId);
         if (!sg) {
             sg = {
                 taskId,
+                displayId,
                 taskTitle: taskTitle || fmt(t.notes.defaults.taskFallback, { taskId }),
                 notes: [],
             };
             tg.subtasks.push(sg);
+        } else if (sg.displayId == null && displayId != null) {
+            sg.displayId = displayId;
         }
         return sg;
     };
@@ -186,7 +204,12 @@ function groupTaskNotes(notes: TaskNoteMetaTreeNode[], t: Messages): ProjectGrou
         //       at the same task the milestone already represents).
         const parentIsMilestoneBacking = note.parentTaskIsMilestone === true;
         if (note.parentTaskId == null || parentIsMilestoneBacking) {
-            const tg = findOrCreateTaskGroup(bucketTasks, note.taskId, note.taskTitle ?? "");
+            const tg = findOrCreateTaskGroup(
+                bucketTasks,
+                note.taskId,
+                note.taskTitle ?? "",
+                note.displayId ?? null
+            );
             tg.notes.push(note);
         } else {
             // L3 subtask — the parent task is L2, the note's task is L3.
@@ -196,9 +219,15 @@ function groupTaskNotes(notes: TaskNoteMetaTreeNode[], t: Messages): ProjectGrou
             const tg = findOrCreateTaskGroup(
                 bucketTasks,
                 note.parentTaskId,
-                note.parentTaskTitle ?? ""
+                note.parentTaskTitle ?? "",
+                note.parentTaskDisplayId ?? null
             );
-            const sg = findOrCreateSubtaskGroup(tg, note.taskId, note.taskTitle ?? "");
+            const sg = findOrCreateSubtaskGroup(
+                tg,
+                note.taskId,
+                note.taskTitle ?? "",
+                note.displayId ?? null
+            );
             sg.notes.push(note);
         }
     }
@@ -458,7 +487,10 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         <GroupedNoteSection
             key={`${keyPrefix}-task-${taskGroup.taskId}`}
             groupKey={`${keyPrefix}-task-${taskGroup.taskId}`}
-            groupLabel={`#${taskGroup.taskId}`}
+            groupLabel={formatTaskDisplayId({
+                taskId: taskGroup.taskId,
+                displayId: taskGroup.displayId,
+            })}
             subLabel={taskGroup.taskTitle}
             defaultExpanded={taskGroupContainsNote(taskGroup, activeNoteId)}
         >
@@ -467,7 +499,10 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                 <GroupedNoteSection
                     key={`${keyPrefix}-task-${taskGroup.taskId}-sub-${subGroup.taskId}`}
                     groupKey={`${keyPrefix}-task-${taskGroup.taskId}-sub-${subGroup.taskId}`}
-                    groupLabel={`#${subGroup.taskId}`}
+                    groupLabel={formatTaskDisplayId({
+                        taskId: subGroup.taskId,
+                        displayId: subGroup.displayId,
+                    })}
                     subLabel={subGroup.taskTitle}
                     defaultExpanded={subGroup.notes.some((n) => n.noteId === activeNoteId)}
                 >
