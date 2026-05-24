@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Box, Typography } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { ChatNoteMain } from "../../../features/notes/chat-notes/components/ChatNoteMain";
@@ -80,6 +81,8 @@ const CenteredMessage = ({ children }: { children: React.ReactNode }) => (
 // snapshot at load time. Real-time edits arriving while the modal is
 // open don't refresh the preview; close + reopen to refetch.
 export const ModalNoteView = (props: ModalNoteViewProps) => {
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
     const {
         target,
         onClose,
@@ -154,7 +157,12 @@ export const ModalNoteView = (props: ModalNoteViewProps) => {
         return <CenteredMessage>{t.common.modalView.loadingNote}</CenteredMessage>;
 
     const wrapper = (children: React.ReactNode) => (
-        <Box sx={{ height: "100%", overflow: "auto", p: 2, width: "100%" }}>{children}</Box>
+        <Box
+            className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+            sx={{ height: "100%", overflow: "auto", p: 2, width: "100%" }}
+        >
+            {children}
+        </Box>
     );
 
     // --- My / Shared note branch ---

@@ -196,6 +196,13 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
                 return;
             }
             if (e.key === "Escape" && isOpenRef.current) {
+                // When a Joy Modal is layered on top of Spotlight (e.g.
+                // the inline-citation preview), the modal handles Esc
+                // itself and should consume the keystroke. Skip closing
+                // Spotlight so a single Esc doesn't dismiss BOTH at once.
+                // Joy modals render with role="dialog" — query the DOM
+                // rather than thread modal state through the hook.
+                if (document.querySelector('[role="dialog"]')) return;
                 e.preventDefault();
                 setIsOpen(false);
             }

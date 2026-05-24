@@ -6,7 +6,10 @@
 
 export type ChatTypeLabel = "dm" | "gm" | "mdm" | "pm";
 export type NoteTypeLabel = "personal" | "task" | "chat";
-export type EntityType = "chat" | "task" | "note";
+// "project" only appears in agent-emitted citation chips (the search
+// backend never returns project rows). It links to the project's
+// task-list view; no project-preview modal exists.
+export type EntityType = "chat" | "task" | "note" | "project";
 
 export interface SpotlightResult {
     entity_type: EntityType;
@@ -36,6 +39,10 @@ export interface SpotlightResult {
 
     // Task-specific
     task_id: string | null;
+    // Human-readable task identifier ("<project.code>-<project_task_number>",
+    // e.g. "PRJ-42"). Always shown to end users in place of the raw
+    // task_id. Null on legacy rows or when the task lacks a project.
+    task_display_id: string | null;
 
     // Note-specific
     note_id: string | null;

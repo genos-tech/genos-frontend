@@ -27,6 +27,7 @@ import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
+import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
@@ -41,7 +42,7 @@ import {
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { fmt, useTranslation, type Messages } from "../../i18n";
@@ -67,6 +68,10 @@ interface Props {
     isLoading: boolean;
     error: string | null;
     onSelect: (r: SpotlightResult) => void;
+    // Inline citations in the agent answer open a quick-look preview
+    // (existing UrlLinkModal) on top of Spotlight rather than navigating
+    // away. Source chips and result rows keep using `onSelect`.
+    onPreview: (r: SpotlightResult) => void;
     onAsk: (overrideQuery?: string) => void;
     onApprove: () => void;
     onReject: () => void;
@@ -106,6 +111,7 @@ export const SpotlightOverlay = ({
     isLoading,
     error,
     onSelect,
+    onPreview,
     onAsk,
     onApprove,
     onReject,
@@ -290,6 +296,7 @@ export const SpotlightOverlay = ({
                     <Box
                         ref={inputRef}
                         component="input"
+                        value={localInput}
                         placeholder={
                             askBusy
                                 ? t.spotlight.placeholder.askBusy
@@ -299,7 +306,6 @@ export const SpotlightOverlay = ({
                                     ? t.spotlight.placeholder.followUp
                                     : t.spotlight.placeholder.default
                         }
-                        value={localInput}
                         sx={{
                             flex: 1,
                             minWidth: 0,
@@ -380,21 +386,21 @@ export const SpotlightOverlay = ({
                     )}
                     {ask.isStreaming && (
                         <Button
-                            size="sm"
-                            variant="plain"
                             color="danger"
-                            onClick={onCancel}
+                            size="sm"
                             sx={{ fontSize: "0.875rem", whiteSpace: "nowrap" }}
+                            variant="plain"
+                            onClick={onCancel}
                         >
                             {t.spotlight.actions.cancel}
                         </Button>
                     )}
                     <Tooltip
+                        size="sm"
+                        variant="outlined"
                         title={!aiAnswersEnabled ? t.spotlight.errors.enableAiHint : ""}
                         // Empty title disables the tooltip in MUI Joy.
                         placement="bottom"
-                        size="sm"
-                        variant="outlined"
                     >
                         {/* Span wrapper lets the tooltip fire over a
                             disabled button (pointer events on a disabled
@@ -406,7 +412,6 @@ export const SpotlightOverlay = ({
                                 size="sm"
                                 startDecorator={<AutoAwesomeRoundedIcon sx={{ fontSize: 16 }} />}
                                 variant="solid"
-                                onClick={() => onAsk()}
                                 sx={{
                                     // Mobile: collapse to an icon-only
                                     // square so the row stays single-line
@@ -418,6 +423,7 @@ export const SpotlightOverlay = ({
                                         m: { xs: 0, sm: undefined },
                                     },
                                 }}
+                                onClick={() => onAsk()}
                             >
                                 <Box
                                     component="span"
@@ -435,15 +441,16 @@ export const SpotlightOverlay = ({
                     stay readable while a new one streams in below them. */}
                 <ConversationPanel
                     ask={ask}
-                    turns={turns}
-                    isDark={isDark}
-                    onSelect={onSelect}
-                    onApprove={onApprove}
-                    onReject={onReject}
-                    onNewConversation={onNewConversation}
-                    onAsk={onAsk}
                     askDisabled={askDisabled}
+                    isDark={isDark}
                     ts={t.spotlight}
+                    turns={turns}
+                    onApprove={onApprove}
+                    onAsk={onAsk}
+                    onNewConversation={onNewConversation}
+                    onPreview={onPreview}
+                    onReject={onReject}
+                    onSelect={onSelect}
                 />
 
                 {/* Results / states — hidden once a conversation is in
@@ -460,7 +467,7 @@ export const SpotlightOverlay = ({
                         display: hasConversation ? "none" : undefined,
                     }}
                 >
-                    {!hasQuery && <EmptyHint text={t.spotlight.empty.initial} isDark={isDark} />}
+                    {!hasQuery && <EmptyHint isDark={isDark} text={t.spotlight.empty.initial} />}
 
                     {hasQuery && isLoading && !hasResults && (
                         <Box
@@ -485,10 +492,10 @@ export const SpotlightOverlay = ({
                         </Box>
                     )}
 
-                    {hasQuery && error && <EmptyHint text={error} tone="error" isDark={isDark} />}
+                    {hasQuery && error && <EmptyHint isDark={isDark} text={error} tone="error" />}
 
                     {hasQuery && !isLoading && !error && !hasResults && (
-                        <EmptyHint text={t.spotlight.empty.noMatches} isDark={isDark} />
+                        <EmptyHint isDark={isDark} text={t.spotlight.empty.noMatches} />
                     )}
 
                     {hasResults && (
@@ -502,8 +509,8 @@ export const SpotlightOverlay = ({
                             {results.map((r) => (
                                 <SpotlightResultItem
                                     key={`${r.entity_type}:${r.entity_id}`}
-                                    result={r}
                                     query={deferredQuery}
+                                    result={r}
                                     isHighlighted={
                                         resultIndexOf.get(`${r.entity_type}:${r.entity_id}`) ===
                                         selectedIndex
@@ -555,6 +562,7 @@ interface ConversationPanelProps {
     turns: CompletedTurn[];
     isDark: boolean;
     onSelect: (r: SpotlightResult) => void;
+    onPreview: (r: SpotlightResult) => void;
     onApprove: () => void;
     onReject: () => void;
     onNewConversation: () => void;
@@ -581,6 +589,7 @@ const ConversationPanel = memo(
         turns,
         isDark,
         onSelect,
+        onPreview,
         onApprove,
         onReject,
         onNewConversation,
@@ -648,7 +657,7 @@ const ConversationPanel = memo(
         return (
             <Box
                 ref={scrollRef}
-                onScroll={handleScroll}
+                className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 sx={{
                     maxHeight: "40vh",
                     overflowY: "auto",
@@ -661,6 +670,7 @@ const ConversationPanel = memo(
                     flexDirection: "column",
                     gap: 1.25,
                 }}
+                onScroll={handleScroll}
             >
                 {showHeader && (
                     <Box
@@ -695,20 +705,23 @@ const ConversationPanel = memo(
                         <Box sx={{ ml: "auto" }}>
                             {(turns.length > 0 || ask.sessionId) && (
                                 <Tooltip
-                                    title={ts.conversation.backToSearchTooltip}
                                     placement="bottom"
                                     size="sm"
+                                    title={ts.conversation.backToSearchTooltip}
                                     variant="outlined"
                                 >
                                     <Button
                                         size="sm"
-                                        variant="outlined"
-                                        color="neutral"
+                                        // Soft+primary reads as a tinted purple chip
+                                        // against the deep-purple sheet, where the
+                                        // earlier outlined+neutral was near-invisible.
+                                        color="primary"
+                                        sx={{ fontSize: "0.875rem", py: 0.25 }}
+                                        variant="soft"
                                         startDecorator={
                                             <ArrowBackRoundedIcon sx={{ fontSize: 14 }} />
                                         }
                                         onClick={onNewConversation}
-                                        sx={{ fontSize: "0.875rem", py: 0.25 }}
                                     >
                                         {ts.actions.backToSearch}
                                     </Button>
@@ -721,37 +734,39 @@ const ConversationPanel = memo(
                 {turns.map((turn) => (
                     <TurnView
                         key={turn.id}
-                        askedQuery={turn.askedQuery}
                         answer={turn.answer}
                         answerSources={turn.answerSources}
-                        toolEvents={turn.toolEvents}
+                        askDisabled={askDisabled}
+                        askedQuery={turn.askedQuery}
                         askError={turn.askError}
                         isCurrent={false}
                         isDark={isDark}
-                        onSelect={onSelect}
-                        onAsk={onAsk}
-                        askDisabled={askDisabled}
+                        toolEvents={turn.toolEvents}
                         ts={ts}
+                        onAsk={onAsk}
+                        onPreview={onPreview}
+                        onSelect={onSelect}
                     />
                 ))}
 
                 {showAsk && (
                     <TurnView
-                        askedQuery={ask.askedQuery}
                         answer={ask.answer}
                         answerSources={ask.answerSources}
-                        toolEvents={ask.toolEvents}
+                        askDisabled={askDisabled}
+                        askedQuery={ask.askedQuery}
                         askError={ask.askError}
-                        isCurrent
+                        isDark={isDark}
                         isStreaming={ask.isStreaming}
                         pendingApproval={ask.pendingApproval}
-                        isDark={isDark}
-                        onSelect={onSelect}
-                        onApprove={onApprove}
-                        onReject={onReject}
-                        onAsk={onAsk}
-                        askDisabled={askDisabled}
+                        toolEvents={ask.toolEvents}
                         ts={ts}
+                        isCurrent
+                        onApprove={onApprove}
+                        onAsk={onAsk}
+                        onPreview={onPreview}
+                        onReject={onReject}
+                        onSelect={onSelect}
                     />
                 )}
             </Box>
@@ -779,6 +794,7 @@ interface TurnViewProps {
     pendingApproval?: PendingApprovalPayload | null;
     isDark: boolean;
     onSelect: (r: SpotlightResult) => void;
+    onPreview: (r: SpotlightResult) => void;
     onApprove?: () => void;
     onReject?: () => void;
     // Pass `onAsk` rather than a pre-bound `onRetry` so the prop reference
@@ -794,26 +810,28 @@ interface TurnViewProps {
 // Matches the citation tokens the prompt (`prompts.py`) instructs the
 // model to emit: one or more colon-separated segments inside square
 // brackets, e.g. "[task:123]", "[chat:pm:1:thread:3]",
-// "[note:personal:50]". The bracketed text must start with a known
-// entity-type prefix so we don't accidentally rewrite a user's
-// literal `[reminder: ship by Friday]`-style aside.
-const CITATION_PATTERN = /\[((?:chat|task|note):[^\]\s]+)\]/g;
+// "[note:personal:50]", "[project:5]". The bracketed text must start
+// with a known entity-type prefix so we don't accidentally rewrite a
+// user's literal `[reminder: ship by Friday]`-style aside.
+const CITATION_PATTERN = /\[((?:chat|task|note|project):[^\]\s]+)\]/g;
+
+// Internal href scheme used by `rewriteCitations` so the ReactMarkdown
+// `a` override can recognise an inline citation and trigger the preview
+// modal instead of navigating. Format: "spotlight-citation:<token>"
+// where <token> is the same string the citation regex captures.
+const CITATION_HREF_PREFIX = "spotlight-citation:";
 
 /** Replace bare `[entity_id]` citation tokens in the LLM answer with
- *  the matching source's title (or its friendly subtitle when the
- *  title is empty). Rendered as italic markdown emphasis so the
- *  reference is visually distinguishable from surrounding prose but
- *  doesn't pretend to be a clickable link — the row of source chips
- *  below the answer is the canonical click target. Tokens that don't
- *  match a known source are left untouched so users can still see
- *  what the model intended.
+ *  a markdown link whose label is the matching source's title (or its
+ *  friendly subtitle when the title is empty) and whose href uses our
+ *  `spotlight-citation:` sentinel scheme. The ReactMarkdown `a` override
+ *  intercepts that scheme and opens a preview modal on click (see
+ *  `CitationLink`). Tokens that don't match a known source are left
+ *  untouched so users can still see what the model intended.
  *
- *  We previously rendered citations as anchors, but the required
- *  `href` placeholder ("#") resolved to "current page + #" in the
- *  browser status bar on hover, which suggested the link went to
- *  whatever page the user was on. Without a real navigable href it
- *  is clearer to drop the link affordance entirely and rely on the
- *  source-chip row for navigation.
+ *  The label is wrapped in markdown emphasis (`*...*`) to keep the
+ *  visual cadence of the prior italic-only treatment while adding the
+ *  clickable affordance.
  */
 function rewriteCitations(
     answer: string,
@@ -825,13 +843,83 @@ function rewriteCitations(
         const source = sourcesById.get(entityId);
         if (!source) return match;
         const label = (source.title || "").trim() || entitySubtitle(source, ts);
-        // Markdown emphasis tokens (`*`) inside the label would break
-        // the wrapping italics; neutralise defensively even though
-        // titles in this app are user-authored and rarely contain `*`.
-        const safeLabel = label.replace(/\*/g, "");
-        return `*${safeLabel}*`;
+        // Escape markdown link/emphasis controls that would break parsing:
+        //   * — closes the wrapping emphasis early
+        //   [ ] — interpreted as a link label
+        //   ( ) — interpreted as a link target boundary
+        const safeLabel = label.replace(/[*[\]()]/g, "");
+        return `[*${safeLabel}*](${CITATION_HREF_PREFIX}${entityId})`;
     });
 }
+
+interface CitationLinkProps {
+    href?: string;
+    children?: React.ReactNode;
+    sourcesById: Map<string, SpotlightResult>;
+    onPreview: (r: SpotlightResult) => void;
+    isDark: boolean;
+}
+
+/** ReactMarkdown anchor override.
+ *
+ *  Inspects the rendered link's href: when it starts with our
+ *  `spotlight-citation:` sentinel, it renders a styled <button> that
+ *  fires `onPreview(source)` on click. Any other href (the model
+ *  occasionally inlines real URLs for web-search results, or markdown
+ *  the user pasted) falls through to a normal external-link anchor.
+ */
+const CitationLink = ({ href, children, sourcesById, onPreview, isDark }: CitationLinkProps) => {
+    if (href && href.startsWith(CITATION_HREF_PREFIX)) {
+        const token = href.slice(CITATION_HREF_PREFIX.length);
+        const source = sourcesById.get(token);
+        if (source) {
+            return (
+                <Box
+                    component="button"
+                    type="button"
+                    sx={{
+                        // Inline-link affordance, not a chrome button.
+                        background: "none",
+                        border: "none",
+                        p: 0,
+                        cursor: "pointer",
+                        font: "inherit",
+                        color: isDark ? DARK_TEXT_STRONG : "primary.600",
+                        textDecoration: "underline",
+                        textDecorationStyle: "dotted",
+                        textUnderlineOffset: "2px",
+                        // Soft hover highlight to advertise interactivity.
+                        borderRadius: "3px",
+                        transition: "background 100ms ease",
+                        "&:hover": {
+                            background: isDark
+                                ? "rgba(167,139,250,0.18)"
+                                : "rgba(124,58,237,0.10)",
+                            textDecorationStyle: "solid",
+                        },
+                        "&:focus-visible": {
+                            outline: "2px solid",
+                            outlineColor: "primary.400",
+                            outlineOffset: "1px",
+                        },
+                    }}
+                    onClick={() => onPreview(source)}
+                >
+                    {children}
+                </Box>
+            );
+        }
+        // Unresolved sentinel — shouldn't happen post-rewriteCitations,
+        // but be safe: render the children plainly without an anchor.
+        return <>{children}</>;
+    }
+    // Any other href: pass through as a normal external link.
+    return (
+        <a href={href} rel="noopener noreferrer" target="_blank">
+            {children}
+        </a>
+    );
+};
 
 const TurnViewInner = ({
     askedQuery,
@@ -844,6 +932,7 @@ const TurnViewInner = ({
     pendingApproval,
     isDark,
     onSelect,
+    onPreview,
     onApprove,
     onReject,
     onAsk,
@@ -863,9 +952,20 @@ const TurnViewInner = ({
     // Look-up table for `rewriteCitations` and the `a` override below.
     // Rebuilt only when the sources array reference changes, not on
     // every streaming `answer_delta` tick.
+    //
+    // Citation tokens captured by `CITATION_PATTERN` are always
+    // "<type>:<rest>". Task / note / project entity_ids already carry
+    // that prefix; chat entity_ids do NOT (they're built as e.g.
+    // "dm:9:thread:4" in the backend chunker). Normalise to the
+    // prefixed form so chat citations resolve too.
     const sourcesById = useMemo(() => {
         const m = new Map<string, SpotlightResult>();
-        for (const s of answerSources) m.set(s.entity_id, s);
+        for (const s of answerSources) {
+            const tokenKey = s.entity_id.startsWith(`${s.entity_type}:`)
+                ? s.entity_id
+                : `${s.entity_type}:${s.entity_id}`;
+            m.set(tokenKey, s);
+        }
         return m;
     }, [answerSources]);
 
@@ -996,11 +1096,11 @@ const TurnViewInner = ({
 
                     {isCurrent && pendingApproval && onApprove && onReject && (
                         <ApprovalCard
-                            pending={pendingApproval}
                             isDark={isDark}
+                            pending={pendingApproval}
+                            ts={ts}
                             onApprove={onApprove}
                             onReject={onReject}
-                            ts={ts}
                         />
                     )}
 
@@ -1094,7 +1194,35 @@ const TurnViewInner = ({
                                 },
                             }}
                         >
-                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            <ReactMarkdown
+                                remarkPlugins={[remarkGfm]}
+                                // react-markdown's default `urlTransform`
+                                // allow-lists http(s)/mailto/etc and strips
+                                // unknown schemes — including our internal
+                                // `spotlight-citation:` sentinel, which would
+                                // arrive at <a> as an empty href and break
+                                // the click handler. Pass through citation
+                                // hrefs untouched; delegate everything else
+                                // to the library default so the existing
+                                // XSS guards still apply.
+                                components={{
+                                    a: ({ href, children }) => (
+                                        <CitationLink
+                                            href={href}
+                                            isDark={isDark}
+                                            sourcesById={sourcesById}
+                                            onPreview={onPreview}
+                                        >
+                                            {children}
+                                        </CitationLink>
+                                    ),
+                                }}
+                                urlTransform={(url) =>
+                                    url.startsWith(CITATION_HREF_PREFIX)
+                                        ? url
+                                        : defaultUrlTransform(url)
+                                }
+                            >
                                 {answerForRender}
                             </ReactMarkdown>
                         </Box>
@@ -1131,10 +1259,10 @@ const TurnViewInner = ({
                                     {visible.map((s) => (
                                         <Chip
                                             key={`${s.entity_type}:${s.entity_id}`}
-                                            size="md"
-                                            variant="solid"
                                             color="primary"
+                                            size="md"
                                             startDecorator={_sourceIcon(s.entity_type)}
+                                            variant="solid"
                                             sx={{
                                                 cursor: "pointer",
                                                 fontSize: "0.875rem",
@@ -1152,34 +1280,33 @@ const TurnViewInner = ({
                                             onClick={() => onSelect(s)}
                                         >
                                             <HighlightedText
-                                                text={_chipLabel(s, ts)}
-                                                query={askedQuery}
                                                 extraTerms={s.matched_terms}
+                                                query={askedQuery}
+                                                text={_chipLabel(s, ts)}
                                             />
                                         </Chip>
                                     ))}
                                     {!showAllSources && hiddenCount > 0 && (
                                         <Button
+                                            color="primary"
                                             size="sm"
                                             variant="plain"
-                                            color="primary"
-                                            onClick={() => setShowAllSources(true)}
                                             sx={{
                                                 minHeight: 0,
                                                 py: 0,
                                                 px: 0.5,
                                                 fontSize: "0.875rem",
                                             }}
+                                            onClick={() => setShowAllSources(true)}
                                         >
                                             {fmt(ts.actions.moreCount, { count: hiddenCount })}
                                         </Button>
                                     )}
                                     {showAllSources && answerSources.length > CHIPS_INITIAL && (
                                         <Button
+                                            color="neutral"
                                             size="sm"
                                             variant="plain"
-                                            color="neutral"
-                                            onClick={() => setShowAllSources(false)}
                                             sx={{
                                                 minHeight: 0,
                                                 py: 0,
@@ -1187,6 +1314,7 @@ const TurnViewInner = ({
                                                 fontSize: "0.875rem",
                                                 opacity: 0.65,
                                             }}
+                                            onClick={() => setShowAllSources(false)}
                                         >
                                             {ts.actions.showLess}
                                         </Button>
@@ -1205,12 +1333,12 @@ const TurnViewInner = ({
                 >
                     {showCopy && (
                         <IconButton
-                            size="sm"
-                            variant="plain"
                             color={copied ? "success" : "neutral"}
-                            onClick={handleCopy}
-                            title={ts.actions.copyAnswer}
+                            size="sm"
                             sx={{ minWidth: 0, p: "3px" }}
+                            title={ts.actions.copyAnswer}
+                            variant="plain"
+                            onClick={handleCopy}
                         >
                             {copied ? (
                                 <CheckRoundedIcon sx={{ fontSize: 14 }} />
@@ -1221,13 +1349,13 @@ const TurnViewInner = ({
                     )}
                     {showRetry && (
                         <IconButton
-                            size="sm"
-                            variant="plain"
                             color="neutral"
                             disabled={askDisabled}
-                            onClick={onRetry}
-                            title={ts.actions.retry}
+                            size="sm"
                             sx={{ minWidth: 0, p: "3px" }}
+                            title={ts.actions.retry}
+                            variant="plain"
+                            onClick={onRetry}
                         >
                             <ReplayRoundedIcon sx={{ fontSize: 14 }} />
                         </IconButton>
@@ -1364,15 +1492,21 @@ function _chipLabel(s: SpotlightResult, ts: SpotlightMessages): string {
 
     if (s.entity_type === "task" && s.task_id) {
         const template = badge === "comment" ? ts.chip.taskComment : ts.chip.taskPlain;
-        return fmt(template, { subtitle, id: s.task_id, sep });
+        // Prefer human-readable PRJ-123. Falls back to the raw numeric
+        // task_id only for legacy rows or tasks without a project.
+        const id = s.task_display_id || s.task_id;
+        return fmt(template, { subtitle, id, sep });
     }
     if (s.entity_type === "chat" && s.chat_id) {
         const template = badge === "thread" ? ts.chip.chatThread : ts.chip.chatPlain;
-        return fmt(template, { subtitle, id: s.chat_id, sep });
+        return fmt(template, { subtitle, sep });
     }
     if (s.entity_type === "note" && s.note_id) {
         const template = badge === "thread" ? ts.chip.noteThread : ts.chip.notePlain;
-        return fmt(template, { subtitle, id: s.note_id, sep });
+        return fmt(template, { subtitle, sep });
+    }
+    if (s.entity_type === "project" && s.project_id) {
+        return fmt(ts.chip.projectPlain, { subtitle, sep });
     }
     // Fallback to raw entity_id if specific ids are absent.
     return title ? `${s.entity_id}: ${title}` : s.entity_id;
@@ -1382,6 +1516,7 @@ function _sourceIcon(entityType: string) {
     if (entityType === "task") return <AssignmentRoundedIcon sx={{ fontSize: 13 }} />;
     if (entityType === "chat") return <ChatBubbleOutlineRoundedIcon sx={{ fontSize: 13 }} />;
     if (entityType === "note") return <StickyNote2RoundedIcon sx={{ fontSize: 13 }} />;
+    if (entityType === "project") return <FolderRoundedIcon sx={{ fontSize: 13 }} />;
     return undefined;
 }
 
@@ -1470,20 +1605,20 @@ const ApprovalCard = ({ pending, isDark, onApprove, onReject, ts }: ApprovalCard
             )}
             <Box sx={{ display: "flex", gap: 0.75 }}>
                 <Button
-                    size="sm"
                     color="success"
+                    size="sm"
+                    sx={{ fontSize: "0.9375rem" }}
                     variant="solid"
                     onClick={onApprove}
-                    sx={{ fontSize: "0.9375rem" }}
                 >
                     {ts.actions.approve}
                 </Button>
                 <Button
-                    size="sm"
                     color="neutral"
+                    size="sm"
+                    sx={{ fontSize: "0.9375rem" }}
                     variant="outlined"
                     onClick={onReject}
-                    sx={{ fontSize: "0.9375rem" }}
                 >
                     {ts.actions.reject}
                 </Button>

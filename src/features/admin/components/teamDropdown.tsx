@@ -416,55 +416,6 @@ export const TeamDropdown = (props: TeamDropdownProps) => {
                     })}
 
                     <Divider sx={{ my: 1, background: styles.dividerColor }} />
-
-                    {/* Add New Team */}
-                    {/* <MenuItem
-                        onClick={() => {
-                            console.log("create team via modal?");
-                        }}
-                        sx={{
-                            borderRadius: "10px",
-                            py: 1.25,
-                            px: 1.5,
-                            transition: "all 0.15s ease",
-                            "&:hover": {
-                                background: "rgba(34,197,94,0.1)",
-                            },
-                        }}
-                    >
-                        <ListItemDecorator>
-                            <Box
-                                sx={{
-                                    width: 28,
-                                    height: 28,
-                                    borderRadius: "8px",
-                                    background:
-                                        "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                }}
-                            >
-                                <AddCircleRoundedIcon sx={{ color: "#fff", fontSize: 16 }} />
-                            </Box>
-                        </ListItemDecorator>
-                        <Typography
-                            level="body-sm"
-                            sx={{ fontWeight: 500, color: styles.successColor }}
-                        >
-                            New Team
-                        </Typography>
-                        <Typography
-                            level="body-xs"
-                            sx={{
-                                ml: "auto",
-                                color: styles.subtitleColor,
-                                fontStyle: "italic",
-                            }}
-                        >
-                            Coming soon
-                        </Typography>
-                    </MenuItem> */}
                 </Menu>
             </Dropdown>
         </Box>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Box, Typography } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { TaskPreview } from "../../../features/tasks/components/contents/TaskPreview";
@@ -45,6 +46,8 @@ type ModalTaskViewProps = {
 // load time. WebSocket updates to the task that arrive while the modal
 // is open won't refresh the modal's view; close + reopen to refetch.
 export const ModalTaskView = (props: ModalTaskViewProps) => {
+    const { mode } = useColorScheme();
+    const isDark = mode === "dark";
     const {
         target,
         onClose,
@@ -159,7 +162,10 @@ export const ModalTaskView = (props: ModalTaskViewProps) => {
     };
 
     return (
-        <Box sx={{ height: "100%", overflow: "auto", width: "100%" }}>
+        <Box
+            className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
+            sx={{ height: "100%", overflow: "auto", width: "100%" }}
+        >
             <TaskPreview
                 myself={myself}
                 setMyself={setMyself}

@@ -75,15 +75,6 @@ const buildChatIntent = (
               ? chatLabel
               : fmt(routerMessages.chatTitleWithLabel, { senderName, chatLabel });
 
-    console.log("send chat notification", {
-        id: `chat:${msg.chatType}:${msg.chatId}:${msg.messageId}`,
-        category: "chats",
-        title,
-        body: truncate(msg.contentText || ""),
-        icon: useTEM.teamMemberProfiles[msg.sender.userId]?.avatarImgPath || undefined,
-        senderId: msg.sender.userId,
-    });
-
     return {
         id: `chat:${msg.chatType}:${msg.chatId}:${msg.messageId}`,
         category: "chats",
@@ -121,15 +112,6 @@ const buildThreadIntent = (
     const senderName = msg.sender.userName || routerMessages.someone;
     const parentLabel = labelForChatType(msg.chatType, msg.chatName);
     const title = fmt(routerMessages.threadReplyTitle, { senderName, parentLabel });
-
-    console.log("send thread notification", {
-        id: `thread:${msg.chatType}:${msg.chatId}:${msg.threadId}:${msg.messageId}`,
-        category: "thread_replies",
-        title,
-        body: truncate(msg.contentText || ""),
-        icon: useTEM.teamMemberProfiles[msg.sender.userId].avatarImgPath || undefined,
-        senderId: msg.sender.userId,
-    });
 
     return {
         id: `thread:${msg.chatType}:${msg.chatId}:${msg.threadId}:${msg.messageId}`,
@@ -180,13 +162,6 @@ const buildActivityIntent = (
         category === "mentions"
             ? fmt(routerMessages.mentionTitle, { senderName, subjectLabel })
             : fmt(routerMessages.taskCommentTitle, { senderName });
-
-    console.log("send activity notification", {
-        id: `activity:${category}:${activity.activityId}`,
-        category,
-        title,
-        body: truncate(activity.firstLineContent || ""),
-    });
 
     return {
         id: `activity:${category}:${activity.activityId}`,

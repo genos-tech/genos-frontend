@@ -28,6 +28,11 @@ type UrlLinkModalProps = {
     usePM: ProjectManagementState;
     useNM: NoteManagementState;
     useSM?: SprintMilestoneManagementState;
+    // Stacking override. Defaults to 10020, the chat-message link case.
+    // The Spotlight overlay sits at 13100, so the preview opened from a
+    // citation inside an answer must pass a higher value (e.g. 13200)
+    // to render above the Spotlight sheet.
+    zIndex?: number;
 };
 
 // Global preview modal for internal links clicked inside chat messages.
@@ -35,7 +40,8 @@ type UrlLinkModalProps = {
 // via `onClose`. Sizing is viewport-relative so the dialog stays usable
 // on a wide range of screen sizes without overflowing.
 export const UrlLinkModal = (props: UrlLinkModalProps) => {
-    const { target, onClose, ...rest } = props;
+    const { target, onClose, zIndex, ...rest } = props;
+    const effectiveZIndex = zIndex ?? 10020;
 
     const renderBody = () => {
         if (!target) return null;
@@ -64,7 +70,7 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
     return (
         <Modal
             open={target !== null}
-            sx={{ zIndex: 10020 }}
+            sx={{ zIndex: effectiveZIndex }}
             slotProps={{
                 backdrop: {
                     sx: {
