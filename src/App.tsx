@@ -563,6 +563,10 @@ export const App = () => {
                                                 query={spotlight.query}
                                                 results={spotlight.results}
                                                 turns={spotlight.turns}
+                                                historyMode={spotlight.historyMode}
+                                                historySessions={spotlight.historySessions}
+                                                historyDetail={spotlight.historyDetail}
+                                                historyIsLoading={spotlight.historyIsLoading}
                                                 onApprove={spotlight.onApprove}
                                                 onAsk={spotlight.onAsk}
                                                 onCancel={spotlight.onCancel}
@@ -572,6 +576,10 @@ export const App = () => {
                                                 onQueryChange={spotlight.setQuery}
                                                 onReject={spotlight.onReject}
                                                 onSelect={handleSpotlightSelect}
+                                                openHistory={spotlight.openHistory}
+                                                viewHistorySession={spotlight.viewHistorySession}
+                                                backToHistoryList={spotlight.backToHistoryList}
+                                                closeHistory={spotlight.closeHistory}
                                             />
                                             <ConnectionStatusSnackbar
                                                 showApiDown={showApiDown}

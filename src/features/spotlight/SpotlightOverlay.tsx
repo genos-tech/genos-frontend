@@ -26,8 +26,10 @@ import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
+import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
@@ -46,7 +48,13 @@ import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 import { fmt, useTranslation, type Messages } from "../../i18n";
-import type { AgentUsage, PendingApprovalPayload } from "../../services/agentApi";
+import type {
+    AgentSessionDetail,
+    AgentSessionSummary,
+    AgentSessionTurn,
+    AgentUsage,
+    PendingApprovalPayload,
+} from "../../services/agentApi";
 import { purplePalette } from "../../theme/purplePalette";
 import {
     badgeFor,
@@ -55,7 +63,7 @@ import {
     SpotlightResultItem,
 } from "./SpotlightResultItem";
 import type { SpotlightResult } from "./types";
-import type { AskState, CompletedTurn, ToolEvent } from "./useSpotlight";
+import type { AskState, CompletedTurn, HistoryMode, ToolEvent } from "./useSpotlight";
 
 type SpotlightMessages = Messages["spotlight"];
 
@@ -84,6 +92,18 @@ interface Props {
     // button and Enter shortcut are disabled with an explanatory
     // tooltip and Spotlight stays a pure search overlay.
     aiAnswersEnabled: boolean;
+    // ----- History panel (Phase ~4.6) -----
+    // When `historyMode !== "closed"` the conversation panel slot
+    // renders a read-only archive instead of the live `turns`/`ask`.
+    // The hook owns all loading; the overlay just renders.
+    historyMode: HistoryMode;
+    historySessions: AgentSessionSummary[];
+    historyDetail: AgentSessionDetail | null;
+    historyIsLoading: boolean;
+    openHistory: () => void;
+    viewHistorySession: (sessionId: string) => void;
+    backToHistoryList: () => void;
+    closeHistory: () => void;
 }
 
 // Distance from the bottom (px) under which we consider the user
@@ -121,6 +141,14 @@ export const SpotlightOverlay = ({
     turns,
     dailyUsage,
     aiAnswersEnabled,
+    historyMode,
+    historySessions,
+    historyDetail,
+    historyIsLoading,
+    openHistory,
+    viewHistorySession,
+    backToHistoryList,
+    closeHistory,
 }: Props) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
@@ -213,6 +241,20 @@ export const SpotlightOverlay = ({
     // Show "Follow up" when there is at least one completed turn or the
     // current session is active — i.e., the user is mid-conversation.
     const hasConversation = turns.length > 0 || Boolean(ask.sessionId);
+    // Agent mode: the moment the user presses Enter we flip the layout
+    // so the conversation panel becomes the main surface and the input
+    // sits at the bottom (chat-style). Using `hasAskContent` rather
+    // than `hasConversation` makes the flip happen synchronously on
+    // submit — `ask.sessionId` only arrives ~9s later in `onDone`,
+    // which would otherwise leave the input awkwardly at the top while
+    // the first answer streams in.
+    //
+    // The history panel also lives in agent mode — opening History
+    // from a clean state still flips layout so the archive view gets
+    // the full sheet height instead of being squashed under search
+    // results that would otherwise be visible.
+    const historyOpen = historyMode !== "closed";
+    const inAgentMode = hasConversation || hasAskContent(ask) || historyOpen;
 
     if (!isOpen) return null;
 
@@ -250,8 +292,9 @@ export const SpotlightOverlay = ({
                 sx={{
                     // Mobile: use nearly full width so the Ask button
                     // fits on the same row as the input + search icon.
-                    // Desktop unchanged.
-                    width: { xs: "100%", sm: "min(700px, 92vw)" },
+                    // Desktop nudged up to 780px so the input still
+                    // breathes after adding the History icon next to Ask.
+                    width: { xs: "100%", sm: "min(780px, 92vw)" },
                     // Reserve room for the BottomTabBar so the overlay's
                     // bottom edge doesn't slide under it on mobile.
                     maxHeight: {
@@ -272,7 +315,11 @@ export const SpotlightOverlay = ({
                     overflow: "hidden",
                 }}
             >
-                {/* Input row + Ask button */}
+                {/* Input row + Ask button.
+                    In agent mode the input moves to the bottom of the
+                    sheet (chat-style) via `order: 2`; the border flips
+                    from below (search-mode separator above results) to
+                    above (separator below the conversation panel). */}
                 <Box
                     sx={{
                         display: "flex",
@@ -282,8 +329,20 @@ export const SpotlightOverlay = ({
                         gap: { xs: 0.5, sm: 1 },
                         px: { xs: 1, sm: 2 },
                         py: { xs: 1, sm: 1.5 },
-                        borderBottom: "1px solid",
-                        borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+                        order: inAgentMode ? 2 : 0,
+                        ...(inAgentMode
+                            ? {
+                                  borderTop: "1px solid",
+                                  borderColor: isDark
+                                      ? "rgba(255,255,255,0.06)"
+                                      : "rgba(0,0,0,0.06)",
+                              }
+                            : {
+                                  borderBottom: "1px solid",
+                                  borderColor: isDark
+                                      ? "rgba(255,255,255,0.06)"
+                                      : "rgba(0,0,0,0.06)",
+                              }),
                     }}
                 >
                     <SearchRoundedIcon
@@ -434,29 +493,62 @@ export const SpotlightOverlay = ({
                             </Button>
                         </Box>
                     </Tooltip>
+                    {/* History entry point — persistent across search
+                        and agent modes (sits right of Ask so a returning
+                        user with no live conversation in localStorage
+                        can still reach their past sessions). Clicking
+                        switches the panel into the History list view
+                        (re-fetches once per click; bounded ≤20 rows). */}
+                    <Tooltip
+                        size="sm"
+                        title={t.spotlight.history.openTooltip}
+                        variant="outlined"
+                        placement="bottom"
+                    >
+                        <IconButton
+                            color="neutral"
+                            size="sm"
+                            sx={{ minWidth: 0, p: "3px", flexShrink: 0 }}
+                            variant="plain"
+                            onClick={openHistory}
+                        >
+                            <HistoryRoundedIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
+                        </IconButton>
+                    </Tooltip>
                 </Box>
 
                 {/* Conversation history + current in-flight turn.
                     Rendered as a single scrollable region so past turns
-                    stay readable while a new one streams in below them. */}
+                    stay readable while a new one streams in below them.
+                    When the user opens History from the header, this
+                    same slot renders a read-only archive instead. */}
                 <ConversationPanel
                     ask={ask}
                     askDisabled={askDisabled}
                     isDark={isDark}
                     ts={t.spotlight}
                     turns={turns}
+                    historyMode={historyMode}
+                    historySessions={historySessions}
+                    historyDetail={historyDetail}
+                    historyIsLoading={historyIsLoading}
                     onApprove={onApprove}
                     onAsk={onAsk}
                     onNewConversation={onNewConversation}
                     onPreview={onPreview}
                     onReject={onReject}
                     onSelect={onSelect}
+                    onViewHistorySession={viewHistorySession}
+                    onBackToHistoryList={backToHistoryList}
+                    onCloseHistory={closeHistory}
                 />
 
-                {/* Results / states — hidden once a conversation is in
-                    progress. In Q&A mode the user is talking to the
-                    agent, not browsing search results. "New conversation"
-                    in the conversation header returns them to search. */}
+                {/* Results / states — hidden the moment an ask is in
+                    flight (not waiting for `hasConversation` which only
+                    flips on sessionId). In Q&A mode the user is talking
+                    to the agent, not browsing search results. "New
+                    conversation" in the conversation header returns
+                    them to search. */}
                 <Box
                     className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                     sx={{
@@ -464,7 +556,7 @@ export const SpotlightOverlay = ({
                         overflowY: "auto",
                         px: 1,
                         py: 1,
-                        display: hasConversation ? "none" : undefined,
+                        display: inAgentMode ? "none" : undefined,
                     }}
                 >
                     {!hasQuery && <EmptyHint isDark={isDark} text={t.spotlight.empty.initial} />}
@@ -569,6 +661,18 @@ interface ConversationPanelProps {
     onAsk: (overrideQuery?: string) => void;
     askDisabled: boolean;
     ts: SpotlightMessages;
+    // History panel — when historyMode !== "closed" the panel renders
+    // a read-only archive in place of turns/ask. The "open history"
+    // entry point lives in the input row (always visible across modes),
+    // so ConversationPanel only needs the close + back-to-list +
+    // view-session callbacks here.
+    historyMode: HistoryMode;
+    historySessions: AgentSessionSummary[];
+    historyDetail: AgentSessionDetail | null;
+    historyIsLoading: boolean;
+    onViewHistorySession: (sessionId: string) => void;
+    onBackToHistoryList: () => void;
+    onCloseHistory: () => void;
 }
 
 const hasAskContent = (ask: AskState): boolean =>
@@ -596,6 +700,13 @@ const ConversationPanel = memo(
         onAsk,
         askDisabled,
         ts,
+        historyMode,
+        historySessions,
+        historyDetail,
+        historyIsLoading,
+        onViewHistorySession,
+        onBackToHistoryList,
+        onCloseHistory,
     }: ConversationPanelProps) => {
         const scrollRef = useRef<HTMLDivElement | null>(null);
         // True when the user has scrolled away from the bottom. We pause
@@ -604,7 +715,12 @@ const ConversationPanel = memo(
         const userScrolledUpRef = useRef(false);
         const rafIdRef = useRef<number | null>(null);
 
-        const showHeader = turns.length > 0 || Boolean(ask.sessionId) || hasAskContent(ask);
+        const historyOpen = historyMode !== "closed";
+        // The panel renders when there's any conversation activity OR
+        // when the user has explicitly opened History (which can happen
+        // from a clean state too).
+        const showHeader =
+            turns.length > 0 || Boolean(ask.sessionId) || hasAskContent(ask) || historyOpen;
         const showAsk = hasAskContent(ask);
 
         // Auto-scroll on relevant updates. requestAnimationFrame coalesces
@@ -659,12 +775,15 @@ const ConversationPanel = memo(
                 ref={scrollRef}
                 className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
                 sx={{
-                    maxHeight: "40vh",
+                    // Flex to fill the sheet's available height now that
+                    // the input row moves to the bottom in agent mode.
+                    // `minHeight: 0` lets the scroll area shrink under
+                    // the sheet's `maxHeight` instead of overflowing.
+                    flex: 1,
+                    minHeight: 0,
                     overflowY: "auto",
                     px: 2,
                     py: 1.25,
-                    borderBottom: "1px solid",
-                    borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
                     background: isDark ? "rgba(255,255,255,0.02)" : "rgba(0,0,0,0.015)",
                     display: "flex",
                     flexDirection: "column",
@@ -685,9 +804,15 @@ const ConversationPanel = memo(
                             zIndex: 1,
                         }}
                     >
-                        <AutoAwesomeRoundedIcon
-                            sx={{ fontSize: 16, opacity: 0.7, color: "primary.500" }}
-                        />
+                        {historyMode === "list" ? (
+                            <HistoryRoundedIcon
+                                sx={{ fontSize: 16, opacity: 0.7, color: "primary.500" }}
+                            />
+                        ) : (
+                            <AutoAwesomeRoundedIcon
+                                sx={{ fontSize: 16, opacity: 0.7, color: "primary.500" }}
+                            />
+                        )}
                         <Typography
                             level="body-sm"
                             sx={{
@@ -697,13 +822,60 @@ const ConversationPanel = memo(
                                 textTransform: "uppercase",
                             }}
                         >
-                            {ts.conversation.header}
-                            {turns.length > 0
-                                ? ` · ${fmt(ts.conversation.turnCount, { count: turns.length })}`
-                                : ""}
+                            {historyMode === "list"
+                                ? ts.history.header
+                                : historyMode === "detail"
+                                  ? ts.history.detailHeader
+                                  : `${ts.conversation.header}${
+                                        turns.length > 0
+                                            ? ` · ${fmt(ts.conversation.turnCount, { count: turns.length })}`
+                                            : ""
+                                    }`}
                         </Typography>
-                        <Box sx={{ ml: "auto" }}>
-                            {(turns.length > 0 || ask.sessionId) && (
+                        <Box sx={{ ml: "auto", display: "flex", alignItems: "center", gap: 0.5 }}>
+                            {/* History mode buttons take over when open;
+                                otherwise show the "open history" icon
+                                alongside "Back to search". */}
+                            {historyMode === "detail" && (
+                                <Tooltip
+                                    placement="bottom"
+                                    size="sm"
+                                    title={ts.history.backToListTooltip}
+                                    variant="outlined"
+                                >
+                                    <Button
+                                        size="sm"
+                                        color="primary"
+                                        sx={{ fontSize: "0.875rem", py: 0.25 }}
+                                        variant="soft"
+                                        startDecorator={
+                                            <ArrowBackRoundedIcon sx={{ fontSize: 14 }} />
+                                        }
+                                        onClick={onBackToHistoryList}
+                                    >
+                                        {ts.history.backToList}
+                                    </Button>
+                                </Tooltip>
+                            )}
+                            {historyOpen && (
+                                <Tooltip
+                                    placement="bottom"
+                                    size="sm"
+                                    title={ts.history.closeTooltip}
+                                    variant="outlined"
+                                >
+                                    <IconButton
+                                        size="sm"
+                                        color="neutral"
+                                        variant="plain"
+                                        sx={{ minWidth: 0, p: "3px" }}
+                                        onClick={onCloseHistory}
+                                    >
+                                        <CloseRoundedIcon sx={{ fontSize: 16 }} />
+                                    </IconButton>
+                                </Tooltip>
+                            )}
+                            {!historyOpen && (turns.length > 0 || ask.sessionId) && (
                                 <Tooltip
                                     placement="bottom"
                                     size="sm"
@@ -731,43 +903,67 @@ const ConversationPanel = memo(
                     </Box>
                 )}
 
-                {turns.map((turn) => (
-                    <TurnView
-                        key={turn.id}
-                        answer={turn.answer}
-                        answerSources={turn.answerSources}
-                        askDisabled={askDisabled}
-                        askedQuery={turn.askedQuery}
-                        askError={turn.askError}
-                        isCurrent={false}
+                {historyMode === "list" && (
+                    <HistoryListView
                         isDark={isDark}
-                        toolEvents={turn.toolEvents}
+                        isLoading={historyIsLoading}
+                        sessions={historySessions}
                         ts={ts}
-                        onAsk={onAsk}
-                        onPreview={onPreview}
-                        onSelect={onSelect}
+                        onSelect={onViewHistorySession}
                     />
-                ))}
+                )}
 
-                {showAsk && (
-                    <TurnView
-                        answer={ask.answer}
-                        answerSources={ask.answerSources}
-                        askDisabled={askDisabled}
-                        askedQuery={ask.askedQuery}
-                        askError={ask.askError}
+                {historyMode === "detail" && (
+                    <HistorySessionDetailView
+                        detail={historyDetail}
                         isDark={isDark}
-                        isStreaming={ask.isStreaming}
-                        pendingApproval={ask.pendingApproval}
-                        toolEvents={ask.toolEvents}
+                        isLoading={historyIsLoading}
                         ts={ts}
-                        isCurrent
-                        onApprove={onApprove}
-                        onAsk={onAsk}
                         onPreview={onPreview}
-                        onReject={onReject}
-                        onSelect={onSelect}
                     />
+                )}
+
+                {historyMode === "closed" && (
+                    <>
+                        {turns.map((turn) => (
+                            <TurnView
+                                key={turn.id}
+                                answer={turn.answer}
+                                answerSources={turn.answerSources}
+                                askDisabled={askDisabled}
+                                askedQuery={turn.askedQuery}
+                                askError={turn.askError}
+                                isCurrent={false}
+                                isDark={isDark}
+                                toolEvents={turn.toolEvents}
+                                ts={ts}
+                                onAsk={onAsk}
+                                onPreview={onPreview}
+                                onSelect={onSelect}
+                            />
+                        ))}
+
+                        {showAsk && (
+                            <TurnView
+                                answer={ask.answer}
+                                answerSources={ask.answerSources}
+                                askDisabled={askDisabled}
+                                askedQuery={ask.askedQuery}
+                                askError={ask.askError}
+                                isDark={isDark}
+                                isStreaming={ask.isStreaming}
+                                pendingApproval={ask.pendingApproval}
+                                toolEvents={ask.toolEvents}
+                                ts={ts}
+                                isCurrent
+                                onApprove={onApprove}
+                                onAsk={onAsk}
+                                onPreview={onPreview}
+                                onReject={onReject}
+                                onSelect={onSelect}
+                            />
+                        )}
+                    </>
                 )}
             </Box>
         );
@@ -1113,85 +1309,8 @@ const TurnViewInner = ({
                     {answer && (
                         <Box
                             sx={{
-                                lineHeight: 1.65,
-                                fontSize: "1rem",
-                                color: isDark ? DARK_TEXT_STRONG : undefined,
+                                ..._markdownAnswerSx(isDark),
                                 mb: answerSources.length > 0 ? 0.75 : 0,
-                                // paragraphs — reset default browser margins
-                                "& p": { m: 0, mb: 0.75 },
-                                "& p:last-child": { mb: 0 },
-                                // lists
-                                "& ul, & ol": { pl: 2.5, my: 0.5 },
-                                "& li": { mb: 0.25 },
-                                // code blocks
-                                "& pre": {
-                                    overflowX: "auto",
-                                    borderRadius: "6px",
-                                    p: 1,
-                                    my: 0.75,
-                                    fontSize: "0.875rem",
-                                    background: isDark
-                                        ? "rgba(255,255,255,0.06)"
-                                        : "rgba(0,0,0,0.04)",
-                                },
-                                // inline code
-                                "& code": {
-                                    fontFamily: "monospace",
-                                    fontSize: "0.85em",
-                                    px: "0.3em",
-                                    py: "0.1em",
-                                    borderRadius: "3px",
-                                    background: isDark
-                                        ? "rgba(255,255,255,0.06)"
-                                        : "rgba(0,0,0,0.04)",
-                                },
-                                // reset code-inside-pre so the pre bg shows
-                                "& pre code": { background: "none", px: 0, py: 0 },
-                                // headings
-                                "& h1, & h2, & h3": { mt: 1, mb: 0.5, fontWeight: 700 },
-                                "& h1": { fontSize: "1.1em" },
-                                "& h2": { fontSize: "1.0em" },
-                                "& h3": { fontSize: "0.95em" },
-                                // bold / italic
-                                "& strong": { fontWeight: 700 },
-                                // links
-                                "& a": {
-                                    color: "primary.500",
-                                    textDecoration: "underline",
-                                    textUnderlineOffset: "2px",
-                                },
-                                // blockquotes
-                                "& blockquote": {
-                                    borderLeft: `3px solid ${isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.18)"}`,
-                                    pl: 1.5,
-                                    my: 0.5,
-                                    opacity: 0.85,
-                                },
-                                // tables (rendered by remark-gfm)
-                                "& table": {
-                                    borderCollapse: "collapse",
-                                    width: "100%",
-                                    fontSize: "0.9375rem",
-                                    my: 0.75,
-                                },
-                                "& th, & td": {
-                                    border: `1px solid ${isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.12)"}`,
-                                    px: 1,
-                                    py: 0.5,
-                                    textAlign: "left",
-                                },
-                                "& th": {
-                                    fontWeight: 700,
-                                    background: isDark
-                                        ? "rgba(255,255,255,0.04)"
-                                        : "rgba(0,0,0,0.03)",
-                                },
-                                // horizontal rule
-                                "& hr": {
-                                    border: "none",
-                                    borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
-                                    my: 1,
-                                },
                             }}
                         >
                             <ReactMarkdown
@@ -1520,6 +1639,89 @@ function _sourceIcon(entityType: string) {
     return undefined;
 }
 
+// Joy UI `sx` block shared by both the live answer renderer (TurnView)
+// and the read-only History archive (HistorySessionDetailView) so the
+// two surfaces render the same markdown identically. Centralising it
+// here means future tweaks to answer typography only need one edit.
+// The Box that consumes this still owns `mb` (the live view tightens
+// to 0 when source chips follow; archive view stays at 0).
+function _markdownAnswerSx(isDark: boolean): Record<string, unknown> {
+    return {
+        lineHeight: 1.65,
+        fontSize: "1rem",
+        color: isDark ? DARK_TEXT_STRONG : undefined,
+        // paragraphs — reset default browser margins
+        "& p": { m: 0, mb: 0.75 },
+        "& p:last-child": { mb: 0 },
+        // lists
+        "& ul, & ol": { pl: 2.5, my: 0.5 },
+        "& li": { mb: 0.25 },
+        // code blocks
+        "& pre": {
+            overflowX: "auto",
+            borderRadius: "6px",
+            p: 1,
+            my: 0.75,
+            fontSize: "0.875rem",
+            background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+        },
+        // inline code
+        "& code": {
+            fontFamily: "monospace",
+            fontSize: "0.85em",
+            px: "0.3em",
+            py: "0.1em",
+            borderRadius: "3px",
+            background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
+        },
+        // reset code-inside-pre so the pre bg shows
+        "& pre code": { background: "none", px: 0, py: 0 },
+        // headings
+        "& h1, & h2, & h3": { mt: 1, mb: 0.5, fontWeight: 700 },
+        "& h1": { fontSize: "1.1em" },
+        "& h2": { fontSize: "1.0em" },
+        "& h3": { fontSize: "0.95em" },
+        // bold / italic
+        "& strong": { fontWeight: 700 },
+        // links
+        "& a": {
+            color: "primary.500",
+            textDecoration: "underline",
+            textUnderlineOffset: "2px",
+        },
+        // blockquotes
+        "& blockquote": {
+            borderLeft: `3px solid ${isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.18)"}`,
+            pl: 1.5,
+            my: 0.5,
+            opacity: 0.85,
+        },
+        // tables (rendered by remark-gfm)
+        "& table": {
+            borderCollapse: "collapse",
+            width: "100%",
+            fontSize: "0.9375rem",
+            my: 0.75,
+        },
+        "& th, & td": {
+            border: `1px solid ${isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.12)"}`,
+            px: 1,
+            py: 0.5,
+            textAlign: "left",
+        },
+        "& th": {
+            fontWeight: 700,
+            background: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
+        },
+        // horizontal rule
+        "& hr": {
+            border: "none",
+            borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
+            my: 1,
+        },
+    };
+}
+
 // Fallback label for a still-pending tool call (no summary yet).
 function _humanReadableCall(e: ToolEvent): string {
     const argPreview =
@@ -1626,3 +1828,357 @@ const ApprovalCard = ({ pending, isDark, onApprove, onReject, ts }: ApprovalCard
         </Box>
     );
 };
+
+// ──────────────────────────────────────────────────────────────────
+// History panel views — read-only archive of past agent sessions.
+//
+// `HistoryListView`     — list of the user's recent sessions, hooks
+//                         click → fetch detail.
+// `HistorySessionDetailView` — one past session's full Q&A, rendered
+//                         like the live turns but stripped of action
+//                         buttons (Copy/Retry don't apply to a
+//                         read-only archive).
+// ──────────────────────────────────────────────────────────────────
+
+interface HistoryListViewProps {
+    sessions: AgentSessionSummary[];
+    isLoading: boolean;
+    isDark: boolean;
+    ts: SpotlightMessages;
+    onSelect: (sessionId: string) => void;
+}
+
+const HistoryListView = ({ sessions, isLoading, isDark, ts, onSelect }: HistoryListViewProps) => {
+    if (isLoading && sessions.length === 0) {
+        return (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 0.5, py: 1 }}>
+                <CircularProgress size="sm" />
+                <Typography
+                    level="body-sm"
+                    sx={{
+                        opacity: isDark ? 1 : 0.75,
+                        color: isDark ? DARK_TEXT_MEDIUM : undefined,
+                    }}
+                >
+                    {ts.history.loading}
+                </Typography>
+            </Box>
+        );
+    }
+
+    if (sessions.length === 0) {
+        return (
+            <Typography
+                level="body-md"
+                sx={{
+                    opacity: isDark ? 1 : 0.75,
+                    color: isDark ? DARK_TEXT_MEDIUM : undefined,
+                    px: 0.5,
+                    py: 1,
+                }}
+            >
+                {ts.history.empty}
+            </Typography>
+        );
+    }
+
+    return (
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.25 }}>
+            {sessions.map((s) => (
+                <Box
+                    key={s.session_id}
+                    component="button"
+                    type="button"
+                    sx={{
+                        textAlign: "left",
+                        background: "transparent",
+                        border: "1px solid",
+                        borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
+                        borderRadius: "8px",
+                        px: 1.25,
+                        py: 0.875,
+                        cursor: "pointer",
+                        font: "inherit",
+                        color: isDark ? DARK_TEXT_STRONG : "inherit",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 0.25,
+                        transition: "background 100ms ease, border-color 100ms ease",
+                        "&:hover": {
+                            background: isDark
+                                ? "rgba(167,139,250,0.10)"
+                                : "rgba(124,58,237,0.05)",
+                            borderColor: isDark
+                                ? "rgba(167,139,250,0.30)"
+                                : "rgba(124,58,237,0.25)",
+                        },
+                        "&:focus-visible": {
+                            outline: "2px solid",
+                            outlineColor: "primary.400",
+                            outlineOffset: "1px",
+                        },
+                    }}
+                    onClick={() => onSelect(s.session_id)}
+                >
+                    <Typography
+                        level="body-md"
+                        sx={{
+                            fontWeight: 500,
+                            color: isDark ? DARK_TEXT_STRONG : undefined,
+                            // Two-line clamp keeps the row compact when
+                            // the first query is long.
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                        }}
+                    >
+                        {s.first_query || ts.states.untitled}
+                    </Typography>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 0.75,
+                            fontSize: "0.8125rem",
+                            opacity: isDark ? 0.9 : 0.65,
+                            color: isDark ? DARK_TEXT_SOFT : undefined,
+                        }}
+                    >
+                        <Box component="span">{_relativeTime(s.last_active_at, ts)}</Box>
+                        <Box component="span" sx={{ opacity: 0.6 }}>
+                            ·
+                        </Box>
+                        <Box component="span">
+                            {fmt(ts.history.turnCount, { count: s.turn_count })}
+                        </Box>
+                    </Box>
+                </Box>
+            ))}
+        </Box>
+    );
+};
+
+interface HistorySessionDetailViewProps {
+    detail: AgentSessionDetail | null;
+    isLoading: boolean;
+    isDark: boolean;
+    ts: SpotlightMessages;
+    // Inline citations in the archived answer open the same
+    // UrlLinkModal preview that the live conversation uses, so the
+    // user can deep-link from history into the actual entity. Click
+    // semantics match `CitationLink` → `onPreview(source)`.
+    onPreview: (s: SpotlightResult) => void;
+}
+
+const HistorySessionDetailView = ({
+    detail,
+    isLoading,
+    isDark,
+    ts,
+    onPreview,
+}: HistorySessionDetailViewProps) => {
+    if (isLoading || detail === null) {
+        if (isLoading) {
+            return (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 0.5, py: 1 }}>
+                    <CircularProgress size="sm" />
+                    <Typography
+                        level="body-sm"
+                        sx={{
+                            opacity: isDark ? 1 : 0.75,
+                            color: isDark ? DARK_TEXT_MEDIUM : undefined,
+                        }}
+                    >
+                        {ts.history.loading}
+                    </Typography>
+                </Box>
+            );
+        }
+        // detail === null after a failed fetch.
+        return (
+            <Typography
+                level="body-md"
+                sx={{
+                    color: "danger.500",
+                    opacity: 0.95,
+                    px: 0.5,
+                    py: 1,
+                }}
+            >
+                {ts.history.loadFailed}
+            </Typography>
+        );
+    }
+
+    return (
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1.25 }}>
+            <Typography
+                level="body-xs"
+                sx={{
+                    opacity: isDark ? 0.85 : 0.65,
+                    color: isDark ? DARK_TEXT_SOFT : undefined,
+                    fontStyle: "italic",
+                }}
+            >
+                {ts.history.readOnlyHint}
+            </Typography>
+            {detail.turns.map((turn) => (
+                <HistoryArchiveTurn
+                    key={turn.run_id}
+                    isDark={isDark}
+                    onPreview={onPreview}
+                    ts={ts}
+                    turn={turn}
+                />
+            ))}
+        </Box>
+    );
+};
+
+// One past Q&A pair in the History detail view. Hosts the per-turn
+// `sourcesById` and `rewriteCitations` work as hooks (which can't
+// live inside the parent .map callback) and renders the answer with
+// the same markdown + clickable-citation treatment the live view uses.
+interface HistoryArchiveTurnProps {
+    turn: AgentSessionTurn;
+    isDark: boolean;
+    ts: SpotlightMessages;
+    onPreview: (s: SpotlightResult) => void;
+}
+
+const HistoryArchiveTurn = ({ turn, isDark, ts, onPreview }: HistoryArchiveTurnProps) => {
+    // Same lookup-table shape as TurnView's `sourcesById` so citation
+    // tokens like `[chat:dm:9:thread:4]` (whose entity_id ships
+    // without the `chat:` prefix from the chunker) resolve.
+    const sourcesById = useMemo(() => {
+        const m = new Map<string, SpotlightResult>();
+        for (const s of turn.sources) {
+            const tokenKey = s.entity_id.startsWith(`${s.entity_type}:`)
+                ? s.entity_id
+                : `${s.entity_type}:${s.entity_id}`;
+            m.set(tokenKey, s);
+        }
+        return m;
+    }, [turn.sources]);
+
+    const answerForRender = useMemo(
+        () => rewriteCitations(turn.answer, sourcesById, ts),
+        [turn.answer, sourcesById, ts]
+    );
+
+    return (
+        <Box
+            sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 0.5,
+                opacity: isDark ? 1 : 0.92,
+            }}
+        >
+            {turn.query && (
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: 0.75,
+                        opacity: isDark ? 1 : 0.88,
+                    }}
+                >
+                    <Typography
+                        level="body-sm"
+                        sx={{
+                            fontWeight: 700,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.04em",
+                            opacity: isDark ? 1 : 0.7,
+                            color: isDark ? DARK_TEXT_MEDIUM : undefined,
+                            minWidth: 18,
+                            mt: "2px",
+                        }}
+                    >
+                        {ts.conversation.turnLabelQ}
+                    </Typography>
+                    <Typography
+                        level="body-md"
+                        sx={{
+                            fontWeight: 500,
+                            whiteSpace: "pre-wrap",
+                            color: isDark ? DARK_TEXT_STRONG : undefined,
+                        }}
+                    >
+                        {turn.query}
+                    </Typography>
+                </Box>
+            )}
+            <Box sx={{ display: "flex", alignItems: "flex-start", gap: 0.75 }}>
+                <Typography
+                    level="body-sm"
+                    sx={{
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.04em",
+                        opacity: isDark ? 1 : 0.75,
+                        minWidth: 18,
+                        mt: "2px",
+                        color: "primary.500",
+                    }}
+                >
+                    {ts.conversation.turnLabelA}
+                </Typography>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                    {turn.error ? (
+                        <Typography level="body-md" sx={{ color: "danger.500" }}>
+                            {turn.error}
+                        </Typography>
+                    ) : (
+                        <Box sx={_markdownAnswerSx(isDark)}>
+                            <ReactMarkdown
+                                remarkPlugins={[remarkGfm]}
+                                components={{
+                                    a: ({ href, children }) => (
+                                        <CitationLink
+                                            href={href}
+                                            isDark={isDark}
+                                            sourcesById={sourcesById}
+                                            onPreview={onPreview}
+                                        >
+                                            {children}
+                                        </CitationLink>
+                                    ),
+                                }}
+                                urlTransform={(url) =>
+                                    url.startsWith(CITATION_HREF_PREFIX)
+                                        ? url
+                                        : defaultUrlTransform(url)
+                                }
+                            >
+                                {answerForRender}
+                            </ReactMarkdown>
+                        </Box>
+                    )}
+                </Box>
+            </Box>
+        </Box>
+    );
+};
+
+// Relative-time helper for History list rows. Keeps the dependency
+// surface zero (no date-fns / dayjs) — just the buckets the i18n
+// bundle defines. Anything older than a day falls back to ISO date.
+function _relativeTime(iso: string, ts: SpotlightMessages): string {
+    const then = new Date(iso).getTime();
+    if (Number.isNaN(then)) return iso;
+    const deltaMs = Date.now() - then;
+    if (deltaMs < 60 * 1000) return ts.history.relativeJustNow;
+    const minutes = Math.floor(deltaMs / (60 * 1000));
+    if (minutes < 60) return fmt(ts.history.relativeMinutes, { count: minutes });
+    const hours = Math.floor(deltaMs / (60 * 60 * 1000));
+    if (hours < 24) return fmt(ts.history.relativeHours, { count: hours });
+    const days = Math.floor(deltaMs / (24 * 60 * 60 * 1000));
+    if (days < 7) return fmt(ts.history.relativeDays, { count: days });
+    // Past a week, the absolute date is more readable than "23 days
+    // ago". Locale-default short date — the spotlight overlay isn't
+    // i18n-strict beyond message-bundle strings today.
+    return new Date(then).toLocaleDateString();
+}

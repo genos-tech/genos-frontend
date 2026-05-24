@@ -987,12 +987,15 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         >
                             <AvatarWithStatus
                                 avatarUser={
-                                    assignee
-                                        ? useTEM.teamMemberProfiles[assignee.userId]
+                                    parentTask.assignee
+                                        ? useTEM.teamMemberProfiles[parentTask.assignee.userId]
                                         : undefined
                                 }
                                 useCM={useCM}
-                                isYou={!!assignee && myself.userId === assignee.userId}
+                                isYou={
+                                    !!parentTask.assignee &&
+                                    myself.userId === parentTask.assignee.userId
+                                }
                                 myself={myself}
                                 setMyself={setMyself}
                                 socket={socket}

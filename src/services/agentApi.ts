@@ -114,6 +114,77 @@ export async function fetchAgentUsage(accessToken: string): Promise<AgentUsage |
     }
 }
 
+// One row of the History list. Mirrors the AgentSessionsListView
+// payload — first_query is the user's first question in the session,
+// already truncated server-side (~140 chars) for a short list row.
+export interface AgentSessionSummary {
+    session_id: string;
+    created_at: string;
+    last_active_at: string;
+    first_query: string;
+    turn_count: number;
+}
+
+// One completed turn inside a past session. `answer` is the final text
+// the model produced; `error` is non-null when the turn ended with a
+// fatal error (status="error"). status="rejected" is a valid terminal
+// state from the write-tool approval flow — answer is present, error
+// is null. `sources` is rebuilt server-side from the persisted tool
+// results so inline citation tokens in the answer can resolve to
+// clickable previews the same way they do in the live view.
+export interface AgentSessionTurn {
+    run_id: string;
+    query: string;
+    answer: string;
+    status: string;
+    error: string | null;
+    started_at: string;
+    sources: SpotlightResult[];
+}
+
+export interface AgentSessionDetail {
+    session_id: string;
+    created_at: string;
+    last_active_at: string;
+    turns: AgentSessionTurn[];
+}
+
+export async function fetchAgentSessions(args: {
+    accessToken: string;
+    teamId: string;
+}): Promise<AgentSessionSummary[]> {
+    if (!args.accessToken || !args.teamId) return [];
+    try {
+        const resp = await fetch(
+            `${API_BASE}/agent/sessions/?team_id=${encodeURIComponent(args.teamId)}`,
+            { headers: { Authorization: `Bearer ${args.accessToken}` } }
+        );
+        if (!resp.ok) return [];
+        const data = (await resp.json()) as { sessions?: AgentSessionSummary[] };
+        return data.sessions || [];
+    } catch {
+        return [];
+    }
+}
+
+export async function fetchAgentSessionDetail(args: {
+    accessToken: string;
+    teamId: string;
+    sessionId: string;
+}): Promise<AgentSessionDetail | null> {
+    if (!args.accessToken || !args.teamId || !args.sessionId) return null;
+    try {
+        const resp = await fetch(
+            `${API_BASE}/agent/sessions/${encodeURIComponent(args.sessionId)}/?team_id=${encodeURIComponent(args.teamId)}`,
+            { headers: { Authorization: `Bearer ${args.accessToken}` } }
+        );
+        if (!resp.ok) return null;
+        return (await resp.json()) as AgentSessionDetail;
+    } catch {
+        return null;
+    }
+}
+
 export async function askAgentStream(args: AskAgentArgs): Promise<void> {
     if (!args.accessToken) {
         args.onError(getMessages().services.agent.notSignedIn);

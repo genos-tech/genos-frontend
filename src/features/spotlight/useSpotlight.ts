@@ -36,7 +36,11 @@ import { useTranslation } from "../../i18n";
 import {
     askAgentStream,
     decideAgent,
+    fetchAgentSessionDetail,
+    fetchAgentSessions,
     fetchAgentUsage,
+    type AgentSessionDetail,
+    type AgentSessionSummary,
     type AgentUsage,
     type PendingApprovalPayload,
 } from "../../services/agentApi";
@@ -112,6 +116,15 @@ export interface CompletedTurn {
     askError: string | null;
 }
 
+// History feature (Phase ~4.6): read-only archive of past agent
+// conversations. State machine:
+//   "closed"  → list/detail not shown; conversation panel renders normally
+//   "list"    → list of recent sessions replaces the conversation panel
+//   "detail"  → one past session's full Q&A renders read-only
+// Closed is the default; the user opens via the clock icon in the
+// conversation header.
+export type HistoryMode = "closed" | "list" | "detail";
+
 export interface UseSpotlightReturn {
     isOpen: boolean;
     open: () => void;
@@ -133,6 +146,15 @@ export interface UseSpotlightReturn {
     // disable the Ask button and the Enter handler when the user has
     // turned the LLM path off in Settings.
     aiAnswersEnabled: boolean;
+    // ----- History panel -----
+    historyMode: HistoryMode;
+    historySessions: AgentSessionSummary[];
+    historyDetail: AgentSessionDetail | null;
+    historyIsLoading: boolean;
+    openHistory: () => void;
+    viewHistorySession: (sessionId: string) => void;
+    backToHistoryList: () => void;
+    closeHistory: () => void;
 }
 
 const EMPTY_ASK_STATE: AskState = {
@@ -157,6 +179,15 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
     const [ask, setAsk] = useState<AskState>(EMPTY_ASK_STATE);
     const [turns, setTurns] = useState<CompletedTurn[]>([]);
     const [dailyUsage, setDailyUsage] = useState<AgentUsage | null>(null);
+    // ----- History panel state (Phase ~4.6) -----
+    // historyMode flips the conversation panel into a read-only archive
+    // view. historySessions is the list, historyDetail is the selected
+    // session's full Q&A. isLoading covers both fetches so the UI can
+    // show one spinner.
+    const [historyMode, setHistoryMode] = useState<HistoryMode>("closed");
+    const [historySessions, setHistorySessions] = useState<AgentSessionSummary[]>([]);
+    const [historyDetail, setHistoryDetail] = useState<AgentSessionDetail | null>(null);
+    const [historyIsLoading, setHistoryIsLoading] = useState(false);
 
     // User-toggleable gates for the LLM path. `webSearch` is forwarded
     // to the agent backend; `aiAnswers` is checked at the overlay layer
@@ -735,6 +766,59 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
         });
     }, []);
 
+    // ---- History panel handlers (Phase ~4.6) ----
+    //
+    // openHistory: switch the panel into list mode and fetch the user's
+    // recent sessions. Refetches each time so a session created in
+    // another tab shows up without a page reload.
+    //
+    // viewHistorySession: flip into detail mode and fetch the full Q&A
+    // for one session. Optimistically clears the prior detail so the
+    // panel doesn't briefly show stale content.
+    //
+    // backToHistoryList: return from detail to list view without
+    // re-fetching the list (still cached from openHistory).
+    //
+    // closeHistory: drop back to the live conversation (or search if
+    // there isn't one). Clears the detail so reopening the panel
+    // starts at the list. The session list itself is kept cached so
+    // a quick toggle doesn't re-hit the server.
+    const openHistory = useCallback(() => {
+        setHistoryMode("list");
+        setHistoryDetail(null);
+        if (!accessToken || !teamId) {
+            setHistorySessions([]);
+            return;
+        }
+        setHistoryIsLoading(true);
+        fetchAgentSessions({ accessToken, teamId })
+            .then((sessions) => setHistorySessions(sessions))
+            .finally(() => setHistoryIsLoading(false));
+    }, [accessToken, teamId]);
+
+    const viewHistorySession = useCallback(
+        (sessionId: string) => {
+            setHistoryMode("detail");
+            setHistoryDetail(null);
+            if (!accessToken || !teamId) return;
+            setHistoryIsLoading(true);
+            fetchAgentSessionDetail({ accessToken, teamId, sessionId })
+                .then((detail) => setHistoryDetail(detail))
+                .finally(() => setHistoryIsLoading(false));
+        },
+        [accessToken, teamId]
+    );
+
+    const backToHistoryList = useCallback(() => {
+        setHistoryMode("list");
+        setHistoryDetail(null);
+    }, []);
+
+    const closeHistory = useCallback(() => {
+        setHistoryMode("closed");
+        setHistoryDetail(null);
+    }, []);
+
     // ---- New Conversation: clears the session AND prior turns so
     // the next ask starts fresh with no prior-turn context injected. ----
     const onNewConversation = useCallback(() => {
@@ -743,6 +827,11 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
         promotedTurnIdsRef.current.clear();
         setTurns([]);
         setAsk(EMPTY_ASK_STATE);
+        // Close any open history view too — otherwise "New conversation"
+        // would clear the live session but leave the panel showing a
+        // past archive, which is incoherent.
+        setHistoryMode("closed");
+        setHistoryDetail(null);
         // Wipe persisted state immediately so a reload after "New conversation"
         // opens a blank overlay rather than restoring the cleared history.
         if (teamId) {
@@ -772,5 +861,13 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
         turns,
         dailyUsage,
         aiAnswersEnabled: aiAnswers,
+        historyMode,
+        historySessions,
+        historyDetail,
+        historyIsLoading,
+        openHistory,
+        viewHistorySession,
+        backToHistoryList,
+        closeHistory,
     };
 };
