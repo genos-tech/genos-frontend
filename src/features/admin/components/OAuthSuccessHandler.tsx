@@ -1,25 +1,15 @@
 import { useEffect, useState } from "react";
 import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
-import {
-    Alert,
-    Box,
-    Button,
-    CircularProgress,
-    CssBaseline,
-    GlobalStyles,
-    Stack,
-    Typography,
-} from "@mui/joy";
-import { CssVarsProvider, useColorScheme } from "@mui/joy/styles";
+import { Alert, Box, Button, CircularProgress, Stack, Typography } from "@mui/joy";
+import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 
 import { SignInFormStyles } from "../../../components/ui/styles/commonStyle";
 import { clearUserScopedLocalStorage, useAuth } from "../../../context/AuthContext";
 import { DatabaseUtils } from "../../../db/utils";
-import { I18nProvider, useTranslation } from "../../../i18n";
+import { useTranslation } from "../../../i18n";
 import { authApi } from "../../../services/api";
-import { purplePalette, purpleTheme } from "../../../theme/purplePalette";
-import { AdminHeader } from "./Header";
+import { purplePalette } from "../../../theme/purplePalette";
 
 interface MeResponse {
     id: string;
@@ -46,7 +36,7 @@ const FAILURE_REASON_MESSAGES: Record<string, string> = {
     unknown_provider: "Unknown OAuth provider.",
 };
 
-const OAuthSuccessContent = () => {
+export const OAuthSuccessHandler = () => {
     const navigate = useNavigate();
     const { t } = useTranslation();
     const { setAccessToken } = useAuth();
@@ -138,98 +128,65 @@ const OAuthSuccessContent = () => {
 
     return (
         <Box
-            sx={(theme) => ({
-                width: { xs: "100%", md: "100vw" },
-                display: "flex",
-                flexDirection: "column",
-                minHeight: "100dvh",
-                backdropFilter: "blur(12px)",
-                backgroundColor: "rgba(255 255 255 / 0.2)",
-                [theme.getColorSchemeSelector("dark")]: {
-                    backgroundColor: "rgba(19 19 24 / 0.4)",
-                },
-                px: 2,
-            })}
+            component="main"
+            sx={{
+                my: "auto",
+                width: { xs: "100%", md: 420 },
+                mx: "auto",
+                py: 4,
+            }}
         >
-            <AdminHeader />
             <Box
-                component="main"
                 sx={{
-                    my: "auto",
-                    width: { xs: "100%", md: 420 },
-                    mx: "auto",
-                    py: 4,
+                    background: styles.cardBg,
+                    border: `1px solid ${styles.cardBorder}`,
+                    borderRadius: "20px",
+                    boxShadow: styles.cardShadow,
+                    p: 4,
+                    backdropFilter: "blur(12px)",
                 }}
             >
-                <Box
-                    sx={{
-                        background: styles.cardBg,
-                        border: `1px solid ${styles.cardBorder}`,
-                        borderRadius: "20px",
-                        boxShadow: styles.cardShadow,
-                        p: 4,
-                        backdropFilter: "blur(12px)",
-                    }}
-                >
-                    {error ? (
-                        <Stack spacing={2}>
-                            <Stack direction="row" spacing={1} alignItems="center">
-                                <ErrorOutlineRoundedIcon
-                                    sx={{ color: palette.dangerTintBorder, fontSize: 28 }}
-                                />
-                                <Typography level="h4" sx={{ fontWeight: 700 }}>
-                                    Sign-in failed
-                                </Typography>
-                            </Stack>
-                            <Alert
-                                color="danger"
-                                sx={{
-                                    borderRadius: "12px",
-                                    border: `1px solid ${palette.dangerTintBorder}`,
-                                }}
-                            >
-                                {error}
-                            </Alert>
-                            <Button
-                                onClick={() => navigate("/signin", { replace: true })}
-                                sx={{
-                                    py: 1.25,
-                                    borderRadius: "12px",
-                                    fontWeight: 600,
-                                    background: styles.buttonBg,
-                                    "&:hover": { background: styles.buttonHover },
-                                }}
-                            >
-                                Back to sign in
-                            </Button>
-                        </Stack>
-                    ) : (
-                        <Stack alignItems="center" spacing={2} sx={{ py: 4 }}>
-                            <CircularProgress size="lg" />
-                            <Typography level="body-md" sx={{ color: styles.subtitleColor }}>
-                                Finishing sign-in…
+                {error ? (
+                    <Stack spacing={2}>
+                        <Stack alignItems="center" direction="row" spacing={1}>
+                            <ErrorOutlineRoundedIcon
+                                sx={{ color: palette.dangerTintBorder, fontSize: 28 }}
+                            />
+                            <Typography level="h4" sx={{ fontWeight: 700 }}>
+                                Sign-in failed
                             </Typography>
                         </Stack>
-                    )}
-                </Box>
+                        <Alert
+                            color="danger"
+                            sx={{
+                                borderRadius: "12px",
+                                border: `1px solid ${palette.dangerTintBorder}`,
+                            }}
+                        >
+                            {error}
+                        </Alert>
+                        <Button
+                            sx={{
+                                py: 1.25,
+                                borderRadius: "12px",
+                                fontWeight: 600,
+                                background: styles.buttonBg,
+                                "&:hover": { background: styles.buttonHover },
+                            }}
+                            onClick={() => navigate("/signin", { replace: true })}
+                        >
+                            Back to sign in
+                        </Button>
+                    </Stack>
+                ) : (
+                    <Stack alignItems="center" spacing={2} sx={{ py: 4 }}>
+                        <CircularProgress size="lg" />
+                        <Typography level="body-md" sx={{ color: styles.subtitleColor }}>
+                            Finishing sign-in…
+                        </Typography>
+                    </Stack>
+                )}
             </Box>
         </Box>
     );
 };
-
-export const OAuthSuccessHandler = () => (
-    <CssVarsProvider disableTransitionOnChange theme={purpleTheme}>
-        <CssBaseline />
-        <GlobalStyles
-            styles={{
-                ":root": {
-                    "--Form-maxWidth": "800px",
-                    "--Transition-duration": "0.4s",
-                },
-            }}
-        />
-        <I18nProvider>
-            <OAuthSuccessContent />
-        </I18nProvider>
-    </CssVarsProvider>
-);

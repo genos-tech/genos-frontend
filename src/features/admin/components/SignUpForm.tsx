@@ -13,11 +13,9 @@ import {
     Alert,
     Box,
     Button,
-    CssBaseline,
     Divider,
     FormControl,
     FormLabel,
-    GlobalStyles,
     IconButton,
     Input,
     LinearProgress,
@@ -25,18 +23,17 @@ import {
     Stack,
     Typography,
 } from "@mui/joy";
-import { CssVarsProvider, useColorScheme } from "@mui/joy/styles";
+import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 
 import { SignUpFormStyles } from "../../../components/ui/styles/commonStyle";
-import { fmt, I18nProvider, useTranslation } from "../../../i18n";
-import { purplePalette, purpleTheme } from "../../../theme/purplePalette";
+import { fmt, useTranslation } from "../../../i18n";
+import { purplePalette } from "../../../theme/purplePalette";
 import { OAUTH_INTEGRATIONS_ENABLED } from "../../integrations/featureFlags";
 import { redirectToOAuthLogin } from "../../integrations/services/oauth";
 import { resendVerificationEmail } from "../services/emailVerification";
 import { signUp } from "../services/signup";
 import { validatePassword } from "../utils/passwordValidation";
-import { AdminHeader } from "./Header";
 import { GoogleIcon } from "./icons/GoogleIcon";
 
 const maskEmail = (email: string): string => {
@@ -56,7 +53,7 @@ interface SignUpFormElement extends HTMLFormElement {
     readonly elements: FormElements;
 }
 
-const SignUpContent = () => {
+export const SignUpForm = () => {
     const navigate = useNavigate();
     const { t } = useTranslation();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -138,560 +135,491 @@ const SignUpContent = () => {
 
     return (
         <Box
-            sx={(theme) => ({
-                width: { xs: "100%", md: "100vw" },
-                transition: "width var(--Transition-duration)",
-                transitionDelay: "calc(var(--Transition-duration) + 0.1s)",
-                position: "relative",
-                zIndex: 1,
+            component="main"
+            sx={{
+                my: "auto",
+                py: 2,
+                pb: 5,
                 display: "flex",
-                justifyContent: "flex-end",
-                backdropFilter: "blur(12px)",
-                backgroundColor: "rgba(255 255 255 / 0.2)",
-                [theme.getColorSchemeSelector("dark")]: {
-                    backgroundColor: "rgba(19 19 24 / 0.4)",
-                },
-            })}
+                flexDirection: "column",
+                gap: 2,
+                width: { xs: "100%", md: 420 },
+                maxWidth: "100%",
+                mx: "auto",
+            }}
         >
+            {/* Form Card */}
             <Box
                 sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    minHeight: "100dvh",
-                    width: "100%",
-                    px: 2,
+                    background: styles.cardBg,
+                    border: `1px solid ${styles.cardBorder}`,
+                    borderRadius: "20px",
+                    boxShadow: styles.cardShadow,
+                    p: 4,
+                    backdropFilter: "blur(12px)",
                 }}
             >
-                <AdminHeader />
+                <Stack sx={{ gap: 3, mb: 3 }}>
+                    <Stack sx={{ gap: 1 }}>
+                        <Typography
+                            component="h1"
+                            level="h2"
+                            sx={{
+                                background: styles.titleGradient,
+                                backgroundClip: "text",
+                                WebkitBackgroundClip: "text",
+                                WebkitTextFillColor: "transparent",
+                                fontWeight: 700,
+                                letterSpacing: "-0.02em",
+                            }}
+                        >
+                            {verificationSentTo
+                                ? t.admin.auth.signUp.afterSubmit.title
+                                : t.admin.auth.signUp.title}
+                        </Typography>
+                        <Typography level="body-sm" sx={{ color: styles.subtitleColor }}>
+                            {verificationSentTo
+                                ? fmt(t.admin.auth.signUp.afterSubmit.body, {
+                                      email: maskEmail(verificationSentTo),
+                                  })
+                                : t.admin.auth.signUp.subtitle}
+                        </Typography>
+                    </Stack>
 
-                <Box
-                    component="main"
-                    sx={{
-                        my: "auto",
-                        py: 2,
-                        pb: 5,
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 2,
-                        width: { xs: "100%", md: 420 },
-                        maxWidth: "100%",
-                        mx: "auto",
-                    }}
-                >
-                    {/* Form Card */}
-                    <Box
-                        sx={{
-                            background: styles.cardBg,
-                            border: `1px solid ${styles.cardBorder}`,
-                            borderRadius: "20px",
-                            boxShadow: styles.cardShadow,
-                            p: 4,
-                            backdropFilter: "blur(12px)",
-                        }}
-                    >
-                        <Stack sx={{ gap: 3, mb: 3 }}>
-                            <Stack sx={{ gap: 1 }}>
-                                <Typography
-                                    component="h1"
-                                    level="h2"
-                                    sx={{
-                                        background: styles.titleGradient,
-                                        backgroundClip: "text",
-                                        WebkitBackgroundClip: "text",
-                                        WebkitTextFillColor: "transparent",
-                                        fontWeight: 700,
-                                        letterSpacing: "-0.02em",
-                                    }}
-                                >
-                                    {verificationSentTo
-                                        ? t.admin.auth.signUp.afterSubmit.title
-                                        : t.admin.auth.signUp.title}
-                                </Typography>
-                                <Typography level="body-sm" sx={{ color: styles.subtitleColor }}>
-                                    {verificationSentTo
-                                        ? fmt(t.admin.auth.signUp.afterSubmit.body, {
-                                              email: maskEmail(verificationSentTo),
-                                          })
-                                        : t.admin.auth.signUp.subtitle}
-                                </Typography>
-                            </Stack>
+                    {errorMessage && (
+                        <Alert
+                            color="danger"
+                            sx={{
+                                borderRadius: "12px",
+                                border: `1px solid ${palette.dangerTintBorder}`,
+                            }}
+                        >
+                            {errorMessage}
+                        </Alert>
+                    )}
+                </Stack>
 
-                            {errorMessage && (
-                                <Alert
-                                    color="danger"
-                                    sx={{
-                                        borderRadius: "12px",
-                                        border: `1px solid ${palette.dangerTintBorder}`,
-                                    }}
-                                >
-                                    {errorMessage}
-                                </Alert>
-                            )}
-                        </Stack>
-
-                        {verificationSentTo ? (
-                            <Stack sx={{ gap: 2 }}>
-                                <Alert
-                                    color="success"
-                                    startDecorator={<MarkEmailReadRoundedIcon />}
-                                    sx={{
-                                        borderRadius: "12px",
-                                        border: `1px solid ${palette.successTintBorder}`,
-                                    }}
-                                >
-                                    {resendStatus === "sent"
-                                        ? t.admin.auth.signUp.afterSubmit.resendSent
-                                        : t.admin.auth.signUp.afterSubmit.checkInboxHint}
-                                </Alert>
-                                <Button
-                                    fullWidth
-                                    variant="outlined"
-                                    disabled={resendStatus !== "idle"}
-                                    onClick={_resendVerification}
-                                    sx={{
-                                        py: 1.25,
-                                        borderRadius: "12px",
-                                        fontWeight: 600,
-                                        fontSize: "15px",
-                                        borderColor: styles.inputBorder,
-                                        color: styles.labelColor,
-                                        background: styles.inputBg,
-                                        "&:hover": {
-                                            borderColor: styles.accentColor,
-                                            background: `${styles.accentColor}10`,
-                                        },
-                                    }}
-                                >
-                                    {resendStatus === "sending"
-                                        ? t.admin.auth.signUp.afterSubmit.resending
-                                        : t.admin.auth.signUp.afterSubmit.resend}
-                                </Button>
-                                <Typography
-                                    level="body-sm"
-                                    textAlign="center"
-                                    sx={{ color: styles.subtitleColor }}
-                                >
-                                    <Link
-                                        onClick={() => navigate("/signin")}
-                                        level="title-sm"
+                {verificationSentTo ? (
+                    <Stack sx={{ gap: 2 }}>
+                        <Alert
+                            color="success"
+                            startDecorator={<MarkEmailReadRoundedIcon />}
+                            sx={{
+                                borderRadius: "12px",
+                                border: `1px solid ${palette.successTintBorder}`,
+                            }}
+                        >
+                            {resendStatus === "sent"
+                                ? t.admin.auth.signUp.afterSubmit.resendSent
+                                : t.admin.auth.signUp.afterSubmit.checkInboxHint}
+                        </Alert>
+                        <Button
+                            disabled={resendStatus !== "idle"}
+                            variant="outlined"
+                            sx={{
+                                py: 1.25,
+                                borderRadius: "12px",
+                                fontWeight: 600,
+                                fontSize: "15px",
+                                borderColor: styles.inputBorder,
+                                color: styles.labelColor,
+                                background: styles.inputBg,
+                                "&:hover": {
+                                    borderColor: styles.accentColor,
+                                    background: `${styles.accentColor}10`,
+                                },
+                            }}
+                            fullWidth
+                            onClick={_resendVerification}
+                        >
+                            {resendStatus === "sending"
+                                ? t.admin.auth.signUp.afterSubmit.resending
+                                : t.admin.auth.signUp.afterSubmit.resend}
+                        </Button>
+                        <Typography
+                            level="body-sm"
+                            sx={{ color: styles.subtitleColor }}
+                            textAlign="center"
+                        >
+                            <Link
+                                level="title-sm"
+                                sx={{
+                                    color: styles.linkColor,
+                                    fontWeight: 600,
+                                    cursor: "pointer",
+                                    "&:hover": { color: styles.linkHover },
+                                }}
+                                onClick={() => navigate("/signin")}
+                            >
+                                {t.admin.auth.signUp.afterSubmit.backToSignIn}
+                            </Link>
+                        </Typography>
+                    </Stack>
+                ) : (
+                    <>
+                        {OAUTH_INTEGRATIONS_ENABLED && (
+                            <>
+                                <Stack sx={{ gap: 1.25, mb: 2.5 }}>
+                                    <Button
+                                        startDecorator={<GoogleIcon />}
+                                        variant="outlined"
                                         sx={{
-                                            color: styles.linkColor,
+                                            py: 1.25,
+                                            borderRadius: "12px",
                                             fontWeight: 600,
-                                            cursor: "pointer",
-                                            "&:hover": { color: styles.linkHover },
+                                            fontSize: "15px",
+                                            borderColor: styles.inputBorder,
+                                            color: styles.labelColor,
+                                            background: styles.inputBg,
+                                            "&:hover": {
+                                                borderColor: styles.accentColor,
+                                                background: `${styles.accentColor}10`,
+                                            },
+                                        }}
+                                        fullWidth
+                                        onClick={() => redirectToOAuthLogin("google")}
+                                    >
+                                        {t.admin.auth.signIn.continueWithGoogle}
+                                    </Button>
+                                    <Button
+                                        startDecorator={<GitHubIcon sx={{ fontSize: 20 }} />}
+                                        variant="outlined"
+                                        sx={{
+                                            py: 1.25,
+                                            borderRadius: "12px",
+                                            fontWeight: 600,
+                                            fontSize: "15px",
+                                            borderColor: styles.inputBorder,
+                                            color: styles.labelColor,
+                                            background: styles.inputBg,
+                                            "&:hover": {
+                                                borderColor: styles.accentColor,
+                                                background: `${styles.accentColor}10`,
+                                            },
+                                        }}
+                                        fullWidth
+                                        onClick={() => redirectToOAuthLogin("github")}
+                                    >
+                                        {t.admin.auth.signIn.continueWithGithub}
+                                    </Button>
+                                </Stack>
+
+                                <Divider sx={{ mb: 2.5, color: styles.subtitleColor }}>
+                                    {t.admin.auth.signIn.orDivider}
+                                </Divider>
+                            </>
+                        )}
+
+                        <form
+                            onSubmit={(event: React.FormEvent<SignUpFormElement>) => {
+                                event.preventDefault();
+                                const formElements = event.currentTarget.elements;
+                                const name = formElements.userName.value;
+                                const email = formElements.email.value;
+
+                                if (!validation.isValid) {
+                                    setErrorMessage(t.admin.auth.signUp.passwordTooWeak);
+                                    return;
+                                }
+                                if (password !== confirmPassword) {
+                                    setErrorMessage(t.admin.auth.signUp.passwordMismatch);
+                                    return;
+                                }
+                                _signup(name, email, password);
+                            }}
+                        >
+                            <Stack sx={{ gap: 2.5 }}>
+                                <FormControl required>
+                                    <FormLabel
+                                        sx={{
+                                            color: styles.labelColor,
+                                            fontSize: "0.8rem",
+                                            fontWeight: 600,
+                                            textTransform: "uppercase",
+                                            letterSpacing: "0.05em",
+                                            mb: 0.75,
                                         }}
                                     >
-                                        {t.admin.auth.signUp.afterSubmit.backToSignIn}
-                                    </Link>
-                                </Typography>
-                            </Stack>
-                        ) : (
-                            <>
-                                {OAUTH_INTEGRATIONS_ENABLED && (
-                                    <>
-                                        <Stack sx={{ gap: 1.25, mb: 2.5 }}>
-                                            <Button
-                                                fullWidth
-                                                variant="outlined"
-                                                startDecorator={<GoogleIcon />}
-                                                onClick={() => redirectToOAuthLogin("google")}
+                                        {t.admin.auth.signUp.nameLabel}
+                                    </FormLabel>
+                                    <Input
+                                        name="userName"
+                                        placeholder={t.admin.auth.signUp.namePlaceholder}
+                                        sx={inputStyle}
+                                        type="text"
+                                        startDecorator={
+                                            <BadgeRoundedIcon
                                                 sx={{
-                                                    py: 1.25,
-                                                    borderRadius: "12px",
-                                                    fontWeight: 600,
-                                                    fontSize: "15px",
-                                                    borderColor: styles.inputBorder,
-                                                    color: styles.labelColor,
-                                                    background: styles.inputBg,
-                                                    "&:hover": {
-                                                        borderColor: styles.accentColor,
-                                                        background: `${styles.accentColor}10`,
-                                                    },
+                                                    color: styles.accentColor,
+                                                    fontSize: 20,
                                                 }}
-                                            >
-                                                {t.admin.auth.signIn.continueWithGoogle}
-                                            </Button>
-                                            <Button
-                                                fullWidth
-                                                variant="outlined"
-                                                startDecorator={
-                                                    <GitHubIcon sx={{ fontSize: 20 }} />
-                                                }
-                                                onClick={() => redirectToOAuthLogin("github")}
-                                                sx={{
-                                                    py: 1.25,
-                                                    borderRadius: "12px",
-                                                    fontWeight: 600,
-                                                    fontSize: "15px",
-                                                    borderColor: styles.inputBorder,
-                                                    color: styles.labelColor,
-                                                    background: styles.inputBg,
-                                                    "&:hover": {
-                                                        borderColor: styles.accentColor,
-                                                        background: `${styles.accentColor}10`,
-                                                    },
-                                                }}
-                                            >
-                                                {t.admin.auth.signIn.continueWithGithub}
-                                            </Button>
-                                        </Stack>
-
-                                        <Divider sx={{ mb: 2.5, color: styles.subtitleColor }}>
-                                            {t.admin.auth.signIn.orDivider}
-                                        </Divider>
-                                    </>
-                                )}
-
-                                <form
-                                    onSubmit={(event: React.FormEvent<SignUpFormElement>) => {
-                                        event.preventDefault();
-                                        const formElements = event.currentTarget.elements;
-                                        const name = formElements.userName.value;
-                                        const email = formElements.email.value;
-
-                                        if (!validation.isValid) {
-                                            setErrorMessage(t.admin.auth.signUp.passwordTooWeak);
-                                            return;
+                                            />
                                         }
-                                        if (password !== confirmPassword) {
-                                            setErrorMessage(t.admin.auth.signUp.passwordMismatch);
-                                            return;
+                                    />
+                                </FormControl>
+
+                                <FormControl required>
+                                    <FormLabel
+                                        sx={{
+                                            color: styles.labelColor,
+                                            fontSize: "0.8rem",
+                                            fontWeight: 600,
+                                            textTransform: "uppercase",
+                                            letterSpacing: "0.05em",
+                                            mb: 0.75,
+                                        }}
+                                    >
+                                        {t.admin.auth.signUp.emailLabel}
+                                    </FormLabel>
+                                    <Input
+                                        name="email"
+                                        placeholder={t.admin.auth.signUp.emailPlaceholder}
+                                        sx={inputStyle}
+                                        type="email"
+                                        startDecorator={
+                                            <EmailRoundedIcon
+                                                sx={{
+                                                    color: styles.accentColor,
+                                                    fontSize: 20,
+                                                }}
+                                            />
                                         }
-                                        _signup(name, email, password);
-                                    }}
-                                >
-                                    <Stack sx={{ gap: 2.5 }}>
-                                        <FormControl required>
-                                            <FormLabel
-                                                sx={{
-                                                    color: styles.labelColor,
-                                                    fontSize: "0.8rem",
-                                                    fontWeight: 600,
-                                                    textTransform: "uppercase",
-                                                    letterSpacing: "0.05em",
-                                                    mb: 0.75,
-                                                }}
-                                            >
-                                                {t.admin.auth.signUp.nameLabel}
-                                            </FormLabel>
-                                            <Input
-                                                name="userName"
-                                                type="text"
-                                                placeholder={t.admin.auth.signUp.namePlaceholder}
-                                                startDecorator={
-                                                    <BadgeRoundedIcon
-                                                        sx={{
-                                                            color: styles.accentColor,
-                                                            fontSize: 20,
-                                                        }}
-                                                    />
-                                                }
-                                                sx={inputStyle}
-                                            />
-                                        </FormControl>
+                                    />
+                                </FormControl>
 
-                                        <FormControl required>
-                                            <FormLabel
+                                <FormControl required>
+                                    <FormLabel
+                                        sx={{
+                                            color: styles.labelColor,
+                                            fontSize: "0.8rem",
+                                            fontWeight: 600,
+                                            textTransform: "uppercase",
+                                            letterSpacing: "0.05em",
+                                            mb: 0.75,
+                                        }}
+                                    >
+                                        {t.admin.auth.signUp.passwordLabel}
+                                    </FormLabel>
+                                    <Input
+                                        name="password"
+                                        placeholder={t.admin.auth.signUp.passwordPlaceholder}
+                                        sx={inputStyle}
+                                        type={showPassword ? "text" : "password"}
+                                        value={password}
+                                        endDecorator={
+                                            <IconButton
+                                                size="sm"
+                                                variant="plain"
+                                                aria-label={
+                                                    showPassword
+                                                        ? t.admin.auth.signUp.passwordVisibility
+                                                              .hide
+                                                        : t.admin.auth.signUp.passwordVisibility
+                                                              .show
+                                                }
                                                 sx={{
-                                                    color: styles.labelColor,
-                                                    fontSize: "0.8rem",
-                                                    fontWeight: 600,
-                                                    textTransform: "uppercase",
-                                                    letterSpacing: "0.05em",
-                                                    mb: 0.75,
+                                                    color: styles.accentColor,
+                                                    "--IconButton-size": "28px",
                                                 }}
+                                                onClick={() => setShowPassword((v) => !v)}
                                             >
-                                                {t.admin.auth.signUp.emailLabel}
-                                            </FormLabel>
-                                            <Input
-                                                name="email"
-                                                type="email"
-                                                placeholder={t.admin.auth.signUp.emailPlaceholder}
-                                                startDecorator={
-                                                    <EmailRoundedIcon
-                                                        sx={{
-                                                            color: styles.accentColor,
-                                                            fontSize: 20,
-                                                        }}
+                                                {showPassword ? (
+                                                    <VisibilityOffRoundedIcon
+                                                        sx={{ fontSize: 20 }}
                                                     />
-                                                }
-                                                sx={inputStyle}
-                                            />
-                                        </FormControl>
-
-                                        <FormControl required>
-                                            <FormLabel
+                                                ) : (
+                                                    <VisibilityRoundedIcon sx={{ fontSize: 20 }} />
+                                                )}
+                                            </IconButton>
+                                        }
+                                        startDecorator={
+                                            <LockRoundedIcon
                                                 sx={{
-                                                    color: styles.labelColor,
-                                                    fontSize: "0.8rem",
-                                                    fontWeight: 600,
-                                                    textTransform: "uppercase",
-                                                    letterSpacing: "0.05em",
-                                                    mb: 0.75,
+                                                    color: styles.accentColor,
+                                                    fontSize: 20,
                                                 }}
-                                            >
-                                                {t.admin.auth.signUp.passwordLabel}
-                                            </FormLabel>
-                                            <Input
-                                                name="password"
-                                                type={showPassword ? "text" : "password"}
-                                                placeholder={
-                                                    t.admin.auth.signUp.passwordPlaceholder
-                                                }
-                                                value={password}
-                                                onChange={(e) => setPassword(e.target.value)}
-                                                onFocus={() => setPasswordFocused(true)}
-                                                onBlur={() => setPasswordFocused(false)}
-                                                startDecorator={
-                                                    <LockRoundedIcon
-                                                        sx={{
-                                                            color: styles.accentColor,
-                                                            fontSize: 20,
-                                                        }}
-                                                    />
-                                                }
-                                                endDecorator={
-                                                    <IconButton
-                                                        aria-label={
-                                                            showPassword
-                                                                ? t.admin.auth.signUp
-                                                                      .passwordVisibility.hide
-                                                                : t.admin.auth.signUp
-                                                                      .passwordVisibility.show
-                                                        }
-                                                        size="sm"
-                                                        variant="plain"
-                                                        onClick={() => setShowPassword((v) => !v)}
-                                                        sx={{
-                                                            color: styles.accentColor,
-                                                            "--IconButton-size": "28px",
-                                                        }}
-                                                    >
-                                                        {showPassword ? (
-                                                            <VisibilityOffRoundedIcon
-                                                                sx={{ fontSize: 20 }}
-                                                            />
-                                                        ) : (
-                                                            <VisibilityRoundedIcon
-                                                                sx={{ fontSize: 20 }}
-                                                            />
-                                                        )}
-                                                    </IconButton>
-                                                }
-                                                sx={inputStyle}
                                             />
-                                            {showMeter && (
-                                                <Box sx={{ mt: 1 }}>
+                                        }
+                                        onBlur={() => setPasswordFocused(false)}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        onFocus={() => setPasswordFocused(true)}
+                                    />
+                                    {showMeter && (
+                                        <Box sx={{ mt: 1 }}>
+                                            <Stack
+                                                alignItems="center"
+                                                direction="row"
+                                                spacing={1}
+                                                sx={{ mb: 0.75 }}
+                                            >
+                                                <LinearProgress
+                                                    color={meterColor}
+                                                    value={(validation.score / 4) * 100}
+                                                    sx={{
+                                                        flex: 1,
+                                                        "--LinearProgress-thickness": "6px",
+                                                    }}
+                                                    determinate
+                                                />
+                                                <Typography
+                                                    level="body-xs"
+                                                    sx={{
+                                                        color: styles.subtitleColor,
+                                                        minWidth: 48,
+                                                        fontWeight: 600,
+                                                    }}
+                                                >
+                                                    {strengthLabel}
+                                                </Typography>
+                                            </Stack>
+                                            <Stack spacing={0.25}>
+                                                {checklistRows.map((row) => (
                                                     <Stack
+                                                        key={row.label}
                                                         alignItems="center"
                                                         direction="row"
-                                                        spacing={1}
-                                                        sx={{ mb: 0.75 }}
+                                                        spacing={0.75}
                                                     >
-                                                        <LinearProgress
-                                                            color={meterColor}
-                                                            determinate
-                                                            value={(validation.score / 4) * 100}
-                                                            sx={{
-                                                                flex: 1,
-                                                                "--LinearProgress-thickness":
-                                                                    "6px",
-                                                            }}
-                                                        />
+                                                        {row.ok ? (
+                                                            <CheckCircleRoundedIcon
+                                                                color="success"
+                                                                sx={{ fontSize: 16 }}
+                                                            />
+                                                        ) : (
+                                                            <RadioButtonUncheckedRoundedIcon
+                                                                sx={{
+                                                                    fontSize: 16,
+                                                                    color: styles.subtitleColor,
+                                                                }}
+                                                            />
+                                                        )}
                                                         <Typography
                                                             level="body-xs"
                                                             sx={{
-                                                                color: styles.subtitleColor,
-                                                                minWidth: 48,
-                                                                fontWeight: 600,
+                                                                color: row.ok
+                                                                    ? styles.labelColor
+                                                                    : styles.subtitleColor,
                                                             }}
                                                         >
-                                                            {strengthLabel}
+                                                            {row.label}
                                                         </Typography>
                                                     </Stack>
-                                                    <Stack spacing={0.25}>
-                                                        {checklistRows.map((row) => (
-                                                            <Stack
-                                                                key={row.label}
-                                                                alignItems="center"
-                                                                direction="row"
-                                                                spacing={0.75}
-                                                            >
-                                                                {row.ok ? (
-                                                                    <CheckCircleRoundedIcon
-                                                                        color="success"
-                                                                        sx={{ fontSize: 16 }}
-                                                                    />
-                                                                ) : (
-                                                                    <RadioButtonUncheckedRoundedIcon
-                                                                        sx={{
-                                                                            fontSize: 16,
-                                                                            color: styles.subtitleColor,
-                                                                        }}
-                                                                    />
-                                                                )}
-                                                                <Typography
-                                                                    level="body-xs"
-                                                                    sx={{
-                                                                        color: row.ok
-                                                                            ? styles.labelColor
-                                                                            : styles.subtitleColor,
-                                                                    }}
-                                                                >
-                                                                    {row.label}
-                                                                </Typography>
-                                                            </Stack>
-                                                        ))}
-                                                    </Stack>
-                                                </Box>
-                                            )}
-                                        </FormControl>
+                                                ))}
+                                            </Stack>
+                                        </Box>
+                                    )}
+                                </FormControl>
 
-                                        <FormControl required>
-                                            <FormLabel
+                                <FormControl required>
+                                    <FormLabel
+                                        sx={{
+                                            color: styles.labelColor,
+                                            fontSize: "0.8rem",
+                                            fontWeight: 600,
+                                            textTransform: "uppercase",
+                                            letterSpacing: "0.05em",
+                                            mb: 0.75,
+                                        }}
+                                    >
+                                        {t.admin.auth.signUp.confirmPasswordLabel}
+                                    </FormLabel>
+                                    <Input
+                                        name="confirm_password"
+                                        sx={inputStyle}
+                                        type={showConfirmPassword ? "text" : "password"}
+                                        value={confirmPassword}
+                                        endDecorator={
+                                            <IconButton
+                                                size="sm"
+                                                variant="plain"
+                                                aria-label={
+                                                    showConfirmPassword
+                                                        ? t.admin.auth.signUp.passwordVisibility
+                                                              .hide
+                                                        : t.admin.auth.signUp.passwordVisibility
+                                                              .show
+                                                }
                                                 sx={{
-                                                    color: styles.labelColor,
-                                                    fontSize: "0.8rem",
-                                                    fontWeight: 600,
-                                                    textTransform: "uppercase",
-                                                    letterSpacing: "0.05em",
-                                                    mb: 0.75,
+                                                    color: styles.accentColor,
+                                                    "--IconButton-size": "28px",
                                                 }}
+                                                onClick={() => setShowConfirmPassword((v) => !v)}
                                             >
-                                                {t.admin.auth.signUp.confirmPasswordLabel}
-                                            </FormLabel>
-                                            <Input
-                                                name="confirm_password"
-                                                type={showConfirmPassword ? "text" : "password"}
-                                                placeholder={
-                                                    t.admin.auth.signUp.confirmPasswordPlaceholder
-                                                }
-                                                value={confirmPassword}
-                                                onChange={(e) =>
-                                                    setConfirmPassword(e.target.value)
-                                                }
-                                                startDecorator={
-                                                    <LockRoundedIcon
-                                                        sx={{
-                                                            color: styles.accentColor,
-                                                            fontSize: 20,
-                                                        }}
+                                                {showConfirmPassword ? (
+                                                    <VisibilityOffRoundedIcon
+                                                        sx={{ fontSize: 20 }}
                                                     />
-                                                }
-                                                endDecorator={
-                                                    <IconButton
-                                                        aria-label={
-                                                            showConfirmPassword
-                                                                ? t.admin.auth.signUp
-                                                                      .passwordVisibility.hide
-                                                                : t.admin.auth.signUp
-                                                                      .passwordVisibility.show
-                                                        }
-                                                        size="sm"
-                                                        variant="plain"
-                                                        onClick={() =>
-                                                            setShowConfirmPassword((v) => !v)
-                                                        }
-                                                        sx={{
-                                                            color: styles.accentColor,
-                                                            "--IconButton-size": "28px",
-                                                        }}
-                                                    >
-                                                        {showConfirmPassword ? (
-                                                            <VisibilityOffRoundedIcon
-                                                                sx={{ fontSize: 20 }}
-                                                            />
-                                                        ) : (
-                                                            <VisibilityRoundedIcon
-                                                                sx={{ fontSize: 20 }}
-                                                            />
-                                                        )}
-                                                    </IconButton>
-                                                }
-                                                sx={inputStyle}
-                                            />
-                                        </FormControl>
-
-                                        <Button
-                                            type="submit"
-                                            fullWidth
-                                            startDecorator={<PersonAddRoundedIcon />}
-                                            sx={{
-                                                mt: 1,
-                                                py: 1.5,
-                                                background: styles.buttonBg,
-                                                borderRadius: "12px",
-                                                fontWeight: 600,
-                                                fontSize: "15px",
-                                                boxShadow: styles.buttonShadow,
-                                                transition:
-                                                    "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                                "&:hover": {
-                                                    background: styles.buttonHover,
-                                                    transform: "translateY(-2px)",
-                                                    boxShadow: `${styles.buttonShadow}, 0 8px 24px ${palette.glow}`,
-                                                },
-                                            }}
-                                        >
-                                            {t.admin.auth.signUp.submit}
-                                        </Button>
-
-                                        <Typography
-                                            level="body-sm"
-                                            textAlign="center"
-                                            sx={{ color: styles.subtitleColor }}
-                                        >
-                                            {t.admin.auth.signUp.haveAccountPrompt}{" "}
-                                            <Link
-                                                href="signin"
-                                                level="title-sm"
+                                                ) : (
+                                                    <VisibilityRoundedIcon sx={{ fontSize: 20 }} />
+                                                )}
+                                            </IconButton>
+                                        }
+                                        placeholder={
+                                            t.admin.auth.signUp.confirmPasswordPlaceholder
+                                        }
+                                        startDecorator={
+                                            <LockRoundedIcon
                                                 sx={{
-                                                    color: styles.linkColor,
-                                                    fontWeight: 600,
-                                                    transition: "all 0.2s ease",
-                                                    "&:hover": {
-                                                        color: styles.linkHover,
-                                                    },
+                                                    color: styles.accentColor,
+                                                    fontSize: 20,
                                                 }}
-                                            >
-                                                {t.admin.auth.signUp.signInLink}
-                                            </Link>
-                                        </Typography>
-                                    </Stack>
-                                </form>
-                            </>
-                        )}
-                    </Box>
-                </Box>
+                                            />
+                                        }
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                    />
+                                </FormControl>
 
-                <Box component="footer" sx={{ py: 3 }}>
-                    <Typography
-                        level="body-xs"
-                        sx={{ textAlign: "center", color: styles.subtitleColor }}
-                    >
-                        {fmt(t.admin.brand.copyright, { year: new Date().getFullYear() })}
-                    </Typography>
-                </Box>
+                                <Button
+                                    startDecorator={<PersonAddRoundedIcon />}
+                                    type="submit"
+                                    sx={{
+                                        mt: 1,
+                                        py: 1.5,
+                                        background: styles.buttonBg,
+                                        borderRadius: "12px",
+                                        fontWeight: 600,
+                                        fontSize: "15px",
+                                        boxShadow: styles.buttonShadow,
+                                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                        "&:hover": {
+                                            background: styles.buttonHover,
+                                            transform: "translateY(-2px)",
+                                            boxShadow: `${styles.buttonShadow}, 0 8px 24px ${palette.glow}`,
+                                        },
+                                    }}
+                                    fullWidth
+                                >
+                                    {t.admin.auth.signUp.submit}
+                                </Button>
+
+                                <Typography
+                                    level="body-sm"
+                                    sx={{ color: styles.subtitleColor }}
+                                    textAlign="center"
+                                >
+                                    {t.admin.auth.signUp.haveAccountPrompt}{" "}
+                                    <Link
+                                        component="button"
+                                        type="button"
+                                        level="title-sm"
+                                        onClick={() => navigate("/signin")}
+                                        sx={{
+                                            color: styles.linkColor,
+                                            fontWeight: 600,
+                                            transition: "all 0.2s ease",
+                                            "&:hover": {
+                                                color: styles.linkHover,
+                                            },
+                                        }}
+                                    >
+                                        {t.admin.auth.signUp.signInLink}
+                                    </Link>
+                                </Typography>
+                            </Stack>
+                        </form>
+                    </>
+                )}
             </Box>
         </Box>
-    );
-};
-
-export const SignUpForm = () => {
-    return (
-        <CssVarsProvider disableTransitionOnChange theme={purpleTheme}>
-            <CssBaseline />
-            <GlobalStyles
-                styles={{
-                    ":root": {
-                        "--Form-maxWidth": "800px",
-                        "--Transition-duration": "0.4s",
-                    },
-                }}
-            />
-            <I18nProvider>
-                <SignUpContent />
-            </I18nProvider>
-        </CssVarsProvider>
     );
 };

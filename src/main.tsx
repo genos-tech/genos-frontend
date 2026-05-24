@@ -6,6 +6,7 @@ import { Outlet, Route, BrowserRouter as Router, Routes } from "react-router-dom
 import { AuthProvider } from "./context/AuthContext";
 import { PageNotFound } from "./components/layout/pageNotFound";
 import { AuthGuard, GuestGuard } from "./features/admin/authGuard";
+import { AuthShell } from "./features/admin/components/AuthShell";
 import { JoinTeam } from "./features/admin/components/joinTeamFrom";
 import { OAuthSuccessHandler } from "./features/admin/components/OAuthSuccessHandler";
 import { ResetPasswordForm } from "./features/admin/components/ResetPasswordForm";
@@ -52,32 +53,49 @@ createRoot(document.getElementById("root")!).render(
 
             {/* All routes that need authentication context. */}
             <Route element={<AuthLayout />}>
-                {/* Guest-only routes (redirect to /jointeam if already logged in) */}
-                <Route element={<GuestGuard />}>
-                    <Route element={<SignInForm />} path="/" />
-                    <Route element={<SignUpForm />} path="/signup" />
-                    <Route element={<SignInForm />} path="/signin" />
-                    <Route element={<ResetPasswordForm />} path="/reset-password" />
+                {/* AuthShell owns the visual chrome (theme + i18n providers,
+                    gradient background, AdminHeader, footer) shared by every
+                    admin-auth route. Mounted once so switching between
+                    /signin, /signup, /jointeam, etc. only swaps the inner
+                    column — no provider re-init, no header flash.
+
+                    `/workspace/*` is intentionally NOT under AuthShell:
+                    App.tsx still owns its own CssVarsProvider / I18nProvider.
+                    Lifting those is a separate, bigger refactor. */}
+                <Route element={<AuthShell />}>
+                    {/* Guest-only routes (redirect to /jointeam if already logged in) */}
+                    <Route element={<GuestGuard />}>
+                        <Route element={<SignInForm />} path="/" />
+                        <Route element={<SignUpForm />} path="/signup" />
+                        <Route element={<SignInForm />} path="/signin" />
+                        <Route element={<ResetPasswordForm />} path="/reset-password" />
+                    </Route>
+
+                    {/* OAuth bounce — not auth-guarded. Reached by both
+                        signed-out users (login intent: the page reads
+                        the JWT from the URL hash and finishes sign-in)
+                        and signed-in users (failure paths only — connect
+                        successes go straight to the next route). */}
+                    {OAUTH_INTEGRATIONS_ENABLED && (
+                        <Route element={<OAuthSuccessHandler />} path="/oauth/success" />
+                    )}
+
+                    {/* Email verification — outside guards because the user
+                        is not signed in yet. After verifying they're sent
+                        to /signin to authenticate. */}
+                    <Route element={<VerifyEmailHandler />} path="/verify-email" />
+
+                    {/* JoinTeam is auth-guarded but shares the same chrome
+                        as the sign-in cluster, so it lives under AuthShell. */}
+                    <Route element={<AuthGuard />}>
+                        <Route element={<JoinTeam />} path="/jointeam" />
+                    </Route>
                 </Route>
 
-                {/* OAuth bounce — not auth-guarded. Reached by both
-                    signed-out users (login intent: the page reads
-                    the JWT from the URL hash and finishes sign-in)
-                    and signed-in users (failure paths only — connect
-                    successes go straight to the next route). */}
-                {OAUTH_INTEGRATIONS_ENABLED && (
-                    <Route element={<OAuthSuccessHandler />} path="/oauth/success" />
-                )}
-
-                {/* Email verification — outside guards because the user
-                    is not signed in yet. After verifying they're sent
-                    to /signin to authenticate. */}
-                <Route element={<VerifyEmailHandler />} path="/verify-email" />
-
-                {/* Protected routes */}
+                {/* Workspace is outside AuthShell — App.tsx renders its own
+                    providers and full-screen layout. */}
                 <Route element={<AuthGuard />}>
                     <Route element={<App />} path="/workspace/*" />
-                    <Route element={<JoinTeam />} path="/jointeam" />
                 </Route>
 
                 {/* Catch-all 404. Lives inside the auth layout because
