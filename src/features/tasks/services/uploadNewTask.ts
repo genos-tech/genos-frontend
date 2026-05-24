@@ -169,6 +169,11 @@ export const uploadNewTask = async (props: uploadTaskProps) => {
 
                 addTask({
                     id: String(taskCreateData.task.task_id),
+                    // Persist the backend-computed displayId into the
+                    // IDB table-row cache. Without this the next render
+                    // of `DraggableTaskRow` falls back to "#<id>" because
+                    // `formatTaskDisplayId` has no displayId to use.
+                    displayId: taskCreateData.task.displayId ?? null,
                     title: taskContent.title,
                     priority: taskContent.priority.priority,
                     effortLevel: taskContent.effortLevel.level,

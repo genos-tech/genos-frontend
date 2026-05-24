@@ -53,6 +53,11 @@ const syncMilestoneBackingTaskCaches = (milestone: Milestone): void => {
     const reporter = milestone.reporter ?? null;
     void addTask({
         id: String(milestone.taskId),
+        // Preserve the milestone's human-readable id on the IDB row.
+        // Without this, every refreshMilestone() overwrites the cached
+        // backing-task row with one missing `displayId`, so the next
+        // table render of `DraggableTaskRow` falls back to "#<id>".
+        displayId: milestone.displayId ?? null,
         title: milestone.title ?? null,
         priority: milestone.priority ?? null,
         effortLevel: milestone.effortLevel ?? null,

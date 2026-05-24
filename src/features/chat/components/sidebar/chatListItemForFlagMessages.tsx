@@ -42,6 +42,7 @@ import {
 import { ProjectProps } from "../../../../types/tasks";
 import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
 import { toggleMessagesPane } from "../../../../utils/sidebarUtils";
+import { formatTaskDisplayId } from "../../../tasks/utils/taskDisplayId";
 import { addMessage } from "../../services/addMessage";
 import { loadSpecificThreadMessages } from "../../services/loadSpecificThreadMessages";
 import { popSpecificMessages } from "../../services/popSpecificMessages";
@@ -629,7 +630,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                             height: "20px",
                         }}
                     >
-                        ID:{flaggedMessage.taskId}
+                        {formatTaskDisplayId(flaggedMessage)}
                     </Chip>
                 )}
             </>

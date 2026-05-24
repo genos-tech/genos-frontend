@@ -167,6 +167,11 @@ export const sendUpdatedSpecificTask = async (
                     const hasDueDate = !!updatedTask.dueDate;
                     addTask({
                         id: String(updatedTask.id),
+                        // Preserve the human-readable displayId on the
+                        // cached row so a subsequent re-render of
+                        // DraggableTaskRow keeps showing "<code>-<n>"
+                        // instead of falling back to "#<id>".
+                        displayId: updatedTask.displayId ?? null,
                         title: updatedTask.title,
                         priority: updatedTask.priority.priority,
                         effortLevel: updatedTask.effortLevel.level,

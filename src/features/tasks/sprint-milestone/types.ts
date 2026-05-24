@@ -51,6 +51,11 @@ export type Milestone = {
     // assignees). Null only for very legacy rows; the backend lazy-
     // backfills on the next read.
     taskId: number | null;
+    // Human-readable id from the backing task's `display_id`
+    // ("<code>-<n>"). Lets table / preview surfaces render the
+    // friendly id without an extra lookup. Null for legacy
+    // milestones whose backing task hasn't been backfilled yet.
+    displayId?: string | null;
     projectId: number;
     teamId: number | string | null;
     sprintId: number | null;

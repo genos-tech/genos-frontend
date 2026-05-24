@@ -264,6 +264,9 @@ export type FlaggedMessageProps = {
     dmPartnerUser: UserProps;
     project?: ProjectProps;
     taskId: number;
+    // Human-readable task identifier; falls back via
+    // `formatTaskDisplayId` to "#<taskId>" when absent.
+    displayId?: string | null;
     tsSent: string;
 };
 
