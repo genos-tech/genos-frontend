@@ -23,6 +23,7 @@ type NoteMentionPayload = {
     // task-note only
     projectId?: number;
     taskId?: number;
+    taskDisplayId?: string | null;
 };
 
 export const emitNoteMention = (socket: Socket | null, payload: NoteMentionPayload): void => {
@@ -42,5 +43,6 @@ export const emitNoteMention = (socket: Socket | null, payload: NoteMentionPaylo
         ...(payload.chatId !== undefined ? { chat_id: payload.chatId } : {}),
         ...(payload.projectId !== undefined ? { project_id: payload.projectId } : {}),
         ...(payload.taskId !== undefined ? { task_id: payload.taskId } : {}),
+        ...(payload.taskDisplayId ? { display_id: payload.taskDisplayId } : {}),
     });
 };

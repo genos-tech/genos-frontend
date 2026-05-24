@@ -94,6 +94,7 @@ export const sendUpdatedSpecificTask = async (
                         task_title: updatedTask.title,
                         project_id: updatedTask.project.projectId,
                         project_name: updatedTask.project.projectName,
+                        display_id: updatedTask.displayId,
                         ts_mentioned_at: res.data.task.ts_updated_at,
                         // `newly_*` drives the real-time per-user toast,
                         // `all_*` is written to the ActivityFact row so
@@ -120,6 +121,7 @@ export const sendUpdatedSpecificTask = async (
                         chatType: 3,
                         dmPartnerUserId: null,
                         taskId: updatedTask.id,
+                        displayId: updatedTask.displayId,
                         taskStatus: updatedTask.status.status,
                         systemUserId: updatedTask.project.systemUserId,
                         messageIdForPut: null,
@@ -145,6 +147,7 @@ export const sendUpdatedSpecificTask = async (
                             destCGName: updatedTask.project.projectName,
                             destCGId: updatedTask.project.projectId,
                             taskId: updatedTask.id,
+                            displayId: updatedTask.displayId,
                             systemUserId: updatedTask.project.systemUserId,
                             messageIdForPut: null,
                             sendActivity: false, // Do not send activity for task status update.
