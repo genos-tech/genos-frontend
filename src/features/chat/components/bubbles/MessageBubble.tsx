@@ -774,6 +774,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                                 isThread={false}
                                 sender={message.sender}
                                 taskId={message.taskId}
+                                displayId={message.displayId}
                                 taskStatus={message.taskStatus}
                                 tsSent={message.tsSent}
                                 tsUpdated={message.tsUpdated}
@@ -952,6 +953,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                                             isThread={false}
                                             sender={message.sender}
                                             taskId={message.taskId}
+                                            displayId={message.displayId}
                                             taskStatus={message.taskStatus}
                                             tsSent={message.tsSent}
                                             tsUpdated={message.tsUpdated}
@@ -987,6 +989,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                                                     isThread={false}
                                                     sender={message.sender}
                                                     taskId={message.taskId}
+                                                    displayId={message.displayId}
                                                     taskStatus={message.taskStatus}
                                                     tsSent={message.tsSent}
                                                     tsUpdated={message.tsUpdated}

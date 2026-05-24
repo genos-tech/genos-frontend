@@ -144,6 +144,10 @@ export type MessageProps = {
     };
     taskExist?: boolean;
     taskId: number | null;
+    // Human-readable task identifier ("GEN-42") when the message is
+    // linked to a task. Falls back via `formatTaskDisplayId` to
+    // "#<taskId>" when absent (legacy rows, pre-backfill).
+    displayId?: string | null;
     taskStatus: string | null;
     project?: ProjectProps;
     reactions?: ReactionProps[];
@@ -162,6 +166,9 @@ export type ThreadMessageProps = {
     contentText: string;
     sender: UserProps;
     taskId: number | null;
+    // Human-readable task identifier ("GEN-42") when the thread is
+    // linked to a task. Falls back via `formatTaskDisplayId`.
+    displayId?: string | null;
     tsSent: string;
     tsUpdated: string;
     attachment?: {

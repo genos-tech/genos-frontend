@@ -4,6 +4,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { extractMMDDHHMMSSs } from "../../../../utils/dateUtils";
+import { formatTaskDisplayId } from "../../../tasks/utils/taskDisplayId";
 import { statuses } from "../../../tasks/utils/taskMeta";
 
 // Status chip color configuration - improved for better visibility
@@ -40,6 +41,9 @@ type BubbleUserNameTypes = {
     tsSent: string;
     tsUpdated: string;
     taskId: number | null;
+    // Human-readable task identifier ("GEN-42"); falls back via
+    // `formatTaskDisplayId` to "#<taskId>" when absent.
+    displayId?: string | null;
     taskStatus: string | null;
     isThread: boolean;
 };
@@ -55,6 +59,7 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
         tsSent,
         tsUpdated,
         taskId,
+        displayId,
         taskStatus,
         isThread,
     } = props;
@@ -119,7 +124,11 @@ export const BubbleUserName = (props: BubbleUserNameTypes) => {
                         spacing={0.75}
                         sx={{ flexWrap: "wrap", gap: 0.5 }}
                     >
-                        {isThread === false && <ModernChip>ID: {taskId || "N/A"}</ModernChip>}
+                        {isThread === false && (
+                            <ModernChip>
+                                {formatTaskDisplayId({ taskId, displayId }) || "N/A"}
+                            </ModernChip>
+                        )}
 
                         {taskStatusDetails && (
                             <ModernChip
