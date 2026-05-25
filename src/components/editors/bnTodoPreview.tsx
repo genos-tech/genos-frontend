@@ -184,6 +184,7 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
                                 useTEM.teamMemberProfiles,
                                 editor,
                                 useTEM.teamMembers,
+                                myself.userId,
                                 mentionGroups
                             ),
                             query

@@ -448,6 +448,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
                                     useTEM.teamMemberProfiles,
                                     editor,
                                     useTEM.teamMembers,
+                                    myself.userId,
                                     mentionGroups
                                 ),
                                 query

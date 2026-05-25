@@ -431,6 +431,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                                     useTEM.teamMemberProfiles,
                                     editor,
                                     useTEM.teamMembers,
+                                    myself.userId,
                                     mentionGroups
                                 ),
                                 query

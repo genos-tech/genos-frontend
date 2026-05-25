@@ -179,14 +179,71 @@ export const CreateMentionGroupSpec = () =>
         }
     );
 
+// Sort rule shared with the assignee/reporter picker (`ACTeamUsers`)
+// so the same ordering shows up on every member-selection surface:
+// self first (you almost always mean to mention/assign yourself when
+// reaching for the picker), then everyone else by display name,
+// case-insensitive. Pure — caller passes a fresh array, we never
+// mutate the input.
+export const sortMembersMyselfFirst = <T extends { userId: string; userName: string }>(
+    members: T[],
+    myselfUserId: string
+): T[] => {
+    return [...members].sort((a, b) => {
+        if (a.userId === myselfUserId) return -1;
+        if (b.userId === myselfUserId) return 1;
+        return (a.userName || "").localeCompare(b.userName || "", undefined, {
+            sensitivity: "base",
+        });
+    });
+};
+
+// Cache the entire built menu (sorted users + JSX rows + group rows)
+// per editor instance. `MentionMenuItems` is called by BlockNote's
+// `getItems` on every query change as the user types, and the body
+// below rebuilds many React elements — without this cache, every
+// keystroke would re-sort the member list AND re-instantiate every
+// avatar / chip / icon for every option, then throw the lot away when
+// the next character arrives.
+//
+// Keyed by `editor` so two editors open at once (e.g. main chat +
+// open thread) don't thrash a single global slot. WeakMap auto-frees
+// the entry when the editor is gc'd. Cache hits require ALL inputs
+// to be reference-equal — `useTEM.teamMembers`,
+// `useTEM.teamMemberProfiles`, and the `mentionGroups` context value
+// only change reference when their underlying data does, so steady-
+// state typing collapses to a hash lookup + a no-op return.
+interface MenuCacheEntry {
+    profiles: Record<string, UserProps>;
+    users: UserProps[];
+    myselfId: string;
+    groups: MentionGroup[];
+    items: DefaultReactSuggestionItem[];
+}
+
+const _menuItemsCache = new WeakMap<object, MenuCacheEntry>();
+
 // Function which gets all users + groups for the mentions menu.
 // Groups are listed first so they're easy to spot when typing.
 export const MentionMenuItems = (
     teamMemberProfiles: Record<string, UserProps>,
     editor: any,
     users: UserProps[],
+    myselfUserId: string,
     mentionGroups: MentionGroup[] = []
 ): DefaultReactSuggestionItem[] => {
+    const cached = _menuItemsCache.get(editor);
+    if (
+        cached &&
+        cached.profiles === teamMemberProfiles &&
+        cached.users === users &&
+        cached.myselfId === myselfUserId &&
+        cached.groups === mentionGroups
+    ) {
+        return cached.items;
+    }
+
+    const sortedUsers = sortMembersMyselfFirst(users, myselfUserId);
     const groupItems: DefaultReactSuggestionItem[] = mentionGroups.map((g) => ({
         // `title` is what BlockNote's `filterSuggestionItems` searches.
         // The `@` trigger character is consumed before the query is
@@ -242,7 +299,7 @@ export const MentionMenuItems = (
         ),
     }));
 
-    const userItems: DefaultReactSuggestionItem[] = users.map((user) => ({
+    const userItems: DefaultReactSuggestionItem[] = sortedUsers.map((user) => ({
         title: user.userEmail,
         badge: user.customStatus,
         onItemClick: () => {
@@ -292,5 +349,13 @@ export const MentionMenuItems = (
     // suggestion popup only shows a few items above the fold. Putting
     // groups at the top pushed individual @user picks out of view and
     // looked like users weren't surfaced at all.
-    return [...userItems, ...groupItems];
+    const items = [...userItems, ...groupItems];
+    _menuItemsCache.set(editor, {
+        profiles: teamMemberProfiles,
+        users,
+        myselfId: myselfUserId,
+        groups: mentionGroups,
+        items,
+    });
+    return items;
 };

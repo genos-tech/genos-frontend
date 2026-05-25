@@ -541,6 +541,7 @@ export const BnChatNoteEditor = (props: BnChatNoteEditorProps) => {
                                                     useTEM.teamMemberProfiles,
                                                     editor,
                                                     useTEM.teamMembers,
+                                                    myself.userId,
                                                     mentionGroups
                                                 ),
                                                 query

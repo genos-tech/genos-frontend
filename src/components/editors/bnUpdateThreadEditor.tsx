@@ -415,6 +415,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
                                     useTEM.teamMemberProfiles,
                                     editor,
                                     useTEM.teamMembers,
+                                    myself.userId,
                                     mentionGroups
                                 ),
                                 query

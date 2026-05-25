@@ -556,6 +556,7 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                                                     useTEM.teamMemberProfiles,
                                                     editor,
                                                     mentionableUsers,
+                                                    myself.userId,
                                                     mentionGroups
                                                 ),
                                                 query

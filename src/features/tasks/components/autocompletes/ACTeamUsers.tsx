@@ -1,7 +1,9 @@
+import { useMemo } from "react";
 import { AutocompleteOption, ListItemContent, Stack, Typography } from "@mui/joy";
 import Autocomplete from "@mui/joy/Autocomplete";
 import { Socket } from "socket.io-client";
 
+import { sortMembersMyselfFirst } from "../../../../components/editors/Mention";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -51,11 +53,19 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
     const { t } = useTranslation();
     const youSuffix = t.tasks.autocomplete.youSuffix;
 
+    // Self on top, then alphabetical by userName — mirrors the
+    // mention-menu ordering in `MentionMenuItems` so both pickers
+    // present the same shape.
+    const sortedMembers = useMemo(
+        () => sortMembersMyselfFirst(useTEM.teamMembers, myself.userId),
+        [useTEM.teamMembers, myself.userId]
+    );
+
     return (
         <Autocomplete
             key={taskContent.id}
             isOptionEqualToValue={(option, value) => option.userId === value.userId}
-            options={useTEM.teamMembers}
+            options={sortedMembers}
             size="sm"
             sx={{ width: "100%" }}
             // Pass `null` through so an unassigned task renders an empty

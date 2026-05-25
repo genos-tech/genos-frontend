@@ -449,6 +449,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                                     useTEM.teamMemberProfiles,
                                     editor,
                                     useTEM.teamMembers,
+                                    myself.userId,
                                     mentionGroups
                                 ),
                                 query

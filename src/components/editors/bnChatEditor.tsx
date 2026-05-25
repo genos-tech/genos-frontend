@@ -579,6 +579,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                                     teamMemberProfilesRef.current,
                                     editor,
                                     teamMembersRef.current,
+                                    myself.userId,
                                     mentionGroupsRef.current
                                 ),
                                 query

@@ -527,6 +527,7 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                                                     useTEM.teamMemberProfiles,
                                                     editor,
                                                     useTEM.teamMembers,
+                                                    myself.userId,
                                                     mentionGroups
                                                 ),
                                                 query

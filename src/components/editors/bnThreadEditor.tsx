@@ -512,6 +512,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                                     teamMemberProfilesRef.current,
                                     editor,
                                     teamMembersRef.current,
+                                    myself.userId,
                                     mentionGroups
                                 ),
                                 query
