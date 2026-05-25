@@ -19,6 +19,15 @@ const attachInterceptors = (instance: AxiosInstance): AxiosInstance => {
             return response;
         },
         (error) => {
+            // Client-aborted requests (e.g. spotlight supersedes an
+            // in-flight search when the user keeps typing) reject with
+            // no `error.response` too — but they aren't a backend
+            // health signal, they're a deliberate frontend action.
+            // Without this guard, a few fast keystrokes cross the
+            // API_DOWN threshold and pop the "API down" snackbar.
+            if (axios.isCancel(error)) {
+                return Promise.reject(error);
+            }
             if (!error.response) {
                 _onApiHealthChange?.(true);
             }
