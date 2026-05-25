@@ -1653,9 +1653,17 @@ function _markdownAnswerSx(isDark: boolean): Record<string, unknown> {
         // paragraphs — reset default browser margins
         "& p": { m: 0, mb: 0.75 },
         "& p:last-child": { mb: 0 },
-        // lists
-        "& ul, & ol": { pl: 2.5, my: 0.5 },
-        "& li": { mb: 0.25 },
+        // lists — something in Joy UI's cascade clears `list-style`, so
+        // lists rendered indented but markerless. Set list-style and
+        // `display: list-item` explicitly so the markers always show.
+        "& ul, & ol": { pl: 2.75, my: 0.75, listStylePosition: "outside" },
+        "& ul": { listStyleType: "disc" },
+        "& ol": { listStyleType: "decimal" },
+        "& li": { mb: 0.5, display: "list-item" },
+        "& li:last-child": { mb: 0 },
+        "& li::marker": { color: isDark ? "#a78bfa" : "#7c3aed" },
+        // nested lists — tighter than top-level
+        "& li > ul, & li > ol": { my: 0.25, pl: 2 },
         // code blocks
         "& pre": {
             overflowX: "auto",
