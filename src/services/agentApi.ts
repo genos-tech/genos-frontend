@@ -114,6 +114,28 @@ export async function fetchAgentUsage(accessToken: string): Promise<AgentUsage |
     }
 }
 
+// Per-feature access flags as decided by `UserFeatureAccess` on the
+// backend. Lets the Settings UI tell a user "you toggled web search on
+// but your account isn't approved yet" BEFORE they hit the generic
+// `subscribers only` ToolError mid-stream. Keep the keys aligned with
+// `UserFeatureAccess.FEATURE_*` server-side.
+export interface AgentFeatures {
+    web_search: boolean;
+    unlimited_agent: boolean;
+}
+
+export async function fetchAgentFeatures(accessToken: string): Promise<AgentFeatures | null> {
+    try {
+        const resp = await fetch(`${API_BASE}/agent/features/`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (!resp.ok) return null;
+        return (await resp.json()) as AgentFeatures;
+    } catch {
+        return null;
+    }
+}
+
 // One row of the History list. Mirrors the AgentSessionsListView
 // payload — first_query is the user's first question in the session,
 // already truncated server-side (~140 chars) for a short list row.
