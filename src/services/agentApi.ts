@@ -136,6 +136,39 @@ export async function fetchAgentFeatures(accessToken: string): Promise<AgentFeat
     }
 }
 
+// Provider/model picker payload — drives Settings → Spotlight → AI Model.
+// `daily_limit` is null when no per-model quota applies to this user
+// (e.g. paid tier on a cheap model not listed in MODEL_DAILY_QUOTAS).
+// `current` reflects the user's saved preference after stale-pref
+// fallback, so the picker can pre-select it without the consumer
+// duplicating the resolution logic.
+export interface AgentModelEntry {
+    provider: string;
+    model: string;
+    label: string;
+    note: string;
+    daily_limit: number | null;
+    used_today: number;
+}
+
+export interface AgentModels {
+    tier: "free" | "paid";
+    current: { provider: string; model: string };
+    models: AgentModelEntry[];
+}
+
+export async function fetchAgentModels(accessToken: string): Promise<AgentModels | null> {
+    try {
+        const resp = await fetch(`${API_BASE}/agent/models/`, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        if (!resp.ok) return null;
+        return (await resp.json()) as AgentModels;
+    } catch {
+        return null;
+    }
+}
+
 // One row of the History list. Mirrors the AgentSessionsListView
 // payload — first_query is the user's first question in the session,
 // already truncated server-side (~140 chars) for a short list row.

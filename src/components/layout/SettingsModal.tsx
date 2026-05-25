@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
+import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
@@ -57,6 +58,7 @@ import {
     useBubbleStylePreference,
 } from "../../hooks/common/useBubbleStylePreference";
 import { useDoubleClickTodoPreference } from "../../hooks/common/useDoubleClickTodoPreference";
+import { useLlmModelPreference } from "../../hooks/common/useLlmModelPreference";
 import { useSpotlightPreferences } from "../../hooks/common/useSpotlightPreferences";
 import { ThemePreference, useThemePreference } from "../../hooks/common/useThemePreference";
 import { fmt, Locale, useTranslation } from "../../i18n";
@@ -265,6 +267,186 @@ const DoubleClickTodoSection = () => {
                 </Box>
                 <Switch checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
             </Stack>
+        </Sheet>
+    );
+};
+
+const LlmModelSection = () => {
+    const { data, loading, setChoice } = useLlmModelPreference();
+    const { t } = useTranslation();
+
+    // Cluster the catalog by provider so the model dropdown can show
+    // only the models that match the currently-selected provider — the
+    // backend catalog is flat, but the UI prefers Provider → Model
+    // cascade so the user doesn't have to scan "Gemini Flash / Pro /
+    // Claude Haiku / Sonnet" in a single list.
+    const providers = useMemo(() => {
+        if (!data) return [];
+        const seen = new Map<string, string>();
+        for (const m of data.models) {
+            if (!seen.has(m.provider)) {
+                seen.set(m.provider, m.provider);
+            }
+        }
+        return Array.from(seen.keys());
+    }, [data]);
+
+    if (loading) {
+        return (
+            <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
+                <Typography level="body-sm" sx={{ opacity: 0.7 }}>
+                    Loading…
+                </Typography>
+            </Sheet>
+        );
+    }
+    if (!data || data.models.length === 0) {
+        return (
+            <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
+                <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
+                    <BoltRoundedIcon />
+                    <Typography level="title-md">{t.settings.llmModel.heading}</Typography>
+                </Stack>
+                <Typography level="body-xs">{t.settings.llmModel.noModelsConfigured}</Typography>
+            </Sheet>
+        );
+    }
+
+    const currentProvider = data.current.provider;
+    const currentModel = data.current.model;
+    const modelsForProvider = data.models.filter((m) => m.provider === currentProvider);
+    const currentEntry = data.models.find(
+        (m) => m.provider === currentProvider && m.model === currentModel
+    );
+
+    const providerLabel = (p: string) => {
+        if (p === "gemini") return t.settings.llmModel.providerGemini;
+        if (p === "claude") return t.settings.llmModel.providerClaude;
+        return p;
+    };
+
+    return (
+        <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
+            <Stack alignItems="center" direction="row" spacing={1} sx={{ mb: 0.5 }}>
+                <BoltRoundedIcon />
+                <Typography level="title-md">{t.settings.llmModel.heading}</Typography>
+                <Box sx={{ flex: 1 }} />
+                <Typography
+                    level="body-xs"
+                    sx={{
+                        px: 1,
+                        py: 0.25,
+                        borderRadius: "sm",
+                        bgcolor: data.tier === "paid" ? "success.softBg" : "neutral.softBg",
+                        color: data.tier === "paid" ? "success.softColor" : "neutral.softColor",
+                        fontWeight: 600,
+                    }}
+                >
+                    {data.tier === "paid"
+                        ? t.settings.llmModel.tierPaid
+                        : t.settings.llmModel.tierFree}
+                </Typography>
+            </Stack>
+            <Typography level="body-xs" sx={{ mb: 1.5 }}>
+                {t.settings.llmModel.description}
+            </Typography>
+
+            <Stack
+                alignItems="center"
+                direction="row"
+                justifyContent="space-between"
+                spacing={2}
+                sx={{ mb: 1.5 }}
+            >
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography level="title-sm">{t.settings.llmModel.providerLabel}</Typography>
+                    <Typography level="body-xs">{t.settings.llmModel.providerHelper}</Typography>
+                </Box>
+                <Select
+                    size="sm"
+                    sx={{ minWidth: 180 }}
+                    value={currentProvider}
+                    onChange={(_e, value) => {
+                        if (!value || typeof value !== "string") return;
+                        // When the provider changes, default to that
+                        // provider's first model in the catalog rather
+                        // than leaving the previous (now-invalid) model
+                        // selected — the backend resolver would fall
+                        // back to the server default in that case, but
+                        // the picker would visually drift.
+                        const firstModel = data.models.find((m) => m.provider === value);
+                        if (firstModel) {
+                            void setChoice(value, firstModel.model);
+                        }
+                    }}
+                >
+                    {providers.map((p) => (
+                        <Option key={p} value={p}>
+                            <Typography level="body-sm">{providerLabel(p)}</Typography>
+                        </Option>
+                    ))}
+                </Select>
+            </Stack>
+
+            <Stack
+                alignItems="center"
+                direction="row"
+                justifyContent="space-between"
+                spacing={2}
+                sx={{ mb: 1.5 }}
+            >
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography level="title-sm">{t.settings.llmModel.modelLabel}</Typography>
+                    <Typography level="body-xs">
+                        {currentEntry?.note || t.settings.llmModel.modelHelper}
+                    </Typography>
+                </Box>
+                <Select
+                    size="sm"
+                    sx={{ minWidth: 180 }}
+                    value={currentModel}
+                    onChange={(_e, value) => {
+                        if (!value || typeof value !== "string") return;
+                        void setChoice(currentProvider, value);
+                    }}
+                >
+                    {modelsForProvider.map((m) => (
+                        <Option key={m.model} value={m.model}>
+                            <Typography level="body-sm">{m.label}</Typography>
+                        </Option>
+                    ))}
+                </Select>
+            </Stack>
+
+            <Divider sx={{ my: 1.5 }} />
+
+            <Typography level="title-sm" sx={{ mb: 1 }}>
+                {t.settings.llmModel.usageHeading}
+            </Typography>
+            <Stack spacing={0.75}>
+                {data.models.map((m) => (
+                    <Stack
+                        key={`${m.provider}-${m.model}`}
+                        alignItems="center"
+                        direction="row"
+                        justifyContent="space-between"
+                        spacing={1}
+                    >
+                        <Typography level="body-sm">{m.label}</Typography>
+                        <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
+                            {m.daily_limit === null
+                                ? t.settings.llmModel.usageUnlimited
+                                : `${m.used_today} / ${m.daily_limit}`}
+                        </Typography>
+                    </Stack>
+                ))}
+            </Stack>
+
+            {data.tier === "free" && (
+                <Typography level="body-xs" sx={{ mt: 1.5, color: "text.tertiary" }}>
+                    {t.settings.llmModel.upgradeNote}
+                </Typography>
+            )}
         </Sheet>
     );
 };
@@ -967,6 +1149,7 @@ export const SettingsModal = ({
                     </TabPanel>
                     <TabPanel value="spotlight" sx={{ px: 0, py: 2 }}>
                         <Stack spacing={2}>
+                            <LlmModelSection />
                             <SpotlightSection />
                         </Stack>
                     </TabPanel>

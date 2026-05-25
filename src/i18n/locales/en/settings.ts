@@ -47,6 +47,23 @@ export const settings = {
         webSearchHelper:
             "Allow the agent to browse the web when answering. Requires AI answers to be on.",
     },
+    llmModel: {
+        heading: "AI model",
+        description:
+            "Choose which LLM the Spotlight agent uses. Each model has a separate daily quota that resets at UTC midnight.",
+        providerLabel: "Provider",
+        providerHelper: "Pick the AI service that should answer your asks.",
+        modelLabel: "Model",
+        modelHelper: "Models on the selected provider.",
+        providerGemini: "Google Gemini",
+        providerClaude: "Anthropic Claude",
+        usageHeading: "Today's usage",
+        usageUnlimited: "Unlimited",
+        tierFree: "Free tier",
+        tierPaid: "Paid tier",
+        upgradeNote: "Upgrade for higher daily limits on every model.",
+        noModelsConfigured: "No models are configured for your account.",
+    },
     privacy: {
         heading: "Privacy & analytics",
         description:
