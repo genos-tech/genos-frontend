@@ -80,6 +80,7 @@ import {
 } from "./sub/codeBlockExtras";
 import { ResetBlockTypeItem } from "./sub/ResetBlockTypeItem";
 import { ThreadsSidebarErrorBoundary } from "./sub/ThreadsSidebarErrorBoundary";
+import { WrapToggleButtons } from "./sub/WrapToggleButtons";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const django_url = import.meta.env.VITE_DJANGO_URL;
@@ -118,7 +119,17 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
     } = props;
 
     const { mode } = useColorScheme();
-    const bnBoxClassName: string = `bn-task-body-box-${mode}`;
+    // Session-only wrap toggles. See `WrapToggleButtons` for the two
+    // CSS classes added to the outer Box when each is on.
+    const [unwrapAll, setUnwrapAll] = useState<boolean>(false);
+    const [unwrapCode, setUnwrapCode] = useState<boolean>(false);
+    const bnBoxClassName: string = [
+        `bn-task-body-box-${mode}`,
+        unwrapAll && "bn-unwrap-all",
+        unwrapCode && "bn-unwrap-code",
+    ]
+        .filter(Boolean)
+        .join(" ");
     const { accessToken } = useAuth();
     const { t } = useTranslation();
     const urlLinkModal = useUrlLinkModal();
@@ -331,6 +342,14 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
             <FileSizeRejectionSnackbar rejection={rejection} onDismiss={dismissRejection} />
             <Box ref={editorRef} className={bnBoxClassName} sx={{ position: "relative" }}>
                 <FileUploadStatusBadge count={editorUploadCount} />
+                <Box sx={{ position: "absolute", top: 8, right: 8, zIndex: 10 }}>
+                    <WrapToggleButtons
+                        unwrapAll={unwrapAll}
+                        setUnwrapAll={setUnwrapAll}
+                        unwrapCode={unwrapCode}
+                        setUnwrapCode={setUnwrapCode}
+                    />
+                </Box>
                 <BlockNoteView
                     className="bn-box"
                     comments={false}

@@ -67,6 +67,7 @@ import {
     getBlockTypeSelectItemsWithCodeBlock,
 } from "./sub/codeBlockExtras";
 import { EditorSendButton } from "./sub/EditorSendButton";
+import { WrapToggleToolbarButtons } from "./sub/WrapToggleToolbarButtons";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const django_url = import.meta.env.VITE_DJANGO_URL;
@@ -106,12 +107,21 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
     const urlLinkModal = useUrlLinkModal();
     const editorBoxRef = useRef<HTMLDivElement>(null);
     useAnchorClickIntercept(editorBoxRef, urlLinkModal);
+    // Session-only wrap toggles. See `WrapToggleButtons` for the two
+    // CSS classes added to the outer Box when each is on.
+    const [unwrapAll, setUnwrapAll] = useState<boolean>(false);
+    const [unwrapCode, setUnwrapCode] = useState<boolean>(false);
     // The `with-subchat` modifier tightens the editor's max-height in
     // App.css when the split sub-chat pane is open, so the two stacked
     // editors don't collectively eat the message-list area.
-    const bnBoxClassName: string = `bn-chat-editor-box-${mode}${
-        useCM.isSubChatVisible ? " with-subchat" : ""
-    }`;
+    const bnBoxClassName: string = [
+        `bn-chat-editor-box-${mode}`,
+        useCM.isSubChatVisible && "with-subchat",
+        unwrapAll && "bn-unwrap-all",
+        unwrapCode && "bn-unwrap-code",
+    ]
+        .filter(Boolean)
+        .join(" ");
 
     const teamMembersRef = useRef(useTEM.teamMembers);
     const teamMemberProfilesRef = useRef(useTEM.teamMemberProfiles);
@@ -570,6 +580,18 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
                                 <CustomEmojiToolbar
                                     key={"customButton"}
                                     setShowEmojiPicker={setShowEmojiPicker}
+                                />
+                            )}
+                            {/* Session-only wrap toggles — hidden on
+                                mobile because the toolbar already
+                                clips off-screen on narrow viewports. */}
+                            {!isMobile && (
+                                <WrapToggleToolbarButtons
+                                    key={"wrapToggleButtons"}
+                                    unwrapAll={unwrapAll}
+                                    setUnwrapAll={setUnwrapAll}
+                                    unwrapCode={unwrapCode}
+                                    setUnwrapCode={setUnwrapCode}
                                 />
                             )}
                         </FormattingToolbar>

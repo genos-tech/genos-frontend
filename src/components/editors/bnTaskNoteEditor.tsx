@@ -88,6 +88,7 @@ import {
 import { ResetBlockTypeItem } from "./sub/ResetBlockTypeItem";
 import { ThreadsSidebarErrorBoundary } from "./sub/ThreadsSidebarErrorBoundary";
 import { ThreadsSidebarWithPreload } from "./sub/ThreadsSidebarWithPreload";
+import { WrapToggleButtons } from "./sub/WrapToggleButtons";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const django_url = import.meta.env.VITE_DJANGO_URL;
@@ -140,7 +141,17 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
     const urlLinkModal = useUrlLinkModal();
     const editorBoxRef = useRef<HTMLDivElement>(null);
     useAnchorClickIntercept(editorBoxRef, urlLinkModal);
-    const bnBoxClassName: string = `bn-note-body-box-${mode}`;
+    // Session-only wrap toggles. See `WrapToggleButtons` for the two
+    // CSS classes added to the outer Box when each is on.
+    const [unwrapAll, setUnwrapAll] = useState<boolean>(false);
+    const [unwrapCode, setUnwrapCode] = useState<boolean>(false);
+    const bnBoxClassName: string = [
+        `bn-note-body-box-${mode}`,
+        unwrapAll && "bn-unwrap-all",
+        unwrapCode && "bn-unwrap-code",
+    ]
+        .filter(Boolean)
+        .join(" ");
 
     // To avoid rendering issues, it's good practice to define your custom drag
     // handle menu in a separate component, instead of inline within the `sideMenu`
@@ -347,7 +358,7 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                 lives at top-right of this editor. */}
                 <FileUploadStatusBadge count={editorUploadCount} placement="bottom-right" />
                 <Tooltip
-                    placement="left"
+                    placement="top"
                     size="sm"
                     title={showThreadsSidebar ? "Hide Comments" : "Show Comments"}
                     variant="outlined"
@@ -362,6 +373,26 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                         <ChatBubbleOutlineIcon sx={{ fontSize: 18 }} />
                     </IconButton>
                 </Tooltip>
+                <Box
+                    sx={{
+                        position: "absolute",
+                        top: 8,
+                        zIndex: 10,
+                        // When the threads sidebar opens it takes the
+                        // right half of the editor — the toggles would
+                        // float over the comments pane instead of the
+                        // editor. Swap to the comment-pane-left in that case
+                        // so they stay over the content being wrapped.
+                        ...(showThreadsSidebar ? { right: 370 } : { right: 52 }),
+                    }}
+                >
+                    <WrapToggleButtons
+                        unwrapAll={unwrapAll}
+                        setUnwrapAll={setUnwrapAll}
+                        unwrapCode={unwrapCode}
+                        setUnwrapCode={setUnwrapCode}
+                    />
+                </Box>
 
                 <BlockNoteView
                     className="bn-box"

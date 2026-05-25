@@ -457,6 +457,37 @@ input[type="checkbox"] {
     background-color: #474747 !important;
 }
 
+/* Wrap/Unwrap toggles
+ *
+ * Two independent classes the floating top-right toggle buttons in
+ * `WrapToggleButtons.tsx` add to the outer editor `<Box>`:
+ *   • `.bn-unwrap-all`  — ONE editor-wide horizontal scrollbar. The
+ *                         editor itself scrolls horizontally and every
+ *                         line of content stops wrapping, so dragging
+ *                         the scrollbar slides ALL content together
+ *                         rather than each block scrolling on its own.
+ *   • `.bn-unwrap-code` — per-block scroll, scoped to code blocks only.
+ *                         Prose stays wrapped and readable.
+ * Both are independent and can be on at once. */
+.bn-unwrap-all .bn-editor {
+    overflow-x: auto;
+}
+.bn-unwrap-all .bn-editor .ProseMirror {
+    width: max-content;
+    min-width: 100%;
+}
+.bn-unwrap-all .bn-editor .bn-inline-content,
+.bn-unwrap-all .bn-editor .bn-block-content {
+    white-space: pre !important;
+}
+.bn-unwrap-code .bn-editor .bn-block-content[data-content-type="codeBlock"] {
+    overflow-x: auto;
+}
+.bn-unwrap-code .bn-editor .bn-block-content[data-content-type="codeBlock"] pre,
+.bn-unwrap-code .bn-editor .bn-block-content[data-content-type="codeBlock"] code {
+    white-space: pre !important;
+}
+
 /* Chat editor styles
  *
  * Min/max-height replaces the old JS-driven `--chat-editor-height` CSS

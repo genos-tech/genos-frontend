@@ -66,6 +66,7 @@ import {
     getBlockTypeSelectItemsWithCodeBlock,
 } from "./sub/codeBlockExtras";
 import { EditorSendButton } from "./sub/EditorSendButton";
+import { WrapToggleToolbarButtons } from "./sub/WrapToggleToolbarButtons";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 const django_url = import.meta.env.VITE_DJANGO_URL;
@@ -107,7 +108,17 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
     const urlLinkModal = useUrlLinkModal();
     const editorBoxRef = useRef<HTMLDivElement>(null);
     useAnchorClickIntercept(editorBoxRef, urlLinkModal);
-    const bnBoxClassName: string = `bn-chat-editor-box-${mode}`;
+    // Session-only wrap toggles. See `WrapToggleButtons` for the two
+    // CSS classes added to the outer Box when each is on.
+    const [unwrapAll, setUnwrapAll] = useState<boolean>(false);
+    const [unwrapCode, setUnwrapCode] = useState<boolean>(false);
+    const bnBoxClassName: string = [
+        `bn-chat-editor-box-${mode}`,
+        unwrapAll && "bn-unwrap-all",
+        unwrapCode && "bn-unwrap-code",
+    ]
+        .filter(Boolean)
+        .join(" ");
 
     const teamMembersRef = useRef(useTEM.teamMembers);
     const teamMemberProfilesRef = useRef(useTEM.teamMemberProfiles);
@@ -503,6 +514,18 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                                 <CustomEmojiToolbar
                                     key={"customButton"}
                                     setShowEmojiPicker={setShowEmojiPicker}
+                                />
+                            )}
+                            {/* Session-only wrap toggles — hidden on
+                                mobile because the toolbar already
+                                clips off-screen on narrow viewports. */}
+                            {!isMobile && (
+                                <WrapToggleToolbarButtons
+                                    key={"wrapToggleButtons"}
+                                    unwrapAll={unwrapAll}
+                                    setUnwrapAll={setUnwrapAll}
+                                    unwrapCode={unwrapCode}
+                                    setUnwrapCode={setUnwrapCode}
                                 />
                             )}
                         </FormattingToolbar>
