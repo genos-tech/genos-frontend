@@ -1,9 +1,8 @@
-import { Autocomplete, Avatar, Chip, Stack } from "@mui/joy";
+import { Autocomplete, Chip, Stack } from "@mui/joy";
 
+import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
-
-const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 type Props = {
     teamMembers: UserProps[];
@@ -12,8 +11,6 @@ type Props = {
     placeholder?: string;
     disabled?: boolean;
 };
-
-const initial = (u: UserProps) => (u.userName?.[0] || u.userEmail?.[0] || "?").toUpperCase();
 
 export const MilestoneAssigneesPicker = ({
     teamMembers,
@@ -45,17 +42,12 @@ export const MilestoneAssigneesPicker = ({
                             size="sm"
                             variant="soft"
                             startDecorator={
-                                <Avatar
-                                    size="sm"
-                                    src={
-                                        user.avatarImgPath
-                                            ? `${media_url}/${user.avatarImgPath}`
-                                            : undefined
-                                    }
-                                    sx={{ width: 18, height: 18, fontSize: 11 }}
-                                >
-                                    {initial(user)}
-                                </Avatar>
+                                <UserAvatar
+                                    clickable={false}
+                                    showPulseDot={false}
+                                    size={18}
+                                    userId={user.userId}
+                                />
                             }
                         >
                             {user.userName}
@@ -66,17 +58,12 @@ export const MilestoneAssigneesPicker = ({
             renderOption={(optionProps, user) => (
                 <li {...optionProps} key={String(user.userId)}>
                     <Stack direction="row" spacing={1} alignItems="center">
-                        <Avatar
-                            size="sm"
-                            src={
-                                user.avatarImgPath
-                                    ? `${media_url}/${user.avatarImgPath}`
-                                    : undefined
-                            }
-                            sx={{ width: 22, height: 22, fontSize: 12 }}
-                        >
-                            {initial(user)}
-                        </Avatar>
+                        <UserAvatar
+                            clickable={false}
+                            showPulseDot={false}
+                            size={22}
+                            userId={user.userId}
+                        />
                         <span>{user.userName || user.userEmail}</span>
                     </Stack>
                 </li>

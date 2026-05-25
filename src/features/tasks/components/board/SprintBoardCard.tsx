@@ -7,12 +7,11 @@ import Box from "@mui/joy/Box";
 import { useColorScheme } from "@mui/joy/styles";
 import Typography from "@mui/joy/Typography";
 
+import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TagListProps, TaskTableProps } from "../../../../types/tasks";
 import { CopyableTaskIdText } from "../CopyableTaskId";
-
-const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
 // Priority colors
 const priorityColors: Record<string, { bg: string; text: string }> = {
@@ -259,29 +258,37 @@ const SprintBoardCardImpl = ({
                                     : "1px solid rgba(0, 0, 0, 0.04)",
                         }}
                     >
-                        {/* Assignee */}
+                        {/* Assignee — UserAvatar pulls the freshest avatar
+                            URL and online status from AvatarContext for
+                            assigned tasks. The Joy <Avatar> fallback below
+                            is the unassigned "?" placeholder; we don't
+                            want UserAvatar's "?" + missing-profile path
+                            for that case because the card-border styling
+                            is part of the placeholder's visual identity. */}
                         <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                            <Avatar
-                                size="sm"
-                                src={
-                                    task.assigneeId === myself.userId
-                                        ? `${media_url}/${myself.avatarImgPath}`
-                                        : task.assigneeImgPath
-                                          ? `${media_url}/${task.assigneeImgPath}`
-                                          : undefined
-                                }
-                                sx={{
-                                    width: 20,
-                                    height: 20,
-                                    fontSize: "0.6rem",
-                                    border:
-                                        mode === "dark"
-                                            ? "1.5px solid rgba(255, 255, 255, 0.1)"
-                                            : "1.5px solid rgba(0, 0, 0, 0.08)",
-                                }}
-                            >
-                                {task.assigneeName?.[0]?.toUpperCase() || "?"}
-                            </Avatar>
+                            {task.assigneeId ? (
+                                <UserAvatar
+                                    clickable={false}
+                                    showPulseDot={false}
+                                    size={20}
+                                    userId={task.assigneeId}
+                                />
+                            ) : (
+                                <Avatar
+                                    size="sm"
+                                    sx={{
+                                        width: 20,
+                                        height: 20,
+                                        fontSize: "0.6rem",
+                                        border:
+                                            mode === "dark"
+                                                ? "1.5px solid rgba(255, 255, 255, 0.1)"
+                                                : "1.5px solid rgba(0, 0, 0, 0.08)",
+                                    }}
+                                >
+                                    ?
+                                </Avatar>
+                            )}
                             <Typography
                                 level="body-xs"
                                 sx={{
