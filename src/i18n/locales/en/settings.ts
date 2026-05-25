@@ -59,8 +59,13 @@ export const settings = {
         providerClaude: "Anthropic Claude",
         usageHeading: "Today's usage",
         usageUnlimited: "Unlimited",
-        tierFree: "Free tier",
-        tierPaid: "Paid tier",
+        // Aggregate counters shown above per-model rows.
+        llmAskLabel: "LLM asks",
+        webSearchLabel: "Web searches",
+        // Tier badge labels — Free / Pro / Max.
+        tierFree: "Free",
+        tierPro: "Pro",
+        tierMax: "Max",
         upgradeNote: "Upgrade for higher daily limits on every model.",
         noModelsConfigured: "No models are configured for your account.",
     },

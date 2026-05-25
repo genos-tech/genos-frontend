@@ -114,14 +114,22 @@ export async function fetchAgentUsage(accessToken: string): Promise<AgentUsage |
     }
 }
 
-// Per-feature access flags as decided by `UserFeatureAccess` on the
-// backend. Lets the Settings UI tell a user "you toggled web search on
-// but your account isn't approved yet" BEFORE they hit the generic
-// `subscribers only` ToolError mid-stream. Keep the keys aligned with
-// `UserFeatureAccess.FEATURE_*` server-side.
+// One quota dimension's snapshot — `null` limit means unlimited for
+// this tier. Reused across endpoints (AgentFeatures, AgentModels) so
+// the frontend handles all three quota types uniformly.
+export interface QuotaBlock {
+    used: number;
+    limit: number | null;
+}
+
+// User's tier + the two cross-cutting daily quotas (LLM ask total +
+// web search). The Settings UI uses `web_search.limit > 0` to decide
+// whether to surface the "your tier has no web search quota" warning
+// up front instead of letting the user hit a mid-stream ToolError.
 export interface AgentFeatures {
-    web_search: boolean;
-    unlimited_agent: boolean;
+    tier: "free" | "pro" | "max";
+    llm_ask: QuotaBlock;
+    web_search: QuotaBlock;
 }
 
 export async function fetchAgentFeatures(accessToken: string): Promise<AgentFeatures | null> {
@@ -152,9 +160,16 @@ export interface AgentModelEntry {
 }
 
 export interface AgentModels {
-    tier: "free" | "paid";
+    tier: "free" | "pro" | "max";
     current: { provider: string; model: string };
     models: AgentModelEntry[];
+    // Cross-cutting per-tier daily quotas, mirroring AgentFeatures.
+    // Folded into this payload so the Settings UI loads everything it
+    // needs in one round-trip.
+    limits: {
+        llm_ask: QuotaBlock;
+        web_search: QuotaBlock;
+    };
 }
 
 export async function fetchAgentModels(accessToken: string): Promise<AgentModels | null> {

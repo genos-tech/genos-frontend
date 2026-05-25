@@ -337,14 +337,29 @@ const LlmModelSection = () => {
                         px: 1,
                         py: 0.25,
                         borderRadius: "sm",
-                        bgcolor: data.tier === "paid" ? "success.softBg" : "neutral.softBg",
-                        color: data.tier === "paid" ? "success.softColor" : "neutral.softColor",
+                        // Three-way: free=neutral, pro=primary, max=success.
+                        // Distinct hues so the upgrade ladder is visually
+                        // obvious without reading the label.
+                        bgcolor:
+                            data.tier === "max"
+                                ? "success.softBg"
+                                : data.tier === "pro"
+                                  ? "primary.softBg"
+                                  : "neutral.softBg",
+                        color:
+                            data.tier === "max"
+                                ? "success.softColor"
+                                : data.tier === "pro"
+                                  ? "primary.softColor"
+                                  : "neutral.softColor",
                         fontWeight: 600,
                     }}
                 >
-                    {data.tier === "paid"
-                        ? t.settings.llmModel.tierPaid
-                        : t.settings.llmModel.tierFree}
+                    {data.tier === "max"
+                        ? t.settings.llmModel.tierMax
+                        : data.tier === "pro"
+                          ? t.settings.llmModel.tierPro
+                          : t.settings.llmModel.tierFree}
                 </Typography>
             </Stack>
             <Typography level="body-xs" sx={{ mb: 1.5 }}>
@@ -424,7 +439,48 @@ const LlmModelSection = () => {
                 {t.settings.llmModel.usageHeading}
             </Typography>
             <Stack spacing={0.75}>
-                {data.models.map((m) => (
+                {/* Cross-cutting tier quotas come first — "LLM asks" is
+                    the total daily ask count regardless of model, and
+                    "Web searches" is the Tavily-tool counter. Both
+                    increment in parallel with the per-model rows
+                    below them. */}
+                <Stack
+                    alignItems="center"
+                    direction="row"
+                    justifyContent="space-between"
+                    spacing={1}
+                >
+                    <Typography level="body-sm" sx={{ fontWeight: 600 }}>
+                        {t.settings.llmModel.llmAskLabel}
+                    </Typography>
+                    <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
+                        {data.limits.llm_ask.limit === null
+                            ? t.settings.llmModel.usageUnlimited
+                            : `${data.limits.llm_ask.used} / ${data.limits.llm_ask.limit}`}
+                    </Typography>
+                </Stack>
+                <Stack
+                    alignItems="center"
+                    direction="row"
+                    justifyContent="space-between"
+                    spacing={1}
+                >
+                    <Typography level="body-sm" sx={{ fontWeight: 600 }}>
+                        {t.settings.llmModel.webSearchLabel}
+                    </Typography>
+                    <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
+                        {data.limits.web_search.limit === null
+                            ? t.settings.llmModel.usageUnlimited
+                            : `${data.limits.web_search.used} / ${data.limits.web_search.limit}`}
+                    </Typography>
+                </Stack>
+                <Divider sx={{ my: 0.5 }} />
+                {/* Only show per-model rows for the currently-selected
+                    provider — counters for the other provider's models
+                    still exist server-side, but they'd be noise here
+                    given the user can't switch to them without first
+                    changing the Provider dropdown. */}
+                {modelsForProvider.map((m) => (
                     <Stack
                         key={`${m.provider}-${m.model}`}
                         alignItems="center"
@@ -474,13 +530,17 @@ const SpotlightSection = () => {
         };
     }, [accessToken]);
 
-    // Only nag the user when they've actually toggled web search on —
-    // a feature they're not using doesn't need an alert. Both the
-    // warning AND the confirmation are gated on `webSearch === true`
-    // so the row is quiet by default.
-    const hasWebSearchAccess = features?.web_search === true;
+    // Only nag the user when they've actually toggled web search on.
+    // After the tier rollout, "access" is "your tier has a non-zero
+    // daily quota" — most tiers do, but an admin could zero out a
+    // tier's `web_search_daily` and we want users to learn that
+    // upfront. `null` limit means unlimited (treated as access).
+    // Both the warning AND the confirmation are gated on
+    // `webSearch === true` so the row stays quiet by default.
+    const webSearchLimit = features?.web_search?.limit;
+    const hasWebSearchAccess = webSearchLimit === null || (webSearchLimit ?? 0) > 0;
     const showAccessWarning = aiAnswers && webSearch && features !== null && !hasWebSearchAccess;
-    const showAccessGranted = aiAnswers && webSearch && hasWebSearchAccess;
+    const showAccessGranted = aiAnswers && webSearch && features !== null && hasWebSearchAccess;
 
     return (
         <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
@@ -559,7 +619,11 @@ const SpotlightSection = () => {
                     sx={{ mt: 1.5 }}
                     variant="soft"
                 >
-                    <Typography level="body-sm">Your account has web search access.</Typography>
+                    <Typography level="body-sm">
+                        {features?.web_search.limit === null
+                            ? "Unlimited web searches on your tier."
+                            : `Today: ${features?.web_search.used ?? 0} / ${features?.web_search.limit ?? 0} web searches.`}
+                    </Typography>
                 </Alert>
             )}
         </Sheet>
