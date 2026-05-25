@@ -45,7 +45,17 @@ export const useProjectManagement = (
 
     const loadProjectsAndTasks = async (targetProjectId: number = -1) => {
         // Load the latest project as initial process
-        const loadedTeamProjects: ProjectProps[] = await loadTeamProjects(myself, accessToken);
+        const loadedTeamProjects: ProjectProps[] | undefined = await loadTeamProjects(
+            myself,
+            accessToken
+        );
+        // Only stamp the throttle timestamp on a real response. If
+        // `loadTeamProjects` early-returned (missing teamId, auth
+        // error, network failure), updating the timestamp would block
+        // the next `[myself]` re-fire — which is the one most likely
+        // to succeed. The effect's own guard skips empty-myself calls,
+        // but this protects every other failure mode too.
+        if (!loadedTeamProjects) return;
         tsLastLoadProjectAndTasks.current = Date.now();
 
         // When the user has just switched teams, any caller-supplied
@@ -165,8 +175,28 @@ export const useProjectManagement = (
         }
     }, [currentProject, teamProjects]);
 
-    // Load projects and tasks when myself changes
+    // Load projects and tasks when myself changes.
+    //
+    // GUARD: skip until `myself` actually has teamId + userId. On a
+    // cold app load (fresh tab, post-deploy reload) `myself` arrives
+    // as an empty placeholder first, then is replaced ~1s later when
+    // the auth + getMyTeams round-trips complete. Without this guard:
+    //   1. The first effect fires with empty `myself`.
+    //   2. The 500ms timer calls `loadProjectsAndTasks` → which calls
+    //      `loadTeamProjects`, which early-returns undefined because
+    //      `teamId` is empty.
+    //   3. Line 49 still stamps `tsLastLoadProjectAndTasks` on this
+    //      failed call.
+    //   4. The next render (myself now populated) re-fires the effect
+    //      but the 1s throttle blocks it.
+    //   5. Result: `teamProjects` stays at [] — the sidebar shows no
+    //      projects, the task table / sprint board can't open. Until
+    //      the user clicks a recent task (which finally gets the
+    //      throttle to expire and a later re-render succeeds).
+    // Skipping the effect entirely until myself is ready means the
+    // first valid run is the only run, no wasted call.
     useEffect(() => {
+        if (!myself.teamId || !myself.userId) return;
         const intervalMs: number = 1000;
         const now = Date.now();
         const last = tsLastLoadProjectAndTasks.current;
