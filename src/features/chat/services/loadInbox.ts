@@ -1,17 +1,40 @@
 import axios from "axios";
 
 import { authApi } from "../../../services/api";
+import { InboxItemProps } from "../../../types/common";
 
-export const loadInbox = async (teamId: string, userId: string, accessToken: string | null) => {
+// Wire shape mirrors the backend's delta envelope; `isDeleted` is only
+// present on incremental responses (rows the client should evict).
+export interface InboxDeltaItem extends InboxItemProps {
+    isDeleted?: boolean;
+}
+
+export interface InboxDeltaResponse {
+    serverTime: string;
+    items: InboxDeltaItem[];
+}
+
+export const loadInbox = async (
+    teamId: string,
+    userId: string,
+    accessToken: string | null,
+    since: string | null
+): Promise<InboxDeltaResponse | undefined> => {
     try {
         const api = authApi(accessToken);
-        if (api) {
-            const query: string = `team_id=${teamId}&user_id=${userId}`;
-            const res = await api.get(`/inbox/?${query}`);
-            return res.data;
-        } else {
+        if (!api) {
             console.error("Unauthorized. Auth toke is not found.");
+            return;
         }
+        const params: string[] = [`team_id=${teamId}`, `user_id=${userId}`];
+        if (since) {
+            params.push(`since=${encodeURIComponent(since)}`);
+        }
+        const res = await api.get(`/inbox/?${params.join("&")}`);
+        return {
+            serverTime: res.data.server_time,
+            items: res.data.data.items,
+        };
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
             console.error("API error:", error.response?.status, error.response?.data);

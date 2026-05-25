@@ -52,4 +52,17 @@ export class ActivityService {
         const result = await this.activityRepo.clear();
         return result.success;
     }
+
+    // Delete activity rows older than `cutoffIso`. Used after an
+    // incremental sync to evict rows that have aged out of the
+    // 30-day display window (incremental sync only adds new rows,
+    // it never evicts old ones).
+    async pruneActivitiesOlderThan(cutoffIso: string): Promise<number> {
+        const all = await this.getAllActivityMessages();
+        const stale = all.filter((m) => m.tsSent < cutoffIso);
+        for (const m of stale) {
+            await this.activityRepo.delete(m.activityId);
+        }
+        return stale.length;
+    }
 }

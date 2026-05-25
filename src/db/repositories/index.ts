@@ -1,6 +1,7 @@
 // Repository exports
 export * from "./base";
 export * from "./chat";
+export * from "./checkpoints";
 export * from "./flagged";
 export * from "./inbox";
 export * from "./note";

@@ -27,6 +27,7 @@ const TEAM_SCOPED_STORES: readonly string[] = [
     STORES.PERSONAL_NOTES,
     STORES.TASK_NOTES,
     STORES.CHAT_NOTES,
+    STORES.SYNC_CHECKPOINTS,
 ];
 
 // Database utility functions

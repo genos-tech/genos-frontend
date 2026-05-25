@@ -1,20 +1,11 @@
 // Database constants
 export const DB_NAME = "genosData";
-// Bumped to 6: forces every browser through `initDB`'s upgrade callback
-// so any database that was created at v5 *without* its object stores
-// self-heals on next load. Previously, `BaseRepository.getDB` and
-// `DatabaseUtils.*` called `openDB(name, version)` with no upgrade
-// callback. Whichever entry point won the race on a fresh DB (most
-// commonly `SignInForm`'s `clearTeamScopedStores()` running before
-// `useAppInitialization` mounted) created the DB at v5 with zero
-// stores; every later `openDB(name, 5)` then saw a matching version
-// and silently skipped its upgrade, stranding the schema forever.
-//
-// Migration is still additive: the upgrade callback in ./schema.ts is
-// idempotent — it only creates stores / indexes that don't already
-// exist — so v4-or-correct-v5 databases re-enter the callback and
-// emerge unchanged.
-export const DB_VERSION = 6;
+// Bumped to 7: adds the `syncCheckpoints` store used for per-data-type
+// incremental ("delta") sync watermarks. The upgrade callback in
+// ./schema.ts is additive and idempotent, so existing v6 databases
+// re-enter the callback and emerge with the new store but otherwise
+// unchanged.
+export const DB_VERSION = 7;
 
 // LRU cap for the full-task cache (TASK_FULL store).
 export const MAX_CACHED_FULL_TASKS = 500;
@@ -43,6 +34,7 @@ export const STORES = {
     TASK_NOTES: "taskNotes",
     CHAT_NOTES: "chatNotes",
     TODOS: "todos",
+    SYNC_CHECKPOINTS: "syncCheckpoints",
 } as const;
 
 // Key paths for object stores
@@ -69,6 +61,7 @@ export const KEY_PATHS = {
     TASK_NOTES: "noteId",
     CHAT_NOTES: "noteId",
     TODOS: "todoId",
+    SYNC_CHECKPOINTS: "key",
 } as const;
 
 // Index names

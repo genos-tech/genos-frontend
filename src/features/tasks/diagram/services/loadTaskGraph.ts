@@ -113,7 +113,8 @@ export const loadTaskGraph = async (
     rootTaskId: number,
     accessToken: string | null
 ): Promise<TaskGraph | null> => {
-    const allTasks = await loadProjectTasksFromApi(myself, projectId, accessToken);
+    const response = await loadProjectTasksFromApi(myself, projectId, accessToken, null);
+    const allTasks = response?.tasks;
     if (!Array.isArray(allTasks)) return null;
 
     const visibleTasks = collectDescendantTree(rootTaskId, allTasks as TaskTableProps[]);
