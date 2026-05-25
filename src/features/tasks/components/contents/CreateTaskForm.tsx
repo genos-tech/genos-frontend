@@ -372,6 +372,21 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [taskTitle, body, taskContent, assignee, reporter, templateId]);
 
+    // Backfill the project from `usePM.currentProject` when the seeder
+    // ran before the project store had resolved. Hits the Ctrl+Cmd+T /
+    // Ctrl+Alt+T shortcut path: the form mounts inside the same tick the
+    // shortcut fires, so if `currentProject` is still loading (e.g. the
+    // ~500ms post-mount delay in `loadProjectsAndTasks`), the seeder at
+    // L318 sets `project: null` and never reacts when it populates a
+    // moment later. Guard on `project?.projectId` so we don't clobber a
+    // draft-restored project or a user pick.
+    useEffect(() => {
+        if (!taskContent) return;
+        if (taskContent.project?.projectId) return;
+        if (!usePM.currentProject?.projectId) return;
+        setTaskContent({ ...taskContent, project: usePM.currentProject });
+    }, [taskContent, usePM.currentProject]);
+
     // Update task title when it changes
     useEffect(() => {
         if (taskContent && taskTitle !== "") {
