@@ -153,7 +153,20 @@ export const SpotlightOverlay = ({
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
-    const inputRef = useRef<HTMLInputElement | null>(null);
+    const inputRef = useRef<HTMLTextAreaElement | null>(null);
+
+    // Auto-resize the textarea to fit its contents up to a sensible cap.
+    // Below the cap the input expands to show every line the user typed;
+    // past the cap it scrolls internally so a runaway paste doesn't push
+    // the rest of the overlay off-screen. Re-runs on every keystroke
+    // (via `localInput` dep) so wrapped lines are accounted for too.
+    useEffect(() => {
+        const ta = inputRef.current;
+        if (!ta) return;
+        ta.style.height = "auto";
+        const MAX_HEIGHT = 200;
+        ta.style.height = `${Math.min(ta.scrollHeight, MAX_HEIGHT)}px`;
+    });
 
     // Autofocus the input each time the overlay opens. Defer to next
     // tick so we don't fight the keydown that triggered the open.
@@ -319,203 +332,252 @@ export const SpotlightOverlay = ({
                     In agent mode the input moves to the bottom of the
                     sheet (chat-style) via `order: 2`; the border flips
                     from below (search-mode separator above results) to
-                    above (separator below the conversation panel). */}
-                <Box
-                    sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        // Tighter on mobile so SearchIcon + input + Ask
-                        // all fit on a 390px-wide viewport.
-                        gap: { xs: 0.5, sm: 1 },
-                        px: { xs: 1, sm: 2 },
-                        py: { xs: 1, sm: 1.5 },
-                        order: inAgentMode ? 2 : 0,
-                        ...(inAgentMode
-                            ? {
-                                  borderTop: "1px solid",
-                                  borderColor: isDark
-                                      ? "rgba(255,255,255,0.06)"
-                                      : "rgba(0,0,0,0.06)",
-                              }
-                            : {
-                                  borderBottom: "1px solid",
-                                  borderColor: isDark
-                                      ? "rgba(255,255,255,0.06)"
-                                      : "rgba(0,0,0,0.06)",
-                              }),
-                    }}
-                >
-                    <SearchRoundedIcon
-                        sx={{
-                            opacity: 0.7,
-                            fontSize: { xs: 18, sm: 24 },
-                            flexShrink: 0,
-                        }}
-                    />
+                    above (separator below the conversation panel).
+                    Hidden entirely while browsing history — the user
+                    opened the history view to read past sessions, not
+                    to start a new ask. They close history (the "Back
+                    to search" button on the panel) to bring the input
+                    back. */}
+                {!historyOpen && (
                     <Box
-                        ref={inputRef}
-                        component="input"
-                        value={localInput}
-                        placeholder={
-                            askBusy
-                                ? t.spotlight.placeholder.askBusy
-                                : !aiAnswersEnabled
-                                  ? t.spotlight.placeholder.aiOff
-                                  : hasConversation
-                                    ? t.spotlight.placeholder.followUp
-                                    : t.spotlight.placeholder.default
-                        }
                         sx={{
-                            flex: 1,
-                            minWidth: 0,
-                            border: "none",
-                            outline: "none",
-                            background: "transparent",
-                            color: isDark ? DARK_TEXT_STRONG : "inherit",
-                            fontSize: { xs: "0.9375rem", sm: "1.0625rem" },
-                            fontFamily: "inherit",
-                            "::placeholder": isDark
-                                ? { color: DARK_TEXT_SOFT, opacity: 1 }
-                                : { opacity: 0.6 },
+                            display: "flex",
+                            // Top-align so the SearchIcon / Ask button stay
+                            // anchored to the first line as the textarea
+                            // grows downward.
+                            alignItems: "flex-start",
+                            // Tighter on mobile so SearchIcon + input + Ask
+                            // all fit on a 390px-wide viewport.
+                            gap: { xs: 0.5, sm: 1 },
+                            px: { xs: 1, sm: 2 },
+                            py: { xs: 1, sm: 1.5 },
+                            order: inAgentMode ? 2 : 0,
+                            ...(inAgentMode
+                                ? {
+                                      borderTop: "1px solid",
+                                      borderColor: isDark
+                                          ? "rgba(255,255,255,0.06)"
+                                          : "rgba(0,0,0,0.06)",
+                                  }
+                                : {
+                                      borderBottom: "1px solid",
+                                      borderColor: isDark
+                                          ? "rgba(255,255,255,0.06)"
+                                          : "rgba(0,0,0,0.06)",
+                                  }),
                         }}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                            handleInputChange(e.target.value)
-                        }
-                        onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                            if (e.key === "ArrowDown") {
-                                if (results.length === 0) return;
-                                e.preventDefault();
-                                setSelectedIndex((prev) => Math.min(prev + 1, results.length - 1));
-                                return;
+                    >
+                        <SearchRoundedIcon
+                            sx={{
+                                opacity: 0.7,
+                                fontSize: { xs: 18, sm: 24 },
+                                flexShrink: 0,
+                                // Nudge down so the icon sits on the first
+                                // line's baseline instead of the textarea's
+                                // top edge.
+                                mt: { xs: "2px", sm: "3px" },
+                            }}
+                        />
+                        <Box
+                            ref={inputRef}
+                            component="textarea"
+                            value={localInput}
+                            rows={1}
+                            placeholder={
+                                askBusy
+                                    ? t.spotlight.placeholder.askBusy
+                                    : !aiAnswersEnabled
+                                      ? t.spotlight.placeholder.aiOff
+                                      : hasConversation
+                                        ? t.spotlight.placeholder.followUp
+                                        : t.spotlight.placeholder.default
                             }
-                            if (e.key === "ArrowUp") {
-                                e.preventDefault();
-                                setSelectedIndex((prev) => Math.max(prev - 1, -1));
-                                return;
+                            sx={{
+                                flex: 1,
+                                minWidth: 0,
+                                border: "none",
+                                outline: "none",
+                                background: "transparent",
+                                color: isDark ? DARK_TEXT_STRONG : "inherit",
+                                fontSize: { xs: "0.9375rem", sm: "1.0625rem" },
+                                fontFamily: "inherit",
+                                // Native browsers add ~5px padding around
+                                // textareas; strip it so the layout matches
+                                // the previous <input> baseline exactly.
+                                p: 0,
+                                // User can't manual-drag the corner — the
+                                // height is auto-fit via the effect above.
+                                resize: "none",
+                                // Below the cap the effect grows the height
+                                // to fit content; past the cap (200px) the
+                                // textarea scrolls internally instead of
+                                // pushing the rest of the overlay off-screen.
+                                overflowY: "auto",
+                                lineHeight: 1.4,
+                                "::placeholder": isDark
+                                    ? { color: DARK_TEXT_SOFT, opacity: 1 }
+                                    : { opacity: 0.6 },
+                            }}
+                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                                handleInputChange(e.target.value)
                             }
-                            if (e.key === "Enter") {
-                                e.preventDefault();
-                                // If a result row is highlighted, navigate to
-                                // it rather than firing the AI ask.
-                                if (selectedIndex >= 0 && results[selectedIndex]) {
-                                    onSelect(results[selectedIndex]);
-                                    setSelectedIndex(-1);
+                            onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+                                // Once the query spans multiple lines, the
+                                // user almost certainly wants Up/Down to
+                                // move the caret between lines rather than
+                                // hijack focus into the result list. Fall
+                                // through to the textarea's default for
+                                // multi-line content; keep result-row
+                                // navigation for the single-line common case.
+                                const isMultiline = localInput.includes("\n");
+                                if (e.key === "ArrowDown" && !isMultiline) {
+                                    if (results.length === 0) return;
+                                    e.preventDefault();
+                                    setSelectedIndex((prev) =>
+                                        Math.min(prev + 1, results.length - 1)
+                                    );
                                     return;
                                 }
-                                // Block Enter from firing a new ask while the
-                                // previous turn is still streaming or awaiting
-                                // user approval. The input itself stays
-                                // editable so the search typeahead keeps
-                                // working in the results section below.
-                                if (askDisabled) return;
-                                onAsk();
-                            }
-                        }}
-                    />
-                    {/* Daily usage pill — hidden for unlimited users.
+                                if (e.key === "ArrowUp" && !isMultiline) {
+                                    e.preventDefault();
+                                    setSelectedIndex((prev) => Math.max(prev - 1, -1));
+                                    return;
+                                }
+                                if (e.key === "Enter") {
+                                    // Shift+Enter inserts a newline (the
+                                    // textarea handles it natively); any
+                                    // other modifier (Cmd/Ctrl/Alt) is
+                                    // treated the same so users with
+                                    // varying habits aren't surprised by
+                                    // an accidental submit.
+                                    if (e.shiftKey || e.metaKey || e.ctrlKey || e.altKey) {
+                                        return;
+                                    }
+                                    e.preventDefault();
+                                    // If a result row is highlighted, navigate to
+                                    // it rather than firing the AI ask.
+                                    if (selectedIndex >= 0 && results[selectedIndex]) {
+                                        onSelect(results[selectedIndex]);
+                                        setSelectedIndex(-1);
+                                        return;
+                                    }
+                                    // Block Enter from firing a new ask while the
+                                    // previous turn is still streaming or awaiting
+                                    // user approval. The input itself stays
+                                    // editable so the search typeahead keeps
+                                    // working in the results section below.
+                                    if (askDisabled) return;
+                                    onAsk();
+                                }
+                            }}
+                        />
+                        {/* Daily usage pill — hidden for unlimited users.
                         Also hidden on mobile so the Ask button stays
                         on-row; the limit still applies, just isn't
                         chrome at 390px. */}
-                    {dailyUsage && !dailyUsage.is_unlimited && (
-                        <Typography
-                            level="body-sm"
-                            sx={{
-                                display: { xs: "none", sm: "block" },
-                                whiteSpace: "nowrap",
-                                fontVariantNumeric: "tabular-nums",
-                                opacity:
-                                    dailyUsage.used >= (dailyUsage.limit ?? Infinity)
-                                        ? 1
-                                        : isDark
-                                          ? 1
-                                          : 0.65,
-                                color:
-                                    dailyUsage.used >= (dailyUsage.limit ?? Infinity)
-                                        ? "warning.500"
-                                        : isDark
-                                          ? DARK_TEXT_MEDIUM
-                                          : undefined,
-                            }}
-                        >
-                            {fmt(t.spotlight.usage.asksToday, {
-                                used: dailyUsage.used,
-                                limit: dailyUsage.limit ?? 0,
-                            })}
-                        </Typography>
-                    )}
-                    {ask.isStreaming && (
-                        <Button
-                            color="danger"
+                        {dailyUsage && !dailyUsage.is_unlimited && (
+                            <Typography
+                                level="body-sm"
+                                sx={{
+                                    display: { xs: "none", sm: "block" },
+                                    whiteSpace: "nowrap",
+                                    fontVariantNumeric: "tabular-nums",
+                                    opacity:
+                                        dailyUsage.used >= (dailyUsage.limit ?? Infinity)
+                                            ? 1
+                                            : isDark
+                                              ? 1
+                                              : 0.65,
+                                    color:
+                                        dailyUsage.used >= (dailyUsage.limit ?? Infinity)
+                                            ? "warning.500"
+                                            : isDark
+                                              ? DARK_TEXT_MEDIUM
+                                              : undefined,
+                                }}
+                            >
+                                {fmt(t.spotlight.usage.asksToday, {
+                                    used: dailyUsage.used,
+                                    limit: dailyUsage.limit ?? 0,
+                                })}
+                            </Typography>
+                        )}
+                        {ask.isStreaming && (
+                            <Button
+                                color="danger"
+                                size="sm"
+                                sx={{ fontSize: "0.875rem", whiteSpace: "nowrap" }}
+                                variant="plain"
+                                onClick={onCancel}
+                            >
+                                {t.spotlight.actions.cancel}
+                            </Button>
+                        )}
+                        <Tooltip
                             size="sm"
-                            sx={{ fontSize: "0.875rem", whiteSpace: "nowrap" }}
-                            variant="plain"
-                            onClick={onCancel}
+                            variant="outlined"
+                            title={!aiAnswersEnabled ? t.spotlight.errors.enableAiHint : ""}
+                            // Empty title disables the tooltip in MUI Joy.
+                            placement="bottom"
                         >
-                            {t.spotlight.actions.cancel}
-                        </Button>
-                    )}
-                    <Tooltip
-                        size="sm"
-                        variant="outlined"
-                        title={!aiAnswersEnabled ? t.spotlight.errors.enableAiHint : ""}
-                        // Empty title disables the tooltip in MUI Joy.
-                        placement="bottom"
-                    >
-                        {/* Span wrapper lets the tooltip fire over a
+                            {/* Span wrapper lets the tooltip fire over a
                             disabled button (pointer events on a disabled
                             <button> are suppressed in Chromium). */}
-                        <Box component="span" sx={{ display: "inline-flex", flexShrink: 0 }}>
-                            <Button
-                                color="primary"
-                                disabled={!hasQuery || askDisabled}
-                                size="sm"
-                                startDecorator={<AutoAwesomeRoundedIcon sx={{ fontSize: 16 }} />}
-                                variant="solid"
-                                sx={{
-                                    // Mobile: collapse to an icon-only
-                                    // square so the row stays single-line
-                                    // at 390px. The startDecorator icon is
-                                    // visually clear ("Ask AI") on its own.
-                                    px: { xs: 1, sm: 1.5 },
-                                    minWidth: 0,
-                                    "& .MuiButton-startDecorator": {
-                                        m: { xs: 0, sm: undefined },
-                                    },
-                                }}
-                                onClick={() => onAsk()}
-                            >
-                                <Box
-                                    component="span"
-                                    sx={{ display: { xs: "none", sm: "inline" } }}
+                            <Box component="span" sx={{ display: "inline-flex", flexShrink: 0 }}>
+                                <Button
+                                    color="primary"
+                                    disabled={!hasQuery || askDisabled}
+                                    size="sm"
+                                    startDecorator={
+                                        <AutoAwesomeRoundedIcon sx={{ fontSize: 16 }} />
+                                    }
+                                    variant="solid"
+                                    sx={{
+                                        // Mobile: collapse to an icon-only
+                                        // square so the row stays single-line
+                                        // at 390px. The startDecorator icon is
+                                        // visually clear ("Ask AI") on its own.
+                                        px: { xs: 1, sm: 1.5 },
+                                        minWidth: 0,
+                                        "& .MuiButton-startDecorator": {
+                                            m: { xs: 0, sm: undefined },
+                                        },
+                                    }}
+                                    onClick={() => onAsk()}
                                 >
-                                    {t.spotlight.actions.ask}
-                                </Box>
-                            </Button>
-                        </Box>
-                    </Tooltip>
-                    {/* History entry point — persistent across search
+                                    <Box
+                                        component="span"
+                                        sx={{ display: { xs: "none", sm: "inline" } }}
+                                    >
+                                        {t.spotlight.actions.ask}
+                                    </Box>
+                                </Button>
+                            </Box>
+                        </Tooltip>
+                        {/* History entry point — persistent across search
                         and agent modes (sits right of Ask so a returning
                         user with no live conversation in localStorage
                         can still reach their past sessions). Clicking
                         switches the panel into the History list view
                         (re-fetches once per click; bounded ≤20 rows). */}
-                    <Tooltip
-                        size="sm"
-                        title={t.spotlight.history.openTooltip}
-                        variant="outlined"
-                        placement="bottom"
-                    >
-                        <IconButton
-                            color="neutral"
+                        <Tooltip
                             size="sm"
-                            sx={{ minWidth: 0, p: "3px", flexShrink: 0 }}
-                            variant="plain"
-                            onClick={openHistory}
+                            title={t.spotlight.history.openTooltip}
+                            variant="outlined"
+                            placement="bottom"
                         >
-                            <HistoryRoundedIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
-                        </IconButton>
-                    </Tooltip>
-                </Box>
+                            <IconButton
+                                color="neutral"
+                                size="sm"
+                                sx={{ minWidth: 0, p: "3px", flexShrink: 0 }}
+                                variant="plain"
+                                onClick={openHistory}
+                            >
+                                <HistoryRoundedIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
+                            </IconButton>
+                        </Tooltip>
+                    </Box>
+                )}
 
                 {/* Conversation history + current in-flight turn.
                     Rendered as a single scrollable region so past turns
