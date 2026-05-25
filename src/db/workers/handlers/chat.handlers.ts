@@ -7,10 +7,22 @@
 import axios from "axios";
 
 import { defaultDmPartner } from "../../../features/chat/services/constants";
+import { loadDMChats } from "../../../features/chat/services/loadDMChats";
 import { loadDMHistory } from "../../../features/chat/services/loadDMHistory";
+import { loadDMMessagesDelta } from "../../../features/chat/services/loadDMMessagesDelta";
+import { loadDMThreadMessagesDelta } from "../../../features/chat/services/loadDMThreadMessagesDelta";
+import { loadGMChats } from "../../../features/chat/services/loadGMChats";
 import { loadGMHistory } from "../../../features/chat/services/loadGMHistory";
+import { loadGMMessagesDelta } from "../../../features/chat/services/loadGMMessagesDelta";
+import { loadGMThreadMessagesDelta } from "../../../features/chat/services/loadGMThreadMessagesDelta";
+import { loadMDMChats } from "../../../features/chat/services/loadMDMChats";
 import { loadMDMHistory } from "../../../features/chat/services/loadMDMHistory";
+import { loadMDMMessagesDelta } from "../../../features/chat/services/loadMDMMessagesDelta";
+import { loadMDMThreadMessagesDelta } from "../../../features/chat/services/loadMDMThreadMessagesDelta";
+import { loadPMChats } from "../../../features/chat/services/loadPMChats";
 import { loadPMHistory } from "../../../features/chat/services/loadPMHistory";
+import { loadPMMessagesDelta } from "../../../features/chat/services/loadPMMessagesDelta";
+import { loadPMThreadMessagesDelta } from "../../../features/chat/services/loadPMThreadMessagesDelta";
 import { authApi } from "../../../services/api";
 import type { UserProps } from "../../../types/admin";
 import {
@@ -32,6 +44,7 @@ import {
 import { ActivityService, ChatService } from "../../services";
 import type { ChatRequests } from "../contracts";
 import type { HandlerMap } from "../poolWorker";
+import { syncWithCheckpoint } from "../utils/syncWithCheckpoint";
 
 const BATCH_SIZE = 1000;
 
@@ -277,34 +290,317 @@ export const chatHandlers: HandlerMap<ChatRequests> = {
     },
 
     loadDMHistory: async ({ myself, accessToken }) => {
-        const history = await loadDMHistory(
+        const dmChatRepo = ChatRepositoryFactory.createDMChatRepository();
+        const dmMessageRepo = ChatRepositoryFactory.createDMMessageRepository();
+        const dmThreadRepo = ChatRepositoryFactory.createDMThreadMessageRepository();
+
+        // 1) Chat list: always full-fetch (cheap, with derived fields the
+        // delta path can't cleanly compute). Wipe + insert is fine.
+        const chatsResp = await loadDMChats(
             myself.teamId,
             myself.teamName,
             myself.userId,
             accessToken
         );
-        if (history) await writeDMHistory(history);
+        if (chatsResp) {
+            await dmChatRepo.clear();
+            if (chatsResp.chats?.length) {
+                const rows: AllChatProps[] = chatsResp.chats.map((c) => ({
+                    chatId: c.chatId,
+                    chatName: c.chatName,
+                    chatType: 1,
+                    dmPartnerUser: c.dmPartnerUser,
+                    isPinned: c.isPinned,
+                    lastReadMessageId: c.lastReadMessageId,
+                    latestMessage: c.latestMessage,
+                    latestMessageText: c.latestMessageText,
+                    tsLastAllReadActivity: c.tsLastAllReadActivity,
+                    TSLastMessage: c.TSLastMessage,
+                }));
+                await dmChatRepo.batchInsert(rows);
+            }
+            if (chatsResp.flagged_messages?.length) {
+                await flaggedRepo.batchInsert(chatsResp.flagged_messages);
+            }
+        }
+
+        // 2) Messages: incremental sync with per-data-type checkpoint.
+        await syncWithCheckpoint({
+            key: "dm-messages",
+            fetcher: async (since) => {
+                const resp = await loadDMMessagesDelta(
+                    myself.teamId,
+                    myself.userId,
+                    accessToken,
+                    since
+                );
+                if (!resp) throw new Error("Failed to load DM messages delta");
+                return { serverTime: resp.serverTime, data: resp.messages };
+            },
+            applier: async (messages, hadCheckpoint) => {
+                if (!hadCheckpoint) {
+                    await dmMessageRepo.clear();
+                }
+                const toUpsert: MessageProps[] = [];
+                for (const m of messages) {
+                    if (m.isDeleted) {
+                        if (m.messageIdWithChatId)
+                            await dmMessageRepo.delete(m.messageIdWithChatId);
+                    } else {
+                        const { isDeleted: _ignored, ...rest } = m;
+                        toUpsert.push(rest);
+                    }
+                }
+                for (let i = 0; i < toUpsert.length; i += BATCH_SIZE) {
+                    await dmMessageRepo.batchInsertMessages(toUpsert.slice(i, i + BATCH_SIZE));
+                }
+            },
+        });
+
+        // 3) Thread messages: incremental sync with its own checkpoint.
+        await syncWithCheckpoint({
+            key: "dm-thread-messages",
+            fetcher: async (since) => {
+                const resp = await loadDMThreadMessagesDelta(
+                    myself.teamId,
+                    myself.userId,
+                    accessToken,
+                    since
+                );
+                if (!resp) throw new Error("Failed to load DM thread messages delta");
+                return { serverTime: resp.serverTime, data: resp.thread_messages };
+            },
+            applier: async (threadMessages, hadCheckpoint) => {
+                if (!hadCheckpoint) {
+                    await dmThreadRepo.clear();
+                }
+                const toUpsert = [];
+                for (const tm of threadMessages) {
+                    if (tm.isDeleted) {
+                        if (tm.messageIdWithChatIdAndThreadId)
+                            await dmThreadRepo.delete(tm.messageIdWithChatIdAndThreadId);
+                    } else {
+                        const { isDeleted: _ignored, ...rest } = tm;
+                        toUpsert.push(rest);
+                    }
+                }
+                for (let i = 0; i < toUpsert.length; i += BATCH_SIZE) {
+                    await dmThreadRepo.batchInsertThreadMessages(
+                        toUpsert.slice(i, i + BATCH_SIZE)
+                    );
+                }
+            },
+        });
     },
 
     loadGMHistory: async ({ myself, accessToken }) => {
-        const history = await loadGMHistory(
+        const gmChatRepo = ChatRepositoryFactory.createGMChatRepository();
+        const gmMessageRepo = ChatRepositoryFactory.createGMMessageRepository();
+        const gmThreadRepo = ChatRepositoryFactory.createGMThreadMessageRepository();
+
+        const chatsResp = await loadGMChats(
             myself.teamId,
             myself.teamName,
             myself.userId,
             accessToken
         );
-        if (history) await writeGMHistory(history);
+        if (chatsResp) {
+            await gmChatRepo.clear();
+            if (chatsResp.chats?.length) {
+                const rows: AllChatProps[] = chatsResp.chats.map((c) => ({
+                    chatId: c.chatId,
+                    chatName: c.chatName,
+                    chatType: 2,
+                    dmPartnerUser: defaultDmPartner,
+                    isPinned: c.isPinned,
+                    isPrivate: c.isPrivate,
+                    lastReadMessageId: c.lastReadMessageId,
+                    latestMessage: c.latestMessage,
+                    latestMessageText: c.latestMessageText,
+                    profileImagePath: c.profileImagePath,
+                    tsLastAllReadActivity: c.tsLastAllReadActivity,
+                    TSLastMessage: c.TSLastMessage,
+                }));
+                await gmChatRepo.batchInsert(rows);
+            }
+            if (chatsResp.flagged_messages?.length) {
+                await flaggedRepo.batchInsert(chatsResp.flagged_messages);
+            }
+        }
+
+        await syncWithCheckpoint({
+            key: "gm-messages",
+            fetcher: async (since) => {
+                const resp = await loadGMMessagesDelta(
+                    myself.teamId,
+                    myself.userId,
+                    accessToken,
+                    since
+                );
+                if (!resp) throw new Error("Failed to load GM messages delta");
+                return { serverTime: resp.serverTime, data: resp.messages };
+            },
+            applier: async (messages, hadCheckpoint) => {
+                if (!hadCheckpoint) {
+                    await gmMessageRepo.clear();
+                }
+                const toUpsert: MessageProps[] = [];
+                for (const m of messages) {
+                    if (m.isDeleted) {
+                        if (m.messageIdWithChatId)
+                            await gmMessageRepo.delete(m.messageIdWithChatId);
+                    } else {
+                        const { isDeleted: _i, ...rest } = m;
+                        toUpsert.push(rest);
+                    }
+                }
+                for (let i = 0; i < toUpsert.length; i += BATCH_SIZE) {
+                    await gmMessageRepo.batchInsertMessages(toUpsert.slice(i, i + BATCH_SIZE));
+                }
+            },
+        });
+
+        await syncWithCheckpoint({
+            key: "gm-thread-messages",
+            fetcher: async (since) => {
+                const resp = await loadGMThreadMessagesDelta(
+                    myself.teamId,
+                    myself.userId,
+                    accessToken,
+                    since
+                );
+                if (!resp) throw new Error("Failed to load GM thread messages delta");
+                return { serverTime: resp.serverTime, data: resp.thread_messages };
+            },
+            applier: async (threadMessages, hadCheckpoint) => {
+                if (!hadCheckpoint) {
+                    await gmThreadRepo.clear();
+                }
+                const toUpsert = [];
+                for (const tm of threadMessages) {
+                    if (tm.isDeleted) {
+                        if (tm.messageIdWithChatIdAndThreadId)
+                            await gmThreadRepo.delete(tm.messageIdWithChatIdAndThreadId);
+                    } else {
+                        const { isDeleted: _i, ...rest } = tm;
+                        toUpsert.push(rest);
+                    }
+                }
+                for (let i = 0; i < toUpsert.length; i += BATCH_SIZE) {
+                    await gmThreadRepo.batchInsertThreadMessages(
+                        toUpsert.slice(i, i + BATCH_SIZE)
+                    );
+                }
+            },
+        });
     },
 
     loadMDMHistory: async ({ myself, accessToken }) => {
         try {
-            const history = await loadMDMHistory(
+            const mdmChatRepo = ChatRepositoryFactory.createMDMChatRepository();
+            const mdmMessageRepo = ChatRepositoryFactory.createMDMMessageRepository();
+            const mdmThreadRepo = ChatRepositoryFactory.createMDMThreadMessageRepository();
+
+            const chatsResp = await loadMDMChats(
                 myself.teamId,
                 myself.teamName,
                 myself.userId,
                 accessToken
             );
-            if (history) await writeMDMHistory(history);
+            if (chatsResp) {
+                await mdmChatRepo.clear();
+                if (chatsResp.chats?.length) {
+                    // The new chats endpoint already populates latestMessage
+                    // and TSLastMessage, so the buildMDMChatRow fallback
+                    // (which existed only because the old /mdm/history/ payload
+                    // sometimes omitted them) isn't needed here.
+                    const rows: AllChatProps[] = chatsResp.chats.map((c) => ({
+                        chatId: c.chatId,
+                        chatName: c.chatName,
+                        chatType: 4,
+                        dmPartnerUser: defaultDmPartner,
+                        isPinned: c.isPinned,
+                        lastReadMessageId: c.lastReadMessageId ?? -1,
+                        latestMessage: c.latestMessage,
+                        latestMessageText: c.latestMessageText,
+                        mdmMembers: c.mdmMembers,
+                        tsLastAllReadActivity: c.tsLastAllReadActivity,
+                        TSLastMessage: c.TSLastMessage,
+                    }));
+                    await mdmChatRepo.batchInsert(rows);
+                }
+                if (chatsResp.flagged_messages?.length) {
+                    await flaggedRepo.batchInsert(chatsResp.flagged_messages);
+                }
+            }
+
+            await syncWithCheckpoint({
+                key: "mdm-messages",
+                fetcher: async (since) => {
+                    const resp = await loadMDMMessagesDelta(
+                        myself.teamId,
+                        myself.userId,
+                        accessToken,
+                        since
+                    );
+                    if (!resp) throw new Error("Failed to load MDM messages delta");
+                    return { serverTime: resp.serverTime, data: resp.messages };
+                },
+                applier: async (messages, hadCheckpoint) => {
+                    if (!hadCheckpoint) {
+                        await mdmMessageRepo.clear();
+                    }
+                    const toUpsert: MessageProps[] = [];
+                    for (const m of messages) {
+                        if (m.isDeleted) {
+                            if (m.messageIdWithChatId)
+                                await mdmMessageRepo.delete(m.messageIdWithChatId);
+                        } else {
+                            const { isDeleted: _i, ...rest } = m;
+                            toUpsert.push(rest);
+                        }
+                    }
+                    for (let i = 0; i < toUpsert.length; i += BATCH_SIZE) {
+                        await mdmMessageRepo.batchInsertMessages(
+                            toUpsert.slice(i, i + BATCH_SIZE)
+                        );
+                    }
+                },
+            });
+
+            await syncWithCheckpoint({
+                key: "mdm-thread-messages",
+                fetcher: async (since) => {
+                    const resp = await loadMDMThreadMessagesDelta(
+                        myself.teamId,
+                        myself.userId,
+                        accessToken,
+                        since
+                    );
+                    if (!resp) throw new Error("Failed to load MDM thread messages delta");
+                    return { serverTime: resp.serverTime, data: resp.thread_messages };
+                },
+                applier: async (threadMessages, hadCheckpoint) => {
+                    if (!hadCheckpoint) {
+                        await mdmThreadRepo.clear();
+                    }
+                    const toUpsert = [];
+                    for (const tm of threadMessages) {
+                        if (tm.isDeleted) {
+                            if (tm.messageIdWithChatIdAndThreadId)
+                                await mdmThreadRepo.delete(tm.messageIdWithChatIdAndThreadId);
+                        } else {
+                            const { isDeleted: _i, ...rest } = tm;
+                            toUpsert.push(rest);
+                        }
+                    }
+                    for (let i = 0; i < toUpsert.length; i += BATCH_SIZE) {
+                        await mdmThreadRepo.batchInsertThreadMessages(
+                            toUpsert.slice(i, i + BATCH_SIZE)
+                        );
+                    }
+                },
+            });
         } catch (error) {
             // Match prior worker: log and continue so callers still resolve.
             console.error("[chat:loadMDMHistory]", error);
@@ -312,13 +608,106 @@ export const chatHandlers: HandlerMap<ChatRequests> = {
     },
 
     loadPMHistory: async ({ myself, accessToken }) => {
-        const history = await loadPMHistory(
+        const pmChatRepo = ChatRepositoryFactory.createPMChatRepository();
+        const pmMessageRepo = ChatRepositoryFactory.createPMMessageRepository();
+        const pmThreadRepo = ChatRepositoryFactory.createPMThreadMessageRepository();
+
+        const chatsResp = await loadPMChats(
             myself.teamId,
             myself.teamName,
             myself.userId,
             accessToken
         );
-        if (history) await writePMHistory(history);
+        if (chatsResp) {
+            await pmChatRepo.clear();
+            if (chatsResp.chats?.length) {
+                const rows: AllChatProps[] = chatsResp.chats.map((c) => ({
+                    chatId: c.chatId,
+                    chatName: c.chatName,
+                    chatType: 3,
+                    dmPartnerUser: defaultDmPartner,
+                    isPinned: c.isPinned,
+                    lastReadMessageId: c.lastReadMessageId,
+                    latestMessage: c.latestMessage,
+                    latestMessageText: c.latestMessageText,
+                    profileImagePath: c.profileImagePath,
+                    project: c.project,
+                    systemUserId: c.systemUserId,
+                    tsLastAllReadActivity: c.tsLastAllReadActivity,
+                    TSLastMessage: c.TSLastMessage,
+                }));
+                await pmChatRepo.batchInsert(rows);
+            }
+            if (chatsResp.flagged_messages?.length) {
+                await flaggedRepo.batchInsert(chatsResp.flagged_messages);
+            }
+        }
+
+        await syncWithCheckpoint({
+            key: "pm-messages",
+            fetcher: async (since) => {
+                const resp = await loadPMMessagesDelta(
+                    myself.teamId,
+                    myself.userId,
+                    accessToken,
+                    since
+                );
+                if (!resp) throw new Error("Failed to load PM messages delta");
+                return { serverTime: resp.serverTime, data: resp.messages };
+            },
+            applier: async (messages, hadCheckpoint) => {
+                if (!hadCheckpoint) {
+                    await pmMessageRepo.clear();
+                }
+                const toUpsert: MessageProps[] = [];
+                for (const m of messages) {
+                    if (m.isDeleted) {
+                        if (m.messageIdWithChatId)
+                            await pmMessageRepo.delete(m.messageIdWithChatId);
+                    } else {
+                        const { isDeleted: _i, ...rest } = m;
+                        toUpsert.push(rest);
+                    }
+                }
+                for (let i = 0; i < toUpsert.length; i += BATCH_SIZE) {
+                    await pmMessageRepo.batchInsertMessages(toUpsert.slice(i, i + BATCH_SIZE));
+                }
+            },
+        });
+
+        await syncWithCheckpoint({
+            key: "pm-thread-messages",
+            fetcher: async (since) => {
+                const resp = await loadPMThreadMessagesDelta(
+                    myself.teamId,
+                    myself.userId,
+                    accessToken,
+                    since
+                );
+                if (!resp) throw new Error("Failed to load PM thread messages delta");
+                return { serverTime: resp.serverTime, data: resp.thread_messages };
+            },
+            applier: async (threadMessages, hadCheckpoint) => {
+                if (!hadCheckpoint) {
+                    await pmThreadRepo.clear();
+                }
+                const toUpsert = [];
+                for (const tm of threadMessages) {
+                    if (tm.isDeleted) {
+                        if (tm.messageIdWithChatIdAndThreadId)
+                            await pmThreadRepo.delete(tm.messageIdWithChatIdAndThreadId);
+                    } else {
+                        const { isDeleted: _i, ...rest } = tm;
+                        toUpsert.push(rest);
+                    }
+                }
+                for (let i = 0; i < toUpsert.length; i += BATCH_SIZE) {
+                    await pmThreadRepo.batchInsertThreadMessages(
+                        toUpsert.slice(i, i + BATCH_SIZE)
+                    );
+                }
+            },
+        });
     },
 
     markAllChatActivityAsRead: async ({
