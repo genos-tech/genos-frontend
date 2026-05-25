@@ -8,31 +8,24 @@ import axios from "axios";
 
 import { defaultDmPartner } from "../../../features/chat/services/constants";
 import { loadDMChats } from "../../../features/chat/services/loadDMChats";
-import { loadDMHistory } from "../../../features/chat/services/loadDMHistory";
 import { loadDMMessagesDelta } from "../../../features/chat/services/loadDMMessagesDelta";
 import { loadDMThreadMessagesDelta } from "../../../features/chat/services/loadDMThreadMessagesDelta";
 import { loadGMChats } from "../../../features/chat/services/loadGMChats";
-import { loadGMHistory } from "../../../features/chat/services/loadGMHistory";
 import { loadGMMessagesDelta } from "../../../features/chat/services/loadGMMessagesDelta";
 import { loadGMThreadMessagesDelta } from "../../../features/chat/services/loadGMThreadMessagesDelta";
 import { loadMDMChats } from "../../../features/chat/services/loadMDMChats";
-import { loadMDMHistory } from "../../../features/chat/services/loadMDMHistory";
 import { loadMDMMessagesDelta } from "../../../features/chat/services/loadMDMMessagesDelta";
 import { loadMDMThreadMessagesDelta } from "../../../features/chat/services/loadMDMThreadMessagesDelta";
 import { loadPMChats } from "../../../features/chat/services/loadPMChats";
-import { loadPMHistory } from "../../../features/chat/services/loadPMHistory";
 import { loadPMMessagesDelta } from "../../../features/chat/services/loadPMMessagesDelta";
 import { loadPMThreadMessagesDelta } from "../../../features/chat/services/loadPMThreadMessagesDelta";
 import { authApi } from "../../../services/api";
-import type { UserProps } from "../../../types/admin";
 import {
     ActivityMessageProps,
     AllChatProps,
-    ChatProps,
     FlaggedMessageProps,
     MessageProps,
 } from "../../../types/chat";
-import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { STORES } from "../../config";
 import {
     ChatRepository,
@@ -79,165 +72,6 @@ const sortByTSLastMessageDesc = (a: AllChatProps, b: AllChatProps): number =>
 
 const sortByMessageIdAsc = <T extends { messageId: number | string }>(a: T, b: T): number =>
     Number(a.messageId) - Number(b.messageId);
-
-// Build the MDM "latestMessage" fallback when the backend payload doesn't
-// include one — kept identical to the prior worker so behavior is unchanged.
-const emptyUserProps: UserProps = {
-    avatarImgPath: "",
-    customStatus: "",
-    teamId: "",
-    teamName: "",
-    tsJoined: "",
-    tsLastSeen: "",
-    userEmail: "",
-    userId: "",
-    userName: "",
-};
-
-const buildMDMChatRow = (mdmChat: ChatProps): AllChatProps => {
-    const fallbackTs = mdmChat.TSLastMessage || getLocalCurrentTimestamp();
-    const defaultLatestMessage: MessageProps = {
-        chatId: mdmChat.chatId,
-        chatType: 4,
-        content: [],
-        contentText: "",
-        messageId: 0,
-        messageIdWithChatId: `${mdmChat.chatId}-0`,
-        numReplies: 0,
-        sender: emptyUserProps,
-        taskId: null,
-        taskStatus: null,
-        tsSent: fallbackTs,
-        tsUpdated: fallbackTs,
-    };
-    return {
-        chatId: mdmChat.chatId,
-        chatName: mdmChat.chatName,
-        chatType: 4,
-        dmPartnerUser: defaultDmPartner,
-        isPinned: mdmChat.isPinned,
-        lastReadMessageId: mdmChat.lastReadMessageId ?? -1,
-        latestMessage: mdmChat.latestMessage ?? defaultLatestMessage,
-        latestMessageText: mdmChat.latestMessageText ?? "",
-        mdmMembers: mdmChat.mdmMembers,
-        tsLastAllReadActivity: mdmChat.tsLastAllReadActivity,
-        TSLastMessage: fallbackTs,
-    };
-};
-
-const writeDMHistory = async (history: {
-    chat_history: ChatProps[];
-    flagged_messages: FlaggedMessageProps[];
-}): Promise<void> => {
-    const dmChatRepo = ChatRepositoryFactory.createDMChatRepository();
-    const dmMessageRepo = ChatRepositoryFactory.createDMMessageRepository();
-    const dmThreadRepo = ChatRepositoryFactory.createDMThreadMessageRepository();
-    await Promise.all([dmChatRepo.clear(), dmMessageRepo.clear(), dmThreadRepo.clear()]);
-    if (!history) return;
-    if (history.chat_history) {
-        const rows: AllChatProps[] = history.chat_history.map((c) => ({
-            chatId: c.chatId,
-            chatName: c.chatName,
-            chatType: 1,
-            dmPartnerUser: c.dmPartnerUser,
-            isPinned: c.isPinned,
-            lastReadMessageId: c.lastReadMessageId,
-            latestMessage: c.latestMessage,
-            latestMessageText: c.latestMessageText,
-            tsLastAllReadActivity: c.tsLastAllReadActivity,
-            TSLastMessage: c.TSLastMessage,
-        }));
-        if (rows.length > 0) await dmChatRepo.batchInsert(rows);
-        for (const c of history.chat_history) {
-            for (let i = 0; i < c.messages.length; i += BATCH_SIZE) {
-                await dmMessageRepo.batchInsertMessages(c.messages.slice(i, i + BATCH_SIZE));
-            }
-        }
-    }
-    if (history.flagged_messages?.length) await flaggedRepo.batchInsert(history.flagged_messages);
-};
-
-const writeGMHistory = async (history: {
-    chat_history: ChatProps[];
-    flagged_messages: FlaggedMessageProps[];
-}): Promise<void> => {
-    const gmChatRepo = ChatRepositoryFactory.createGMChatRepository();
-    const gmMessageRepo = ChatRepositoryFactory.createGMMessageRepository();
-    const gmThreadRepo = ChatRepositoryFactory.createGMThreadMessageRepository();
-    await Promise.all([gmChatRepo.clear(), gmMessageRepo.clear(), gmThreadRepo.clear()]);
-    const rows: AllChatProps[] = history.chat_history.map((c) => ({
-        chatId: c.chatId,
-        chatName: c.chatName,
-        chatType: 2,
-        dmPartnerUser: defaultDmPartner,
-        isPinned: c.isPinned,
-        isPrivate: c.isPrivate,
-        lastReadMessageId: c.lastReadMessageId,
-        latestMessage: c.latestMessage,
-        latestMessageText: c.latestMessageText,
-        profileImagePath: c.profileImagePath,
-        tsLastAllReadActivity: c.tsLastAllReadActivity,
-        TSLastMessage: c.TSLastMessage,
-    }));
-    if (rows.length > 0) await gmChatRepo.batchInsert(rows);
-    for (const c of history.chat_history) {
-        for (let i = 0; i < c.messages.length; i += BATCH_SIZE) {
-            await chatService.batchInsertGMMessages(c.messages.slice(i, i + BATCH_SIZE));
-        }
-    }
-    if (history.flagged_messages?.length) await flaggedRepo.batchInsert(history.flagged_messages);
-};
-
-const writePMHistory = async (history: {
-    chat_history: ChatProps[];
-    flagged_messages: FlaggedMessageProps[];
-}): Promise<void> => {
-    const pmChatRepo = ChatRepositoryFactory.createPMChatRepository();
-    const pmMessageRepo = ChatRepositoryFactory.createPMMessageRepository();
-    const pmThreadRepo = ChatRepositoryFactory.createPMThreadMessageRepository();
-    await Promise.all([pmChatRepo.clear(), pmMessageRepo.clear(), pmThreadRepo.clear()]);
-    const rows: AllChatProps[] = history.chat_history.map((c) => ({
-        chatId: c.chatId,
-        chatName: c.chatName,
-        chatType: 3,
-        dmPartnerUser: defaultDmPartner,
-        isPinned: c.isPinned,
-        lastReadMessageId: c.lastReadMessageId,
-        latestMessage: c.latestMessage,
-        latestMessageText: c.latestMessageText,
-        profileImagePath: c.profileImagePath,
-        project: c.project,
-        systemUserId: c.systemUserId,
-        tsLastAllReadActivity: c.tsLastAllReadActivity,
-        TSLastMessage: c.TSLastMessage,
-    }));
-    if (rows.length > 0) await pmChatRepo.batchInsert(rows);
-    for (const c of history.chat_history) {
-        for (let i = 0; i < c.messages.length; i += BATCH_SIZE) {
-            await chatService.batchInsertPMMessages(c.messages.slice(i, i + BATCH_SIZE));
-        }
-    }
-    if (history.flagged_messages?.length) await flaggedRepo.batchInsert(history.flagged_messages);
-};
-
-const writeMDMHistory = async (history: {
-    chat_history: ChatProps[];
-    flagged_messages: FlaggedMessageProps[];
-}): Promise<void> => {
-    const mdmChatRepo = ChatRepositoryFactory.createMDMChatRepository();
-    const mdmMessageRepo = ChatRepositoryFactory.createMDMMessageRepository();
-    const mdmThreadRepo = ChatRepositoryFactory.createMDMThreadMessageRepository();
-    await Promise.all([mdmChatRepo.clear(), mdmMessageRepo.clear(), mdmThreadRepo.clear()]);
-    const rows = history.chat_history.map(buildMDMChatRow);
-    if (rows.length > 0) await mdmChatRepo.batchInsert(rows);
-    for (const c of history.chat_history) {
-        const messages = c.messages || [];
-        for (let i = 0; i < messages.length; i += BATCH_SIZE) {
-            await chatService.batchInsertMDMMessages(messages.slice(i, i + BATCH_SIZE));
-        }
-    }
-    if (history.flagged_messages?.length) await flaggedRepo.batchInsert(history.flagged_messages);
-};
 
 export const chatHandlers: HandlerMap<ChatRequests> = {
     addChat: async ({ chat, chatType }) => {
@@ -526,10 +360,9 @@ export const chatHandlers: HandlerMap<ChatRequests> = {
             if (chatsResp) {
                 await mdmChatRepo.clear();
                 if (chatsResp.chats?.length) {
-                    // The new chats endpoint already populates latestMessage
-                    // and TSLastMessage, so the buildMDMChatRow fallback
-                    // (which existed only because the old /mdm/history/ payload
-                    // sometimes omitted them) isn't needed here.
+                    // The new chats endpoint populates latestMessage and
+                    // TSLastMessage directly via Subquery — no fallback
+                    // construction needed.
                     const rows: AllChatProps[] = chatsResp.chats.map((c) => ({
                         chatId: c.chatId,
                         chatName: c.chatName,
