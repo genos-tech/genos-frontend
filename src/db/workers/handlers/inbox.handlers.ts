@@ -24,7 +24,11 @@ export const inboxHandlers: HandlerMap<InboxRequests> = {
                 if (!response) {
                     throw new Error("Failed to load inbox");
                 }
-                return { serverTime: response.serverTime, data: response.items };
+                return {
+                    serverTime: response.serverTime,
+                    data: response.items,
+                    forceFull: response.forceFull,
+                };
             },
             applier: async (items, hadCheckpoint) => {
                 if (!hadCheckpoint) {

@@ -8,9 +8,14 @@ import { ActivityMessageProps } from "../../../types/chat";
 // the server uses it as the lower bound instead — no day cap applies.
 const periodDays: number = 30;
 
+export interface ActivityDeltaItem extends ActivityMessageProps {
+    isDeleted?: boolean;
+}
+
 export interface ActivityDeltaResponse {
     serverTime: string;
-    activity: ActivityMessageProps[];
+    activity: ActivityDeltaItem[];
+    forceFull?: boolean;
 }
 
 export const loadActivityHistory = async (
@@ -34,6 +39,7 @@ export const loadActivityHistory = async (
         return {
             serverTime: res.data.server_time,
             activity: res.data.data.activity,
+            forceFull: res.data.force_full_reload,
         };
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {

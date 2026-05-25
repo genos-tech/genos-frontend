@@ -12,6 +12,7 @@ export interface InboxDeltaItem extends InboxItemProps {
 export interface InboxDeltaResponse {
     serverTime: string;
     items: InboxDeltaItem[];
+    forceFull?: boolean;
 }
 
 export const loadInbox = async (
@@ -34,6 +35,7 @@ export const loadInbox = async (
         return {
             serverTime: res.data.server_time,
             items: res.data.data.items,
+            forceFull: res.data.force_full_reload,
         };
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {

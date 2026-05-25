@@ -43,7 +43,11 @@ export const usersHandlers: HandlerMap<UsersRequests> = {
                 if (!response) {
                     throw new Error("Failed to load team members");
                 }
-                return { serverTime: response.serverTime, data: response.members };
+                return {
+                    serverTime: response.serverTime,
+                    data: response.members,
+                    forceFull: response.forceFull,
+                };
             },
             applier: async (members, hadCheckpoint) => {
                 // USER_INFO is intentionally excluded from team-scoped

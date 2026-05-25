@@ -10,6 +10,7 @@ export interface DMThreadMessageDeltaItem extends ThreadMessageProps {
 export interface DMThreadMessagesDeltaResponse {
     serverTime: string;
     thread_messages: DMThreadMessageDeltaItem[];
+    forceFull?: boolean;
 }
 
 export const loadDMThreadMessagesDelta = async (
@@ -32,6 +33,7 @@ export const loadDMThreadMessagesDelta = async (
         return {
             serverTime: res.data.server_time,
             thread_messages: res.data.data.thread_messages,
+            forceFull: res.data.force_full_reload,
         };
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {

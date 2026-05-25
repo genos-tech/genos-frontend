@@ -39,7 +39,11 @@ export const tasksHandlers: HandlerMap<TasksRequests> = {
                 if (!response) {
                     throw new Error("Failed to load project tasks");
                 }
-                return { serverTime: response.serverTime, data: response.tasks };
+                return {
+                    serverTime: response.serverTime,
+                    data: response.tasks,
+                    forceFull: response.forceFull,
+                };
             },
             applier: async (tasks, _hadCheckpoint) => {
                 const toUpsert: TaskTableProps[] = [];

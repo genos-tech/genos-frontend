@@ -10,6 +10,7 @@ export interface GMThreadMessageDeltaItem extends ThreadMessageProps {
 export interface GMThreadMessagesDeltaResponse {
     serverTime: string;
     thread_messages: GMThreadMessageDeltaItem[];
+    forceFull?: boolean;
 }
 
 export const loadGMThreadMessagesDelta = async (
@@ -30,6 +31,7 @@ export const loadGMThreadMessagesDelta = async (
         return {
             serverTime: res.data.server_time,
             thread_messages: res.data.data.thread_messages,
+            forceFull: res.data.force_full_reload,
         };
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {

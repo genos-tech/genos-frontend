@@ -335,7 +335,11 @@ export const chatHandlers: HandlerMap<ChatRequests> = {
                     since
                 );
                 if (!resp) throw new Error("Failed to load DM messages delta");
-                return { serverTime: resp.serverTime, data: resp.messages };
+                return {
+                    serverTime: resp.serverTime,
+                    data: resp.messages,
+                    forceFull: resp.forceFull,
+                };
             },
             applier: async (messages, hadCheckpoint) => {
                 if (!hadCheckpoint) {
@@ -368,7 +372,11 @@ export const chatHandlers: HandlerMap<ChatRequests> = {
                     since
                 );
                 if (!resp) throw new Error("Failed to load DM thread messages delta");
-                return { serverTime: resp.serverTime, data: resp.thread_messages };
+                return {
+                    serverTime: resp.serverTime,
+                    data: resp.thread_messages,
+                    forceFull: resp.forceFull,
+                };
             },
             applier: async (threadMessages, hadCheckpoint) => {
                 if (!hadCheckpoint) {
@@ -438,7 +446,11 @@ export const chatHandlers: HandlerMap<ChatRequests> = {
                     since
                 );
                 if (!resp) throw new Error("Failed to load GM messages delta");
-                return { serverTime: resp.serverTime, data: resp.messages };
+                return {
+                    serverTime: resp.serverTime,
+                    data: resp.messages,
+                    forceFull: resp.forceFull,
+                };
             },
             applier: async (messages, hadCheckpoint) => {
                 if (!hadCheckpoint) {
@@ -470,7 +482,11 @@ export const chatHandlers: HandlerMap<ChatRequests> = {
                     since
                 );
                 if (!resp) throw new Error("Failed to load GM thread messages delta");
-                return { serverTime: resp.serverTime, data: resp.thread_messages };
+                return {
+                    serverTime: resp.serverTime,
+                    data: resp.thread_messages,
+                    forceFull: resp.forceFull,
+                };
             },
             applier: async (threadMessages, hadCheckpoint) => {
                 if (!hadCheckpoint) {
@@ -544,7 +560,11 @@ export const chatHandlers: HandlerMap<ChatRequests> = {
                         since
                     );
                     if (!resp) throw new Error("Failed to load MDM messages delta");
-                    return { serverTime: resp.serverTime, data: resp.messages };
+                    return {
+                        serverTime: resp.serverTime,
+                        data: resp.messages,
+                        forceFull: resp.forceFull,
+                    };
                 },
                 applier: async (messages, hadCheckpoint) => {
                     if (!hadCheckpoint) {
@@ -578,7 +598,11 @@ export const chatHandlers: HandlerMap<ChatRequests> = {
                         since
                     );
                     if (!resp) throw new Error("Failed to load MDM thread messages delta");
-                    return { serverTime: resp.serverTime, data: resp.thread_messages };
+                    return {
+                        serverTime: resp.serverTime,
+                        data: resp.thread_messages,
+                        forceFull: resp.forceFull,
+                    };
                 },
                 applier: async (threadMessages, hadCheckpoint) => {
                     if (!hadCheckpoint) {
@@ -653,7 +677,11 @@ export const chatHandlers: HandlerMap<ChatRequests> = {
                     since
                 );
                 if (!resp) throw new Error("Failed to load PM messages delta");
-                return { serverTime: resp.serverTime, data: resp.messages };
+                return {
+                    serverTime: resp.serverTime,
+                    data: resp.messages,
+                    forceFull: resp.forceFull,
+                };
             },
             applier: async (messages, hadCheckpoint) => {
                 if (!hadCheckpoint) {
@@ -685,7 +713,11 @@ export const chatHandlers: HandlerMap<ChatRequests> = {
                     since
                 );
                 if (!resp) throw new Error("Failed to load PM thread messages delta");
-                return { serverTime: resp.serverTime, data: resp.thread_messages };
+                return {
+                    serverTime: resp.serverTime,
+                    data: resp.thread_messages,
+                    forceFull: resp.forceFull,
+                };
             },
             applier: async (threadMessages, hadCheckpoint) => {
                 if (!hadCheckpoint) {

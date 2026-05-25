@@ -10,6 +10,7 @@ export interface DMMessageDeltaItem extends MessageProps {
 export interface DMMessagesDeltaResponse {
     serverTime: string;
     messages: DMMessageDeltaItem[];
+    forceFull?: boolean;
 }
 
 export const loadDMMessagesDelta = async (
@@ -32,6 +33,7 @@ export const loadDMMessagesDelta = async (
         return {
             serverTime: res.data.server_time,
             messages: res.data.data.messages,
+            forceFull: res.data.force_full_reload,
         };
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {

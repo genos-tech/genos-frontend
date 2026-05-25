@@ -13,6 +13,7 @@ export interface TeamMemberDeltaItem extends UserProps {
 export interface TeamMembersDeltaResponse {
     serverTime: string;
     members: TeamMemberDeltaItem[];
+    forceFull?: boolean;
 }
 
 export const loadTeamMembers = async (
@@ -38,6 +39,7 @@ export const loadTeamMembers = async (
         return {
             serverTime: res.data.server_time,
             members: res.data.data.members,
+            forceFull: res.data.force_full_reload,
         };
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {

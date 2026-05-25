@@ -32,18 +32,33 @@ export const activityHandlers: HandlerMap<ActivityRequests> = {
                 if (!response) {
                     throw new Error("Failed to load activity history");
                 }
-                return { serverTime: response.serverTime, data: response.activity };
+                return {
+                    serverTime: response.serverTime,
+                    data: response.activity,
+                    forceFull: response.forceFull,
+                };
             },
             applier: async (activities, hadCheckpoint) => {
                 // Full load: wipe before insert (legacy behavior).
-                // Incremental: upsert in place. The server includes
+                // Incremental: upsert in place plus apply tombstones for
+                // any rows the server flagged is_deleted=True (e.g. a
+                // reaction the user unreacted). The server includes
                 // edited rows by ts_updated_at, so put() is idempotent.
                 if (!hadCheckpoint) {
                     await activityService.clearActivityMessages();
                 }
-                for (let i = 0; i < activities.length; i += BATCH_SIZE) {
+                const toUpsert: ActivityMessageProps[] = [];
+                for (const a of activities) {
+                    if (a.isDeleted) {
+                        await activityService.deleteActivityMessage(a.activityId);
+                    } else {
+                        const { isDeleted: _ignored, ...rest } = a;
+                        toUpsert.push(rest);
+                    }
+                }
+                for (let i = 0; i < toUpsert.length; i += BATCH_SIZE) {
                     await activityService.batchInsertActivityMessages(
-                        activities.slice(i, i + BATCH_SIZE)
+                        toUpsert.slice(i, i + BATCH_SIZE)
                     );
                 }
             },

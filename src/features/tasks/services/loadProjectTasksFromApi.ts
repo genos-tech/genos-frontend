@@ -13,6 +13,7 @@ export interface ProjectTaskDeltaItem extends TaskTableProps {
 export interface ProjectTasksDeltaResponse {
     serverTime: string;
     tasks: ProjectTaskDeltaItem[];
+    forceFull?: boolean;
 }
 
 // Direct API call to `getProjectTasks`. Used by `loadProjectTasksWorker`
@@ -39,6 +40,7 @@ export const loadProjectTasksFromApi = async (
         return {
             serverTime: res.data.server_time,
             tasks: res.data.data.tasks,
+            forceFull: res.data.force_full_reload,
         };
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {

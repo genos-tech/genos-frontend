@@ -10,6 +10,7 @@ export interface PMThreadMessageDeltaItem extends ThreadMessageProps {
 export interface PMThreadMessagesDeltaResponse {
     serverTime: string;
     thread_messages: PMThreadMessageDeltaItem[];
+    forceFull?: boolean;
 }
 
 export const loadPMThreadMessagesDelta = async (
@@ -30,6 +31,7 @@ export const loadPMThreadMessagesDelta = async (
         return {
             serverTime: res.data.server_time,
             thread_messages: res.data.data.thread_messages,
+            forceFull: res.data.force_full_reload,
         };
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {

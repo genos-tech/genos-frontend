@@ -5,6 +5,11 @@ const checkpointRepo = new CheckpointRepository();
 export interface DeltaResponse<T> {
     serverTime: string;
     data: T;
+    // When the server's catastrophic-delta cap kicks in (client checkpoint
+    // older than MAX_DELTA_AGE_DAYS), the backend re-runs the query as a
+    // full load and sets this flag so the applier wipes the IDB store
+    // before inserting — preventing stale data from leaking through.
+    forceFull?: boolean;
 }
 
 export interface SyncWithCheckpointOptions<T> {
@@ -38,6 +43,10 @@ export interface SyncWithCheckpointOptions<T> {
 export async function syncWithCheckpoint<T>(opts: SyncWithCheckpointOptions<T>): Promise<void> {
     const since = await checkpointRepo.getCheckpoint(opts.key);
     const response = await opts.fetcher(since);
-    await opts.applier(response.data, since !== null);
+    // `hadCheckpoint=false` makes the applier treat this as a full load
+    // (clear-before-insert). We force that when either the client truly
+    // has no checkpoint OR the server told us to (catastrophic-delta).
+    const hadCheckpoint = since !== null && !response.forceFull;
+    await opts.applier(response.data, hadCheckpoint);
     await checkpointRepo.setCheckpoint(opts.key, response.serverTime);
 }
