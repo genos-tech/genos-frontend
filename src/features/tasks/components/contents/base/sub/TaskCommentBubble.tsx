@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import CodeIcon from "@mui/icons-material/Code";
 import EditIcon from "@mui/icons-material/Edit";
+import WrapTextIcon from "@mui/icons-material/WrapText";
 import { Box, IconButton, Sheet, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
@@ -103,6 +105,14 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
     const [reactions, setReactions] = useState<ReactionProps[]>([]);
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
+    // Per-bubble wrap toggles. Same CSS-class approach as the chat
+    // message bubbles — class lives on a wrapper Box around the
+    // preview, App.css drives the actual wrap/scroll behaviour.
+    const [unwrapAll, setUnwrapAll] = useState<boolean>(false);
+    const [unwrapCode, setUnwrapCode] = useState<boolean>(false);
+    const previewWrapClassName = [unwrapAll && "bn-unwrap-all", unwrapCode && "bn-unwrap-code"]
+        .filter(Boolean)
+        .join(" ");
 
     useEffect(() => {
         if (comment.reactions) {
@@ -213,6 +223,61 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
         return null;
     }
 
+    // Shared button styling for the top-right cluster (wrap toggles +
+    // edit). Off = transparent neutral; on = accent-tinted background
+    // (matches the editor toolbars' `isSelected` styling for wrap).
+    const toggleButtonSx = (active: boolean) => ({
+        width: 28,
+        height: 28,
+        borderRadius: "8px",
+        transition: "all 0.15s ease",
+        color: active
+            ? isDark
+                ? "#a5b4fc"
+                : "#6366f1"
+            : isDark
+              ? "rgba(255,255,255,0.7)"
+              : "rgba(0,0,0,0.55)",
+        background: active
+            ? isDark
+                ? "rgba(99,102,241,0.20)"
+                : "rgba(99,102,241,0.10)"
+            : "transparent",
+        "&:hover": {
+            background: isDark ? "rgba(99,102,241,0.28)" : "rgba(99,102,241,0.15)",
+            color: isDark ? "#a5b4fc" : "#6366f1",
+        },
+    });
+
+    const wrapToggleButtons = (
+        <>
+            <AppTooltip title={unwrapAll ? "Wrap all content" : "Unwrap all content"}>
+                <IconButton
+                    size="sm"
+                    sx={toggleButtonSx(unwrapAll)}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setUnwrapAll(!unwrapAll);
+                    }}
+                >
+                    <WrapTextIcon sx={{ fontSize: 16 }} />
+                </IconButton>
+            </AppTooltip>
+            <AppTooltip title={unwrapCode ? "Wrap code blocks" : "Unwrap code blocks"}>
+                <IconButton
+                    size="sm"
+                    sx={toggleButtonSx(unwrapCode)}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setUnwrapCode(!unwrapCode);
+                    }}
+                >
+                    <CodeIcon sx={{ fontSize: 16 }} />
+                </IconButton>
+            </AppTooltip>
+        </>
+    );
+
     const editButton = (
         <AppTooltip title={t.tasks.comment.editTooltip}>
             <IconButton
@@ -257,18 +322,20 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
     );
 
     const commentBody = (
-        <BnChatPreview
-            key={`${comment.taskId}-${comment.commentId}-${comment.tsSent}`}
-            content={comment.commentBody}
-            customClassName="task-comment-preview"
-            isSent={isSent}
-            myself={myself}
-            setMyself={setMyself}
-            socket={socket}
-            useCM={useCM}
-            useTEM={useTEM}
-            useUISM={useUISM}
-        />
+        <Box className={previewWrapClassName || undefined}>
+            <BnChatPreview
+                key={`${comment.taskId}-${comment.commentId}-${comment.tsSent}`}
+                content={comment.commentBody}
+                customClassName="task-comment-preview"
+                isSent={isSent}
+                myself={myself}
+                setMyself={setMyself}
+                socket={socket}
+                useCM={useCM}
+                useTEM={useTEM}
+                useUISM={useUISM}
+            />
+        </Box>
     );
 
     if (isCompact) {
@@ -348,7 +415,10 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                                 : "0 2px 8px rgba(0,0,0,0.1)",
                         }}
                     >
-                        {editButton}
+                        <Stack direction="row" alignItems="center" spacing={0.25}>
+                            {wrapToggleButtons}
+                            {editButton}
+                        </Stack>
                     </Box>
                 )}
 
@@ -514,7 +584,9 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                         </Box>
                     </Stack>
 
-                    {/* Inline edit affordance, top-right of bubble */}
+                    {/* Inline edit + wrap-toggle affordances, top-right
+                        of bubble. Both fade in with the hover toolbar
+                        so they don't add visual noise at rest. */}
                     <Box
                         sx={{
                             position: "absolute",
@@ -524,7 +596,10 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                             transition: "opacity 0.15s ease",
                         }}
                     >
-                        {editButton}
+                        <Stack direction="row" alignItems="center" spacing={0.25}>
+                            {wrapToggleButtons}
+                            {editButton}
+                        </Stack>
                     </Box>
 
                     <Box sx={{ position: "absolute", bottom: 0, right: 10 }}>

@@ -143,6 +143,12 @@ export const chat = {
         copyMessageLink: "Copy message link",
         editMessage: "Edit message",
         deleteMessage: "Delete message",
+        // Per-bubble wrap toggles. Pair of labels per action so the
+        // menu item flips depending on the current toggle state.
+        unwrapAll: "Unwrap content",
+        wrapAll: "Wrap content",
+        unwrapCode: "Unwrap code blocks",
+        wrapCode: "Wrap code blocks",
     },
     modals: {
         deleteMessage: {

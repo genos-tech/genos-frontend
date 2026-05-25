@@ -57,6 +57,7 @@ import {
     getBlockTypeSelectItemsWithCodeBlock,
 } from "./sub/codeBlockExtras";
 import { EditorSendButton } from "./sub/EditorSendButton";
+import { WrapToggleToolbarButtons } from "./sub/WrapToggleToolbarButtons";
 
 type BnTaskCommentEditorProps = {
     useTEM: TeamManagementState;
@@ -95,7 +96,16 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     const urlLinkModal = useUrlLinkModal();
     const editorBoxRef = useRef<HTMLDivElement>(null);
     useAnchorClickIntercept(editorBoxRef, urlLinkModal);
-    const bnBoxClassName: string = `bn-task-comment-box-${mode}`;
+    // Session-only wrap toggles. See `WrapToggleToolbarButtons`.
+    const [unwrapAll, setUnwrapAll] = useState<boolean>(false);
+    const [unwrapCode, setUnwrapCode] = useState<boolean>(false);
+    const bnBoxClassName: string = [
+        `bn-task-comment-box-${mode}`,
+        unwrapAll && "bn-unwrap-all",
+        unwrapCode && "bn-unwrap-code",
+    ]
+        .filter(Boolean)
+        .join(" ");
 
     // Disable the Audio and Image blocks from the built-in schema
     // This is done by picking out the blocks you want to disable
@@ -439,6 +449,18 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                                 <CustomEmojiToolbar
                                     key={"customButton"}
                                     setShowEmojiPicker={setShowEmojiPicker}
+                                />
+                            )}
+                            {/* Session-only wrap toggles — hidden on
+                                mobile because the toolbar already
+                                clips off-screen on narrow viewports. */}
+                            {!isMobile && (
+                                <WrapToggleToolbarButtons
+                                    key={"wrapToggleButtons"}
+                                    unwrapAll={unwrapAll}
+                                    setUnwrapAll={setUnwrapAll}
+                                    unwrapCode={unwrapCode}
+                                    setUnwrapCode={setUnwrapCode}
                                 />
                             )}
                         </FormattingToolbar>

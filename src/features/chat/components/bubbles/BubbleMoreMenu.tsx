@@ -1,10 +1,12 @@
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import CodeIcon from "@mui/icons-material/Code";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import ReplyRoundedIcon from "@mui/icons-material/ReplyRounded";
+import WrapTextIcon from "@mui/icons-material/WrapText";
 import { Box } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
@@ -38,6 +40,14 @@ type BubbleMoreMenuProps = {
     usePM: ProjectManagementState;
     useTM: TaskManagementState;
     isSent: boolean;
+    // Per-bubble wrap toggles owned by the parent bubble. Adding/
+    // removing the `bn-unwrap-all` / `bn-unwrap-code` class on the
+    // bubble's preview wrapper triggers the same CSS rules used by
+    // the editor toolbars.
+    unwrapAll: boolean;
+    setUnwrapAll: (value: boolean) => void;
+    unwrapCode: boolean;
+    setUnwrapCode: (value: boolean) => void;
 };
 
 // Chat type to URL path mapping
@@ -65,6 +75,10 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
         usePM,
         useTM,
         isSent,
+        unwrapAll,
+        setUnwrapAll,
+        unwrapCode,
+        setUnwrapCode,
     } = props;
 
     const { t } = useTranslation();
@@ -221,6 +235,20 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
             icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,
             onClick: handleCopyLinkClick,
         },
+        {
+            id: "unwrapAll",
+            label: unwrapAll ? t.chat.messageActions.wrapAll : t.chat.messageActions.unwrapAll,
+            icon: <WrapTextIcon sx={{ fontSize: 18 }} />,
+            onClick: () => setUnwrapAll(!unwrapAll),
+            active: unwrapAll,
+        },
+        // {
+        //     id: "unwrapCode",
+        //     label: unwrapCode ? t.chat.messageActions.wrapCode : t.chat.messageActions.unwrapCode,
+        //     icon: <CodeIcon sx={{ fontSize: 18 }} />,
+        //     onClick: () => setUnwrapCode(!unwrapCode),
+        //     active: unwrapCode,
+        // },
         {
             id: "edit",
             label: t.chat.messageActions.editMessage,

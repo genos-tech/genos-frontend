@@ -1,9 +1,11 @@
 import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from "react";
+import CodeIcon from "@mui/icons-material/Code";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
+import WrapTextIcon from "@mui/icons-material/WrapText";
 import { Box, IconButton, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { createPortal } from "react-dom";
@@ -34,6 +36,11 @@ type BubbleThreadMoreMenuProps = {
     thread: ThreadProps;
     useCM: ChatManagementState;
     isSent: boolean;
+    // Per-bubble wrap toggles owned by the parent thread-bubble.
+    unwrapAll: boolean;
+    setUnwrapAll: (value: boolean) => void;
+    unwrapCode: boolean;
+    setUnwrapCode: (value: boolean) => void;
 };
 
 type MenuItemConfig = {
@@ -64,6 +71,10 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
         thread,
         useCM,
         isSent,
+        unwrapAll,
+        setUnwrapAll,
+        unwrapCode,
+        setUnwrapCode,
     } = props;
 
     const { mode } = useColorScheme();
@@ -317,6 +328,32 @@ export const BubbleThreadMoreMenu = (props: BubbleThreadMoreMenuProps) => {
             color: { light: "#059669", dark: "#34d399" },
             hoverBg: { light: "rgba(5,150,105,0.12)", dark: "rgba(52,211,153,0.18)" },
             visible: true,
+        },
+        {
+            id: "unwrapAll",
+            label: unwrapAll ? t.chat.messageActions.wrapAll : t.chat.messageActions.unwrapAll,
+            icon: <WrapTextIcon sx={{ fontSize: 18 }} />,
+            onClick: () => {
+                setUnwrapAll(!unwrapAll);
+                closeMenu();
+            },
+            color: { light: "#6366f1", dark: "#a5b4fc" },
+            hoverBg: { light: "rgba(99,102,241,0.10)", dark: "rgba(99,102,241,0.20)" },
+            visible: true,
+            active: unwrapAll,
+        },
+        {
+            id: "unwrapCode",
+            label: unwrapCode ? t.chat.messageActions.wrapCode : t.chat.messageActions.unwrapCode,
+            icon: <CodeIcon sx={{ fontSize: 18 }} />,
+            onClick: () => {
+                setUnwrapCode(!unwrapCode);
+                closeMenu();
+            },
+            color: { light: "#6366f1", dark: "#a5b4fc" },
+            hoverBg: { light: "rgba(99,102,241,0.10)", dark: "rgba(99,102,241,0.20)" },
+            visible: true,
+            active: unwrapCode,
         },
         {
             id: "flag",

@@ -129,6 +129,12 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
     const [uniqueReactionEmojiCount, setUniqueReactionEmojiCount] = useState<number>(0);
+    // Per-bubble wrap toggles. Same pattern as `MessageBubble`.
+    const [unwrapAll, setUnwrapAll] = useState<boolean>(false);
+    const [unwrapCode, setUnwrapCode] = useState<boolean>(false);
+    const previewWrapClassName = [unwrapAll && "bn-unwrap-all", unwrapCode && "bn-unwrap-code"]
+        .filter(Boolean)
+        .join(" ");
 
     // Dynamic positioning for emoji picker
     const bubbleRef = useRef<HTMLDivElement>(null);
@@ -373,6 +379,10 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                 socket={socket}
                 thread={thread}
                 useCM={useCM}
+                unwrapAll={unwrapAll}
+                setUnwrapAll={setUnwrapAll}
+                unwrapCode={unwrapCode}
+                setUnwrapCode={setUnwrapCode}
             />
         </Stack>
     );
@@ -386,7 +396,10 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                   : "transparent";
 
         const messageBody = message.content.length > 0 && (
-            <Box sx={{ mt: isSimpleBubble ? 0 : 0.25 }}>
+            <Box
+                className={previewWrapClassName || undefined}
+                sx={{ mt: isSimpleBubble ? 0 : 0.25 }}
+            >
                 <BnChatPreview
                     key={`${thread.chatId}-${thread.threadId}-${message.messageId}-${thread.chatType}-${message.tsUpdated}`}
                     content={message.content}
@@ -691,7 +704,10 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                             )}
 
                             {message.content.length > 0 && (
-                                <Box sx={{ mt: isSimpleBubble ? 0 : 0.5 }}>
+                                <Box
+                                    className={previewWrapClassName || undefined}
+                                    sx={{ mt: isSimpleBubble ? 0 : 0.5 }}
+                                >
                                     <BnChatPreview
                                         key={`${thread.chatId}-${thread.threadId}-${message.messageId}-${thread.chatType}-${message.tsUpdated}`}
                                         content={message.content}

@@ -314,6 +314,16 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<any>(null);
     const [uniqueReactionEmojiCount, setUniqueReactionEmojiCount] = useState<number>(0);
+    // Per-bubble wrap toggles. Toggling from the More menu adds
+    // `bn-unwrap-all` / `bn-unwrap-code` to the preview wrapper Box
+    // below, which the existing App.css rules pick up to either
+    // unwrap everything (editor-wide scroll) or unwrap just code
+    // blocks. State is local — never persisted.
+    const [unwrapAll, setUnwrapAll] = useState<boolean>(false);
+    const [unwrapCode, setUnwrapCode] = useState<boolean>(false);
+    const previewWrapClassName = [unwrapAll && "bn-unwrap-all", unwrapCode && "bn-unwrap-code"]
+        .filter(Boolean)
+        .join(" ");
 
     // Dynamic positioning for emoji picker
     const bubbleRef = useRef<HTMLDivElement>(null);
@@ -635,6 +645,10 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                 useCM={useCM}
                 usePM={usePM}
                 useTM={useTM}
+                unwrapAll={unwrapAll}
+                setUnwrapAll={setUnwrapAll}
+                unwrapCode={unwrapCode}
+                setUnwrapCode={setUnwrapCode}
             />
         </Stack>
     );
@@ -661,6 +675,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                 }
             >
                 <Box
+                    className={previewWrapClassName || undefined}
                     sx={{
                         mt: isSimpleBubble ? 0 : 0.25,
                     }}
@@ -1003,6 +1018,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
 
                                 {message.content && message.content.length > 0 && (
                                     <Box
+                                        className={previewWrapClassName || undefined}
                                         sx={{
                                             mt: isSimpleBubble ? 0 : 0.5,
                                             cursor: message.taskId ? "pointer" : "default",
