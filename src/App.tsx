@@ -53,6 +53,7 @@ import { TaskSortPreferencesProvider } from "./hooks/common/useTaskSortPreferenc
 import { ThemePreferenceProvider } from "./hooks/common/useThemePreference";
 import { useThreadTaskHandling } from "./hooks/common/useThreadTaskHandling";
 import { useUrlLinkModalState } from "./hooks/common/useUrlLinkModalState";
+import { useWakeRefresh } from "./hooks/common/useWakeRefresh";
 import { useWebSocket } from "./hooks/common/useWebSocket";
 import { useWindowSize } from "./hooks/common/useWindowSize";
 import { registerApiHealthListener, unregisterApiHealthListener } from "./services/api";
@@ -60,6 +61,7 @@ import { NotificationsProvider } from "./services/notifications/NotificationsCon
 import { NotificationToastHost } from "./services/notifications/NotificationToastHost";
 import { PermissionBanner } from "./services/notifications/PermissionBanner";
 import { NotificationIntent } from "./services/notifications/types";
+import { refreshAllData } from "./services/refreshAllData";
 
 import { I18nProvider } from "./i18n";
 import { purpleTheme } from "./theme/purplePalette";
@@ -200,6 +202,31 @@ export const App = () => {
         currentTeamId: useTEM.currentTeamId,
         isLoading: useUISM.isLoading,
         socketInstance,
+    });
+
+    // When the user returns from a long idle (closed laptop overnight,
+    // backgrounded tab for hours) or after the browser regains network,
+    // re-run the boot-time loaders so stale IDB is repopulated from the
+    // API. Without this, the chat list / task table / sidebar show
+    // whatever was cached before the offline stretch — anything that
+    // happened while the WS was disconnected is silently missed.
+    useWakeRefresh(() => {
+        return refreshAllData({
+            myself,
+            accessToken: accessToken || null,
+            currentProjectId: usePM.currentProject?.projectId ?? null,
+            onIDBRefreshed: async () => {
+                await Promise.allSettled([
+                    useCM.funcSetAllChats(),
+                    useCM.funcSetFlaggedMessages(),
+                    useCM.funcSetActivityMessages(),
+                    useTEM.funcSetTeamMembers(),
+                    usePM.currentProject?.projectId
+                        ? usePM.refreshProjectTasks(usePM.currentProject.projectId)
+                        : Promise.resolve(),
+                ]);
+            },
+        });
     });
 
     // URL-link modal: opens an in-place preview of internal chat / task /
