@@ -30,7 +30,12 @@ import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
-import { CreateMentionGroupSpec, CreateMentionSpec, MentionMenuItems } from "./Mention";
+import {
+    CreateMentionGroupSpec,
+    CreateMentionSpec,
+    MentionMenuItems,
+    MentionSuggestionMenu,
+} from "./Mention";
 import {
     codeBlockEnterShortcut,
     getBlockTypeSelectItemsWithCodeBlock,
@@ -177,6 +182,7 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
                 {/* Adds a mentions menu which opens with the "@" key */}
                 <SuggestionMenuController
                     triggerCharacter={"@"}
+                    suggestionMenuComponent={MentionSuggestionMenu}
                     getItems={async (query) =>
                         // Gets the mentions menu items
                         filterSuggestionItems(

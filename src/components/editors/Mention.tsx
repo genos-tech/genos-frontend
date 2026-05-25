@@ -1,7 +1,12 @@
 import { useState } from "react";
-import { createReactInlineContentSpec, DefaultReactSuggestionItem } from "@blocknote/react";
+import {
+    createReactInlineContentSpec,
+    DefaultReactSuggestionItem,
+    SuggestionMenuProps,
+    useComponentsContext,
+} from "@blocknote/react";
 import GroupRoundedIcon from "@mui/icons-material/GroupRounded";
-import { Avatar, Box, Chip, Typography } from "@mui/joy";
+import { Box, Chip, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { useMentionGroupModal } from "../../context/MentionGroupModalContext";
@@ -10,9 +15,7 @@ import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { MentionGroup } from "../../services/mentionGroupsApi";
 import { UserProps } from "../../types/admin";
-import { PulseDot } from "../ui/misc/PulseDot";
-
-const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
+import { UserAvatar } from "../ui/avatars/UserAvatar";
 
 // Shared visual treatment for every mention chip (user OR group). The
 // only difference between variants is the colour palette; the pill
@@ -299,51 +302,133 @@ export const MentionMenuItems = (
         ),
     }));
 
-    const userItems: DefaultReactSuggestionItem[] = sortedUsers.map((user) => ({
-        title: user.userEmail,
-        badge: user.customStatus,
-        onItemClick: () => {
-            editor.insertInlineContent([
-                {
-                    key: user.userId,
-                    type: "mention",
-                    props: {
-                        userName: user.userName,
-                        userEmail: user.userEmail,
-                        userId: user.userId,
-                        teamId: user.teamId,
-                        teamName: user.teamName,
-                        avatarImgPath: user.avatarImgPath,
-                        customStatus: user.customStatus,
+    const userItems: DefaultReactSuggestionItem[] = sortedUsers.map((user) => {
+        const isSelf = user.userId === myselfUserId;
+        return {
+            // BlockNote's default suggestion menu renders `title` next
+            // to the icon slot — so putting the email here showed it
+            // twice (in the icon block on the left AND as the big
+            // right-side label). Use the userName instead so the
+            // right-side label, if shown, matches the bolded `@name`
+            // in the icon. Email search still works because
+            // `filterSuggestionItems` also matches against `aliases`.
+            title: user.userName,
+            aliases: [user.userEmail],
+            onItemClick: () => {
+                editor.insertInlineContent([
+                    {
+                        key: user.userId,
+                        type: "mention",
+                        props: {
+                            userName: user.userName,
+                            userEmail: user.userEmail,
+                            userId: user.userId,
+                            teamId: user.teamId,
+                            teamName: user.teamName,
+                            avatarImgPath: user.avatarImgPath,
+                            customStatus: user.customStatus,
+                        },
                     },
-                },
-                " ",
-            ]);
-        },
-        icon: (
-            <Box alignItems="center" display="flex" gap={1}>
-                {/* Avatar + Status Dot */}
-                <Box height={32} position="relative" width={32}>
-                    <Avatar
-                        alt={user.userName}
-                        src={`${media_url}/${user.avatarImgPath}`}
-                        sx={{ width: 32, height: 32 }}
-                    />
-                    <Box bottom={0} height={10} position="absolute" right={0} width={10}>
-                        <PulseDot
-                            color={
-                                teamMemberProfiles[user.userId]?.isOnline === true &&
-                                teamMemberProfiles[user.userId]?.isOfflineForced !== "true"
-                                    ? "#4caf50"
-                                    : "#999"
-                            }
-                        />
+                    " ",
+                ]);
+            },
+            icon: (
+                <Box
+                    alignItems="center"
+                    display="flex"
+                    gap={1.25}
+                    sx={{ minWidth: 0, width: "100%", py: 0.25 }}
+                >
+                    {/* Avatar + online dot via the shared `UserAvatar`
+                        so size, status color, fallback initial, and
+                        online/offline logic stay in sync with every
+                        other avatar in the app. `clickable={false}`
+                        because the whole row is already a click target
+                        (selecting the mention); we don't also want the
+                        avatar to open the user-profile modal underneath
+                        the menu. */}
+                    <Box sx={{ flexShrink: 0 }}>
+                        <UserAvatar clickable={false} size={36} userId={user.userId} />
                     </Box>
+
+                    {/* Two-line block: @userName (bold) over email
+                        (muted), matching the group item's layout above. */}
+                    <Box
+                        display="flex"
+                        flexDirection="column"
+                        sx={{ minWidth: 0, flex: 1, gap: 0.125 }}
+                    >
+                        <Box alignItems="center" display="flex" gap={0.5} sx={{ minWidth: 0 }}>
+                            <Typography
+                                level="body-sm"
+                                sx={{
+                                    fontWeight: 600,
+                                    whiteSpace: "nowrap",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    minWidth: 0,
+                                }}
+                            >
+                                @{user.userName}
+                            </Typography>
+                            {isSelf && (
+                                <Chip
+                                    color="warning"
+                                    size="sm"
+                                    variant="soft"
+                                    sx={{
+                                        fontSize: "0.6rem",
+                                        fontWeight: 700,
+                                        textTransform: "uppercase",
+                                        letterSpacing: "0.04em",
+                                        minHeight: 0,
+                                        py: "1px",
+                                        px: "5px",
+                                        "--Chip-paddingInline": "5px",
+                                        flexShrink: 0,
+                                    }}
+                                >
+                                    You
+                                </Chip>
+                            )}
+                        </Box>
+                        <Typography
+                            level="body-xs"
+                            sx={{
+                                opacity: 0.7,
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                            }}
+                        >
+                            {user.userEmail}
+                        </Typography>
+                    </Box>
+
+                    {/* Custom status pulled to the right so it never
+                        crowds the name. Italic + muted so it reads as
+                        ambient context, not a primary label. */}
+                    {user.customStatus && (
+                        <Typography
+                            level="body-xs"
+                            sx={{
+                                opacity: 0.7,
+                                fontStyle: "italic",
+                                ml: "auto",
+                                flexShrink: 0,
+                                maxWidth: 140,
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                            }}
+                        >
+                            {user.customStatus}
+                        </Typography>
+                    )}
                 </Box>
-                {user.userName}
-            </Box>
-        ),
-    }));
+            ),
+        };
+    });
 
     // Users first — they're the common case, and the BlockNote
     // suggestion popup only shows a few items above the fold. Putting
@@ -358,4 +443,71 @@ export const MentionMenuItems = (
         items,
     });
     return items;
+};
+
+// Custom suggestion-menu component for the `@` mentions popup.
+//
+// Why we need one: BlockNote's default `SuggestionMenu.Item` always
+// renders a body slot (title + subtext) with `flex: 1` to the right of
+// the icon, even when title is empty — so it leaves a stretched empty
+// column next to our rich icon. We've packed everything visible
+// (avatar, name, email, status, "You" chip) into the `icon` field, so
+// we want a renderer that draws ONLY the icon for each item.
+//
+// We keep `Components.SuggestionMenu.Root` for the popover surface so
+// the menu matches every other BlockNote popup (slash menu, etc.) in
+// background, border, shadow, and z-index treatment. Loading/empty
+// states reuse the matching `Components.SuggestionMenu` slots for the
+// same reason.
+//
+// Selection + keyboard nav: BlockNote owns query parsing, arrow-key
+// navigation, and Enter-to-select. It just hands us `selectedIndex`
+// each render and calls `onItemClick` when the user commits. We mirror
+// the selected row visually with the purple accent used elsewhere in
+// the app's mention chips.
+export const MentionSuggestionMenu = <T extends DefaultReactSuggestionItem>(
+    props: SuggestionMenuProps<T>
+) => {
+    const Components = useComponentsContext()!;
+    const { items, loadingState, selectedIndex, onItemClick } = props;
+
+    return (
+        <Components.SuggestionMenu.Root id="bn-suggestion-menu" className="bn-suggestion-menu">
+            {items.map((item, i) => (
+                <Box
+                    key={item.title || i}
+                    aria-selected={i === selectedIndex || undefined}
+                    role="option"
+                    // BlockNote's default item uses `mousedown.preventDefault`
+                    // to stop the editor from blurring before the click
+                    // commits — keep the same behavior so a click on a row
+                    // doesn't drop the menu first.
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => onItemClick?.(item)}
+                    sx={{
+                        cursor: "pointer",
+                        px: 1,
+                        py: 0.25,
+                        borderRadius: "6px",
+                        backgroundColor:
+                            i === selectedIndex ? "rgba(124,58,237,0.12)" : "transparent",
+                        transition: "background-color 0.1s ease",
+                        "&:hover": {
+                            backgroundColor: "rgba(124,58,237,0.08)",
+                        },
+                    }}
+                >
+                    {item.icon}
+                </Box>
+            ))}
+            {items.length === 0 && (loadingState === "loading" || loadingState === "loaded") && (
+                <Components.SuggestionMenu.EmptyItem className="bn-suggestion-menu-item">
+                    No matches
+                </Components.SuggestionMenu.EmptyItem>
+            )}
+            {(loadingState === "loading-initial" || loadingState === "loading") && (
+                <Components.SuggestionMenu.Loader className="bn-suggestion-menu-loader" />
+            )}
+        </Components.SuggestionMenu.Root>
+    );
 };

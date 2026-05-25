@@ -74,7 +74,12 @@ import { FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
 import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
 import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
-import { CreateMentionGroupSpec, CreateMentionSpec, MentionMenuItems } from "./Mention";
+import {
+    CreateMentionGroupSpec,
+    CreateMentionSpec,
+    MentionMenuItems,
+    MentionSuggestionMenu,
+} from "./Mention";
 import { Alert } from "./sub/Alert";
 import {
     codeBlockEnterShortcut,
@@ -550,6 +555,7 @@ export const BnMyNoteEditor = (props: BnMyNoteEditorProps) => {
                                 {isEditable && (
                                     <SuggestionMenuController
                                         triggerCharacter={"@"}
+                                        suggestionMenuComponent={MentionSuggestionMenu}
                                         getItems={async (query) =>
                                             filterSuggestionItems(
                                                 MentionMenuItems(

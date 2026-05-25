@@ -46,7 +46,12 @@ import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
-import { CreateMentionGroupSpec, CreateMentionSpec, MentionMenuItems } from "./Mention";
+import {
+    CreateMentionGroupSpec,
+    CreateMentionSpec,
+    MentionMenuItems,
+    MentionSuggestionMenu,
+} from "./Mention";
 import {
     codeBlockEnterShortcut,
     getBlockTypeSelectItemsWithCodeBlock,
@@ -442,6 +447,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
                     {/* Adds a mentions menu which opens with the "@" key */}
                     <SuggestionMenuController
                         triggerCharacter={"@"}
+                        suggestionMenuComponent={MentionSuggestionMenu}
                         getItems={async (query) =>
                             // Gets the mentions menu items
                             filterSuggestionItems(

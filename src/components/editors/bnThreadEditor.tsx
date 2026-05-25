@@ -55,7 +55,12 @@ import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
 import { useUploadCounter } from "../ui/feedback/useUploadCounter";
 import { CustomEmojiToolbar } from "./customEmojiToolbar";
 import { getEmojiSuggestionItems } from "./EmojiSuggestion";
-import { CreateMentionGroupSpec, CreateMentionSpec, MentionMenuItems } from "./Mention";
+import {
+    CreateMentionGroupSpec,
+    CreateMentionSpec,
+    MentionMenuItems,
+    MentionSuggestionMenu,
+} from "./Mention";
 import {
     codeBlockEnterShortcut,
     getBlockTypeSelectItemsWithCodeBlock,
@@ -506,6 +511,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                     {/* Adds a mentions menu which opens with the "@" key */}
                     <SuggestionMenuController
                         triggerCharacter={"@"}
+                        suggestionMenuComponent={MentionSuggestionMenu}
                         getItems={async (query) =>
                             filterSuggestionItems(
                                 MentionMenuItems(
