@@ -64,6 +64,7 @@ export const TaskNodeCard = memo((props: NodeProps) => {
     const {
         task,
         isRoot,
+        isCurrentPreview,
         isExternal,
         openBlockerCount,
         projectName,
@@ -132,19 +133,50 @@ export const TaskNodeCard = memo((props: NodeProps) => {
     // `color-mix` is widely supported (Chromium 111+ / Safari 16.2+ /
     // Firefox 113+); we lean on CSS to blend so the result interpolates
     // in both theme modes without two color stops to maintain manually.
-    const baseBorder = isRoot ? P.borderStrong : P.border;
+    // "Current preview" takes the strongest border so it pops from a
+    // tree of siblings; root falls back to `borderStrong`; regular
+    // tasks use the default border. Status tint still mixes in.
+    const baseBorder = isCurrentPreview ? P.accent : isRoot ? P.borderStrong : P.border;
     const statusTintColor = meta.color;
     const borderColor = isExternal
         ? (P.borderMuted ?? P.border)
-        : statusTintColor
-          ? `color-mix(in srgb, ${baseBorder}, ${statusTintColor} 38%)`
-          : baseBorder;
+        : isCurrentPreview
+          ? // Current-preview card keeps the accent border pure (no
+            // status mix) so it reads as an unambiguous "you are here"
+            // marker regardless of the task's status color.
+            P.accent
+          : statusTintColor
+            ? `color-mix(in srgb, ${baseBorder}, ${statusTintColor} 38%)`
+            : baseBorder;
     // Subtle status glow on non-ghost cards so the eye sweeps over
     // closed (green) / WIP (orange) tasks as a group.
     const statusGlow =
         !isExternal && statusTintColor
             ? `0 4px 18px ${alpha(statusTintColor, isDark ? 0.18 : 0.12)}`
             : null;
+    // "Current preview" ring: an accent-colored outline drawn via an
+    // outer box-shadow layer so it sits OUTSIDE the card's border
+    // without nudging layout. Combined with whatever existing glow the
+    // card already has so root + current cards still show their glow.
+    const currentRing = isCurrentPreview
+        ? `0 0 0 2px ${alpha(P.accent, isDark ? 0.85 : 0.7)}, 0 0 22px ${alpha(P.accent, isDark ? 0.35 : 0.25)}`
+        : null;
+    // "Current preview" surface tint. Contrast by *lightness*, not
+    // hue: every other card is already some shade of purple against a
+    // purple canvas, so blending in MORE purple wouldn't make the
+    // focal card stand out. Dark mode → layer a translucent white
+    // wash so the card reads brighter than its siblings; light mode →
+    // layer a translucent black wash so it reads darker. Using a
+    // gradient overlay (vs flat color-mix) renders more reliably
+    // across browsers AND produces a visible step against the already-
+    // elevated surface — a flat mix at the same alpha tends to look
+    // identical to the base. Border + ring still carry the brand
+    // accent so the card stays tied to the diagram's palette.
+    const cardBackground = isCurrentPreview
+        ? isDark
+            ? `linear-gradient(rgba(255,255,255,0.18), rgba(255,255,255,0.18)), ${P.surfaceElevated}`
+            : `linear-gradient(rgba(0,0,0,0.10), rgba(0,0,0,0.10)), ${P.surfaceElevated}`
+        : P.surfaceElevated;
     const stripeColor = isExternal
         ? null
         : schedule.tone === "neutral" || schedule.tone === "success"
@@ -159,7 +191,7 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                 p: 1.25,
                 pl: stripeColor ? 1.5 : 1.25,
                 borderRadius: "12px",
-                background: P.surfaceElevated,
+                background: cardBackground,
                 border: "1px solid",
                 borderStyle,
                 borderColor,
@@ -167,9 +199,18 @@ export const TaskNodeCard = memo((props: NodeProps) => {
                 cursor: isExternal ? "pointer" : "default",
                 boxShadow: isExternal
                     ? "none"
-                    : isRoot
-                      ? `0 6px 22px ${P.glow}${statusGlow ? `, ${statusGlow}` : ""}`
-                      : (statusGlow ?? P.shadowSoft),
+                    : [
+                          // Order matters: outer ring first so it sits
+                          // outside any internal glow layers. `filter()`
+                          // out nulls so a card with only one applicable
+                          // shadow doesn't end up with stray commas.
+                          currentRing,
+                          isRoot ? `0 6px 22px ${P.glow}` : null,
+                          statusGlow,
+                          !isRoot && !statusGlow ? P.shadowSoft : null,
+                      ]
+                          .filter(Boolean)
+                          .join(", ") || "none",
                 transition: "border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease",
                 position: "relative",
                 "&:hover": isExternal

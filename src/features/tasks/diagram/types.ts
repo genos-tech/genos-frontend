@@ -21,6 +21,16 @@ export type TaskNodeData = {
     task: TaskTableProps;
     /** True for the root node — the milestone/task that opened the diagram. */
     isRoot: boolean;
+    /**
+     * True when this node matches `useTM.currentPreviewTaskId` — i.e.
+     * the task whose preview pane the user opened the diagram from.
+     * Used by the card to paint an "anchor" accent so the user can spot
+     * "this is the one I came from" in a tree of many sibling tasks.
+     * Distinct from `isRoot`: when the previewed task is a sub-task,
+     * the diagram's root is the chain top (a milestone or parent), so
+     * `isRoot` and `isCurrentPreview` light up different cards.
+     */
+    isCurrentPreview: boolean;
     /** Mirrors `task.isMilestone`, surfaced for fast lookups during render. */
     isMilestone: boolean;
     /**

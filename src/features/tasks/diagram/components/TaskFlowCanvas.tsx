@@ -270,6 +270,10 @@ const computeDescendantCounts = (
 const buildNodesAndEdges = (
     graph: TaskGraph,
     rootTaskId: number,
+    // Task id of the preview pane the user opened the diagram from
+    // (or null when none). Module-scope here can't read `useTM` —
+    // the caller passes the snapshot at assembly time.
+    currentPreviewTaskId: number | null,
     sprintByTaskId: Map<number, Sprint>,
     openBlockerCountByTask: Map<number, number>,
     diagramProjectName: string | null,
@@ -307,6 +311,11 @@ const buildNodesAndEdges = (
         const data: TaskNodeData = {
             task,
             isRoot: taskId === rootTaskId,
+            // External (ghost) tasks live outside the visible tree and
+            // can't be "the one you came from" by definition — skip the
+            // accent treatment for them even if the id happens to match.
+            isCurrentPreview:
+                !isExternal && currentPreviewTaskId != null && taskId === currentPreviewTaskId,
             isMilestone,
             isExternal,
             openBlockerCount: openBlockerCountByTask.get(taskId) ?? 0,
@@ -692,6 +701,11 @@ const CanvasInner = ({
             const { nodes: rawNodes, edges: rawEdges } = buildNodesAndEdges(
                 graph,
                 rootTaskId,
+                // Snapshot the preview-pane target at assemble time so
+                // the "you are here" highlight lands on the right card.
+                // Captured here (inside CanvasInner) because the module-
+                // scope builder can't reach `useTM`.
+                useTM.currentPreviewTaskId,
                 sprintByTaskId,
                 blockerMap,
                 diagramProjectName,

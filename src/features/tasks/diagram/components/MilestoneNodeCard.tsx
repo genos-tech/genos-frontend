@@ -61,8 +61,32 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
     const isDark = mode === "dark";
     const P = isDark ? purplePalette.dark : purplePalette.light;
 
-    const { task, closedDescendantCount, totalDescendantCount, sprint, onOpenPreview } =
-        props.data as unknown as TaskNodeData;
+    const {
+        task,
+        isCurrentPreview,
+        closedDescendantCount,
+        totalDescendantCount,
+        sprint,
+        onOpenPreview,
+    } = props.data as unknown as TaskNodeData;
+
+    // "Current preview" treatment — kept in sync with TaskNodeCard so
+    // both kinds of cards highlight the same way when they happen to
+    // be the focal one (e.g. previewing a milestone-backing task
+    // anchors the diagram on the milestone, which renders via this
+    // component). Border stays orange (milestone identity); the
+    // accent purple appears as an OUTER ring on top of the existing
+    // milestone shadow, and the surface gets the same lightness wash
+    // (brighter in dark mode, darker in light) so it pops by
+    // *brightness* against the surrounding purple cards.
+    const cardBackground = isCurrentPreview
+        ? isDark
+            ? `linear-gradient(rgba(255,255,255,0.18), rgba(255,255,255,0.18)), ${P.surfaceElevated}`
+            : `linear-gradient(rgba(0,0,0,0.10), rgba(0,0,0,0.10)), ${P.surfaceElevated}`
+        : P.surfaceElevated;
+    const currentRing = isCurrentPreview
+        ? `0 0 0 2px ${alpha(P.accent, isDark ? 0.85 : 0.7)}, 0 0 22px ${alpha(P.accent, isDark ? 0.35 : 0.25)}`
+        : null;
 
     const meta = statusMeta(task.status);
     const schedule = getScheduleStatus(task.startDate, task.dueDate, task.status);
@@ -96,12 +120,20 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
                 p: 1.25,
                 pt: 1.5,
                 borderRadius: "12px",
-                background: P.surfaceElevated,
+                background: cardBackground,
                 border: "1.5px solid",
                 borderColor: isDark ? "rgba(249,115,22,0.45)" : "rgba(234,88,12,0.45)",
-                boxShadow: isDark
-                    ? "0 6px 22px rgba(249,115,22,0.18)"
-                    : "0 6px 22px rgba(234,88,12,0.14)",
+                // Stack the current-preview ring outside the milestone's
+                // orange glow when applicable; otherwise the orange glow
+                // alone — same compose pattern as TaskNodeCard.
+                boxShadow: [
+                    currentRing,
+                    isDark
+                        ? "0 6px 22px rgba(249,115,22,0.18)"
+                        : "0 6px 22px rgba(234,88,12,0.14)",
+                ]
+                    .filter(Boolean)
+                    .join(", "),
                 position: "relative",
                 transition: "border-color 0.15s ease, box-shadow 0.15s ease",
                 "&:hover": {
