@@ -118,11 +118,11 @@ export const ACTaskSelector = ({
         (async () => {
             setLoading(true);
             try {
-                const data = await loadProjectTasksFromApi(myself, pid, accessToken);
+                const response = await loadProjectTasksFromApi(myself, pid, accessToken, null);
                 if (cancelled) return;
                 setTasksByProject((prev) => ({
                     ...prev,
-                    [pid]: Array.isArray(data) ? data : [],
+                    [pid]: response?.tasks ?? [],
                 }));
             } finally {
                 if (!cancelled) setLoading(false);

@@ -1,44 +1,38 @@
 import axios from "axios";
 
 import { authApi } from "../../../services/api";
-import { UserProps } from "../../../types/admin";
-import { ActivityMessageProps } from "../../../types/chat";
+import { ThreadMessageProps } from "../../../types/chat";
 
-// Default lookback for the FULL-load path. Once a checkpoint exists,
-// the server uses it as the lower bound instead — no day cap applies.
-const periodDays: number = 30;
-
-export interface ActivityDeltaItem extends ActivityMessageProps {
+export interface DMThreadMessageDeltaItem extends ThreadMessageProps {
     isDeleted?: boolean;
 }
 
-export interface ActivityDeltaResponse {
+export interface DMThreadMessagesDeltaResponse {
     serverTime: string;
-    activity: ActivityDeltaItem[];
+    thread_messages: DMThreadMessageDeltaItem[];
     forceFull?: boolean;
 }
 
-export const loadActivityHistory = async (
-    myself: UserProps,
+export const loadDMThreadMessagesDelta = async (
+    teamId: string,
+    userId: string,
     accessToken: string | null,
     since: string | null
-): Promise<ActivityDeltaResponse | undefined> => {
+): Promise<DMThreadMessagesDeltaResponse | undefined> => {
     try {
         const api = authApi(accessToken);
         if (!api) {
             console.error("Unauthorized. Auth toke is not found.");
             return;
         }
-        const params: string[] = [`team_id=${myself.teamId}`, `user_id=${myself.userId}`];
+        const params: string[] = [`team_id=${teamId}`, `user_id=${userId}`];
         if (since) {
             params.push(`since=${encodeURIComponent(since)}`);
-        } else {
-            params.push(`period_days=${periodDays}`);
         }
-        const res = await api.get(`/chat/activity/history/?${params.join("&")}`);
+        const res = await api.get(`/dm/threadMessagesDelta/?${params.join("&")}`);
         return {
             serverTime: res.data.server_time,
-            activity: res.data.data.activity,
+            thread_messages: res.data.data.thread_messages,
             forceFull: res.data.force_full_reload,
         };
     } catch (error: unknown) {

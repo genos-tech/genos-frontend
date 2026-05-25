@@ -1,41 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { deleteMessage } from "../../features/chat/services/deleteMessage";
+import { updateReadStatus } from "../../features/chat/services/updateReadStatus";
+import { authApi } from "../../services/api";
 
 vi.mock("../../services/api", () => ({
     authApi: vi.fn(),
     nonAuthApi: vi.fn(),
 }));
-
-import { authApi } from "../../services/api";
-import { loadDMHistory } from "../../features/chat/services/loadDMHistory";
-import { deleteMessage } from "../../features/chat/services/deleteMessage";
-import { updateReadStatus } from "../../features/chat/services/updateReadStatus";
-
-describe("loadDMHistory", () => {
-    beforeEach(() => {
-        vi.clearAllMocks();
-    });
-
-    it("should call GET /dm/history/ with correct query params", async () => {
-        const mockData = [{ dm_id: 1, messages: [] }];
-        const mockGet = vi.fn().mockResolvedValue({ data: mockData });
-        (authApi as ReturnType<typeof vi.fn>).mockReturnValue({ get: mockGet });
-
-        const result = await loadDMHistory("team1", "Team One", "user1", "token123");
-
-        expect(authApi).toHaveBeenCalledWith("token123");
-        expect(mockGet).toHaveBeenCalledWith(
-            "/dm/history/?team_id=team1&team_name=Team One&user_id=user1"
-        );
-        expect(result).toEqual(mockData);
-    });
-
-    it("should return undefined when accessToken is null", async () => {
-        (authApi as ReturnType<typeof vi.fn>).mockReturnValue(null);
-
-        const result = await loadDMHistory("team1", "Team One", "user1", null);
-        expect(result).toBeUndefined();
-    });
-});
 
 describe("deleteMessage", () => {
     beforeEach(() => {

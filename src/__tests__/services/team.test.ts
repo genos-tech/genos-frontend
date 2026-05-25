@@ -1,14 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { createTeam } from "../../features/admin/services/createTeam";
+import { loadMyTeams } from "../../features/admin/services/loadMyTeams";
+import { loadTeamMembers } from "../../features/admin/services/loadTeamMembers";
+import { authApi } from "../../services/api";
 
 vi.mock("../../services/api", () => ({
     authApi: vi.fn(),
     nonAuthApi: vi.fn(),
 }));
-
-import { authApi } from "../../services/api";
-import { loadMyTeams } from "../../features/admin/services/loadMyTeams";
-import { loadTeamMembers } from "../../features/admin/services/loadTeamMembers";
-import { createTeam } from "../../features/admin/services/createTeam";
 
 const mockMyself = {
     teamId: "team1",
@@ -56,22 +56,29 @@ describe("loadTeamMembers", () => {
     });
 
     it("should call GET /team/getTeamMembers/ with correct query", async () => {
-        const mockData = [{ userId: "u1", userName: "User 1" }];
-        const mockGet = vi.fn().mockResolvedValue({ data: mockData });
+        const mockMembers = [{ userId: "u1", userName: "User 1" }];
+        const mockResponse = {
+            server_time: "2026-05-25T12:00:00Z",
+            data: { members: mockMembers },
+        };
+        const mockGet = vi.fn().mockResolvedValue({ data: mockResponse });
         (authApi as ReturnType<typeof vi.fn>).mockReturnValue({ get: mockGet });
 
-        const result = await loadTeamMembers(mockMyself, "token123");
+        const result = await loadTeamMembers(mockMyself, "token123", null);
 
         expect(mockGet).toHaveBeenCalledWith(
             "/team/getTeamMembers/?team_id=team1&team_name=Team One&user_id=user1"
         );
-        expect(result).toEqual(mockData);
+        expect(result).toEqual({
+            serverTime: "2026-05-25T12:00:00Z",
+            members: mockMembers,
+        });
     });
 
     it("should return undefined when token is null", async () => {
         (authApi as ReturnType<typeof vi.fn>).mockReturnValue(null);
 
-        const result = await loadTeamMembers(mockMyself, null);
+        const result = await loadTeamMembers(mockMyself, null, null);
         expect(result).toBeUndefined();
     });
 });

@@ -10,8 +10,13 @@ import type { ActivityMessageProps } from "../../../types/chat";
 import { ActivityService } from "../../services";
 import type { ActivityRequests } from "../contracts";
 import type { HandlerMap } from "../poolWorker";
+import { syncWithCheckpoint } from "../utils/syncWithCheckpoint";
 
 const BATCH_SIZE = 1000;
+// Activity feed only shows the most recent 30 days. Incremental sync
+// only adds new rows, so without this prune the store would grow
+// unboundedly across sessions.
+const ACTIVITY_RETENTION_DAYS = 30;
 const activityService = new ActivityService();
 
 export const activityHandlers: HandlerMap<ActivityRequests> = {
@@ -20,15 +25,49 @@ export const activityHandlers: HandlerMap<ActivityRequests> = {
     },
 
     loadActivityHistory: async ({ myself, accessToken }) => {
-        await activityService.clearActivityMessages();
-        const history = await loadActivityHistory(myself, accessToken);
-        if (history) {
-            for (let i = 0; i < history.length; i += BATCH_SIZE) {
-                await activityService.batchInsertActivityMessages(
-                    history.slice(i, i + BATCH_SIZE)
-                );
-            }
-        }
+        await syncWithCheckpoint({
+            key: "activity",
+            fetcher: async (since) => {
+                const response = await loadActivityHistory(myself, accessToken, since);
+                if (!response) {
+                    throw new Error("Failed to load activity history");
+                }
+                return {
+                    serverTime: response.serverTime,
+                    data: response.activity,
+                    forceFull: response.forceFull,
+                };
+            },
+            applier: async (activities, hadCheckpoint) => {
+                // Full load: wipe before insert (legacy behavior).
+                // Incremental: upsert in place plus apply tombstones for
+                // any rows the server flagged is_deleted=True (e.g. a
+                // reaction the user unreacted). The server includes
+                // edited rows by ts_updated_at, so put() is idempotent.
+                if (!hadCheckpoint) {
+                    await activityService.clearActivityMessages();
+                }
+                const toUpsert: ActivityMessageProps[] = [];
+                for (const a of activities) {
+                    if (a.isDeleted) {
+                        await activityService.deleteActivityMessage(a.activityId);
+                    } else {
+                        const { isDeleted: _ignored, ...rest } = a;
+                        toUpsert.push(rest);
+                    }
+                }
+                for (let i = 0; i < toUpsert.length; i += BATCH_SIZE) {
+                    await activityService.batchInsertActivityMessages(
+                        toUpsert.slice(i, i + BATCH_SIZE)
+                    );
+                }
+            },
+        });
+
+        const cutoff = new Date(
+            Date.now() - ACTIVITY_RETENTION_DAYS * 24 * 60 * 60 * 1000
+        ).toISOString();
+        await activityService.pruneActivitiesOlderThan(cutoff);
     },
 
     popActivityMessages: async ({ myself }) => {

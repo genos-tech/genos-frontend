@@ -1,22 +1,28 @@
 import axios from "axios";
 
 import { authApi } from "../../../services/api";
+import { ChatProps, FlaggedMessageProps } from "../../../types/chat";
 
-export const loadGMHistory = async (
+export interface PMChatsListResponse {
+    chats: ChatProps[];
+    flagged_messages: FlaggedMessageProps[];
+}
+
+export const loadPMChats = async (
     teamId: string,
     teamName: string,
     userId: string,
     accessToken: string | null
-) => {
+): Promise<PMChatsListResponse | undefined> => {
     try {
         const api = authApi(accessToken);
-        if (api) {
-            const query: string = `team_id=${teamId}&team_name=${teamName}&user_id=${userId}`;
-            const res = await api.get(`/gm/history/?${query}`);
-            return res.data;
-        } else {
+        if (!api) {
             console.error("Unauthorized. Auth toke is not found.");
+            return;
         }
+        const query = `team_id=${teamId}&team_name=${encodeURIComponent(teamName)}&user_id=${userId}`;
+        const res = await api.get(`/pm/chats/?${query}`);
+        return res.data;
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
             console.error("API error:", error.response?.status, error.response?.data);

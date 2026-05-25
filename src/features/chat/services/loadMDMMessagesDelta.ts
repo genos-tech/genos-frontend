@@ -1,26 +1,24 @@
 import axios from "axios";
 
 import { authApi } from "../../../services/api";
-import { InboxItemProps } from "../../../types/common";
+import { MessageProps } from "../../../types/chat";
 
-// Wire shape mirrors the backend's delta envelope; `isDeleted` is only
-// present on incremental responses (rows the client should evict).
-export interface InboxDeltaItem extends InboxItemProps {
+export interface MDMMessageDeltaItem extends MessageProps {
     isDeleted?: boolean;
 }
 
-export interface InboxDeltaResponse {
+export interface MDMMessagesDeltaResponse {
     serverTime: string;
-    items: InboxDeltaItem[];
+    messages: MDMMessageDeltaItem[];
     forceFull?: boolean;
 }
 
-export const loadInbox = async (
+export const loadMDMMessagesDelta = async (
     teamId: string,
     userId: string,
     accessToken: string | null,
     since: string | null
-): Promise<InboxDeltaResponse | undefined> => {
+): Promise<MDMMessagesDeltaResponse | undefined> => {
     try {
         const api = authApi(accessToken);
         if (!api) {
@@ -28,13 +26,11 @@ export const loadInbox = async (
             return;
         }
         const params: string[] = [`team_id=${teamId}`, `user_id=${userId}`];
-        if (since) {
-            params.push(`since=${encodeURIComponent(since)}`);
-        }
-        const res = await api.get(`/inbox/?${params.join("&")}`);
+        if (since) params.push(`since=${encodeURIComponent(since)}`);
+        const res = await api.get(`/mdm/messagesDelta/?${params.join("&")}`);
         return {
             serverTime: res.data.server_time,
-            items: res.data.data.items,
+            messages: res.data.data.messages,
             forceFull: res.data.force_full_reload,
         };
     } catch (error: unknown) {

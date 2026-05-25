@@ -1,26 +1,24 @@
 import axios from "axios";
 
 import { authApi } from "../../../services/api";
-import { InboxItemProps } from "../../../types/common";
+import { ThreadMessageProps } from "../../../types/chat";
 
-// Wire shape mirrors the backend's delta envelope; `isDeleted` is only
-// present on incremental responses (rows the client should evict).
-export interface InboxDeltaItem extends InboxItemProps {
+export interface GMThreadMessageDeltaItem extends ThreadMessageProps {
     isDeleted?: boolean;
 }
 
-export interface InboxDeltaResponse {
+export interface GMThreadMessagesDeltaResponse {
     serverTime: string;
-    items: InboxDeltaItem[];
+    thread_messages: GMThreadMessageDeltaItem[];
     forceFull?: boolean;
 }
 
-export const loadInbox = async (
+export const loadGMThreadMessagesDelta = async (
     teamId: string,
     userId: string,
     accessToken: string | null,
     since: string | null
-): Promise<InboxDeltaResponse | undefined> => {
+): Promise<GMThreadMessagesDeltaResponse | undefined> => {
     try {
         const api = authApi(accessToken);
         if (!api) {
@@ -28,13 +26,11 @@ export const loadInbox = async (
             return;
         }
         const params: string[] = [`team_id=${teamId}`, `user_id=${userId}`];
-        if (since) {
-            params.push(`since=${encodeURIComponent(since)}`);
-        }
-        const res = await api.get(`/inbox/?${params.join("&")}`);
+        if (since) params.push(`since=${encodeURIComponent(since)}`);
+        const res = await api.get(`/gm/threadMessagesDelta/?${params.join("&")}`);
         return {
             serverTime: res.data.server_time,
-            items: res.data.data.items,
+            thread_messages: res.data.data.thread_messages,
             forceFull: res.data.force_full_reload,
         };
     } catch (error: unknown) {

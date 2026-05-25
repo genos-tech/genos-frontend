@@ -279,6 +279,15 @@ export const STORE_CONFIGS: Record<string, StoreConfig> = {
         keyPath: KEY_PATHS.TODOS,
         indexes: [{ name: INDEX_NAMES.TODOS, keyPath: INDEX_KEY_PATHS.TODOS, unique: false }],
     },
+    // Per-data-type "last synced" watermarks for incremental sync.
+    // Record shape: { key, serverTime, lastUpdated }. The `key` is a
+    // stable string per loader (e.g. "activity", "dm", "tasks:<projectId>");
+    // `serverTime` is the ISO timestamp returned by the backend's delta
+    // endpoint, which the next sync replays as `?since=`.
+    [STORES.SYNC_CHECKPOINTS]: {
+        name: STORES.SYNC_CHECKPOINTS,
+        keyPath: KEY_PATHS.SYNC_CHECKPOINTS,
+    },
 };
 
 // Initialize database with proper schema.
