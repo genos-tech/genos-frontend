@@ -661,6 +661,11 @@ export const tasks = {
             addSubTask: "Add sub-task",
             // MilestoneNodeCard "open" button.
             openMilestone: "Open milestone",
+            // MilestoneNodeCard "add task" button — wording differs
+            // from `addSubTask` because the milestone owns tasks (not
+            // sub-tasks) in the user's mental model, even though the
+            // backend hierarchy still parents them under the milestone.
+            addTaskToMilestone: "Add task under this milestone",
             // ModalTaskDiagram chrome.
             hideClosed: "Hide closed tasks",
             showClosed: "Show closed tasks",

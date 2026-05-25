@@ -634,7 +634,19 @@ const CanvasInner = ({
 
     const handleAddSubtask = useCallback(
         async (parentTaskId: number) => {
-            const res = await createDiagramSubtask(myself, projectId, parentTaskId, accessToken);
+            // Title varies by parent kind: a milestone's child is just
+            // "a task in this milestone" to the user, while a regular
+            // task's child IS a sub-task. Look up the parent in the
+            // last-loaded graph rather than re-querying.
+            const parent = graphRef.current?.tasks.find((t) => Number(t.id) === parentTaskId);
+            const defaultTitle = parent?.isMilestone === true ? "New task" : "New sub-task";
+            const res = await createDiagramSubtask(
+                myself,
+                projectId,
+                parentTaskId,
+                accessToken,
+                defaultTitle
+            );
             if (!res.ok) {
                 setError(res.error);
                 return;

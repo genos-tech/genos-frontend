@@ -1,4 +1,5 @@
 import { memo } from "react";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
@@ -67,6 +68,7 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
         closedDescendantCount,
         totalDescendantCount,
         sprint,
+        onAddSubtask,
         onOpenPreview,
     } = props.data as unknown as TaskNodeData;
 
@@ -418,6 +420,28 @@ export const MilestoneNodeCard = memo((props: NodeProps) => {
                 >
                     Milestone
                 </Chip>
+                <Box sx={{ flex: 1 }} />
+                <AppTooltip title={t.tasks.diagram.tooltips.addTaskToMilestone}>
+                    <IconButton
+                        size="sm"
+                        variant="plain"
+                        onClick={() => void onAddSubtask()}
+                        sx={{
+                            "--IconButton-size": "24px",
+                            color: flagColor,
+                            opacity: 0.8,
+                            borderRadius: "6px",
+                            "&:hover": {
+                                opacity: 1,
+                                background: isDark
+                                    ? "rgba(249,115,22,0.15)"
+                                    : "rgba(234,88,12,0.1)",
+                            },
+                        }}
+                    >
+                        <AddRoundedIcon sx={{ fontSize: 16 }} />
+                    </IconButton>
+                </AppTooltip>
             </Stack>
         </Box>
     );

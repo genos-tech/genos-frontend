@@ -17,7 +17,11 @@ export const createDiagramSubtask = async (
     myself: UserProps,
     projectId: number,
     parentTaskId: number,
-    accessToken: string | null
+    accessToken: string | null,
+    // Default title for the new row. The canvas passes "New task" when
+    // the parent is a milestone (the child reads as a task in that
+    // milestone, not a sub-task), and "New sub-task" otherwise.
+    title: string = "New sub-task"
 ): Promise<{ ok: true; taskId: number } | { ok: false; error: string }> => {
     try {
         const api = authApi(accessToken);
@@ -27,7 +31,7 @@ export const createDiagramSubtask = async (
             project: projectId,
             assignee: myself.userId,
             reporter: myself.userId,
-            title: "New sub-task",
+            title,
             priority: null,
             effort_level: null,
             status: "Open",
@@ -53,7 +57,8 @@ export const createDiagramSubtask = async (
         if (axios.isAxiosError(error)) {
             return {
                 ok: false,
-                error: (error.response?.data as { error?: string } | undefined)?.error ??
+                error:
+                    (error.response?.data as { error?: string } | undefined)?.error ??
                     "Failed to create sub-task.",
             };
         }
