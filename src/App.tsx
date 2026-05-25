@@ -780,10 +780,25 @@ export const App = () => {
                                                                                                       .currentPreviewTask
                                                                                                       .title
                                                                                         }
+                                                                                        // Anchor on the WHOLE hierarchy
+                                                                                        // the previewed task belongs to,
+                                                                                        // matching the TaskTitleBlock
+                                                                                        // button at L855. `rootTaskId`
+                                                                                        // walks up the parent chain (or
+                                                                                        // is self for top-level tasks);
+                                                                                        // without this fallback, firing
+                                                                                        // the shortcut while previewing
+                                                                                        // a leaf sub-task renders only
+                                                                                        // that one node instead of the
+                                                                                        // milestone / parent / siblings
+                                                                                        // / sub-tree the user expects.
                                                                                         rootTaskId={Number(
                                                                                             useTM
                                                                                                 .currentPreviewTask
-                                                                                                .id
+                                                                                                .rootTaskId ??
+                                                                                                useTM
+                                                                                                    .currentPreviewTask
+                                                                                                    .id
                                                                                         )}
                                                                                         usePM={
                                                                                             usePM
