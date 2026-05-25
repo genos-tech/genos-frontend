@@ -344,16 +344,29 @@ const buildNodesAndEdges = (
 
     // Hidden-task set for the "Hide closed tasks" toggle. The root is
     // always kept — hiding the focal point would just empty the canvas
-    // and look broken. External (ghost) tasks aren't filtered either:
-    // they're outside-tree references; dependency edges that touch a
-    // hidden internal task get dropped further down via the rendered-
-    // id set, so disconnected ghosts simply fall out on their own.
+    // and look broken. External (ghost) tasks aren't filtered for the
+    // Closed case: they're outside-tree references; dependency edges
+    // that touch a hidden internal task get dropped further down via
+    // the rendered-id set, so disconnected ghosts simply fall out on
+    // their own.
+    //
+    // Deleted tasks are ALWAYS hidden, regardless of the `hideClosed`
+    // toggle — they're soft-deleted rows the rest of the app doesn't
+    // expose (table, sidebar, search), so showing them only in the
+    // diagram would surface dead data with no way to act on it. Also
+    // applied to ghost dependency refs so a "blocker" pointing at a
+    // deleted task from another project doesn't leak in.
+    const isDeleted = (status: string | null | undefined): boolean =>
+        (status ?? "").toLowerCase() === "deleted";
     const hiddenTaskIds = new Set<number>();
-    if (hideClosed) {
-        for (const t of graph.tasks) {
-            if (t.id == null) continue;
-            const taskId = Number(t.id);
-            if (taskId === rootTaskId) continue;
+    for (const t of graph.tasks) {
+        if (t.id == null) continue;
+        const taskId = Number(t.id);
+        if (isDeleted(t.status)) {
+            hiddenTaskIds.add(taskId);
+            continue;
+        }
+        if (hideClosed && taskId !== rootTaskId) {
             if ((t.status ?? "").toLowerCase() === "closed") {
                 hiddenTaskIds.add(taskId);
             }
@@ -362,10 +375,14 @@ const buildNodesAndEdges = (
     const visibleInternalTasks = graph.tasks.filter(
         (t) => t.id != null && !hiddenTaskIds.has(Number(t.id))
     );
+    // Deleted ghosts: synthesised from TaskDependencyRef which carries
+    // status in the same shape as internal rows, so the same predicate
+    // works.
+    const visibleExternalTasks = graph.externalTasks.filter((t) => !isDeleted(t.status));
 
     const nodes: Node[] = [
         ...visibleInternalTasks.map((t) => makeNode(t, false)),
-        ...graph.externalTasks.map((t) => makeNode(t, true)),
+        ...visibleExternalTasks.map((t) => makeNode(t, true)),
     ];
 
     // Structure edges from parent_task_id (visible-tree only —
