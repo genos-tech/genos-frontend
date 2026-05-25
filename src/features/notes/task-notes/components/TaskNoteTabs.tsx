@@ -400,6 +400,7 @@ export const TaskNoteTabs = ({
                             justifyContent: "center",
                             position: "absolute",
                             zIndex: 100,
+                            width: "400px",
                         }}
                         required
                     >
