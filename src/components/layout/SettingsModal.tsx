@@ -1151,6 +1151,10 @@ export const SettingsModal = ({
                             <SettingsRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
                             {t.settings.tabs.general}
                         </Tab>
+                        <Tab value="spotlight" sx={SIDEBAR_TAB_SX}>
+                            <AutoAwesomeRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
+                            {t.settings.tabs.spotlight}
+                        </Tab>
                         <Tab value="chat" sx={SIDEBAR_TAB_SX}>
                             <ChatBubbleOutlineRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
                             {t.settings.tabs.chat}
@@ -1158,10 +1162,6 @@ export const SettingsModal = ({
                         <Tab value="tasks" sx={SIDEBAR_TAB_SX}>
                             <PlaylistAddCheckRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
                             {t.settings.tabs.tasks}
-                        </Tab>
-                        <Tab value="spotlight" sx={SIDEBAR_TAB_SX}>
-                            <AutoAwesomeRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
-                            {t.settings.tabs.spotlight}
                         </Tab>
                         <Tab value="notifications" sx={SIDEBAR_TAB_SX}>
                             <NotificationsRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
@@ -1192,6 +1192,12 @@ export const SettingsModal = ({
                             <PrivacySection />
                         </Stack>
                     </TabPanel>
+                    <TabPanel value="spotlight" sx={{ px: 0, py: 2 }}>
+                        <Stack spacing={2}>
+                            <LlmModelSection />
+                            <SpotlightSection />
+                        </Stack>
+                    </TabPanel>
                     <TabPanel value="chat" sx={{ px: 0, py: 2 }}>
                         <Stack spacing={2}>
                             <MessageLayoutSection />
@@ -1209,12 +1215,6 @@ export const SettingsModal = ({
                                 behaviour. */}
                             <AutoCloseOnPrMergeSection />
                             <AutoSyncCalendarSection />
-                        </Stack>
-                    </TabPanel>
-                    <TabPanel value="spotlight" sx={{ px: 0, py: 2 }}>
-                        <Stack spacing={2}>
-                            <LlmModelSection />
-                            <SpotlightSection />
                         </Stack>
                     </TabPanel>
                     <TabPanel value="notifications" sx={{ px: 0, py: 2 }}>

@@ -63,7 +63,8 @@ export const HistoryShell = ({ open, onClose, useCM, useTM, useSM, useNM, usePM 
                 false,
                 false,
                 useTM.setCurrentPreviewTaskId,
-                usePM.setCurrentProject
+                usePM.setCurrentProject,
+                entry.messageId ?? undefined
             );
             onClose();
         },
@@ -79,7 +80,8 @@ export const HistoryShell = ({ open, onClose, useCM, useTM, useSM, useNM, usePM 
                 false,
                 true,
                 useTM.setCurrentPreviewTaskId,
-                usePM.setCurrentProject
+                usePM.setCurrentProject,
+                entry.messageId ?? undefined
             );
             onClose();
         },

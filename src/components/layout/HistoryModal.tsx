@@ -461,12 +461,25 @@ export const HistoryModal = ({
         switch (entry.kind) {
             case "chat": {
                 const chat = findChat(entry.chatType, entry.chatId);
+                // Per-message rows (recorded from `/message/:id` URLs)
+                // show that message's text — that's the whole point of
+                // having a separate row per message. If the lookup
+                // didn't find the bubble (offline IDB miss), fall back
+                // to a "Message #id" stub so the row still reads as
+                // distinct from neighboring rows in the same chat.
+                // Plain chat rows mirror the sidebar's
+                // `ChatListItemMessage` and show `latestMessageText`.
+                const subtitle =
+                    entry.messageId != null
+                        ? entry.messageText || `Message #${entry.messageId}`
+                        : chat?.latestMessageText || undefined;
                 return (
                     <HistoryRow
-                        key={`chat-${entry.chatType}-${entry.chatId}-${entry.openedAt}`}
+                        key={`chat-${entry.chatType}-${entry.chatId}-${entry.messageId ?? 0}-${entry.openedAt}`}
                         avatar={renderChatAvatar(entry.chatType, chat, isDark)}
                         isDark={isDark}
                         label={entry.label}
+                        subtitle={subtitle}
                         timestamp={entry.openedAt}
                         onClick={() => onOpenChat(entry)}
                     />
@@ -474,9 +487,17 @@ export const HistoryModal = ({
             }
             case "thread": {
                 const chat = findChat(entry.chatType, entry.chatId);
+                // Prefer the deep-linked in-thread message text; fall
+                // back to the parent-message text (the bubble the
+                // thread hangs off of) for thread rows without a
+                // specific message focus.
+                const subtitle =
+                    entry.messageId != null
+                        ? entry.messageText || `Message #${entry.messageId}`
+                        : entry.parentMessageText || undefined;
                 return (
                     <HistoryRow
-                        key={`thread-${entry.chatType}-${entry.chatId}-${entry.threadId}-${entry.openedAt}`}
+                        key={`thread-${entry.chatType}-${entry.chatId}-${entry.threadId}-${entry.messageId ?? 0}-${entry.openedAt}`}
                         avatar={renderChatAvatar(entry.chatType, chat, isDark)}
                         chips={
                             <SmallChip
@@ -489,7 +510,7 @@ export const HistoryModal = ({
                         chipsBeforeLabel
                         isDark={isDark}
                         label={entry.label}
-                        subtitle={entry.parentMessageText || undefined}
+                        subtitle={subtitle}
                         timestamp={entry.openedAt}
                         onClick={() => onOpenThread(entry)}
                     />

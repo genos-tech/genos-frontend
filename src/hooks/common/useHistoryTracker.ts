@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
 
+import { popSpecificMessages } from "../../features/chat/services/popSpecificMessages";
+import { popSpecificThreadMessages } from "../../features/chat/services/popSpecificThreadMessages";
 import { ChatManagementState } from "../chats/useChatManagement";
 import { NoteManagementState } from "../notes/useNoteManagement";
 import { SprintMilestoneManagementState } from "../tasks/useSprintMilestoneManagement";
@@ -33,6 +35,50 @@ const firstLine = (text: string | null | undefined): string | null => {
     return cleaned.length > 80 ? cleaned.slice(0, 77) + "…" : cleaned;
 };
 
+// Walk a BlockNote-style `content` tree and concatenate any leaf `text`
+// nodes. Used as a fallback when `contentText` is empty on a message
+// (older bubbles persisted before that field was populated still carry
+// the rich content under `content`).
+const textFromBlocks = (content: unknown): string => {
+    if (!content) return "";
+    const parts: string[] = [];
+    const walk = (node: unknown) => {
+        if (!node) return;
+        if (Array.isArray(node)) {
+            for (const item of node) walk(item);
+            return;
+        }
+        if (typeof node === "object") {
+            const obj = node as Record<string, unknown>;
+            if (typeof obj.text === "string") parts.push(obj.text);
+            if (obj.content) walk(obj.content);
+            if (obj.children) walk(obj.children);
+        }
+    };
+    walk(content);
+    return parts.join(" ");
+};
+
+// Best-effort first-line extract: prefer the persisted plain-text
+// snapshot, fall back to walking the rich-content tree.
+const previewFromMessage = (msg: { contentText?: string; content?: unknown }): string | null => {
+    return firstLine(msg.contentText) ?? firstLine(textFromBlocks(msg.content));
+};
+
+// Extract the trailing messageId from a `moveToSpecificIndex` hint.
+// `useChatManagement.moveToSpecificChat` formats it as
+// "{chatId}-{messageId}" for chats and "{chatId}-{threadId}-{messageId}"
+// for threads. Returns null when no usable id is present (no hint, NaN,
+// or 0/sentinel).
+const messageIdFromHint = (hint: string | undefined, segments: number): number | null => {
+    if (!hint) return null;
+    const parts = hint.split("-");
+    if (parts.length < segments) return null;
+    const raw = Number(parts[segments - 1]);
+    if (!Number.isFinite(raw) || raw <= 0) return null;
+    return raw;
+};
+
 export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) => {
     const { record } = useHistory();
 
@@ -52,20 +98,91 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
         if (!currentMainChat || currentMainChat.chatId == null || currentMainChat.chatId === -1) {
             return;
         }
-        const key = `chat:${currentMainChat.chatType}:${currentMainChat.chatId}`;
-        if (lastChatKeyRef.current === key) return;
-        lastChatKeyRef.current = key;
+        // `moveToSpecificIndex` is the canonical "URL targets a specific
+        // bubble" signal — set by both `moveToSpecificChat` and the URL
+        // effect in `useChatRouting`. Format: "{chatId}-{messageId}".
+        const chatType = currentMainChat.chatType;
+        const chatId = currentMainChat.chatId;
+        const messageId = messageIdFromHint(currentMainChat.moveToSpecificIndex, 2);
+        let messageText: string | null = null;
+        if (messageId != null) {
+            const msg = currentMainChat.messages.find((m) => Number(m.messageId) === messageId);
+            if (msg) messageText = previewFromMessage(msg);
+            // eslint-disable-next-line no-console
+            console.log("[HistoryTracker chat] sync lookup", {
+                chatType,
+                chatId,
+                messageId,
+                moveToSpecificIndex: currentMainChat.moveToSpecificIndex,
+                messagesLen: currentMainChat.messages.length,
+                allIds: currentMainChat.messages.map((m) => m.messageId),
+                msgFound: !!msg,
+                msgContentText: msg?.contentText,
+                msgContent: msg?.content,
+                syncFoundText: messageText,
+            });
+        }
+        // The ref encodes "have we recorded this (chat, message, text)
+        // exact state already?" — including `messageText` means if a
+        // later effect run finds the bubble in `messages` (Virtuoso
+        // paginated it in) we re-record once and `mergeAndCap` upserts
+        // the entry with the now-known text instead of leaving the row
+        // stuck on the `Message #id` stub.
+        const refKey = `chat:${chatType}:${chatId}:${messageId ?? 0}:${messageText ? "1" : "0"}`;
+        if (lastChatKeyRef.current === refKey) return;
+        lastChatKeyRef.current = refKey;
         const label =
-            currentMainChat.chatName ||
-            (currentMainChat.dmPartnerUser?.userName ?? `#${currentMainChat.chatId}`);
-        const entry: HistoryEntry = {
+            currentMainChat.chatName || (currentMainChat.dmPartnerUser?.userName ?? `#${chatId}`);
+        record({
             kind: "chat",
-            chatType: currentMainChat.chatType,
-            chatId: currentMainChat.chatId,
+            chatType,
+            chatId,
             label,
+            messageId,
+            messageText,
             openedAt: Date.now(),
-        };
-        record(entry);
+        });
+        // Async fallback: `currentMainChat.messages` is just the slice
+        // Virtuoso has paged in — when the user deep-links to an older
+        // bubble it may not be in that slice. The IDB store has the
+        // full chat history, so hit it directly. The follow-up
+        // `record()` upserts the same entry (same `keyForEntry`).
+        //
+        // No cancellation: `currentMainChat` is touched by every chat
+        // event (new socket message, read-status tick, etc.), so a
+        // cleanup-based cancel would race with the IDB read and
+        // silently drop the result. We always want whatever text we
+        // can find; `mergeAndCap` keys by (chat, messageId) so a late
+        // record still lands on the right entry.
+        if (messageId != null && messageText == null) {
+            void popSpecificMessages(chatId, chatType).then((all) => {
+                const found = all.find((m) => Number(m.messageId) === messageId);
+                const text = found ? previewFromMessage(found) : null;
+                // eslint-disable-next-line no-console
+                console.log("[HistoryTracker chat] async IDB lookup", {
+                    chatType,
+                    chatId,
+                    messageId,
+                    fetched: all.length,
+                    allIds: all.map((m) => m.messageId),
+                    msgFound: !!found,
+                    msgContentText: found?.contentText,
+                    msgContent: found?.content,
+                    text,
+                });
+                if (!text) return;
+                lastChatKeyRef.current = `chat:${chatType}:${chatId}:${messageId}:1`;
+                record({
+                    kind: "chat",
+                    chatType,
+                    chatId,
+                    label,
+                    messageId,
+                    messageText: text,
+                    openedAt: Date.now(),
+                });
+            });
+        }
     }, [currentMainChat, record]);
 
     // Threads
@@ -79,10 +196,22 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
         ) {
             return;
         }
-        const key = `thread:${currentThreadChat.chatType}:${currentThreadChat.chatId}:${currentThreadChat.threadId}`;
-        if (lastThreadKeyRef.current === key) return;
-        lastThreadKeyRef.current = key;
-        const parentName = currentThreadChat.chatName || `#${currentThreadChat.chatId}`;
+        // Thread `moveToSpecificIndex` format: "{chatId}-{threadId}-{messageId}".
+        const chatType = currentThreadChat.chatType;
+        const chatId = currentThreadChat.chatId;
+        const threadId = currentThreadChat.threadId;
+        const messageId = messageIdFromHint(currentThreadChat.moveToSpecificIndex, 3);
+        let messageText: string | null = null;
+        if (messageId != null) {
+            const msg = currentThreadChat.messages.find((m) => Number(m.messageId) === messageId);
+            if (msg) messageText = previewFromMessage(msg);
+        }
+        // Same retry-on-text pattern as the chat effect — see comment
+        // there for the rationale.
+        const refKey = `thread:${chatType}:${chatId}:${threadId}:${messageId ?? 0}:${messageText ? "1" : "0"}`;
+        if (lastThreadKeyRef.current === refKey) return;
+        lastThreadKeyRef.current = refKey;
+        const parentName = currentThreadChat.chatName || `#${chatId}`;
         // Find the parent message the thread hangs off of, in the
         // currently-loaded main chat. If `currentMainChat` is the
         // parent chat of this thread, its messages contain the bubble
@@ -92,24 +221,57 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
         let parentMessageText: string | null = null;
         if (
             currentMainChat &&
-            currentMainChat.chatType === currentThreadChat.chatType &&
-            currentMainChat.chatId === currentThreadChat.chatId
+            currentMainChat.chatType === chatType &&
+            currentMainChat.chatId === chatId
         ) {
-            const parent = currentMainChat.messages.find(
-                (m) => m.threadId === currentThreadChat.threadId
-            );
+            const parent = currentMainChat.messages.find((m) => m.threadId === threadId);
             if (parent) parentMessageText = firstLine(parent.contentText);
         }
-        const entry: HistoryEntry = {
+        record({
             kind: "thread",
-            chatType: currentThreadChat.chatType,
-            chatId: currentThreadChat.chatId,
-            threadId: currentThreadChat.threadId,
+            chatType,
+            chatId,
+            threadId,
             parentMessageText,
             label: parentName,
+            messageId,
+            messageText,
             openedAt: Date.now(),
-        };
-        record(entry);
+        });
+        // Async IDB fallback for the targeted in-thread bubble — same
+        // story as the chat effect: the in-memory `messages` slice is
+        // only the part Virtuoso loaded. No cancellation — see the
+        // matching comment in the chat effect for why.
+        if (messageId != null && messageText == null) {
+            void popSpecificThreadMessages(chatId, threadId, chatType).then((all) => {
+                const found = all.find((m) => Number(m.messageId) === messageId);
+                const text = found ? previewFromMessage(found) : null;
+                // eslint-disable-next-line no-console
+                console.log("[HistoryTracker thread] async IDB lookup", {
+                    chatType,
+                    chatId,
+                    threadId,
+                    messageId,
+                    fetched: all.length,
+                    sampleIds: all.slice(0, 5).map((m) => m.messageId),
+                    foundType: typeof found?.messageId,
+                    text,
+                });
+                if (!text) return;
+                lastThreadKeyRef.current = `thread:${chatType}:${chatId}:${threadId}:${messageId}:1`;
+                record({
+                    kind: "thread",
+                    chatType,
+                    chatId,
+                    threadId,
+                    parentMessageText,
+                    label: parentName,
+                    messageId,
+                    messageText: text,
+                    openedAt: Date.now(),
+                });
+            });
+        }
     }, [currentThreadChat, currentMainChat, record]);
 
     // Tasks

@@ -19,6 +19,13 @@ export type ChatHistoryEntry = {
     kind: "chat";
     chatType: number;
     chatId: number;
+    // When the URL the row was recorded from carried `/message/:id`,
+    // we persist that id plus the first line of the targeted message
+    // so the row deep-links straight back to that bubble. Different
+    // messageIds within the same chat are separate rows (see
+    // `keyForEntry`).
+    messageId?: number | null;
+    messageText?: string | null;
     label: string;
     openedAt: number;
 };
@@ -28,6 +35,11 @@ export type ThreadHistoryEntry = {
     chatType: number;
     chatId: number;
     threadId: number;
+    // When the thread URL carried `/message/:id`, we persist the id
+    // plus the first line of the targeted in-thread message. Different
+    // in-thread messageIds are separate rows.
+    messageId?: number | null;
+    messageText?: string | null;
     // First line of the parent message's plain-text content (the
     // bubble the thread hangs off of). Captured at open time so the
     // history row can show what the conversation was about — the
@@ -102,9 +114,13 @@ const STORAGE_KEY_PREFIX = "weikiy.history.v1.";
 const keyForEntry = (e: HistoryEntry): string => {
     switch (e.kind) {
         case "chat":
-            return `chat:${e.chatType}:${e.chatId}`;
+            // A deep-link open of a specific message (`/message/:id`)
+            // is its own row, separate from the plain chat open and
+            // from other messages within the same chat — that's how
+            // the user navigates back to a particular bubble.
+            return `chat:${e.chatType}:${e.chatId}:${e.messageId ?? 0}`;
         case "thread":
-            return `thread:${e.chatType}:${e.chatId}:${e.threadId}`;
+            return `thread:${e.chatType}:${e.chatId}:${e.threadId}:${e.messageId ?? 0}`;
         case "task":
             return `task:${e.taskId}`;
         case "milestone":
@@ -145,7 +161,20 @@ const readFromStorage = (teamId: string | null | undefined): HistoryEntry[] => {
         if (!raw) return [];
         const parsed = JSON.parse(raw);
         if (!Array.isArray(parsed)) return [];
-        return parsed.filter(isHistoryEntry);
+        const valid = parsed.filter(isHistoryEntry) as HistoryEntry[];
+        // Collapse any duplicates that may have been written under an
+        // older keying scheme (e.g. per-(chat, messageId)). Entries
+        // are stored newest-first, so the first occurrence of each
+        // key is the one we keep.
+        const seen = new Set<string>();
+        const deduped: HistoryEntry[] = [];
+        for (const e of valid) {
+            const k = keyForEntry(e);
+            if (seen.has(k)) continue;
+            seen.add(k);
+            deduped.push(e);
+        }
+        return deduped;
     } catch {
         // Corrupted JSON — treat as empty rather than crashing the app.
         return [];
