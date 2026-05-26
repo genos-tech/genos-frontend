@@ -86,7 +86,7 @@ export const noteTypeFromKind = (kind: NoteTabKind): NoteTypeId => {
 // number, but in practice the persisted record had no upper bound and
 // users rarely keep more than a few dozen tabs open. We add a soft cap
 // so a runaway `openTab` loop can't grow the strip without bound.
-const MAX_TABS = 100;
+const MAX_TABS = 10;
 
 // Size of the "live" editor pool — how many of the user's most recently
 // active tabs we keep mounted simultaneously (LRU). Mounted editors

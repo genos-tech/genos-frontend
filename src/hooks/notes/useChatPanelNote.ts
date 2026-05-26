@@ -20,6 +20,11 @@ import { ChatNoteMetaProps, ChatNoteProps } from "../../types/notes";
 export interface ChatPanelNoteApi {
     note: ChatNoteProps | null;
     isLoading: boolean;
+    // Tab list local to the chat panel — separate from notes-home's
+    // `tabsApi.tabs`. Each `setNote` call dedups + appends so the user
+    // can jump between recently-opened chat notes (e.g. parent ↔ child
+    // after a "Child Note" create).
+    tabs: ChatNoteProps[];
     openOrCreate: (
         chatType: number,
         chatId: number,
@@ -28,6 +33,7 @@ export interface ChatPanelNoteApi {
         chatName?: string
     ) => Promise<void>;
     setNote: (note: ChatNoteProps | null) => void;
+    closeTab: (noteId: number) => void;
     clear: () => void;
 }
 
@@ -46,13 +52,45 @@ export const useChatPanelNote = ({
 }: UseChatPanelNoteOptions): ChatPanelNoteApi => {
     const [note, setNoteState] = useState<ChatNoteProps | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [tabs, setTabs] = useState<ChatNoteProps[]>([]);
 
     const setNote = useCallback((next: ChatNoteProps | null) => {
         setNoteState(next);
+        // Mirror into the tab list: dedup by noteId, append at the end.
+        // Updating an existing tab's metadata (e.g. fresh title from
+        // auto-save) keeps the same slot, so order is stable.
+        if (next) {
+            setTabs((prev) => {
+                const idx = prev.findIndex((t) => t.noteId === next.noteId);
+                if (idx === -1) return [...prev, next];
+                const merged = [...prev];
+                merged[idx] = next;
+                return merged;
+            });
+        }
+    }, []);
+
+    const closeTab = useCallback((noteId: number) => {
+        setTabs((prev) => {
+            const idx = prev.findIndex((t) => t.noteId === noteId);
+            if (idx === -1) return prev;
+            const next = prev.filter((t) => t.noteId !== noteId);
+            // If the closed tab was the active one, promote a neighbour
+            // (prefer the one to the left, else the new first). When no
+            // tabs remain, clear the active note.
+            setNoteState((active) => {
+                if (active?.noteId !== noteId) return active;
+                if (next.length === 0) return null;
+                const neighbourIdx = Math.max(0, idx - 1);
+                return next[Math.min(neighbourIdx, next.length - 1)];
+            });
+            return next;
+        });
     }, []);
 
     const clear = useCallback(() => {
         setNoteState(null);
+        setTabs([]);
         setIsLoading(false);
     }, []);
 
@@ -93,7 +131,7 @@ export const useChatPanelNote = ({
 
                 if (chatNotes && chatNotes.length > 0) {
                     const next = chatNotes[0];
-                    setNoteState(next);
+                    setNote(next);
                     addNote(3, next);
                     await refreshMeta();
                     return;
@@ -112,7 +150,7 @@ export const useChatPanelNote = ({
                 );
                 if (created) {
                     const newNote: ChatNoteProps = { noteType: 3, ...created };
-                    setNoteState(newNote);
+                    setNote(newNote);
                     addNote(3, newNote);
                     onNoteCreated?.(newNote);
                     await refreshMeta();
@@ -123,14 +161,16 @@ export const useChatPanelNote = ({
                 setIsLoading(false);
             }
         },
-        [accessToken, myself, onNoteCreated, refreshMeta]
+        [accessToken, myself, onNoteCreated, refreshMeta, setNote]
     );
 
     return {
         note,
         isLoading,
+        tabs,
         openOrCreate,
         setNote,
+        closeTab,
         clear,
     };
 };

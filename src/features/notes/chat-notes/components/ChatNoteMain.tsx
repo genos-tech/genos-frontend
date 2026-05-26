@@ -133,6 +133,25 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
         [useNM.tabsApi]
     );
 
+    // Chat-page mode tab strip — driven by `chatPanelApi.tabs`, not by
+    // the notes-home `tabsApi`. Each click sets the active panel note.
+    const handleChatPanelTabChange = useCallback(
+        (newValue: number) => {
+            const next = useNM.chatPanelApi.tabs[newValue];
+            if (next) useNM.chatPanelApi.setNote(next);
+        },
+        [useNM.chatPanelApi]
+    );
+    const handleChatPanelCloseTab = useCallback(
+        async (_tabIndex: number, closingNoteId: number) => {
+            useNM.chatPanelApi.closeTab(closingNoteId);
+        },
+        [useNM.chatPanelApi]
+    );
+    const chatPanelActiveTabIndex = useNM.chatPanelApi.tabs.findIndex(
+        (t) => t.noteId === useNM.chatPanelApi.note?.noteId
+    );
+
     // Reset note body saved status when the selected tab index changes
     useEffect(() => {
         chatNoteEditor.setNoteBodySaved(false);
@@ -264,15 +283,26 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
 
                     <Tabs
                         sx={{ width: "100%" }}
-                        value={isInChatPage ? 0 : useNM.selectedTabIndex}
+                        value={
+                            isInChatPage
+                                ? Math.max(0, chatPanelActiveTabIndex)
+                                : useNM.selectedTabIndex
+                        }
                         onChange={(_, val) => {
-                            if (!isInChatPage) handleTabChange(Number(val));
+                            if (isInChatPage) {
+                                handleChatPanelTabChange(Number(val));
+                            } else {
+                                handleTabChange(Number(val));
+                            }
                         }}
                     >
-                        {/* The chat-page panel renders a single note,
-                         * so we hide the multi-tab strip there. The
-                         * notes-home rendering keeps the strip and
-                         * drives it off the new tabsApi. */}
+                        {/* Chat-page panel keeps its own isolated tab
+                         * list (driven by `chatPanelApi.tabs`) so users
+                         * can flip between a parent note and the child
+                         * they just created from the header. Notes-home
+                         * uses the cross-kind `useNM.tabItems` instead.
+                         * The strip is hidden when there are 0–1 tabs
+                         * (no value to add). */}
                         {!isInChatPage && (
                             <ChatNoteTabList
                                 selectedTabIndex={useNM.selectedTabIndex}
@@ -280,10 +310,17 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                 onCloseTab={handleCloseTab}
                             />
                         )}
+                        {isInChatPage && useNM.chatPanelApi.tabs.length > 1 && (
+                            <ChatNoteTabList
+                                selectedTabIndex={Math.max(0, chatPanelActiveTabIndex)}
+                                tabItems={useNM.chatPanelApi.tabs}
+                                onCloseTab={handleChatPanelCloseTab}
+                            />
+                        )}
 
                         {/* Chat-page mode renders its own editor inline
-                         * (no LRU pool here — chatPanelApi drives a
-                         * single note). Notes-home mode's editors live
+                         * (no LRU pool here — chatPanelApi drives the
+                         * active note). Notes-home mode's editors live
                          * in the pool rendered by NoteContentRenderer
                          * for cross-tab keepalive. The `chatNoteEditor`
                          * hook is fed `null` in notes-home mode, so
@@ -292,7 +329,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                         {isInChatPage && activeChatNote && chatNoteEditor.body && (
                             <TabPanel
                                 key={`tab-note-body-${activeChatNote.noteType}-${activeChatNote.noteId}`}
-                                value={0}
+                                value={Math.max(0, chatPanelActiveTabIndex)}
                                 sx={{
                                     paddingX: "5px",
                                     paddingTop: "0px",
