@@ -49,7 +49,7 @@ export const setupWebSocketHandlers = (
         // try/catch.
         if (notificationManager) {
             try {
-                const intent = buildIntentFromMessage(message, myself, useTEM);
+                const intent = buildIntentFromMessage(message, myself, useTEM, useCM);
                 if (intent) notificationManager.notify(intent);
             } catch (err) {
                 console.warn("[notifications] router error", err);

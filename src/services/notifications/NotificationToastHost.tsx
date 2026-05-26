@@ -5,8 +5,6 @@ import { useColorScheme } from "@mui/joy/styles";
 
 import { NotificationIntent } from "./types";
 
-const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
-
 interface NotificationToastHostProps {
     /** Subscribe-fn from `useNotifications().subscribeToasts` (or the
      *  manager's `subscribeToasts`). */
@@ -92,7 +90,12 @@ export const NotificationToastHost = ({
                     sx={{ width: "100%" }}
                 >
                     {active.icon ? (
-                        <Avatar src={`${media_url}/${active.icon}`} size="md" />
+                        // `intent.icon` is already a fully-qualified URL
+                        // produced by `buildAvatarSrc` in the router — do
+                        // not prepend the media root again, or the URL
+                        // becomes `${media}/${media}/...` and Avatar
+                        // silently falls back to the initials.
+                        <Avatar src={active.icon} size="md" />
                     ) : (
                         <Avatar size="md">{active.title?.[0] ?? "?"}</Avatar>
                     )}
