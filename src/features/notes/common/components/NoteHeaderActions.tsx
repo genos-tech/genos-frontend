@@ -25,6 +25,7 @@ import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 import { TaskProps } from "../../../../types/tasks";
 import { isMac } from "../../../../utils/platform";
+import { formatTaskDisplayId } from "../../../tasks/utils/taskDisplayId";
 import { getMyNoteRoleId, NOTE_ROLE_OWNER } from "../utils/noteRoles";
 import { ModalNoteSharing } from "./ModalNoteSharing";
 
@@ -265,11 +266,11 @@ export const NoteHeaderActions = ({
                                 title={
                                     currentTask.title
                                         ? fmt(t.notes.header.openTaskTooltipWithTitle, {
-                                              id: currentTask.id,
+                                              id: formatTaskDisplayId(currentTask),
                                               title: currentTask.title,
                                           })
                                         : fmt(t.notes.header.openTaskTooltip, {
-                                              id: currentTask.id,
+                                              id: formatTaskDisplayId(currentTask),
                                           })
                                 }
                             >
@@ -279,11 +280,11 @@ export const NoteHeaderActions = ({
                                     aria-label={
                                         currentTask.title
                                             ? fmt(t.notes.header.openTaskAriaWithTitle, {
-                                                  id: currentTask.id,
+                                                  id: formatTaskDisplayId(currentTask),
                                                   title: currentTask.title,
                                               })
                                             : fmt(t.notes.header.openTaskAria, {
-                                                  id: currentTask.id,
+                                                  id: formatTaskDisplayId(currentTask),
                                               })
                                     }
                                     sx={{
@@ -323,7 +324,9 @@ export const NoteHeaderActions = ({
                                             letterSpacing: "-0.01em",
                                         }}
                                     >
-                                        {fmt(t.notes.header.taskIdLabel, { id: currentTask.id })}
+                                        {fmt(t.notes.header.taskIdLabel, {
+                                            id: formatTaskDisplayId(currentTask),
+                                        })}
                                     </Typography>
 
                                     {/* Title section */}
