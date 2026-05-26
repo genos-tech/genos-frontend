@@ -54,6 +54,7 @@ import {
     TaskNodeData,
 } from "../types";
 import { computeHealth, getMilestoneWindow } from "../utils/scheduleStatus";
+import { sortDiagramTasks } from "../utils/sortDiagramTasks";
 import { DependencyEdge } from "./DependencyEdge";
 import { DiagramLegend } from "./DiagramLegend";
 import { MilestoneNodeCard } from "./MilestoneNodeCard";
@@ -380,9 +381,22 @@ const buildNodesAndEdges = (
     // works.
     const visibleExternalTasks = graph.externalTasks.filter((t) => !isDeleted(t.status));
 
+    // Pre-sort so each parent's sibling columns render ordered by task
+    // id and so blocker/blocked sibling pairs sit adjacent (blocker
+    // left of blocked). sortDiagramTasks returns each sibling group
+    // in REVERSE of the desired visual order to compensate for dagre
+    // v3's order phase, which places the LAST-added successor at the
+    // leftmost column. The structure-edges loop below walks this
+    // array verbatim when calling setEdge, so the desired-leftmost
+    // sibling is added last and ends up on the left.
+    const sortedInternalTasks = sortDiagramTasks(visibleInternalTasks, graph.dependencyEdges);
+    const sortedExternalTasks = [...visibleExternalTasks].sort(
+        (a, b) => Number(a.id) - Number(b.id)
+    );
+
     const nodes: Node[] = [
-        ...visibleInternalTasks.map((t) => makeNode(t, false)),
-        ...visibleExternalTasks.map((t) => makeNode(t, true)),
+        ...sortedInternalTasks.map((t) => makeNode(t, false)),
+        ...sortedExternalTasks.map((t) => makeNode(t, true)),
     ];
 
     // Structure edges from parent_task_id (visible-tree only —
@@ -392,8 +406,11 @@ const buildNodesAndEdges = (
     // parent become root-level siblings in dagre — acceptable since
     // their original parent has gone away from the user's view.
     const structureEdges: Edge[] = [];
-    const visibleIdSet = new Set(visibleInternalTasks.map((t) => Number(t.id)));
-    for (const task of visibleInternalTasks) {
+    const visibleIdSet = new Set(sortedInternalTasks.map((t) => Number(t.id)));
+    // Iterate the SORTED list so setEdge call order reflects the
+    // desired sibling column ordering (see sortDiagramTasks for the
+    // dagre-quirk reversal).
+    for (const task of sortedInternalTasks) {
         const taskId = Number(task.id);
         const parentId = task.parentTaskId == null ? null : Number(task.parentTaskId);
         if (parentId == null || !visibleIdSet.has(parentId)) continue;
