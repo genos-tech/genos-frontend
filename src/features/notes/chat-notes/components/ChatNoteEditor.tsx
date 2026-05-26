@@ -100,7 +100,7 @@ export const ChatNoteEditor = ({
                     sx={{
                         position: "absolute",
                         top: "52.5px",
-                        right: "8%",
+                        right: "9%",
                         transform: "translateX(-50%)",
                         zIndex: 100,
                     }}

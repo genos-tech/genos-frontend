@@ -8,6 +8,9 @@ import { EditableNote, saveNote } from "../services/saveNote";
 // Debounce delay between the user's last body edit and the auto-save firing.
 const AUTO_SAVE_DELAY_MS = 3000;
 
+// How long the "saved" indicator stays visible after a successful save.
+const SAVED_INDICATOR_DURATION_MS = 5000;
+
 export interface UseNoteEditorCoreProps<T extends EditableNote> {
     currentNote: T | null;
     myself: UserProps;
@@ -177,6 +180,18 @@ export function useNoteEditorCore<T extends EditableNote>({
             }
         };
     }, []);
+
+    // Auto-clear the "saved" indicator after a short delay so it behaves
+    // like a transient confirmation rather than a sticky badge.
+    useEffect(() => {
+        if (!noteBodySaved) return;
+
+        const timerId = setTimeout(() => {
+            setNoteBodySaved(false);
+        }, SAVED_INDICATOR_DURATION_MS);
+
+        return () => clearTimeout(timerId);
+    }, [noteBodySaved]);
 
     const handleTitleChange = useCallback((value: string) => {
         setTitle(value);

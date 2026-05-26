@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 
 import { TaskEditStateManagement } from "../../types/taskEditState";
 import { AttachmentFileProps, TaskProps } from "../../types/tasks";
+
+// How long the "saved" indicator stays visible after a successful save.
+const SAVED_INDICATOR_DURATION_MS = 5000;
 
 /**
  * Custom hook to manage task edit state
@@ -29,6 +32,18 @@ export const useTaskEditState = (
     const [body, setBody] = useState<PartialBlock[]>(currentTask?.body || []);
     const [currentTaskId, setCurrentTaskId] = useState<number | undefined>(currentTask?.id);
     const [initTaskTitle, setInitTaskTitle] = useState<string>(currentTask?.title || "");
+
+    // Auto-clear the "saved" indicator after a short delay so it behaves
+    // like a transient confirmation rather than a sticky badge.
+    useEffect(() => {
+        if (!taskBodySaved) return;
+
+        const timerId = setTimeout(() => {
+            setTaskBodySaved(false);
+        }, SAVED_INDICATOR_DURATION_MS);
+
+        return () => clearTimeout(timerId);
+    }, [taskBodySaved]);
 
     return {
         // State values
