@@ -39,10 +39,23 @@ export function useNoteTreeState<T extends BaseNoteTreeNode>({
         }
     }, [metaTree, selectedTabIndex, tmpMetaTree]);
 
-    // Update timestamp when selected tab changes
+    // Update timestamp when the selected tab changes. Used as part of
+    // each tree row's React `key` so a real switch invalidates memo'd
+    // subtrees.
+    //
+    // The earlier `timestamp.slice(1)` trick assumed selectedTabIndex
+    // was always a single digit — it stripped exactly one leading char
+    // and prepended the current index. Once the user opened the 11th
+    // tab (selectedTabIndex >= 10) the prepended prefix was longer
+    // than the stripped one, the result fed back through this effect's
+    // `timestamp` dep, and the string grew by a digit every iteration
+    // until React's max-update-depth tripped. Generating a fresh
+    // timestamp avoids the splice math entirely and removes `timestamp`
+    // from the dep list, so this effect is now strictly one-shot per
+    // tab change.
     useEffect(() => {
-        setTimestamp(String(selectedTabIndex) + timestamp.slice(1));
-    }, [selectedTabIndex, timestamp]);
+        setTimestamp(String(selectedTabIndex) + getLocalCurrentTimestamp());
+    }, [selectedTabIndex]);
 
     // Initialize timestamp after 1 second
     useEffect(() => {

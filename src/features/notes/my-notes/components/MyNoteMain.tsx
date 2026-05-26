@@ -1,21 +1,20 @@
-import { useCallback, useEffect, useState } from "react";
-import { Stack, TabPanel, Tabs } from "@mui/joy";
+import { useCallback, useMemo, useState } from "react";
+import { Stack, Tabs } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
-import { useNoteEditor } from "../../../../hooks/notes/useNoteEditor";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import type { NoteTab } from "../../../../hooks/notes/useNoteTabs";
 import { UserProps } from "../../../../types/admin";
-import { MyNoteProps } from "../../../../types/notes";
 import { EmptyState } from "../../common/components/EmptyState";
-import { NoteEditor } from "../../common/components/NoteEditor";
 import { NoteHeaderActions } from "../../common/components/NoteHeaderActions";
 import { NoteTabList } from "../../common/components/NoteTabList";
 import { MyNoteHeader } from "../components/MyNoteHeader";
 import { ModalDeleteMyNote } from "../modals/ModalDeleteMyNote";
+import { MyNoteEditorPanel } from "./MyNoteEditorPanel";
 
 /**
  * Props for the MyNoteMain component
@@ -45,39 +44,24 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
     const { accessToken } = useAuth();
     const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
 
-    // Custom hooks for note management
-    const noteEditor = useNoteEditor({
-        currentMyNote: useNM.currentMyNote,
-        myself,
-        accessToken,
-        socket,
-        resyncSignal: useNM.noteResyncNonce,
-        onNoteUpdate: (updatedNote: MyNoteProps) => {
-            // Push the latest title into the new tabs API so the strip
-            // re-renders without going through the legacy
-            // `setTabItems`/`setCurrent*Note` round-trip (which is what
-            // caused the "snap-back" bug).
-            useNM.tabsApi.updateTabTitle(updatedNote.noteId, "my", updatedNote.title);
-
-            useNM.setMyNoteMeta(
-                useNM.myNoteMeta.map((item) =>
-                    item.noteType === updatedNote.noteType && item.noteId === updatedNote.noteId
-                        ? {
-                              noteType: updatedNote.noteType,
-                              noteId: updatedNote.noteId,
-                              parentNoteId: updatedNote.parentNoteId,
-                              title: updatedNote.title,
-                              tsUpdated: updatedNote.tsUpdated,
-                          }
-                        : item
-                )
-            );
-
-            // Optimistically flip the history chip to "by me · just now"
-            // without waiting for a full version refetch.
-            useNM.bumpNoteVersionsHead(updatedNote.noteType, updatedNote.noteId);
-        },
-    });
+    // In task-page mode MyNoteMain renders standalone — the editor pool
+    // lives in `NoteContentRenderer`, which is only mounted on
+    // notes-home. So we render a single inline editor panel for the
+    // active my note here. Derived from `currentMyNote` so the body
+    // still renders during the brief sync gap after a tab switch.
+    const inlineMyTab = useMemo<(NoteTab & { kind: "my" }) | null>(() => {
+        if (!isInTaskPage) return null;
+        const n = useNM.currentMyNote;
+        if (!n || !myself.teamId) return null;
+        return {
+            kind: "my",
+            noteType: 1,
+            noteId: n.noteId,
+            id: `my-${n.noteId}`,
+            title: n.title,
+            teamId: myself.teamId,
+        };
+    }, [isInTaskPage, useNM.currentMyNote, myself.teamId]);
 
     // The notes-home tab strip mixes all kinds (my/task/chat) into a
     // single bar, so the close handler must derive the kind from the
@@ -102,11 +86,6 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
         },
         [useNM.tabsApi]
     );
-
-    // Reset note body saved status when the selected tab index changes
-    useEffect(() => {
-        noteEditor.setNoteBodySaved(false);
-    }, [useNM.selectedTabIndex]);
 
     // Event handlers
     const handleCreateNewNote = () => {
@@ -151,118 +130,107 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
         return null;
     }
 
+    // This component renders the header + tab strip ONLY. The actual
+    // BlockNote editor body lives in the editor pool below it (rendered
+    // by NoteContentRenderer), so that switching tabs across kinds
+    // doesn't unmount mounted editors.
     return (
         <Stack direction={"column"} sx={{ width: "100%" }}>
-            {noteEditor.body && (
-                <>
-                    {useNM.currentNoteType !== 0 && (
-                        <Stack direction={"column"} sx={{ width: "100%" }}>
-                            <Stack
-                                alignItems="center"
-                                direction="row"
-                                justifyContent="space-between"
-                                sx={{
-                                    width: "100%",
-                                    height: "30px",
-                                    mt: "10px",
-                                    mb: "5px",
-                                }}
-                            >
-                                <MyNoteHeader
-                                    useNM={useNM}
-                                    myself={myself}
-                                    setMyself={setMyself}
-                                    socket={socket}
-                                    useCM={useCM}
-                                    useUISM={useUISM}
-                                />
+            {useNM.currentNoteType !== 0 && (
+                <Stack direction={"column"} sx={{ width: "100%" }}>
+                    <Stack
+                        alignItems="center"
+                        direction="row"
+                        justifyContent="space-between"
+                        sx={{
+                            width: "100%",
+                            height: "30px",
+                            // Task-page panel wraps this Main with its
+                            // own header zone, so we pull up by 15px to
+                            // sit flush with that surround. Notes-home
+                            // uses the standard 10px top gap.
+                            mt: isInTaskPage ? "-15px" : "10px",
+                            mb: "5px",
+                        }}
+                    >
+                        <MyNoteHeader
+                            myself={myself}
+                            setMyself={setMyself}
+                            socket={socket}
+                            useCM={useCM}
+                            useNM={useNM}
+                            useUISM={useUISM}
+                        />
 
-                                <NoteHeaderActions
-                                    useCM={useCM}
-                                    useNM={useNM}
-                                    currentTask={undefined}
-                                    isInTaskPage={isInTaskPage}
-                                    myself={myself}
-                                    noteType={1}
-                                    pmChat={undefined}
-                                    setMyself={setMyself}
-                                    socket={socket}
-                                    useTEM={useTEM}
-                                    useUISM={useUISM}
-                                    onCloseNotes={() => {
-                                        useNM.setIsTaskNoteVisible(false);
-                                    }}
-                                    onCopyNoteLink={handleCopyNoteLink}
-                                    onCreateChildNote={handleCreateChildNote}
-                                    onCreateNewNote={handleCreateNewNote}
-                                    onDeleteNote={handleDeleteNote}
-                                    onOpenTask={() => {}}
-                                />
+                        <NoteHeaderActions
+                            currentTask={undefined}
+                            isInTaskPage={isInTaskPage}
+                            myself={myself}
+                            noteType={1}
+                            pmChat={undefined}
+                            setMyself={setMyself}
+                            socket={socket}
+                            useCM={useCM}
+                            useNM={useNM}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
+                            onCopyNoteLink={handleCopyNoteLink}
+                            onCreateChildNote={handleCreateChildNote}
+                            onCreateNewNote={handleCreateNewNote}
+                            onDeleteNote={handleDeleteNote}
+                            onOpenTask={() => {}}
+                            onCloseNotes={() => {
+                                useNM.setIsTaskNoteVisible(false);
+                            }}
+                        />
 
-                                {useNM.currentMyNote && (
-                                    <ModalDeleteMyNote
-                                        handleCloseTab={handleCloseTab}
-                                        myself={myself}
-                                        openDeleteNote={openDeleteNote}
-                                        setOpenDeleteNote={setOpenDeleteNote}
-                                        myNoteMeta={useNM.myNoteMeta}
-                                        setMyNoteMeta={useNM.setMyNoteMeta}
-                                        currentMyNote={useNM.currentMyNote}
-                                        currentTabIndex={useNM.selectedTabIndex}
-                                    />
-                                )}
-                            </Stack>
+                        {useNM.currentMyNote && (
+                            <ModalDeleteMyNote
+                                currentMyNote={useNM.currentMyNote}
+                                currentTabIndex={useNM.selectedTabIndex}
+                                handleCloseTab={handleCloseTab}
+                                myNoteMeta={useNM.myNoteMeta}
+                                myself={myself}
+                                openDeleteNote={openDeleteNote}
+                                setMyNoteMeta={useNM.setMyNoteMeta}
+                                setOpenDeleteNote={setOpenDeleteNote}
+                            />
+                        )}
+                    </Stack>
 
-                            <Tabs
-                                sx={{ width: "100%" }}
-                                value={useNM.selectedTabIndex}
-                                onChange={(_, val) => {
-                                    handleTabChange(Number(val));
-                                }}
-                            >
-                                <NoteTabList useNM={useNM} onCloseTab={handleCloseTab} />
+                    <Tabs
+                        sx={{ width: "100%" }}
+                        value={useNM.selectedTabIndex}
+                        onChange={(_, val) => {
+                            handleTabChange(Number(val));
+                        }}
+                    >
+                        <NoteTabList useNM={useNM} onCloseTab={handleCloseTab} />
+                    </Tabs>
 
-                                {/* Render exactly one editor (not one per tab). The tab
-                                 * strip lives in <NoteTabList> above; the body content
-                                 * is a singleton because `useNM.currentMyNote` is too.
-                                 * Keying by `noteType-noteId` remounts the BlockNote
-                                 * editor + Hocuspocus provider only when the user
-                                 * actually switches notes — which is what kills the
-                                 * old N-editor remount storm that caused the lag. */}
-                                {useNM.currentMyNote && (
-                                    <TabPanel
-                                        key={`tab-note-body-${useNM.currentMyNote.noteType}-${useNM.currentMyNote.noteId}`}
-                                        value={useNM.selectedTabIndex}
-                                        sx={{
-                                            paddingX: "5px",
-                                            paddingTop: "0px",
-                                            paddingBottom: "5px",
-                                        }}
-                                    >
-                                        <NoteEditor
-                                            body={noteEditor.body}
-                                            useCM={useCM}
-                                            useNM={useNM}
-                                            myself={myself}
-                                            noteBodySaved={noteEditor.noteBodySaved}
-                                            setMyself={setMyself}
-                                            setNoteBodyEdited={noteEditor.setNoteBodyEdited}
-                                            setNoteBodySaved={noteEditor.setNoteBodySaved}
-                                            socket={socket}
-                                            useTEM={useTEM}
-                                            titleInputRef={noteEditor.titleInputRef}
-                                            useUISM={useUISM}
-                                            currentMyNoteTitle={noteEditor.currentMyNoteTitle}
-                                            onBodyChange={noteEditor.handleBodyChange}
-                                            onTitleBlur={noteEditor.handleTitleBlur}
-                                            onTitleChange={noteEditor.handleTitleChange}
-                                        />
-                                    </TabPanel>
-                                )}
-                            </Tabs>
-                        </Stack>
+                    {/* Task-page inline editor — task-page panel is
+                        single-note, so this is one panel, always
+                        active. Notes-home renders editors via the LRU
+                        pool in NoteContentRenderer instead. The `key`
+                        forces remount on note id change (parent → child)
+                        — BlockNote uses `body` as an initial value and
+                        wouldn't pick up the new doc otherwise. */}
+                    {isInTaskPage && inlineMyTab && (
+                        <MyNoteEditorPanel
+                            key={inlineMyTab.id}
+                            accessToken={accessToken}
+                            isActive
+                            myself={myself}
+                            setMyself={setMyself}
+                            socket={socket}
+                            tab={inlineMyTab}
+                            useCM={useCM}
+                            useNM={useNM}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
+                        />
                     )}
-                </>
+                </Stack>
             )}
         </Stack>
     );

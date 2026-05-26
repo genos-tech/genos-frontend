@@ -1,21 +1,20 @@
-import { useCallback, useEffect, useState } from "react";
-import { Box, IconButton, Stack } from "@mui/joy";
+import { useCallback, useMemo, useState } from "react";
+import { Box, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
-import { upsertNoteCache } from "../../../../hooks/notes/useNoteData";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import type { NoteTab } from "../../../../hooks/notes/useNoteTabs";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
-import { TaskNoteProps } from "../../../../types/notes";
 import { NoteHeaderActions } from "../../common/components/NoteHeaderActions";
-import { useNoteAutoSave } from "../../common/hooks/useNoteAutoSave";
 import { useTaskPreview } from "../../common/hooks/useTaskPreview";
 import { ModalDeleteTaskNote } from "../modals/ModalDeleteTaskNote";
 import { ACTaskNotes } from "./autocompletes/ACTaskNotes";
+import { TaskNoteEditorPanel } from "./TaskNoteEditorPanel";
 import { TaskNoteHeader } from "./TaskNoteHeader";
 import { TaskNoteTabs } from "./TaskNoteTabs";
 
@@ -51,57 +50,15 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
     const [openSearchBox, setOpenSearchBox] = useState(false);
     const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
 
-    // Custom hooks
-    const {
-        noteBodySaved,
-        setNoteBodyEdited,
-        setNoteBodySaved,
-        body,
-        setBody,
-        currentTaskNoteTitle,
-        handleTitleChange,
-        handleTitleBlur,
-    } = useNoteAutoSave({
-        currentTaskNote: useNM.currentTaskNote,
-        myself,
-        accessToken: accessToken || "",
-        socket,
-        resyncSignal: useNM.noteResyncNonce,
-        onNoteUpdate: (updatedNote: TaskNoteProps) => {
-            // Push the latest title into the new tabs API so the strip
-            // re-renders without going through the legacy
-            // `setTabItems`/`setCurrent*Note` round-trip.
-            useNM.tabsApi.updateTabTitle(updatedNote.noteId, "task", updatedNote.title);
-
-            useNM.setTaskNoteMeta(
-                useNM.taskNoteMeta.map((item) =>
-                    item.noteType === updatedNote.noteType && item.noteId === updatedNote.noteId
-                        ? { ...item, title: updatedNote.title }
-                        : item
-                )
-            );
-
-            // Cache write-through and mirror into the legacy `currentTaskNote`
-            // field so other consumers (header, breadcrumbs, etc.) read the
-            // freshest title without a refetch.
-            upsertNoteCache(updatedNote);
-            useNM.setCurrentTaskNote(updatedNote);
-
-            // Optimistically flip the history chip to "by me · just now".
-            useNM.bumpNoteVersionsHead(updatedNote.noteType, updatedNote.noteId);
-        },
-    });
-
+    // The BlockNote editor + autosave hook now lives in
+    // `TaskNoteEditorPanel`, one instance per live tab. This Main owns
+    // only the active-tab-bound chrome: header, modal, task-preview link.
     const { currentTask } = useTaskPreview({
         currentTaskNote: useNM.currentTaskNote,
         myself,
         accessToken: accessToken || "",
         setCurrentPreviewTask: useTM.setCurrentPreviewTask,
     });
-
-    useEffect(() => {
-        setNoteBodySaved(false);
-    }, [useNM.selectedTabIndex]);
 
     // The notes-home tab strip mixes all kinds (my/task/chat). Look up
     // the tab by index in `tabsApi.tabs` so we close the right one,
@@ -166,6 +123,29 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
             chat.chatId === useNM.currentTaskNote.projectId
     );
 
+    // In task-page mode TaskNoteMain renders standalone — the editor
+    // pool lives in `NoteContentRenderer`, which is only mounted on
+    // notes-home. So we render a single inline editor panel for the
+    // active task tab here. We derive the tab from `currentTaskNote`
+    // (set by `setCurrentTaskNote` in the active-tab sync effect) rather
+    // than from `tabsApi.activeTabId` so the body still renders during
+    // the brief sync gap right after a tab switch.
+    const inlineTaskTab = useMemo<(NoteTab & { kind: "task" }) | null>(() => {
+        if (!isInTaskPage) return null;
+        const n = useNM.currentTaskNote;
+        if (!n || !myself.teamId) return null;
+        return {
+            kind: "task",
+            noteType: 2,
+            noteId: n.noteId,
+            projectId: n.projectId,
+            taskId: n.taskId,
+            id: `task-${n.noteId}`,
+            title: n.title,
+            teamId: myself.teamId,
+        };
+    }, [isInTaskPage, useNM.currentTaskNote, myself.teamId]);
+
     // If tabs exist but currentTaskNote is not loaded yet, return null
     if (useNM.currentTaskNote === null) {
         return null;
@@ -173,7 +153,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
 
     return (
         <Stack direction={"column"} sx={{ width: "100%" }}>
-            {body && useNM.currentNoteType !== 0 && (
+            {useNM.currentNoteType !== 0 && (
                 <>
                     {/* Note Header */}
                     <Stack
@@ -206,18 +186,16 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
 
                         {isInTaskPage === false && (
                             <TaskNoteHeader
-                                useNM={useNM}
                                 myself={myself}
                                 setMyself={setMyself}
                                 socket={socket}
                                 useCM={useCM}
+                                useNM={useNM}
                                 useUISM={useUISM}
                             />
                         )}
 
                         <NoteHeaderActions
-                            useCM={useCM}
-                            useNM={useNM}
                             currentTask={currentTask}
                             isInTaskPage={isInTaskPage}
                             myself={myself}
@@ -225,6 +203,8 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                             pmChat={pmChat}
                             setMyself={setMyself}
                             socket={socket}
+                            useCM={useCM}
+                            useNM={useNM}
                             useTEM={useTEM}
                             useUISM={useUISM}
                             onCloseNotes={handleCloseNotes}
@@ -246,24 +226,36 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                         )}
                     </Stack>
 
-                    <TaskNoteTabs
-                        body={body}
-                        useCM={useCM}
-                        useNM={useNM}
-                        currentTaskNoteTitle={currentTaskNoteTitle}
-                        myself={myself}
-                        noteBodySaved={noteBodySaved}
-                        setBody={setBody}
-                        setMyself={setMyself}
-                        setNoteBodyEdited={setNoteBodyEdited}
-                        setNoteBodySaved={setNoteBodySaved}
-                        socket={socket}
-                        useTEM={useTEM}
-                        useUISM={useUISM}
-                        onCloseTab={handleCloseTab}
-                        onTitleBlur={handleTitleBlur}
-                        onTitleChange={handleTitleChange}
-                    />
+                    {/* Just the tab strip — in notes-home mode the
+                        editor body comes from the LRU pool in
+                        NoteContentRenderer; in task-page mode we render
+                        a single inline panel just below. */}
+                    <TaskNoteTabs useNM={useNM} onCloseTab={handleCloseTab} />
+
+                    {/* Task-page inline editor — task-page panel is
+                        single-note, so this is one panel, always
+                        active. The `key` is critical: BlockNote
+                        treats `body` as an initial value and won't
+                        sync subsequent body changes from props, so a
+                        switch from parent → child note (e.g. via the
+                        header's "Child Note" action) must force a
+                        full remount, otherwise the editor keeps
+                        showing the parent's document. */}
+                    {isInTaskPage && inlineTaskTab && (
+                        <TaskNoteEditorPanel
+                            key={inlineTaskTab.id}
+                            accessToken={accessToken}
+                            isActive
+                            myself={myself}
+                            setMyself={setMyself}
+                            socket={socket}
+                            tab={inlineTaskTab}
+                            useCM={useCM}
+                            useNM={useNM}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
+                        />
+                    )}
                 </>
             )}
         </Stack>

@@ -168,7 +168,12 @@ export interface NoteManagementState {
     isNodeExpanded: (noteType: number, noteId: number) => boolean;
     toggleNodeExpanded: (noteType: number, noteId: number) => void;
 
-    // Note creation functions
+    // Note creation functions. `handleCreateNewChatNote` returns the
+    // freshly created note so the chat-page panel (which mirrors a
+    // separate `chatPanelApi.note` instead of `useNM.currentChatNote`)
+    // can pipe it into `chatPanelApi.setNote(...)` — otherwise creating
+    // a child note from the chat-page header doesn't repoint the panel
+    // at the new note.
     handleCreateNewChatNote: (
         parentNoteId: number | null,
         chatType: number,
@@ -176,7 +181,7 @@ export interface NoteManagementState {
         isThread: boolean,
         threadId: number,
         chatName?: string
-    ) => Promise<void>;
+    ) => Promise<ChatNoteProps | null>;
 
     handleCreateNewChatNoteIfNotExist: (
         chatType: number,
@@ -354,8 +359,8 @@ export const useNoteManagement = (
         isThread: boolean,
         threadId: number,
         chatName?: string
-    ) => {
-        if (!accessToken) return;
+    ): Promise<ChatNoteProps | null> => {
+        if (!accessToken) return null;
 
         try {
             const title = `${parentNoteId ? "Child" : "New"} Chat Note (${
@@ -385,9 +390,12 @@ export const useNoteManagement = (
                 if (freshMeta.length > 0) {
                     setChatNoteMeta(freshMeta);
                 }
+                return chatNote;
             }
+            return null;
         } catch (error) {
             console.error("Error creating chat note:", error);
+            return null;
         }
     };
 

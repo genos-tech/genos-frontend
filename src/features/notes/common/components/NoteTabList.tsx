@@ -24,12 +24,6 @@ export const NoteTabList = ({ useNM, onCloseTab }: NoteTabListProps) => {
     const scrollStateRef = useRef({ left: false, right: false });
     const checkScheduledRef = useRef(false);
     const lastCheckTimeRef = useRef(0);
-    // Track the last tab's identity to detect when a new tab is added
-    const getLastTabKey = (items: typeof useNM.tabItems) =>
-        items.length > 0
-            ? `${items[items.length - 1].noteType}-${items[items.length - 1].noteId}`
-            : "";
-    const prevLastTabKeyRef = useRef<string>(getLastTabKey(useNM.tabItems));
 
     // Single effect that handles all scroll detection
     useEffect(() => {
@@ -106,31 +100,47 @@ export const NoteTabList = ({ useNM, onCloseTab }: NoteTabListProps) => {
         };
     }, []); // Empty dependency array - only run on mount/unmount
 
-    // Effect to scroll to right when new tab is added (detected by last tab key change)
-    const lastTabKey = getLastTabKey(useNM.tabItems);
+    // Keep the active tab visible in the strip. Fires whenever the
+    // active selection changes (new tab opened → becomes active,
+    // existing tab clicked, tab closed → neighbour promotes) or the
+    // tab count changes (so removal-induced index shifts also recenter).
+    // Replaces the old "scroll to right end on new tab" effect, which
+    // missed two important cases:
+    //   - clicking an existing tab off-screen
+    //   - opening a tab that's not at the strip's right edge
+    // Joy renders each Tab as `<button role="tab">`, so we locate the
+    // target by index without threading per-tab refs through every Tab.
     useEffect(() => {
         const container = scrollContainerRef.current;
-        const prevLastTabKey = prevLastTabKeyRef.current;
+        const tabList = tabListRef.current;
+        if (!container || !tabList) return;
+        const idx = useNM.selectedTabIndex;
+        if (idx < 0) return;
 
-        // Update the ref with current last tab key
-        prevLastTabKeyRef.current = lastTabKey;
-
-        // If the last tab changed and it's not empty, a new tab was added - scroll to the right
-        if (
-            lastTabKey !== prevLastTabKey &&
-            lastTabKey !== "" &&
-            prevLastTabKey !== "" &&
-            container
-        ) {
-            const timeoutId = setTimeout(() => {
+        const timeoutId = setTimeout(() => {
+            const target = tabList.querySelectorAll<HTMLElement>('[role="tab"]')[idx];
+            if (!target) return;
+            const containerRect = container.getBoundingClientRect();
+            const targetRect = target.getBoundingClientRect();
+            // 12px padding so the active tab isn't flush against the
+            // scroll button / edge — keeps the close-X hoverable.
+            const padding = 12;
+            if (targetRect.left < containerRect.left + padding) {
                 container.scrollTo({
-                    left: container.scrollWidth - container.clientWidth,
+                    left: container.scrollLeft + (targetRect.left - containerRect.left) - padding,
                     behavior: "smooth",
                 });
-            }, 100);
-            return () => clearTimeout(timeoutId);
-        }
-    }, [lastTabKey]);
+            } else if (targetRect.right > containerRect.right - padding) {
+                container.scrollTo({
+                    left:
+                        container.scrollLeft + (targetRect.right - containerRect.right) + padding,
+                    behavior: "smooth",
+                });
+            }
+            // Tabs that are already visible: no scroll needed.
+        }, 80);
+        return () => clearTimeout(timeoutId);
+    }, [useNM.selectedTabIndex, useNM.tabItems.length]);
 
     const scroll = (direction: "left" | "right") => {
         const el = scrollContainerRef.current;

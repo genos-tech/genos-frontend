@@ -1,85 +1,39 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { PartialBlock } from "@blocknote/core";
-import CheckIcon from "@mui/icons-material/Check";
 import ChevronLeftRoundedIcon from "@mui/icons-material/ChevronLeftRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
-import NoteAltIcon from "@mui/icons-material/NoteAlt";
 import {
     Box,
-    Chip,
-    FormControl,
     IconButton,
-    Input,
     Tab,
     TabList,
-    TabPanel,
     Tabs,
     Tooltip,
     Typography,
     useColorScheme,
 } from "@mui/joy";
 
-import { BnTaskNoteEditor } from "../../../../components/editors/bnTaskNoteEditor";
-import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
-import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
-import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
-import { useTranslation } from "../../../../i18n";
 
 interface TaskNoteTabsProps {
     useNM: NoteManagementState;
-    body: PartialBlock[] | undefined;
-    noteBodySaved: boolean;
-    myself: any;
-    setBody: (body: PartialBlock[]) => void;
-    useCM: ChatManagementState;
-    setMyself: (me: any) => void;
-    setNoteBodyEdited: (edited: boolean) => void;
-    setNoteBodySaved: (saved: boolean) => void;
-    useUISM: UIStateManagementState;
-    socket: any;
-    useTEM: TeamManagementState;
     onCloseTab: (tabIndex: number, closingNoteId: number) => void;
-    onTitleChange: (title: string) => void;
-    onTitleBlur: () => void;
-    currentTaskNoteTitle: string;
 }
 
-export const TaskNoteTabs = ({
-    useNM,
-    body,
-    noteBodySaved,
-    myself,
-    setBody,
-    useCM,
-    setMyself,
-    setNoteBodyEdited,
-    setNoteBodySaved,
-    useUISM,
-    socket,
-    useTEM,
-    onCloseTab,
-    onTitleChange,
-    onTitleBlur,
-    currentTaskNoteTitle,
-}: TaskNoteTabsProps) => {
-    const titleInputRef = useRef<HTMLInputElement | null>(null);
+// Tab strip for the task-notes view. The editor body (title input,
+// "saved" chip, BlockNote editor) used to live in this component but
+// has been lifted into `TaskNoteEditorPanel`, rendered once per live
+// tab by the editor pool in `NoteContentRenderer` so cross-tab switches
+// don't remount the editor.
+export const TaskNoteTabs = ({ useNM, onCloseTab }: TaskNoteTabsProps) => {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
-    const { t } = useTranslation();
     const [canScrollLeft, setCanScrollLeft] = useState(false);
     const [canScrollRight, setCanScrollRight] = useState(false);
     const scrollStateRef = useRef({ left: false, right: false });
     const rafIdRef = useRef<number>(0);
-    // Track the last tab's identity to detect when a new tab is added
-    const getLastTabKey = (items: typeof useNM.tabItems) =>
-        items.length > 0
-            ? `${items[items.length - 1].noteType}-${items[items.length - 1].noteId}`
-            : "";
-    const prevLastTabKeyRef = useRef<string>(getLastTabKey(useNM.tabItems));
 
     const checkScrollability = useCallback(() => {
         const el = scrollContainerRef.current;
@@ -122,33 +76,43 @@ export const TaskNoteTabs = ({
         };
     }, [checkScrollability]);
 
-    // Effect to scroll to right when new tab is added (detected by last tab key change)
-    const lastTabKey = getLastTabKey(useNM.tabItems);
+    // Keep the active tab visible in the strip. Fires whenever the
+    // active selection changes (new tab opened → becomes active,
+    // existing tab clicked, tab closed → neighbour promotes) or the
+    // tab count changes. Replaces the old "scroll to right end on new
+    // tab" effect, which missed clicks on existing off-screen tabs.
+    const selectedTabIndex = useNM.selectedTabIndex;
     useEffect(() => {
-        const el = scrollContainerRef.current;
-        const prevLastTabKey = prevLastTabKeyRef.current;
+        const container = scrollContainerRef.current;
+        if (!container) return;
+        if (selectedTabIndex < 0) return;
 
-        // Update the ref with current last tab key
-        prevLastTabKeyRef.current = lastTabKey;
-
-        // If the last tab changed and it's not empty, a new tab was added - scroll to the right
-        if (lastTabKey !== prevLastTabKey && lastTabKey !== "" && prevLastTabKey !== "" && el) {
-            const timeoutId = setTimeout(() => {
-                el.scrollTo({
-                    left: el.scrollWidth - el.clientWidth,
+        const timeoutId = setTimeout(() => {
+            const target =
+                container.querySelectorAll<HTMLElement>('[role="tab"]')[selectedTabIndex];
+            if (!target) {
+                checkScrollability();
+                return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            const targetRect = target.getBoundingClientRect();
+            const padding = 12;
+            if (targetRect.left < containerRect.left + padding) {
+                container.scrollTo({
+                    left: container.scrollLeft + (targetRect.left - containerRect.left) - padding,
                     behavior: "smooth",
                 });
-                // Check scrollability after scrolling
-                setTimeout(checkScrollability, 150);
-            }, 100);
-            return () => clearTimeout(timeoutId);
-        } else {
-            const timeoutId = setTimeout(() => {
-                checkScrollability();
-            }, 100);
-            return () => clearTimeout(timeoutId);
-        }
-    }, [checkScrollability, lastTabKey]);
+            } else if (targetRect.right > containerRect.right - padding) {
+                container.scrollTo({
+                    left:
+                        container.scrollLeft + (targetRect.right - containerRect.right) + padding,
+                    behavior: "smooth",
+                });
+            }
+            setTimeout(checkScrollability, 150);
+        }, 80);
+        return () => clearTimeout(timeoutId);
+    }, [checkScrollability, selectedTabIndex, useNM.tabItems.length]);
 
     const scroll = (direction: "left" | "right") => {
         const el = scrollContainerRef.current;
@@ -198,8 +162,8 @@ export const TaskNoteTabs = ({
                 {canScrollLeft && (
                     <IconButton
                         size="sm"
-                        variant="plain"
                         sx={{ ...scrollButtonStyles, left: 4 }}
+                        variant="plain"
                         onClick={() => scroll("left")}
                     >
                         <ChevronLeftRoundedIcon sx={{ fontSize: 18 }} />
@@ -236,7 +200,6 @@ export const TaskNoteTabs = ({
                         {useNM.tabItems.map((tab, index) => (
                             <Tooltip
                                 key={`tab-tooltip-${index}`}
-                                arrow
                                 placement="bottom"
                                 size="sm"
                                 title={tab.title}
@@ -249,6 +212,7 @@ export const TaskNoteTabs = ({
                                             : "rgba(0,0,0,0.05)",
                                     },
                                 }}
+                                arrow
                             >
                                 <Tab
                                     key={`tab-${tab.noteType}-${tab.noteId}`}
@@ -319,13 +283,13 @@ export const TaskNoteTabs = ({
                                         />
                                         <Typography
                                             level="body-sm"
-                                            noWrap
                                             sx={{
                                                 fontSize: "inherit",
                                                 fontWeight: "inherit",
                                                 color: "inherit",
                                                 maxWidth: 120,
                                             }}
+                                            noWrap
                                         >
                                             {tab.title}
                                         </Typography>
@@ -368,114 +332,14 @@ export const TaskNoteTabs = ({
                 {canScrollRight && (
                     <IconButton
                         size="sm"
-                        variant="plain"
                         sx={{ ...scrollButtonStyles, right: 4 }}
+                        variant="plain"
                         onClick={() => scroll("right")}
                     >
                         <ChevronRightRoundedIcon sx={{ fontSize: 18 }} />
                     </IconButton>
                 )}
             </Box>
-
-            {/* Render exactly one editor (not one per tab). The TabList above
-             * still maps over all tabs for the strip, but the body is a
-             * singleton because `useNM.currentTaskNote` is too. Keying by
-             * `noteType-noteId` remounts the BlockNote editor + Hocuspocus
-             * provider only when the user actually switches notes — which is
-             * what kills the old N-editor remount storm that caused the lag. */}
-            {useNM.currentTaskNote && (
-                <TabPanel
-                    key={`tab-note-body-${useNM.currentTaskNote.noteType}-${useNM.currentTaskNote.noteId}`}
-                    value={useNM.selectedTabIndex}
-                    sx={{
-                        paddingX: "5px",
-                        paddingTop: "0px",
-                        paddingBottom: "5px",
-                    }}
-                >
-                    <FormControl
-                        sx={{
-                            mt: "10px",
-                            ml: "10px",
-                            justifyContent: "center",
-                            position: "absolute",
-                            zIndex: 100,
-                            width: "400px",
-                        }}
-                        required
-                    >
-                        <Input
-                            key={"currentTaskNoteTitle"}
-                            placeholder={t.notes.editor.titlePlaceholder}
-                            startDecorator={<NoteAltIcon />}
-                            value={currentTaskNoteTitle}
-                            variant="soft"
-                            slotProps={{
-                                input: {
-                                    ref: titleInputRef,
-                                    onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => {
-                                        if (e.key === "Enter") {
-                                            e.preventDefault();
-                                            titleInputRef.current?.blur();
-                                        }
-                                    },
-                                },
-                            }}
-                            sx={{
-                                fontSize: "22px",
-                                fontWeight: "bold",
-                            }}
-                            onBlur={onTitleBlur}
-                            onChange={(e) => onTitleChange(e.target.value)}
-                        />
-                    </FormControl>
-                    {noteBodySaved && (
-                        <Box
-                            sx={{
-                                position: "absolute",
-                                top: "52.5px",
-                                right: "9%",
-                                transform: "translateX(-50%)",
-                                zIndex: 100,
-                            }}
-                        >
-                            <Chip
-                                size="sm"
-                                variant="soft"
-                                color="neutral"
-                                startDecorator={<CheckIcon sx={{ fontSize: 14 }} />}
-                                sx={{
-                                    fontWeight: 500,
-                                    fontSize: "13px",
-                                    "--Chip-paddingInline": "10px",
-                                    animation: "fadeIn 0.3s ease-in-out",
-                                    "@keyframes fadeIn": {
-                                        from: { opacity: 0, transform: "scale(0.95)" },
-                                        to: { opacity: 1, transform: "scale(1)" },
-                                    },
-                                }}
-                            >
-                                {t.notes.editor.savedChip}
-                            </Chip>
-                        </Box>
-                    )}
-                    <BnTaskNoteEditor
-                        body={body || []}
-                        useCM={useCM}
-                        currentTaskNote={useNM.currentTaskNote}
-                        currentNoteMembers={useNM.currentNoteMembers}
-                        myself={myself}
-                        resyncSignal={useNM.noteResyncNonce}
-                        setBody={setBody}
-                        setMyself={setMyself}
-                        setNoteBodyEdited={setNoteBodyEdited}
-                        setNoteBodySaved={setNoteBodySaved}
-                        socket={socket}
-                        useTEM={useTEM}
-                        useUISM={useUISM}
-                    />
-                </TabPanel>
-            )}
         </Tabs>
     );
 };

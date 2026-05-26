@@ -54,6 +54,13 @@ export interface NoteTabsApi {
     // can switch the view back to the content pane.
     openTick: number;
 
+    // LRU of tab ids whose editors are currently kept mounted. Front
+    // is most-recent, capped at `NOTE_EDITOR_POOL_SIZE`. NoteContentRenderer
+    // iterates this to render every live tab simultaneously (hiding all
+    // but the active one), so re-visiting a recently-used tab doesn't
+    // remount its BlockNote editor.
+    liveTabIds: string[];
+
     openTab: (tab: NoteTab) => void;
     switchTab: (tabId: string) => void;
     closeTab: (tabId: string) => void;
@@ -79,7 +86,17 @@ export const noteTypeFromKind = (kind: NoteTabKind): NoteTypeId => {
 // number, but in practice the persisted record had no upper bound and
 // users rarely keep more than a few dozen tabs open. We add a soft cap
 // so a runaway `openTab` loop can't grow the strip without bound.
-const MAX_TABS = 100;
+const MAX_TABS = 10;
+
+// Size of the "live" editor pool — how many of the user's most recently
+// active tabs we keep mounted simultaneously (LRU). Mounted editors
+// retain their BlockNote / Hocuspocus / Y.Doc state across tab
+// switches, so re-visiting any of them is instant. Switching to a tab
+// outside the pool still works — it just remounts like before.
+//
+// 5 is the sweet spot: covers the "rapid context-switch among a few
+// related notes" UX without N×websocket-connection cost.
+export const NOTE_EDITOR_POOL_SIZE = 5;
 
 interface UseNoteTabsOptions {
     myself: UserProps;
@@ -93,6 +110,10 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
     // "user requested a note open" even when the requested tab is
     // already active (setActiveTabId with the same id is a no-op).
     const [openTick, setOpenTick] = useState(0);
+    // LRU of tab ids with mounted editors (front = most recent). Capped
+    // at NOTE_EDITOR_POOL_SIZE so the WebSocket + Y.Doc footprint stays
+    // bounded.
+    const [liveTabIds, setLiveTabIds] = useState<string[]>([]);
     const hasHydratedRef = useRef(false);
     const lastTeamIdRef = useRef<string | null>(null);
 
@@ -247,6 +268,17 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
         [myself.teamId]
     );
 
+    // Promote a tab id to the front of the LRU pool. Idempotent — if
+    // the id is already in the pool it just bubbles to the front. Pool
+    // is sliced to NOTE_EDITOR_POOL_SIZE; anything pushed off the tail
+    // is dropped (its editor unmounts on the next render).
+    const bumpLive = useCallback((tabId: string) => {
+        setLiveTabIds((prev) => {
+            const filtered = prev.filter((id) => id !== tabId);
+            return [tabId, ...filtered].slice(0, NOTE_EDITOR_POOL_SIZE);
+        });
+    }, []);
+
     const openTab = useCallback(
         (tab: NoteTab) => {
             if (!tab.teamId || tab.teamId !== myself.teamId) {
@@ -265,6 +297,7 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
                 const merged = current.map((t, i) => (i === existingIdx ? { ...t, ...tab } : t));
                 setTabs(merged);
                 setActiveTabId(tab.id);
+                bumpLive(tab.id);
                 persist(merged, tab.id);
                 return;
             }
@@ -278,9 +311,10 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
             }
             setTabs(next);
             setActiveTabId(tab.id);
+            bumpLive(tab.id);
             persist(next, tab.id);
         },
-        [myself.teamId, persist]
+        [myself.teamId, persist, bumpLive]
     );
 
     const switchTab = useCallback(
@@ -289,9 +323,10 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
             if (!current.some((t) => t.id === tabId)) return;
             if (activeIdRef.current === tabId) return;
             setActiveTabId(tabId);
+            bumpLive(tabId);
             persist(current, tabId);
         },
-        [persist]
+        [persist, bumpLive]
     );
 
     const closeTab = useCallback(
@@ -315,6 +350,15 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
 
             setTabs(next);
             setActiveTabId(nextActive);
+            // Drop the closed tab from the live pool so its editor
+            // unmounts. If the active tab is now a different one, make
+            // sure it's in (or at the front of) the pool.
+            setLiveTabIds((prev) => {
+                const without = prev.filter((id) => id !== tabId);
+                if (!nextActive) return without;
+                const reordered = without.filter((id) => id !== nextActive);
+                return [nextActive, ...reordered].slice(0, NOTE_EDITOR_POOL_SIZE);
+            });
             persist(next, nextActive);
         },
         [persist]
@@ -341,6 +385,7 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
         if (!persisted || persisted.tabs.length === 0) {
             setTabs([]);
             setActiveTabId(null);
+            setLiveTabIds([]);
             hasHydratedRef.current = true;
             lastTeamIdRef.current = myself.teamId;
             return;
@@ -364,6 +409,10 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
         const nextActive = validTabs.length === 0 ? null : validTabs[safeIdx].id;
         setTabs(validTabs);
         setActiveTabId(nextActive);
+        // Seed the live pool with the selected tab only — other persisted
+        // tabs enter the pool lazily as the user clicks them. Avoids
+        // mounting 100 BlockNote editors on app start.
+        setLiveTabIds(nextActive ? [nextActive] : []);
         hasHydratedRef.current = true;
         lastTeamIdRef.current = myself.teamId;
     }, [myself.teamId, resolveRefToTab]);
@@ -375,15 +424,19 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
         if (!myself.teamId) {
             setTabs([]);
             setActiveTabId(null);
+            setLiveTabIds([]);
             hasHydratedRef.current = false;
             lastTeamIdRef.current = null;
             return;
         }
         if (lastTeamIdRef.current === myself.teamId) return;
-        // Drop current state immediately on team switch.
+        // Drop current state immediately on team switch — otherwise the
+        // previous team's mounted editors would briefly linger while
+        // rehydrate resolves the new team's persisted strip.
         if (lastTeamIdRef.current !== null && lastTeamIdRef.current !== myself.teamId) {
             setTabs([]);
             setActiveTabId(null);
+            setLiveTabIds([]);
         }
         let cancelled = false;
         (async () => {
@@ -401,6 +454,7 @@ export const useNoteTabs = ({ myself, accessToken }: UseNoteTabsOptions): NoteTa
         activeTab,
         activeTabId,
         openTick,
+        liveTabIds,
         openTab,
         switchTab,
         closeTab,
