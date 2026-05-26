@@ -108,19 +108,6 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
         if (messageId != null) {
             const msg = currentMainChat.messages.find((m) => Number(m.messageId) === messageId);
             if (msg) messageText = previewFromMessage(msg);
-            // eslint-disable-next-line no-console
-            console.log("[HistoryTracker chat] sync lookup", {
-                chatType,
-                chatId,
-                messageId,
-                moveToSpecificIndex: currentMainChat.moveToSpecificIndex,
-                messagesLen: currentMainChat.messages.length,
-                allIds: currentMainChat.messages.map((m) => m.messageId),
-                msgFound: !!msg,
-                msgContentText: msg?.contentText,
-                msgContent: msg?.content,
-                syncFoundText: messageText,
-            });
         }
         // The ref encodes "have we recorded this (chat, message, text)
         // exact state already?" — including `messageText` means if a
@@ -158,18 +145,6 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
             void popSpecificMessages(chatId, chatType).then((all) => {
                 const found = all.find((m) => Number(m.messageId) === messageId);
                 const text = found ? previewFromMessage(found) : null;
-                // eslint-disable-next-line no-console
-                console.log("[HistoryTracker chat] async IDB lookup", {
-                    chatType,
-                    chatId,
-                    messageId,
-                    fetched: all.length,
-                    allIds: all.map((m) => m.messageId),
-                    msgFound: !!found,
-                    msgContentText: found?.contentText,
-                    msgContent: found?.content,
-                    text,
-                });
                 if (!text) return;
                 lastChatKeyRef.current = `chat:${chatType}:${chatId}:${messageId}:1`;
                 record({
@@ -246,17 +221,6 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
             void popSpecificThreadMessages(chatId, threadId, chatType).then((all) => {
                 const found = all.find((m) => Number(m.messageId) === messageId);
                 const text = found ? previewFromMessage(found) : null;
-                // eslint-disable-next-line no-console
-                console.log("[HistoryTracker thread] async IDB lookup", {
-                    chatType,
-                    chatId,
-                    threadId,
-                    messageId,
-                    fetched: all.length,
-                    sampleIds: all.slice(0, 5).map((m) => m.messageId),
-                    foundType: typeof found?.messageId,
-                    text,
-                });
                 if (!text) return;
                 lastThreadKeyRef.current = `thread:${chatType}:${chatId}:${threadId}:${messageId}:1`;
                 record({

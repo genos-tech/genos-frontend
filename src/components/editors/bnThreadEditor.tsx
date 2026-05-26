@@ -308,14 +308,12 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
 
     const sendingThreadMessage = async () => {
         if (editor.document.length > 1 && socket !== null) {
-            // Set input text
+            // Set input text. `getFirstLine` already returns
+            // attachment-aware previews ("Image: …", "File: …", etc.)
+            // for non-text first blocks, so we don't need a separate
+            // image fallback here.
             const content: any[] | any = editor.document;
-            let contentText: string = "Something wrong....";
-            if (content && content.length > 0) {
-                contentText = getFirstLine(content[0]);
-            } else if (editor.document.slice(-2, -1)[0].type === "image") {
-                contentText = t.common.editor.imageAttachment;
-            }
+            const contentText: string = getFirstLine(content[0]);
 
             socket.emit(
                 "thread_message",

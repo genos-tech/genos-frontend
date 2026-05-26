@@ -1,25 +1,53 @@
 export function getFirstLine(first_line: any): string {
-    const first_line_contents: string[] = [];
-    try {
-        for (const c of first_line["content"]) {
-            if (c["type"] === "text") {
-                const text = String(c["text"]).trim();
-                if (text.length > 0) {
-                    first_line_contents.push(text);
-                }
-            } else if (c["type"] === "mention") {
-                first_line_contents.push("@" + c["props"]["userName"]);
-            } else if (c["type"] === "link") {
-                first_line_contents.push(c["content"][0]["text"]);
-            } else {
-                console.warn("[WARN] Unexpected content type:", c["type"]);
-                console.warn("[WARN] first_line:\n", first_line);
-            }
-        }
-        return first_line_contents.join(" ");
-    } catch (e) {
-        console.error(e);
-        console.error("[ERROR] first_line:", first_line);
-        return "Failed to generate the first line...";
+    if (!first_line || typeof first_line !== "object") return "";
+    const blockType: string | undefined = first_line.type;
+
+    if (blockType === "image") {
+        const name = first_line?.props?.name;
+        return name ? `Image: ${name}` : "Image";
     }
+
+    if (blockType === "file") {
+        const name = first_line?.props?.name;
+        return name ? `File: ${name}` : "File";
+    }
+
+    if (blockType === "table") {
+        return "Table";
+    }
+
+    if (blockType === "divider") {
+        return "";
+    }
+
+    // Content-bearing blocks (paragraph, heading, list items, quote,
+    // codeBlock, ...) carry an inline-content array. Unknown block
+    // types fall through here too — if they happen to have a content
+    // array we still extract something useful; otherwise the loop is
+    // a no-op and we return "".
+    const parts: string[] = [];
+    for (const c of (first_line.content as unknown[]) ?? []) {
+        if (!c || typeof c !== "object") continue;
+        const inline = c as { type?: string; text?: unknown; props?: any; content?: any };
+        if (inline.type === "text") {
+            const text = String(inline.text ?? "").trim();
+            if (text) parts.push(text);
+        } else if (inline.type === "mention") {
+            const user = inline.props?.userName;
+            if (user) parts.push(`@${user}`);
+        } else if (inline.type === "link") {
+            const inner = (inline.content as { text?: string }[]) ?? [];
+            if (inner[0]?.text) parts.push(inner[0].text);
+        }
+        // Unknown inline types are skipped silently — forward-
+        // compatibility, not a bug to warn about.
+    }
+
+    const joined = parts.join(" ");
+    if (joined) return joined;
+
+    // Last-resort label for content-bearing blocks that turned out to
+    // be empty (e.g. an empty code block).
+    if (blockType === "codeBlock") return "Code";
+    return "";
 }
