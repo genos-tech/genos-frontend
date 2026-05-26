@@ -350,7 +350,7 @@ async function runNdjsonStream(
     }
     const decoder = new TextDecoder("utf-8");
     let buffer = "";
-    let doneEventReceived = false;
+    let streamClosedCleanly = false;
 
     try {
         while (true) {
@@ -363,16 +363,16 @@ async function runNdjsonStream(
                 const line = buffer.slice(0, nl).trim();
                 buffer = buffer.slice(nl + 1);
                 if (line) {
-                    if (!doneEventReceived) {
-                        doneEventReceived = dispatchLine(line, handlers);
+                    if (!streamClosedCleanly) {
+                        streamClosedCleanly = dispatchLine(line, handlers);
                     }
                 }
                 nl = buffer.indexOf("\n");
             }
         }
         const tail = buffer.trim();
-        if (tail && !doneEventReceived) {
-            doneEventReceived = dispatchLine(tail, handlers);
+        if (tail && !streamClosedCleanly) {
+            streamClosedCleanly = dispatchLine(tail, handlers);
         }
     } catch (err) {
         // AbortError is expected when the user cancels or closes the
@@ -393,18 +393,22 @@ async function runNdjsonStream(
         }
     }
 
-    // If the server closed the connection without sending a `done`
-    // event (e.g. mid-stream server crash, network drop), surface an
-    // error so the hook's `onError` handler runs and clears the
-    // `isStreaming` flag. Without this the UI would show "streaming…"
-    // forever.
-    if (!doneEventReceived) {
+    // If the server closed the connection without any terminal event
+    // (e.g. mid-stream server crash, network drop), surface an error
+    // so the hook's `onError` handler runs and clears the `isStreaming`
+    // flag. Without this the UI would show "streaming…" forever.
+    // `done`, `error`, and `tool_call_pending_approval` are all
+    // legitimate stream-closing events — none of them should trip this.
+    if (!streamClosedCleanly) {
         handlers.onError(getMessages().services.agent.streamEndedUnexpectedly);
     }
 }
 
-// Returns true only for the `done` event so the caller can detect a
-// clean stream finish vs a connection that closed without one.
+// Returns true when the line is a terminal event the backend uses to
+// close the stream: `done` (clean finish), `error` (backend reported
+// failure), or `tool_call_pending_approval` (paused, awaiting /decide/).
+// Caller uses this to distinguish an intentional close from a dropped
+// connection.
 function dispatchLine(line: string, h: BaseStreamHandlers): boolean {
     let evt: AgentEvent;
     try {
@@ -424,10 +428,10 @@ function dispatchLine(line: string, h: BaseStreamHandlers): boolean {
             return false;
         case "done":
             h.onDone(evt.session_id);
-            return true; // signals clean finish
+            return true; // terminal: clean finish
         case "error":
             h.onError(evt.message || getMessages().services.agent.unknownError);
-            return false;
+            return true; // terminal: backend already reported the failure
         case "tool_call_start":
             h.onToolStart?.({
                 step: evt.step,
@@ -457,7 +461,7 @@ function dispatchLine(line: string, h: BaseStreamHandlers): boolean {
                 approval_token: evt.approval_token,
                 run_id: evt.run_id,
             });
-            return false;
+            return true; // terminal: stream pauses here until /decide/
     }
     return false;
 }
