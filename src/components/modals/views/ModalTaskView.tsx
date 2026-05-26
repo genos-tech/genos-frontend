@@ -153,8 +153,9 @@ export const ModalTaskView = (props: ModalTaskViewProps) => {
         ...useTM,
         currentPreviewTask: modalTask,
         currentPreviewTaskId: target.taskId,
-        setCurrentPreviewTask: (next: TaskProps | undefined) => {
-            if (next) setModalTask(next);
+        setCurrentPreviewTask: (next) => {
+            const resolved = typeof next === "function" ? next(modalTask ?? undefined) : next;
+            if (resolved) setModalTask(resolved);
         },
         setIsTaskPreviewVisible: (visible: boolean) => {
             if (!visible) onClose();

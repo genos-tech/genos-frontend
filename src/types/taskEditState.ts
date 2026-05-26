@@ -32,7 +32,7 @@ export interface TaskEditStateSetters {
     setTaskStatusUpdated: (value: boolean) => void;
     setTaskBodyEdited: (value: boolean) => void;
     setTaskBodySaved: (value: boolean) => void;
-    setTmpCurrentTaskContent: (value: TaskProps) => void;
+    setTmpCurrentTaskContent: (value: TaskProps | ((prev: TaskProps) => TaskProps)) => void;
     setTaskTitle: (value: string) => void;
     setBody: (value: PartialBlock[]) => void;
     setCurrentTaskId: (value: number | undefined) => void;

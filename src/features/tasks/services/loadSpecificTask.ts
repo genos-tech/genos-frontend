@@ -5,6 +5,17 @@ import { authApi } from "../../../services/api";
 import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
 
+// Defensive scrub for stale cache entries: strip any negative-id
+// "in-flight" attachment that leaked into IDB before the
+// `sendUpdatedSpecificTask` cache write started filtering them out.
+// Without this, a stale negative-id row would resurrect on every load
+// and the next save would re-POST it (creating a duplicate file on
+// the server every drop until the cache entry is naturally evicted).
+const scrubInFlightAttachments = (task: TaskProps): TaskProps => ({
+    ...task,
+    attachments: (task.attachments ?? []).filter((a) => a.attachment_id >= 0),
+});
+
 export const loadSpecificTask = async (
     myself: UserProps,
     projectId: number,
@@ -16,7 +27,7 @@ export const loadSpecificTask = async (
         if (!options?.forceRefresh) {
             const cached = await getCachedFullTask(taskId);
             if (cached) {
-                return [cached];
+                return [scrubInFlightAttachments(cached)];
             }
         }
 

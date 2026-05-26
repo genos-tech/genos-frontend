@@ -815,7 +815,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                         sx={{ minWidth: `${FIELD_LABEL_MIN_WIDTH}px` }}
                     >
                         <FieldLabel isDark={isDark}>{t.tasks.fields.links}</FieldLabel>
-                        {(taskContent.links?.length ?? 0) > 0 && (
+                        {/* {(taskContent.links?.length ?? 0) > 0 && (
                             <AppTooltip title={t.tasks.tooltips.refreshPullRequests}>
                                 <IconButton
                                     size="sm"
@@ -841,7 +841,7 @@ export const TaskMainBlock = (props: TaskMainBlockProps) => {
                                     />
                                 </IconButton>
                             </AppTooltip>
-                        )}
+                        )} */}
                     </Stack>
                     <DynamicURLManager
                         setTaskContent={setTaskContent}

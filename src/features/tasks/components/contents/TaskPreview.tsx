@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PartialBlock } from "@blocknote/core";
 import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
 import AddIcon from "@mui/icons-material/Add";
@@ -130,8 +130,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
     const { t } = useTranslation();
 
     const [taskClosed, setTaskClosed] = useState(false);
-    const [isAttachmentDeleted, setIsAttachmentDeleted] = useState(false);
-    const [deletedAttachmentId, setDeletedAttachmentId] = useState<number>(-1);
     // Mirror the actual task: `null` means unassigned. Don't silently
     // substitute `myself` here — that would mislead the user into
     // thinking they were the assignee of an unassigned task.
@@ -162,6 +160,26 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         taskEditState.setTmpCurrentTaskContent(useTM.currentPreviewTask || ({} as TaskProps));
     }, []);
 
+    // Single-callback replacement for the older two-flag deletion
+    // pattern (`isAttachmentDeleted` / `deletedAttachmentId`). Updates
+    // both the persisted list and the working copy in one shot so
+    // there's no window where one side knows about the delete and the
+    // other doesn't.
+    const handleAttachmentDeleted = useCallback(
+        (attachmentId: number) => {
+            taskEditState.setUploadedFiles((prev) =>
+                prev.filter((a) => a.attachment_id !== attachmentId)
+            );
+            taskEditState.setTmpCurrentTaskContent((prev) => ({
+                ...prev,
+                attachments: (prev.attachments ?? []).filter(
+                    (a) => a.attachment_id !== attachmentId
+                ),
+            }));
+        },
+        [taskEditState]
+    );
+
     // Use the custom hook to get the sendUpdatedTask function
     const sendUpdatedTask = useSendUpdatedTask({
         socket,
@@ -178,6 +196,24 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             sendUpdatedTask(false);
         }
     }, [taskEditState.taskUpdated]);
+
+    // Re-trigger the save when the attachment list still contains
+    // negative-id rows after a save just completed. This handles the
+    // case where the user dropped file B *during* file A's POST: the
+    // duplicate `setTaskUpdated(true)` call gets coalesced by React
+    // while the flag is already true, so B would otherwise sit pending
+    // forever until something else flipped the flag. After A's save
+    // flips the flag back to false, this effect notices B's negative
+    // id and kicks off the next save.
+    useEffect(() => {
+        if (taskEditState.taskUpdated) return;
+        const hasPending = (taskEditState.tmpCurrentTaskContent?.attachments ?? []).some(
+            (a) => a.attachment_id < 0
+        );
+        if (hasPending) {
+            taskEditState.setTaskUpdated(true);
+        }
+    }, [taskEditState.taskUpdated, taskEditState.tmpCurrentTaskContent?.attachments]);
 
     useEffect(() => {
         if (taskEditState.startIntervalUpdatingTask) {
@@ -313,7 +349,39 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         const recentLocalEdit = Date.now() - lastLocalEditAtRef.current < LOCAL_EDIT_SUPPRESS_MS;
         if (prevId === nextId && recentLocalEdit) return;
 
-        taskEditState.setTmpCurrentTaskContent(next);
+        // Effect 392 (below) mirrors `tmpCurrentTaskContent` into
+        // `useTM.setCurrentPreviewTask`, which re-fires THIS effect
+        // with `next === tmpCurrentTaskContent`. Bail out on that
+        // self-echo: without this guard the in-flight merge below
+        // synthesizes a fresh `{...next, attachments: [...]}` every
+        // cycle, Effect 392 mirrors it back, and React throws
+        // "Maximum update depth exceeded". A genuine `loadUpdatedTask`
+        // returns a freshly-parsed object so this check passes through.
+        if (next === taskEditState.tmpCurrentTaskContent) return;
+
+        // Preserve any in-flight (negative-id) attachments that the
+        // user just dropped — `loadUpdatedTask` is triggered by our
+        // own PUT's socket echo (see useProjectTaskManagement.ts:88)
+        // and fires concurrently with the attachment POST. The GET
+        // response can therefore land WITHOUT the new attachments and
+        // would otherwise wipe them from the panel until the upload
+        // round-trip finished writing back the persisted rows.
+        const inFlight = (taskEditState.tmpCurrentTaskContent?.attachments ?? []).filter(
+            (a) => a.attachment_id < 0
+        );
+
+        // Hot path: nothing in flight → pass `next` through as-is so
+        // React's `useState` ref-equality de-dupes any echo. Only
+        // synthesize a new object when we actually need to merge the
+        // in-flight rows on top.
+        if (inFlight.length === 0) {
+            taskEditState.setTmpCurrentTaskContent(next);
+        } else {
+            taskEditState.setTmpCurrentTaskContent({
+                ...next,
+                attachments: [...(next.attachments ?? []), ...inFlight],
+            });
+        }
         taskEditState.setCurrentTaskId(next.id);
         taskEditState.setTaskTitle(next.title);
         taskEditState.setBody(next.body || []);
@@ -348,24 +416,13 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             }
     }, [taskClosed]);
 
-    // Update attachments
-    useEffect(() => {
-        if (
-            taskEditState.tmpCurrentTaskContent !== null &&
-            taskEditState.tmpCurrentTaskContent !== undefined &&
-            taskEditState.uploadedFiles.length > 0
-        ) {
-            (async () => {
-                taskEditState.setTmpCurrentTaskContent({
-                    ...taskEditState.tmpCurrentTaskContent,
-                    attachments: taskEditState.uploadedFiles,
-                });
-                setAssignee(taskEditState.tmpCurrentTaskContent.assignee ?? null);
-                setReporter(taskEditState.tmpCurrentTaskContent.reporter ?? myself);
-            })();
-        }
-    }, [taskEditState.uploadedFiles]);
-
+    // Keep the file-count badge in sync with the persisted attachments
+    // list. The old cyclical sync that mirrored `uploadedFiles` back
+    // into `tmpCurrentTaskContent.attachments` is gone — the upload
+    // pipeline now writes the merged result straight into
+    // `tmpCurrentTaskContent` (see useSendUpdatedTask), and additions /
+    // deletions both update the two stores together via the add path in
+    // `TaskTabBlock` and `handleAttachmentDeleted` respectively.
     useEffect(() => {
         reportFileCount(taskEditState.uploadedFiles.length);
     }, [taskEditState.uploadedFiles.length, reportFileCount]);
@@ -378,16 +435,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
             setReporter(taskEditState.tmpCurrentTaskContent?.reporter || myself);
         }
     }, [taskEditState.tmpCurrentTaskContent]);
-
-    useEffect(() => {
-        if (deletedAttachmentId !== -1 && isAttachmentDeleted === true) {
-            taskEditState.setUploadedFiles((prev) =>
-                prev.filter((attachment) => attachment.attachment_id !== deletedAttachmentId)
-            );
-            setIsAttachmentDeleted(false);
-            setDeletedAttachmentId(-1);
-        }
-    }, [isAttachmentDeleted, deletedAttachmentId]);
 
     // Get Task Notes. Cancelled-flag guard ensures a slow response
     // for an old taskId can't overwrite the fresh task's notes — the
@@ -823,9 +870,8 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                             isInEdit={isInEdit}
                             isLoadingTaskActivities={isLoadingTaskActivities}
                             myself={myself}
-                            setDeletedAttachmentId={setDeletedAttachmentId}
+                            onAttachmentDeleted={handleAttachmentDeleted}
                             setEditTargetComment={setEditTargetComment}
-                            setIsAttachmentDeleted={setIsAttachmentDeleted}
                             setIsInEdit={setIsInEdit}
                             setMyself={setMyself}
                             setTabIndex={setTabIndex}
@@ -834,7 +880,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                             setTaskContent={taskEditState.setTmpCurrentTaskContent}
                             setTaskUpdated={taskEditState.setTaskUpdated}
                             setTodoFromMessageBubble={setTodoFromMessageBubble}
-                            setUploadedFiles={taskEditState.setUploadedFiles}
                             socket={socket}
                             tabIndex={tabIndex}
                             taskActivities={taskActivities}
@@ -843,7 +888,6 @@ export const TaskPreview = (props: TaskPreviewProps) => {
                             taskContent={taskEditState.tmpCurrentTaskContent}
                             taskNotes={taskNotes}
                             tmpCurrentTaskContent={taskEditState.tmpCurrentTaskContent}
-                            uploadedFiles={taskEditState.uploadedFiles}
                             useCM={useCM}
                             useNM={useNM}
                             useTEM={useTEM}
@@ -1194,8 +1238,6 @@ const MilestonePreviewInner = ({
     const setTaskCommentLines = useTM.setTaskCommentLines;
     const [isInEdit, setIsInEdit] = useState(false);
     const [editTargetComment, setEditTargetComment] = useState<TaskCommentProps>();
-    const [isAttachmentDeleted, setIsAttachmentDeleted] = useState(false);
-    const [deletedAttachmentId, setDeletedAttachmentId] = useState<number>(-1);
 
     useEffect(() => {
         const taskId = milestone?.taskId;
@@ -1259,15 +1301,17 @@ const MilestonePreviewInner = ({
         };
     }, [milestone?.taskId, milestoneActivitiesRefetchKey]);
 
-    useEffect(() => {
-        if (deletedAttachmentId !== -1 && isAttachmentDeleted) {
-            setUploadedFiles((prev) =>
-                prev.filter((a) => a.attachment_id !== deletedAttachmentId)
-            );
-            setIsAttachmentDeleted(false);
-            setDeletedAttachmentId(-1);
-        }
-    }, [isAttachmentDeleted, deletedAttachmentId]);
+    // Single-callback replacement for the older two-flag deletion
+    // pattern (`isAttachmentDeleted` / `deletedAttachmentId`). Both the
+    // persisted list and the milestone's working copy are updated
+    // together so there's no observable in-between state.
+    const handleAttachmentDeleted = useCallback((attachmentId: number) => {
+        setUploadedFiles((prev) => prev.filter((a) => a.attachment_id !== attachmentId));
+        setTaskContentLike((prev) => ({
+            ...prev,
+            attachments: (prev.attachments ?? []).filter((a) => a.attachment_id !== attachmentId),
+        }));
+    }, []);
 
     // Project tags / autocomplete options follow the same loading
     // pattern as TaskPreview so the row dropdowns render correctly.
@@ -1378,46 +1422,50 @@ const MilestonePreviewInner = ({
         if (backingTaskId != null) {
             const pending = next.attachments?.filter((a) => a.attachment_id < 0) ?? [];
             if (pending.length > 0) {
+                // Snapshot the negative ids we're about to persist so
+                // the post-upload merge only strips THESE rows from
+                // `taskContentLike` — any new negative ids added during
+                // the round-trip survive and ride the next save cycle
+                // (see the matching pattern in useSendUpdatedTask).
+                const sentNegativeIds = new Set(pending.map((a) => a.attachment_id));
+                let uploadedAttachments: TaskProps["attachments"] = [];
                 try {
                     const uploaded = await uploadTaskAttachments(
                         backingTaskId,
                         pending,
                         accessToken
                     );
-                    if (uploaded.length > 0) {
-                        const uploadedAttachments = uploaded.map((a: any) => ({
-                            attachment_id: a.attachment_id,
-                            file: a.attached_file,
-                            file_base64: a.file_base64,
-                            name: a.name,
-                            type: a.attached_type,
-                        }));
-                        // Drop the negative-id stubs and keep the
-                        // already-persisted rows alongside the freshly
-                        // uploaded ones, mirroring `useSendUpdatedTask`'s
-                        // post-upload reconciliation. Both stores need
-                        // the swap: `uploadedFiles` drives TaskTabBlock's
-                        // re-render of the chips, and `taskContentLike`
-                        // is what the next `persistFromTaskContent` call
-                        // will diff against — leaving the negatives there
-                        // would re-upload the same file on the next
-                        // metadata edit.
-                        const swap = (prev: TaskProps["attachments"]) => [
-                            ...prev.filter((a) => a.attachment_id >= 0),
-                            ...uploadedAttachments,
-                        ];
-                        setUploadedFiles((prev) => swap(prev));
-                        setTaskContentLike((prev) => ({
-                            ...prev,
-                            attachments: swap(prev.attachments ?? []),
-                        }));
-                    }
+                    uploadedAttachments = uploaded.map((a: any) => ({
+                        attachment_id: a.attachment_id,
+                        file: a.attached_file,
+                        file_base64: a.file_base64,
+                        name: a.name,
+                        type: a.attached_type,
+                    }));
                 } catch (err) {
                     // Don't block the metadata diff below on an upload
                     // failure — the user's tag / sprint / status edits
                     // are independent of the attachment payload.
                     console.error("Milestone attachment upload failed:", err);
                 }
+                // ALWAYS strip the sent negative-id rows, even when the
+                // upload errored or returned 0 rows. The milestone
+                // retrigger effect below watches `taskContentLike.attachments`
+                // for any remaining `< 0` ids and re-fires the save —
+                // without this prune, a single rejected upload would
+                // spin React into a "Maximum update depth exceeded"
+                // crash. Losing the in-flight rows on failure is the
+                // correct UX (they would have been visible only as
+                // pending tiles anyway).
+                const merge = (prev: TaskProps["attachments"]) => [
+                    ...prev.filter((a) => !sentNegativeIds.has(a.attachment_id)),
+                    ...uploadedAttachments,
+                ];
+                setUploadedFiles((prev) => merge(prev));
+                setTaskContentLike((prev) => ({
+                    ...prev,
+                    attachments: merge(prev.attachments ?? []),
+                }));
             }
         }
 
@@ -1554,9 +1602,37 @@ const MilestonePreviewInner = ({
     const [taskUpdated, setTaskUpdated] = useState(false);
     useEffect(() => {
         if (!taskUpdated) return;
-        persistFromTaskContent(taskContentLike);
-        setTaskUpdated(false);
+        // Await persistFromTaskContent before flipping `taskUpdated`
+        // back to false. The previous fire-and-forget form let the
+        // retrigger effect below see (`taskUpdated=false`,
+        // attachments still contain `< 0` ids) BEFORE the async strip
+        // landed, which immediately re-flipped `setTaskUpdated(true)`
+        // and rebounded into the save trigger. The synchronous loop
+        // outran the actual upload fetch, so React threw "Maximum
+        // update depth exceeded" before any POST left the browser —
+        // the dropped file disappeared from the panel with no server
+        // log. Awaiting keeps the strip in the same continuation as
+        // the false-flip so retrigger sees a clean attachments list.
+        let cancelled = false;
+        (async () => {
+            await persistFromTaskContent(taskContentLike);
+            if (!cancelled) setTaskUpdated(false);
+        })();
+        return () => {
+            cancelled = true;
+        };
     }, [taskUpdated]);
+
+    // Re-trigger the save when attachments still contain negative-id
+    // rows after a save just completed. Matches the regular-task
+    // sibling — without it, a file dropped during an in-flight upload
+    // would coalesce its `setTaskUpdated(true)` into the already-true
+    // flag and never get POSTed.
+    useEffect(() => {
+        if (taskUpdated) return;
+        const hasPending = (taskContentLike.attachments ?? []).some((a) => a.attachment_id < 0);
+        if (hasPending) setTaskUpdated(true);
+    }, [taskUpdated, taskContentLike.attachments]);
 
     // Auto-close the preview after 3s when the milestone can't be
     // resolved (e.g. landed on a stale URL after a hard refresh while
@@ -2134,9 +2210,8 @@ const MilestonePreviewInner = ({
                         isInEdit={isInEdit}
                         isLoadingTaskActivities={isLoadingTaskActivities}
                         myself={myself}
-                        setDeletedAttachmentId={setDeletedAttachmentId}
+                        onAttachmentDeleted={handleAttachmentDeleted}
                         setEditTargetComment={setEditTargetComment}
-                        setIsAttachmentDeleted={setIsAttachmentDeleted}
                         setIsInEdit={setIsInEdit}
                         setMyself={setMyself}
                         setTabIndex={setTabIndex}
@@ -2144,7 +2219,6 @@ const MilestonePreviewInner = ({
                         setTaskComments={setTaskComments}
                         setTaskContent={setTaskContentLike}
                         setTaskUpdated={setTaskUpdated}
-                        setUploadedFiles={setUploadedFiles}
                         socket={socket}
                         tabIndex={tabIndex}
                         taskActivities={taskActivities}
@@ -2153,7 +2227,6 @@ const MilestonePreviewInner = ({
                         taskContent={taskContentLike}
                         taskNotes={taskNotes}
                         tmpCurrentTaskContent={taskContentLike}
-                        uploadedFiles={uploadedFiles}
                         useCM={useCM}
                         useNM={useNM}
                         useTEM={useTEM}

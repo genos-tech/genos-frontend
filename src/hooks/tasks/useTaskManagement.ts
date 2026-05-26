@@ -97,7 +97,9 @@ export interface TaskManagementState {
     currentPreviewTaskId: number;
     setCurrentPreviewTaskId: (id: number) => void;
     currentPreviewTask: TaskProps | undefined;
-    setCurrentPreviewTask: (task: TaskProps | undefined) => void;
+    setCurrentPreviewTask: (
+        task: TaskProps | undefined | ((prev: TaskProps | undefined) => TaskProps | undefined)
+    ) => void;
     // Whether the right-hand preview pane is showing a task or a
     // milestone. When `milestone`, `currentPreviewMilestoneId` carries
     // which milestone to render and `currentPreviewTask*` are unused.
