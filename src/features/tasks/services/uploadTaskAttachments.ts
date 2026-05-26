@@ -26,11 +26,42 @@ export const uploadTaskAttachments = async (
     for (const attachment of attachments) {
         if (attachment.attachment_id >= 0) continue;
 
+        // Defensive: anything that lost its File reference along the
+        // way (post-IDB round-trip, accidental shallow copy, etc.)
+        // would 400 the backend with "attached_file: No file was
+        // submitted." Skip and log it so we surface the symptom
+        // without breaking the rest of the batch.
+        // (Typed-as-File but post-save the runtime value can be a
+        // string path, so we have to widen here.)
+        const filePayload = attachment.file as unknown;
+        if (!(filePayload instanceof Blob)) {
+            console.error(
+                "uploadTaskAttachments: skipping attachment without a File/Blob payload",
+                { attachmentId: attachment.attachment_id, file: attachment.file }
+            );
+            continue;
+        }
+
+        // Always declare the multipart filename explicitly. Some
+        // browsers (Safari notably) hand over a `File` whose `.name`
+        // is empty for inputs that didn't carry a filename — and a
+        // missing filename in the multipart part makes Django's
+        // FileField validator return "No file was submitted." even
+        // though bytes ARE present.
+        const filename =
+            attachment.name ||
+            (filePayload instanceof File ? filePayload.name : "") ||
+            `attachment-${Date.now()}`;
+        const mime =
+            attachment.type ||
+            (filePayload instanceof File ? filePayload.type : "") ||
+            "application/octet-stream";
+
         const formData = new FormData();
         formData.append("task", String(taskId));
         formData.append("attachment_id", "-1");
-        formData.append("attached_file", attachment.file);
-        formData.append("attached_type", attachment.file.type || "application/octet-stream");
+        formData.append("attached_file", filePayload, filename);
+        formData.append("attached_type", mime);
 
         const res = await fetch(`${base_url}/task/attachment/`, {
             method: "POST",
@@ -39,10 +70,26 @@ export const uploadTaskAttachments = async (
             },
             body: formData,
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => null);
 
         if (!res.ok) {
-            throw new Error(data?.message || getMessages().tasks.errors.attachmentUploadFailed);
+            // Surface the actual serializer/server error instead of the
+            // generic fallback. Server returns `{ field: ["msg"] }` for
+            // serializer failures, so stringify the whole payload to
+            // make the cause visible in the console + thrown message.
+            const detail =
+                data == null
+                    ? `HTTP ${res.status}`
+                    : typeof data === "string"
+                      ? data
+                      : JSON.stringify(data);
+            console.error("uploadTaskAttachments POST failed", {
+                status: res.status,
+                detail,
+                filename,
+                mime,
+            });
+            throw new Error(`${getMessages().tasks.errors.attachmentUploadFailed} (${detail})`);
         }
         if (data) uploaded.push(data);
     }

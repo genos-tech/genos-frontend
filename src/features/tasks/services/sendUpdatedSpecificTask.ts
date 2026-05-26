@@ -1,7 +1,7 @@
 import axios from "axios";
 import { Socket } from "socket.io-client";
 
-import { cacheFullTask } from "../../../db/services/task-full.service";
+import { cacheFullTask, invalidateCachedFullTask } from "../../../db/services/task-full.service";
 import { getMessages } from "../../../i18n";
 import { authApi } from "../../../services/api";
 import { UserProps } from "../../../types/admin";
@@ -214,6 +214,18 @@ export const sendUpdatedSpecificTask = async (
                     updatedTask.attachments,
                     accessToken
                 );
+
+                // The cache write at line 80 happened BEFORE the upload,
+                // so for in-flight rows it persisted the negative-id
+                // File-bearing version. Invalidate after upload so the
+                // next `loadSpecificTask` refetches the persisted shape
+                // (positive ids, server paths, base64) — otherwise
+                // reopening the task would render File-backed previews
+                // for already-saved rows and a subsequent save would
+                // try to re-upload them.
+                if (uploadAttachments.length > 0) {
+                    await invalidateCachedFullTask(updatedTask.id);
+                }
 
                 return uploadAttachments;
             }

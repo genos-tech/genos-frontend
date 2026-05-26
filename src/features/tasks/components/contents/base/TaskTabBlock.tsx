@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import AttachFileRoundedIcon from "@mui/icons-material/AttachFileRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
@@ -43,32 +43,18 @@ import { MessageProps, ThreadMessageProps } from "../../../../../types/chat";
 import { TaskNoteProps } from "../../../../../types/notes";
 import {
     AttachmentFileProps,
-    FileProps,
-    ImageSizeProps,
     TaskActivityProps,
     TaskCommentProps,
     TaskProps,
 } from "../../../../../types/tasks";
 import { getLocalCurrentTimestamp } from "../../../../../utils/dateUtils";
 import { downloadFile } from "../../../../../utils/downloadUtils";
+import { useAttachmentClientIds } from "../../../hooks/useAttachmentClientIds";
+import { useAttachmentPreviews } from "../../../hooks/useAttachmentPreviews";
 import { deleteTaskAttachment } from "../../../services/deleteTaskAttachment";
 import { TaskActivityFeed } from "./sub/TaskActivityFeed";
 import { TaskCommentEditorBlock } from "./sub/TaskCommentEditorBlock";
 import { TaskCommentList } from "./sub/TaskCommentList";
-
-const resizeImageToFitBox = (imageSize: ImageSizeProps): ImageSizeProps => {
-    const maxWidth = 300;
-    const maxHeight = 300;
-
-    const widthRatio = maxWidth / imageSize.width;
-    const heightRatio = maxHeight / imageSize.height;
-    const scaleFactor = Math.min(widthRatio, heightRatio);
-
-    return {
-        width: Math.round(imageSize.width * scaleFactor),
-        height: Math.round(imageSize.height * scaleFactor),
-    };
-};
 
 type TaskTabBlockProps = {
     socket: Socket | null;
@@ -76,11 +62,13 @@ type TaskTabBlockProps = {
     setMyself: (value: UserProps) => void;
     taskContent: TaskProps;
     setTaskContent: (value: TaskProps) => void;
-    uploadedFiles: any[];
-    setUploadedFiles: (value: any[]) => void;
     setTaskUpdated: (value: boolean) => void;
-    setIsAttachmentDeleted: (value: boolean) => void;
-    setDeletedAttachmentId: (value: number) => void;
+    /** Removes the attachment from both the persisted `uploadedFiles`
+     *  list and the working `tmpCurrentTaskContent.attachments` in a
+     *  single parent-side update. Replaces the older two-flag pattern
+     *  (`setIsAttachmentDeleted` + `setDeletedAttachmentId`) which was
+     *  prone to wedging on rapid double-deletes. */
+    onAttachmentDeleted: (attachmentId: number) => void;
     taskComments: TaskCommentProps[];
     setIsInEdit: (value: boolean) => void;
     setEditTargetComment: (value: TaskCommentProps) => void;
@@ -122,13 +110,10 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         setMyself,
         useCM,
         useUISM,
-        uploadedFiles,
-        setUploadedFiles,
         setTaskUpdated,
         taskContent,
         setTaskContent,
-        setIsAttachmentDeleted,
-        setDeletedAttachmentId,
+        onAttachmentDeleted,
         taskComments,
         setIsInEdit,
         setEditTargetComment,
@@ -149,11 +134,9 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         setTodoFromMessageBubble,
     } = props;
 
-    const [images, setImages] = useState<FileProps[]>([]);
-    const [textFiles, setTextFiles] = useState<FileProps[]>([]);
-    const [uploadingFiles, setUploadingFiles] = useState<AttachmentFileProps[]>([]);
-    const [isUploadingFilesUpdated, setIsUploadingFilesUpdated] = useState<boolean>(false);
-    const [numOfUploadingFiles, setNumOfUploadingFiles] = useState<number>(0);
+    const attachments = taskContent.attachments ?? [];
+    const previews = useAttachmentPreviews(attachments);
+    const nextClientId = useAttachmentClientIds();
     // Per-file size cap. `filterFiles` accepts only files within the
     // limit and stashes the rest for the snackbar; the corresponding
     // `<FileSizeRejectionSnackbar />` is rendered below.
@@ -194,238 +177,74 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         [projectId, currentTaskId]
     );
 
-    const updateDisplayingFiles = (file: File, attachmentId: number) => {
-        if (attachmentId > 0) {
-            if (file.type === "image/jpeg" || file.type === "image/png") {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    if (e.target?.result) {
-                        const img = new Image();
-                        img.src = e.target.result as string;
-                        img.onload = () => {
-                            const size = resizeImageToFitBox({
-                                height: img.height,
-                                width: img.width,
-                            });
-                            setImages((prev) =>
-                                prev.filter((image) => image.attachmentId !== attachmentId)
-                            );
-                            setImages((prev) => [
-                                ...prev,
-                                {
-                                    attachmentId: attachmentId,
-                                    url: img.src,
-                                    name: file.name,
-                                    width: size.width,
-                                    height: size.height,
-                                },
-                            ]);
-                        };
-                    }
-                };
-                reader.readAsDataURL(file);
-            } else {
-                const fileURL = URL.createObjectURL(file);
-                setTextFiles((prev) => prev.filter((f) => f.attachmentId !== attachmentId));
-                setTextFiles((prev) => [
-                    ...prev,
-                    {
-                        attachmentId: attachmentId,
-                        name: file.name,
-                        url: fileURL,
-                        height: -1,
-                        width: -1,
-                    },
-                ]);
-            }
-        }
-    };
-
-    // File upload manager via "Select File" button
     const inputRef = useRef<HTMLInputElement | null>(null);
-    const handleButtonClick = () => {
-        inputRef.current?.click();
-    };
 
-    const handleSelectedFiles = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const selectedFiles = event.target.files;
-        if (selectedFiles) {
+    const appendFiles = useCallback(
+        (files: Iterable<File>, dedupeByName = false) => {
             // Drop oversize files before they take up an attachment slot
-            // (negative id) — they'd otherwise sit in the panel forever
-            // since the backend would 413 the actual upload.
-            const accepted = filterFiles(selectedFiles);
-            if (accepted.length === 0) {
-                event.target.value = "";
-                return;
-            }
-            accepted.forEach((file, index) => {
-                const attachmentId: number = -numOfUploadingFiles - index - 1;
-                setUploadingFiles((prev) => [
-                    ...prev,
-                    { attachment_id: attachmentId, file: file },
-                ]);
-                updateDisplayingFiles(file, attachmentId);
+            // — they'd otherwise sit in the panel forever since the
+            // backend would 413 the actual upload.
+            const incoming = dedupeByName
+                ? Array.from(new Map(Array.from(files).map((f) => [f.name, f])).values())
+                : Array.from(files);
+            const accepted = filterFiles(incoming);
+            if (accepted.length === 0) return;
+            const newItems: AttachmentFileProps[] = accepted.map((file) => ({
+                attachment_id: nextClientId(),
+                file,
+                name: file.name,
+                type: file.type,
+            }));
+            setTaskContent({
+                ...taskContent,
+                attachments: [...attachments, ...newItems],
             });
+            setTaskUpdated(true);
+        },
+        [attachments, filterFiles, nextClientId, setTaskContent, setTaskUpdated, taskContent]
+    );
 
-            setIsUploadingFilesUpdated(true);
-            setNumOfUploadingFiles(numOfUploadingFiles + accepted.length);
-        }
+    const handleSelectedFiles = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.files) appendFiles(event.target.files);
         event.target.value = "";
     };
 
     const handleDroppedFiles = (event: React.DragEvent<HTMLDivElement>) => {
         event.preventDefault();
-
-        // Dedupe by name first (matches existing behaviour), then drop
-        // anything over the per-file size cap.
-        const dedupedFiles = Array.from(
-            new Map(Array.from(event.dataTransfer.files).map((f) => [f.name, f])).values()
-        );
-        const droppedFiles = filterFiles(dedupedFiles);
-        if (droppedFiles.length === 0) return;
-
-        droppedFiles.forEach((file, index) => {
-            const attachmentId: number = -numOfUploadingFiles - index - 1;
-            setUploadingFiles((prev) => [...prev, { attachment_id: attachmentId, file: file }]);
-            updateDisplayingFiles(file, attachmentId);
-        });
-
-        setIsUploadingFilesUpdated(true);
-        setNumOfUploadingFiles(numOfUploadingFiles + droppedFiles.length);
+        // Existing-task tab dedupes by filename to match the prior
+        // behaviour (drag-and-drop can deliver the same file twice on
+        // some OSes).
+        appendFiles(event.dataTransfer.files, true);
     };
 
-    const handleDeleteImage = async (taskId: number | undefined, deletingImage: FileProps) => {
-        setImages((prev) => prev.filter((image) => image !== deletingImage));
-        if (taskId) {
-            await deleteTaskAttachment(taskId, deletingImage.attachmentId, accessToken);
-
-            if (setIsAttachmentDeleted) {
-                setIsAttachmentDeleted(true);
-            }
-            if (setDeletedAttachmentId) {
-                setDeletedAttachmentId(deletingImage.attachmentId);
-            }
-            setUploadedFiles(
-                uploadedFiles.filter((file) => file.attachment_id !== deletingImage.attachmentId)
-            );
-        }
-    };
-
-    const handleDeleteTextFile = async (
-        taskId: number | undefined,
-        deletingTextFile: FileProps
-    ) => {
-        setTextFiles((prev) => prev.filter((file) => file !== deletingTextFile));
-        if (taskId) {
-            await deleteTaskAttachment(taskId, deletingTextFile.attachmentId, accessToken);
-
-            if (setIsAttachmentDeleted) {
-                setIsAttachmentDeleted(true);
-            }
-            if (setDeletedAttachmentId) {
-                setDeletedAttachmentId(deletingTextFile.attachmentId);
-            }
-            setUploadedFiles(
-                uploadedFiles.filter(
-                    (file) => file.attachment_id !== deletingTextFile.attachmentId
-                )
-            );
-        }
-    };
-
-    // We watch the *currently rendered* task id rather than
-    // `useTM.currentPreviewTaskId` so this block can also drive the
-    // milestone preview, which feeds in the milestone's backing task
-    // through `taskContent.id` (the milestone-id and task-id channels
-    // are kept distinct on `useTM`).
-    //
-    // Tab index lives on the parent (TaskPreview / MilestonePreviewInner
-    // via `useInitialTabIndex`); we deliberately don't reset it here on
-    // task change.
-    useEffect(() => {
-        setImages([]);
-        setTextFiles([]);
-        setUploadingFiles([]);
-        setNumOfUploadingFiles(0);
-    }, [taskContent?.id]);
-
-    useEffect(() => {
-        if (isUploadingFilesUpdated === true) {
-            // Append only the *new* negative-id pending uploads. Replacing
-            // `taskContent.attachments` with the full `uploadingFiles` list
-            // works in the steady state (effect 335 keeps `uploadingFiles`
-            // in sync with the saved positive-id rows), but it loses prior
-            // attachments if the user adds a second file while the previous
-            // upload's POST is still in-flight — at that moment
-            // `uploadingFiles` has been cleared back to `[]` and only
-            // contains the new entry. By merging against the current
-            // `taskContent.attachments` we keep the in-flight saved/pending
-            // rows intact instead of clobbering them with the latest file.
-            const newPendingUploads = uploadingFiles.filter((f) => f.attachment_id < 0);
+    const handleDelete = async (attachmentId: number) => {
+        // Negative ids haven't reached the server yet — just drop them
+        // locally. We rely on the parent's tmp/upload reconciliation in
+        // `useSendUpdatedTask` to skip already-removed in-flight rows
+        // when its POST round-trip returns.
+        if (attachmentId < 0) {
             setTaskContent({
                 ...taskContent,
-                attachments: [...(taskContent.attachments ?? []), ...newPendingUploads],
+                attachments: attachments.filter((a) => a.attachment_id !== attachmentId),
             });
-            setIsUploadingFilesUpdated(false);
-            setTaskUpdated(true);
-            setUploadingFiles([]);
+            return;
         }
-    }, [isUploadingFilesUpdated]);
+        if (taskContent.id) {
+            await deleteTaskAttachment(taskContent.id, attachmentId, accessToken);
+        }
+        onAttachmentDeleted(attachmentId);
+    };
 
-    useEffect(() => {
-        setImages([]);
-        setTextFiles([]);
-        const backendFiles: AttachmentFileProps[] = [];
-        uploadedFiles.forEach((attachmentFile) => {
-            if (attachmentFile.attachment_id < 0) return;
-            if (attachmentFile.file_base64) {
-                const byteCharacters = atob(attachmentFile.file_base64);
-                const byteNumbers = new Array(byteCharacters.length)
-                    .fill(0)
-                    .map((_, i) => byteCharacters.charCodeAt(i));
-                const byteArray = new Uint8Array(byteNumbers);
-                const blob = new Blob([byteArray]);
-                const file = new File([blob], attachmentFile.name || "attached_file", {
-                    type: attachmentFile.type,
-                });
+    const imageItems = useMemo(
+        () => attachments.filter((a) => previews.get(a.attachment_id)?.kind === "image"),
+        [attachments, previews]
+    );
+    const fileItems = useMemo(
+        () => attachments.filter((a) => previews.get(a.attachment_id)?.kind === "file"),
+        [attachments, previews]
+    );
 
-                updateDisplayingFiles(file, attachmentFile.attachment_id);
-                // Preserve `file_base64` / `name` / `type` here. Effect 323
-                // pushes `uploadingFiles` straight into `taskContent.attachments`,
-                // which then round-trips through `setCurrentPreviewTask` and
-                // `setUploadedFiles` (TaskPreview effect 192). If we drop
-                // `file_base64` at this hop, the next render of effect 335
-                // sees a positive-id attachment without a base64 and falls
-                // into the `else if (file)` branch — which silently skips
-                // `updateDisplayingFiles`, so previously-saved files vanish
-                // from the panel the moment a new one is added.
-                backendFiles.push({
-                    attachment_id: attachmentFile.attachment_id,
-                    file: file,
-                    file_base64: attachmentFile.file_base64,
-                    name: attachmentFile.name,
-                    type: attachmentFile.type,
-                });
-            } else if (attachmentFile.file) {
-                backendFiles.push({
-                    attachment_id: attachmentFile.attachment_id,
-                    file: attachmentFile.file,
-                    name: attachmentFile.name,
-                    type: attachmentFile.type,
-                });
-            }
-        });
-        setUploadingFiles((prev) => {
-            const pendingUploads = prev.filter((f) => f.attachment_id < 0);
-            return [...backendFiles, ...pendingUploads];
-        });
-    }, [uploadedFiles]);
-
-    // Comment list rendering (Virtuoso, scroll-to-bottom, line counts)
-    // moved into `TaskCommentList` so the chat-thread Comments tab can
-    // mount the same UI directly.
-
-    // State for modal
+    // State for image preview modal
     const [opened, setOpened] = useState(false);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
@@ -459,7 +278,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         {
             label: t.tasks.tabs.attachments,
             icon: <AttachFileRoundedIcon sx={{ fontSize: 16 }} />,
-            count: uploadedFiles.length,
+            count: attachments.length,
         },
         {
             label: t.tasks.tabs.activity,
@@ -795,7 +614,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                             onDragOver={(e) => e.preventDefault()}
                             onDrop={handleDroppedFiles}
                         >
-                            {uploadedFiles.length === 0 && (
+                            {attachments.length === 0 && (
                                 <Box
                                     sx={{
                                         display: "flex",
@@ -854,18 +673,21 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                 </Box>
                             )}
 
-                            {/* Text Files */}
-                            {textFiles.map((file, index) => {
-                                // Negative client-side ids mark attachments that
-                                // haven't been persisted yet — i.e. the
-                                // upload-in-flight state. Once
+                            {/* Non-image files */}
+                            {fileItems.map((item) => {
+                                const preview = previews.get(item.attachment_id);
+                                if (!preview) return null;
+                                // Negative client-side ids mark attachments
+                                // that haven't been persisted yet. Once
                                 // `useSendUpdatedTask` swaps them for the
                                 // server-issued positive ids the spinner
                                 // disappears automatically.
-                                const isUploading = file.attachmentId < 0;
+                                const isUploading = item.attachment_id < 0;
+                                const name =
+                                    item.name ?? (item.file instanceof File ? item.file.name : "");
                                 return (
                                     <Box
-                                        key={`textfile-${file.name}-${file.attachmentId}-${index}`}
+                                        key={`file-${item.attachment_id}`}
                                         sx={{
                                             position: "relative",
                                             textAlign: "center",
@@ -910,9 +732,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                     opacity: 0.4,
                                                 },
                                             }}
-                                            onClick={() =>
-                                                handleDeleteTextFile(taskContent.id, file)
-                                            }
+                                            onClick={() => handleDelete(item.attachment_id)}
                                         >
                                             <CloseRoundedIcon
                                                 sx={{ fontSize: 12, color: "#ef4444" }}
@@ -920,7 +740,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                         </IconButton>
                                         <AppTooltip
                                             title={fmt(t.tasks.tabs.downloadFileTooltip, {
-                                                name: file.name,
+                                                name,
                                             })}
                                         >
                                             <div
@@ -929,7 +749,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                 }}
                                                 onClick={() => {
                                                     if (isUploading) return;
-                                                    downloadFile(file.url, file.name);
+                                                    downloadFile(preview.url, name);
                                                 }}
                                             >
                                                 <InsertDriveFileRoundedIcon
@@ -955,7 +775,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                     : "rgba(0,0,0,0.55)",
                                             }}
                                         >
-                                            {file.name}
+                                            {name}
                                         </Typography>
                                         <UploadingTileBadge open={isUploading} />
                                     </Box>
@@ -963,11 +783,15 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                             })}
 
                             {/* Images */}
-                            {images.map((image, index) => {
-                                const isUploading = image.attachmentId < 0;
+                            {imageItems.map((item) => {
+                                const preview = previews.get(item.attachment_id);
+                                if (!preview) return null;
+                                const isUploading = item.attachment_id < 0;
+                                const name =
+                                    item.name ?? (item.file instanceof File ? item.file.name : "");
                                 return (
                                     <Box
-                                        key={`image-${image.name}-${image.attachmentId}-${index}`}
+                                        key={`image-${item.attachment_id}`}
                                         sx={{
                                             position: "relative",
                                             display: "inline-block",
@@ -1002,31 +826,26 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                     opacity: 0.4,
                                                 },
                                             }}
-                                            onClick={() =>
-                                                handleDeleteImage(taskContent.id, image)
-                                            }
+                                            onClick={() => handleDelete(item.attachment_id)}
                                         >
                                             <CloseRoundedIcon
                                                 sx={{ fontSize: 14, color: "white" }}
                                             />
                                         </IconButton>
                                         <img
-                                            alt={image.name}
-                                            src={image.url}
+                                            alt={name}
+                                            src={preview.url}
                                             style={{
-                                                width: `${image.width}px`,
-                                                height: `${image.height}px`,
-                                                cursor: isUploading ? "default" : "pointer",
+                                                maxWidth: 300,
+                                                maxHeight: 300,
+                                                width: "auto",
+                                                height: "auto",
                                                 display: "block",
+                                                cursor: isUploading ? "default" : "pointer",
                                             }}
-                                            onClick={(e) => {
+                                            onClick={() => {
                                                 if (isUploading) return;
-                                                const target = e.target as HTMLElement;
-                                                if (target.tagName === "IMG") {
-                                                    handleImageClick(
-                                                        (target as HTMLImageElement).src
-                                                    );
-                                                }
+                                                handleImageClick(preview.url);
                                             }}
                                         />
                                         <UploadingTileBadge open={isUploading} />
@@ -1074,7 +893,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                             : "linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(124,58,237,0.12) 100%)",
                                     },
                                 }}
-                                onClick={handleButtonClick}
+                                onClick={() => inputRef.current?.click()}
                             >
                                 <FolderRoundedIcon sx={{ fontSize: 18 }} />
                                 <Typography

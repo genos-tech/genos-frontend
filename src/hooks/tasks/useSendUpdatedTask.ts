@@ -16,7 +16,9 @@ export interface UseSendUpdatedTaskParams {
     myself: UserProps;
     accessToken: string | null;
     currentPreviewTask: TaskProps | null | undefined;
-    setCurrentPreviewTask: (value: TaskProps) => void;
+    setCurrentPreviewTask: (
+        value: TaskProps | undefined | ((prev: TaskProps | undefined) => TaskProps | undefined)
+    ) => void;
 
     // Option 1: Provide individual parameters (for backward compatibility)
     tmpCurrentTaskContent?: TaskProps;
@@ -29,7 +31,7 @@ export interface UseSendUpdatedTaskParams {
     setUploadedFiles?: (
         value: AttachmentFileProps[] | ((prev: AttachmentFileProps[]) => AttachmentFileProps[])
     ) => void;
-    setTmpCurrentTaskContent?: (value: TaskProps) => void;
+    setTmpCurrentTaskContent?: (value: TaskProps | ((prev: TaskProps) => TaskProps)) => void;
     setCurrentTaskId?: (value: number | undefined) => void;
     setBody?: (value: PartialBlock[]) => void;
     setTaskUpdated?: (value: boolean) => void;
@@ -65,7 +67,6 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
     const body = taskEditState?.body ?? params.body!;
     const taskBodyEdited = taskEditState?.taskBodyEdited ?? params.taskBodyEdited!;
     const taskStatusUpdated = taskEditState?.taskStatusUpdated ?? params.taskStatusUpdated!;
-    const uploadedFiles = taskEditState?.uploadedFiles ?? params.uploadedFiles!;
     const setUploadedFiles = taskEditState?.setUploadedFiles ?? params.setUploadedFiles!;
     const setTmpCurrentTaskContent =
         taskEditState?.setTmpCurrentTaskContent ?? params.setTmpCurrentTaskContent!;
@@ -81,47 +82,64 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
 
     const sendUpdatedTask = useCallback(
         async (taskSwitched: boolean) => {
-            let newTaskContent: TaskProps = {
+            const baseTaskContent: TaskProps = {
                 ...tmpCurrentTaskContent,
                 title: taskTitle === "" ? initTaskTitle : taskTitle,
                 body: body,
             };
 
+            // Snapshot of negative-id rows being sent up — anything
+            // *not* in this set is either already-saved (positive id) or
+            // a brand-new file the user added during the round-trip and
+            // must NOT be dropped from the merged result.
+            const sentNegativeIds = new Set(
+                (baseTaskContent.attachments ?? [])
+                    .filter((a) => a.attachment_id < 0)
+                    .map((a) => a.attachment_id)
+            );
+
             const uploadAttachments = await sendUpdatedSpecificTask(
                 socket,
                 myself,
-                newTaskContent,
+                baseTaskContent,
                 taskBodyEdited,
                 taskStatusUpdated,
                 accessToken
             );
 
-            if (uploadAttachments && uploadAttachments.length > 0) {
-                let uploadedAttachments: AttachmentFileProps[] = [];
-                uploadAttachments.map((attachment: any) => {
-                    if (attachment.attachment_id) {
-                        uploadedAttachments = [
-                            ...uploadedAttachments,
-                            {
-                                attachment_id: attachment.attachment_id,
-                                file: attachment.attached_file,
-                                file_base64: attachment.file_base64,
-                                name: attachment.name,
-                                type: attachment.attached_type,
-                            },
-                        ];
-                    }
-                });
-                setUploadedFiles([...uploadedFiles, ...uploadedAttachments]);
+            const persistedAttachments: AttachmentFileProps[] =
+                uploadAttachments && uploadAttachments.length > 0
+                    ? uploadAttachments
+                          .filter((a: any) => a.attachment_id)
+                          .map((a: any) => ({
+                              attachment_id: a.attachment_id,
+                              file: a.attached_file,
+                              file_base64: a.file_base64,
+                              name: a.name,
+                              type: a.attached_type,
+                          }))
+                    : [];
 
-                newTaskContent = {
-                    ...newTaskContent,
-                    attachments: [
-                        ...newTaskContent.attachments.filter((a) => a.attachment_id >= 0),
-                        ...uploadedAttachments,
-                    ],
-                };
+            if (persistedAttachments.length > 0) {
+                // Functional updater so any files added during the
+                // upload survive: we only strip the negative ids we
+                // actually persisted (`sentNegativeIds`); newer
+                // negative ids stay put and ride the next save cycle.
+                setUploadedFiles((prev) => [
+                    ...prev.filter((a) => a.attachment_id >= 0),
+                    ...persistedAttachments,
+                ]);
             }
+
+            const mergeAttachments = (prev: TaskProps): TaskProps => ({
+                ...prev,
+                attachments: [
+                    ...(prev.attachments ?? []).filter(
+                        (a) => !sentNegativeIds.has(a.attachment_id)
+                    ),
+                    ...persistedAttachments,
+                ],
+            });
 
             if (taskSwitched && currentPreviewTask) {
                 // Initialize the following variable when user switches the previewing task
@@ -130,10 +148,27 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
                 setCurrentTaskId(currentPreviewTask.id);
                 setBody(currentPreviewTask.body || []);
             } else {
-                // Update only the tmpCurrentTaskContent when user updated the task content
-                // (Not switched the previewing task)
-                setTmpCurrentTaskContent(newTaskContent);
-                setCurrentPreviewTask(newTaskContent);
+                // Update only the tmpCurrentTaskContent when user
+                // updated the task content (not switched). Use a
+                // functional updater so files the user added during
+                // the upload round-trip aren't clobbered by our
+                // stale closure on `tmpCurrentTaskContent`.
+                setTmpCurrentTaskContent((prev) =>
+                    mergeAttachments({
+                        ...prev,
+                        title: baseTaskContent.title,
+                        body: baseTaskContent.body,
+                    })
+                );
+                setCurrentPreviewTask((prev) =>
+                    prev
+                        ? mergeAttachments({
+                              ...prev,
+                              title: baseTaskContent.title,
+                              body: baseTaskContent.body,
+                          })
+                        : baseTaskContent
+                );
             }
             setTaskUpdated(false);
             setTaskBodySaved(true);
@@ -151,7 +186,6 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
             body,
             taskBodyEdited,
             taskStatusUpdated,
-            uploadedFiles,
             currentPreviewTask,
             setUploadedFiles,
             setTmpCurrentTaskContent,
