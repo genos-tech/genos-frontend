@@ -1,6 +1,7 @@
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
+import { useRef } from "react";
 import {
     BlockNoteSchema,
     defaultBlockSpecs,
@@ -26,6 +27,8 @@ import { Socket } from "socket.io-client";
 
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
+import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
+import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickIntercept";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { UserProps } from "../../types/admin";
@@ -70,6 +73,10 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
     const bnBoxClassName = customClassName
         ? `${customClassName}-${mode}`
         : `bn-todo-bubble-box-${mode}`;
+
+    const urlLinkModal = useUrlLinkModal();
+    const editorBoxRef = useRef<HTMLDivElement>(null);
+    useAnchorClickIntercept(editorBoxRef, urlLinkModal);
 
     // Disable the Audio and Image blocks from the built-in schema
     // This is done by picking out the blocks you want to disable
@@ -126,7 +133,7 @@ export const BnTodoPreview = (props: BnTodoPreviewProps) => {
     });
 
     return (
-        <Box className={bnBoxClassName} sx={{ px: "10px" }}>
+        <Box ref={editorBoxRef} className={bnBoxClassName} sx={{ px: "10px" }}>
             <BlockNoteView
                 className="bn-box"
                 editable={true}
