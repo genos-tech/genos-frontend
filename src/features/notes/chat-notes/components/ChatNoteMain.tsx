@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Stack, TabPanel, Tabs } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
@@ -10,10 +10,12 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { useChatNoteEditor } from "../../../../hooks/notes/useChatNoteEditor";
 import { upsertNoteCache } from "../../../../hooks/notes/useNoteData";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import type { NoteTab } from "../../../../hooks/notes/useNoteTabs";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
 import { ChatNoteProps } from "../../../../types/notes";
 import { ChatNoteEditor } from "./ChatNoteEditor";
+import { ChatNoteEditorPanel } from "./ChatNoteEditorPanel";
 import { ChatNoteHeader } from "./ChatNoteHeader";
 import { ChatNoteTabList } from "./ChatNoteTabList";
 
@@ -157,6 +159,30 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
             c.chatId === activeChatNote.chatId
     );
 
+    // In task-page mode ChatNoteMain renders standalone (the panel
+    // hosting it isn't the notes-home view, so the editor pool in
+    // `NoteContentRenderer` isn't mounted). Render a single inline
+    // editor panel for the active chat note. Chat-page mode keeps its
+    // own inline editor below (driven by `chatPanelApi`, not by
+    // tabsApi), so this branch is gated on isInTaskPage.
+    const inlineChatTab = useMemo<(NoteTab & { kind: "chat" }) | null>(() => {
+        if (!isInTaskPage) return null;
+        const n = useNM.currentChatNote;
+        if (!n || !myself.teamId) return null;
+        return {
+            kind: "chat",
+            noteType: 3,
+            noteId: n.noteId,
+            chatType: n.chatType,
+            chatId: n.chatId,
+            isThread: n.isThread,
+            threadId: n.threadId,
+            id: `chat-${n.noteId}`,
+            title: n.title,
+            teamId: myself.teamId,
+        };
+    }, [isInTaskPage, useNM.currentChatNote, myself.teamId]);
+
     // Event handlers
     const handleCreateChildNote = () => {
         if (activeChatNote) {
@@ -197,7 +223,12 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                         sx={{
                             width: "100%",
                             height: "30px",
-                            mt: "10px",
+                            // Task-page panel wraps this Main with its
+                            // own header zone, so we pull up by 15px to
+                            // sit flush with that surround. Notes-home
+                            // and chat-page use the standard 10px top
+                            // gap.
+                            mt: isInTaskPage ? "-15px" : "10px",
                             mb: "5px",
                         }}
                     >
@@ -284,6 +315,26 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                             </TabPanel>
                         )}
                     </Tabs>
+
+                    {/* Task-page inline editor — task-page panel
+                        renders a single chat note, so this is one
+                        panel, always active. Notes-home renders editors
+                        via the LRU pool in NoteContentRenderer
+                        instead. */}
+                    {isInTaskPage && inlineChatTab && (
+                        <ChatNoteEditorPanel
+                            accessToken={accessToken}
+                            isActive
+                            myself={myself}
+                            setMyself={setMyself}
+                            socket={socket}
+                            tab={inlineChatTab}
+                            useCM={useCM}
+                            useNM={useNM}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
+                        />
+                    )}
                 </Stack>
             )}
         </Stack>

@@ -1,17 +1,20 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Stack, Tabs } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
+import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
+import type { NoteTab } from "../../../../hooks/notes/useNoteTabs";
 import { UserProps } from "../../../../types/admin";
 import { EmptyState } from "../../common/components/EmptyState";
 import { NoteHeaderActions } from "../../common/components/NoteHeaderActions";
 import { NoteTabList } from "../../common/components/NoteTabList";
 import { MyNoteHeader } from "../components/MyNoteHeader";
 import { ModalDeleteMyNote } from "../modals/ModalDeleteMyNote";
+import { MyNoteEditorPanel } from "./MyNoteEditorPanel";
 
 /**
  * Props for the MyNoteMain component
@@ -38,7 +41,27 @@ interface MyNoteMainProps {
 export const MyNoteMain = (props: MyNoteMainProps) => {
     const { isInTaskPage, useTEM, socket, myself, setMyself, useUISM, useNM, useCM } = props;
 
+    const { accessToken } = useAuth();
     const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
+
+    // In task-page mode MyNoteMain renders standalone — the editor pool
+    // lives in `NoteContentRenderer`, which is only mounted on
+    // notes-home. So we render a single inline editor panel for the
+    // active my note here. Derived from `currentMyNote` so the body
+    // still renders during the brief sync gap after a tab switch.
+    const inlineMyTab = useMemo<(NoteTab & { kind: "my" }) | null>(() => {
+        if (!isInTaskPage) return null;
+        const n = useNM.currentMyNote;
+        if (!n || !myself.teamId) return null;
+        return {
+            kind: "my",
+            noteType: 1,
+            noteId: n.noteId,
+            id: `my-${n.noteId}`,
+            title: n.title,
+            teamId: myself.teamId,
+        };
+    }, [isInTaskPage, useNM.currentMyNote, myself.teamId]);
 
     // The notes-home tab strip mixes all kinds (my/task/chat) into a
     // single bar, so the close handler must derive the kind from the
@@ -122,7 +145,11 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                         sx={{
                             width: "100%",
                             height: "30px",
-                            mt: "10px",
+                            // Task-page panel wraps this Main with its
+                            // own header zone, so we pull up by 15px to
+                            // sit flush with that surround. Notes-home
+                            // uses the standard 10px top gap.
+                            mt: isInTaskPage ? "-15px" : "10px",
                             mb: "5px",
                         }}
                     >
@@ -180,6 +207,25 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                     >
                         <NoteTabList useNM={useNM} onCloseTab={handleCloseTab} />
                     </Tabs>
+
+                    {/* Task-page inline editor — task-page panel is
+                        single-note, so this is one panel, always
+                        active. Notes-home renders editors via the LRU
+                        pool in NoteContentRenderer instead. */}
+                    {isInTaskPage && inlineMyTab && (
+                        <MyNoteEditorPanel
+                            accessToken={accessToken}
+                            isActive
+                            myself={myself}
+                            setMyself={setMyself}
+                            socket={socket}
+                            tab={inlineMyTab}
+                            useCM={useCM}
+                            useNM={useNM}
+                            useTEM={useTEM}
+                            useUISM={useUISM}
+                        />
+                    )}
                 </Stack>
             )}
         </Stack>
