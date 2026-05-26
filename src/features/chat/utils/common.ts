@@ -35,6 +35,9 @@ export function getFirstLine(first_line: any): string {
         } else if (inline.type === "mention") {
             const user = inline.props?.userName;
             if (user) parts.push(`@${user}`);
+        } else if (inline.type === "mentionGroup") {
+            const group = inline.props?.groupName;
+            if (group) parts.push(`@${group}`);
         } else if (inline.type === "link") {
             const inner = (inline.content as { text?: string }[]) ?? [];
             if (inner[0]?.text) parts.push(inner[0].text);

@@ -38,7 +38,9 @@ const firstLine = (text: string | null | undefined): string | null => {
 // Walk a BlockNote-style `content` tree and concatenate any leaf `text`
 // nodes. Used as a fallback when `contentText` is empty on a message
 // (older bubbles persisted before that field was populated still carry
-// the rich content under `content`).
+// the rich content under `content`). Also surfaces mention and
+// mention-group chips as `@name` tokens so a message that's *only* a
+// chip ("@team") still produces a useful preview.
 const textFromBlocks = (content: unknown): string => {
     if (!content) return "";
     const parts: string[] = [];
@@ -50,7 +52,20 @@ const textFromBlocks = (content: unknown): string => {
         }
         if (typeof node === "object") {
             const obj = node as Record<string, unknown>;
-            if (typeof obj.text === "string") parts.push(obj.text);
+            const nodeType = obj.type;
+            if (nodeType === "mention") {
+                const user = (obj.props as Record<string, unknown> | undefined)?.userName;
+                if (typeof user === "string" && user) {
+                    parts.push(`@${user}`);
+                }
+            } else if (nodeType === "mentionGroup") {
+                const group = (obj.props as Record<string, unknown> | undefined)?.groupName;
+                if (typeof group === "string" && group) {
+                    parts.push(`@${group}`);
+                }
+            } else if (typeof obj.text === "string") {
+                parts.push(obj.text);
+            }
             if (obj.content) walk(obj.content);
             if (obj.children) walk(obj.children);
         }
