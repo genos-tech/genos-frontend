@@ -184,17 +184,24 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
     }, [isInTaskPage, useNM.currentChatNote, myself.teamId]);
 
     // Event handlers
-    const handleCreateChildNote = () => {
-        if (activeChatNote) {
-            useNM.handleCreateNewChatNote(
-                activeChatNote.noteId,
-                activeChatNote.chatType,
-                activeChatNote.chatId,
-                activeChatNote.isThread,
-                activeChatNote.threadId
-            );
-        } else {
+    const handleCreateChildNote = async () => {
+        if (!activeChatNote) {
             console.error("Can't parent note ID to create a child note.");
+            return;
+        }
+        const newNote = await useNM.handleCreateNewChatNote(
+            activeChatNote.noteId,
+            activeChatNote.chatType,
+            activeChatNote.chatId,
+            activeChatNote.isThread,
+            activeChatNote.threadId
+        );
+        // Chat-page mode mirrors an isolated `chatPanelApi.note` rather
+        // than the global `currentChatNote` — `handleCreateNewChatNote`
+        // only touches the latter, so without this the chat panel keeps
+        // showing the parent note even though the child was created.
+        if (isInChatPage && newNote) {
+            useNM.chatPanelApi.setNote(newNote);
         }
     };
 
@@ -320,9 +327,13 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                         renders a single chat note, so this is one
                         panel, always active. Notes-home renders editors
                         via the LRU pool in NoteContentRenderer
-                        instead. */}
+                        instead. The `key` forces remount on note id
+                        change (parent → child) — BlockNote uses `body`
+                        as an initial value and wouldn't pick up the
+                        new doc otherwise. */}
                     {isInTaskPage && inlineChatTab && (
                         <ChatNoteEditorPanel
+                            key={inlineChatTab.id}
                             accessToken={accessToken}
                             isActive
                             myself={myself}

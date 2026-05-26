@@ -211,9 +211,13 @@ export const MyNoteMain = (props: MyNoteMainProps) => {
                     {/* Task-page inline editor — task-page panel is
                         single-note, so this is one panel, always
                         active. Notes-home renders editors via the LRU
-                        pool in NoteContentRenderer instead. */}
+                        pool in NoteContentRenderer instead. The `key`
+                        forces remount on note id change (parent → child)
+                        — BlockNote uses `body` as an initial value and
+                        wouldn't pick up the new doc otherwise. */}
                     {isInTaskPage && inlineMyTab && (
                         <MyNoteEditorPanel
+                            key={inlineMyTab.id}
                             accessToken={accessToken}
                             isActive
                             myself={myself}

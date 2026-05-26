@@ -234,9 +234,16 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
 
                     {/* Task-page inline editor — task-page panel is
                         single-note, so this is one panel, always
-                        active. */}
+                        active. The `key` is critical: BlockNote
+                        treats `body` as an initial value and won't
+                        sync subsequent body changes from props, so a
+                        switch from parent → child note (e.g. via the
+                        header's "Child Note" action) must force a
+                        full remount, otherwise the editor keeps
+                        showing the parent's document. */}
                     {isInTaskPage && inlineTaskTab && (
                         <TaskNoteEditorPanel
+                            key={inlineTaskTab.id}
                             accessToken={accessToken}
                             isActive
                             myself={myself}
