@@ -10,10 +10,16 @@ import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import {
     Badge,
     Box,
+    Button,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
     Divider,
     GlobalStyles,
     List,
     ListItem,
+    Modal,
+    ModalDialog,
     Sheet,
     Tooltip,
     Typography,
@@ -131,6 +137,11 @@ export const Sidebar = (props: SidebarProps) => {
     const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
     const [avatarUserId, setAvatarUserId] = useState<string | undefined>(undefined);
     const [openSettings, setOpenSettings] = useState<boolean>(false);
+    // Sign-out is destructive (clears localStorage, drafts, history) and
+    // visually adjacent to the settings icon — easy to misclick. The
+    // confirmation modal is the safety net.
+    const [openSignOutConfirm, setOpenSignOutConfirm] = useState<boolean>(false);
+    const [signOutBusy, setSignOutBusy] = useState<boolean>(false);
 
     const handleLogout = async () => {
         try {
@@ -673,7 +684,7 @@ export const Sidebar = (props: SidebarProps) => {
                                         },
                                     },
                                 }}
-                                onClick={handleLogout}
+                                onClick={() => setOpenSignOutConfirm(true)}
                             >
                                 <Box
                                     sx={{
@@ -792,6 +803,55 @@ export const Sidebar = (props: SidebarProps) => {
                 useCM={useCM}
                 useUISM={useUISM}
             />
+
+            <Modal
+                open={openSignOutConfirm}
+                onClose={() => !signOutBusy && setOpenSignOutConfirm(false)}
+            >
+                <ModalDialog
+                    sx={{
+                        width: { xs: "calc(100vw - 24px)", md: "auto" },
+                        minWidth: { xs: 0, md: 380 },
+                        maxWidth: { xs: "100vw", md: 480 },
+                    }}
+                >
+                    <DialogTitle>{t.sidebar.signOutConfirm.title}</DialogTitle>
+                    <Divider />
+                    <DialogContent>
+                        <Typography level="body-sm" sx={{ pt: 1 }}>
+                            {t.sidebar.signOutConfirm.body}
+                        </Typography>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button
+                            color="neutral"
+                            disabled={signOutBusy}
+                            variant="plain"
+                            onClick={() => setOpenSignOutConfirm(false)}
+                        >
+                            {t.sidebar.signOutConfirm.cancel}
+                        </Button>
+                        <Button
+                            color="danger"
+                            loading={signOutBusy}
+                            onClick={async () => {
+                                setSignOutBusy(true);
+                                try {
+                                    await handleLogout();
+                                } finally {
+                                    // Sign-out navigates away on success;
+                                    // resetting state defends against the
+                                    // failure path (button stays clickable).
+                                    setSignOutBusy(false);
+                                    setOpenSignOutConfirm(false);
+                                }
+                            }}
+                        >
+                            {t.sidebar.signOutConfirm.confirm}
+                        </Button>
+                    </DialogActions>
+                </ModalDialog>
+            </Modal>
         </Sheet>
     );
 };

@@ -22,4 +22,10 @@ export const sidebar = {
         notesShortcut: { mac: "Ctrl+⌘+N", windows: "Ctrl+Alt+N" },
         historyShortcut: { mac: "History · Ctrl+⌘+H", windows: "History · Ctrl+Alt+H" },
     },
+    signOutConfirm: {
+        title: "Sign out of this workspace?",
+        body: "You'll need to sign in again to come back. Any unsent drafts on this device will be cleared.",
+        cancel: "Cancel",
+        confirm: "Sign out",
+    },
 } as const;
