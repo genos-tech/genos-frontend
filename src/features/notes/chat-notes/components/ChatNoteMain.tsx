@@ -237,6 +237,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                          * drives it off the new tabsApi. */}
                         {!isInChatPage && (
                             <ChatNoteTabList
+                                selectedTabIndex={useNM.selectedTabIndex}
                                 tabItems={useNM.tabItems}
                                 onCloseTab={handleCloseTab}
                             />

@@ -34,12 +34,6 @@ export const TaskNoteTabs = ({ useNM, onCloseTab }: TaskNoteTabsProps) => {
     const [canScrollRight, setCanScrollRight] = useState(false);
     const scrollStateRef = useRef({ left: false, right: false });
     const rafIdRef = useRef<number>(0);
-    // Track the last tab's identity to detect when a new tab is added
-    const getLastTabKey = (items: typeof useNM.tabItems) =>
-        items.length > 0
-            ? `${items[items.length - 1].noteType}-${items[items.length - 1].noteId}`
-            : "";
-    const prevLastTabKeyRef = useRef<string>(getLastTabKey(useNM.tabItems));
 
     const checkScrollability = useCallback(() => {
         const el = scrollContainerRef.current;
@@ -82,33 +76,43 @@ export const TaskNoteTabs = ({ useNM, onCloseTab }: TaskNoteTabsProps) => {
         };
     }, [checkScrollability]);
 
-    // Effect to scroll to right when new tab is added (detected by last tab key change)
-    const lastTabKey = getLastTabKey(useNM.tabItems);
+    // Keep the active tab visible in the strip. Fires whenever the
+    // active selection changes (new tab opened → becomes active,
+    // existing tab clicked, tab closed → neighbour promotes) or the
+    // tab count changes. Replaces the old "scroll to right end on new
+    // tab" effect, which missed clicks on existing off-screen tabs.
+    const selectedTabIndex = useNM.selectedTabIndex;
     useEffect(() => {
-        const el = scrollContainerRef.current;
-        const prevLastTabKey = prevLastTabKeyRef.current;
+        const container = scrollContainerRef.current;
+        if (!container) return;
+        if (selectedTabIndex < 0) return;
 
-        // Update the ref with current last tab key
-        prevLastTabKeyRef.current = lastTabKey;
-
-        // If the last tab changed and it's not empty, a new tab was added - scroll to the right
-        if (lastTabKey !== prevLastTabKey && lastTabKey !== "" && prevLastTabKey !== "" && el) {
-            const timeoutId = setTimeout(() => {
-                el.scrollTo({
-                    left: el.scrollWidth - el.clientWidth,
+        const timeoutId = setTimeout(() => {
+            const target =
+                container.querySelectorAll<HTMLElement>('[role="tab"]')[selectedTabIndex];
+            if (!target) {
+                checkScrollability();
+                return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            const targetRect = target.getBoundingClientRect();
+            const padding = 12;
+            if (targetRect.left < containerRect.left + padding) {
+                container.scrollTo({
+                    left: container.scrollLeft + (targetRect.left - containerRect.left) - padding,
                     behavior: "smooth",
                 });
-                // Check scrollability after scrolling
-                setTimeout(checkScrollability, 150);
-            }, 100);
-            return () => clearTimeout(timeoutId);
-        } else {
-            const timeoutId = setTimeout(() => {
-                checkScrollability();
-            }, 100);
-            return () => clearTimeout(timeoutId);
-        }
-    }, [checkScrollability, lastTabKey]);
+            } else if (targetRect.right > containerRect.right - padding) {
+                container.scrollTo({
+                    left:
+                        container.scrollLeft + (targetRect.right - containerRect.right) + padding,
+                    behavior: "smooth",
+                });
+            }
+            setTimeout(checkScrollability, 150);
+        }, 80);
+        return () => clearTimeout(timeoutId);
+    }, [checkScrollability, selectedTabIndex, useNM.tabItems.length]);
 
     const scroll = (direction: "left" | "right") => {
         const el = scrollContainerRef.current;
