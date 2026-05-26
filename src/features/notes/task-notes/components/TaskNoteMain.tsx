@@ -1,18 +1,15 @@
-import { useCallback, useEffect, useState } from "react";
-import { Box, IconButton, Stack } from "@mui/joy";
+import { useCallback, useState } from "react";
+import { Box, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
-import { upsertNoteCache } from "../../../../hooks/notes/useNoteData";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
-import { TaskNoteProps } from "../../../../types/notes";
 import { NoteHeaderActions } from "../../common/components/NoteHeaderActions";
-import { useNoteAutoSave } from "../../common/hooks/useNoteAutoSave";
 import { useTaskPreview } from "../../common/hooks/useTaskPreview";
 import { ModalDeleteTaskNote } from "../modals/ModalDeleteTaskNote";
 import { ACTaskNotes } from "./autocompletes/ACTaskNotes";
@@ -51,57 +48,15 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
     const [openSearchBox, setOpenSearchBox] = useState(false);
     const [openDeleteNote, setOpenDeleteNote] = useState<boolean>(false);
 
-    // Custom hooks
-    const {
-        noteBodySaved,
-        setNoteBodyEdited,
-        setNoteBodySaved,
-        body,
-        setBody,
-        currentTaskNoteTitle,
-        handleTitleChange,
-        handleTitleBlur,
-    } = useNoteAutoSave({
-        currentTaskNote: useNM.currentTaskNote,
-        myself,
-        accessToken: accessToken || "",
-        socket,
-        resyncSignal: useNM.noteResyncNonce,
-        onNoteUpdate: (updatedNote: TaskNoteProps) => {
-            // Push the latest title into the new tabs API so the strip
-            // re-renders without going through the legacy
-            // `setTabItems`/`setCurrent*Note` round-trip.
-            useNM.tabsApi.updateTabTitle(updatedNote.noteId, "task", updatedNote.title);
-
-            useNM.setTaskNoteMeta(
-                useNM.taskNoteMeta.map((item) =>
-                    item.noteType === updatedNote.noteType && item.noteId === updatedNote.noteId
-                        ? { ...item, title: updatedNote.title }
-                        : item
-                )
-            );
-
-            // Cache write-through and mirror into the legacy `currentTaskNote`
-            // field so other consumers (header, breadcrumbs, etc.) read the
-            // freshest title without a refetch.
-            upsertNoteCache(updatedNote);
-            useNM.setCurrentTaskNote(updatedNote);
-
-            // Optimistically flip the history chip to "by me · just now".
-            useNM.bumpNoteVersionsHead(updatedNote.noteType, updatedNote.noteId);
-        },
-    });
-
+    // The BlockNote editor + autosave hook now lives in
+    // `TaskNoteEditorPanel`, one instance per live tab. This Main owns
+    // only the active-tab-bound chrome: header, modal, task-preview link.
     const { currentTask } = useTaskPreview({
         currentTaskNote: useNM.currentTaskNote,
         myself,
         accessToken: accessToken || "",
         setCurrentPreviewTask: useTM.setCurrentPreviewTask,
     });
-
-    useEffect(() => {
-        setNoteBodySaved(false);
-    }, [useNM.selectedTabIndex]);
 
     // The notes-home tab strip mixes all kinds (my/task/chat). Look up
     // the tab by index in `tabsApi.tabs` so we close the right one,
@@ -173,7 +128,7 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
 
     return (
         <Stack direction={"column"} sx={{ width: "100%" }}>
-            {body && useNM.currentNoteType !== 0 && (
+            {useNM.currentNoteType !== 0 && (
                 <>
                     {/* Note Header */}
                     <Stack
@@ -206,18 +161,16 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
 
                         {isInTaskPage === false && (
                             <TaskNoteHeader
-                                useNM={useNM}
                                 myself={myself}
                                 setMyself={setMyself}
                                 socket={socket}
                                 useCM={useCM}
+                                useNM={useNM}
                                 useUISM={useUISM}
                             />
                         )}
 
                         <NoteHeaderActions
-                            useCM={useCM}
-                            useNM={useNM}
                             currentTask={currentTask}
                             isInTaskPage={isInTaskPage}
                             myself={myself}
@@ -225,6 +178,8 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                             pmChat={pmChat}
                             setMyself={setMyself}
                             socket={socket}
+                            useCM={useCM}
+                            useNM={useNM}
                             useTEM={useTEM}
                             useUISM={useUISM}
                             onCloseNotes={handleCloseNotes}
@@ -246,24 +201,9 @@ export const TaskNoteMain = (props: TaskNoteMainProps) => {
                         )}
                     </Stack>
 
-                    <TaskNoteTabs
-                        body={body}
-                        useCM={useCM}
-                        useNM={useNM}
-                        currentTaskNoteTitle={currentTaskNoteTitle}
-                        myself={myself}
-                        noteBodySaved={noteBodySaved}
-                        setBody={setBody}
-                        setMyself={setMyself}
-                        setNoteBodyEdited={setNoteBodyEdited}
-                        setNoteBodySaved={setNoteBodySaved}
-                        socket={socket}
-                        useTEM={useTEM}
-                        useUISM={useUISM}
-                        onCloseTab={handleCloseTab}
-                        onTitleBlur={handleTitleBlur}
-                        onTitleChange={handleTitleChange}
-                    />
+                    {/* Just the tab strip — editor bodies live in the
+                        editor pool rendered by NoteContentRenderer. */}
+                    <TaskNoteTabs useNM={useNM} onCloseTab={handleCloseTab} />
                 </>
             )}
         </Stack>

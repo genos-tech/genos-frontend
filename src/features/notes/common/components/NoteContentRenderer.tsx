@@ -4,6 +4,7 @@ import TouchAppOutlinedIcon from "@mui/icons-material/TouchAppOutlined";
 import { Box, Button, Stack, Typography, useColorScheme } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
+import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -13,8 +14,11 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TaskPreview } from "../../../tasks/components/contents/TaskPreview";
+import { ChatNoteEditorPanel } from "../../chat-notes/components/ChatNoteEditorPanel";
 import { ChatNoteMain } from "../../chat-notes/components/ChatNoteMain";
+import { MyNoteEditorPanel } from "../../my-notes/components/MyNoteEditorPanel";
 import { MyNoteMain } from "../../my-notes/components/MyNoteMain";
+import { TaskNoteEditorPanel } from "../../task-notes/components/TaskNoteEditorPanel";
 import { TaskNoteMain } from "../../task-notes/components/TaskNoteMain";
 import { NoteHomeContent } from "./NoteHomeContent";
 
@@ -35,6 +39,7 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
     const { t } = useTranslation();
+    const { accessToken } = useAuth();
 
     const renderPlaceholder = (message: string, subtitle?: string) => (
         <Box
@@ -149,8 +154,8 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
 
                 {/* Hint indicator */}
                 <Stack
-                    direction="row"
                     alignItems="center"
+                    direction="row"
                     spacing={0.5}
                     sx={{
                         mt: 1,
@@ -270,90 +275,22 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
 
                     {useNM.currentNoteType === 1 && (
                         <Button
-                            variant="soft"
                             color="neutral"
                             startDecorator={<NoteAddRoundedIcon sx={{ fontSize: 18 }} />}
-                            onClick={() => useNM.handleCreateNewMyNote(null)}
+                            variant="soft"
                             sx={{
                                 mt: 0.5,
                                 borderRadius: "10px",
                                 fontWeight: 600,
                                 px: 2.5,
                             }}
+                            onClick={() => useNM.handleCreateNewMyNote(null)}
                         >
                             {t.notes.placeholder.newMyNote}
                         </Button>
                     )}
                 </Stack>
             </Box>
-        );
-    }
-
-    // My Note (noteType === 1)
-    if (activeNoteType === 1 && useNM.currentMyNote) {
-        return (
-            <MyNoteMain
-                isInTaskPage={false}
-                useCM={useCM}
-                myself={myself}
-                useNM={useNM}
-                setMyself={setMyself}
-                socket={socket}
-                useTEM={useTEM}
-                useUISM={useUISM}
-            />
-        );
-    }
-
-    // Task Note (noteType === 2)
-    if (activeNoteType === 2 && useNM.currentTaskNote) {
-        return (
-            <>
-                <TaskNoteMain
-                    useCM={useCM}
-                    isInTaskPage={false}
-                    myself={myself}
-                    useNM={useNM}
-                    setMyself={setMyself}
-                    socket={socket}
-                    useTEM={useTEM}
-                    useTM={useTM}
-                    useUISM={useUISM}
-                />
-
-                {useNM.isTaskVisibleInNote && useTM.currentPreviewTask && (
-                    <TaskPreview
-                        useCM={useCM}
-                        useNM={useNM}
-                        myself={myself}
-                        setMyself={setMyself}
-                        socket={socket}
-                        useTEM={useTEM}
-                        useTM={useTM}
-                        useUISM={useUISM}
-                        usePM={usePM}
-                    />
-                )}
-            </>
-        );
-    }
-
-    // Chat Note (noteType === 3)
-    if (activeNoteType === 3 && useNM.currentChatNote) {
-        return (
-            <ChatNoteMain
-                useCM={useCM}
-                isInChatPage={false}
-                isInTaskPage={false}
-                myself={myself}
-                useNM={useNM}
-                usePM={usePM}
-                setMyself={setMyself}
-                socket={socket}
-                useTEM={useTEM}
-                useTM={useTM}
-                useUISM={useUISM}
-            />
         );
     }
 
@@ -365,25 +302,153 @@ export const NoteContentRenderer = (props: NoteContentRendererProps) => {
         );
     }
 
-    // Fallback: tabs exist but the current note for the active type is
-    // still loading (rare cache miss after a tab switch). Render a
-    // transparent box that matches the page background so the pane
-    // never appears as a black flash. The actual note will appear in
-    // the very next render once `useNoteManagement`'s active-tab sync
-    // effect resolves.
-    if (useNM.tabItems.length > 0) {
-        return (
-            <Box
-                sx={{
-                    width: "100%",
-                    height: "100%",
-                    background: isDark
-                        ? "radial-gradient(ellipse at center, rgba(251,191,36,0.03) 0%, transparent 70%)"
-                        : "radial-gradient(ellipse at center, rgba(251,191,36,0.04) 0%, transparent 70%)",
-                }}
-            />
-        );
-    }
+    // The active Main renders the header + tab strip for the active
+    // kind. The editor body for *every* live tab is rendered as a
+    // sibling below (the LRU editor pool) — that's what makes tab
+    // switching feel instant: a hidden panel is already mounted with
+    // its BlockNote + collab provider warm, so the visible→hidden flip
+    // is just CSS.
+    //
+    // Falling back to the active-Main render when its `current*Note`
+    // is null: we still render the pool below, so a brief mid-switch
+    // render (between activeTabId flipping and useNoteManagement's
+    // sync effect setting `current*Note`) only briefly drops the
+    // header, not the editor itself.
+    const renderActiveMain = () => {
+        if (activeNoteType === 1 && useNM.currentMyNote) {
+            return (
+                <MyNoteMain
+                    isInTaskPage={false}
+                    myself={myself}
+                    setMyself={setMyself}
+                    socket={socket}
+                    useCM={useCM}
+                    useNM={useNM}
+                    useTEM={useTEM}
+                    useUISM={useUISM}
+                />
+            );
+        }
+        if (activeNoteType === 2 && useNM.currentTaskNote) {
+            return (
+                <TaskNoteMain
+                    isInTaskPage={false}
+                    myself={myself}
+                    setMyself={setMyself}
+                    socket={socket}
+                    useCM={useCM}
+                    useNM={useNM}
+                    useTEM={useTEM}
+                    useTM={useTM}
+                    useUISM={useUISM}
+                />
+            );
+        }
+        if (activeNoteType === 3 && useNM.currentChatNote) {
+            return (
+                <ChatNoteMain
+                    isInChatPage={false}
+                    isInTaskPage={false}
+                    myself={myself}
+                    setMyself={setMyself}
+                    socket={socket}
+                    useCM={useCM}
+                    useNM={useNM}
+                    usePM={usePM}
+                    useTEM={useTEM}
+                    useTM={useTM}
+                    useUISM={useUISM}
+                />
+            );
+        }
+        // No matching Main yet (sync effect still settling). Don't
+        // render anything for the header zone — the pool below still
+        // shows the active editor, so the screen isn't blank.
+        return null;
+    };
 
-    return null;
+    const renderEditorPool = () => {
+        if (useNM.tabsApi.liveTabIds.length === 0) return null;
+        const tabsById = new Map(useNM.tabsApi.tabs.map((t) => [t.id, t]));
+        return useNM.tabsApi.liveTabIds.map((tabId) => {
+            const tab = tabsById.get(tabId);
+            if (!tab) return null;
+            const isActive = tab.id === useNM.tabsApi.activeTabId;
+            if (tab.kind === "my") {
+                return (
+                    <MyNoteEditorPanel
+                        key={tab.id}
+                        accessToken={accessToken}
+                        isActive={isActive}
+                        myself={myself}
+                        setMyself={setMyself}
+                        socket={socket}
+                        tab={tab}
+                        useCM={useCM}
+                        useNM={useNM}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
+                    />
+                );
+            }
+            if (tab.kind === "task") {
+                return (
+                    <TaskNoteEditorPanel
+                        key={tab.id}
+                        accessToken={accessToken}
+                        isActive={isActive}
+                        myself={myself}
+                        setMyself={setMyself}
+                        socket={socket}
+                        tab={tab}
+                        useCM={useCM}
+                        useNM={useNM}
+                        useTEM={useTEM}
+                        useUISM={useUISM}
+                    />
+                );
+            }
+            return (
+                <ChatNoteEditorPanel
+                    key={tab.id}
+                    accessToken={accessToken}
+                    isActive={isActive}
+                    myself={myself}
+                    setMyself={setMyself}
+                    socket={socket}
+                    tab={tab}
+                    useCM={useCM}
+                    useNM={useNM}
+                    useTEM={useTEM}
+                    useUISM={useUISM}
+                />
+            );
+        });
+    };
+
+    return (
+        <Stack direction="column" sx={{ width: "100%" }}>
+            {renderActiveMain()}
+            {renderEditorPool()}
+
+            {/* Task preview sidebar — stays a singleton bound to the
+                active task tab, unaffected by the keepalive pool. */}
+            {activeNoteType === 2 &&
+                useNM.currentTaskNote &&
+                useNM.isTaskVisibleInNote &&
+                useTM.currentPreviewTask && (
+                    <TaskPreview
+                        myself={myself}
+                        setMyself={setMyself}
+                        socket={socket}
+                        useCM={useCM}
+                        useNM={useNM}
+                        usePM={usePM}
+                        useTEM={useTEM}
+                        useTM={useTM}
+                        useUISM={useUISM}
+                    />
+                )}
+        </Stack>
+    );
 };
