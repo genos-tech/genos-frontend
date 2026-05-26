@@ -937,30 +937,32 @@ const ConversationPanel = memo(
                                     </IconButton>
                                 </Tooltip>
                             )}
-                            {!historyOpen && (turns.length > 0 || ask.sessionId) && (
-                                <Tooltip
-                                    placement="bottom"
-                                    size="sm"
-                                    title={ts.conversation.backToSearchTooltip}
-                                    variant="outlined"
-                                >
-                                    <Button
+                            {!historyOpen &&
+                                (turns.length > 0 || ask.sessionId || hasAskContent(ask)) && (
+                                    // Visible during streaming too: ask.sessionId
+                                    // only arrives on `onDone`, but the user can
+                                    // already want to bail back to search the
+                                    // moment they hit Enter.
+                                    <Tooltip
+                                        placement="bottom"
                                         size="sm"
-                                        // Soft+primary reads as a tinted purple chip
-                                        // against the deep-purple sheet, where the
-                                        // earlier outlined+neutral was near-invisible.
-                                        color="primary"
-                                        sx={{ fontSize: "0.875rem", py: 0.25 }}
-                                        variant="soft"
-                                        startDecorator={
-                                            <ArrowBackRoundedIcon sx={{ fontSize: 14 }} />
-                                        }
-                                        onClick={onNewConversation}
+                                        title={ts.conversation.backToSearchTooltip}
+                                        variant="outlined"
                                     >
-                                        {ts.actions.backToSearch}
-                                    </Button>
-                                </Tooltip>
-                            )}
+                                        <Button
+                                            size="sm"
+                                            color="primary"
+                                            sx={{ fontSize: "0.875rem", py: 0.25 }}
+                                            variant="soft"
+                                            startDecorator={
+                                                <ArrowBackRoundedIcon sx={{ fontSize: 14 }} />
+                                            }
+                                            onClick={onNewConversation}
+                                        >
+                                            {ts.actions.backToSearch}
+                                        </Button>
+                                    </Tooltip>
+                                )}
                         </Box>
                     </Box>
                 )}
