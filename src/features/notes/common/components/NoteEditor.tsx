@@ -101,7 +101,7 @@ export const NoteEditor = ({
                     sx={{
                         position: "absolute",
                         top: "52.5px",
-                        right: "1%",
+                        right: "8%",
                         transform: "translateX(-50%)",
                         zIndex: 100,
                     }}
