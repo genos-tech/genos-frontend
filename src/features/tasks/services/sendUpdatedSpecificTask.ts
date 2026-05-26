@@ -77,7 +77,26 @@ export const sendUpdatedSpecificTask = async (
                 // cache so the next `loadSpecificTask` reflects the
                 // edit without a network refetch. Covers both
                 // metadata-only and body-edit paths.
-                await cacheFullTask(updatedTask);
+                //
+                // CRITICAL: strip negative-id (in-flight) attachments
+                // before caching. They're client-side constructs with
+                // `File` payloads, not server-side rows; persisting
+                // them causes a vicious cycle — `loadSpecificTask`
+                // returns the stale negative-id row from cache, the
+                // user's next drop appends to that array, and the
+                // subsequent save's `uploadTaskAttachments` loop POSTs
+                // BOTH the stale row and the new file (two POSTs per
+                // drop). The negative-id rows survive only in
+                // `tmpCurrentTaskContent` for the duration of the
+                // upload round-trip — that's correct in-memory
+                // behaviour, but they must never leak into IDB.
+                const cacheableTask = {
+                    ...updatedTask,
+                    attachments: (updatedTask.attachments ?? []).filter(
+                        (a) => a.attachment_id >= 0
+                    ),
+                };
+                await cacheFullTask(cacheableTask);
             }
 
             if (res) {
@@ -108,7 +127,17 @@ export const sendUpdatedSpecificTask = async (
                 }
             }
 
-            // Send ws message only when task metadata is update, not task body.
+            // Send ws message only when task metadata is updated, not
+            // task body. Attachments and the IDB row mirror live OUTSIDE
+            // this guard — they must always run, including for
+            // body-edit saves and saves where the BlockNote editor's
+            // Yjs initial-sync onChange flipped `taskBodyEdited` to
+            // true even though the user only dropped a file. Scoping
+            // the upload to this guard caused the "file disappears
+            // with no POST in backend" bug: when `taskBodyEdited` was
+            // true the PUT succeeded but `uploadTaskAttachments` was
+            // skipped, then `useSendUpdatedTask`'s post-save merge
+            // stripped the now-orphaned negative-id rows.
             if (res && taskBodyEdited === false) {
                 const updatedTaskMessage = taskMessageTemplate(myself, updatedTask);
                 const updatedTaskThreadMessage = taskThreadMessageTemplate(myself, updatedTask);
@@ -154,53 +183,55 @@ export const sendUpdatedSpecificTask = async (
                         });
                     }
                 }
+            }
 
-                if (updatedTask) {
-                    // When the user clears the due date (TBD), the
-                    // local `daysLeft` is whatever the previous due
-                    // date computed to (e.g. -1 for a row that was
-                    // already expired). Persisting that into IDB makes
-                    // the table flash "Expired" on next render until a
-                    // fresh fetch overwrites it. Treat empty/null due
-                    // date as "no days-left" so the cached row matches
-                    // what the backend will later return.
-                    const hasDueDate = !!updatedTask.dueDate;
-                    addTask({
-                        id: String(updatedTask.id),
-                        // Preserve the human-readable displayId on the
-                        // cached row so a subsequent re-render of
-                        // DraggableTaskRow keeps showing "<code>-<n>"
-                        // instead of falling back to "#<id>".
-                        displayId: updatedTask.displayId ?? null,
-                        title: updatedTask.title,
-                        priority: updatedTask.priority.priority,
-                        effortLevel: updatedTask.effortLevel.level,
-                        createdDate: updatedTask.createdDate || null,
-                        updatedAt: updatedTask.updatedAt || null,
-                        dueDate: updatedTask.dueDate,
-                        // Mirror start_date into the IDB row so the
-                        // optimistic local update survives the next
-                        // cache read (without this, the freshly-set
-                        // value would disappear on re-render).
-                        startDate: updatedTask.startDate ?? null,
-                        daysLeft: hasDueDate ? updatedTask.daysLeft || null : null,
-                        status: updatedTask.status.status,
-                        assigneeId: updatedTask.assignee?.userId ?? null,
-                        assigneeEmail: updatedTask.assignee?.userEmail ?? null,
-                        assigneeName: updatedTask.assignee?.userName ?? null,
-                        assigneeImgPath: updatedTask.assignee?.avatarImgPath ?? null,
-                        parentTaskId: String(updatedTask.parentTaskId),
-                        threadId: updatedTask.threadId,
-                        tags: updatedTask.tags,
-                        concatTags: updatedTask.concatTags || null,
-                        teamId: myself.teamId,
-                        projectId: updatedTask.project.projectId,
-                        isMilestone: updatedTask.isMilestone ?? false,
-                        milestoneId: updatedTask.milestoneId ?? null,
-                        sprintId: updatedTask.sprintId ?? null,
-                    });
-                }
+            if (res && updatedTask) {
+                // When the user clears the due date (TBD), the
+                // local `daysLeft` is whatever the previous due
+                // date computed to (e.g. -1 for a row that was
+                // already expired). Persisting that into IDB makes
+                // the table flash "Expired" on next render until a
+                // fresh fetch overwrites it. Treat empty/null due
+                // date as "no days-left" so the cached row matches
+                // what the backend will later return.
+                const hasDueDate = !!updatedTask.dueDate;
+                addTask({
+                    id: String(updatedTask.id),
+                    // Preserve the human-readable displayId on the
+                    // cached row so a subsequent re-render of
+                    // DraggableTaskRow keeps showing "<code>-<n>"
+                    // instead of falling back to "#<id>".
+                    displayId: updatedTask.displayId ?? null,
+                    title: updatedTask.title,
+                    priority: updatedTask.priority.priority,
+                    effortLevel: updatedTask.effortLevel.level,
+                    createdDate: updatedTask.createdDate || null,
+                    updatedAt: updatedTask.updatedAt || null,
+                    dueDate: updatedTask.dueDate,
+                    // Mirror start_date into the IDB row so the
+                    // optimistic local update survives the next
+                    // cache read (without this, the freshly-set
+                    // value would disappear on re-render).
+                    startDate: updatedTask.startDate ?? null,
+                    daysLeft: hasDueDate ? updatedTask.daysLeft || null : null,
+                    status: updatedTask.status.status,
+                    assigneeId: updatedTask.assignee?.userId ?? null,
+                    assigneeEmail: updatedTask.assignee?.userEmail ?? null,
+                    assigneeName: updatedTask.assignee?.userName ?? null,
+                    assigneeImgPath: updatedTask.assignee?.avatarImgPath ?? null,
+                    parentTaskId: String(updatedTask.parentTaskId),
+                    threadId: updatedTask.threadId,
+                    tags: updatedTask.tags,
+                    concatTags: updatedTask.concatTags || null,
+                    teamId: myself.teamId,
+                    projectId: updatedTask.project.projectId,
+                    isMilestone: updatedTask.isMilestone ?? false,
+                    milestoneId: updatedTask.milestoneId ?? null,
+                    sprintId: updatedTask.sprintId ?? null,
+                });
+            }
 
+            if (res) {
                 // `TaskProps.id` is typed as optional, but by this point
                 // we've already issued a `PUT /task/` against it and
                 // mirrored the row into IndexedDB, so a missing id here

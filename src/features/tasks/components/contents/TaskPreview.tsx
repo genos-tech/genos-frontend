@@ -349,7 +349,39 @@ export const TaskPreview = (props: TaskPreviewProps) => {
         const recentLocalEdit = Date.now() - lastLocalEditAtRef.current < LOCAL_EDIT_SUPPRESS_MS;
         if (prevId === nextId && recentLocalEdit) return;
 
-        taskEditState.setTmpCurrentTaskContent(next);
+        // Effect 392 (below) mirrors `tmpCurrentTaskContent` into
+        // `useTM.setCurrentPreviewTask`, which re-fires THIS effect
+        // with `next === tmpCurrentTaskContent`. Bail out on that
+        // self-echo: without this guard the in-flight merge below
+        // synthesizes a fresh `{...next, attachments: [...]}` every
+        // cycle, Effect 392 mirrors it back, and React throws
+        // "Maximum update depth exceeded". A genuine `loadUpdatedTask`
+        // returns a freshly-parsed object so this check passes through.
+        if (next === taskEditState.tmpCurrentTaskContent) return;
+
+        // Preserve any in-flight (negative-id) attachments that the
+        // user just dropped — `loadUpdatedTask` is triggered by our
+        // own PUT's socket echo (see useProjectTaskManagement.ts:88)
+        // and fires concurrently with the attachment POST. The GET
+        // response can therefore land WITHOUT the new attachments and
+        // would otherwise wipe them from the panel until the upload
+        // round-trip finished writing back the persisted rows.
+        const inFlight = (taskEditState.tmpCurrentTaskContent?.attachments ?? []).filter(
+            (a) => a.attachment_id < 0
+        );
+
+        // Hot path: nothing in flight → pass `next` through as-is so
+        // React's `useState` ref-equality de-dupes any echo. Only
+        // synthesize a new object when we actually need to merge the
+        // in-flight rows on top.
+        if (inFlight.length === 0) {
+            taskEditState.setTmpCurrentTaskContent(next);
+        } else {
+            taskEditState.setTmpCurrentTaskContent({
+                ...next,
+                attachments: [...(next.attachments ?? []), ...inFlight],
+            });
+        }
         taskEditState.setCurrentTaskId(next.id);
         taskEditState.setTaskTitle(next.title);
         taskEditState.setBody(next.body || []);
@@ -1396,36 +1428,44 @@ const MilestonePreviewInner = ({
                 // the round-trip survive and ride the next save cycle
                 // (see the matching pattern in useSendUpdatedTask).
                 const sentNegativeIds = new Set(pending.map((a) => a.attachment_id));
+                let uploadedAttachments: TaskProps["attachments"] = [];
                 try {
                     const uploaded = await uploadTaskAttachments(
                         backingTaskId,
                         pending,
                         accessToken
                     );
-                    if (uploaded.length > 0) {
-                        const uploadedAttachments = uploaded.map((a: any) => ({
-                            attachment_id: a.attachment_id,
-                            file: a.attached_file,
-                            file_base64: a.file_base64,
-                            name: a.name,
-                            type: a.attached_type,
-                        }));
-                        const merge = (prev: TaskProps["attachments"]) => [
-                            ...prev.filter((a) => !sentNegativeIds.has(a.attachment_id)),
-                            ...uploadedAttachments,
-                        ];
-                        setUploadedFiles((prev) => merge(prev));
-                        setTaskContentLike((prev) => ({
-                            ...prev,
-                            attachments: merge(prev.attachments ?? []),
-                        }));
-                    }
+                    uploadedAttachments = uploaded.map((a: any) => ({
+                        attachment_id: a.attachment_id,
+                        file: a.attached_file,
+                        file_base64: a.file_base64,
+                        name: a.name,
+                        type: a.attached_type,
+                    }));
                 } catch (err) {
                     // Don't block the metadata diff below on an upload
                     // failure — the user's tag / sprint / status edits
                     // are independent of the attachment payload.
                     console.error("Milestone attachment upload failed:", err);
                 }
+                // ALWAYS strip the sent negative-id rows, even when the
+                // upload errored or returned 0 rows. The milestone
+                // retrigger effect below watches `taskContentLike.attachments`
+                // for any remaining `< 0` ids and re-fires the save —
+                // without this prune, a single rejected upload would
+                // spin React into a "Maximum update depth exceeded"
+                // crash. Losing the in-flight rows on failure is the
+                // correct UX (they would have been visible only as
+                // pending tiles anyway).
+                const merge = (prev: TaskProps["attachments"]) => [
+                    ...prev.filter((a) => !sentNegativeIds.has(a.attachment_id)),
+                    ...uploadedAttachments,
+                ];
+                setUploadedFiles((prev) => merge(prev));
+                setTaskContentLike((prev) => ({
+                    ...prev,
+                    attachments: merge(prev.attachments ?? []),
+                }));
             }
         }
 
@@ -1562,8 +1602,25 @@ const MilestonePreviewInner = ({
     const [taskUpdated, setTaskUpdated] = useState(false);
     useEffect(() => {
         if (!taskUpdated) return;
-        persistFromTaskContent(taskContentLike);
-        setTaskUpdated(false);
+        // Await persistFromTaskContent before flipping `taskUpdated`
+        // back to false. The previous fire-and-forget form let the
+        // retrigger effect below see (`taskUpdated=false`,
+        // attachments still contain `< 0` ids) BEFORE the async strip
+        // landed, which immediately re-flipped `setTaskUpdated(true)`
+        // and rebounded into the save trigger. The synchronous loop
+        // outran the actual upload fetch, so React threw "Maximum
+        // update depth exceeded" before any POST left the browser —
+        // the dropped file disappeared from the panel with no server
+        // log. Awaiting keeps the strip in the same continuation as
+        // the false-flip so retrigger sees a clean attachments list.
+        let cancelled = false;
+        (async () => {
+            await persistFromTaskContent(taskContentLike);
+            if (!cancelled) setTaskUpdated(false);
+        })();
+        return () => {
+            cancelled = true;
+        };
     }, [taskUpdated]);
 
     // Re-trigger the save when attachments still contain negative-id
