@@ -1,6 +1,6 @@
 import "./App.css";
 
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Box } from "@mui/joy";
 import CssBaseline from "@mui/joy/CssBaseline";
 import { CssVarsProvider } from "@mui/joy/styles";
@@ -270,10 +270,58 @@ export const App = () => {
     const closeHistory = useCallback(() => setHistoryOpen(false), []);
 
     // Task graph modal — opened by the Ctrl+Cmd+G / Ctrl+Alt+G shortcut.
-    // Anchored on the currently previewed task, so it's a no-op when no
-    // task is in the preview pane (or the task has no project, since the
-    // diagram fetches by project).
+    // Anchored on the currently previewed task OR milestone, so it's a
+    // no-op when neither is in the preview pane (or the entity is missing
+    // a project / backing task id, since the diagram fetches by project
+    // and walks the parent tree from a task node).
     const [taskDiagramOpen, setTaskDiagramOpen] = useState(false);
+
+    // Unified diagram target: covers both the task-preview and
+    // milestone-preview cases so the shortcut handler and the modal
+    // render block share one source of truth. Returns null when no
+    // valid entity is previewed — both call sites use that as the gate.
+    const taskDiagramTarget = useMemo<{
+        projectId: number;
+        rootTaskId: number;
+        rootLabel: string;
+    } | null>(() => {
+        if (useTM.currentPreviewKind === "task") {
+            const task = useTM.currentPreviewTask;
+            if (!task?.id || !task.project?.projectId) return null;
+            return {
+                projectId: task.project.projectId,
+                // Walk up to the hierarchy root so the diagram shows the
+                // milestone / parent / siblings rather than a lone leaf.
+                rootTaskId: Number(task.rootTaskId ?? task.id),
+                rootLabel: task.displayId ? `${task.displayId} · ${task.title}` : task.title,
+            };
+        }
+        if (useTM.currentPreviewKind === "milestone") {
+            const projectId = usePM.currentProject?.projectId;
+            if (!projectId) return null;
+            const milestone = useSM.projectMilestones[projectId]?.find(
+                (m) => m.milestoneId === useTM.currentPreviewMilestoneId
+            );
+            if (!milestone || milestone.taskId == null || milestone.projectId == null) {
+                return null;
+            }
+            return {
+                projectId: milestone.projectId,
+                rootTaskId: milestone.taskId,
+                // Match the label used by the in-pane button in
+                // MilestonePreviewInner so the shortcut and click paths
+                // open visually identical diagrams.
+                rootLabel: `${milestone.title || "Milestone"} · diagram`,
+            };
+        }
+        return null;
+    }, [
+        useTM.currentPreviewKind,
+        useTM.currentPreviewTask,
+        useTM.currentPreviewMilestoneId,
+        usePM.currentProject?.projectId,
+        useSM.projectMilestones,
+    ]);
 
     const { previewIndex: serviceSwitcherPreviewIndex, mruOrder: serviceSwitcherMruOrder } =
         useGlobalServiceShortcut({
@@ -289,10 +337,7 @@ export const App = () => {
             onQuickMeetClipboard: () => meetClipboardRef.current?.trigger(),
             onOpenHistory: openHistory,
             onOpenTaskDiagram: () => {
-                const task = useTM.currentPreviewTask;
-                if (useTM.currentPreviewKind !== "task" || !task?.id || !task.project?.projectId) {
-                    return;
-                }
+                if (!taskDiagramTarget) return;
                 setTaskDiagramOpen(true);
             },
         });
@@ -743,21 +788,15 @@ export const App = () => {
                                                                                 Ctrl+Cmd+G /
                                                                                 Ctrl+Alt+G
                                                                                 shortcut. Gated on
-                                                                                a previewed task
-                                                                                that has a project,
-                                                                                since the diagram
-                                                                                walks the parent
-                                                                                tree within that
-                                                                                project. */}
+                                                                                `taskDiagramTarget`,
+                                                                                which resolves the
+                                                                                projectId / rootTaskId
+                                                                                / label from either
+                                                                                the previewed task
+                                                                                or the previewed
+                                                                                milestone. */}
                                                                             {taskDiagramOpen &&
-                                                                                useTM
-                                                                                    .currentPreviewTask
-                                                                                    ?.id != null &&
-                                                                                useTM
-                                                                                    .currentPreviewTask
-                                                                                    ?.project
-                                                                                    ?.projectId !=
-                                                                                    null && (
+                                                                                taskDiagramTarget && (
                                                                                     <ModalTaskDiagram
                                                                                         myself={
                                                                                             myself
@@ -766,40 +805,14 @@ export const App = () => {
                                                                                             taskDiagramOpen
                                                                                         }
                                                                                         projectId={
-                                                                                            useTM
-                                                                                                .currentPreviewTask
-                                                                                                .project
-                                                                                                .projectId
+                                                                                            taskDiagramTarget.projectId
                                                                                         }
                                                                                         rootLabel={
-                                                                                            useTM
-                                                                                                .currentPreviewTask
-                                                                                                .displayId
-                                                                                                ? `${useTM.currentPreviewTask.displayId} · ${useTM.currentPreviewTask.title}`
-                                                                                                : useTM
-                                                                                                      .currentPreviewTask
-                                                                                                      .title
+                                                                                            taskDiagramTarget.rootLabel
                                                                                         }
-                                                                                        // Anchor on the WHOLE hierarchy
-                                                                                        // the previewed task belongs to,
-                                                                                        // matching the TaskTitleBlock
-                                                                                        // button at L855. `rootTaskId`
-                                                                                        // walks up the parent chain (or
-                                                                                        // is self for top-level tasks);
-                                                                                        // without this fallback, firing
-                                                                                        // the shortcut while previewing
-                                                                                        // a leaf sub-task renders only
-                                                                                        // that one node instead of the
-                                                                                        // milestone / parent / siblings
-                                                                                        // / sub-tree the user expects.
-                                                                                        rootTaskId={Number(
-                                                                                            useTM
-                                                                                                .currentPreviewTask
-                                                                                                .rootTaskId ??
-                                                                                                useTM
-                                                                                                    .currentPreviewTask
-                                                                                                    .id
-                                                                                        )}
+                                                                                        rootTaskId={
+                                                                                            taskDiagramTarget.rootTaskId
+                                                                                        }
                                                                                         usePM={
                                                                                             usePM
                                                                                         }
