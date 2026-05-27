@@ -2,6 +2,7 @@ import { Socket } from "socket.io-client";
 
 import { ChatService } from "../../../db/services/chat.service";
 import { invalidateCachedFullTask } from "../../../db/services/task-full.service";
+import { chatChannel } from "../../../db/workers/channels";
 import { addChat } from "../../../features/chat/services/addChat";
 import { addMessage } from "../../../features/chat/services/addMessage";
 import { addThreadMessage } from "../../../features/chat/services/addThreadMessage";
@@ -459,14 +460,27 @@ const ensureMDMInAllChats = async (
         mdmMembers: existing?.mdmMembers,
     });
 
-    const chatForIDB = buildAllChat(
-        useCM.allChats.find((c) => c.chatId === newMessage.chatId && c.chatType === 4)
-    );
+    // Read the existing row from IDB rather than `useCM.allChats` — the
+    // WS handler closure can be stale (the backend broadcasts MDM
+    // messages twice: once to the mdm room and once to each member's
+    // personal room, so this handler often fires in rapid succession
+    // before React's state has re-rendered the dep-array re-subscribe).
+    // IDB is the durable source of truth for fields the WS payload
+    // doesn't carry — most importantly `mdmMembers`, which would
+    // otherwise be silently dropped on the upsert and surface as the
+    // generic People icon next time the chat list reloads from IDB.
+    const existingFromIDB = (await chatChannel.request("popSpecificChat", {
+        chatId: newMessage.chatId,
+        chatType: 4,
+    })) as AllChatProps | null;
+
+    const chatForIDB = buildAllChat(existingFromIDB ?? undefined);
     await addChat(chatForIDB, 4);
 
     useCM.setAllChats((prev: AllChatProps[]) => {
         const existing = prev.find((c) => c.chatId === newMessage.chatId && c.chatType === 4);
-        const updatedChat = buildAllChat(existing);
+        // Prefer the live React state when available, fall back to IDB.
+        const updatedChat = buildAllChat(existing ?? existingFromIDB ?? undefined);
         if (existing) {
             return prev.map((c) =>
                 c.chatId === newMessage.chatId && c.chatType === 4 ? updatedChat : c

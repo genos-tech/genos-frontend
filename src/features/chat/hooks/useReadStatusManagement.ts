@@ -53,11 +53,23 @@ export const useReadStatusManagement = ({
             })
             .then(async () => {
                 if ((currentChat as ChatProps).lastReadMessageId < lastReadMessageId) {
-                    const updatedChat = {
-                        ...currentChat,
-                        lastReadMessageId,
-                    };
-                    await addChat(updatedChat as AllChatProps, updatedChat.chatType);
+                    // Merge into the persisted row rather than spreading
+                    // `currentChat` (which is `ChatProps` and does not
+                    // carry `mdmMembers`, `profileImagePath`,
+                    // `tsLastAllReadActivity`, etc.). Spreading the
+                    // narrower type would silently clobber those fields
+                    // in IDB — the subsequent `funcSetAllChats()` then
+                    // surfaces the corrupted row to the UI, which for
+                    // MDM chats is observable as the avatar reverting
+                    // to the generic People icon.
+                    const existing = (await chatChannel.request("popSpecificChat", {
+                        chatId: currentChat.chatId,
+                        chatType: currentChat.chatType,
+                    })) as AllChatProps | null;
+                    const updatedChat: AllChatProps = existing
+                        ? { ...existing, lastReadMessageId }
+                        : ({ ...currentChat, lastReadMessageId } as AllChatProps);
+                    await addChat(updatedChat, updatedChat.chatType);
                     await useCM.funcSetAllChats();
                 }
             })
