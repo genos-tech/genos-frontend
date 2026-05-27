@@ -144,20 +144,19 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
     const isDark = mode === "dark";
 
     // chat_type=4 is dual-purpose: task-comment activities carry a `taskId`
-    // (and a project name in `chatName`); MDM activities never do. We use
+    // (and a project name in `chatName`); multi-user DMs never do. We use
     // `taskId` as the discriminator so MDM activities don't render "#NULL"
-    // or get labeled "Task".
+    // or get labeled "Task". Multi-user DMs ("MDM" internally) self-label
+    // as "DM" — the lookup at chatTypeLookup[4] already returns "DM" since
+    // that's the end-user term.
     const isTaskComment = activity.chatType === 4 && !!activity.taskId;
-    const isMDM = activity.chatType === 4 && !activity.taskId;
     const isTaskBody = activity.chatType === 5;
     const isTaskNote = activity.chatType === 7;
     const isNote = activity.chatType >= 6 && activity.chatType <= 8;
 
-    const chatTypeLabel = isMDM
-        ? "MDM"
-        : isTaskComment
-          ? t.chat.activity.chipTaskComment
-          : chatTypeLookup[activity.chatType];
+    const chatTypeLabel = isTaskComment
+        ? t.chat.activity.chipTaskComment
+        : chatTypeLookup[activity.chatType];
     // Tinted surface palette for task-body + note types; everything
     // else keeps the existing neutral "chatType" grey.
     const surfaceChipColor = SURFACE_CHIP_COLOR[activity.chatType] ?? CHIP_COLORS.chatType;
@@ -212,8 +211,8 @@ export const ActivityTypeChips: React.FC<ActivityTypeChipsProps> = ({
             )}
 
             {/* "Reply" only applies to inline messages, not task comments
-                (which already self-label as "Task"), not MDM messages
-                (which already self-label as "MDM"), and not the
+                (which already self-label as "Task Comment"), not multi-
+                user DMs (which already self-label as "DM"), and not the
                 task-body / note surfaces (chat_type 5-8) which have
                 their own surface chip and no notion of "replying". */}
             {activity.activityType === 1 && activity.chatType !== 4 && !isTaskBody && !isNote && (
