@@ -488,6 +488,23 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         const status = useTM.currentPreviewTask?.status;
                         const statusColor = status?.color || styles.accentColor;
 
+                        // `currentThreadChat.displayId` isn't reliably
+                        // populated by every `setCurrentThreadChat` call
+                        // site, so the chip would fall back to "#<id>"
+                        // for fresh thread loads. Pick the freshest
+                        // record we can find — the loaded preview task
+                        // when it matches this thread's task, otherwise
+                        // the row from `allTasks` (carries displayId via
+                        // fetchProjectTasks). Falls back to the thread
+                        // chat itself when no other source is loaded.
+                        const taskForDisplay =
+                            (useTM.currentPreviewTask &&
+                            useTM.currentPreviewTask.id === currentThreadTaskId
+                                ? useTM.currentPreviewTask
+                                : null) ??
+                            useTM.allTasks.find((row) => row.id === String(currentThreadTaskId)) ??
+                            useCM.currentThreadChat;
+
                         return (
                             <Tooltip
                                 size="sm"
@@ -498,7 +515,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                 <Box
                                     component="button"
                                     type="button"
-                                    aria-label={`Open Task ${formatTaskDisplayId(useCM.currentThreadChat) || "N/A"}`}
+                                    aria-label={`Open Task ${formatTaskDisplayId(taskForDisplay) || "N/A"}`}
                                     onClick={() => {
                                         useCM.setIsMainChatVisible(false);
                                         useCM.setIsThreadVisible(true);
@@ -543,7 +560,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                                         }}
                                     />
                                     <CopyableTaskIdText
-                                        task={useCM.currentThreadChat}
+                                        task={taskForDisplay}
                                         fallback="N/A"
                                         prefix="Task "
                                         level="body-xs"
