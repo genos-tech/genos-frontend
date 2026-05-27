@@ -26,7 +26,17 @@ export const activityHandlers: HandlerMap<ActivityRequests> = {
 
     loadActivityHistory: async ({ myself, accessToken }) => {
         await syncWithCheckpoint({
-            key: "activity",
+            // Bumped from "activity" to invalidate any existing
+            // checkpoint and force a one-shot full reload. Pre-fix
+            // clients stored mention rows under the live-push
+            // "1-<chat_type>-..." activityId while the REST refresh
+            // returns them as "3-<chat_type>-...", so users carry a
+            // shadow "1-..." row alongside every refreshed "3-..."
+            // entry — visible as a duplicate in the chat activity
+            // feed. A full reload (clearActivityMessages then
+            // batchInsert) wipes the stale half cleanly on the first
+            // launch after the fix.
+            key: "activity-v2",
             fetcher: async (since) => {
                 const response = await loadActivityHistory(myself, accessToken, since);
                 if (!response) {

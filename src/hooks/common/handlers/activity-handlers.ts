@@ -32,8 +32,21 @@ export const handleActivityMessage = async (
                 isInArray(myself.userId, tmpNewActivityMessage.mentionedUserIds)
             ) {
                 // console.log("Me mentioned");
+                // Align the live activityId with what `get_mention_activities`
+                // returns on REST refresh ("3-<chat_type>-..."). The DB always
+                // stores the row with the "1-" prefix and the GET endpoint
+                // rewrites it to "3-" for mention rows; the live socket push
+                // still ships the raw DB form, so without this swap the WS
+                // upsert lands under "1-..." while the next history fetch
+                // re-inserts the same row under "3-..." — two IDB rows, one
+                // duplicate in the activity feed (visible after page refresh).
                 newActivityMessage = {
                     ...tmpNewActivityMessage,
+                    activityId:
+                        tmpNewActivityMessage.activityId &&
+                        tmpNewActivityMessage.activityId[0] === "1"
+                            ? "3" + tmpNewActivityMessage.activityId.slice(1)
+                            : tmpNewActivityMessage.activityId,
                     activityType: 3,
                 };
                 doUpdateActivityMessage = true;
