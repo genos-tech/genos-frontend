@@ -19,6 +19,7 @@ import { ActivityMessageProps, AllChatProps, FlaggedMessageProps } from "../../.
 import { isMac } from "../../../../utils/platform";
 import { useScrollToBottomOnNewActivity } from "../../hooks/messageBubbleHooks";
 import { useChatRouting } from "../../hooks/useChatRouting";
+import { ChipId, makeChipFilter } from "../../utils/activityChipFilters";
 import { ChatListItemForActivity } from "./activity/chatListItemForActivity";
 import { ChatListItem } from "./chatListItem";
 import { ChatListItemForFlagMessages } from "./chatListItemForFlagMessages";
@@ -112,6 +113,11 @@ type ChatListProps = {
     targetChatType: number;
     includeMDM?: boolean; // When true, include MDM (type 4) chats along with DM (type 1)
     currentActivityMessageType: number;
+    // Multi-select chip refinement that AND-composes with the
+    // single-select above. Only the Activity-tab consumer threads a
+    // live set; non-Activity consumers pass `EMPTY_CHIP_SET` to keep
+    // a stable identity across renders.
+    selectedActivityChipIds: ReadonlySet<ChipId>;
     useCM: ChatManagementState;
     state: ChatListState;
     actions: ChatListActions;
@@ -160,6 +166,7 @@ const useFilteredChats = (
 const useFilteredActivityMessages = (
     activityMessages: ActivityMessageProps[],
     currentActivityMessageType: number,
+    selectedActivityChipIds: ReadonlySet<ChipId>,
     showOnlyUnreadItems: boolean
 ) => {
     const [tmpActivityMessages, setTmpActivityMessages] = useState<ActivityMessageProps[]>(
@@ -172,9 +179,15 @@ const useFilteredActivityMessages = (
         );
 
         if (filteredMessages) {
-            const filterFn =
-                ACTIVITY_FILTERS[currentActivityMessageType as keyof typeof ACTIVITY_FILTERS];
-            const filtered = filterFn ? filteredMessages.filter(filterFn) : filteredMessages;
+            // AND-compose the primary single-select with the new
+            // multi-select chip refinement. Empty chip set passes
+            // everything through (makeChipFilter short-circuits) so
+            // the unfiltered baseline matches the pre-chip behaviour.
+            const primaryFn =
+                ACTIVITY_FILTERS[currentActivityMessageType as keyof typeof ACTIVITY_FILTERS] ??
+                (() => true);
+            const chipFn = makeChipFilter(selectedActivityChipIds);
+            const filtered = filteredMessages.filter((item) => primaryFn(item) && chipFn(item));
 
             if (showOnlyUnreadItems) {
                 setTmpActivityMessages(filtered.filter((item) => item.isRead === false));
@@ -182,7 +195,12 @@ const useFilteredActivityMessages = (
                 setTmpActivityMessages(filtered);
             }
         }
-    }, [activityMessages, currentActivityMessageType, showOnlyUnreadItems]);
+    }, [
+        activityMessages,
+        currentActivityMessageType,
+        selectedActivityChipIds,
+        showOnlyUnreadItems,
+    ]);
 
     return tmpActivityMessages;
 };
@@ -327,17 +345,17 @@ const ChatListRenderer = ({
                     <ChatListItem
                         key={`${chat.chatId}-${chat.chatType}-${chat.chatName}`}
                         chat={chat}
-                        useCM={useCM}
                         incompleteTodoCount={state.incompleteTodoCount}
                         isPinnedChat={false}
+                        isToDoVisible={state.isToDoVisible}
                         myself={data.myself}
                         setIsToDoVisible={actions.setIsToDoVisible}
-                        isToDoVisible={state.isToDoVisible}
                         setMyself={data.setMyself}
                         socket={socket}
+                        useCM={useCM}
                         useTEM={useTEM}
-                        useUISM={useUISM}
                         useTM={useTM}
+                        useUISM={useUISM}
                     />
                 </Box>
             );
@@ -404,17 +422,17 @@ const ActivityListRenderer = ({
                             key={`${activityMessage.activityId}-${activityMessage.isRead}`}
                             activity={activityMessage}
                             activityMessages={activityMessages}
-                            useCM={useCM}
                             myself={data.myself}
                             selectedActivityId={selectedActivityId}
                             setCurrentProject={usePM.setCurrentProject}
                             setMyself={data.setMyself}
                             setSelectedActivityId={setSelectedActivityId}
                             socket={socket}
-                            useTEM={useTEM}
-                            useUISM={useUISM}
-                            useTM={useTM}
+                            useCM={useCM}
                             useNM={useNM}
+                            useTEM={useTEM}
+                            useTM={useTM}
+                            useUISM={useUISM}
                         />
                     </Stack>
                 </Box>
@@ -476,7 +494,6 @@ const FlaggedListRenderer = ({
                     <Stack direction="row">
                         <ChatListItemForFlagMessages
                             key={`${flaggedMessage.flaggedMessageId}`}
-                            useCM={useCM}
                             flaggedMessage={flaggedMessage}
                             myself={data.myself}
                             selectedFlaggedMessageId={selectedFlaggedMessageId}
@@ -484,9 +501,10 @@ const FlaggedListRenderer = ({
                             setMyself={data.setMyself}
                             setSelectedFlaggedMessageId={setSelectedFlaggedMessageId}
                             socket={socket}
+                            useCM={useCM}
                             useTEM={useTEM}
-                            useUISM={useUISM}
                             useTM={useTM}
+                            useUISM={useUISM}
                         />
                     </Stack>
                 </Box>
@@ -501,6 +519,7 @@ export const ChatList = (props: ChatListProps) => {
         targetChatType,
         includeMDM = false,
         currentActivityMessageType,
+        selectedActivityChipIds,
         state,
         actions,
         data,
@@ -542,6 +561,7 @@ export const ChatList = (props: ChatListProps) => {
     const tmpActivityMessages = useFilteredActivityMessages(
         useCM.activityMessages,
         currentActivityMessageType,
+        selectedActivityChipIds,
         state.showOnlyUnreadItems
     );
     const [tmpFlaggedMessages, setTmpFlaggedMessages] = useState<FlaggedMessageProps[]>(
@@ -768,16 +788,16 @@ export const ChatList = (props: ChatListProps) => {
             return (
                 <ChatListRenderer
                     actions={actions}
-                    isDark={isDark}
-                    useCM={useCM}
                     data={data}
+                    isDark={isDark}
                     socket={socket}
                     state={state}
-                    useTEM={useTEM}
                     targetChats={targetChats}
+                    useCM={useCM}
+                    useTEM={useTEM}
+                    useTM={useTM}
                     useUISM={useUISM}
                     virtuosoRef={virtuosoRef}
-                    useTM={useTM}
                 />
             );
         }
@@ -791,20 +811,20 @@ export const ChatList = (props: ChatListProps) => {
             }
             return (
                 <ActivityListRenderer
-                    isDark={isDark}
-                    usePM={usePM}
                     activityMessages={useCM.activityMessages}
-                    useCM={useCM}
                     data={data}
+                    isDark={isDark}
                     selectedActivityId={selectedActivityId}
                     setSelectedActivityId={setSelectedActivityId}
                     socket={socket}
-                    useTEM={useTEM}
                     tmpActivityMessages={tmpActivityMessages}
+                    useCM={useCM}
+                    useNM={useNM}
+                    usePM={usePM}
+                    useTEM={useTEM}
+                    useTM={useTM}
                     useUISM={useUISM}
                     virtuosoRef={virtuosoActivityRef}
-                    useTM={useTM}
-                    useNM={useNM}
                 />
             );
         }
@@ -818,18 +838,18 @@ export const ChatList = (props: ChatListProps) => {
             }
             return (
                 <FlaggedListRenderer
-                    isDark={isDark}
-                    usePM={usePM}
-                    useCM={useCM}
                     data={data}
+                    isDark={isDark}
                     selectedFlaggedMessageId={selectedFlaggedMessageId}
                     setSelectedFlaggedMessageId={setSelectedFlaggedMessageId}
                     socket={socket}
-                    useTEM={useTEM}
                     tmpFlaggedMessages={tmpFlaggedMessages}
+                    useCM={useCM}
+                    usePM={usePM}
+                    useTEM={useTEM}
+                    useTM={useTM}
                     useUISM={useUISM}
                     virtuosoRef={virtuosoFlaggedRef}
-                    useTM={useTM}
                 />
             );
         }

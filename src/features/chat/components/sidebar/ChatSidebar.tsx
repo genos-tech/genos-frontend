@@ -35,6 +35,7 @@ import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { isMac } from "../../../../utils/platform";
 import { useChatRouting } from "../../hooks/useChatRouting";
+import { ChipId, EMPTY_CHIP_SET } from "../../utils/activityChipFilters";
 import { ModalCreateGM } from "../modals/ModalCreateGM";
 import { ModalCreateMDM } from "../modals/ModalCreateMDM";
 import { ModalJoinGM } from "../modals/ModalJoinGM";
@@ -142,6 +143,12 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
 
     // 0: none, 1: thread, 2: task, 3: mention, 4: reaction
     const [currentActivityMessageType, setCurrentActivityMessageType] = useState<number>(0);
+
+    // Multi-select chip refinement that AND-composes with the
+    // single-select above. Empty set = pass-through (no narrowing).
+    // Ephemeral — resets on reload, matching `currentActivityMessageType`.
+    const [selectedActivityChipIds, setSelectedActivityChipIds] =
+        useState<ReadonlySet<ChipId>>(EMPTY_CHIP_SET);
 
     // Get unread count for a specific chat type
     const getUnreadCount = (chatType: number): number => {
@@ -255,13 +262,13 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
 
                 {/* Search Box */}
                 <ChatSearch
-                    useCM={useCM}
                     myself={myself}
                     openSearchBox={openSearchBox}
                     setMyself={setMyself}
                     setOpenJoinGM={setOpenJoinGM}
                     setOpenSearchBox={setOpenSearchBox}
                     socket={socket}
+                    useCM={useCM}
                     useTEM={useTEM}
                     useUISM={useUISM}
                 />
@@ -283,8 +290,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     }}
                 >
                     <Stack
-                        direction="row"
                         alignItems="center"
+                        direction="row"
                         justifyContent="space-between"
                         sx={{ mb: 1 }}
                     >
@@ -317,11 +324,11 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                 return (
                                     <Tooltip
                                         key={item.type}
-                                        title={t.chat.sidebar[item.labelKey]}
-                                        size="sm"
                                         placement="top"
-                                        variant="outlined"
+                                        size="sm"
                                         sx={{ zIndex: 10020 }}
+                                        title={t.chat.sidebar[item.labelKey]}
+                                        variant="outlined"
                                     >
                                         <Badge
                                             badgeContent={unreadCount > 0 ? unreadCount : 0}
@@ -344,7 +351,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                             }}
                                         >
                                             <Box
-                                                onClick={() => handleNavClick(item.type)}
                                                 sx={{
                                                     width: 36,
                                                     height: 36,
@@ -380,6 +386,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                                         transform: "translateY(0)",
                                                     },
                                                 }}
+                                                onClick={() => handleNavClick(item.type)}
                                             >
                                                 <Icon
                                                     sx={{
@@ -402,13 +409,12 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                         </Stack>
 
                         {/* Actions */}
-                        <Stack direction="row" spacing={0.5} alignItems="center">
+                        <Stack alignItems="center" direction="row" spacing={0.5}>
                             {/* Unread Filter Toggle */}
                             <Chip
+                                color={showOnlyUnreadItems ? "primary" : "neutral"}
                                 size="sm"
                                 variant={showOnlyUnreadItems ? "solid" : "soft"}
-                                color={showOnlyUnreadItems ? "primary" : "neutral"}
-                                onClick={() => setShowOnlyUnreadItems(!showOnlyUnreadItems)}
                                 sx={{
                                     cursor: "pointer",
                                     fontWeight: 600,
@@ -440,6 +446,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                               : "rgba(0,0,0,0.06)",
                                     },
                                 }}
+                                onClick={() => setShowOnlyUnreadItems(!showOnlyUnreadItems)}
                             >
                                 Unread
                             </Chip>
@@ -468,8 +475,8 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                     <MoreHorizRoundedIcon sx={{ fontSize: 18 }} />
                                 </MenuButton>
                                 <Menu
-                                    size="sm"
                                     placement="bottom-end"
+                                    size="sm"
                                     sx={{
                                         borderRadius: "12px",
                                         boxShadow: isDark
@@ -478,12 +485,12 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                     }}
                                 >
                                     <MenuItem
-                                        onClick={() => setOpenCreateGM(true)}
                                         sx={{
                                             borderRadius: "8px",
                                             gap: 1.5,
                                             fontSize: "0.85rem",
                                         }}
+                                        onClick={() => setOpenCreateGM(true)}
                                     >
                                         <GroupsIcon
                                             sx={{
@@ -494,12 +501,12 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                                         {t.chat.sidebar.newGroupMessageMenu}
                                     </MenuItem>
                                     <MenuItem
-                                        onClick={() => setOpenCreateMDM(true)}
                                         sx={{
                                             borderRadius: "8px",
                                             gap: 1.5,
                                             fontSize: "0.85rem",
                                         }}
+                                        onClick={() => setOpenCreateMDM(true)}
                                     >
                                         <PeopleRoundedIcon
                                             sx={{
@@ -537,11 +544,17 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     </Typography>
                 </Box>
 
-                {/* Activity Filter (only shown for Activity tab) */}
+                {/* Activity Filter (only shown for Activity tab).
+                    `ActivityDivider` owns BOTH the single-select chip
+                    row AND the trailing "Custom" multi-select menu
+                    trigger; we thread the chip-set state in here so
+                    the same row exposes both filters. */}
                 {useCM.currentChatPaneType === CHAT_PANE_TYPES.ACTIVITY && (
                     <ActivityDivider
                         currentActivityMessageType={currentActivityMessageType}
                         setCurrentActivityMessageType={setCurrentActivityMessageType}
+                        selectedChipIds={selectedActivityChipIds}
+                        setSelectedChipIds={setSelectedActivityChipIds}
                     />
                 )}
 
@@ -557,92 +570,97 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     {/* Direct Messages (includes both DM and MDM) */}
                     {useCM.currentChatPaneType === CHAT_PANE_TYPES.DM && (
                         <ChatList
-                            usePM={usePM}
-                            targetChatType={1}
-                            includeMDM={true}
-                            useCM={useCM}
-                            currentActivityMessageType={-1}
-                            socket={socket}
-                            useTEM={useTEM}
-                            useUISM={useUISM}
-                            useTM={useTM}
                             actions={{ setIsToDoVisible }}
-                            data={{ myself, setMyself }}
-                            state={{ showOnlyUnreadItems, incompleteTodoCount, isToDoVisible }}
                             chatRouting={chatRouting}
+                            currentActivityMessageType={-1}
+                            data={{ myself, setMyself }}
+                            includeMDM={true}
+                            selectedActivityChipIds={EMPTY_CHIP_SET}
+                            socket={socket}
+                            state={{ showOnlyUnreadItems, incompleteTodoCount, isToDoVisible }}
+                            targetChatType={1}
+                            useCM={useCM}
+                            usePM={usePM}
+                            useTEM={useTEM}
+                            useTM={useTM}
+                            useUISM={useUISM}
                         />
                     )}
 
                     {/* Group Messages */}
                     {useCM.currentChatPaneType === CHAT_PANE_TYPES.GM && (
                         <ChatList
-                            usePM={usePM}
+                            actions={{ setIsToDoVisible }}
+                            chatRouting={chatRouting}
+                            currentActivityMessageType={-1}
+                            data={{ myself, setMyself }}
+                            selectedActivityChipIds={EMPTY_CHIP_SET}
+                            socket={socket}
+                            state={{ showOnlyUnreadItems, incompleteTodoCount, isToDoVisible }}
                             targetChatType={2}
                             useCM={useCM}
-                            currentActivityMessageType={-1}
-                            socket={socket}
+                            usePM={usePM}
                             useTEM={useTEM}
-                            useUISM={useUISM}
                             useTM={useTM}
-                            actions={{ setIsToDoVisible }}
-                            data={{ myself, setMyself }}
-                            state={{ showOnlyUnreadItems, incompleteTodoCount, isToDoVisible }}
-                            chatRouting={chatRouting}
+                            useUISM={useUISM}
                         />
                     )}
 
                     {/* Project Messages */}
                     {useCM.currentChatPaneType === CHAT_PANE_TYPES.PM && (
                         <ChatList
-                            usePM={usePM}
+                            actions={{ setIsToDoVisible }}
+                            chatRouting={chatRouting}
+                            currentActivityMessageType={-1}
+                            data={{ myself, setMyself }}
+                            selectedActivityChipIds={EMPTY_CHIP_SET}
+                            socket={socket}
+                            state={{ showOnlyUnreadItems, incompleteTodoCount, isToDoVisible }}
                             targetChatType={3}
                             useCM={useCM}
-                            currentActivityMessageType={-1}
-                            socket={socket}
+                            usePM={usePM}
                             useTEM={useTEM}
-                            useUISM={useUISM}
                             useTM={useTM}
-                            actions={{ setIsToDoVisible }}
-                            data={{ myself, setMyself }}
-                            state={{ showOnlyUnreadItems, incompleteTodoCount, isToDoVisible }}
-                            chatRouting={chatRouting}
+                            useUISM={useUISM}
                         />
                     )}
 
                     {/* Activity Messages */}
                     {useCM.currentChatPaneType === CHAT_PANE_TYPES.ACTIVITY && (
                         <ChatList
-                            usePM={usePM}
+                            actions={{ setIsToDoVisible }}
+                            chatRouting={chatRouting}
+                            currentActivityMessageType={currentActivityMessageType}
+                            data={{ myself, setMyself }}
+                            selectedActivityChipIds={selectedActivityChipIds}
+                            socket={socket}
+                            state={{ showOnlyUnreadItems, incompleteTodoCount, isToDoVisible }}
                             targetChatType={5}
                             useCM={useCM}
-                            currentActivityMessageType={currentActivityMessageType}
-                            socket={socket}
-                            useTEM={useTEM}
-                            useUISM={useUISM}
-                            useTM={useTM}
                             useNM={useNM}
-                            actions={{ setIsToDoVisible }}
-                            data={{ myself, setMyself }}
-                            state={{ showOnlyUnreadItems, incompleteTodoCount, isToDoVisible }}
-                            chatRouting={chatRouting}
+                            usePM={usePM}
+                            useTEM={useTEM}
+                            useTM={useTM}
+                            useUISM={useUISM}
                         />
                     )}
 
                     {/* Flagged Messages */}
                     {useCM.currentChatPaneType === CHAT_PANE_TYPES.FLAGGED && (
                         <ChatList
-                            usePM={usePM}
+                            actions={{ setIsToDoVisible }}
+                            chatRouting={chatRouting}
+                            currentActivityMessageType={currentActivityMessageType}
+                            data={{ myself, setMyself }}
+                            selectedActivityChipIds={EMPTY_CHIP_SET}
+                            socket={socket}
+                            state={{ showOnlyUnreadItems, incompleteTodoCount, isToDoVisible }}
                             targetChatType={6}
                             useCM={useCM}
-                            currentActivityMessageType={currentActivityMessageType}
-                            socket={socket}
+                            usePM={usePM}
                             useTEM={useTEM}
-                            useUISM={useUISM}
                             useTM={useTM}
-                            actions={{ setIsToDoVisible }}
-                            data={{ myself, setMyself }}
-                            state={{ showOnlyUnreadItems, incompleteTodoCount, isToDoVisible }}
-                            chatRouting={chatRouting}
+                            useUISM={useUISM}
                         />
                     )}
                 </Box>
@@ -673,24 +691,24 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
             </Sheet>
 
             <ModalCreateGM
-                useCM={useCM}
-                useTEM={useTEM}
-                useUISM={useUISM}
-                setMyself={setMyself}
                 myself={myself}
                 open={openCreateGM}
+                setMyself={setMyself}
                 setOpen={setOpenCreateGM}
                 socket={socket}
+                useCM={useCM}
+                useTEM={useTEM}
+                useUISM={useUISM}
             />
             <ModalCreateMDM
-                useCM={useCM}
-                useUISM={useUISM}
-                useTEM={useTEM}
                 myself={myself}
-                setMyself={setMyself}
                 open={openCreateMDM}
+                setMyself={setMyself}
                 setOpen={setOpenCreateMDM}
                 socket={socket}
+                useCM={useCM}
+                useTEM={useTEM}
+                useUISM={useUISM}
             />
         </Box>
     );

@@ -62,6 +62,29 @@ export const chat = {
         activityFilterThreads: "Threads",
         activityFilterReactions: "Reactions",
         activityFilterTasks: "Tasks",
+        // "Custom" menu trigger sits at the end of the single-select
+        // chip row in `ActivityDivider`. Clicking it opens a Joy `Menu`
+        // with one item per chip predicate; selections AND-compose
+        // inside the menu. Primary single-select and Custom multi-
+        // select are mutually exclusive — see `handlePrimaryClick` /
+        // `toggleChip` in ActivityDivider.
+        // Keys sorted alphabetically per `sort-keys`.
+        chipDM: "DM",
+        chipFilterClear: "Clear all filters",
+        chipFilterCustomLabel: "Custom",
+        chipGM: "GM",
+        chipMDM: "MDM",
+        chipMention: "Mention",
+        chipNoteChat: "Chat note",
+        chipNoteMy: "Personal note",
+        chipNoteTask: "Task note",
+        chipPM: "PM",
+        chipProject: "Project",
+        chipReaction: "Reaction",
+        chipReply: "Reply",
+        chipTask: "Task",
+        chipTaskComment: "Task comment",
+        chipThread: "Thread",
         emptyDMTitle: "No direct messages",
         emptyDMSubtitle: "Start a conversation with someone",
         emptyGMTitle: "No group messages",
