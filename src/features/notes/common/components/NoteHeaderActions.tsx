@@ -13,6 +13,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 import { useNavigate } from "react-router-dom";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
@@ -645,12 +646,7 @@ export const NoteHeaderActions = ({
                 until an active note has been resolved; the modal's hook
                 requires (noteType, noteId) to fetch the summary. */}
             {askButtonAvailable && normalizedNoteType !== null && (
-                <Tooltip
-                    size="sm"
-                    sx={{ borderRadius: "8px" }}
-                    title={t.noteAsk.headerButton.tooltip}
-                    variant="outlined"
-                >
+                <AppTooltip title={t.noteAsk.headerButton.tooltip}>
                     <IconButton
                         aria-label={t.noteAsk.headerButton.tooltip}
                         size="sm"
@@ -660,7 +656,7 @@ export const NoteHeaderActions = ({
                     >
                         <AutoAwesomeRoundedIcon sx={{ fontSize: 18, color: styles.accentColor }} />
                     </IconButton>
-                </Tooltip>
+                </AppTooltip>
             )}
 
             {/* More Actions Dropdown */}

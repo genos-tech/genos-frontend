@@ -15,6 +15,7 @@ import {
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { useTranslation } from "../../../i18n";
 import { purplePalette } from "../../../theme/purplePalette";
 import { redirectToOAuthConnect } from "../services/oauth";
@@ -276,11 +277,11 @@ export const LinkedPrCard = ({ url, accessToken, hideOnNotConnected }: Props) =>
                     </Box>
 
                     {/* CI badge */}
-                    <Tooltip title={ciTooltipLabel(ci, t)} size="sm">
+                    <AppTooltip title={ciTooltipLabel(ci, t)} size="sm">
                         <Box sx={{ display: "flex", alignItems: "center" }}>
                             <CiBadge state={ci} size={16} />
                         </Box>
-                    </Tooltip>
+                    </AppTooltip>
 
                     {/* State chip */}
                     <Chip

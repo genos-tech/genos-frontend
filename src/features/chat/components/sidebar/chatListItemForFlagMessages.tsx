@@ -4,21 +4,12 @@ import AssignmentIcon from "@mui/icons-material/Assignment";
 import FlagIcon from "@mui/icons-material/Flag";
 import GroupsIcon from "@mui/icons-material/Groups";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
-import {
-    Avatar,
-    Box,
-    Chip,
-    IconButton,
-    ListDivider,
-    ListItem,
-    Stack,
-    Tooltip,
-    Typography,
-} from "@mui/joy";
+import { Avatar, Box, Chip, IconButton, ListDivider, ListItem, Stack, Typography } from "@mui/joy";
 import ListItemButton, { ListItemButtonProps } from "@mui/joy/ListItemButton";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
 import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
@@ -856,11 +847,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                                 >
                                     {extractYYYYMMDDHHMM(flaggedMessage.tsSent)}
                                 </Typography>
-                                <Tooltip
-                                    size="sm"
-                                    title={t.chat.listItem.unflag}
-                                    variant="outlined"
-                                >
+                                <AppTooltip size="sm" title={t.chat.listItem.unflag}>
                                     <IconButton
                                         color={tmpIsFlagged ? "danger" : "neutral"}
                                         size="sm"
@@ -878,7 +865,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                                     >
                                         <FlagIcon sx={{ fontSize: 16 }} />
                                     </IconButton>
-                                </Tooltip>
+                                </AppTooltip>
                             </Stack>
                         </Stack>
 

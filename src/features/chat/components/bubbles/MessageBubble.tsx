@@ -1,10 +1,11 @@
 import { memo, useEffect, useRef, useState } from "react";
-import { Box, Sheet, Stack, Tooltip } from "@mui/joy";
+import { Box, Sheet, Stack } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
 
 import { BnChatPreview } from "../../../../components/editors/bnChatPreview";
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { EmojiPicker } from "../../../../components/ui/emoji/EmojiPicker";
 import { EmojiReaction } from "../../../../components/ui/emoji/EmojiReaction";
@@ -668,9 +669,8 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                   : "transparent";
 
         const messageBody = message.content && message.content.length > 0 && (
-            <Tooltip
+            <AppTooltip
                 placement="right"
-                variant="outlined"
                 enterDelay={1000}
                 title={
                     <>
@@ -698,7 +698,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                         useUISM={useUISM}
                     />
                 </Box>
-            </Tooltip>
+            </AppTooltip>
         );
 
         return (
@@ -875,9 +875,8 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                             useFixedPosition={true}
                         />
                     )}
-                    <Tooltip
+                    <AppTooltip
                         placement="right"
-                        variant="outlined"
                         enterDelay={1000}
                         title={
                             <>
@@ -1075,7 +1074,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                                 taskCommentCount={message.taskCommentCount}
                             />
                         </Sheet>
-                    </Tooltip>
+                    </AppTooltip>
                 </Box>
             )}
         </Box>

@@ -27,7 +27,6 @@ import {
     TabList,
     TabPanel,
     Tabs,
-    Tooltip,
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -44,6 +43,7 @@ import {
 import { GithubPullSummary, listMyPulls } from "./services/github";
 import { redirectToOAuthConnect } from "./services/oauth";
 
+import { AppTooltip } from "../../components/ui/AppTooltip";
 import { useAuth } from "../../context/AuthContext";
 
 type TabKey = "connections" | "calendar" | "github";
@@ -229,7 +229,7 @@ const CalendarTab = ({
                                     </Typography>
                                 </Box>
                                 {e.hangoutLink && (
-                                    <Tooltip size="sm" title="Join Google Meet">
+                                    <AppTooltip size="sm" title="Join Google Meet">
                                         <IconButton
                                             size="sm"
                                             variant="plain"
@@ -242,7 +242,7 @@ const CalendarTab = ({
                                         >
                                             <VideoCameraFrontRoundedIcon />
                                         </IconButton>
-                                    </Tooltip>
+                                    </AppTooltip>
                                 )}
                                 <IconButton
                                     size="sm"
@@ -376,7 +376,7 @@ const WebhookSetup = () => {
                                 readOnly
                                 size="sm"
                                 endDecorator={
-                                    <Tooltip title={copied ? "Copied" : "Copy"} size="sm">
+                                    <AppTooltip title={copied ? "Copied" : "Copy"} size="sm">
                                         <IconButton
                                             size="sm"
                                             variant="plain"
@@ -389,7 +389,7 @@ const WebhookSetup = () => {
                                                 <ContentCopyRoundedIcon fontSize="small" />
                                             )}
                                         </IconButton>
-                                    </Tooltip>
+                                    </AppTooltip>
                                 }
                                 sx={{
                                     fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",

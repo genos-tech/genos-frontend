@@ -1,11 +1,11 @@
+import * as React from "react";
 import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
 import LightModeIcon from "@mui/icons-material/LightMode";
-import { Tooltip } from "@mui/joy";
 import IconButton, { IconButtonProps } from "@mui/joy/IconButton";
 import { useColorScheme } from "@mui/joy/styles";
-import * as React from "react";
 
 import { useTranslation } from "../../i18n";
+import { AppTooltip } from "../ui/AppTooltip";
 
 export const ColorSchemeToggle = (props: IconButtonProps) => {
     const { onClick, sx, ...other } = props;
@@ -21,12 +21,7 @@ export const ColorSchemeToggle = (props: IconButtonProps) => {
         );
     }
     return (
-        <Tooltip
-            placement="right-start"
-            size="sm"
-            title={t.common.ui.colorScheme.switchTheme}
-            variant="outlined"
-        >
+        <AppTooltip placement="right-start" size="sm" title={t.common.ui.colorScheme.switchTheme}>
             <IconButton
                 color="neutral"
                 data-screenshot="toggle-mode"
@@ -54,6 +49,6 @@ export const ColorSchemeToggle = (props: IconButtonProps) => {
                 <DarkModeRoundedIcon />
                 <LightModeIcon />
             </IconButton>
-        </Tooltip>
+        </AppTooltip>
     );
 };

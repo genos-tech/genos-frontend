@@ -1,8 +1,9 @@
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
-import { Box, Button, Tooltip, Typography } from "@mui/joy";
+import { Box, Button, Typography } from "@mui/joy";
 
 import { useTranslation } from "../../../i18n";
 import { isMac } from "../../../utils/platform";
+import { AppTooltip } from "../../ui/AppTooltip";
 
 type EditorSendButtonProps = {
     /** Disable the button (typically when the editor is empty). */
@@ -31,7 +32,7 @@ export const EditorSendButton = ({ disabled, onSend }: EditorSendButtonProps) =>
     const modKey = isMac() ? "⌘" : "Ctrl";
 
     return (
-        <Tooltip
+        <AppTooltip
             arrow
             placement="top-end"
             size="sm"
@@ -71,7 +72,6 @@ export const EditorSendButton = ({ disabled, onSend }: EditorSendButtonProps) =>
                     </Box>
                 </Box>
             }
-            variant="outlined"
         >
             <Box
                 sx={{
@@ -129,7 +129,7 @@ export const EditorSendButton = ({ disabled, onSend }: EditorSendButtonProps) =>
                     {t.common.editor.send}
                 </Button>
             </Box>
-        </Tooltip>
+        </AppTooltip>
     );
 };
 

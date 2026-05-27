@@ -14,11 +14,11 @@ import {
     MenuButton,
     MenuItem,
     Stack,
-    Tooltip,
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
@@ -67,7 +67,7 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
             {/* To-Do Button */}
             {chat.dmPartnerUser.userId === myself.userId &&
                 (isToDoVisible ? (
-                    <Tooltip size="sm" title={t.chat.listItem.backToChat} variant="outlined">
+                    <AppTooltip size="sm" title={t.chat.listItem.backToChat}>
                         <IconButton
                             color="neutral"
                             component="a"
@@ -78,9 +78,9 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                         >
                             <QuestionAnswerRoundedIcon />
                         </IconButton>
-                    </Tooltip>
+                    </AppTooltip>
                 ) : (
-                    <Tooltip size="sm" title={t.chat.listItem.openTodo} variant="outlined">
+                    <AppTooltip size="sm" title={t.chat.listItem.openTodo}>
                         <Badge
                             anchorOrigin={{ vertical: "top", horizontal: "right" }}
                             badgeContent={incompleteTodoCount}
@@ -99,14 +99,13 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                                 <ChecklistIcon />
                             </IconButton>
                         </Badge>
-                    </Tooltip>
+                    </AppTooltip>
                 ))}
 
             {/* Pin Button */}
-            <Tooltip
+            <AppTooltip
                 size="sm"
                 title={chat.isPinned ? t.chat.listItem.unpinChat : t.chat.listItem.pinChat}
-                variant="outlined"
             >
                 <IconButton
                     color={chat.isPinned ? "danger" : "neutral"}
@@ -116,7 +115,7 @@ export const ChatListItemActions: React.FC<ChatListItemActionsProps> = ({
                 >
                     <PushPinIcon sx={{ fontSize: isPinned ? 18 : 16 }} />
                 </IconButton>
-            </Tooltip>
+            </AppTooltip>
 
             {/* Unread Indicator */}
             {chat.latestMessage && chat.lastReadMessageId < chat.latestMessage?.messageId && (

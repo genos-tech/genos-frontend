@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
-import { Box, Button, IconButton, Tooltip, useColorScheme } from "@mui/joy";
+import { Box, Button, IconButton, useColorScheme } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { useTranslation } from "../../../i18n";
@@ -8,6 +8,7 @@ import { UserProps } from "../../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../../types/chat";
 import { GroupedReactionProps, ReactionProps } from "../../../types/common";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
+import { AppTooltip } from "../AppTooltip";
 
 export const groupEmojis = (reactions: ReactionProps[]): GroupedReactionProps[] => {
     const map = new Map<string, { count: number; senders: UserProps[] }>();
@@ -298,7 +299,7 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
                             ))}
                         </>
                     )}
-                    <Tooltip size="sm" title={t.common.ui.emoji.reaction} variant="outlined">
+                    <AppTooltip size="sm" title={t.common.ui.emoji.reaction}>
                         <IconButton
                             key={`emoji-icon-${message.messageId}`}
                             size="sm"
@@ -319,7 +320,7 @@ export const EmojiReaction = (props: EmojiReactionProps) => {
                         >
                             <SentimentSatisfiedAltIcon sx={{ fontSize: "24px" }} />
                         </IconButton>
-                    </Tooltip>
+                    </AppTooltip>
                 </>
             )}
         </Box>

@@ -1,8 +1,9 @@
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import { Box, Chip, Stack, Tooltip, Typography } from "@mui/joy";
+import { Box, Chip, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
 import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
@@ -151,7 +152,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
 
                     {/* Chat name */}
                     {chat?.chatType === 4 ? (
-                        <Tooltip
+                        <AppTooltip
                             title={
                                 useCM.allChats
                                     .find((c) => c.chatId === chat.chatId && c.chatType === 4)
@@ -160,7 +161,6 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                             }
                             placement="bottom"
                             arrow
-                            variant="outlined"
                         >
                             <Typography
                                 level="title-md"
@@ -175,7 +175,7 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                             >
                                 {mdmDisplayName || chat?.chatName}
                             </Typography>
-                        </Tooltip>
+                        </AppTooltip>
                     ) : (
                         <Typography
                             level="title-md"

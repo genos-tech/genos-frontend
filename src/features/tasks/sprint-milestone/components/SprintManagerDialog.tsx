@@ -16,10 +16,10 @@ import {
     Option,
     Select,
     Stack,
-    Tooltip,
     Typography,
 } from "@mui/joy";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { useTranslation } from "../../../../i18n";
 import { Sprint } from "../types";
@@ -136,17 +136,17 @@ const SprintRow = ({
                     </Chip>
                 )}
                 {!editing && (
-                    <Tooltip title={t.tasks.sprintManager.editTooltip} size="sm" variant="outlined">
+                    <AppTooltip title={t.tasks.sprintManager.editTooltip} size="sm">
                         <IconButton size="sm" variant="plain" onClick={() => setEditing(true)}>
                             <EditIcon sx={{ fontSize: 16 }} />
                         </IconButton>
-                    </Tooltip>
+                    </AppTooltip>
                 )}
-                <Tooltip title={t.tasks.sprintManager.deleteTooltip} size="sm" variant="outlined">
+                <AppTooltip title={t.tasks.sprintManager.deleteTooltip} size="sm">
                     <IconButton size="sm" variant="plain" color="danger" onClick={remove}>
                         <DeleteOutlineIcon sx={{ fontSize: 16 }} />
                     </IconButton>
-                </Tooltip>
+                </AppTooltip>
             </Stack>
 
             <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }}>

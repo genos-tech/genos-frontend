@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Box, Chip, Tooltip } from "@mui/joy";
+import { Box, Chip } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { fmt, useTranslation } from "../../../i18n";
@@ -7,6 +7,7 @@ import { UserProps } from "../../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../../types/chat";
 import { GroupedReactionProps, ReactionProps } from "../../../types/common";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
+import { AppTooltip } from "../AppTooltip";
 
 export const groupEmojis = (reactions: ReactionProps[]): GroupedReactionProps[] => {
     const map = new Map<string, { count: number; senders: UserProps[] }>();
@@ -273,9 +274,8 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
     return (
         <Box display="flex">
             {displayed.map(({ senders, emoji, count }, index) => (
-                <Tooltip
+                <AppTooltip
                     key={`tooltip-${index}`}
-                    variant="outlined"
                     title={fmt(
                         senders.length > 5
                             ? t.common.ui.emoji.multipleReacted
@@ -309,19 +309,18 @@ export const ShowEmojiReaction = (props: ShowEmojiReactionProps) => {
                         {emoji}
                         {count}
                     </Chip>
-                </Tooltip>
+                </AppTooltip>
             ))}
 
             {hidden.length > 0 && (
-                <Tooltip
+                <AppTooltip
                     size="sm"
                     title={hidden.map(({ emoji, count }) => `${emoji} ${count}`).join(" ")}
-                    variant="outlined"
                 >
                     <Chip size="sm" sx={{ fontSize: "0.8rem" }} variant="plain">
                         {fmt(t.common.ui.emoji.moreLabel, { count: hidden.length })}
                     </Chip>
-                </Tooltip>
+                </AppTooltip>
             )}
         </Box>
     );

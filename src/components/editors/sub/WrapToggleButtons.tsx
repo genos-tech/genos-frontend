@@ -1,6 +1,8 @@
 import CodeIcon from "@mui/icons-material/Code";
 import WrapTextIcon from "@mui/icons-material/WrapText";
-import { IconButton, Stack, Tooltip } from "@mui/joy";
+import { IconButton, Stack } from "@mui/joy";
+
+import { AppTooltip } from "../../ui/AppTooltip";
 
 type WrapToggleButtonsProps = {
     unwrapAll: boolean;
@@ -27,11 +29,10 @@ export const WrapToggleButtons = (props: WrapToggleButtonsProps) => {
 
     return (
         <Stack direction="row" spacing={0.5}>
-            <Tooltip
+            <AppTooltip
                 placement="top"
                 size="sm"
                 title={unwrapAll ? "Wrap all content" : "Unwrap all content"}
-                variant="outlined"
             >
                 <IconButton
                     color="neutral"
@@ -41,12 +42,11 @@ export const WrapToggleButtons = (props: WrapToggleButtonsProps) => {
                 >
                     <WrapTextIcon sx={{ fontSize: 16 }} />
                 </IconButton>
-            </Tooltip>
-            <Tooltip
+            </AppTooltip>
+            <AppTooltip
                 placement="top"
                 size="sm"
                 title={unwrapCode ? "Wrap code blocks" : "Unwrap code blocks only"}
-                variant="outlined"
             >
                 <IconButton
                     color="neutral"
@@ -56,7 +56,7 @@ export const WrapToggleButtons = (props: WrapToggleButtonsProps) => {
                 >
                     <CodeIcon sx={{ fontSize: 16 }} />
                 </IconButton>
-            </Tooltip>
+            </AppTooltip>
         </Stack>
     );
 };

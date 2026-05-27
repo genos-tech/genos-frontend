@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import SentimentSatisfiedAltIcon from "@mui/icons-material/SentimentSatisfiedAlt";
-import { Box, Button, Chip, IconButton, Tooltip, useColorScheme } from "@mui/joy";
+import { Box, Button, Chip, IconButton, useColorScheme } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
 import { fmt, useTranslation } from "../../../i18n";
@@ -8,6 +8,7 @@ import { UserProps } from "../../../types/admin";
 import { GroupedReactionProps, ReactionProps } from "../../../types/common";
 import { TaskCommentProps } from "../../../types/tasks";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
+import { AppTooltip } from "../AppTooltip";
 
 export const groupEmojis = (reactions: ReactionProps[]): GroupedReactionProps[] => {
     const map = new Map<string, { count: number; senders: UserProps[] }>();
@@ -136,9 +137,8 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
     return (
         <Box display="flex">
             {displayed.map(({ senders, emoji, count }, index) => (
-                <Tooltip
+                <AppTooltip
                     key={`tooltip-${index}`}
-                    variant="outlined"
                     title={fmt(
                         senders.length > 5
                             ? t.common.ui.emoji.multipleReacted
@@ -171,19 +171,18 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
                         {emoji}
                         {count}
                     </Chip>
-                </Tooltip>
+                </AppTooltip>
             ))}
 
             {hidden.length > 0 && (
-                <Tooltip
+                <AppTooltip
                     size="sm"
                     title={hidden.map(({ emoji, count }) => `${emoji} ${count}`).join(" ")}
-                    variant="outlined"
                 >
                     <Chip size="sm" sx={{ fontSize: "0.8rem" }} variant="plain">
                         {fmt(t.common.ui.emoji.moreLabel, { count: hidden.length })}
                     </Chip>
-                </Tooltip>
+                </AppTooltip>
             )}
 
             {showUnderBarOption && (
@@ -211,7 +210,7 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
                             ))}
                         </>
                     )}
-                    <Tooltip size="sm" title={t.common.ui.emoji.reaction} variant="outlined">
+                    <AppTooltip size="sm" title={t.common.ui.emoji.reaction}>
                         <IconButton
                             key={`emoji-icon-${comment.commentId}`}
                             color="primary"
@@ -232,7 +231,7 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
                         >
                             <SentimentSatisfiedAltIcon sx={{ fontSize: "24px" }} />
                         </IconButton>
-                    </Tooltip>
+                    </AppTooltip>
                 </>
             )}
         </Box>

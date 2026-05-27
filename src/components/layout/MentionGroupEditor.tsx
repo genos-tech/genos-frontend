@@ -13,7 +13,6 @@ import {
     ListItem,
     ListItemButton,
     Stack,
-    Tooltip,
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -25,6 +24,7 @@ import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { MentionGroup } from "../../services/mentionGroupsApi";
 import { UserProps } from "../../types/admin";
+import { AppTooltip } from "../ui/AppTooltip";
 import { AvatarWithStatus } from "../ui/avatars/avatarWithStatus";
 
 type Props = {
@@ -158,7 +158,7 @@ export const MentionGroupEditor = ({
                         @{group.groupName}
                     </Typography>
                 )}
-                <Tooltip title="Delete group" size="sm" variant="outlined">
+                <AppTooltip title="Delete group" size="sm">
                     <IconButton
                         size="sm"
                         variant="plain"
@@ -167,7 +167,7 @@ export const MentionGroupEditor = ({
                     >
                         <DeleteOutlineRoundedIcon />
                     </IconButton>
-                </Tooltip>
+                </AppTooltip>
             </Stack>
 
             {/* Description */}
@@ -234,7 +234,7 @@ export const MentionGroupEditor = ({
                                     {row.user?.userEmail || ""}
                                 </Typography>
                             </Box>
-                            <Tooltip title="Remove member" size="sm" variant="outlined">
+                            <AppTooltip title="Remove member" size="sm">
                                 <IconButton
                                     size="sm"
                                     variant="plain"
@@ -243,7 +243,7 @@ export const MentionGroupEditor = ({
                                 >
                                     <CloseRoundedIcon />
                                 </IconButton>
-                            </Tooltip>
+                            </AppTooltip>
                         </ListItem>
                     ))}
                 </List>

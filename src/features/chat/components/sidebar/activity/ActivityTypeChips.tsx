@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { Box, Stack, Tooltip, Typography } from "@mui/joy";
+import { Box, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { AppTooltip } from "../../../../../components/ui/AppTooltip";
 import { useTranslation } from "../../../../../i18n";
 import { ActivityMessageProps } from "../../../../../types/chat";
 import { formatTaskDisplayId } from "../../../../tasks/utils/taskDisplayId";
@@ -129,9 +130,9 @@ const ModernChip: React.FC<ModernChipProps> = ({
 
     if (!copyText) return chip;
     return (
-        <Tooltip arrow placement="top" title={copied ? "Copied!" : "Click to copy"}>
+        <AppTooltip arrow placement="top" title={copied ? "Copied!" : "Click to copy"}>
             {chip}
-        </Tooltip>
+        </AppTooltip>
     );
 };
 

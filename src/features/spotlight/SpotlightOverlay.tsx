@@ -33,20 +33,12 @@ import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import StickyNote2RoundedIcon from "@mui/icons-material/StickyNote2Rounded";
-import {
-    Box,
-    Button,
-    Chip,
-    CircularProgress,
-    IconButton,
-    Sheet,
-    Tooltip,
-    Typography,
-} from "@mui/joy";
+import { Box, Button, Chip, CircularProgress, IconButton, Sheet, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { AppTooltip } from "../../components/ui/AppTooltip";
 import { fmt, useTranslation, type Messages } from "../../i18n";
 import type {
     AgentSessionDetail,
@@ -526,9 +518,8 @@ export const SpotlightOverlay = ({
                                 {t.spotlight.actions.cancel}
                             </Button>
                         )}
-                        <Tooltip
+                        <AppTooltip
                             size="sm"
-                            variant="outlined"
                             title={!aiAnswersEnabled ? t.spotlight.errors.enableAiHint : ""}
                             // Empty title disables the tooltip in MUI Joy.
                             placement="bottom"
@@ -566,18 +557,17 @@ export const SpotlightOverlay = ({
                                     </Box>
                                 </Button>
                             </Box>
-                        </Tooltip>
+                        </AppTooltip>
                         {/* History entry point — persistent across search
                         and agent modes (sits right of Ask so a returning
                         user with no live conversation in localStorage
                         can still reach their past sessions). Clicking
                         switches the panel into the History list view
                         (re-fetches once per click; bounded ≤20 rows). */}
-                        <Tooltip
+                        <AppTooltip
                             placement="bottom"
                             size="sm"
                             title={t.spotlight.history.openTooltip}
-                            variant="outlined"
                         >
                             <IconButton
                                 color="neutral"
@@ -588,7 +578,7 @@ export const SpotlightOverlay = ({
                             >
                                 <HistoryRoundedIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
                             </IconButton>
-                        </Tooltip>
+                        </AppTooltip>
                     </Box>
                 )}
 
@@ -912,11 +902,10 @@ const ConversationPanel = memo(
                                 otherwise show the "open history" icon
                                 alongside "Back to search". */}
                             {historyMode === "detail" && (
-                                <Tooltip
+                                <AppTooltip
                                     placement="bottom"
                                     size="sm"
                                     title={ts.history.backToListTooltip}
-                                    variant="outlined"
                                 >
                                     <Button
                                         color="primary"
@@ -930,14 +919,13 @@ const ConversationPanel = memo(
                                     >
                                         {ts.history.backToList}
                                     </Button>
-                                </Tooltip>
+                                </AppTooltip>
                             )}
                             {historyOpen && (
-                                <Tooltip
+                                <AppTooltip
                                     placement="bottom"
                                     size="sm"
                                     title={ts.history.closeTooltip}
-                                    variant="outlined"
                                 >
                                     <IconButton
                                         color="neutral"
@@ -948,7 +936,7 @@ const ConversationPanel = memo(
                                     >
                                         <CloseRoundedIcon sx={{ fontSize: 16 }} />
                                     </IconButton>
-                                </Tooltip>
+                                </AppTooltip>
                             )}
                             {!historyOpen &&
                                 (turns.length > 0 || ask.sessionId || hasAskContent(ask)) && (
@@ -956,11 +944,10 @@ const ConversationPanel = memo(
                                     // only arrives on `onDone`, but the user can
                                     // already want to bail back to search the
                                     // moment they hit Enter.
-                                    <Tooltip
+                                    <AppTooltip
                                         placement="bottom"
                                         size="sm"
                                         title={ts.conversation.backToSearchTooltip}
-                                        variant="outlined"
                                     >
                                         <Button
                                             color="primary"
@@ -974,7 +961,7 @@ const ConversationPanel = memo(
                                         >
                                             {ts.actions.backToSearch}
                                         </Button>
-                                    </Tooltip>
+                                    </AppTooltip>
                                 )}
                         </Box>
                     </Box>

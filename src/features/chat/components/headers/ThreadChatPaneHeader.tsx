@@ -21,6 +21,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { alpha } from "@mui/system";
 import { useNavigate } from "react-router-dom";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
 import { MoreMenu } from "../../../../components/ui/MoreMenu";
 import { ThreadChatPaneHeaderStyles } from "../../../../components/ui/styles/commonStyle";
@@ -404,7 +405,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
 
                 {/* Chat name */}
                 {useCM.currentThreadChat?.chatType === 4 ? (
-                    <Tooltip
+                    <AppTooltip
                         title={
                             useCM.allChats
                                 .find(
@@ -417,7 +418,6 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         }
                         placement="bottom"
                         arrow
-                        variant="outlined"
                     >
                         <Typography
                             level="title-md"
@@ -432,7 +432,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         >
                             {useCM.currentThreadChat?.chatName}
                         </Typography>
-                    </Tooltip>
+                    </AppTooltip>
                 ) : (
                     <Typography
                         level="title-md"

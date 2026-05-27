@@ -69,6 +69,7 @@ import { NoteRoleMember, TaskNoteProps } from "../../types/notes";
 import { getUserColor } from "../../utils/collabUtils";
 import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 import { downloadFile } from "../../utils/downloadUtils";
+import { AppTooltip } from "../ui/AppTooltip";
 import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
 import { FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
 import { useFileSizeGuard } from "../ui/feedback/useFileSizeGuard";
@@ -357,11 +358,10 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                 {/* Anchored bottom-right because the Comments toggle already
                 lives at top-right of this editor. */}
                 <FileUploadStatusBadge count={editorUploadCount} placement="bottom-right" />
-                <Tooltip
+                <AppTooltip
                     placement="top"
                     size="sm"
                     title={showThreadsSidebar ? "Hide Comments" : "Show Comments"}
-                    variant="outlined"
                 >
                     <IconButton
                         color="neutral"
@@ -372,7 +372,7 @@ export const BnTaskNoteEditor = (props: BnTaskNoteEditorProps) => {
                     >
                         <ChatBubbleOutlineIcon sx={{ fontSize: 18 }} />
                     </IconButton>
-                </Tooltip>
+                </AppTooltip>
                 <Box
                     sx={{
                         position: "absolute",

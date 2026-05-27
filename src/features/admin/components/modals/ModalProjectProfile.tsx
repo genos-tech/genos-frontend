@@ -24,6 +24,7 @@ import {
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
+import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { FileSizeRejectionSnackbar } from "../../../../components/ui/feedback/FileSizeRejectionSnackbar";
 import { useFileSizeGuard } from "../../../../components/ui/feedback/useFileSizeGuard";
@@ -774,7 +775,10 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                                     {projectProfile?.code || "—"}
                                                                 </Typography>
                                                             </Box>
-                                                            <Tooltip title="Edit code" size="sm">
+                                                            <AppTooltip
+                                                                title="Edit code"
+                                                                size="sm"
+                                                            >
                                                                 <IconButton
                                                                     size="sm"
                                                                     variant="plain"
@@ -791,7 +795,7 @@ export const ModalProjectProfile = (props: ModalProjectProfileProps) => {
                                                                         sx={{ fontSize: 16 }}
                                                                     />
                                                                 </IconButton>
-                                                            </Tooltip>
+                                                            </AppTooltip>
                                                         </Stack>
                                                     )}
                                                     {codeError && (

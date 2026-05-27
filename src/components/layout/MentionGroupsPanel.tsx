@@ -12,7 +12,6 @@ import {
     ListItemButton,
     Sheet,
     Stack,
-    Tooltip,
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -24,6 +23,7 @@ import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { MentionGroup } from "../../services/mentionGroupsApi";
 import { UserProps } from "../../types/admin";
+import { AppTooltip } from "../ui/AppTooltip";
 import { MentionGroupEditor } from "./MentionGroupEditor";
 
 type Props = {
@@ -101,7 +101,7 @@ export const MentionGroupsPanel = ({
                         <Typography level="title-sm" sx={{ flex: 1 }}>
                             Groups
                         </Typography>
-                        <Tooltip title="New group" size="sm" variant="outlined">
+                        <AppTooltip title="New group" size="sm">
                             <IconButton
                                 size="sm"
                                 variant="soft"
@@ -113,7 +113,7 @@ export const MentionGroupsPanel = ({
                             >
                                 <AddRoundedIcon />
                             </IconButton>
-                        </Tooltip>
+                        </AppTooltip>
                     </Stack>
 
                     {creating && (

@@ -2,18 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import GitHubIcon from "@mui/icons-material/GitHub";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import {
-    Alert,
-    Box,
-    Button,
-    Card,
-    Chip,
-    CircularProgress,
-    Stack,
-    Tooltip,
-    Typography,
-} from "@mui/joy";
+import { Alert, Box, Button, Card, Chip, CircularProgress, Stack, Typography } from "@mui/joy";
 
+import { AppTooltip } from "../../../components/ui/AppTooltip";
 import {
     Connection,
     ConnectionsResponse,
@@ -126,7 +117,7 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
                         </Button>
                     )}
                     {c ? (
-                        <Tooltip
+                        <AppTooltip
                             title={
                                 isPrimary
                                     ? "You can't disconnect the provider you signed up with."
@@ -144,7 +135,7 @@ export const ConnectionsSection = ({ accessToken }: ConnectionsSectionProps) => 
                                     {disconnecting === provider ? "Disconnecting…" : "Disconnect"}
                                 </Button>
                             </span>
-                        </Tooltip>
+                        </AppTooltip>
                     ) : (
                         <Button
                             onClick={() => {
