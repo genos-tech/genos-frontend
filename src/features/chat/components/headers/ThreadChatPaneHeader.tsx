@@ -1,6 +1,7 @@
 import AddTaskRoundedIcon from "@mui/icons-material/AddTaskRounded";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import MoreVertRoundedIcon from "@mui/icons-material/MoreVertRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
@@ -22,6 +23,7 @@ import { useNavigate } from "react-router-dom";
 
 import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
 import { ThreadChatPaneHeaderStyles } from "../../../../components/ui/styles/commonStyle";
+import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../../../hooks/common/useIsMobile";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
@@ -32,6 +34,8 @@ import { UserProps } from "../../../../types/admin";
 import { ThreadProps } from "../../../../types/chat";
 import { CopyableTaskIdText } from "../../../tasks/components/CopyableTaskId";
 import { formatTaskDisplayId } from "../../../tasks/utils/taskDisplayId";
+import { ThreadAskModal } from "../../../threadAsk/ThreadAskModal";
+import { useThreadAsk } from "../../../threadAsk/useThreadAsk";
 import { useChatContext } from "../../context/ChatContext";
 
 type ThreadChatPaneHeaderProps = {
@@ -50,6 +54,18 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
     const navigate = useNavigate();
     const styles = isDark ? ThreadChatPaneHeaderStyles.dark : ThreadChatPaneHeaderStyles.light;
     const { currentThreadTaskId } = useChatContext();
+    const { accessToken } = useAuth();
+    // Modal state for the "Ask about this thread" feature. Mounted at
+    // this header so each thread gets a clean hook instance; switching
+    // threads naturally tears down the in-progress Q&A.
+    const threadAsk = useThreadAsk({ accessToken, teamId: myself.teamId });
+    const openThreadAsk = () => {
+        const chatType = useCM.currentThreadChat?.chatType;
+        const chatId = useCM.currentThreadChat?.chatId;
+        const threadId = useCM.currentThreadChat?.threadId;
+        if (chatType === undefined || chatId === undefined || threadId === undefined) return;
+        threadAsk.open({ chatType, chatId, threadId });
+    };
 
     const isYou: boolean =
         myself.userId === useCM.currentThreadChat?.dmPartnerUser.userId &&
@@ -157,11 +173,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
             matchedChat?.chatName ||
             useCM.currentMainChat?.chatName ||
             useCM.currentThreadChat?.chatName;
-        if (
-            chatType === 4 &&
-            matchedChat?.mdmMembers &&
-            matchedChat.mdmMembers.length > 0
-        ) {
+        if (chatType === 4 && matchedChat?.mdmMembers && matchedChat.mdmMembers.length > 0) {
             const MAX_DISPLAY = 3;
             const names = matchedChat.mdmMembers.map((m) => m.userName);
             chatName =
@@ -239,6 +251,12 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         <MoreVertRoundedIcon sx={{ fontSize: 20 }} />
                     </MenuButton>
                     <Menu size="sm" placement="bottom-end" sx={{ minWidth: 200 }}>
+                        <MenuItem onClick={openThreadAsk}>
+                            <AutoAwesomeRoundedIcon
+                                sx={{ fontSize: 18, color: styles.accentColor }}
+                            />
+                            {t.threadAsk.headerButton.label}
+                        </MenuItem>
                         {hasTask && (
                             <MenuItem onClick={openTaskHandler}>
                                 <AssignmentRoundedIcon
@@ -263,6 +281,12 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         )}
                     </Menu>
                 </Dropdown>
+                <ThreadAskModal
+                    state={threadAsk}
+                    myself={myself}
+                    accessToken={accessToken}
+                    chatName={useCM.currentThreadChat?.chatName || ""}
+                />
             </Stack>
         );
     }
@@ -607,6 +631,27 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     );
                 })()}
 
+                {/* Ask about this thread — opens the AI Q&A modal. Always
+                    visible (no chatType guard) because the summary +
+                    follow-up flow is useful regardless of whether the
+                    thread is in DM / GM / PM / MDM. */}
+                <Tooltip
+                    size="sm"
+                    title={t.threadAsk.headerButton.tooltip}
+                    variant="outlined"
+                    sx={{ borderRadius: "8px" }}
+                >
+                    <IconButton
+                        size="sm"
+                        variant="plain"
+                        aria-label={t.threadAsk.headerButton.tooltip}
+                        sx={actionButtonStyle}
+                        onClick={openThreadAsk}
+                    >
+                        <AutoAwesomeRoundedIcon sx={{ fontSize: 18, color: styles.accentColor }} />
+                    </IconButton>
+                </Tooltip>
+
                 {/* Open Note Button, invisible in PM threads */}
                 {useCM.currentThreadChat?.chatType !== 3 && (
                     <Tooltip
@@ -684,6 +729,15 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     </IconButton>
                 </Tooltip>
             </Stack>
+
+            {/* Thread Q&A modal — mounted once per header instance so
+                state lives for the lifetime of this thread view. */}
+            <ThreadAskModal
+                state={threadAsk}
+                myself={myself}
+                accessToken={accessToken}
+                chatName={useCM.currentThreadChat?.chatName || ""}
+            />
         </Stack>
     );
 };
