@@ -1,16 +1,16 @@
 import { Socket } from "socket.io-client";
 
-import { authApi } from "../../../services/api";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { getMessages } from "../../../i18n";
+import { authApi } from "../../../services/api";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps, MDMMemberProps, MessageProps } from "../../../types/chat";
 import { getLocalCurrentTimestamp } from "../../../utils/dateUtils";
 import { addChat } from "./addChat";
+import { defaultDmPartner } from "./constants";
 import { createMDMChat } from "./createMDMChat";
 import { loadMDMHistory } from "./loadMDMHistory";
 import { popSpecificMessages } from "./popSpecificMessages";
-import { defaultDmPartner } from "./constants";
 
 /**
  * Add members to an existing MDM chat.
@@ -93,7 +93,11 @@ export const convertDMToMDM = async (
                 });
             } else {
                 const historyData = await loadMDMHistory(
-                    myself.teamId, myself.teamName, myself.userId, accessToken, mdmId
+                    myself.teamId,
+                    myself.teamName,
+                    myself.userId,
+                    accessToken,
+                    mdmId
                 );
                 const mdmChat = historyData?.chat_history?.[0];
                 if (mdmChat) {
@@ -148,7 +152,10 @@ export const convertDMToMDM = async (
                                 type: "paragraph",
                                 content: [{ type: "text", text: startedConversation, styles: {} }],
                             },
-                            { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] },
+                            {
+                                type: "paragraph",
+                                content: [{ type: "text", text: "", styles: {} }],
+                            },
                         ],
                         destCGName: chatName,
                         destCGId: chatId,
@@ -188,11 +195,18 @@ export const convertDMToMDM = async (
             messageIdWithChatId: `${chatId}-1`,
             chatId: chatId,
             messageId: 1,
+            // Two-block shape (text paragraph + trailing empty paragraph)
+            // matches what the socket emit above sends and what the other
+            // system messages produce (see `getCreateMDMMessage` /
+            // `getCreateGroupMessage` / `getJoinedMessage`). `BnChatPreview`
+            // calls `content.slice(0, -1)` on the rendered content, so a
+            // single-block array becomes empty and BlockNote throws.
             content: [
                 {
                     type: "paragraph",
                     content: [{ type: "text", text: startedConversation, styles: {} }],
                 },
+                { type: "paragraph", content: [{ type: "text", text: "", styles: {} }] },
             ],
             contentText: startedConversation,
             sender: myself,
@@ -267,7 +281,11 @@ export const addMembersToChat = async (
         return result !== null;
     } else if (chat.chatType === 4) {
         const success = await addMembersToMDM(
-            accessToken, chat.chatId, newMemberIds, myself, socket
+            accessToken,
+            chat.chatId,
+            newMemberIds,
+            myself,
+            socket
         );
 
         if (success) {
