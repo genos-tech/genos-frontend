@@ -1,6 +1,7 @@
 import { useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
@@ -16,6 +17,7 @@ import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithSt
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { NoteHeaderActionsStyles } from "../../../../components/ui/styles/commonStyle";
+import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -25,6 +27,8 @@ import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
 import { TaskProps } from "../../../../types/tasks";
 import { isMac } from "../../../../utils/platform";
+import { NoteAskModal, useNoteAsk } from "../../../noteAsk";
+import { SpotlightResult } from "../../../spotlight/types";
 import { formatTaskDisplayId } from "../../../tasks/utils/taskDisplayId";
 import { getMyNoteRoleId, NOTE_ROLE_OWNER } from "../utils/noteRoles";
 import { ModalNoteSharing } from "./ModalNoteSharing";
@@ -106,6 +110,76 @@ export const NoteHeaderActions = ({
     const [shareOpen, setShareOpen] = useState(false);
     const openShareModal = () => {
         if (activeNoteId != null) setShareOpen(true);
+    };
+
+    // ---- "Ask about this note" wiring ----
+    // The hook is mounted here (once per NoteHeaderActions instance —
+    // i.e. once per active note pane). Switching the active note
+    // doesn't unmount the actions component, so the hook's open()
+    // detects context changes and clears the prior conversation on
+    // its own. noteType=4 (Shared Personal) maps back to 1 — same
+    // backend table as MyNote.
+    const { accessToken } = useAuth();
+    const noteAsk = useNoteAsk({ accessToken, teamId: myself.teamId });
+    const askButtonAvailable = activeNoteId != null;
+    const normalizedNoteType: 1 | 2 | 3 | null =
+        noteType === 4
+            ? 1
+            : noteType === 1 || noteType === 2 || noteType === 3
+              ? (noteType as 1 | 2 | 3)
+              : null;
+    const openNoteAsk = () => {
+        if (!askButtonAvailable || normalizedNoteType === null || activeNoteId == null) return;
+        noteAsk.open({ noteType: normalizedNoteType, noteId: activeNoteId });
+    };
+    // Citation click handler. The note Q&A agent can cite tasks /
+    // chats / notes / projects — same SpotlightResult shape as the
+    // global Spotlight surface. We navigate by URL for every entity
+    // type rather than calling useCM.moveToSpecificChat etc., because
+    // the routes pick up the necessary state on mount. Inline rather
+    // than extracted to a shared helper for v1 — there are only two
+    // call sites (this and ThreadChatPaneHeader) and the URL shapes
+    // are short and rarely change.
+    const onCitationSelect = (r: SpotlightResult) => {
+        if (r.entity_type === "task" && r.task_id && r.project_id) {
+            navigate(`/workspace/tasks/project/${r.project_id}/task/${r.task_id}`);
+            return;
+        }
+        if (r.entity_type === "project" && r.project_id) {
+            navigate(`/workspace/tasks/project/${r.project_id}`);
+            return;
+        }
+        if (r.entity_type === "chat" && r.chat_type && r.chat_id) {
+            const base = `/workspace/chat/${r.chat_type}/${r.chat_id}`;
+            if (r.thread_id) {
+                const url = `${base}/thread/${r.thread_id}`;
+                navigate(r.message_id ? `${url}/message/${r.message_id}` : url);
+            } else {
+                navigate(r.message_id ? `${base}/message/${r.message_id}` : base);
+            }
+            return;
+        }
+        if (r.entity_type === "note" && r.note_id) {
+            if (r.note_type === "personal") {
+                navigate(`/workspace/notes/my/${r.note_id}`);
+                return;
+            }
+            if (r.note_type === "task" && r.project_id && r.task_id) {
+                navigate(
+                    `/workspace/notes/task/project/${r.project_id}` +
+                        `/task/${r.task_id}/note/${r.note_id}`
+                );
+                return;
+            }
+            if (r.note_type === "chat" && r.chat_type && r.chat_id && r.thread_id) {
+                navigate(
+                    `/workspace/notes/chat/${r.chat_type}` +
+                        `/${r.chat_id}/thread/${r.thread_id}/note/${r.note_id}`
+                );
+                return;
+            }
+            navigate("/workspace/notes");
+        }
     };
 
     // Common action button style
@@ -567,6 +641,28 @@ export const NoteHeaderActions = ({
                 </Stack>
             )}
 
+            {/* "Ask about this note" — opens the AI Q&A modal. Hidden
+                until an active note has been resolved; the modal's hook
+                requires (noteType, noteId) to fetch the summary. */}
+            {askButtonAvailable && normalizedNoteType !== null && (
+                <Tooltip
+                    size="sm"
+                    sx={{ borderRadius: "8px" }}
+                    title={t.noteAsk.headerButton.tooltip}
+                    variant="outlined"
+                >
+                    <IconButton
+                        aria-label={t.noteAsk.headerButton.tooltip}
+                        size="sm"
+                        sx={actionButtonStyle}
+                        variant="plain"
+                        onClick={openNoteAsk}
+                    >
+                        <AutoAwesomeRoundedIcon sx={{ fontSize: 18, color: styles.accentColor }} />
+                    </IconButton>
+                </Tooltip>
+            )}
+
             {/* More Actions Dropdown */}
             {(() => {
                 const items: MoreMenuItem[] = [
@@ -689,6 +785,12 @@ export const NoteHeaderActions = ({
                     useNM={useNM}
                 />
             )}
+
+            {/* "Ask about this note" modal — mounted once per
+                NoteHeaderActions instance so state lives for the
+                lifetime of this note view. Switching the active note
+                rebinds the hook via open(). */}
+            <NoteAskModal state={noteAsk} onSelectSource={onCitationSelect} />
         </Stack>
     );
 };

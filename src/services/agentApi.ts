@@ -81,6 +81,15 @@ export interface ThreadContext {
     threadId: number;
 }
 
+// Scope for "Ask about this note". Mirrors ThreadContext for the note
+// surface: `noteType` is the integer code (1=Personal, 2=Task, 3=Chat),
+// `noteId` is the row id. `noteType=4` (Shared) is normalised to 1 by
+// the caller — it's a UI bucket, not a separate backend table.
+export interface NoteContext {
+    noteType: 1 | 2 | 3;
+    noteId: number;
+}
+
 export interface AskAgentArgs extends BaseStreamHandlers {
     query: string;
     teamId: string;
@@ -99,11 +108,18 @@ export interface AskAgentArgs extends BaseStreamHandlers {
     // ThreadChatPaneHeader. When omitted, the normal Spotlight agent
     // behavior applies.
     threadContext?: ThreadContext;
+    // Mirror of `threadContext` for the per-note Ask flow. Used by the
+    // "Ask about this note" modal launched from NoteHeaderActions —
+    // injects the note's summary into the system prompt and binds the
+    // session to (note_type, note_id) so a reopen restores prior Q&A.
+    // Mutually exclusive with `threadContext`; the backend rejects
+    // requests with both set.
+    noteContext?: NoteContext;
     // When true, the backend ignores any existing session for this user
-    // (both `sessionId` and any per-thread session) and creates a fresh
-    // AgentSession. Used by the thread modal's "Clear conversation"
-    // button so the next ask doesn't accidentally inherit the cleared
-    // turns via the per-thread lookup.
+    // (both `sessionId` and any per-thread/per-note session) and creates
+    // a fresh AgentSession. Used by the "Clear conversation" button so
+    // the next ask doesn't accidentally inherit the cleared turns via
+    // the per-entity lookup.
     newConversation?: boolean;
     signal?: AbortSignal;
 }
@@ -261,6 +277,58 @@ export interface ThreadSummaryResponse {
     turns: AgentSessionTurn[];
 }
 
+// Response from POST /agent/note-summary/. Same shape as
+// `ThreadSummaryResponse` plus a `body_length` snapshot (used for the
+// fingerprint and for the "X char note" hint when the body is empty)
+// and the note's title at gen time.
+export interface NoteSummaryResponse {
+    summary: string;
+    generated: boolean;
+    last_updated_iso: string;
+    body_length: number;
+    fingerprint: string;
+    note_title: string;
+    agent_session_id: string | null;
+    turns: AgentSessionTurn[];
+}
+
+export async function fetchNoteSummary(args: {
+    accessToken: string | null;
+    teamId: string;
+    noteContext: NoteContext;
+    forceRegenerate?: boolean;
+    signal?: AbortSignal;
+}): Promise<NoteSummaryResponse> {
+    if (!args.accessToken) {
+        throw new Error(getMessages().services.agent.notSignedIn);
+    }
+    const resp = await fetch(`${API_BASE}/agent/note-summary/`, {
+        method: "POST",
+        signal: args.signal,
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${args.accessToken}`,
+        },
+        body: JSON.stringify({
+            team_id: args.teamId,
+            note_type: args.noteContext.noteType,
+            note_id: args.noteContext.noteId,
+            ...(args.forceRegenerate ? { force_regenerate: true } : {}),
+        }),
+    });
+    if (!resp.ok) {
+        let msg = fmt(getMessages().services.agent.serverReturned, { status: resp.status });
+        try {
+            const data = await resp.json();
+            if (data?.error) msg = data.error;
+        } catch {
+            // ignore
+        }
+        throw new Error(msg);
+    }
+    return (await resp.json()) as NoteSummaryResponse;
+}
+
 // Why this is its own non-streaming endpoint (and not a flavor of
 // /ask/): a thread summary is a short, terminal artifact — there's no
 // follow-up loop, no tools called, no sources to attach. Streaming
@@ -361,6 +429,14 @@ export async function askAgentStream(args: AskAgentArgs): Promise<void> {
                           chat_type: args.threadContext.chatType,
                           chat_id: args.threadContext.chatId,
                           thread_id: args.threadContext.threadId,
+                      },
+                  }
+                : {}),
+            ...(args.noteContext
+                ? {
+                      note_context: {
+                          note_type: args.noteContext.noteType,
+                          note_id: args.noteContext.noteId,
                       },
                   }
                 : {}),

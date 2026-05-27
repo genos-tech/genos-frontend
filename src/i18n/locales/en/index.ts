@@ -6,6 +6,7 @@ import { common } from "./common";
 import { history } from "./history";
 import { inbox } from "./inbox";
 import { layout } from "./layout";
+import { noteAsk } from "./noteAsk";
 import { notes } from "./notes";
 import { services } from "./services";
 import { settings } from "./settings";
@@ -26,6 +27,7 @@ export const en = {
     inbox,
     spotlight,
     threadAsk,
+    noteAsk,
     services,
     admin,
     calendar,
