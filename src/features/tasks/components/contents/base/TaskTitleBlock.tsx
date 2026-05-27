@@ -468,46 +468,44 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
 
                 {/* Right side: Action buttons */}
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, ml: "auto" }}>
-                    {isOnTasksRoute && taskContent.threadId !== null && (
-                        <AppTooltip title={t.tasks.titleBlock.checkThread}>
-                            <IconButton
-                                size="sm"
-                                variant="plain"
-                                sx={{
-                                    borderRadius: "8px",
-                                    color: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.5)",
-                                    "&:hover": {
-                                        background: isDark
-                                            ? "rgba(255,255,255,0.08)"
-                                            : "rgba(0,0,0,0.06)",
-                                        color: isDark
-                                            ? "rgba(255,255,255,0.9)"
-                                            : "rgba(0,0,0,0.8)",
-                                    },
-                                }}
-                                onClick={() => {
-                                    if (
-                                        taskContent.chatType &&
-                                        taskContent.chatId &&
-                                        taskContent.threadId &&
-                                        taskContent.threadId !== null
-                                    ) {
+                    {isOnTasksRoute &&
+                        taskContent.threadId !== null &&
+                        taskContent.chatType !== null &&
+                        taskContent.chatId !== null && (
+                            <AppTooltip title={t.tasks.titleBlock.checkThread}>
+                                <IconButton
+                                    size="sm"
+                                    variant="plain"
+                                    sx={{
+                                        background: styles.buttonBg,
+                                        border: `1px solid ${styles.buttonBorder}`,
+                                        borderRadius: "10px",
+                                        width: "36px",
+                                        height: "36px",
+                                        transition: "all 0.2s ease",
+                                        "&:hover": {
+                                            background: styles.buttonHover,
+                                            transform: "translateY(-1px)",
+                                        },
+                                    }}
+                                    onClick={() => {
                                         useCM.moveToSpecificChat(
-                                            taskContent.chatType,
-                                            taskContent.chatId,
-                                            taskContent.threadId,
+                                            taskContent.chatType!,
+                                            taskContent.chatId!,
+                                            taskContent.threadId!,
                                             false,
                                             true,
                                             useTM.setCurrentPreviewTaskId,
                                             usePM.setCurrentProject
                                         );
-                                    }
-                                }}
-                            >
-                                <QuestionAnswerRoundedIcon sx={{ fontSize: 18 }} />
-                            </IconButton>
-                        </AppTooltip>
-                    )}
+                                    }}
+                                >
+                                    <QuestionAnswerRoundedIcon
+                                        sx={{ fontSize: 20, color: styles.textColor }}
+                                    />
+                                </IconButton>
+                            </AppTooltip>
+                        )}
 
                     {/* Diagram trigger — only meaningful for persisted
                         tasks with a project (the diagram fetches
