@@ -35,7 +35,12 @@ import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { isMac } from "../../../../utils/platform";
 import { useChatRouting } from "../../hooks/useChatRouting";
-import { ChipId, EMPTY_CHIP_SET } from "../../utils/activityChipFilters";
+import {
+    ChipId,
+    EMPTY_CHIP_SET,
+    EMPTY_INSTANCE_SET,
+    hasGatingChip,
+} from "../../utils/activityChipFilters";
 import { ModalCreateGM } from "../modals/ModalCreateGM";
 import { ModalCreateMDM } from "../modals/ModalCreateMDM";
 import { ModalJoinGM } from "../modals/ModalJoinGM";
@@ -149,6 +154,20 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
     // Ephemeral — resets on reload, matching `currentActivityMessageType`.
     const [selectedActivityChipIds, setSelectedActivityChipIds] =
         useState<ReadonlySet<ChipId>>(EMPTY_CHIP_SET);
+
+    // Instance-name refinement set keyed by "${chatType}-${chatId}".
+    // Only engaged when at least one of project / dm / gm / mdm is in
+    // `selectedActivityChipIds` — the effect below wipes it whenever
+    // every gating chip is deselected so the filter can't leak into
+    // unrelated contexts.
+    const [selectedActivityInstanceIds, setSelectedActivityInstanceIds] =
+        useState<ReadonlySet<string>>(EMPTY_INSTANCE_SET);
+
+    useEffect(() => {
+        if (!hasGatingChip(selectedActivityChipIds) && selectedActivityInstanceIds.size > 0) {
+            setSelectedActivityInstanceIds(EMPTY_INSTANCE_SET);
+        }
+    }, [selectedActivityChipIds, selectedActivityInstanceIds.size]);
 
     // Get unread count for a specific chat type
     const getUnreadCount = (chatType: number): number => {
@@ -552,9 +571,12 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                 {useCM.currentChatPaneType === CHAT_PANE_TYPES.ACTIVITY && (
                     <ActivityDivider
                         currentActivityMessageType={currentActivityMessageType}
-                        setCurrentActivityMessageType={setCurrentActivityMessageType}
                         selectedChipIds={selectedActivityChipIds}
+                        selectedInstanceIds={selectedActivityInstanceIds}
+                        setCurrentActivityMessageType={setCurrentActivityMessageType}
                         setSelectedChipIds={setSelectedActivityChipIds}
+                        setSelectedInstanceIds={setSelectedActivityInstanceIds}
+                        useCM={useCM}
                     />
                 )}
 
@@ -576,6 +598,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             data={{ myself, setMyself }}
                             includeMDM={true}
                             selectedActivityChipIds={EMPTY_CHIP_SET}
+                            selectedActivityInstanceIds={EMPTY_INSTANCE_SET}
                             socket={socket}
                             state={{ showOnlyUnreadItems, incompleteTodoCount, isToDoVisible }}
                             targetChatType={1}
@@ -595,6 +618,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             currentActivityMessageType={-1}
                             data={{ myself, setMyself }}
                             selectedActivityChipIds={EMPTY_CHIP_SET}
+                            selectedActivityInstanceIds={EMPTY_INSTANCE_SET}
                             socket={socket}
                             state={{ showOnlyUnreadItems, incompleteTodoCount, isToDoVisible }}
                             targetChatType={2}
@@ -614,6 +638,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             currentActivityMessageType={-1}
                             data={{ myself, setMyself }}
                             selectedActivityChipIds={EMPTY_CHIP_SET}
+                            selectedActivityInstanceIds={EMPTY_INSTANCE_SET}
                             socket={socket}
                             state={{ showOnlyUnreadItems, incompleteTodoCount, isToDoVisible }}
                             targetChatType={3}
@@ -633,6 +658,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             currentActivityMessageType={currentActivityMessageType}
                             data={{ myself, setMyself }}
                             selectedActivityChipIds={selectedActivityChipIds}
+                            selectedActivityInstanceIds={selectedActivityInstanceIds}
                             socket={socket}
                             state={{ showOnlyUnreadItems, incompleteTodoCount, isToDoVisible }}
                             targetChatType={5}
@@ -653,6 +679,7 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             currentActivityMessageType={currentActivityMessageType}
                             data={{ myself, setMyself }}
                             selectedActivityChipIds={EMPTY_CHIP_SET}
+                            selectedActivityInstanceIds={EMPTY_INSTANCE_SET}
                             socket={socket}
                             state={{ showOnlyUnreadItems, incompleteTodoCount, isToDoVisible }}
                             targetChatType={6}

@@ -97,3 +97,73 @@ export const CHIP_ORDER: readonly ChipId[] = [
 // can pass a stable reference and avoid re-running the per-render
 // filter effect on identity-fresh sets.
 export const EMPTY_CHIP_SET: ReadonlySet<ChipId> = new Set<ChipId>();
+
+// ---------------------------------------------------------------------
+// Instance-name filter (refines Custom chip selection)
+// ---------------------------------------------------------------------
+// Subset of chip ids that gate the "Filter by name" button next to the
+// Custom dropdown. When any of these chips is active in
+// `selectedChipIds`, the parent reveals the new button and the instance
+// predicate engages; otherwise the predicate is pass-through and the
+// instance state is auto-cleared upstream so it can't leak across
+// gating-chip toggles.
+export const INSTANCE_GATING_CHIPS: ReadonlySet<ChipId> = new Set<ChipId>([
+    "dm",
+    "gm",
+    "mdm",
+    "pm",
+    "project",
+]);
+
+// Maps each gating chip back to the `chatType` integer used by
+// `AllChatProps` / `ActivityMessageProps`. `pm` and `project` both
+// surface chat_type=3 chats — the broader `project` predicate covers
+// task comments / task body / task note activities too, but the
+// underlying chat list is the same set of PM rows.
+export const GATING_CHIP_TO_CHATTYPE: Partial<Record<ChipId, number>> = {
+    dm: 1,
+    gm: 2,
+    mdm: 4,
+    pm: 3,
+    project: 3,
+};
+
+// Inverse lookup: when grouping the instance menu by chat-type, pick
+// one canonical chip per chatType for the header label. "Project"
+// reads more naturally than "PM" so it wins when chatType=3 is gated.
+export const CHATTYPE_HEADER_CHIP: Record<number, ChipId> = {
+    1: "dm",
+    2: "gm",
+    3: "project",
+    4: "mdm",
+};
+
+// Stable string id used as the instance-filter payload:
+// `${chatType}-${chatId}`. Works against both `ActivityMessageProps`
+// and `AllChatProps`, so the same string keys the toggle UI and the
+// predicate without an intermediate adapter type.
+export const makeInstanceKey = (chatType: number, chatId: number): string =>
+    `${chatType}-${chatId}`;
+
+// OR-logic predicate — an activity matches if its (chatType, chatId)
+// is in the selected set. Empty selection short-circuits to true so
+// "button visible but nothing selected" reads as no narrowing.
+export const makeInstanceFilter =
+    (selected: ReadonlySet<string>): ((a: ActivityMessageProps) => boolean) =>
+    (a) => {
+        if (selected.size === 0) return true;
+        return selected.has(makeInstanceKey(a.chatType, a.chatId));
+    };
+
+// True iff any gating chip is in `selected`. Drives both the
+// conditional visibility of the "By name" button AND the upstream
+// auto-clear effect that wipes the instance set when no gating chip
+// remains.
+export const hasGatingChip = (selected: ReadonlySet<ChipId>): boolean => {
+    for (const id of selected) {
+        if (INSTANCE_GATING_CHIPS.has(id)) return true;
+    }
+    return false;
+};
+
+export const EMPTY_INSTANCE_SET: ReadonlySet<string> = new Set<string>();

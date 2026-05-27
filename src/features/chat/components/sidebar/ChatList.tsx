@@ -19,7 +19,7 @@ import { ActivityMessageProps, AllChatProps, FlaggedMessageProps } from "../../.
 import { isMac } from "../../../../utils/platform";
 import { useScrollToBottomOnNewActivity } from "../../hooks/messageBubbleHooks";
 import { useChatRouting } from "../../hooks/useChatRouting";
-import { ChipId, makeChipFilter } from "../../utils/activityChipFilters";
+import { ChipId, makeChipFilter, makeInstanceFilter } from "../../utils/activityChipFilters";
 import { ChatListItemForActivity } from "./activity/chatListItemForActivity";
 import { ChatListItem } from "./chatListItem";
 import { ChatListItemForFlagMessages } from "./chatListItemForFlagMessages";
@@ -118,6 +118,9 @@ type ChatListProps = {
     // live set; non-Activity consumers pass `EMPTY_CHIP_SET` to keep
     // a stable identity across renders.
     selectedActivityChipIds: ReadonlySet<ChipId>;
+    // Instance-name refinement set ("${chatType}-${chatId}" keys).
+    // Composes as AND with the chip set; empty passes through.
+    selectedActivityInstanceIds: ReadonlySet<string>;
     useCM: ChatManagementState;
     state: ChatListState;
     actions: ChatListActions;
@@ -167,6 +170,7 @@ const useFilteredActivityMessages = (
     activityMessages: ActivityMessageProps[],
     currentActivityMessageType: number,
     selectedActivityChipIds: ReadonlySet<ChipId>,
+    selectedActivityInstanceIds: ReadonlySet<string>,
     showOnlyUnreadItems: boolean
 ) => {
     const [tmpActivityMessages, setTmpActivityMessages] = useState<ActivityMessageProps[]>(
@@ -179,15 +183,18 @@ const useFilteredActivityMessages = (
         );
 
         if (filteredMessages) {
-            // AND-compose the primary single-select with the new
-            // multi-select chip refinement. Empty chip set passes
-            // everything through (makeChipFilter short-circuits) so
-            // the unfiltered baseline matches the pre-chip behaviour.
+            // AND-compose the primary single-select with the chip
+            // refinement and the instance-name refinement. Each
+            // predicate short-circuits to true on empty input so the
+            // unfiltered baseline matches pre-filter behavior.
             const primaryFn =
                 ACTIVITY_FILTERS[currentActivityMessageType as keyof typeof ACTIVITY_FILTERS] ??
                 (() => true);
             const chipFn = makeChipFilter(selectedActivityChipIds);
-            const filtered = filteredMessages.filter((item) => primaryFn(item) && chipFn(item));
+            const instanceFn = makeInstanceFilter(selectedActivityInstanceIds);
+            const filtered = filteredMessages.filter(
+                (item) => primaryFn(item) && chipFn(item) && instanceFn(item)
+            );
 
             if (showOnlyUnreadItems) {
                 setTmpActivityMessages(filtered.filter((item) => item.isRead === false));
@@ -199,6 +206,7 @@ const useFilteredActivityMessages = (
         activityMessages,
         currentActivityMessageType,
         selectedActivityChipIds,
+        selectedActivityInstanceIds,
         showOnlyUnreadItems,
     ]);
 
@@ -520,6 +528,7 @@ export const ChatList = (props: ChatListProps) => {
         includeMDM = false,
         currentActivityMessageType,
         selectedActivityChipIds,
+        selectedActivityInstanceIds,
         state,
         actions,
         data,
@@ -562,6 +571,7 @@ export const ChatList = (props: ChatListProps) => {
         useCM.activityMessages,
         currentActivityMessageType,
         selectedActivityChipIds,
+        selectedActivityInstanceIds,
         state.showOnlyUnreadItems
     );
     const [tmpFlaggedMessages, setTmpFlaggedMessages] = useState<FlaggedMessageProps[]>(
