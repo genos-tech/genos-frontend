@@ -115,6 +115,14 @@ export type ActivityMessageProps = {
     reactions: ReactionProps[];
     tsSent: string;
     mentionedUserIds?: [];
+    // Per-user "by group" filter source. Map of `userId → [groupId, ...]`
+    // recording which mention-groups led to each user's inclusion.
+    // Direct @user mentions don't appear here, so reading
+    // `mentionedViaGroups[myUserId]` tells you the groups that put the
+    // current user on this activity (empty / undefined = no group origin).
+    // Populated by the backend mention handler on send; empty `{}` when
+    // the message had no group mentions.
+    mentionedViaGroups?: Record<string, number[]>;
     isRead: boolean;
     // Present on PM thread activities so the notification router can
     // recognize bot-narrated lifecycle messages (sender === systemUserId)

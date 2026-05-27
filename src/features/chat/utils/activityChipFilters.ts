@@ -167,3 +167,38 @@ export const hasGatingChip = (selected: ReadonlySet<ChipId>): boolean => {
 };
 
 export const EMPTY_INSTANCE_SET: ReadonlySet<string> = new Set<string>();
+
+// ---------------------------------------------------------------------
+// Mention-group filter (refines the "Mention" Custom chip)
+// ---------------------------------------------------------------------
+// Parallel to the instance filter above, but gated on the `mention` chip
+// instead of the chat-type chips, and keyed by `MentionGroup.groupId`.
+// Source data: `activity.mentionedViaGroups[myUserId]` — the set of
+// groups that put the current user on this activity (direct @user
+// mentions don't appear in the map).
+//
+// OR-logic predicate — an activity matches if any selected groupId is
+// in the current user's group-origin list. Empty selection
+// short-circuits to true.
+export const makeMentionGroupFilter = (
+    selected: ReadonlySet<number>,
+    myUserId: string
+): ((a: ActivityMessageProps) => boolean) => {
+    return (a) => {
+        if (selected.size === 0) return true;
+        const myGroups = a.mentionedViaGroups?.[myUserId];
+        if (!myGroups || myGroups.length === 0) return false;
+        for (const gid of myGroups) {
+            if (selected.has(gid)) return true;
+        }
+        return false;
+    };
+};
+
+// Drives the conditional "By group" button visibility AND the
+// upstream auto-clear effect that wipes the group set whenever the
+// gating `mention` chip is deselected.
+export const hasMentionGatingChip = (selected: ReadonlySet<ChipId>): boolean =>
+    selected.has("mention");
+
+export const EMPTY_GROUP_ID_SET: ReadonlySet<number> = new Set<number>();

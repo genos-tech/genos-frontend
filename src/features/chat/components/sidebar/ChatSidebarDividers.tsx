@@ -29,6 +29,7 @@ import {
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
+import { useMentionGroupsContext } from "../../../../context/MentionGroupsContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useTranslation, type Messages } from "../../../../i18n";
 import { AllChatProps } from "../../../../types/chat";
@@ -38,6 +39,7 @@ import {
     ChipId,
     GATING_CHIP_TO_CHATTYPES,
     hasGatingChip,
+    hasMentionGatingChip,
     makeInstanceKey,
 } from "../../utils/activityChipFilters";
 
@@ -203,6 +205,12 @@ type ActivityDividerProps = {
     // it so it can't leak into unrelated contexts.
     selectedInstanceIds: ReadonlySet<string>;
     setSelectedInstanceIds: (next: ReadonlySet<string>) => void;
+    // Mention-group refinement set (MentionGroup.groupId values).
+    // Only consulted when the `mention` chip is in `selectedChipIds` —
+    // the parent auto-clears it whenever that gating chip is toggled
+    // off so a stale selection can't leak.
+    selectedMentionGroupIds: ReadonlySet<number>;
+    setSelectedMentionGroupIds: (next: ReadonlySet<number>) => void;
     // Source of chat instances for the "By name" menu. Reads
     // `useCM.allChats` directly — no separate fetch.
     useCM: ChatManagementState;
@@ -236,8 +244,11 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
         setSelectedChipIds,
         selectedInstanceIds,
         setSelectedInstanceIds,
+        selectedMentionGroupIds,
+        setSelectedMentionGroupIds,
         useCM,
     } = props;
+    const { mentionGroups } = useMentionGroupsContext();
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
@@ -286,6 +297,25 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
         }
         setSelectedInstanceIds(next);
     };
+
+    const toggleMentionGroup = (groupId: number) => {
+        const next = new Set(selectedMentionGroupIds);
+        if (next.has(groupId)) {
+            next.delete(groupId);
+        } else {
+            next.add(groupId);
+        }
+        setSelectedMentionGroupIds(next);
+    };
+
+    // Mention groups sorted by display name for a stable menu order.
+    // `useMentionGroups` already lowercases names on create/update, so
+    // localeCompare gives us natural alphabetical ordering.
+    const sortedMentionGroups = [...mentionGroups].sort((a, b) =>
+        a.groupName.localeCompare(b.groupName)
+    );
+    const showMentionGroupFilter = hasMentionGatingChip(selectedChipIds);
+    const hasMentionGroupSelection = selectedMentionGroupIds.size > 0;
 
     // The "By name" button only renders when a gating chip is active;
     // any instance selection visible to the user therefore necessarily
@@ -758,6 +788,165 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
                                         py: 0.75,
                                     }}
                                     onClick={() => setSelectedInstanceIds(new Set())}
+                                >
+                                    {t.chat.sidebar.chipFilterClear}
+                                </MenuItem>
+                            )}
+                        </Menu>
+                    </Dropdown>
+                )}
+
+                {/* "By group" refinement — visible only while the
+                    `mention` chip is active in the Custom menu. Lists
+                    every mention-group from `useMentionGroupsContext`;
+                    selections AND-compose with the chip filter and any
+                    "By name" instance refinement. Auto-clears upstream
+                    when the gating chip is deselected. */}
+                {showMentionGroupFilter && (
+                    <Dropdown>
+                        <MenuButton
+                            slots={{ root: Box }}
+                            slotProps={{
+                                root: {
+                                    "aria-label": t.chat.sidebar.chipFilterByGroupLabel,
+                                    sx: chipButtonSx(hasMentionGroupSelection),
+                                },
+                            }}
+                        >
+                            <LabelOutlinedIcon sx={chipIconSx(hasMentionGroupSelection)} />
+                            <Typography level="body-xs" sx={chipLabelSx(hasMentionGroupSelection)}>
+                                {t.chat.sidebar.chipFilterByGroupLabel}
+                            </Typography>
+                            {hasMentionGroupSelection && (
+                                <Box
+                                    sx={{
+                                        alignItems: "center",
+                                        background: isDark ? "#a78bfa" : "#7c3aed",
+                                        borderRadius: "999px",
+                                        color: "#fff",
+                                        display: "flex",
+                                        fontSize: "0.55rem",
+                                        fontWeight: 700,
+                                        height: 13,
+                                        justifyContent: "center",
+                                        lineHeight: 1,
+                                        minWidth: 13,
+                                        px: 0.375,
+                                    }}
+                                >
+                                    {selectedMentionGroupIds.size}
+                                </Box>
+                            )}
+                        </MenuButton>
+                        <Menu
+                            placement="bottom-start"
+                            size="sm"
+                            sx={{
+                                background: isDark
+                                    ? "rgba(30, 30, 40, 0.98)"
+                                    : "rgba(255, 255, 255, 0.98)",
+                                border: "1px solid",
+                                borderColor: isDark
+                                    ? "rgba(255,255,255,0.08)"
+                                    : "rgba(0,0,0,0.06)",
+                                borderRadius: "10px",
+                                boxShadow: isDark
+                                    ? "0 8px 24px rgba(0,0,0,0.5)"
+                                    : "0 8px 24px rgba(0,0,0,0.12)",
+                                maxHeight: 400,
+                                minWidth: 220,
+                                overflowY: "auto",
+                                zIndex: 10010,
+                            }}
+                        >
+                            {sortedMentionGroups.length === 0 && (
+                                <MenuItem
+                                    sx={{
+                                        borderRadius: "6px",
+                                        color: isDark
+                                            ? "rgba(255,255,255,0.5)"
+                                            : "rgba(0,0,0,0.45)",
+                                        fontSize: "0.8rem",
+                                        mx: 0.5,
+                                        py: 0.75,
+                                    }}
+                                    disabled
+                                >
+                                    {t.chat.sidebar.chipFilterByGroupEmpty}
+                                </MenuItem>
+                            )}
+                            {sortedMentionGroups.map((group) => {
+                                const isChecked = selectedMentionGroupIds.has(group.groupId);
+                                return (
+                                    <MenuItem
+                                        key={group.groupId}
+                                        selected={isChecked}
+                                        sx={{
+                                            borderRadius: "6px",
+                                            fontSize: "0.8rem",
+                                            gap: 1,
+                                            mx: 0.5,
+                                            py: 0.5,
+                                        }}
+                                        onClick={(e) => {
+                                            // Keep menu open across multi-toggles.
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            toggleMentionGroup(group.groupId);
+                                        }}
+                                    >
+                                        <Box
+                                            sx={{
+                                                alignItems: "center",
+                                                color: isChecked
+                                                    ? isDark
+                                                        ? "#a78bfa"
+                                                        : "#7c3aed"
+                                                    : "transparent",
+                                                display: "flex",
+                                                justifyContent: "center",
+                                                width: 16,
+                                            }}
+                                        >
+                                            <CheckRoundedIcon sx={{ fontSize: 16 }} />
+                                        </Box>
+                                        <AlternateEmailRoundedIcon
+                                            sx={{
+                                                color: isDark
+                                                    ? "rgba(255,255,255,0.65)"
+                                                    : "rgba(0,0,0,0.6)",
+                                                fontSize: 16,
+                                            }}
+                                        />
+                                        <Box
+                                            sx={{
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
+                                            }}
+                                        >
+                                            {group.groupName}
+                                        </Box>
+                                    </MenuItem>
+                                );
+                            })}
+                            {hasMentionGroupSelection && (
+                                <MenuItem
+                                    sx={{
+                                        borderRadius: "6px",
+                                        borderTop: "1px solid",
+                                        borderTopColor: isDark
+                                            ? "rgba(255,255,255,0.06)"
+                                            : "rgba(0,0,0,0.06)",
+                                        color: isDark ? "#a78bfa" : "#7c3aed",
+                                        fontSize: "0.8rem",
+                                        fontWeight: 600,
+                                        gap: 1,
+                                        mt: 0.5,
+                                        mx: 0.5,
+                                        py: 0.75,
+                                    }}
+                                    onClick={() => setSelectedMentionGroupIds(new Set())}
                                 >
                                     {t.chat.sidebar.chipFilterClear}
                                 </MenuItem>

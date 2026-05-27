@@ -26,17 +26,22 @@ export const activityHandlers: HandlerMap<ActivityRequests> = {
 
     loadActivityHistory: async ({ myself, accessToken }) => {
         await syncWithCheckpoint({
-            // Bumped from "activity" to invalidate any existing
-            // checkpoint and force a one-shot full reload. Pre-fix
-            // clients stored mention rows under the live-push
-            // "1-<chat_type>-..." activityId while the REST refresh
-            // returns them as "3-<chat_type>-...", so users carry a
-            // shadow "1-..." row alongside every refreshed "3-..."
-            // entry — visible as a duplicate in the chat activity
-            // feed. A full reload (clearActivityMessages then
-            // batchInsert) wipes the stale half cleanly on the first
-            // launch after the fix.
-            key: "activity-v2",
+            // Bumped to "activity-v3" so existing clients re-fetch
+            // every activity row and pick up the new
+            // `mentionedViaGroups` field that drives the "By group"
+            // filter. Pre-v3 rows have no field at all (it's `undefined`
+            // instead of `{}`), which the predicate treats the same as
+            // an empty map — so the bump is mostly a UX nicety: without
+            // it, recently-cached mention activities couldn't be
+            // filtered until they aged out of the 30-day window.
+            //
+            // Previous bump (activity-v2): mention rows used to be
+            // stored under live-push "1-<chat_type>-..." activityIds
+            // while REST refreshes returned "3-<chat_type>-...", so
+            // users carried a shadow "1-..." row alongside every
+            // refreshed "3-..." entry. A full reload wipes the stale
+            // half cleanly.
+            key: "activity-v3",
             fetcher: async (since) => {
                 const response = await loadActivityHistory(myself, accessToken, since);
                 if (!response) {

@@ -19,7 +19,12 @@ import { ActivityMessageProps, AllChatProps, FlaggedMessageProps } from "../../.
 import { isMac } from "../../../../utils/platform";
 import { useScrollToBottomOnNewActivity } from "../../hooks/messageBubbleHooks";
 import { useChatRouting } from "../../hooks/useChatRouting";
-import { ChipId, makeChipFilter, makeInstanceFilter } from "../../utils/activityChipFilters";
+import {
+    ChipId,
+    makeChipFilter,
+    makeInstanceFilter,
+    makeMentionGroupFilter,
+} from "../../utils/activityChipFilters";
 import { ChatListItemForActivity } from "./activity/chatListItemForActivity";
 import { ChatListItem } from "./chatListItem";
 import { ChatListItemForFlagMessages } from "./chatListItemForFlagMessages";
@@ -121,6 +126,12 @@ type ChatListProps = {
     // Instance-name refinement set ("${chatType}-${chatId}" keys).
     // Composes as AND with the chip set; empty passes through.
     selectedActivityInstanceIds: ReadonlySet<string>;
+    // Mention-group refinement set (MentionGroup.groupId values).
+    // Composes as AND with chip + instance filters; empty passes through.
+    // Only meaningful when the `mention` chip is also in
+    // `selectedActivityChipIds`; the parent auto-clears this when the
+    // gating chip is deselected.
+    selectedActivityMentionGroupIds: ReadonlySet<number>;
     useCM: ChatManagementState;
     state: ChatListState;
     actions: ChatListActions;
@@ -171,6 +182,8 @@ const useFilteredActivityMessages = (
     currentActivityMessageType: number,
     selectedActivityChipIds: ReadonlySet<ChipId>,
     selectedActivityInstanceIds: ReadonlySet<string>,
+    selectedActivityMentionGroupIds: ReadonlySet<number>,
+    myUserId: string,
     showOnlyUnreadItems: boolean
 ) => {
     const [tmpActivityMessages, setTmpActivityMessages] = useState<ActivityMessageProps[]>(
@@ -183,17 +196,22 @@ const useFilteredActivityMessages = (
         );
 
         if (filteredMessages) {
-            // AND-compose the primary single-select with the chip
-            // refinement and the instance-name refinement. Each
-            // predicate short-circuits to true on empty input so the
-            // unfiltered baseline matches pre-filter behavior.
+            // AND-compose primary single-select + chip refinement +
+            // instance-name refinement + mention-group refinement.
+            // Each predicate short-circuits to true on empty input so
+            // the unfiltered baseline matches pre-filter behavior.
             const primaryFn =
                 ACTIVITY_FILTERS[currentActivityMessageType as keyof typeof ACTIVITY_FILTERS] ??
                 (() => true);
             const chipFn = makeChipFilter(selectedActivityChipIds);
             const instanceFn = makeInstanceFilter(selectedActivityInstanceIds);
+            const mentionGroupFn = makeMentionGroupFilter(
+                selectedActivityMentionGroupIds,
+                myUserId
+            );
             const filtered = filteredMessages.filter(
-                (item) => primaryFn(item) && chipFn(item) && instanceFn(item)
+                (item) =>
+                    primaryFn(item) && chipFn(item) && instanceFn(item) && mentionGroupFn(item)
             );
 
             if (showOnlyUnreadItems) {
@@ -207,6 +225,8 @@ const useFilteredActivityMessages = (
         currentActivityMessageType,
         selectedActivityChipIds,
         selectedActivityInstanceIds,
+        selectedActivityMentionGroupIds,
+        myUserId,
         showOnlyUnreadItems,
     ]);
 
@@ -529,6 +549,7 @@ export const ChatList = (props: ChatListProps) => {
         currentActivityMessageType,
         selectedActivityChipIds,
         selectedActivityInstanceIds,
+        selectedActivityMentionGroupIds,
         state,
         actions,
         data,
@@ -572,6 +593,8 @@ export const ChatList = (props: ChatListProps) => {
         currentActivityMessageType,
         selectedActivityChipIds,
         selectedActivityInstanceIds,
+        selectedActivityMentionGroupIds,
+        data.myself.userId,
         state.showOnlyUnreadItems
     );
     const [tmpFlaggedMessages, setTmpFlaggedMessages] = useState<FlaggedMessageProps[]>(

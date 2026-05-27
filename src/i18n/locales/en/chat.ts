@@ -70,6 +70,8 @@ export const chat = {
         // `toggleChip` in ActivityDivider.
         // Keys sorted alphabetically per `sort-keys`.
         chipDM: "DM",
+        chipFilterByGroupEmpty: "No mention groups yet",
+        chipFilterByGroupLabel: "By group",
         chipFilterByNameEmpty: "No chats yet",
         chipFilterByNameLabel: "By name",
         chipFilterClear: "Clear all filters",
