@@ -12,6 +12,7 @@ import { settings } from "./settings";
 import { sidebar } from "./sidebar";
 import { spotlight } from "./spotlight";
 import { tasks } from "./tasks";
+import { threadAsk } from "./threadAsk";
 
 export const en = {
     common,
@@ -24,6 +25,7 @@ export const en = {
     notes,
     inbox,
     spotlight,
+    threadAsk,
     services,
     admin,
     calendar,

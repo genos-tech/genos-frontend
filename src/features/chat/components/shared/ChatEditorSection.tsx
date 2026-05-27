@@ -54,7 +54,7 @@ export const ChatEditorSection = ({
 }: ChatEditorSectionProps) => {
     if (isThread) {
         return (
-            <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
+            <Box sx={{ paddingLeft: 1, paddingRight: 1, paddingBottom: 1 }}>
                 {isInEdit === true && editTargetMessage && (
                     <BnUpdateThreadEditor
                         useCM={useCM}
@@ -94,7 +94,7 @@ export const ChatEditorSection = ({
     }
 
     return (
-        <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
+        <Box sx={{ paddingLeft: 1, paddingRight: 1, paddingBottom: 1 }}>
             {isInEdit === true && editTargetMessage && (
                 <BnUpdateEditor
                     chat={chat as ChatProps}

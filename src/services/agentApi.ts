@@ -75,6 +75,12 @@ interface BaseStreamHandlers {
     onPendingApproval?: (payload: PendingApprovalPayload) => void;
 }
 
+export interface ThreadContext {
+    chatType: number;
+    chatId: number;
+    threadId: number;
+}
+
 export interface AskAgentArgs extends BaseStreamHandlers {
     query: string;
     teamId: string;
@@ -85,6 +91,20 @@ export interface AskAgentArgs extends BaseStreamHandlers {
     // agent's tool list so the model can't call it. Defaults to true
     // (current behavior) if omitted.
     allowWebSearch?: boolean;
+    // When set, the agent scopes its answer to one specific chat thread:
+    // it loads a thread summary into the system prompt, hard-disables
+    // every workspace-wide and write tool, and enables only
+    // `fetch_chat_thread` for drilling into specific messages. Used by
+    // the "Ask about this thread" modal launched from
+    // ThreadChatPaneHeader. When omitted, the normal Spotlight agent
+    // behavior applies.
+    threadContext?: ThreadContext;
+    // When true, the backend ignores any existing session for this user
+    // (both `sessionId` and any per-thread session) and creates a fresh
+    // AgentSession. Used by the thread modal's "Clear conversation"
+    // button so the next ask doesn't accidentally inherit the cleared
+    // turns via the per-thread lookup.
+    newConversation?: boolean;
     signal?: AbortSignal;
 }
 
@@ -219,6 +239,70 @@ export interface AgentSessionDetail {
     turns: AgentSessionTurn[];
 }
 
+// Response from POST /agent/thread-summary/.
+//
+// `generated` distinguishes a fresh LLM call from a cache hit, so the UI
+// can show a "just refreshed N seconds ago" badge. `fingerprint` is an
+// opaque cache key (composite of max_message_id + count + max edit ts);
+// the client compares it to a re-fetched value to detect that new
+// messages have arrived and offer the user a "Refresh summary?" banner.
+//
+// `agent_session_id` + `turns` hydrate the modal's Q&A history for this
+// user on this thread, so reopening the modal (even after a page reload)
+// restores the conversation. Null/empty when the user has never asked
+// a follow-up here.
+export interface ThreadSummaryResponse {
+    summary: string;
+    generated: boolean;
+    last_updated_iso: string;
+    message_count: number;
+    fingerprint: string;
+    agent_session_id: string | null;
+    turns: AgentSessionTurn[];
+}
+
+// Why this is its own non-streaming endpoint (and not a flavor of
+// /ask/): a thread summary is a short, terminal artifact — there's no
+// follow-up loop, no tools called, no sources to attach. Streaming
+// chunks would just complicate the client for ~300 words of output.
+export async function fetchThreadSummary(args: {
+    accessToken: string | null;
+    teamId: string;
+    threadContext: ThreadContext;
+    forceRegenerate?: boolean;
+    signal?: AbortSignal;
+}): Promise<ThreadSummaryResponse> {
+    if (!args.accessToken) {
+        throw new Error(getMessages().services.agent.notSignedIn);
+    }
+    const resp = await fetch(`${API_BASE}/agent/thread-summary/`, {
+        method: "POST",
+        signal: args.signal,
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${args.accessToken}`,
+        },
+        body: JSON.stringify({
+            team_id: args.teamId,
+            chat_type: args.threadContext.chatType,
+            chat_id: args.threadContext.chatId,
+            thread_id: args.threadContext.threadId,
+            ...(args.forceRegenerate ? { force_regenerate: true } : {}),
+        }),
+    });
+    if (!resp.ok) {
+        let msg = fmt(getMessages().services.agent.serverReturned, { status: resp.status });
+        try {
+            const data = await resp.json();
+            if (data?.error) msg = data.error;
+        } catch {
+            // ignore
+        }
+        throw new Error(msg);
+    }
+    return (await resp.json()) as ThreadSummaryResponse;
+}
+
 export async function fetchAgentSessions(args: {
     accessToken: string;
     teamId: string;
@@ -271,6 +355,16 @@ export async function askAgentStream(args: AskAgentArgs): Promise<void> {
             // (true) — keeps the wire format unchanged for existing
             // clients and the backend default.
             ...(args.allowWebSearch === false ? { allow_web_search: false } : {}),
+            ...(args.threadContext
+                ? {
+                      thread_context: {
+                          chat_type: args.threadContext.chatType,
+                          chat_id: args.threadContext.chatId,
+                          thread_id: args.threadContext.threadId,
+                      },
+                  }
+                : {}),
+            ...(args.newConversation ? { new_conversation: true } : {}),
         },
         args.accessToken,
         args.signal,
