@@ -108,8 +108,11 @@ export const EMPTY_CHIP_SET: ReadonlySet<ChipId> = new Set<ChipId>();
 export const INSTANCE_GATING_CHIPS: ReadonlySet<ChipId> = new Set<ChipId>([
     "dm",
     "gm",
+    "noteTask",
     "pm",
     "project",
+    "task",
+    "taskComment",
 ]);
 
 // Maps each gating chip back to the `chatType` integer(s) used by
@@ -119,11 +122,22 @@ export const INSTANCE_GATING_CHIPS: ReadonlySet<ChipId> = new Set<ChipId>([
 // `project` both surface chat_type=3 chats — the broader `project`
 // predicate covers task comments / task body / task note activities
 // too, but the underlying chat list is the same set of PM rows.
+//
+// `task`, `taskComment`, and `noteTask` also map to chatType 3 because
+// every task lives inside a project, and projects are PM (chatType=3)
+// chats. The "By name" menu shows the same PM list; the predicate
+// below additionally matches activities by `projectId` so task
+// comments (chatType=4), task body mentions (chatType=5), and task
+// notes (chatType=7) — which have different chatTypes but share the
+// project FK — get filtered correctly.
 export const GATING_CHIP_TO_CHATTYPES: Partial<Record<ChipId, readonly number[]>> = {
     dm: [1, 4],
     gm: [2],
+    noteTask: [3],
     pm: [3],
     project: [3],
+    task: [3],
+    taskComment: [3],
 };
 
 // Inverse lookup: when grouping the instance menu by chat-type, pick
@@ -148,11 +162,23 @@ export const makeInstanceKey = (chatType: number, chatId: number): string =>
 // OR-logic predicate — an activity matches if its (chatType, chatId)
 // is in the selected set. Empty selection short-circuits to true so
 // "button visible but nothing selected" reads as no narrowing.
+//
+// Project-scope fallback: a `3-${projectId}` key (produced by selecting
+// a project in the "By name" menu) also matches activities where
+// `projectId` equals that id, regardless of chatType. This lets one
+// project selection cover the PM chat itself (chatType=3, chatId=
+// projectId), its task comments (chatType=4, chatId=projectId), task
+// body mentions (chatType=5, chatId=projectId), and task notes
+// (chatType=7, chatId=noteId BUT projectId=projectId). Without the
+// fallback, picking "Kraken" with the `task` chip would match nothing
+// because task activities don't all share chatType=3.
 export const makeInstanceFilter =
     (selected: ReadonlySet<string>): ((a: ActivityMessageProps) => boolean) =>
     (a) => {
         if (selected.size === 0) return true;
-        return selected.has(makeInstanceKey(a.chatType, a.chatId));
+        if (selected.has(makeInstanceKey(a.chatType, a.chatId))) return true;
+        if (a.projectId != null && selected.has(makeInstanceKey(3, a.projectId))) return true;
+        return false;
     };
 
 // True iff any gating chip is in `selected`. Drives both the
