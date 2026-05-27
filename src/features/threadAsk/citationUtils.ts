@@ -56,6 +56,46 @@ export const rewriteCitations = (
     });
 };
 
+// Extract the set of citation-token entity ids that appear inline in
+// the answer text — used to decide whether a given `SpotlightResult`
+// is already represented as a hyperlink (in which case it shouldn't
+// also render as a chip below) or "free-floating" (chip-worthy).
+//
+// Tokens are normalised to the "<type>:<rest>" form CITATION_PATTERN
+// captures: chat entity_ids that don't carry the leading "chat:"
+// prefix in the index still match here because the model emits the
+// prefixed token form.
+export const extractInlineCitedIds = (answer: string): Set<string> => {
+    const ids = new Set<string>();
+    if (!answer) return ids;
+    const re = new RegExp(CITATION_PATTERN.source, "g");
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(answer)) !== null) {
+        ids.add(m[1]);
+    }
+    return ids;
+};
+
+// Return the subset of `sources` that the answer text does NOT cite
+// inline — i.e. the ones we want to render as chips. Used by the
+// thread modal to follow the user's two-style rule: inline citations
+// become hyperlinks (handled in `rewriteCitations`), and the leftover
+// references show as a chip row beneath the answer.
+export const sourcesNotInline = (
+    answer: string,
+    sources: SpotlightResult[]
+): SpotlightResult[] => {
+    if (sources.length === 0) return sources;
+    const cited = extractInlineCitedIds(answer);
+    if (cited.size === 0) return sources;
+    return sources.filter((s) => {
+        const tokenKey = s.entity_id.startsWith(`${s.entity_type}:`)
+            ? s.entity_id
+            : `${s.entity_type}:${s.entity_id}`;
+        return !cited.has(tokenKey);
+    });
+};
+
 // Build a URL that opens the entity. Used by the saved-note serialiser
 // to make citation tokens clickable from outside the modal context
 // (where we can't call `useCM.moveToSpecificChat`). Returns `null` if

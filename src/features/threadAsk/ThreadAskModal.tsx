@@ -36,8 +36,14 @@ import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
 import { markdownAnswerSx } from "../spotlight/markdownAnswerSx";
 import { SpotlightResult } from "../spotlight/types";
-import { buildSourcesById, CITATION_HREF_PREFIX, rewriteCitations } from "./citationUtils";
+import {
+    buildSourcesById,
+    CITATION_HREF_PREFIX,
+    rewriteCitations,
+    sourcesNotInline,
+} from "./citationUtils";
 import { saveThreadAskAsNote } from "./saveThreadAskAsNote";
+import { SourceChips } from "./SourceChips";
 import { UseThreadAskReturn } from "./useThreadAsk";
 
 interface ThreadAskModalProps {
@@ -373,6 +379,7 @@ export const ThreadAskModal = ({
                             <InFlightTurn
                                 aLabel={t.threadAsk.conversation.turnLabelA}
                                 answer={state.ask.answer}
+                                answerSources={state.ask.answerSources}
                                 askedQuery={state.ask.askedQuery}
                                 askError={state.ask.askError}
                                 isDark={isDark}
@@ -475,6 +482,16 @@ const TurnRow = ({
         () => rewriteCitations(turn.answer || "(no answer)", sourcesById),
         [turn.answer, sourcesById]
     );
+    // Sources that the answer doesn't already reference inline as a
+    // hyperlink. Inline-cited ones live in the prose itself; these
+    // become a chip row underneath. Computed against the turn's own
+    // sources rather than the cross-turn `sourcesById` because chips
+    // should reflect "what this answer referenced", not the running
+    // session total.
+    const chipSources = useMemo(
+        () => sourcesNotInline(turn.answer || "", turn.answerSources || []),
+        [turn.answer, turn.answerSources]
+    );
     return (
         <Box
             sx={{
@@ -514,6 +531,7 @@ const TurnRow = ({
                     >
                         {rewritten}
                     </ReactMarkdown>
+                    <SourceChips sources={chipSources} onSelectSource={onSelectSource} />
                 </Box>
             )}
         </Box>
@@ -525,6 +543,7 @@ const TurnRow = ({
 const InFlightTurn = ({
     askedQuery,
     answer,
+    answerSources,
     askError,
     isStreaming,
     qLabel,
@@ -536,6 +555,7 @@ const InFlightTurn = ({
 }: {
     askedQuery: string;
     answer: string;
+    answerSources: SpotlightResult[];
     askError: string | null;
     isStreaming: boolean;
     qLabel: string;
@@ -548,6 +568,10 @@ const InFlightTurn = ({
     const rewritten = useMemo(
         () => rewriteCitations(answer || "", sourcesById),
         [answer, sourcesById]
+    );
+    const chipSources = useMemo(
+        () => sourcesNotInline(answer || "", answerSources || []),
+        [answer, answerSources]
     );
     return (
         <Box
@@ -586,6 +610,12 @@ const InFlightTurn = ({
                     >
                         {rewritten}
                     </ReactMarkdown>
+                    {/* Show chips only AFTER the stream finishes — while
+                        text is still arriving the sources list keeps
+                        growing and a partial chip row would jitter. */}
+                    {!isStreaming && (
+                        <SourceChips sources={chipSources} onSelectSource={onSelectSource} />
+                    )}
                     {isStreaming ? (
                         <Typography
                             level="body-xs"
