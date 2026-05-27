@@ -36,17 +36,9 @@ export const buildSourcesById = (sources: SpotlightResult[]): Map<string, Spotli
 };
 
 // Detect whether a source's title is already present in the answer
-// prose right before a citation token. The LLM commonly writes
-// "**Title**" or "Title" inline and then emits `[type:id]` right
-// next to it — replacing the token with the same title text would
-// render the title twice (once from the prose, once from the link).
-//
-// We look at the 200 chars immediately before the token's offset.
-// That window covers same-line and previous-line mentions (markdown
-// bullets often wrap the title onto its own line before the token).
-// Normalisation strips markdown emphasis chars, lowercases, and
-// collapses whitespace so the comparison ignores bold/italic markers
-// and line wraps.
+// prose right before a citation token. Kept exported in case future
+// inline-citation rendering wants to suppress dupes — currently
+// unused since `rewriteCitations` strips all tokens unconditionally.
 //
 // Min-length guard avoids matching very short titles like "Bug"
 // which could coincidentally appear unrelated in the prose.
@@ -57,34 +49,40 @@ const titleAppearsBefore = (answer: string, offset: number, title: string): bool
     return norm(window).includes(norm(title));
 };
 
-// Replace bare `[type:id]` tokens with a markdown link whose label is
-// the source's title (or a fallback) and whose href uses the sentinel
-// scheme. Tokens that don't match any known source are left alone so
-// the user can see what the model intended to cite.
+// Token-with-preceding-space pattern. We consume one optional space
+// or tab before the bracket so stripping doesn't leave a double-space
+// or " ." artifact. Newlines are NOT consumed — they have markdown
+// significance (blank line = paragraph break) and we mustn't merge
+// paragraphs accidentally.
+const _CITATION_STRIP_PATTERN = /[ \t]?\[(?:chat|task|note|project):[^\]\s]+\]/g;
+
+// Strip every inline `[type:id]` citation token from the answer.
 //
-// De-duplication rule: when the source's title already appears in the
-// prose just before the token (LLM wrote "**Title** [task:42]"),
-// strip the token entirely instead of emitting a same-text link. The
-// SourceChips row below the answer picks the source up — it shows
-// any "referenced but not inline-hyperlinked" source as a chip — so
-// the user still gets one clickable affordance, just without the
-// awkward duplicate prose.
+// History: an earlier version of this helper replaced each token with
+// a markdown link whose visible label was the cited entity's TITLE.
+// That gave the user a clickable affordance, but it read awkwardly:
+// the LLM tended to write `... per the perf-budget decision [task:42]`,
+// which then rendered as `... per the perf-budget decision Lighthouse
+// >= 95 task` — the title isn't a grammatical continuation of the
+// sentence, so the rendered prose felt broken.
 //
-// Escapes markdown control chars in the label so a title with a `*`
-// or `[` doesn't break the surrounding link/emphasis parsing.
+// New rule: strip the tokens. Every source that the model cited
+// surfaces in the `SourceChips` row below the answer instead, which
+// is now the single discovery surface. `sourcesNotInline` (below) is
+// updated to match — it returns every source rather than filtering
+// out the ones the model would have inline-linked.
+//
+// `sourcesById` is kept in the signature even though it's no longer
+// consulted, because every call site already passes it. Removing the
+// parameter would be a no-op rename — leave it for now in case the
+// inline path ever returns (e.g. footnote-style superscript links).
 export const rewriteCitations = (
     answer: string,
     sourcesById: Map<string, SpotlightResult>
 ): string => {
-    if (!answer || sourcesById.size === 0) return answer;
-    return answer.replace(CITATION_PATTERN, (match, entityId: string, offset: number) => {
-        const source = sourcesById.get(entityId);
-        if (!source) return match;
-        const rawLabel = (source.title || "").trim() || entitySubtitle(source);
-        if (titleAppearsBefore(answer, offset, rawLabel)) return "";
-        const safeLabel = rawLabel.replace(/[*[\]()]/g, "");
-        return `[*${safeLabel}*](${CITATION_HREF_PREFIX}${entityId})`;
-    });
+    if (!answer) return answer;
+    void sourcesById; // intentionally unused under the new chips-only rule
+    return answer.replace(_CITATION_STRIP_PATTERN, "");
 };
 
 // Extract the set of citation-token entity ids that appear inline in
@@ -125,29 +123,20 @@ export const extractInlineCitedIds = (
     return ids;
 };
 
-// Return the subset of `sources` that the answer text does NOT cite
-// inline — i.e. the ones we want to render as chips. Used by the
-// thread modal to follow the user's two-style rule: inline citations
-// become hyperlinks (handled in `rewriteCitations`), and the leftover
-// references show as a chip row beneath the answer.
+// Returns the sources to render as chips beneath the answer.
 //
-// Builds its own sourcesById so the duplication-aware logic in
-// `extractInlineCitedIds` runs end-to-end without the caller having
-// to thread the map through.
+// Under the chips-only rule (see `rewriteCitations`) every cited
+// source flows here — no inline-link filtering. The function name is
+// retained because every call site already imports it, and the answer
+// argument is kept so the signature is stable if a future revision
+// wants to apply different filtering. For now the body is just
+// "return all sources".
 export const sourcesNotInline = (
     answer: string,
     sources: SpotlightResult[]
 ): SpotlightResult[] => {
-    if (sources.length === 0) return sources;
-    const sourcesById = buildSourcesById(sources);
-    const cited = extractInlineCitedIds(answer, sourcesById);
-    if (cited.size === 0) return sources;
-    return sources.filter((s) => {
-        const tokenKey = s.entity_id.startsWith(`${s.entity_type}:`)
-            ? s.entity_id
-            : `${s.entity_type}:${s.entity_id}`;
-        return !cited.has(tokenKey);
-    });
+    void answer; // unused under the chips-only rule
+    return sources;
 };
 
 // Build a URL that opens the entity. Used by the saved-note serialiser

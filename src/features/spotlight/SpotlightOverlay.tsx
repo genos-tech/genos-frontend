@@ -1081,35 +1081,38 @@ const CITATION_PATTERN = /\[((?:chat|task|note|project):[^\]\s]+)\]/g;
 // where <token> is the same string the citation regex captures.
 const CITATION_HREF_PREFIX = "spotlight-citation:";
 
-/** Replace bare `[entity_id]` citation tokens in the LLM answer with
- *  a markdown link whose label is the matching source's title (or its
- *  friendly subtitle when the title is empty) and whose href uses our
- *  `spotlight-citation:` sentinel scheme. The ReactMarkdown `a` override
- *  intercepts that scheme and opens a preview modal on click (see
- *  `CitationLink`). Tokens that don't match a known source are left
- *  untouched so users can still see what the model intended.
+/** Strip every inline `[type:id]` citation token from the LLM answer.
  *
- *  The label is wrapped in markdown emphasis (`*...*`) to keep the
- *  visual cadence of the prior italic-only treatment while adding the
- *  clickable affordance.
+ *  History: an earlier version of this helper replaced each token with
+ *  a markdown link whose label was the cited entity's TITLE. That gave
+ *  the user a clickable affordance, but it read awkwardly — the LLM
+ *  tended to write `... per the perf-budget decision [task:42]`, which
+ *  then rendered as `... per the perf-budget decision Lighthouse >= 95
+ *  task`. Titles aren't grammatical continuations of sentences, so the
+ *  rendered prose felt broken.
+ *
+ *  New rule: strip the tokens. Every cited source surfaces in the
+ *  chips row below the answer (see the `answerSources` chip rendering
+ *  later in this file) — that's the single discovery surface now.
+ *
+ *  Token-strip regex consumes one optional preceding space/tab so we
+ *  don't leave double-spaces or " ." artifacts. Newlines are NOT
+ *  consumed — paragraph breaks must survive.
+ *
+ *  `sourcesById` + `ts` are kept in the signature so the call site
+ *  doesn't change; they're intentionally unused under the new rule.
  */
+const _CITATION_STRIP_PATTERN_LOCAL = /[ \t]?\[(?:chat|task|note|project):[^\]\s]+\]/g;
+
 function rewriteCitations(
     answer: string,
     sourcesById: Map<string, SpotlightResult>,
     ts: SpotlightMessages
 ): string {
-    if (!answer || sourcesById.size === 0) return answer;
-    return answer.replace(CITATION_PATTERN, (match, entityId: string) => {
-        const source = sourcesById.get(entityId);
-        if (!source) return match;
-        const label = (source.title || "").trim() || entitySubtitle(source, ts);
-        // Escape markdown link/emphasis controls that would break parsing:
-        //   * — closes the wrapping emphasis early
-        //   [ ] — interpreted as a link label
-        //   ( ) — interpreted as a link target boundary
-        const safeLabel = label.replace(/[*[\]()]/g, "");
-        return `[*${safeLabel}*](${CITATION_HREF_PREFIX}${entityId})`;
-    });
+    if (!answer) return answer;
+    void sourcesById; // intentionally unused under the new chips-only rule
+    void ts;
+    return answer.replace(_CITATION_STRIP_PATTERN_LOCAL, "");
 }
 
 interface CitationLinkProps {
