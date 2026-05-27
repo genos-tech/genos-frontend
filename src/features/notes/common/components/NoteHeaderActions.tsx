@@ -603,7 +603,7 @@ export const NoteHeaderActions = ({
                         </Box>
                     </Tooltip>
 
-                    {isOwner && (
+                    {/* {isOwner && (
                         <Tooltip size="sm" title={t.notes.header.share} variant="outlined">
                             <Box
                                 component="button"
@@ -637,7 +637,7 @@ export const NoteHeaderActions = ({
                                 </Typography>
                             </Box>
                         </Tooltip>
-                    )}
+                    )} */}
                 </Stack>
             )}
 
