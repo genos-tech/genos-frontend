@@ -46,14 +46,21 @@ import {
 } from "../../services/agentApi";
 import { searchSpotlight } from "../../services/searchApi";
 import { isMac } from "../../utils/platform";
+import {
+    MAX_TURNS_IN_HISTORY,
+    type AskState,
+    type CompletedTurn,
+    type ToolEvent,
+} from "../agentQA";
 import type { SpotlightResult } from "./types";
+
+// Re-exported so existing consumers that import these types from
+// `features/spotlight/useSpotlight` continue to compile while the
+// agentQA package becomes the canonical home.
+export type { AskState, CompletedTurn, ToolEvent };
 
 const DEBOUNCE_MS = 250;
 const RESULT_LIMIT = 20;
-// Soft cap on how many completed turns we hold in client memory. The
-// agent's own SESSION_MAX_PRIOR_TURNS (3 by default) controls how many
-// the model actually sees; this cap is purely a UI memory bound.
-const MAX_TURNS_IN_HISTORY = 20;
 // localStorage persistence (Phase 17)
 const STORAGE_KEY = (teamId: string) => `spotlight:session:v1:${teamId}`;
 const STORAGE_TTL_MS = 4 * 60 * 60 * 1000; // 4 hours
@@ -62,58 +69,6 @@ const MAX_STORED_TURNS = 10; // lower cap than in-memory to limit storage size
 export interface UseSpotlightArgs {
     accessToken: string | null;
     teamId: string | null | undefined;
-}
-
-export type ToolEventStatus = "pending" | "done" | "error";
-
-export interface ToolEvent {
-    step: number;
-    tool_name: string;
-    arguments: Record<string, unknown>;
-    summary?: string;
-    error?: string;
-    status: ToolEventStatus;
-}
-
-export interface AskState {
-    // True while either the search or the LLM stream is in flight.
-    isStreaming: boolean;
-    // The query the answer is for. May lag behind the input.
-    askedQuery: string;
-    // Accumulated answer text from the Gemini stream.
-    answer: string;
-    // Citation sources returned by the backend before the stream
-    // started. We keep these separate from the `results` of
-    // type-to-filter so the UI can show them attached to the answer.
-    answerSources: SpotlightResult[];
-    // Set when the stream emits an error event (or transport fails).
-    askError: string | null;
-    // Phase 3: per-step tool-call activity log. Ordered by step.
-    toolEvents: ToolEvent[];
-    // Phase 7: when the agent calls a write tool, the loop pauses
-    // here. The UI renders an Approve / Reject card; clicking either
-    // button calls `onApprove` / `onReject` and clears this field.
-    pendingApproval: PendingApprovalPayload | null;
-    // Phase 8: conversation session ID returned by the backend on the
-    // `done` event. Sent back with subsequent /ask/ calls so the model
-    // sees prior Q&A turns as context. Null means fresh session.
-    sessionId: string | null;
-    // Phase 12: monotonic id for the current in-flight turn. Stream
-    // handlers gate on this rather than `askedQuery` so identical-text
-    // re-asks don't bleed state across turns.
-    turnId: number;
-}
-
-// Phase 12: an immutable snapshot of a finished turn. Past turns are
-// promoted into the `turns` array; the live `ask` represents only the
-// current in-flight turn (or an empty slot between turns).
-export interface CompletedTurn {
-    id: number;
-    askedQuery: string;
-    answer: string;
-    answerSources: SpotlightResult[];
-    toolEvents: ToolEvent[];
-    askError: string | null;
 }
 
 // History feature (Phase ~4.6): read-only archive of past agent
@@ -285,7 +240,7 @@ export const useSpotlight = ({ accessToken, teamId }: UseSpotlightArgs): UseSpot
         } catch {
             // Ignore corrupt / missing localStorage entries.
         }
-    }, [teamId]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [teamId]);
 
     // ---- Overlay close: clear transient query / results, preserve
     // conversation. ----

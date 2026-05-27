@@ -1,7 +1,7 @@
 // Convert the LLM's markdown output into BlockNote `PartialBlock[]`
-// so the saved Chat Note renders headings, lists, bold, italic and
-// citation links natively in the editor — instead of leaking raw
-// markdown control characters like `### Summary` or `**Participants**`.
+// so the saved note renders headings, lists, bold, italic and citation
+// links natively in the editor — instead of leaking raw markdown
+// control characters like `### Summary` or `**Participants**`.
 //
 // Scope: deliberately small. The LLM's prompt instructs it to produce
 // a constrained markdown vocabulary (headings 1–3, paragraphs, bullets,

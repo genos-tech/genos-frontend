@@ -1,37 +1,32 @@
 // useThreadAsk — state + behavior for the "Ask about this thread" modal
 // launched from ThreadChatPaneHeader.
 //
-// Two phases:
+// Thin orchestrator over `useAgentQA` (which owns turns, ask state,
+// streaming, approval, etc.) + thread-specific concerns:
 //   1. **Summary** — on open, fetch `/agent/thread-summary/`. The
 //      backend returns either a cached row (no LLM cost) or generates
 //      a fresh summary. We display it and start a 30 s background poll
 //      that re-fetches the fingerprint. If the fingerprint drifts (new
 //      messages, edit, delete), set `staleSummary=true` so the UI can
 //      surface a "Refresh summary?" banner.
-//   2. **Q&A** — the user asks follow-up questions via
-//      `askAgentStream`, passing `threadContext`. The backend scopes
-//      the agent to this thread only (workspace tools disabled,
-//      `fetch_chat_thread` enabled, summary injected into system prompt).
-//
-// State is preserved across modal close/reopen so an accidental close
-// doesn't lose the conversation; switching to a different thread tears
-// down the hook (it's mounted per-ThreadChatPaneHeader), giving each
-// thread its own clean slate.
+//   2. **Q&A** — delegated to `useAgentQA`. We inject `threadContext`
+//      (and the user's web-search preference) via `buildAskExtras` so
+//      the backend scopes the agent to this thread.
+//   3. **Bootstrap from session** — the summary endpoint also returns
+//      this user's per-thread `agent_session_id` and prior turns. We
+//      apply those to `useAgentQA` via `reset` so the modal hydrates
+//      with the conversation history.
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useSpotlightPreferences } from "../../hooks/common/useSpotlightPreferences";
 import {
-    askAgentStream,
-    decideAgent,
     fetchThreadSummary,
     type AgentSessionTurn,
-    type PendingApprovalPayload,
     type ThreadContext,
     type ThreadSummaryResponse,
 } from "../../services/agentApi";
-import type { SpotlightResult } from "../spotlight/types";
-import type { AskState, CompletedTurn, ToolEvent } from "../spotlight/useSpotlight";
+import { useAgentQA, type CompletedTurn, type ToolEvent, type UseAgentQAReturn } from "../agentQA";
 
 // Map a server-side AgentSessionTurn (restored from a persisted run)
 // to the local CompletedTurn shape the modal renders. The local id
@@ -55,23 +50,6 @@ const sessionTurnToCompleted = (turn: AgentSessionTurn, index: number): Complete
 // (peek-only, no LLM) and even a multi-team thread doesn't churn faster.
 const FINGERPRINT_POLL_MS = 30_000;
 
-// Soft cap on stored turns. Matches the corresponding bound in
-// useSpotlight: the model itself only sees the last few via the
-// backend's SESSION_MAX_PRIOR_TURNS, so a larger UI buffer is fine.
-const MAX_TURNS = 20;
-
-const EMPTY_ASK_STATE: AskState = {
-    isStreaming: false,
-    askedQuery: "",
-    answer: "",
-    answerSources: [],
-    askError: null,
-    toolEvents: [],
-    pendingApproval: null,
-    sessionId: null,
-    turnId: 0,
-};
-
 export interface UseThreadAskArgs {
     accessToken: string | null;
     teamId: string | null | undefined;
@@ -84,6 +62,11 @@ export interface ThreadSummaryState {
     messageCount: number;
 }
 
+// Merged shape returned by `useThreadAsk`. The thread-specific summary
+// controls live at the top level; the generic Q&A state machine is
+// exposed under `agentQA` so the modal can pass it straight into
+// `<AgentQAConversation state={state.agentQA} />` /
+// `<AgentQAInput state={state.agentQA} />`.
 export interface UseThreadAskReturn {
     // ---- Open / close ----
     isOpen: boolean;
@@ -103,24 +86,8 @@ export interface UseThreadAskReturn {
     // the displayed summary. UI shows a "new messages — refresh?" banner.
     staleSummary: boolean;
 
-    // ---- Q&A ----
-    query: string;
-    setQuery: (q: string) => void;
-    ask: AskState;
-    turns: CompletedTurn[];
-    // `overrideQuery` lets a past turn's "Ask again" button re-fire its
-    // original question without stomping the live input. Mirrors
-    // useSpotlight.onAsk's signature.
-    onAsk: (overrideQuery?: string) => void;
-    onCancel: () => void;
-    // Write-tool approval handlers. With the thread branch now sharing
-    // the full Spotlight tool set (including `create_task`, `add_comment`,
-    // etc.), the agent can pause on a `tool_call_pending_approval` event.
-    // The modal shows an ApprovalCard wired to these; they resume the
-    // same stream via POST /api/v2/agent/decide/.
-    onApprove: () => void;
-    onReject: () => void;
-    clearConversation: () => void;
+    // ---- Q&A (generic; delegated to useAgentQA) ----
+    agentQA: UseAgentQAReturn;
 }
 
 export const useThreadAsk = ({ accessToken, teamId }: UseThreadAskArgs): UseThreadAskReturn => {
@@ -138,25 +105,33 @@ export const useThreadAsk = ({ accessToken, teamId }: UseThreadAskArgs): UseThre
     const [summaryError, setSummaryError] = useState<string | null>(null);
     const [staleSummary, setStaleSummary] = useState(false);
 
-    const [query, setQuery] = useState("");
-    const [ask, setAsk] = useState<AskState>(EMPTY_ASK_STATE);
-    const [turns, setTurns] = useState<CompletedTurn[]>([]);
-
-    // Aborts: one for the in-flight summary fetch, one for the in-flight
-    // ask stream. Tracked separately so a summary refresh doesn't kill
-    // an active answer (and vice versa).
+    // Aborts: the agentQA hook owns the ask-stream abort; here we only
+    // track the summary fetch so a force-refresh or a switch-away can
+    // cancel an in-flight summary load.
     const summaryAbortRef = useRef<AbortController | null>(null);
-    const askAbortRef = useRef<AbortController | null>(null);
 
-    // Prevents double-promotion when both `onDone` and `onError` fire
-    // for the same turn.
-    const promotedTurnIdsRef = useRef<Set<number>>(new Set());
-    // One-shot flag: when set, the next /ask/ call instructs the
-    // backend to start a fresh AgentSession even if a per-thread one
-    // already exists. Used by `clearConversation` — without this, the
-    // backend's thread-context lookup would silently inherit the
-    // cleared session and re-attach its history on the next page load.
-    const pendingNewConversationRef = useRef(false);
+    // Threading the latest threadContext through callbacks via a ref
+    // keeps `buildAskExtras` and the polling effect stable across
+    // re-renders without rebuilding when only the context changes.
+    const threadContextRef = useRef<ThreadContext | null>(threadContext);
+    useEffect(() => {
+        threadContextRef.current = threadContext;
+    }, [threadContext]);
+
+    // The generic Q&A hook. Its `buildAskExtras` is called fresh on
+    // every onAsk(), so reads via threadContextRef pick up the latest
+    // context without invalidating the closure.
+    const agentQA = useAgentQA({
+        accessToken,
+        teamId,
+        buildAskExtras: useCallback(
+            () => ({
+                threadContext: threadContextRef.current ?? undefined,
+                allowWebSearch: webSearch,
+            }),
+            [webSearch]
+        ),
+    });
 
     // ---- Load / refresh the summary. Shared by `open` and `refreshSummary`. ----
     const loadSummary = useCallback(
@@ -187,30 +162,22 @@ export const useThreadAsk = ({ accessToken, teamId }: UseThreadAskArgs): UseThre
                         fingerprint: data.fingerprint,
                         messageCount: data.message_count,
                     });
-                    // Restore prior Q&A from the server. Only fires when
-                    // there ARE prior turns — otherwise we'd stomp on
-                    // any in-progress turns the user has already typed
-                    // (the modal can be re-opened mid-conversation).
-                    if (data.turns && data.turns.length > 0) {
-                        const restored = data.turns.map(sessionTurnToCompleted);
-                        setTurns(restored);
-                        // Pre-seed the next turnId so a new ask doesn't
-                        // collide with the restored ids.
-                        promotedTurnIdsRef.current = new Set(restored.map((t) => t.id));
-                        setAsk((prev) => ({
-                            ...prev,
+                    // Hydrate the agentQA hook from the server snapshot
+                    // — but ONLY when the server actually has state to
+                    // restore. A blank snapshot on a stale-session race
+                    // would otherwise wipe in-progress local turns; the
+                    // pre-refactor code carefully gated this on either
+                    // `turns.length > 0` or `agent_session_id` truthy.
+                    // Open() handles the genuine "clear everything"
+                    // case for thread switches; here we only restore.
+                    const restored: CompletedTurn[] = (data.turns || []).map(
+                        sessionTurnToCompleted
+                    );
+                    if (restored.length > 0 || data.agent_session_id) {
+                        agentQA.reset({
                             sessionId: data.agent_session_id,
-                            turnId: restored[restored.length - 1].id,
-                        }));
-                    } else if (data.agent_session_id) {
-                        // No turns yet but server has a session id (rare —
-                        // only happens if the user opened the modal, asked
-                        // nothing, and reopened later). Bind it anyway so
-                        // the next ask continues the same session.
-                        setAsk((prev) => ({
-                            ...prev,
-                            sessionId: data.agent_session_id,
-                        }));
+                            turns: restored,
+                        });
                     }
                 } catch (err) {
                     if (controller.signal.aborted) return;
@@ -221,7 +188,7 @@ export const useThreadAsk = ({ accessToken, teamId }: UseThreadAskArgs): UseThre
                 }
             })();
         },
-        [accessToken, teamId]
+        [accessToken, teamId, agentQA]
     );
 
     const open = useCallback(
@@ -238,10 +205,9 @@ export const useThreadAsk = ({ accessToken, teamId }: UseThreadAskArgs): UseThre
                 setThreadContext(ctx);
                 setSummary(null);
                 setStaleSummary(false);
-                setAsk(EMPTY_ASK_STATE);
-                setTurns([]);
-                setQuery("");
-                promotedTurnIdsRef.current.clear();
+                // Full wipe before loadSummary populates with server state.
+                agentQA.reset({ sessionId: null, turns: [] });
+                agentQA.setQuery("");
                 loadSummary(ctx, false);
             } else if (!summary && !summaryLoading) {
                 // Same thread but no summary yet (e.g. previous load
@@ -249,14 +215,14 @@ export const useThreadAsk = ({ accessToken, teamId }: UseThreadAskArgs): UseThre
                 loadSummary(ctx, false);
             }
         },
-        [threadContext, summary, summaryLoading, loadSummary]
+        [threadContext, summary, summaryLoading, loadSummary, agentQA]
     );
 
     const close = useCallback(() => {
         setIsOpen(false);
-        // Abort an in-flight summary fetch; the in-flight ask stream
-        // we leave alone — preserving its partial answer if the user
-        // reopens.
+        // Abort an in-flight summary fetch; the agentQA hook handles
+        // its own in-flight stream — we leave it alone, preserving the
+        // partial answer if the user reopens.
         summaryAbortRef.current?.abort();
         summaryAbortRef.current = null;
     }, []);
@@ -304,334 +270,10 @@ export const useThreadAsk = ({ accessToken, teamId }: UseThreadAskArgs): UseThre
         };
     }, [isOpen, threadContext, accessToken, teamId, summary]);
 
-    // ---- Promote the current `ask` into the `turns` history. ----
-    // Idempotent; safe to call from both onDone and onError.
-    const promoteCurrentTurn = useCallback((turnId: number) => {
-        if (promotedTurnIdsRef.current.has(turnId)) return;
-        promotedTurnIdsRef.current.add(turnId);
-        setAsk((prev) => {
-            if (prev.turnId !== turnId) return prev;
-            const hasContent =
-                Boolean(prev.answer) ||
-                prev.toolEvents.length > 0 ||
-                prev.answerSources.length > 0 ||
-                Boolean(prev.askError);
-            if (hasContent) {
-                const snapshot: CompletedTurn = {
-                    id: prev.turnId,
-                    askedQuery: prev.askedQuery,
-                    answer: prev.answer,
-                    answerSources: prev.answerSources,
-                    toolEvents: prev.toolEvents,
-                    askError: prev.askError,
-                };
-                setTurns((prevTurns) => {
-                    const next = [...prevTurns, snapshot];
-                    return next.length > MAX_TURNS ? next.slice(next.length - MAX_TURNS) : next;
-                });
-            }
-            return {
-                ...EMPTY_ASK_STATE,
-                sessionId: prev.sessionId,
-                turnId: prev.turnId,
-            };
-        });
-    }, []);
-
-    // ---- Stream handler builder, parameterized by the turn id. ----
-    // Mirrors the gate-on-turnId pattern from useSpotlight: identical
-    // re-asks of the same query text don't cross-pollute each other.
-    const buildStreamHandlers = useCallback(
-        (askedTurnId: number) => {
-            const stillCurrent = (prev: AskState) => prev.turnId === askedTurnId;
-            return {
-                onSources: (sources: SpotlightResult[]) => {
-                    setAsk((prev) =>
-                        stillCurrent(prev) ? { ...prev, answerSources: sources } : prev
-                    );
-                },
-                onDelta: (text: string) => {
-                    setAsk((prev) =>
-                        stillCurrent(prev) ? { ...prev, answer: prev.answer + text } : prev
-                    );
-                },
-                onDone: (sessionId?: string) => {
-                    setAsk((prev) =>
-                        stillCurrent(prev)
-                            ? {
-                                  ...prev,
-                                  isStreaming: false,
-                                  ...(sessionId !== undefined ? { sessionId } : {}),
-                              }
-                            : prev
-                    );
-                    promoteCurrentTurn(askedTurnId);
-                },
-                onError: (message: string) => {
-                    setAsk((prev) =>
-                        stillCurrent(prev)
-                            ? { ...prev, isStreaming: false, askError: message }
-                            : prev
-                    );
-                    promoteCurrentTurn(askedTurnId);
-                },
-                onToolStart: ({
-                    step,
-                    tool_name,
-                    arguments: args,
-                }: {
-                    step: number;
-                    tool_name: string;
-                    arguments: Record<string, unknown>;
-                }) => {
-                    setAsk((prev) => {
-                        if (!stillCurrent(prev)) return prev;
-                        const dup = prev.toolEvents.some(
-                            (te) =>
-                                te.step === step &&
-                                te.tool_name === tool_name &&
-                                te.status === "pending"
-                        );
-                        if (dup) return prev;
-                        const next: ToolEvent = {
-                            step,
-                            tool_name,
-                            arguments: args,
-                            status: "pending",
-                        };
-                        return { ...prev, toolEvents: [...prev.toolEvents, next] };
-                    });
-                },
-                onToolResult: ({
-                    step,
-                    tool_name,
-                    summary,
-                }: {
-                    step: number;
-                    tool_name: string;
-                    summary: string;
-                }) => {
-                    setAsk((prev) => {
-                        if (!stillCurrent(prev)) return prev;
-                        return {
-                            ...prev,
-                            toolEvents: prev.toolEvents.map((te) =>
-                                te.step === step &&
-                                te.tool_name === tool_name &&
-                                te.status === "pending"
-                                    ? { ...te, status: "done" as const, summary }
-                                    : te
-                            ),
-                        };
-                    });
-                },
-                onToolError: ({
-                    step,
-                    tool_name,
-                    error,
-                }: {
-                    step: number;
-                    tool_name: string;
-                    error: string;
-                }) => {
-                    setAsk((prev) => {
-                        if (!stillCurrent(prev)) return prev;
-                        return {
-                            ...prev,
-                            toolEvents: prev.toolEvents.map((te) =>
-                                te.step === step &&
-                                te.tool_name === tool_name &&
-                                te.status === "pending"
-                                    ? { ...te, status: "error" as const, error }
-                                    : te
-                            ),
-                        };
-                    });
-                },
-                // The thread Q&A flow disables all write tools, so this
-                // shouldn't fire — but plumbing it through means a future
-                // tool-allow-list change wouldn't silently break the UI.
-                onPendingApproval: (payload: PendingApprovalPayload) => {
-                    setAsk((prev) =>
-                        stillCurrent(prev)
-                            ? { ...prev, isStreaming: false, pendingApproval: payload }
-                            : prev
-                    );
-                },
-            };
-        },
-        [promoteCurrentTurn]
-    );
-
-    // ---- Send a question. ----
-    const onAsk = useCallback(
-        (overrideQuery?: string) => {
-            // `overrideQuery` wins when supplied (Retry on a past turn);
-            // otherwise the live input is the source.
-            const trimmed = (overrideQuery !== undefined ? overrideQuery : query).trim();
-            if (!trimmed) return;
-            if (!threadContext || !teamId) return;
-            if (ask.isStreaming || ask.pendingApproval !== null) return;
-
-            askAbortRef.current?.abort();
-            const controller = new AbortController();
-            askAbortRef.current = controller;
-
-            // Read turnId+sessionId from the current `ask` synchronously —
-            // updater closures don't see freshly-committed state. See the
-            // matching comment in useSpotlight.onAsk for the failure mode
-            // when this is forgotten.
-            const askedTurnId = ask.turnId + 1;
-
-            setAsk({
-                isStreaming: true,
-                askedQuery: trimmed,
-                answer: "",
-                answerSources: [],
-                askError: null,
-                toolEvents: [],
-                pendingApproval: null,
-                sessionId: ask.sessionId,
-                turnId: askedTurnId,
-            });
-
-            // Consume the "new conversation" flag if Clear was pressed
-            // since the last ask. One-shot — the flag clears as soon as
-            // it's read so subsequent asks continue the freshly-created
-            // session.
-            const newConversation = pendingNewConversationRef.current;
-            pendingNewConversationRef.current = false;
-
-            void askAgentStream({
-                query: trimmed,
-                teamId,
-                accessToken,
-                sessionId: ask.sessionId ?? undefined,
-                threadContext,
-                newConversation,
-                // Honour the user's Spotlight web-search toggle. Thread Q&A
-                // shares Spotlight's tool surface now — if the user has web
-                // search enabled there, they likely want it here too.
-                allowWebSearch: webSearch,
-                signal: controller.signal,
-                ...buildStreamHandlers(askedTurnId),
-            });
-
-            setQuery("");
-        },
-        [
-            query,
-            teamId,
-            accessToken,
-            threadContext,
-            buildStreamHandlers,
-            ask.isStreaming,
-            ask.pendingApproval,
-            ask.turnId,
-            ask.sessionId,
-            webSearch,
-        ]
-    );
-
-    // ---- Cancel the in-flight answer. ----
-    const onCancel = useCallback(() => {
-        askAbortRef.current?.abort();
-        askAbortRef.current = null;
-        setAsk((prev) => {
-            if (!prev.isStreaming && prev.pendingApproval === null) return prev;
-            const turnId = prev.turnId;
-            if (!promotedTurnIdsRef.current.has(turnId)) {
-                promotedTurnIdsRef.current.add(turnId);
-                const hasContent =
-                    Boolean(prev.answer) ||
-                    prev.toolEvents.length > 0 ||
-                    prev.answerSources.length > 0;
-                if (hasContent) {
-                    const snapshot: CompletedTurn = {
-                        id: turnId,
-                        askedQuery: prev.askedQuery,
-                        answer: prev.answer,
-                        answerSources: prev.answerSources,
-                        toolEvents: prev.toolEvents,
-                        askError: prev.askError,
-                    };
-                    setTurns((prevTurns) => {
-                        const next = [...prevTurns, snapshot];
-                        return next.length > MAX_TURNS
-                            ? next.slice(next.length - MAX_TURNS)
-                            : next;
-                    });
-                }
-            }
-            return { ...EMPTY_ASK_STATE, sessionId: prev.sessionId, turnId: prev.turnId };
-        });
-    }, []);
-
-    // ---- Approve / Reject handlers for the pending write tool. ----
-    //
-    // `decide` does NOT bump `turnId`. Approve/reject is a continuation
-    // of the same turn — the resumed stream's `onDone` is what promotes
-    // it into history. Same shape as `useSpotlight.decide`.
-    const decide = useCallback(
-        (decision: "approve" | "reject") => {
-            setAsk((prev) => {
-                if (!prev.pendingApproval) return prev;
-                const payload = prev.pendingApproval;
-                const askedTurnId = prev.turnId;
-
-                // Flip back to streaming; the resumed stream's
-                // tool_call_start / result / error events will fill in
-                // the pending row (deduped via buildStreamHandlers).
-                const next: AskState = {
-                    ...prev,
-                    pendingApproval: null,
-                    isStreaming: true,
-                };
-
-                // Reuse the abort handle — the new request supersedes
-                // anything older.
-                askAbortRef.current?.abort();
-                const controller = new AbortController();
-                askAbortRef.current = controller;
-
-                void decideAgent({
-                    runId: payload.run_id,
-                    approvalToken: payload.approval_token,
-                    decision,
-                    accessToken,
-                    signal: controller.signal,
-                    ...buildStreamHandlers(askedTurnId),
-                });
-
-                return next;
-            });
-        },
-        [accessToken, buildStreamHandlers]
-    );
-
-    const onApprove = useCallback(() => decide("approve"), [decide]);
-    const onReject = useCallback(() => decide("reject"), [decide]);
-
-    // ---- Wipe the conversation but keep the summary + same thread. ----
-    // Sets `pendingNewConversationRef` so the next /ask/ tells the
-    // backend to start a fresh AgentSession rather than reusing the
-    // existing per-thread one — without this, reloading the page would
-    // restore the cleared turns via the thread-context lookup.
-    const clearConversation = useCallback(() => {
-        askAbortRef.current?.abort();
-        askAbortRef.current = null;
-        promotedTurnIdsRef.current.clear();
-        pendingNewConversationRef.current = true;
-        setTurns([]);
-        setAsk(EMPTY_ASK_STATE);
-        setQuery("");
-    }, []);
-
     // ---- Tear-down on unmount (thread switch). ----
     useEffect(() => {
         return () => {
             summaryAbortRef.current?.abort();
-            askAbortRef.current?.abort();
         };
     }, []);
 
@@ -645,14 +287,10 @@ export const useThreadAsk = ({ accessToken, teamId }: UseThreadAskArgs): UseThre
         summaryError,
         refreshSummary,
         staleSummary,
-        query,
-        setQuery,
-        ask,
-        turns,
-        onAsk,
-        onCancel,
-        onApprove,
-        onReject,
-        clearConversation,
+        agentQA,
     };
 };
+
+// Re-export so wrappers (or the modal) that need the underlying agentQA
+// return shape — e.g. to pass into AgentQAConversation — can read it.
+export type { ToolEvent, UseAgentQAReturn };

@@ -62,20 +62,26 @@ import { purplePalette } from "../../theme/purplePalette";
 // produce muddy, hard-to-read text.
 //
 // `DARK_TEXT_STRONG` is re-imported from the shared markdownAnswerSx
-// module so the body text colour in the typography block stays in lock-
-// step with what every other "answer surface" (ThreadAskModal etc.)
-// renders.
-import { ApprovalCard } from "./ApprovalCard";
-import { DARK_TEXT_STRONG, markdownAnswerSx } from "./markdownAnswerSx";
+// module (now in features/agentQA/) so the body text colour in the
+// typography block stays in lock-step with every other "answer surface"
+// (ThreadAskModal etc.) that renders the same theme.
+import {
+    ApprovalCard,
+    DARK_TEXT_STRONG,
+    markdownAnswerSx,
+    ToolProgressList,
+    type AskState,
+    type CompletedTurn,
+    type ToolEvent,
+} from "../agentQA";
 import {
     badgeFor,
     entitySubtitle,
     HighlightedText,
     SpotlightResultItem,
 } from "./SpotlightResultItem";
-import { ToolProgressList } from "./ToolProgressList";
 import type { SpotlightResult } from "./types";
-import type { AskState, CompletedTurn, HistoryMode, ToolEvent } from "./useSpotlight";
+import type { HistoryMode } from "./useSpotlight";
 
 type SpotlightMessages = Messages["spotlight"];
 
@@ -388,8 +394,8 @@ export const SpotlightOverlay = ({
                         <Box
                             ref={inputRef}
                             component="textarea"
-                            value={localInput}
                             rows={1}
+                            value={localInput}
                             placeholder={
                                 askBusy
                                     ? t.spotlight.placeholder.askBusy
@@ -535,10 +541,10 @@ export const SpotlightOverlay = ({
                                     color="primary"
                                     disabled={!hasQuery || askDisabled}
                                     size="sm"
+                                    variant="solid"
                                     startDecorator={
                                         <AutoAwesomeRoundedIcon sx={{ fontSize: 16 }} />
                                     }
-                                    variant="solid"
                                     sx={{
                                         // Mobile: collapse to an icon-only
                                         // square so the row stays single-line
@@ -568,10 +574,10 @@ export const SpotlightOverlay = ({
                         switches the panel into the History list view
                         (re-fetches once per click; bounded ≤20 rows). */}
                         <Tooltip
+                            placement="bottom"
                             size="sm"
                             title={t.spotlight.history.openTooltip}
                             variant="outlined"
-                            placement="bottom"
                         >
                             <IconButton
                                 color="neutral"
@@ -594,22 +600,22 @@ export const SpotlightOverlay = ({
                 <ConversationPanel
                     ask={ask}
                     askDisabled={askDisabled}
+                    historyDetail={historyDetail}
+                    historyIsLoading={historyIsLoading}
+                    historyMode={historyMode}
+                    historySessions={historySessions}
                     isDark={isDark}
                     ts={t.spotlight}
                     turns={turns}
-                    historyMode={historyMode}
-                    historySessions={historySessions}
-                    historyDetail={historyDetail}
-                    historyIsLoading={historyIsLoading}
                     onApprove={onApprove}
                     onAsk={onAsk}
+                    onBackToHistoryList={backToHistoryList}
+                    onCloseHistory={closeHistory}
                     onNewConversation={onNewConversation}
                     onPreview={onPreview}
                     onReject={onReject}
                     onSelect={onSelect}
                     onViewHistorySession={viewHistorySession}
-                    onBackToHistoryList={backToHistoryList}
-                    onCloseHistory={closeHistory}
                 />
 
                 {/* Results / states — hidden the moment an ask is in
@@ -913,8 +919,8 @@ const ConversationPanel = memo(
                                     variant="outlined"
                                 >
                                     <Button
-                                        size="sm"
                                         color="primary"
+                                        size="sm"
                                         sx={{ fontSize: "0.875rem", py: 0.25 }}
                                         variant="soft"
                                         startDecorator={
@@ -934,10 +940,10 @@ const ConversationPanel = memo(
                                     variant="outlined"
                                 >
                                     <IconButton
-                                        size="sm"
                                         color="neutral"
-                                        variant="plain"
+                                        size="sm"
                                         sx={{ minWidth: 0, p: "3px" }}
+                                        variant="plain"
                                         onClick={onCloseHistory}
                                     >
                                         <CloseRoundedIcon sx={{ fontSize: 16 }} />
@@ -957,8 +963,8 @@ const ConversationPanel = memo(
                                         variant="outlined"
                                     >
                                         <Button
-                                            size="sm"
                                             color="primary"
+                                            size="sm"
                                             sx={{ fontSize: "0.875rem", py: 0.25 }}
                                             variant="soft"
                                             startDecorator={
@@ -1363,13 +1369,13 @@ const TurnViewInner = ({
 
                     {isCurrent && pendingApproval && onApprove && onReject && (
                         <ApprovalCard
+                            approveLabel={ts.actions.approve}
                             isDark={isDark}
                             pending={pendingApproval}
+                            rejectLabel={ts.actions.reject}
                             titleText={fmt(ts.approval.titleWithTool, {
                                 toolName: pendingApproval.tool_name,
                             })}
-                            approveLabel={ts.actions.approve}
-                            rejectLabel={ts.actions.reject}
                             onApprove={onApprove}
                             onReject={onReject}
                         />
@@ -1822,9 +1828,9 @@ const HistorySessionDetailView = ({
                 <HistoryArchiveTurn
                     key={turn.run_id}
                     isDark={isDark}
-                    onPreview={onPreview}
                     ts={ts}
                     turn={turn}
+                    onPreview={onPreview}
                 />
             ))}
         </Box>

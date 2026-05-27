@@ -1,14 +1,14 @@
 // Joy UI `sx` block shared by every surface that renders an LLM
-// answer as markdown: SpotlightOverlay's live TurnView, the read-only
-// history archive, and the ThreadAskModal summary + Q&A. Centralising
-// it means tweaks to answer typography land in one place.
+// answer as markdown: the global Spotlight overlay, its read-only
+// history archive, and the per-entity Ask modals (thread, notes).
+// Centralising it means tweaks to answer typography land in one place.
 //
 // The consuming `<Box sx={...}>` still owns layout-only props (`mb`,
 // `bgcolor` for the summary card, etc.) and merges this style in.
 
-// Dark-mode body-text colour. Re-exported by SpotlightOverlay so its
-// many other body-text usages can keep importing from the same module
-// the style block uses — no risk of the two drifting apart.
+// Dark-mode body-text colour. Re-exported so consumers that share the
+// same look (badges, secondary labels) can keep importing from one
+// module — no risk of the two drifting apart.
 export const DARK_TEXT_STRONG = "#f1e8ff";
 
 export function markdownAnswerSx(isDark: boolean): Record<string, unknown> {

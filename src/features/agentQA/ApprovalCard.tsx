@@ -6,9 +6,9 @@
 // arguments the model proposed; Approve/Reject buttons resume the
 // stream via POST /api/v2/agent/decide/.
 //
-// Decoupled from the Spotlight i18n shape — labels come in as props so
-// both the global Spotlight surface and the per-thread modal can mount
-// the same component with surface-specific copy.
+// String-free: labels come in as props so every agent surface
+// (Spotlight, threadAsk, future noteAsk) can mount the same component
+// with surface-specific i18n copy.
 
 import { Box, Button, Typography } from "@mui/joy";
 
