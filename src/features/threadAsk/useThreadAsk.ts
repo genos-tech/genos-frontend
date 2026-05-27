@@ -23,6 +23,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useSpotlightPreferences } from "../../hooks/common/useSpotlightPreferences";
 import {
     askAgentStream,
+    decideAgent,
     fetchThreadSummary,
     type AgentSessionTurn,
     type PendingApprovalPayload,
@@ -107,8 +108,18 @@ export interface UseThreadAskReturn {
     setQuery: (q: string) => void;
     ask: AskState;
     turns: CompletedTurn[];
-    onAsk: () => void;
+    // `overrideQuery` lets a past turn's "Ask again" button re-fire its
+    // original question without stomping the live input. Mirrors
+    // useSpotlight.onAsk's signature.
+    onAsk: (overrideQuery?: string) => void;
     onCancel: () => void;
+    // Write-tool approval handlers. With the thread branch now sharing
+    // the full Spotlight tool set (including `create_task`, `add_comment`,
+    // etc.), the agent can pause on a `tool_call_pending_approval` event.
+    // The modal shows an ApprovalCard wired to these; they resume the
+    // same stream via POST /api/v2/agent/decide/.
+    onApprove: () => void;
+    onReject: () => void;
     clearConversation: () => void;
 }
 
@@ -453,69 +464,74 @@ export const useThreadAsk = ({ accessToken, teamId }: UseThreadAskArgs): UseThre
     );
 
     // ---- Send a question. ----
-    const onAsk = useCallback(() => {
-        const trimmed = query.trim();
-        if (!trimmed) return;
-        if (!threadContext || !teamId) return;
-        if (ask.isStreaming || ask.pendingApproval !== null) return;
+    const onAsk = useCallback(
+        (overrideQuery?: string) => {
+            // `overrideQuery` wins when supplied (Retry on a past turn);
+            // otherwise the live input is the source.
+            const trimmed = (overrideQuery !== undefined ? overrideQuery : query).trim();
+            if (!trimmed) return;
+            if (!threadContext || !teamId) return;
+            if (ask.isStreaming || ask.pendingApproval !== null) return;
 
-        askAbortRef.current?.abort();
-        const controller = new AbortController();
-        askAbortRef.current = controller;
+            askAbortRef.current?.abort();
+            const controller = new AbortController();
+            askAbortRef.current = controller;
 
-        // Read turnId+sessionId from the current `ask` synchronously —
-        // updater closures don't see freshly-committed state. See the
-        // matching comment in useSpotlight.onAsk for the failure mode
-        // when this is forgotten.
-        const askedTurnId = ask.turnId + 1;
+            // Read turnId+sessionId from the current `ask` synchronously —
+            // updater closures don't see freshly-committed state. See the
+            // matching comment in useSpotlight.onAsk for the failure mode
+            // when this is forgotten.
+            const askedTurnId = ask.turnId + 1;
 
-        setAsk({
-            isStreaming: true,
-            askedQuery: trimmed,
-            answer: "",
-            answerSources: [],
-            askError: null,
-            toolEvents: [],
-            pendingApproval: null,
-            sessionId: ask.sessionId,
-            turnId: askedTurnId,
-        });
+            setAsk({
+                isStreaming: true,
+                askedQuery: trimmed,
+                answer: "",
+                answerSources: [],
+                askError: null,
+                toolEvents: [],
+                pendingApproval: null,
+                sessionId: ask.sessionId,
+                turnId: askedTurnId,
+            });
 
-        // Consume the "new conversation" flag if Clear was pressed
-        // since the last ask. One-shot — the flag clears as soon as
-        // it's read so subsequent asks continue the freshly-created
-        // session.
-        const newConversation = pendingNewConversationRef.current;
-        pendingNewConversationRef.current = false;
+            // Consume the "new conversation" flag if Clear was pressed
+            // since the last ask. One-shot — the flag clears as soon as
+            // it's read so subsequent asks continue the freshly-created
+            // session.
+            const newConversation = pendingNewConversationRef.current;
+            pendingNewConversationRef.current = false;
 
-        void askAgentStream({
-            query: trimmed,
+            void askAgentStream({
+                query: trimmed,
+                teamId,
+                accessToken,
+                sessionId: ask.sessionId ?? undefined,
+                threadContext,
+                newConversation,
+                // Honour the user's Spotlight web-search toggle. Thread Q&A
+                // shares Spotlight's tool surface now — if the user has web
+                // search enabled there, they likely want it here too.
+                allowWebSearch: webSearch,
+                signal: controller.signal,
+                ...buildStreamHandlers(askedTurnId),
+            });
+
+            setQuery("");
+        },
+        [
+            query,
             teamId,
             accessToken,
-            sessionId: ask.sessionId ?? undefined,
             threadContext,
-            newConversation,
-            // Honour the user's Spotlight web-search toggle. Thread Q&A
-            // shares Spotlight's tool surface now — if the user has web
-            // search enabled there, they likely want it here too.
-            allowWebSearch: webSearch,
-            signal: controller.signal,
-            ...buildStreamHandlers(askedTurnId),
-        });
-
-        setQuery("");
-    }, [
-        query,
-        teamId,
-        accessToken,
-        threadContext,
-        buildStreamHandlers,
-        ask.isStreaming,
-        ask.pendingApproval,
-        ask.turnId,
-        ask.sessionId,
-        webSearch,
-    ]);
+            buildStreamHandlers,
+            ask.isStreaming,
+            ask.pendingApproval,
+            ask.turnId,
+            ask.sessionId,
+            webSearch,
+        ]
+    );
 
     // ---- Cancel the in-flight answer. ----
     const onCancel = useCallback(() => {
@@ -550,6 +566,51 @@ export const useThreadAsk = ({ accessToken, teamId }: UseThreadAskArgs): UseThre
             return { ...EMPTY_ASK_STATE, sessionId: prev.sessionId, turnId: prev.turnId };
         });
     }, []);
+
+    // ---- Approve / Reject handlers for the pending write tool. ----
+    //
+    // `decide` does NOT bump `turnId`. Approve/reject is a continuation
+    // of the same turn — the resumed stream's `onDone` is what promotes
+    // it into history. Same shape as `useSpotlight.decide`.
+    const decide = useCallback(
+        (decision: "approve" | "reject") => {
+            setAsk((prev) => {
+                if (!prev.pendingApproval) return prev;
+                const payload = prev.pendingApproval;
+                const askedTurnId = prev.turnId;
+
+                // Flip back to streaming; the resumed stream's
+                // tool_call_start / result / error events will fill in
+                // the pending row (deduped via buildStreamHandlers).
+                const next: AskState = {
+                    ...prev,
+                    pendingApproval: null,
+                    isStreaming: true,
+                };
+
+                // Reuse the abort handle — the new request supersedes
+                // anything older.
+                askAbortRef.current?.abort();
+                const controller = new AbortController();
+                askAbortRef.current = controller;
+
+                void decideAgent({
+                    runId: payload.run_id,
+                    approvalToken: payload.approval_token,
+                    decision,
+                    accessToken,
+                    signal: controller.signal,
+                    ...buildStreamHandlers(askedTurnId),
+                });
+
+                return next;
+            });
+        },
+        [accessToken, buildStreamHandlers]
+    );
+
+    const onApprove = useCallback(() => decide("approve"), [decide]);
+    const onReject = useCallback(() => decide("reject"), [decide]);
 
     // ---- Wipe the conversation but keep the summary + same thread. ----
     // Sets `pendingNewConversationRef` so the next /ask/ tells the
@@ -590,6 +651,8 @@ export const useThreadAsk = ({ accessToken, teamId }: UseThreadAskArgs): UseThre
         turns,
         onAsk,
         onCancel,
+        onApprove,
+        onReject,
         clearConversation,
     };
 };

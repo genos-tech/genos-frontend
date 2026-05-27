@@ -11,8 +11,11 @@
 
 import { useMemo, useState } from "react";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
+import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
+import ReplayRoundedIcon from "@mui/icons-material/ReplayRounded";
 import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
 import {
@@ -29,22 +32,36 @@ import {
     Typography,
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { useUrlLinkModal } from "../../hooks/common/UrlLinkModalContext";
 import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
+import { ApprovalCard } from "../spotlight/ApprovalCard";
 import { markdownAnswerSx } from "../spotlight/markdownAnswerSx";
+import { ToolProgressList } from "../spotlight/ToolProgressList";
 import { SpotlightResult } from "../spotlight/types";
 import {
     buildSourcesById,
     CITATION_HREF_PREFIX,
     rewriteCitations,
     sourcesNotInline,
+    sourceToUrl,
 } from "./citationUtils";
 import { saveThreadAskAsNote } from "./saveThreadAskAsNote";
 import { SourceChips } from "./SourceChips";
 import { UseThreadAskReturn } from "./useThreadAsk";
+
+// ReactMarkdown's default `urlTransform` whitelists http/https/mailto/
+// ircs/xmpp and blanks every other scheme to "" — including our
+// `spotlight-citation:<token>` sentinel. The blanked href then falls
+// through CitationAnchor's "looks like a sentinel" check and renders
+// as a plain `<a href="" target="_blank">`, which opens the current
+// page in a new tab on click. Whitelist the sentinel here so it
+// survives intact and reaches the anchor renderer.
+const threadAskUrlTransform = (url: string): string =>
+    url.startsWith(CITATION_HREF_PREFIX) ? url : defaultUrlTransform(url);
 
 interface ThreadAskModalProps {
     state: UseThreadAskReturn;
@@ -61,9 +78,17 @@ interface ThreadAskModalProps {
 
 // Custom anchor renderer for ReactMarkdown. When the href matches our
 // `spotlight-citation:` sentinel, render a button that resolves the
-// token via `sourcesById` and fires `onSelectSource`. Any other href
-// (e.g. real web URLs the model occasionally inlines) passes through
-// as a normal external link.
+// token via `sourcesById` and:
+//   1. First tries the UrlLinkModal preview — same surface chat-message
+//      links use, so the user can quick-look the cited entity without
+//      losing their place in the conversation. The modal sits on top
+//      of ThreadAskModal (zIndex 13200) so it's not occluded.
+//   2. Falls back to `onSelectSource` (full navigate) when the modal
+//      didn't open — either we're outside a UrlLinkModalProvider, the
+//      entity type has no modal preview yet (projects), or the href
+//      shape isn't modal-able.
+// Chips below the answer use only the navigate path on purpose: the
+// modal preview is the primary affordance for inline citations.
 const CitationAnchor = ({
     href,
     children,
@@ -77,10 +102,19 @@ const CitationAnchor = ({
     onSelectSource?: (source: SpotlightResult) => void;
     isDark: boolean;
 }) => {
+    const urlLinkModal = useUrlLinkModal();
     if (href && href.startsWith(CITATION_HREF_PREFIX)) {
         const token = href.slice(CITATION_HREF_PREFIX.length);
         const source = sourcesById.get(token);
         if (source) {
+            const handleClick = () => {
+                const previewHref = sourceToUrl(source);
+                if (previewHref && urlLinkModal) {
+                    const outcome = urlLinkModal.openModalByHref(previewHref);
+                    if (outcome === "opened") return;
+                }
+                onSelectSource?.(source);
+            };
             return (
                 <Box
                     component="button"
@@ -109,7 +143,7 @@ const CitationAnchor = ({
                             outlineOffset: "1px",
                         },
                     }}
-                    onClick={() => onSelectSource?.(source)}
+                    onClick={handleClick}
                 >
                     {children}
                 </Box>
@@ -237,7 +271,12 @@ export const ThreadAskModal = ({
         state.ask.isStreaming ||
         state.ask.askError ||
         state.ask.answer ||
-        state.ask.toolEvents.length > 0;
+        state.ask.toolEvents.length > 0 ||
+        // A paused write-tool approval is also "in flight" — without
+        // this the InFlightTurn (which owns the ApprovalCard) wouldn't
+        // render when the agent stops at a `create_task` / `add_comment`
+        // / etc. and the user couldn't approve or reject.
+        state.ask.pendingApproval !== null;
 
     return (
         <Modal open={state.isOpen} onClose={state.close}>
@@ -327,7 +366,10 @@ export const ThreadAskModal = ({
                             bgcolor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
                         }}
                     >
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            urlTransform={threadAskUrlTransform}
+                        >
                             {state.summary.text}
                         </ReactMarkdown>
                     </Box>
@@ -373,6 +415,10 @@ export const ThreadAskModal = ({
                                 turn={turn}
                                 sourcesById={sourcesById}
                                 onSelectSource={onSelectSource}
+                                onRetry={state.onAsk}
+                                copyLabel={t.threadAsk.actions.copyAnswer}
+                                copiedLabel={t.threadAsk.actions.copied}
+                                retryLabel={t.threadAsk.actions.retry}
                             />
                         ))}
                         {hasInFlightAnswer ? (
@@ -380,12 +426,20 @@ export const ThreadAskModal = ({
                                 aLabel={t.threadAsk.conversation.turnLabelA}
                                 answer={state.ask.answer}
                                 answerSources={state.ask.answerSources}
+                                toolEvents={state.ask.toolEvents}
                                 askedQuery={state.ask.askedQuery}
                                 askError={state.ask.askError}
                                 isDark={isDark}
                                 isStreaming={state.ask.isStreaming}
+                                pendingApproval={state.ask.pendingApproval}
                                 qLabel={t.threadAsk.conversation.turnLabelQ}
                                 streamingLabel={t.threadAsk.states.streaming}
+                                thinkingLabel={t.threadAsk.states.thinking}
+                                approveLabel={t.threadAsk.actions.approve}
+                                rejectLabel={t.threadAsk.actions.reject}
+                                approvalTitleFormat={t.threadAsk.approval.titleWithTool}
+                                onApprove={state.onApprove}
+                                onReject={state.onReject}
                                 sourcesById={sourcesById}
                                 onSelectSource={onSelectSource}
                             />
@@ -418,7 +472,10 @@ export const ThreadAskModal = ({
                         <Button
                             disabled={!state.query.trim() || !state.summary}
                             startDecorator={<SendRoundedIcon sx={{ fontSize: 16 }} />}
-                            onClick={state.onAsk}
+                            // Wrap to drop the MouseEvent argument so it
+                            // isn't coerced into `overrideQuery` and used
+                            // verbatim as the query text.
+                            onClick={() => state.onAsk()}
                         >
                             {t.threadAsk.conversation.send}
                         </Button>
@@ -470,6 +527,10 @@ const TurnRow = ({
     isDark,
     sourcesById,
     onSelectSource,
+    onRetry,
+    copyLabel,
+    copiedLabel,
+    retryLabel,
 }: {
     turn: import("../spotlight/useSpotlight").CompletedTurn;
     qLabel: string;
@@ -477,7 +538,27 @@ const TurnRow = ({
     isDark: boolean;
     sourcesById: Map<string, SpotlightResult>;
     onSelectSource?: (source: SpotlightResult) => void;
+    onRetry?: (askedQuery: string) => void;
+    copyLabel: string;
+    copiedLabel: string;
+    retryLabel: string;
 }) => {
+    const [copied, setCopied] = useState(false);
+    const handleCopy = () => {
+        if (!turn.answer) return;
+        navigator.clipboard
+            .writeText(turn.answer)
+            .then(() => {
+                setCopied(true);
+                window.setTimeout(() => setCopied(false), 2000);
+            })
+            .catch(() => {
+                /* non-secure context — ignore */
+            });
+    };
+    const handleRetry = () => onRetry?.(turn.askedQuery);
+    const showCopy = Boolean(turn.answer);
+    const showRetry = Boolean(turn.askedQuery) && Boolean(onRetry);
     const rewritten = useMemo(
         () => rewriteCitations(turn.answer || "(no answer)", sourcesById),
         [turn.answer, sourcesById]
@@ -505,6 +586,10 @@ const TurnRow = ({
             <Typography level="body-sm" sx={{ fontWeight: 600, color: "text.primary", mb: 0.5 }}>
                 {qLabel}: {turn.askedQuery}
             </Typography>
+            {/* Tool-progress strip: replays the steps the agent took to
+                produce this answer (search, fetch_task, etc.) — same
+                rendering as the global Spotlight surface. */}
+            <ToolProgressList events={turn.toolEvents} isDark={isDark} />
             {turn.askError ? (
                 <Typography level="body-sm" sx={{ color: "danger.softColor" }}>
                     {aLabel}: {turn.askError}
@@ -516,6 +601,7 @@ const TurnRow = ({
                     </Typography>
                     <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
+                        urlTransform={threadAskUrlTransform}
                         components={{
                             a: ({ href, children }) => (
                                 <CitationAnchor
@@ -534,6 +620,45 @@ const TurnRow = ({
                     <SourceChips sources={chipSources} onSelectSource={onSelectSource} />
                 </Box>
             )}
+            {(showCopy || showRetry) && (
+                <Box
+                    sx={{
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        gap: 0.25,
+                        mt: 0.25,
+                    }}
+                >
+                    {showCopy && (
+                        <IconButton
+                            color={copied ? "success" : "neutral"}
+                            size="sm"
+                            sx={{ minWidth: 0, p: "3px" }}
+                            title={copied ? copiedLabel : copyLabel}
+                            variant="plain"
+                            onClick={handleCopy}
+                        >
+                            {copied ? (
+                                <CheckRoundedIcon sx={{ fontSize: 14 }} />
+                            ) : (
+                                <ContentCopyRoundedIcon sx={{ fontSize: 14 }} />
+                            )}
+                        </IconButton>
+                    )}
+                    {showRetry && (
+                        <IconButton
+                            color="neutral"
+                            size="sm"
+                            sx={{ minWidth: 0, p: "3px" }}
+                            title={retryLabel}
+                            variant="plain"
+                            onClick={handleRetry}
+                        >
+                            <ReplayRoundedIcon sx={{ fontSize: 14 }} />
+                        </IconButton>
+                    )}
+                </Box>
+            )}
         </Box>
     );
 };
@@ -544,11 +669,19 @@ const InFlightTurn = ({
     askedQuery,
     answer,
     answerSources,
+    toolEvents,
     askError,
     isStreaming,
+    pendingApproval,
     qLabel,
     aLabel,
     streamingLabel,
+    thinkingLabel,
+    approveLabel,
+    rejectLabel,
+    approvalTitleFormat,
+    onApprove,
+    onReject,
     isDark,
     sourcesById,
     onSelectSource,
@@ -556,15 +689,28 @@ const InFlightTurn = ({
     askedQuery: string;
     answer: string;
     answerSources: SpotlightResult[];
+    toolEvents: import("../spotlight/useSpotlight").ToolEvent[];
     askError: string | null;
     isStreaming: boolean;
+    pendingApproval: import("../../services/agentApi").PendingApprovalPayload | null;
     qLabel: string;
     aLabel: string;
     streamingLabel: string;
+    thinkingLabel: string;
+    approveLabel: string;
+    rejectLabel: string;
+    approvalTitleFormat: string;
+    onApprove: () => void;
+    onReject: () => void;
     isDark: boolean;
     sourcesById: Map<string, SpotlightResult>;
     onSelectSource?: (source: SpotlightResult) => void;
 }) => {
+    // "Thinking…" placeholder shown when the stream is active but no
+    // tool calls or answer text have landed yet — gives the user
+    // immediate feedback that something IS happening (and isn't a stall).
+    const showThinking =
+        isStreaming && !answer && !askError && toolEvents.length === 0 && !pendingApproval;
     const rewritten = useMemo(
         () => rewriteCitations(answer || "", sourcesById),
         [answer, sourcesById]
@@ -584,6 +730,36 @@ const InFlightTurn = ({
             <Typography level="body-sm" sx={{ fontWeight: 600, color: "text.primary", mb: 0.5 }}>
                 {qLabel}: {askedQuery}
             </Typography>
+            {/* Tool-progress strip — same as past turns. Shown live as
+                the agent advances through tool calls. */}
+            <ToolProgressList events={toolEvents} isDark={isDark} />
+            {showThinking && (
+                <Typography
+                    level="body-sm"
+                    sx={{
+                        color: "text.tertiary",
+                        fontStyle: "italic",
+                        mt: 0.25,
+                        mb: 0.5,
+                    }}
+                >
+                    {thinkingLabel}
+                </Typography>
+            )}
+            {pendingApproval && (
+                <ApprovalCard
+                    pending={pendingApproval}
+                    isDark={isDark}
+                    titleText={approvalTitleFormat.replace(
+                        "{toolName}",
+                        pendingApproval.tool_name
+                    )}
+                    approveLabel={approveLabel}
+                    rejectLabel={rejectLabel}
+                    onApprove={onApprove}
+                    onReject={onReject}
+                />
+            )}
             {askError ? (
                 <Typography level="body-sm" sx={{ color: "danger.softColor" }}>
                     {aLabel}: {askError}
@@ -595,6 +771,7 @@ const InFlightTurn = ({
                     </Typography>
                     <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
+                        urlTransform={threadAskUrlTransform}
                         components={{
                             a: ({ href, children }) => (
                                 <CitationAnchor

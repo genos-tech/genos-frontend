@@ -65,6 +65,7 @@ import { purplePalette } from "../../theme/purplePalette";
 // module so the body text colour in the typography block stays in lock-
 // step with what every other "answer surface" (ThreadAskModal etc.)
 // renders.
+import { ApprovalCard } from "./ApprovalCard";
 import { DARK_TEXT_STRONG, markdownAnswerSx } from "./markdownAnswerSx";
 import {
     badgeFor,
@@ -72,6 +73,7 @@ import {
     HighlightedText,
     SpotlightResultItem,
 } from "./SpotlightResultItem";
+import { ToolProgressList } from "./ToolProgressList";
 import type { SpotlightResult } from "./types";
 import type { AskState, CompletedTurn, HistoryMode, ToolEvent } from "./useSpotlight";
 
@@ -1363,7 +1365,11 @@ const TurnViewInner = ({
                         <ApprovalCard
                             isDark={isDark}
                             pending={pendingApproval}
-                            ts={ts}
+                            titleText={fmt(ts.approval.titleWithTool, {
+                                toolName: pendingApproval.tool_name,
+                            })}
+                            approveLabel={ts.actions.approve}
+                            rejectLabel={ts.actions.reject}
                             onApprove={onApprove}
                             onReject={onReject}
                         />
@@ -1565,96 +1571,6 @@ TurnViewInner.displayName = "TurnView";
 const TurnView = memo(TurnViewInner);
 
 // ──────────────────────────────────────────────────────────────────
-// ToolProgressList — Phase 3 agent activity strip
-//
-// Renders the agent's per-step tool calls above the final answer.
-// Pending steps show a small spinner; completed steps show ✓ and the
-// short summary the backend produced; failed steps show ✗ + the error.
-// Hidden when no events exist (so single-step answers stay clean).
-// ──────────────────────────────────────────────────────────────────
-
-interface ToolProgressListProps {
-    events: ToolEvent[];
-    isDark: boolean;
-}
-
-const ToolProgressList = ({ events, isDark }: ToolProgressListProps) => {
-    return (
-        <Box
-            sx={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 0.25,
-                mb: 0.75,
-                pl: 0.25,
-                borderLeft: "2px solid",
-                borderColor: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
-                pl_: 1,
-            }}
-        >
-            {events.map((e) => (
-                <ToolProgressRow key={`${e.step}:${e.tool_name}`} event={e} isDark={isDark} />
-            ))}
-        </Box>
-    );
-};
-
-const ToolProgressRow = ({ event, isDark }: { event: ToolEvent; isDark: boolean }) => {
-    const isPending = event.status === "pending";
-    const isError = event.status === "error";
-
-    const label = event.summary || _humanReadableCall(event);
-
-    return (
-        <Box
-            sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 0.75,
-                pl: 1,
-                py: 0.25,
-                fontSize: "0.9375rem",
-            }}
-        >
-            {isPending && (
-                <CircularProgress size="sm" sx={{ "--CircularProgress-size": "11px" }} />
-            )}
-            {!isPending && !isError && (
-                <Box
-                    component="span"
-                    sx={{ color: "success.500", fontWeight: 700, width: 14, textAlign: "center" }}
-                >
-                    ✓
-                </Box>
-            )}
-            {isError && (
-                <Box
-                    component="span"
-                    sx={{ color: "danger.500", fontWeight: 700, width: 14, textAlign: "center" }}
-                >
-                    ✗
-                </Box>
-            )}
-            <Typography
-                level="body-sm"
-                sx={{
-                    opacity: isPending ? (isDark ? 1 : 0.8) : 1,
-                    color: isError
-                        ? "danger.500"
-                        : isDark
-                          ? isPending
-                              ? DARK_TEXT_MEDIUM
-                              : DARK_TEXT_STRONG
-                          : undefined,
-                }}
-            >
-                {isError ? `${event.tool_name}: ${event.error}` : label}
-            </Typography>
-        </Box>
-    );
-};
-
-// ──────────────────────────────────────────────────────────────────
 // Source chip label helpers
 // ──────────────────────────────────────────────────────────────────
 
@@ -1707,113 +1623,6 @@ function _sourceIcon(entityType: string) {
     if (entityType === "project") return <FolderRoundedIcon sx={{ fontSize: 13 }} />;
     return undefined;
 }
-
-// Fallback label for a still-pending tool call (no summary yet).
-function _humanReadableCall(e: ToolEvent): string {
-    const argPreview =
-        Object.keys(e.arguments).length > 0
-            ? Object.entries(e.arguments)
-                  .slice(0, 2)
-                  .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
-                  .join(", ")
-            : "";
-    return argPreview ? `${e.tool_name}(${argPreview})` : e.tool_name;
-}
-
-// ──────────────────────────────────────────────────────────────────
-// ApprovalCard — Phase 7 write-tool gate
-//
-// Rendered when the agent loop has paused on a tool flagged
-// `requires_approval=True` (currently `create_task`, `update_task`,
-// `add_comment`, `create_note`). Shows the tool name + the arguments
-// the model proposed, and offers Approve / Reject buttons that call
-// back into the hook. Either choice resumes the same stream via
-// POST /api/v2/agent/decide/.
-// ──────────────────────────────────────────────────────────────────
-
-interface ApprovalCardProps {
-    pending: PendingApprovalPayload;
-    isDark: boolean;
-    onApprove: () => void;
-    onReject: () => void;
-    ts: SpotlightMessages;
-}
-
-const ApprovalCard = ({ pending, isDark, onApprove, onReject, ts }: ApprovalCardProps) => {
-    const argEntries = Object.entries(pending.arguments || {});
-    const palette = isDark ? purplePalette.dark : purplePalette.light;
-    return (
-        <Box
-            sx={{
-                mt: 0.75,
-                mb: 0.75,
-                px: 1.25,
-                py: 1,
-                borderRadius: "10px",
-                border: "1px solid",
-                borderColor: palette.warningTintBorder,
-                background: palette.warningTintBg,
-            }}
-        >
-            <Typography
-                level="body-sm"
-                sx={{
-                    fontWeight: 700,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.04em",
-                    color: palette.warningTint,
-                    mb: 0.5,
-                }}
-            >
-                {fmt(ts.approval.titleWithTool, { toolName: pending.tool_name })}
-            </Typography>
-            {argEntries.length > 0 && (
-                <Box
-                    sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 0.15,
-                        mb: 0.75,
-                        fontSize: "0.9375rem",
-                        fontFamily: "monospace",
-                        opacity: 0.9,
-                    }}
-                >
-                    {argEntries.map(([k, v]) => (
-                        <Box key={k} sx={{ display: "flex", gap: 0.5 }}>
-                            <Box component="span" sx={{ opacity: 0.8 }}>
-                                {k}:
-                            </Box>
-                            <Box component="span" sx={{ flex: 1, wordBreak: "break-word" }}>
-                                {typeof v === "string" ? v : JSON.stringify(v)}
-                            </Box>
-                        </Box>
-                    ))}
-                </Box>
-            )}
-            <Box sx={{ display: "flex", gap: 0.75 }}>
-                <Button
-                    color="success"
-                    size="sm"
-                    sx={{ fontSize: "0.9375rem" }}
-                    variant="solid"
-                    onClick={onApprove}
-                >
-                    {ts.actions.approve}
-                </Button>
-                <Button
-                    color="neutral"
-                    size="sm"
-                    sx={{ fontSize: "0.9375rem" }}
-                    variant="outlined"
-                    onClick={onReject}
-                >
-                    {ts.actions.reject}
-                </Button>
-            </Box>
-        </Box>
-    );
-};
 
 // ──────────────────────────────────────────────────────────────────
 // History panel views — read-only archive of past agent sessions.

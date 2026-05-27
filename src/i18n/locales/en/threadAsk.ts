@@ -40,6 +40,18 @@ export const threadAsk = {
         streaming: "streaming…",
         thinking: "Thinking…",
     },
+    actions: {
+        approve: "Approve",
+        reject: "Reject",
+        copyAnswer: "Copy answer",
+        copied: "Copied",
+        retry: "Ask again",
+    },
+    approval: {
+        // `{toolName}` is replaced with the write tool the agent
+        // proposed (e.g. "create_task", "add_comment").
+        titleWithTool: "Approval required: {toolName}",
+    },
     saveAsNote: {
         button: "Save as Chat Note",
         saving: "Saving…",

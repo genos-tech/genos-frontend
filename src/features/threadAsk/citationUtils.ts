@@ -35,10 +35,40 @@ export const buildSourcesById = (sources: SpotlightResult[]): Map<string, Spotli
     return m;
 };
 
+// Detect whether a source's title is already present in the answer
+// prose right before a citation token. The LLM commonly writes
+// "**Title**" or "Title" inline and then emits `[type:id]` right
+// next to it — replacing the token with the same title text would
+// render the title twice (once from the prose, once from the link).
+//
+// We look at the 200 chars immediately before the token's offset.
+// That window covers same-line and previous-line mentions (markdown
+// bullets often wrap the title onto its own line before the token).
+// Normalisation strips markdown emphasis chars, lowercases, and
+// collapses whitespace so the comparison ignores bold/italic markers
+// and line wraps.
+//
+// Min-length guard avoids matching very short titles like "Bug"
+// which could coincidentally appear unrelated in the prose.
+const titleAppearsBefore = (answer: string, offset: number, title: string): boolean => {
+    if (title.length < 6) return false;
+    const window = answer.slice(Math.max(0, offset - 200), offset);
+    const norm = (s: string) => s.toLowerCase().replace(/[*_`]/g, "").replace(/\s+/g, " ").trim();
+    return norm(window).includes(norm(title));
+};
+
 // Replace bare `[type:id]` tokens with a markdown link whose label is
 // the source's title (or a fallback) and whose href uses the sentinel
 // scheme. Tokens that don't match any known source are left alone so
 // the user can see what the model intended to cite.
+//
+// De-duplication rule: when the source's title already appears in the
+// prose just before the token (LLM wrote "**Title** [task:42]"),
+// strip the token entirely instead of emitting a same-text link. The
+// SourceChips row below the answer picks the source up — it shows
+// any "referenced but not inline-hyperlinked" source as a chip — so
+// the user still gets one clickable affordance, just without the
+// awkward duplicate prose.
 //
 // Escapes markdown control chars in the label so a title with a `*`
 // or `[` doesn't break the surrounding link/emphasis parsing.
@@ -47,10 +77,11 @@ export const rewriteCitations = (
     sourcesById: Map<string, SpotlightResult>
 ): string => {
     if (!answer || sourcesById.size === 0) return answer;
-    return answer.replace(CITATION_PATTERN, (match, entityId: string) => {
+    return answer.replace(CITATION_PATTERN, (match, entityId: string, offset: number) => {
         const source = sourcesById.get(entityId);
         if (!source) return match;
         const rawLabel = (source.title || "").trim() || entitySubtitle(source);
+        if (titleAppearsBefore(answer, offset, rawLabel)) return "";
         const safeLabel = rawLabel.replace(/[*[\]()]/g, "");
         return `[*${safeLabel}*](${CITATION_HREF_PREFIX}${entityId})`;
     });
@@ -65,13 +96,31 @@ export const rewriteCitations = (
 // captures: chat entity_ids that don't carry the leading "chat:"
 // prefix in the index still match here because the model emits the
 // prefixed token form.
-export const extractInlineCitedIds = (answer: string): Set<string> => {
+//
+// `sourcesById` is optional but should match what `rewriteCitations`
+// receives: when present, tokens that `rewriteCitations` would strip
+// (because the title duplicates nearby prose) are NOT counted here
+// either. That way the source flows to the chip row instead of being
+// orphaned — the user still has one clickable affordance.
+export const extractInlineCitedIds = (
+    answer: string,
+    sourcesById?: Map<string, SpotlightResult>
+): Set<string> => {
     const ids = new Set<string>();
     if (!answer) return ids;
     const re = new RegExp(CITATION_PATTERN.source, "g");
     let m: RegExpExecArray | null;
     while ((m = re.exec(answer)) !== null) {
-        ids.add(m[1]);
+        const entityId = m[1];
+        if (sourcesById) {
+            const source = sourcesById.get(entityId);
+            const rawLabel = (source?.title || "").trim();
+            if (rawLabel && titleAppearsBefore(answer, m.index, rawLabel)) {
+                // Treated as "not inline" so the chip row picks it up.
+                continue;
+            }
+        }
+        ids.add(entityId);
     }
     return ids;
 };
@@ -81,12 +130,17 @@ export const extractInlineCitedIds = (answer: string): Set<string> => {
 // thread modal to follow the user's two-style rule: inline citations
 // become hyperlinks (handled in `rewriteCitations`), and the leftover
 // references show as a chip row beneath the answer.
+//
+// Builds its own sourcesById so the duplication-aware logic in
+// `extractInlineCitedIds` runs end-to-end without the caller having
+// to thread the map through.
 export const sourcesNotInline = (
     answer: string,
     sources: SpotlightResult[]
 ): SpotlightResult[] => {
     if (sources.length === 0) return sources;
-    const cited = extractInlineCitedIds(answer);
+    const sourcesById = buildSourcesById(sources);
+    const cited = extractInlineCitedIds(answer, sourcesById);
     if (cited.size === 0) return sources;
     return sources.filter((s) => {
         const tokenKey = s.entity_id.startsWith(`${s.entity_type}:`)
