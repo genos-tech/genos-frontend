@@ -22,6 +22,7 @@ import { alpha } from "@mui/system";
 import { useNavigate } from "react-router-dom";
 
 import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
+import { MoreMenu } from "../../../../components/ui/MoreMenu";
 import { ThreadChatPaneHeaderStyles } from "../../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../../context/AuthContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
@@ -32,6 +33,7 @@ import { useTranslation } from "../../../../i18n";
 import { MuteToggleButton } from "../../../../services/notifications/MuteToggleButton";
 import { UserProps } from "../../../../types/admin";
 import { ThreadProps } from "../../../../types/chat";
+import { CHAT_TYPE_CODE, SpotlightResult } from "../../../spotlight/types";
 import { CopyableTaskIdText } from "../../../tasks/components/CopyableTaskId";
 import { formatTaskDisplayId } from "../../../tasks/utils/taskDisplayId";
 import { ThreadAskModal } from "../../../threadAsk/ThreadAskModal";
@@ -53,7 +55,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
     const isMobile = useIsMobile();
     const navigate = useNavigate();
     const styles = isDark ? ThreadChatPaneHeaderStyles.dark : ThreadChatPaneHeaderStyles.light;
-    const { currentThreadTaskId } = useChatContext();
+    const { currentThreadTaskId, usePM } = useChatContext();
     const { accessToken } = useAuth();
     // Modal state for the "Ask about this thread" feature. Mounted at
     // this header so each thread gets a clean hook instance; switching
@@ -65,6 +67,60 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
         const threadId = useCM.currentThreadChat?.threadId;
         if (chatType === undefined || chatId === undefined || threadId === undefined) return;
         threadAsk.open({ chatType, chatId, threadId });
+    };
+    // Citation click handler for the thread-Ask modal. Mirrors
+    // `handleSpotlightSelect` in App.tsx — same URL shapes / same
+    // `moveToSpecificChat` call for chat citations so a click here
+    // lands on the same surface as a Spotlight click would. Doesn't
+    // close the modal: a user might want to inspect a citation, then
+    // come back and ask a follow-up about the same thread.
+    const onCitationSelect = (r: SpotlightResult) => {
+        if (r.entity_type === "task" && r.task_id && r.project_id) {
+            navigate(`/workspace/tasks/project/${r.project_id}/task/${r.task_id}`);
+            return;
+        }
+        if (r.entity_type === "project" && r.project_id) {
+            navigate(`/workspace/tasks/project/${r.project_id}`);
+            return;
+        }
+        if (r.entity_type === "chat" && r.chat_type && r.chat_id) {
+            const chatTypeCode = CHAT_TYPE_CODE[r.chat_type];
+            const numericChatId = Number(r.chat_id);
+            const numericThreadId = r.thread_id ? Number(r.thread_id) : 0;
+            const numericMessageId = r.message_id ? Number(r.message_id) : undefined;
+            useCM.moveToSpecificChat(
+                chatTypeCode,
+                numericChatId,
+                numericThreadId,
+                false,
+                numericThreadId !== 0,
+                useTM.setCurrentPreviewTaskId,
+                usePM.setCurrentProject,
+                numericMessageId
+            );
+            return;
+        }
+        if (r.entity_type === "note" && r.note_id) {
+            if (r.note_type === "personal") {
+                navigate(`/workspace/notes/my/${r.note_id}`);
+                return;
+            }
+            if (r.note_type === "task" && r.project_id && r.task_id) {
+                navigate(
+                    `/workspace/notes/task/project/${r.project_id}` +
+                        `/task/${r.task_id}/note/${r.note_id}`
+                );
+                return;
+            }
+            if (r.note_type === "chat" && r.chat_type && r.chat_id && r.thread_id) {
+                navigate(
+                    `/workspace/notes/chat/${r.chat_type}` +
+                        `/${r.chat_id}/thread/${r.thread_id}/note/${r.note_id}`
+                );
+                return;
+            }
+            navigate("/workspace/notes");
+        }
     };
 
     const isYou: boolean =
@@ -286,6 +342,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     myself={myself}
                     accessToken={accessToken}
                     chatName={useCM.currentThreadChat?.chatName || ""}
+                    onSelectSource={onCitationSelect}
                 />
             </Stack>
         );
@@ -407,22 +464,12 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                 )}
 
                 {/*
-                    Unified Task pill — replaces the previously-isolated
-                    Task ID chip, Status chip, Open Task button and Create
-                    Task button which sat side-by-side and confused users
-                    about what was clickable vs informational. Two
-                    variants share the same rounded shape so "task" is
-                    perceived as one cohesive control:
-                      - "exists":  clickable; shows Task #<id> plus a
-                                   colored status dot/label when status
-                                   info is trustworthy (chip-visibility
-                                   rule preserved from the original).
-                                   The whole pill is the "open task"
-                                   affordance.
-                      - "create":  primary-styled; shows + Create Task
-                                   label. Suppressed for PM threads
-                                   (chatType === 3) which always have a
-                                   task tied to the thread.
+                    Task pill — read-only "Open Task #N" affordance with
+                    optional status dot. Only renders when a task exists
+                    for this thread. The Create Task action has moved
+                    into the MoreMenu (below) — having it both inline AND
+                    in the menu would re-introduce the "two ways to do
+                    one thing" confusion the unified pill solved.
                 */}
                 {(() => {
                     const hasTask = currentThreadTaskId !== -1;
@@ -563,72 +610,9 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                         );
                     }
 
-                    // No task yet → show Create Task pill (suppressed for
-                    // PM threads, which always have a task by design).
-                    if (chatType === 3) return null;
-
-                    return (
-                        <Tooltip
-                            size="sm"
-                            title={t.chat.headers.newTaskTooltip}
-                            variant="outlined"
-                            sx={{ borderRadius: "8px" }}
-                        >
-                            <Box
-                                component="button"
-                                type="button"
-                                aria-label={t.chat.headers.newTaskAria}
-                                onClick={() => {
-                                    useCM.setIsMainChatVisible(true);
-                                    useCM.setIsThreadVisible(true);
-                                    useTM.setIsTaskPreviewVisible(false);
-                                    useTM.setIsCreatingTask({
-                                        flag: true,
-                                        parentTaskId: null,
-                                        rootTaskId: null,
-                                        creationKind: "task",
-                                        milestoneId: null,
-                                    });
-                                }}
-                                sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 0.75,
-                                    height: 32,
-                                    px: 1.5,
-                                    borderRadius: "10px",
-                                    border: "none",
-                                    background: styles.primaryButtonBg,
-                                    cursor: "pointer",
-                                    font: "inherit",
-                                    color: "#fff",
-                                    boxShadow: `0 2px 8px ${styles.glowColor}`,
-                                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                    "&:hover": {
-                                        background: styles.primaryButtonHover,
-                                        transform: "translateY(-2px)",
-                                        boxShadow: `0 6px 16px ${styles.glowColor}`,
-                                    },
-                                    "&:focus-visible": {
-                                        outline: `2px solid ${styles.accentColor}`,
-                                        outlineOffset: 2,
-                                    },
-                                }}
-                            >
-                                <AddTaskRoundedIcon sx={{ fontSize: 16, color: "#fff" }} />
-                                <Typography
-                                    level="body-xs"
-                                    sx={{
-                                        fontWeight: 700,
-                                        color: "#fff",
-                                        letterSpacing: "-0.01em",
-                                    }}
-                                >
-                                    Create Task
-                                </Typography>
-                            </Box>
-                        </Tooltip>
-                    );
+                    // No task yet → no inline pill; the Create Task
+                    // action lives in the MoreMenu below.
+                    return null;
                 })()}
 
                 {/* Ask about this thread — opens the AI Q&A modal. Always
@@ -652,61 +636,54 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                     </IconButton>
                 </Tooltip>
 
-                {/* Open Note Button, invisible in PM threads */}
-                {useCM.currentThreadChat?.chatType !== 3 && (
-                    <Tooltip
-                        size="sm"
-                        title={t.chat.headers.openNoteTooltip}
-                        variant="outlined"
-                        sx={{ borderRadius: "8px" }}
-                    >
-                        <IconButton
-                            size="sm"
-                            variant="plain"
-                            sx={actionButtonStyle}
-                            onClick={() => {
-                                const chatType = useCM.currentThreadChat?.chatType;
-                                const chatId = useCM.currentThreadChat?.chatId;
-                                const matchedChat = useCM.allChats.find(
-                                    (c) => c.chatId === chatId && c.chatType === chatType
-                                );
-                                let chatName =
-                                    matchedChat?.chatName ||
-                                    useCM.currentMainChat?.chatName ||
-                                    useCM.currentThreadChat?.chatName;
-                                if (
-                                    chatType === 4 &&
-                                    matchedChat?.mdmMembers &&
-                                    matchedChat.mdmMembers.length > 0
-                                ) {
-                                    const MAX_DISPLAY = 3;
-                                    const names = matchedChat.mdmMembers.map((m) => m.userName);
-                                    chatName =
-                                        names.length <= MAX_DISPLAY
-                                            ? names.join(", ")
-                                            : `${names.slice(0, MAX_DISPLAY).join(", ")} +${names.length - MAX_DISPLAY}`;
-                                }
-                                // Use the isolated chat panel API so opening a
-                                // chat note from this header never touches the
-                                // notes-home tab strip.
-                                useNM.chatPanelApi.openOrCreate(
-                                    chatType as number,
-                                    chatId as number,
-                                    true,
-                                    useCM.currentThreadChat?.threadId as number,
-                                    chatName
-                                );
-                                useCM.setIsChatNoteVisibleInChat(true);
-                                useCM.setIsMainChatVisible(false);
-                                useCM.setIsThreadVisible(true);
-                                useTM.setIsTaskPreviewVisible(false);
-                                useTM.setIsCreatingTask((prev) => ({ ...prev, flag: false }));
+                {/* Secondary actions (Open Note + Create Task) live in
+                    a MoreMenu so the header's right edge stays focused
+                    on the primary controls (mute / task pill / ask /
+                    close). The menu trigger auto-hides when no items
+                    are visible (e.g. PM threads where Open Note is
+                    suppressed AND the thread already has a task). */}
+                {(() => {
+                    const hasTask = currentThreadTaskId !== -1;
+                    const chatType = useCM.currentThreadChat?.chatType;
+                    const showOpenNote = chatType !== 3;
+                    const showCreateTask = !hasTask && chatType !== 3;
+                    if (!showOpenNote && !showCreateTask) return null;
+                    return (
+                        <MoreMenu
+                            placement="bottom-end"
+                            triggerSize={36}
+                            triggerSx={{
+                                borderRadius: "10px",
+                                background: styles.buttonBg,
+                                border: `1px solid ${styles.buttonBorder}`,
                             }}
-                        >
-                            <NoteAltRoundedIcon sx={{ fontSize: 18, color: styles.accentColor }} />
-                        </IconButton>
-                    </Tooltip>
-                )}
+                            items={[
+                                {
+                                    id: "open-note",
+                                    label: t.chat.headers.openNoteTooltip,
+                                    icon: (
+                                        <NoteAltRoundedIcon
+                                            sx={{ fontSize: 18, color: styles.accentColor }}
+                                        />
+                                    ),
+                                    visible: showOpenNote,
+                                    onClick: openNoteHandler,
+                                },
+                                {
+                                    id: "create-task",
+                                    label: t.chat.headers.newTaskTooltip,
+                                    icon: (
+                                        <AddTaskRoundedIcon
+                                            sx={{ fontSize: 18, color: styles.accentColor }}
+                                        />
+                                    ),
+                                    visible: showCreateTask,
+                                    onClick: createTaskHandler,
+                                },
+                            ]}
+                        />
+                    );
+                })()}
 
                 {/* Close Button */}
                 <Tooltip
@@ -737,6 +714,7 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                 myself={myself}
                 accessToken={accessToken}
                 chatName={useCM.currentThreadChat?.chatName || ""}
+                onSelectSource={onCitationSelect}
             />
         </Stack>
     );

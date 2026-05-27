@@ -33,6 +33,8 @@ import ReactMarkdown from "react-markdown";
 
 import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
+import { SpotlightResult } from "../spotlight/types";
+import { buildSourcesById, CITATION_HREF_PREFIX, rewriteCitations } from "./citationUtils";
 import { saveThreadAskAsNote } from "./saveThreadAskAsNote";
 import { UseThreadAskReturn } from "./useThreadAsk";
 
@@ -41,7 +43,80 @@ interface ThreadAskModalProps {
     myself: UserProps;
     accessToken: string | null;
     chatName: string;
+    // Click handler invoked when a citation hyperlink inside an answer
+    // is activated. Receives the resolved `SpotlightResult` for the
+    // entity. The caller is expected to navigate / open a preview /
+    // close the modal as it sees fit — this component stays routing-
+    // agnostic so it can sit anywhere in the tree.
+    onSelectSource?: (source: SpotlightResult) => void;
 }
+
+// Custom anchor renderer for ReactMarkdown. When the href matches our
+// `spotlight-citation:` sentinel, render a button that resolves the
+// token via `sourcesById` and fires `onSelectSource`. Any other href
+// (e.g. real web URLs the model occasionally inlines) passes through
+// as a normal external link.
+const CitationAnchor = ({
+    href,
+    children,
+    sourcesById,
+    onSelectSource,
+    isDark,
+}: {
+    href?: string;
+    children?: React.ReactNode;
+    sourcesById: Map<string, SpotlightResult>;
+    onSelectSource?: (source: SpotlightResult) => void;
+    isDark: boolean;
+}) => {
+    if (href && href.startsWith(CITATION_HREF_PREFIX)) {
+        const token = href.slice(CITATION_HREF_PREFIX.length);
+        const source = sourcesById.get(token);
+        if (source) {
+            return (
+                <Box
+                    component="button"
+                    type="button"
+                    sx={{
+                        background: "none",
+                        border: "none",
+                        p: 0,
+                        cursor: "pointer",
+                        font: "inherit",
+                        color: isDark ? "#a5b4fc" : "#6366f1",
+                        textDecoration: "underline",
+                        textDecorationStyle: "dotted",
+                        textUnderlineOffset: "2px",
+                        borderRadius: "3px",
+                        transition: "background 100ms ease",
+                        "&:hover": {
+                            background: isDark
+                                ? "rgba(167,139,250,0.18)"
+                                : "rgba(124,58,237,0.10)",
+                            textDecorationStyle: "solid",
+                        },
+                        "&:focus-visible": {
+                            outline: "2px solid",
+                            outlineColor: isDark ? "#a5b4fc" : "#6366f1",
+                            outlineOffset: "1px",
+                        },
+                    }}
+                    onClick={() => onSelectSource?.(source)}
+                >
+                    {children}
+                </Box>
+            );
+        }
+        // Unresolved sentinel — render the children plain. Shouldn't
+        // happen post-rewriteCitations but be defensive.
+        return <>{children}</>;
+    }
+    return (
+        <a href={href} rel="noopener noreferrer" target="_blank">
+            {children}
+        </a>
+    );
+};
 
 // Human-readable "updated N ago" for the summary header. Renders once
 // per modal render; no need for live ticking.
@@ -68,7 +143,13 @@ const formatPlural = (template: string, count: number): string => {
     return chosen.replace(/#/g, String(count));
 };
 
-export const ThreadAskModal = ({ state, myself, accessToken, chatName }: ThreadAskModalProps) => {
+export const ThreadAskModal = ({
+    state,
+    myself,
+    accessToken,
+    chatName,
+    onSelectSource,
+}: ThreadAskModalProps) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
@@ -76,6 +157,26 @@ export const ThreadAskModal = ({ state, myself, accessToken, chatName }: ThreadA
     const [saving, setSaving] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
     const [saveSuccess, setSaveSuccess] = useState(false);
+
+    // Aggregate every source ever cited in this conversation so a token
+    // emitted on turn 1 still resolves on turn 3's answer. Dedup by
+    // entity_id since the same task / chat / note may be cited many
+    // times across turns.
+    const sourcesById = useMemo(() => {
+        const acc: SpotlightResult[] = [];
+        const seen = new Set<string>();
+        const push = (src?: SpotlightResult[]) => {
+            for (const s of src || []) {
+                const k = `${s.entity_type}:${s.entity_id}`;
+                if (seen.has(k)) continue;
+                seen.add(k);
+                acc.push(s);
+            }
+        };
+        for (const turn of state.turns) push(turn.answerSources);
+        push(state.ask.answerSources);
+        return buildSourcesById(acc);
+    }, [state.turns, state.ask.answerSources]);
 
     const onSave = async () => {
         if (!state.summary || !state.threadContext) return;
@@ -263,6 +364,8 @@ export const ThreadAskModal = ({ state, myself, accessToken, chatName }: ThreadA
                                 isDark={isDark}
                                 qLabel={t.threadAsk.conversation.turnLabelQ}
                                 turn={turn}
+                                sourcesById={sourcesById}
+                                onSelectSource={onSelectSource}
                             />
                         ))}
                         {hasInFlightAnswer ? (
@@ -275,6 +378,8 @@ export const ThreadAskModal = ({ state, myself, accessToken, chatName }: ThreadA
                                 isStreaming={state.ask.isStreaming}
                                 qLabel={t.threadAsk.conversation.turnLabelQ}
                                 streamingLabel={t.threadAsk.states.streaming}
+                                sourcesById={sourcesById}
+                                onSelectSource={onSelectSource}
                             />
                         ) : null}
                     </Stack>
@@ -355,42 +460,69 @@ const TurnRow = ({
     qLabel,
     aLabel,
     isDark,
+    sourcesById,
+    onSelectSource,
 }: {
     turn: import("../spotlight/useSpotlight").CompletedTurn;
     qLabel: string;
     aLabel: string;
     isDark: boolean;
-}) => (
-    <Box
-        sx={{
-            borderLeft: `3px solid ${isDark ? "rgba(99,102,241,0.5)" : "rgba(99,102,241,0.4)"}`,
-            pl: 1.5,
-            py: 0.25,
-        }}
-    >
-        <Typography level="body-sm" sx={{ fontWeight: 600, color: "text.primary", mb: 0.5 }}>
-            {qLabel}: {turn.askedQuery}
-        </Typography>
-        {turn.askError ? (
-            <Typography level="body-sm" sx={{ color: "danger.softColor" }}>
-                {aLabel}: {turn.askError}
+    sourcesById: Map<string, SpotlightResult>;
+    onSelectSource?: (source: SpotlightResult) => void;
+}) => {
+    const rewritten = useMemo(
+        () => rewriteCitations(turn.answer || "(no answer)", sourcesById),
+        [turn.answer, sourcesById]
+    );
+    return (
+        <Box
+            sx={{
+                borderLeft: `3px solid ${
+                    isDark ? "rgba(99,102,241,0.5)" : "rgba(99,102,241,0.4)"
+                }`,
+                pl: 1.5,
+                py: 0.25,
+            }}
+        >
+            <Typography level="body-sm" sx={{ fontWeight: 600, color: "text.primary", mb: 0.5 }}>
+                {qLabel}: {turn.askedQuery}
             </Typography>
-        ) : (
-            <Box
-                sx={{
-                    "& p": { my: 0.25 },
-                    "& ul": { my: 0.25, pl: 2.5 },
-                    "& li": { my: 0.1 },
-                }}
-            >
-                <Typography component="span" level="body-sm" sx={{ fontWeight: 600, mr: 0.5 }}>
-                    {aLabel}:
+            {turn.askError ? (
+                <Typography level="body-sm" sx={{ color: "danger.softColor" }}>
+                    {aLabel}: {turn.askError}
                 </Typography>
-                <ReactMarkdown>{turn.answer || "(no answer)"}</ReactMarkdown>
-            </Box>
-        )}
-    </Box>
-);
+            ) : (
+                <Box
+                    sx={{
+                        "& p": { my: 0.25 },
+                        "& ul": { my: 0.25, pl: 2.5 },
+                        "& li": { my: 0.1 },
+                    }}
+                >
+                    <Typography component="span" level="body-sm" sx={{ fontWeight: 600, mr: 0.5 }}>
+                        {aLabel}:
+                    </Typography>
+                    <ReactMarkdown
+                        components={{
+                            a: ({ href, children }) => (
+                                <CitationAnchor
+                                    href={href}
+                                    sourcesById={sourcesById}
+                                    onSelectSource={onSelectSource}
+                                    isDark={isDark}
+                                >
+                                    {children}
+                                </CitationAnchor>
+                            ),
+                        }}
+                    >
+                        {rewritten}
+                    </ReactMarkdown>
+                </Box>
+            )}
+        </Box>
+    );
+};
 
 // The currently-streaming or just-errored turn (not yet promoted into
 // the turns history).
@@ -403,6 +535,8 @@ const InFlightTurn = ({
     aLabel,
     streamingLabel,
     isDark,
+    sourcesById,
+    onSelectSource,
 }: {
     askedQuery: string;
     answer: string;
@@ -412,42 +546,65 @@ const InFlightTurn = ({
     aLabel: string;
     streamingLabel: string;
     isDark: boolean;
-}) => (
-    <Box
-        sx={{
-            borderLeft: `3px solid ${isDark ? "rgba(34,197,94,0.6)" : "rgba(34,197,94,0.5)"}`,
-            pl: 1.5,
-            py: 0.25,
-        }}
-    >
-        <Typography level="body-sm" sx={{ fontWeight: 600, color: "text.primary", mb: 0.5 }}>
-            {qLabel}: {askedQuery}
-        </Typography>
-        {askError ? (
-            <Typography level="body-sm" sx={{ color: "danger.softColor" }}>
-                {aLabel}: {askError}
+    sourcesById: Map<string, SpotlightResult>;
+    onSelectSource?: (source: SpotlightResult) => void;
+}) => {
+    const rewritten = useMemo(
+        () => rewriteCitations(answer || "", sourcesById),
+        [answer, sourcesById]
+    );
+    return (
+        <Box
+            sx={{
+                borderLeft: `3px solid ${isDark ? "rgba(34,197,94,0.6)" : "rgba(34,197,94,0.5)"}`,
+                pl: 1.5,
+                py: 0.25,
+            }}
+        >
+            <Typography level="body-sm" sx={{ fontWeight: 600, color: "text.primary", mb: 0.5 }}>
+                {qLabel}: {askedQuery}
             </Typography>
-        ) : (
-            <Box
-                sx={{
-                    "& p": { my: 0.25 },
-                    "& ul": { my: 0.25, pl: 2.5 },
-                    "& li": { my: 0.1 },
-                }}
-            >
-                <Typography component="span" level="body-sm" sx={{ fontWeight: 600, mr: 0.5 }}>
-                    {aLabel}:
+            {askError ? (
+                <Typography level="body-sm" sx={{ color: "danger.softColor" }}>
+                    {aLabel}: {askError}
                 </Typography>
-                <ReactMarkdown>{answer || ""}</ReactMarkdown>
-                {isStreaming ? (
-                    <Typography
-                        level="body-xs"
-                        sx={{ color: "text.tertiary", fontStyle: "italic", mt: 0.5 }}
-                    >
-                        {streamingLabel}
+            ) : (
+                <Box
+                    sx={{
+                        "& p": { my: 0.25 },
+                        "& ul": { my: 0.25, pl: 2.5 },
+                        "& li": { my: 0.1 },
+                    }}
+                >
+                    <Typography component="span" level="body-sm" sx={{ fontWeight: 600, mr: 0.5 }}>
+                        {aLabel}:
                     </Typography>
-                ) : null}
-            </Box>
-        )}
-    </Box>
-);
+                    <ReactMarkdown
+                        components={{
+                            a: ({ href, children }) => (
+                                <CitationAnchor
+                                    href={href}
+                                    sourcesById={sourcesById}
+                                    onSelectSource={onSelectSource}
+                                    isDark={isDark}
+                                >
+                                    {children}
+                                </CitationAnchor>
+                            ),
+                        }}
+                    >
+                        {rewritten}
+                    </ReactMarkdown>
+                    {isStreaming ? (
+                        <Typography
+                            level="body-xs"
+                            sx={{ color: "text.tertiary", fontStyle: "italic", mt: 0.5 }}
+                        >
+                            {streamingLabel}
+                        </Typography>
+                    ) : null}
+                </Box>
+            )}
+        </Box>
+    );
+};

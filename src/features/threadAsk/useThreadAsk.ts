@@ -23,12 +23,30 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
     askAgentStream,
     fetchThreadSummary,
+    type AgentSessionTurn,
     type PendingApprovalPayload,
     type ThreadContext,
     type ThreadSummaryResponse,
 } from "../../services/agentApi";
 import type { SpotlightResult } from "../spotlight/types";
 import type { AskState, CompletedTurn, ToolEvent } from "../spotlight/useSpotlight";
+
+// Map a server-side AgentSessionTurn (restored from a persisted run)
+// to the local CompletedTurn shape the modal renders. The local id
+// is just a React key — derived from index since the server doesn't
+// expose a numeric turn id, only `run_id` (UUID).
+const sessionTurnToCompleted = (turn: AgentSessionTurn, index: number): CompletedTurn => ({
+    id: index + 1,
+    askedQuery: turn.query,
+    answer: turn.answer,
+    answerSources: turn.sources || [],
+    // toolEvents are not persisted on AgentRun — the activity strip
+    // is "show what happened LIVE", not part of the durable record.
+    // Restored turns render without it; the prior answer + sources
+    // are enough context.
+    toolEvents: [],
+    askError: turn.error || null,
+});
 
 // How often we re-check the server's fingerprint while the modal is
 // open. 30 s is a generous compromise — the backend call is cheap
@@ -115,6 +133,12 @@ export const useThreadAsk = ({ accessToken, teamId }: UseThreadAskArgs): UseThre
     // Prevents double-promotion when both `onDone` and `onError` fire
     // for the same turn.
     const promotedTurnIdsRef = useRef<Set<number>>(new Set());
+    // One-shot flag: when set, the next /ask/ call instructs the
+    // backend to start a fresh AgentSession even if a per-thread one
+    // already exists. Used by `clearConversation` — without this, the
+    // backend's thread-context lookup would silently inherit the
+    // cleared session and re-attach its history on the next page load.
+    const pendingNewConversationRef = useRef(false);
 
     // ---- Load / refresh the summary. Shared by `open` and `refreshSummary`. ----
     const loadSummary = useCallback(
@@ -145,6 +169,31 @@ export const useThreadAsk = ({ accessToken, teamId }: UseThreadAskArgs): UseThre
                         fingerprint: data.fingerprint,
                         messageCount: data.message_count,
                     });
+                    // Restore prior Q&A from the server. Only fires when
+                    // there ARE prior turns — otherwise we'd stomp on
+                    // any in-progress turns the user has already typed
+                    // (the modal can be re-opened mid-conversation).
+                    if (data.turns && data.turns.length > 0) {
+                        const restored = data.turns.map(sessionTurnToCompleted);
+                        setTurns(restored);
+                        // Pre-seed the next turnId so a new ask doesn't
+                        // collide with the restored ids.
+                        promotedTurnIdsRef.current = new Set(restored.map((t) => t.id));
+                        setAsk((prev) => ({
+                            ...prev,
+                            sessionId: data.agent_session_id,
+                            turnId: restored[restored.length - 1].id,
+                        }));
+                    } else if (data.agent_session_id) {
+                        // No turns yet but server has a session id (rare —
+                        // only happens if the user opened the modal, asked
+                        // nothing, and reopened later). Bind it anyway so
+                        // the next ask continues the same session.
+                        setAsk((prev) => ({
+                            ...prev,
+                            sessionId: data.agent_session_id,
+                        }));
+                    }
                 } catch (err) {
                     if (controller.signal.aborted) return;
                     const message = err instanceof Error ? err.message : "Load failed";
@@ -425,12 +474,20 @@ export const useThreadAsk = ({ accessToken, teamId }: UseThreadAskArgs): UseThre
             turnId: askedTurnId,
         });
 
+        // Consume the "new conversation" flag if Clear was pressed
+        // since the last ask. One-shot — the flag clears as soon as
+        // it's read so subsequent asks continue the freshly-created
+        // session.
+        const newConversation = pendingNewConversationRef.current;
+        pendingNewConversationRef.current = false;
+
         void askAgentStream({
             query: trimmed,
             teamId,
             accessToken,
             sessionId: ask.sessionId ?? undefined,
             threadContext,
+            newConversation,
             // Web search makes no sense inside a thread Q&A; the backend
             // disables it anyway via the thread_context branch but
             // setting `allowWebSearch=false` keeps the wire payload
@@ -488,10 +545,15 @@ export const useThreadAsk = ({ accessToken, teamId }: UseThreadAskArgs): UseThre
     }, []);
 
     // ---- Wipe the conversation but keep the summary + same thread. ----
+    // Sets `pendingNewConversationRef` so the next /ask/ tells the
+    // backend to start a fresh AgentSession rather than reusing the
+    // existing per-thread one — without this, reloading the page would
+    // restore the cleared turns via the thread-context lookup.
     const clearConversation = useCallback(() => {
         askAbortRef.current?.abort();
         askAbortRef.current = null;
         promotedTurnIdsRef.current.clear();
+        pendingNewConversationRef.current = true;
         setTurns([]);
         setAsk(EMPTY_ASK_STATE);
         setQuery("");

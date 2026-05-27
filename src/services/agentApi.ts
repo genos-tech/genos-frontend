@@ -99,6 +99,12 @@ export interface AskAgentArgs extends BaseStreamHandlers {
     // ThreadChatPaneHeader. When omitted, the normal Spotlight agent
     // behavior applies.
     threadContext?: ThreadContext;
+    // When true, the backend ignores any existing session for this user
+    // (both `sessionId` and any per-thread session) and creates a fresh
+    // AgentSession. Used by the thread modal's "Clear conversation"
+    // button so the next ask doesn't accidentally inherit the cleared
+    // turns via the per-thread lookup.
+    newConversation?: boolean;
     signal?: AbortSignal;
 }
 
@@ -240,12 +246,19 @@ export interface AgentSessionDetail {
 // opaque cache key (composite of max_message_id + count + max edit ts);
 // the client compares it to a re-fetched value to detect that new
 // messages have arrived and offer the user a "Refresh summary?" banner.
+//
+// `agent_session_id` + `turns` hydrate the modal's Q&A history for this
+// user on this thread, so reopening the modal (even after a page reload)
+// restores the conversation. Null/empty when the user has never asked
+// a follow-up here.
 export interface ThreadSummaryResponse {
     summary: string;
     generated: boolean;
     last_updated_iso: string;
     message_count: number;
     fingerprint: string;
+    agent_session_id: string | null;
+    turns: AgentSessionTurn[];
 }
 
 // Why this is its own non-streaming endpoint (and not a flavor of
@@ -351,6 +364,7 @@ export async function askAgentStream(args: AskAgentArgs): Promise<void> {
                       },
                   }
                 : {}),
+            ...(args.newConversation ? { new_conversation: true } : {}),
         },
         args.accessToken,
         args.signal,
