@@ -1,23 +1,23 @@
-// Citation handling — shared between the modal display (clickable
-// hyperlinks via ReactMarkdown) and the saved-note serialiser
-// (BlockNote inline-link blocks).
+// Citation handling — canonical home for the citation-token vocabulary
+// shared by every surface that renders agent answers (the thread-Ask
+// modal, future note-Ask modals, the saved-note serialiser).
 //
-// Mirrors `rewriteCitations` and `CITATION_PATTERN` in SpotlightOverlay.
-// Kept as a separate module here so a refactor that pulls those out
-// of SpotlightOverlay can replace this file with a re-export.
+// SpotlightOverlay still has its own inline copy of this logic; both
+// trees emit `[type:id]` tokens with the same shape, and they'll
+// converge once Spotlight migrates onto `useAgentQA` (stretch goal —
+// see the agentQA refactor plan).
 
 import { SpotlightResult } from "../spotlight/types";
 
 // Matches `[type:id...]` tokens emitted by the LLM. Anchored to one of
 // the four known entity prefixes so a free-form sentence with literal
 // brackets ("[reminder: ship by Friday]") doesn't trip the pattern.
-// Same pattern as SpotlightOverlay's CITATION_PATTERN.
 export const CITATION_PATTERN = /\[((?:chat|task|note|project):[^\]\s]+)\]/g;
 
 // Sentinel href scheme. ReactMarkdown's anchor override recognises this
 // prefix and renders a button that opens the entity instead of a
-// standard <a href>. Matches SpotlightOverlay's prefix so any future
-// shared anchor renderer can handle both.
+// standard <a href>. Shared with SpotlightOverlay so a single anchor
+// renderer can handle both.
 export const CITATION_HREF_PREFIX = "spotlight-citation:";
 
 // Build the entity-id → source lookup the rewriter consumes. Chat

@@ -1,7 +1,7 @@
 // Agent activity strip — renders each tool the agent has fired so the
-// user sees progress in real time. Used by both SpotlightOverlay (the
-// global agent surface) and ThreadAskModal (the per-thread agent
-// surface) so the two surfaces report progress identically.
+// user sees progress in real time. Used by every agent surface
+// (Spotlight, per-thread Ask, future per-note Ask) so the surfaces
+// report progress identically.
 //
 // Rules:
 //   - Pending step → spinner + the tool name with a short arg preview
@@ -14,7 +14,7 @@
 import { Box, CircularProgress, Typography } from "@mui/joy";
 
 import { DARK_TEXT_STRONG } from "./markdownAnswerSx";
-import type { ToolEvent } from "./useSpotlight";
+import type { ToolEvent } from "./types";
 
 // Mid-strength dark-mode body color used only here; kept local rather
 // than threading through markdownAnswerSx since it's an intermediate

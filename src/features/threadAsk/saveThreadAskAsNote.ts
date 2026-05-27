@@ -16,10 +16,8 @@ import { PartialBlock } from "@blocknote/core";
 
 import { authApi } from "../../services/api";
 import { UserProps } from "../../types/admin";
+import { buildSourcesById, markdownToBlocks, type CompletedTurn } from "../agentQA";
 import { SpotlightResult } from "../spotlight/types";
-import type { CompletedTurn } from "../spotlight/useSpotlight";
-import { buildSourcesById } from "./citationUtils";
-import { markdownToBlocks } from "./markdownToBlocks";
 
 const HEADING_PROPS = {
     level: 3,

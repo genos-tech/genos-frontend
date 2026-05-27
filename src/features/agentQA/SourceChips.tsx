@@ -1,8 +1,8 @@
-// Chip row rendered below a thread-Ask answer for sources the answer
+// Chip row rendered below an agent answer for sources the answer
 // references but doesn't embed inline. The two-style rule:
 //   - sources cited inline (`[chat:dm:5:thread:4]` tokens in the
 //     answer text) → already rendered as title hyperlinks via
-//     `rewriteCitations` + `CitationAnchor` in ThreadAskModal
+//     `rewriteCitations` + `CitationAnchor`
 //   - everything else in `answerSources` → shown here as a chip
 //
 // Visual style mirrors Spotlight's chip row but with `variant="soft"`
@@ -56,8 +56,8 @@ export const SourceChips = ({ sources, onSelectSource }: SourceChipsProps) => {
                     key={`${s.entity_type}:${s.entity_id}`}
                     color="primary"
                     size="sm"
-                    variant="soft"
                     startDecorator={sourceIcon(s.entity_type)}
+                    variant="soft"
                     sx={{
                         cursor: "pointer",
                         fontSize: "0.8125rem",
