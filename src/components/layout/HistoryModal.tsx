@@ -44,6 +44,7 @@ import { SprintMilestoneManagementState } from "../../hooks/tasks/useSprintMiles
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../i18n";
 import { AllChatProps } from "../../types/chat";
+import { useAvatarContext } from "../ui/avatars/AvatarContext";
 import { UserAvatar } from "../ui/avatars/UserAvatar";
 
 const MEDIA_URL = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
@@ -451,6 +452,7 @@ export const HistoryModal = ({
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
+    const { myself } = useAvatarContext();
     const { chatsEntries, tasksEntries, notesEntries, clear } = useHistory();
     const [tab, setTab] = useState<HistoryTabKey>("chats");
 
@@ -563,20 +565,39 @@ export const HistoryModal = ({
                         : entry.noteType === 3
                           ? entry.chatName || null
                           : null;
+                // Mirror the avatar a user sees in the originating
+                // surface: personal notes -> their own avatar; task
+                // notes -> the task's project image; chat notes ->
+                // the chat's avatar (DM partner / GM-MDM-PM image).
+                let noteAvatar: React.ReactNode;
+                if (entry.noteType === 1) {
+                    noteAvatar = (
+                        <UserAvatar clickable={false} size={AVATAR_SIZE} userId={myself.userId} />
+                    );
+                } else if (entry.noteType === 2) {
+                    noteAvatar = renderProjectAvatar(useCM.allChats, entry.projectId, isDark);
+                } else if (
+                    entry.noteType === 3 &&
+                    entry.chatType != null &&
+                    entry.chatId != null
+                ) {
+                    const chat = findChat(entry.chatType, entry.chatId);
+                    noteAvatar = renderChatAvatar(entry.chatType, chat, isDark);
+                } else {
+                    noteAvatar = (
+                        <GroupOrProjectAvatar
+                            fallback={
+                                <NoteAltRoundedIcon sx={{ fontSize: AVATAR_FALLBACK_ICON_SIZE }} />
+                            }
+                            isDark={isDark}
+                            src={undefined}
+                        />
+                    );
+                }
                 return (
                     <HistoryRow
                         key={`note-${entry.noteType}-${entry.noteId}-${entry.openedAt}`}
-                        avatar={
-                            <GroupOrProjectAvatar
-                                fallback={
-                                    <NoteAltRoundedIcon
-                                        sx={{ fontSize: AVATAR_FALLBACK_ICON_SIZE }}
-                                    />
-                                }
-                                isDark={isDark}
-                                src={undefined}
-                            />
-                        }
+                        avatar={noteAvatar}
                         chips={
                             visual ? (
                                 <SmallChip
