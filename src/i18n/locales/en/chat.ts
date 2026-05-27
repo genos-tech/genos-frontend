@@ -75,7 +75,6 @@ export const chat = {
         chipFilterClear: "Clear all filters",
         chipFilterCustomLabel: "Custom",
         chipGM: "GM",
-        chipMDM: "MDM",
         chipMention: "Mention",
         chipNoteChat: "Chat note",
         chipNoteMy: "Personal note",

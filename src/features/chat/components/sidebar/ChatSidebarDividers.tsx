@@ -7,7 +7,6 @@ import CommentOutlinedIcon from "@mui/icons-material/CommentOutlined";
 import EmojiEmotionsRoundedIcon from "@mui/icons-material/EmojiEmotionsRounded";
 import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
-import GroupOutlinedIcon from "@mui/icons-material/GroupOutlined";
 import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
 import LabelOutlinedIcon from "@mui/icons-material/LabelOutlined";
 import PersonOutlineRoundedIcon from "@mui/icons-material/PersonOutlineRounded";
@@ -37,7 +36,7 @@ import {
     CHATTYPE_HEADER_CHIP,
     CHIP_ORDER,
     ChipId,
-    GATING_CHIP_TO_CHATTYPE,
+    GATING_CHIP_TO_CHATTYPES,
     hasGatingChip,
     makeInstanceKey,
 } from "../../utils/activityChipFilters";
@@ -177,7 +176,6 @@ type ChipMeta = { icon: React.ElementType; labelKey: ActivityFilterKey };
 const CHIP_META: Record<ChipId, ChipMeta> = {
     dm: { icon: PersonOutlineRoundedIcon, labelKey: "chipDM" },
     gm: { icon: GroupsOutlinedIcon, labelKey: "chipGM" },
-    mdm: { icon: GroupOutlinedIcon, labelKey: "chipMDM" },
     mention: { icon: AlternateEmailRoundedIcon, labelKey: "chipMention" },
     noteChat: { icon: ForumOutlinedIcon, labelKey: "chipNoteChat" },
     noteMy: { icon: StickyNote2OutlinedIcon, labelKey: "chipNoteMy" },
@@ -202,7 +200,7 @@ type ActivityDividerProps = {
     setSelectedChipIds: (next: ReadonlySet<ChipId>) => void;
     // Instance-name refinement set ("${chatType}-${chatId}" keys).
     // Only consulted when at least one gating chip (project / dm / gm /
-    // mdm) is in `selectedChipIds` — otherwise the parent auto-clears
+    // pm) is in `selectedChipIds` — otherwise the parent auto-clears
     // it so it can't leak into unrelated contexts.
     selectedInstanceIds: ReadonlySet<string>;
     setSelectedInstanceIds: (next: ReadonlySet<string>) => void;
@@ -221,10 +219,15 @@ const resolveChatDisplayName = (chat: AllChatProps): string => {
     return chat.chatName || "";
 };
 
+// "DM" is the end-user term for both 1:1 (chatType 1) and multi-user
+// DMs (chatType 4 without taskId). Bucket them together in the menu.
+const groupKeyForChatType = (chatType: number): number => (chatType === 4 ? 1 : chatType);
+
 // Visual order of chat-type sections in the "By name" menu when more
 // than one gating chip is selected. Mirrors the chat-list sidebar
-// section order (projects → DMs → GMs → MDMs).
-const GROUP_ORDER: readonly number[] = [3, 1, 2, 4];
+// section order (projects → DMs → GMs). chatType 4 is bucketed into
+// 1 by `groupKeyForChatType`, so it doesn't get its own section.
+const GROUP_ORDER: readonly number[] = [3, 1, 2];
 
 export const ActivityDivider = (props: ActivityDividerProps) => {
     const {
@@ -293,23 +296,29 @@ export const ActivityDivider = (props: ActivityDividerProps) => {
 
     // Derive the set of chat-types eligible for the instance menu from
     // the currently-active gating chips. `pm` and `project` both map to
-    // chatType=3 — the Set dedupes that automatically.
+    // chatType=3, `dm` maps to both 1 and 4 — the Set dedupes any
+    // overlap automatically.
     const gatedChatTypes = new Set<number>();
     for (const chipId of selectedChipIds) {
-        const ct = GATING_CHIP_TO_CHATTYPE[chipId];
-        if (ct != null) gatedChatTypes.add(ct);
+        const cts = GATING_CHIP_TO_CHATTYPES[chipId];
+        if (cts) for (const ct of cts) gatedChatTypes.add(ct);
     }
 
-    // Filter + sort + group chats for the menu body.
+    // Filter + sort + group chats for the menu body. Bucketing uses
+    // `groupKeyForChatType` so chatType=4 (MDM) folds into the chatType=1
+    // (DM) bucket — they render together under the "DM" header.
     const gatedChats = useCM.allChats.filter((c) => gatedChatTypes.has(c.chatType));
-    const showGroupHeaders = gatedChatTypes.size > 1;
+    const gatedGroupKeys = new Set<number>();
+    for (const ct of gatedChatTypes) gatedGroupKeys.add(groupKeyForChatType(ct));
+    const showGroupHeaders = gatedGroupKeys.size > 1;
     const chatsByType = new Map<number, AllChatProps[]>();
     for (const c of gatedChats) {
-        const bucket = chatsByType.get(c.chatType);
+        const key = groupKeyForChatType(c.chatType);
+        const bucket = chatsByType.get(key);
         if (bucket) {
             bucket.push(c);
         } else {
-            chatsByType.set(c.chatType, [c]);
+            chatsByType.set(key, [c]);
         }
     }
     for (const [, bucket] of chatsByType) {

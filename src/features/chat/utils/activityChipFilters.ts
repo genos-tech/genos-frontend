@@ -8,7 +8,6 @@ export type ChipId =
     | "dm"
     | "gm"
     | "pm"
-    | "mdm"
     | "thread"
     | "reply"
     | "mention"
@@ -27,12 +26,12 @@ type Predicate = (a: ActivityMessageProps) => boolean;
 // sorted alphabetically to satisfy `sort-keys`; semantic render order
 // lives in `CHIP_ORDER` below.
 export const CHIP_PREDICATES: Record<ChipId, Predicate> = {
-    dm: (a) => a.chatType === 1,
+    // "MDM" (multi-user DM) is an internal term — to end users it's just
+    // a DM. The `dm` chip therefore covers chatType 1 AND chatType 4
+    // without a taskId (chatType 4 with a taskId is a task comment,
+    // partitioned off by the `taskComment` predicate below).
+    dm: (a) => a.chatType === 1 || (a.chatType === 4 && !a.taskId),
     gm: (a) => a.chatType === 2,
-    // chat_type 4 is dual-purpose: with a taskId it's a task comment,
-    // without one it's an MDM message. Split on `taskId` so `mdm` and
-    // `taskComment` partition the chatType-4 row space cleanly.
-    mdm: (a) => a.chatType === 4 && !a.taskId,
     mention: (a) => a.activityType === 3,
     noteChat: (a) => a.chatType === 8,
     noteMy: (a) => a.chatType === 6,
@@ -81,7 +80,6 @@ export const CHIP_ORDER: readonly ChipId[] = [
     "dm",
     "gm",
     "pm",
-    "mdm",
     "thread",
     "reply",
     "mention",
@@ -110,32 +108,34 @@ export const EMPTY_CHIP_SET: ReadonlySet<ChipId> = new Set<ChipId>();
 export const INSTANCE_GATING_CHIPS: ReadonlySet<ChipId> = new Set<ChipId>([
     "dm",
     "gm",
-    "mdm",
     "pm",
     "project",
 ]);
 
-// Maps each gating chip back to the `chatType` integer used by
-// `AllChatProps` / `ActivityMessageProps`. `pm` and `project` both
-// surface chat_type=3 chats — the broader `project` predicate covers
-// task comments / task body / task note activities too, but the
-// underlying chat list is the same set of PM rows.
-export const GATING_CHIP_TO_CHATTYPE: Partial<Record<ChipId, number>> = {
-    dm: 1,
-    gm: 2,
-    mdm: 4,
-    pm: 3,
-    project: 3,
+// Maps each gating chip back to the `chatType` integer(s) used by
+// `AllChatProps` / `ActivityMessageProps`. `dm` covers both 1:1 DMs
+// (chatType 1) AND multi-user DMs (chatType 4, no taskId) because
+// "MDM" is an internal term — to end users they're all "DM". `pm` and
+// `project` both surface chat_type=3 chats — the broader `project`
+// predicate covers task comments / task body / task note activities
+// too, but the underlying chat list is the same set of PM rows.
+export const GATING_CHIP_TO_CHATTYPES: Partial<Record<ChipId, readonly number[]>> = {
+    dm: [1, 4],
+    gm: [2],
+    pm: [3],
+    project: [3],
 };
 
 // Inverse lookup: when grouping the instance menu by chat-type, pick
 // one canonical chip per chatType for the header label. "Project"
 // reads more naturally than "PM" so it wins when chatType=3 is gated.
+// chatType 4 (MDM) also maps to "dm" so MDM chats render under the
+// DM header — same end-user-facing terminology.
 export const CHATTYPE_HEADER_CHIP: Record<number, ChipId> = {
     1: "dm",
     2: "gm",
     3: "project",
-    4: "mdm",
+    4: "dm",
 };
 
 // Stable string id used as the instance-filter payload:
