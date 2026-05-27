@@ -511,7 +511,11 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         1: "DM",
         2: "GM",
         3: "PM",
-        4: "MDM",
+        // chat_type=4 is dual-purpose: with a taskId it's a task comment
+        // (ActivityTypeChips overrides via `taskId` check); without one it's
+        // a multi-user DM, which to end users is just a "DM" — "MDM" is
+        // internal terminology only.
+        4: "DM",
         5: t.chat.activity.chipTaskBody,
         6: t.chat.activity.chipPersonalNote,
         7: t.chat.activity.chipTaskNote,

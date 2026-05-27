@@ -161,7 +161,6 @@ const ACTIVITY_FILTERS: Array<{
     { id: 0, labelKey: "activityFilterAll", icon: ViewListRoundedIcon },
     { id: 3, labelKey: "activityFilterMentions", icon: AlternateEmailRoundedIcon },
     { id: 1, labelKey: "activityFilterThreads", icon: ChatBubbleOutlineRoundedIcon },
-    { id: 4, labelKey: "activityFilterReactions", icon: EmojiEmotionsRoundedIcon },
     { id: 2, labelKey: "activityFilterTasks", icon: TaskAltRoundedIcon },
 ];
 
