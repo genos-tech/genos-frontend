@@ -66,6 +66,7 @@ export const TaskCommentEditorBlock = (props: TaskCommentEditorBlockProps) => {
                     taskCommentLines={taskCommentLines}
                     taskComments={taskComments}
                     taskId={task.id}
+                    taskDisplayId={task.displayId}
                     useTEM={useTEM}
                     useUISM={useUISM}
                     useTM={useTM}

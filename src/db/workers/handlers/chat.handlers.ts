@@ -501,7 +501,16 @@ export const chatHandlers: HandlerMap<ChatRequests> = {
         }
 
         await syncWithCheckpoint({
-            key: "pm-messages",
+            // Bumped from "pm-messages" to force one-shot full reload.
+            // PM messages persisted before commit 94fcfcf2 ("Use display
+            // id for pm chat", 2026-05-24) were cached without the
+            // `displayId` field. Delta sync only refetches rows whose
+            // ts_updated_at moved since the last checkpoint, so any PM
+            // bubble untouched since then never picks up the new field
+            // and the bot's task-card chip falls back to "#<taskId>".
+            // A full reload clears the store and re-batches with the
+            // current shape; subsequent runs go back to delta-only.
+            key: "pm-messages-v2",
             fetcher: async (since) => {
                 const resp = await loadPMMessagesDelta(
                     myself.teamId,

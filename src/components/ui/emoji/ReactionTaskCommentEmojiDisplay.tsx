@@ -37,6 +37,11 @@ type ReactionEmojiProps = {
     comment: TaskCommentProps;
     projectId?: number;
     projectName?: string;
+    // Parent task's human-readable id ("<code>-<n>") used on outgoing
+    // `task_comment_reaction` emits so the derived activity broadcast
+    // can stamp it onto the chat-activity-sidebar entry. Without this
+    // the activity item for a reaction falls back to "#<taskId>".
+    taskDisplayId?: string | null;
     showUnderBarOption: boolean;
     reactions: ReactionProps[];
     setReactions: (value: ReactionProps[]) => void;
@@ -49,6 +54,7 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
         comment,
         projectId,
         projectName,
+        taskDisplayId,
         showUnderBarOption,
         reactions,
         setReactions,
@@ -89,6 +95,7 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
                     project_id: projectId,
                     project_name: projectName,
                     task_id: comment.taskId,
+                    display_id: taskDisplayId,
                     comment_id: comment.commentId,
                     comment_body: comment.commentBody,
                     comment_sender_id: comment.senderId,
@@ -115,6 +122,7 @@ export const ReactionTaskCommentEmojiDisplay = (props: ReactionEmojiProps) => {
                     project_id: projectId,
                     project_name: projectName,
                     task_id: comment.taskId,
+                    display_id: taskDisplayId,
                     comment_id: comment.commentId,
                     comment_body: comment.commentBody,
                     comment_sender_id: comment.senderId,

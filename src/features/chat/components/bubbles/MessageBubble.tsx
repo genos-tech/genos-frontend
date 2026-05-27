@@ -421,6 +421,12 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                 taskId: message.taskId,
                 taskStatus: message.taskStatus,
                 content: message.content,
+                // Forwarded to the reaction handler so its derived
+                // activity broadcast carries the same human-readable
+                // task id ("<code>-<n>") the live PM bubble shows.
+                // Without this the chat activity sidebar item for the
+                // reaction falls back to "#<taskId>".
+                displayId: message.displayId,
                 tsSent: message.tsSent,
                 tsUpdated: message.tsUpdated,
             };

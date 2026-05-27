@@ -41,6 +41,11 @@ type TaskCommentBubbleProps = {
     comment: TaskCommentProps;
     currentProjectId?: number;
     currentProjectName?: string;
+    /** Parent task's human-readable id ("<code>-<n>"), threaded down
+     *  to the reaction emits so their derived activity broadcasts can
+     *  stamp it onto the chat-activity-sidebar entry. Without this the
+     *  activity item for a reaction falls back to "#<taskId>". */
+    currentTaskDisplayId?: string | null;
     setIsInEdit: (value: boolean) => void;
     setEditTargetComment: (value: TaskCommentProps) => void;
     useCM: ChatManagementState;
@@ -67,6 +72,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
         comment,
         currentProjectId,
         currentProjectName,
+        currentTaskDisplayId,
         setIsInEdit,
         setEditTargetComment,
         useCM,
@@ -141,6 +147,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                         project_id: currentProjectId,
                         project_name: currentProjectName,
                         task_id: comment.taskId,
+                        display_id: currentTaskDisplayId,
                         comment_id: comment.commentId,
                         comment_body: comment.commentBody,
                         comment_sender_id: comment.senderId,
@@ -165,6 +172,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                         project_id: currentProjectId,
                         project_name: currentProjectName,
                         task_id: comment.taskId,
+                        display_id: currentTaskDisplayId,
                         comment_id: comment.commentId,
                         comment_body: comment.commentBody,
                         comment_sender_id: comment.senderId,
@@ -312,6 +320,7 @@ export const TaskCommentBubble = (props: TaskCommentBubbleProps) => {
                 myself={myself}
                 projectId={currentProjectId}
                 projectName={currentProjectName}
+                taskDisplayId={currentTaskDisplayId}
                 reactions={reactions}
                 setReactions={setReactions}
                 setShowEmojiPicker={setShowEmojiPicker}

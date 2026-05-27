@@ -174,6 +174,7 @@ export const ThreadCommentsView = ({
                     useTM={useTM}
                     currentProjectId={task.project?.projectId}
                     currentProjectName={task.project?.projectName}
+                    currentTaskDisplayId={task.displayId}
                     fillContainer
                     commentLinkBuilder={chatId !== undefined ? commentLinkBuilder : undefined}
                     focusedCommentId={focusedCommentId}

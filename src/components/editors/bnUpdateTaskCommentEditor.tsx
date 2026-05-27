@@ -63,6 +63,11 @@ type BnUpdateTaskCommentEditorProps = {
     projectId?: number;
     projectName?: string;
     taskId?: number;
+    // Human-readable parent task id ("<code>-<n>") forwarded on the
+    // outgoing `task_comment` PUT so the backend's derived activity
+    // payload can stamp it onto the chat-activity-sidebar entry. Without
+    // this the activity item for a comment edit falls back to "#<taskId>".
+    taskDisplayId?: string | null;
     isPrivate?: boolean;
     setTaskUpdated?: (value: boolean) => void;
     taskComments: TaskCommentProps[];
@@ -87,6 +92,7 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
         projectName,
         isPrivate,
         taskId,
+        taskDisplayId,
         setTaskUpdated,
         taskComments,
         setTaskComments,
@@ -253,6 +259,9 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
                         project_id: projectId,
                         project_name: projectName,
                         task_id: taskId,
+                        // Mirrors the POST-side emit in bnTaskCommentEditor so the
+                        // derived activity broadcast carries the friendly task id.
+                        display_id: taskDisplayId,
                         comment_id: targetComment.commentId,
                         comment_body: editor.document,
                         is_private: isPrivate || false,

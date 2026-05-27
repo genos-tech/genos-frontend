@@ -212,6 +212,13 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                 dmPartnerUser: thread.chatType === 1 ? thread.dmPartnerUser : emptyUser,
                 taskId: message.taskId,
                 content: message.content,
+                // Parent thread carries the human-readable task id
+                // (the same value the bubble's existing
+                // `displayId={thread.displayId}` plumbing uses). The
+                // reaction handler echoes this back on the derived
+                // activity broadcast so the chat activity sidebar shows
+                // "<code>-<n>" instead of "#<taskId>".
+                displayId: thread.displayId,
                 tsSent: message.tsSent,
                 tsUpdated: message.tsUpdated,
             };

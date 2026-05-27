@@ -189,6 +189,13 @@ export const handleRegularMessage = async (
         taskCommentCount: newMessage.taskCommentCount,
         tsSent: newMessage.tsSent,
         tsUpdated: newMessage.tsUpdated,
+        // Forward the human-readable task id ("<code>-<n>") off the
+        // wire. Without this, the chip on the PM task-card bubble
+        // (`BubbleUserName`) falls back to "#<taskId>" for every
+        // live-pushed PM message — backend serializes it, the WS
+        // payload carries it, but the translation into the local
+        // `MessageProps` shape was dropping the field on the floor.
+        displayId: newMessage.displayId,
         taskId: newMessage.taskId,
         taskStatus: newMessage.taskStatus,
     };

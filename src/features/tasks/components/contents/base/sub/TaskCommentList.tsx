@@ -29,6 +29,10 @@ type TaskCommentListProps = {
     useTM: TaskManagementState;
     currentProjectId?: number | null;
     currentProjectName?: string | null;
+    /** Parent task's human-readable id ("<code>-<n>"), threaded to
+     *  each `TaskCommentBubble` so its reaction emits can carry the
+     *  friendly id on the derived activity broadcast. */
+    currentTaskDisplayId?: string | null;
     /** Optional cap on the rendered list height. Defaults to 800 to
      * match the prior in-line behaviour inside TaskTabBlock; chat
      * thread mounts pass a larger value so the list breathes. Ignored
@@ -78,6 +82,7 @@ export const TaskCommentList = ({
     useCM,
     currentProjectId,
     currentProjectName,
+    currentTaskDisplayId,
     maxHeight = 800,
     fillContainer = false,
     commentLinkBuilder,
@@ -193,6 +198,7 @@ export const TaskCommentList = ({
                                 useUISM={useUISM}
                                 currentProjectId={currentProjectId ?? undefined}
                                 currentProjectName={currentProjectName ?? undefined}
+                                currentTaskDisplayId={currentTaskDisplayId ?? undefined}
                                 isFocused={comment.commentId === focusedCommentId}
                                 onCommentClick={buildCommentClickHandler(comment.commentId)}
                                 setTodoFromMessageBubble={setTodoFromMessageBubble}
@@ -231,6 +237,7 @@ export const TaskCommentList = ({
                             useUISM={useUISM}
                             currentProjectId={currentProjectId ?? undefined}
                             currentProjectName={currentProjectName ?? undefined}
+                            currentTaskDisplayId={currentTaskDisplayId ?? undefined}
                             isFocused={comment.commentId === focusedCommentId}
                             onCommentClick={buildCommentClickHandler(comment.commentId)}
                             setTodoFromMessageBubble={setTodoFromMessageBubble}

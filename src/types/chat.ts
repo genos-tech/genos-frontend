@@ -219,6 +219,11 @@ export type NewMessageProps = {
     };
     taskId: number | null;
     taskStatus: string | null;
+    // Human-readable task id ("<code>-<n>") on PM bubbles linked to a
+    // task. Backend always sets this on the chat broadcast for PM
+    // (see message_handlers.py:315); other chat types just pass
+    // whatever the client emitted, defaulting to None.
+    displayId?: string | null;
     project?: ProjectProps;
     isEdited: boolean;
     reactions?: ReactionProps[];
