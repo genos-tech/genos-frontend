@@ -38,6 +38,20 @@ export const ActivityHeader: React.FC<ActivityHeaderProps> = ({
     const { mode } = useColorScheme();
     const isDark = mode === "dark";
 
+    // For DMs the activity payload's `chatName` is sender-centric — the
+    // sender's frontend passes its own view of the DM title (the partner
+    // user's name) as `destCGName`, which is the OTHER user from the
+    // receiver's POV. Prefer the server-resolved per-user `chatName`
+    // from `useCM.allChats` when available. Other chat types carry a
+    // viewer-independent title (group / project / task / note name) so
+    // the activity payload value is fine for them.
+    const resolvedChatName =
+        activity.chatType === 1
+            ? (useCM.allChats.find(
+                  (chat) => chat.chatType === 1 && chat.chatId === activity.chatId
+              )?.chatName ?? activity.chatName)
+            : activity.chatName;
+
     return (
         <Stack
             alignItems="center"
@@ -92,8 +106,8 @@ export const ActivityHeader: React.FC<ActivityHeaderProps> = ({
                         }}
                     >
                         {activity.chatType === 1 && isYou
-                            ? `${activity.chatName} (you)`
-                            : activity.chatName}
+                            ? `${resolvedChatName} (you)`
+                            : resolvedChatName}
                     </Typography>
                 )}
 

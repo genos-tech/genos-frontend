@@ -52,12 +52,19 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
         (chat) => chat.chatType === lookupChatType && chat.chatId === activity.chatId
     );
 
-    // DM Avatar (chatType === 1)
+    // DM Avatar (chatType === 1).
+    // `activity.dmPartnerUserId` is sender-centric (it's the sender's
+    // userId, set on the backend at the moment the message is emitted),
+    // so for the SENDER receiving their own activity it points at
+    // themselves and the avatar would render wrong. Prefer the server-
+    // resolved partner from the per-user allChats record; fall back to
+    // the activity payload only when allChats hasn't synced yet.
     if (activity.chatType === 1) {
-        if (activity.dmPartnerUserId !== "") {
+        const partnerUserId = chat?.dmPartnerUser?.userId || activity.dmPartnerUserId;
+        if (partnerUserId !== "") {
             return (
                 <AvatarWithStatus
-                    avatarUser={useTEM.teamMemberProfiles[activity.dmPartnerUserId]}
+                    avatarUser={useTEM.teamMemberProfiles[partnerUserId]}
                     useCM={useCM}
                     isYou={isYou}
                     myself={myself}
@@ -67,7 +74,9 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
                 />
             );
         } else {
-            return <Avatar size="sm">{activity.chatName[0].toUpperCase()}</Avatar>;
+            return (
+                <Avatar size="sm">{(chat?.chatName ?? activity.chatName)[0].toUpperCase()}</Avatar>
+            );
         }
     }
 

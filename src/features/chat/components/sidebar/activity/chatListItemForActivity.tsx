@@ -137,11 +137,18 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         const currentChat: AllChatProps = useCM.allChats.filter(
             (chat) => chat.chatType === chatType && chat.chatId === activity.chatId
         )[0];
+        // For DMs (and MDMs) the activity payload's `chatName` / `dmPartnerUser*`
+        // are sender-centric: the sender's UI passes their own view of the
+        // chat name as `destCGName`, and the backend sets `dmPartnerUser =
+        // sender`. From the receiver's POV both are wrong. `currentChat`
+        // (from `useCM.allChats`) is server-resolved per-user, so prefer it
+        // whenever it's available — fall back to the activity payload only
+        // when allChats hasn't synced yet.
         const newChat: ChatProps = {
             chatId: activity.chatId,
-            chatName: activity.chatName,
+            chatName: currentChat?.chatName ?? activity.chatName,
             chatType: chatType,
-            dmPartnerUser: {
+            dmPartnerUser: currentChat?.dmPartnerUser ?? {
                 teamId: myself.teamId,
                 teamName: myself.teamName,
                 userId: activity.dmPartnerUserId,
@@ -162,8 +169,8 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
             latestMessageText: messages[messages.length - 1].contentText,
             TSLastMessage: activity.tsSent,
             moveToSpecificIndex: moveToSpecificIndex,
-            isPrivate: currentChat.isPrivate,
-            profileImagePath: currentChat.profileImagePath,
+            isPrivate: currentChat?.isPrivate,
+            profileImagePath: currentChat?.profileImagePath,
         };
         return newChat;
     };
@@ -319,12 +326,20 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
             );
 
             if (threadMessages && threadMessages.length > 0) {
+                // Same sender-centric issue as in `defineNewChat`: for DM
+                // threads the activity payload's chatName + dmPartnerUser*
+                // are wrong from the receiver's POV. Prefer the server-
+                // resolved per-user fields from `useCM.allChats`.
+                const currentChat: AllChatProps | undefined = useCM.allChats.find(
+                    (chat) =>
+                        chat.chatType === activity.chatType && chat.chatId === activity.chatId
+                );
                 const newThread: ThreadProps = {
                     chatId: activity.chatId,
-                    chatName: activity.chatName,
+                    chatName: currentChat?.chatName ?? activity.chatName,
                     threadId: activity.threadId,
                     chatType: activity.chatType,
-                    dmPartnerUser: {
+                    dmPartnerUser: currentChat?.dmPartnerUser ?? {
                         teamId: myself.teamId,
                         teamName: myself.teamName,
                         userId: activity.dmPartnerUserId,
