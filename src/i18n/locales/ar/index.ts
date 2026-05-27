@@ -1397,6 +1397,7 @@ export const ar: DeepPartial<Messages> = {
                 chatTitleWithLabel: "{senderName} • {chatLabel}",
                 threadReplyTitle: "ردّ {senderName} في {parentLabel}",
                 mentionTitle: "أشار {senderName} إليك في {subjectLabel}",
+                mentionTitleByBot: "تمت الإشارة إليك في {subjectLabel}",
                 taskCommentTitle: "علّق {senderName} على مهمة",
                 activityProjectLabel: "المشروع • {projectName}",
                 inboxFallback: "عنصر جديد في صندوق الوارد",

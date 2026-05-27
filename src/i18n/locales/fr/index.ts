@@ -1417,6 +1417,7 @@ export const fr: DeepPartial<Messages> = {
                 chatTitleWithLabel: "{senderName} • {chatLabel}",
                 threadReplyTitle: "{senderName} a répondu dans {parentLabel}",
                 mentionTitle: "{senderName} vous a mentionné dans {subjectLabel}",
+                mentionTitleByBot: "Vous avez été mentionné dans {subjectLabel}",
                 taskCommentTitle: "{senderName} a commenté une tâche",
                 activityProjectLabel: "Projet • {projectName}",
                 inboxFallback: "Nouvel élément de boîte de réception",

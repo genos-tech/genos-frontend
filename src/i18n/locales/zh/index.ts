@@ -1378,6 +1378,7 @@ export const zh: DeepPartial<Messages> = {
                 chatTitleWithLabel: "{senderName} • {chatLabel}",
                 threadReplyTitle: "{senderName} 在 {parentLabel} 中回复了你",
                 mentionTitle: "{senderName} 在 {subjectLabel} 中提到了你",
+                mentionTitleByBot: "在 {subjectLabel} 中被提到",
                 taskCommentTitle: "{senderName} 在任务下发表了评论",
                 activityProjectLabel: "项目 • {projectName}",
                 inboxFallback: "新收件箱项目",

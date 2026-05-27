@@ -1404,6 +1404,7 @@ export const hi: DeepPartial<Messages> = {
                 chatTitleWithLabel: "{senderName} • {chatLabel}",
                 threadReplyTitle: "{senderName} ने {parentLabel} में जवाब दिया",
                 mentionTitle: "{senderName} ने आपको {subjectLabel} में मेंशन किया",
+                mentionTitleByBot: "{subjectLabel} में आपका मेंशन हुआ",
                 taskCommentTitle: "{senderName} ने एक टास्क पर कमेंट किया",
                 activityProjectLabel: "प्रोजेक्ट • {projectName}",
                 inboxFallback: "नया इनबॉक्स आइटम",

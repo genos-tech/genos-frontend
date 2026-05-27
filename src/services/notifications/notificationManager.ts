@@ -50,8 +50,20 @@ const matchesActiveSurface = (
         );
     }
 
-    // Task preview matches task-comment intents.
-    if (active.taskId !== undefined && src.taskId !== undefined) {
+    // Task preview matches task-comment intents only — the comment thread
+    // and the comment-reaction stream are the conversation surface for an
+    // open task, so a toast for a comment you're already reading would be
+    // redundant. Mentions and chat broadcasts that happen to be linked to
+    // the same task (e.g. the PM "task created" card you get pinged for
+    // immediately after creating the task) are intentionally NOT
+    // suppressed by this rule — those carry information the preview pane
+    // doesn't render (the inline @assignee mention, etc.) and the user
+    // expects to see the toast confirming the broadcast went out.
+    if (
+        active.taskId !== undefined &&
+        src.taskId !== undefined &&
+        intent.category === "task_comments"
+    ) {
         if (active.taskId === src.taskId) return true;
     }
 

@@ -125,6 +125,24 @@ const buildChatIntent = (
     if (msg.isEdited || msg.isDeleted || msg.isReactionUpdated) return null;
     if (!msg.sender || msg.sender.userId === myself.userId) return null;
 
+    // System-user (project bot) speaks for automated PM messages:
+    // task-created cards, status-change cards, and similar. The matching
+    // activity push still fires the `mentions` intent for anyone tagged
+    // in the bubble's mention nodes, so skipping the bot's chat intent
+    // removes a near-duplicate notification without losing the personal
+    // signal. Catches the "I just created a task — why am I getting
+    // pinged about my own action?" case for the creator.
+    if (msg.systemUserId && msg.sender.userId === msg.systemUserId) return null;
+
+    // When the same broadcast also carries the user as a mentioned
+    // recipient, the parallel `wsType:"activity"` push will deliver the
+    // more-specific `mentions` intent — keep that one and suppress this
+    // generic `chats` intent. Empty/missing list is the no-mentions
+    // case and falls through normally.
+    if (Array.isArray(msg.mentionedUserIds) && msg.mentionedUserIds.includes(myself.userId)) {
+        return null;
+    }
+
     // Replicates the "incoming for me" logic from message-handlers:
     //   - DM: receiver is me and sender is not me
     //   - GM/PM/MDM: any non-self message in a room I'm in
@@ -179,6 +197,19 @@ const buildThreadIntent = (
     if (msg.isEdited || msg.isDeleted || msg.isReactionUpdated) return null;
     if (!msg.sender || msg.sender.userId === myself.userId) return null;
 
+    // Same bot-suppression as buildChatIntent: PM thread bubbles for
+    // task lifecycle events (created / moved to <status>) are posted by
+    // the project's system user. Skip them here — the activity push for
+    // anyone actually mentioned still fires.
+    if (msg.systemUserId && msg.sender.userId === msg.systemUserId) return null;
+
+    // Defer to the parallel mentions activity intent for users who are
+    // tagged in this thread reply (see buildChatIntent for the same
+    // pattern and rationale).
+    if (Array.isArray(msg.mentionedUserIds) && msg.mentionedUserIds.includes(myself.userId)) {
+        return null;
+    }
+
     // Mirrors handleThreadMessage's `isIncomingForMe`.
     const fromMe = msg.sender.userId === myself.userId;
     const toMe = msg.chatType === 1 && msg.receiver?.userId === myself.userId;
@@ -226,6 +257,30 @@ const buildActivityIntent = (
     if (activity.activityType === 2) return null;
     if (!activity.senderId || activity.senderId === myself.userId) return null;
 
+    // PM activities are unconditionally sent as the project's system
+    // user — `message_handlers.py` overrides `sender_user_id` to
+    // `system_user_id` for every chat_type=3 broadcast (see the
+    // `if chat_type == 3: if system_user_id: sender_user_id = ...`
+    // block). So `chatType === 3` is sufficient on its own to identify
+    // the bot path; the `activity.systemUserId === activity.senderId`
+    // check is a defensive extra for the day that invariant changes.
+    // Using `||` here also keeps the rule working when the Flask
+    // backend hasn't been restarted with the new payload yet.
+    const senderIsBot =
+        (!!activity.systemUserId && activity.senderId === activity.systemUserId) ||
+        activity.chatType === 3;
+
+    // Suppress PM thread bubbles posted by the bot — they're always
+    // lifecycle bookkeeping ("New task created by @you", "@you moved
+    // this task to In Progress") and the user being mentioned IS the
+    // user who just took the action, so the notification is
+    // self-attribution. The PM chat-level activity that fans out on
+    // the same write still carries the actionable mention (e.g.
+    // assignee tag on the task card) and is left alone.
+    if (senderIsBot && activity.isThread === true) {
+        return null;
+    }
+
     const mentionsMe = Array.isArray(activity.mentionedUserIds)
         ? (activity.mentionedUserIds as string[]).includes(myself.userId)
         : false;
@@ -244,15 +299,34 @@ const buildActivityIntent = (
     const subjectLabel = activity.projectName
         ? fmt(routerMessages.activityProjectLabel, { projectName: activity.projectName })
         : labelForChatType(activity.chatType, activity.chatName);
+    // Use the bot-form title when the sender is the project's system
+    // user — `senderIsBot` is already computed at the top of this
+    // function and reused here so the redundant-prefix fix kicks in
+    // whether or not the backend payload carries `systemUserId`.
     const title =
         category === "mentions"
-            ? fmt(routerMessages.mentionTitle, { senderName, subjectLabel })
+            ? senderIsBot
+                ? fmt(routerMessages.mentionTitleByBot, { subjectLabel })
+                : fmt(routerMessages.mentionTitle, { senderName, subjectLabel })
             : fmt(routerMessages.taskCommentTitle, { senderName });
 
     // Project-scoped activity (mentions in a PM bubble, task comments) gets
     // the project avatar so the user can see at a glance which project the
     // notification is for. Mentions in a DM still fall back to the sender.
-    const projectImage = lookupProjectImage(useCM, activity.projectId);
+    //
+    // PM activities (chatType=3) are special: `message_handlers.py`'s
+    // live activity payload doesn't carry `projectId`, so
+    // `lookupProjectImage` returns undefined and the icon would fall
+    // through to the system user's avatar (unset for the bot — toast
+    // ends up showing a letter-fallback). The PM chat row stores the
+    // project image as its `profileImagePath`, and the activity's
+    // `chatId` IS that PM chat's id, so an `allChats` lookup keyed by
+    // chatId recovers the project avatar without depending on the
+    // missing field.
+    const projectImage =
+        activity.chatType === 3
+            ? lookupChatProfileImage(useCM, 3, activity.chatId)
+            : lookupProjectImage(useCM, activity.projectId);
     const senderImage = useTEM.teamMemberProfiles[activity.senderId]?.avatarImgPath;
     const icon = buildAvatarSrc(projectImage || senderImage);
 

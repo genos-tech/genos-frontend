@@ -1403,6 +1403,7 @@ export const ja: DeepPartial<Messages> = {
                 chatTitleWithLabel: "{senderName} • {chatLabel}",
                 threadReplyTitle: "{senderName} が {parentLabel} で返信しました",
                 mentionTitle: "{senderName} が {subjectLabel} であなたをメンションしました",
+                mentionTitleByBot: "{subjectLabel} でメンションされました",
                 taskCommentTitle: "{senderName} がタスクにコメントしました",
                 activityProjectLabel: "プロジェクト • {projectName}",
                 inboxFallback: "新しい受信箱項目",

@@ -79,6 +79,10 @@ export const services = {
             chatTitleWithLabel: "{senderName} • {chatLabel}",
             threadReplyTitle: "{senderName} replied in {parentLabel}",
             mentionTitle: "{senderName} mentioned you in {subjectLabel}",
+            // Used when the activity comes from the project's system
+            // user (the PM bot) — saying "{projectName} mentioned you
+            // in Project • {projectName}" reads as a duplicate.
+            mentionTitleByBot: "Mentioned you in {subjectLabel}",
             taskCommentTitle: "{senderName} commented on a task",
             activityProjectLabel: "Project • {projectName}",
             inboxFallback: "New inbox item",

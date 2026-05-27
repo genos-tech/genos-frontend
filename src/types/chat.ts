@@ -116,6 +116,10 @@ export type ActivityMessageProps = {
     tsSent: string;
     mentionedUserIds?: [];
     isRead: boolean;
+    // Present on PM thread activities so the notification router can
+    // recognize bot-narrated lifecycle messages (sender === systemUserId)
+    // and suppress the self-attribution toast.
+    systemUserId?: string;
 };
 
 export type MessageProps = {
@@ -197,6 +201,10 @@ export type NewMessageProps = {
     contentText: string;
     sender: UserProps;
     receiver: UserProps;
+    // Forwarded from the Flask broadcast so the notification router can
+    // collapse the "chats" intent into the parallel "mentions" intent
+    // when the same message also pushes an activity to the same user.
+    mentionedUserIds?: string[];
     tsSent: string;
     tsUpdated: string;
     numReplies: number;
@@ -236,6 +244,10 @@ export type NewThreadMessageProps = {
     contentText: string;
     sender: UserProps;
     receiver: UserProps;
+    // Same purpose as on NewMessageProps — lets the router drop the
+    // `thread_replies` intent when the user is also being notified via
+    // the activity mention path for the same broadcast.
+    mentionedUserIds?: string[];
     taskId: number | null;
     tsSent: string;
     tsUpdated: string;
