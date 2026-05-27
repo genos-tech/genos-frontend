@@ -56,6 +56,16 @@ import type {
     PendingApprovalPayload,
 } from "../../services/agentApi";
 import { purplePalette } from "../../theme/purplePalette";
+// Dark-mode text colors tuned for legibility against the translucent
+// purple sheet background (rgba(30,20,46,0.92)). These replace
+// opacity-based dimming, which compounds with the bg translucency to
+// produce muddy, hard-to-read text.
+//
+// `DARK_TEXT_STRONG` is re-imported from the shared markdownAnswerSx
+// module so the body text colour in the typography block stays in lock-
+// step with what every other "answer surface" (ThreadAskModal etc.)
+// renders.
+import { DARK_TEXT_STRONG, markdownAnswerSx } from "./markdownAnswerSx";
 import {
     badgeFor,
     entitySubtitle,
@@ -114,11 +124,6 @@ const SCROLL_FOLLOW_THRESHOLD_PX = 50;
 // Number of citation chips shown before the "+N more" expand button.
 const CHIPS_INITIAL = 4;
 
-// Dark-mode text colors tuned for legibility against the translucent
-// purple sheet background (rgba(30,20,46,0.92)). These replace
-// opacity-based dimming, which compounds with the bg translucency to
-// produce muddy, hard-to-read text.
-const DARK_TEXT_STRONG = "#f1e8ff";
 const DARK_TEXT_MEDIUM = "#cebfeb";
 const DARK_TEXT_SOFT = "#a89bbf";
 
@@ -1373,7 +1378,7 @@ const TurnViewInner = ({
                     {answer && (
                         <Box
                             sx={{
-                                ..._markdownAnswerSx(isDark),
+                                ...markdownAnswerSx(isDark),
                                 mb: answerSources.length > 0 ? 0.75 : 0,
                             }}
                         >
@@ -1701,97 +1706,6 @@ function _sourceIcon(entityType: string) {
     if (entityType === "note") return <StickyNote2RoundedIcon sx={{ fontSize: 13 }} />;
     if (entityType === "project") return <FolderRoundedIcon sx={{ fontSize: 13 }} />;
     return undefined;
-}
-
-// Joy UI `sx` block shared by both the live answer renderer (TurnView)
-// and the read-only History archive (HistorySessionDetailView) so the
-// two surfaces render the same markdown identically. Centralising it
-// here means future tweaks to answer typography only need one edit.
-// The Box that consumes this still owns `mb` (the live view tightens
-// to 0 when source chips follow; archive view stays at 0).
-function _markdownAnswerSx(isDark: boolean): Record<string, unknown> {
-    return {
-        lineHeight: 1.65,
-        fontSize: "1rem",
-        color: isDark ? DARK_TEXT_STRONG : undefined,
-        // paragraphs — reset default browser margins
-        "& p": { m: 0, mb: 0.75 },
-        "& p:last-child": { mb: 0 },
-        // lists — something in Joy UI's cascade clears `list-style`, so
-        // lists rendered indented but markerless. Set list-style and
-        // `display: list-item` explicitly so the markers always show.
-        "& ul, & ol": { pl: 2.75, my: 0.75, listStylePosition: "outside" },
-        "& ul": { listStyleType: "disc" },
-        "& ol": { listStyleType: "decimal" },
-        "& li": { mb: 0.5, display: "list-item" },
-        "& li:last-child": { mb: 0 },
-        "& li::marker": { color: isDark ? "#a78bfa" : "#7c3aed" },
-        // nested lists — tighter than top-level
-        "& li > ul, & li > ol": { my: 0.25, pl: 2 },
-        // code blocks
-        "& pre": {
-            overflowX: "auto",
-            borderRadius: "6px",
-            p: 1,
-            my: 0.75,
-            fontSize: "0.875rem",
-            background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
-        },
-        // inline code
-        "& code": {
-            fontFamily: "monospace",
-            fontSize: "0.85em",
-            px: "0.3em",
-            py: "0.1em",
-            borderRadius: "3px",
-            background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)",
-        },
-        // reset code-inside-pre so the pre bg shows
-        "& pre code": { background: "none", px: 0, py: 0 },
-        // headings
-        "& h1, & h2, & h3": { mt: 1, mb: 0.5, fontWeight: 700 },
-        "& h1": { fontSize: "1.1em" },
-        "& h2": { fontSize: "1.0em" },
-        "& h3": { fontSize: "0.95em" },
-        // bold / italic
-        "& strong": { fontWeight: 700 },
-        // links
-        "& a": {
-            color: "primary.500",
-            textDecoration: "underline",
-            textUnderlineOffset: "2px",
-        },
-        // blockquotes
-        "& blockquote": {
-            borderLeft: `3px solid ${isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.18)"}`,
-            pl: 1.5,
-            my: 0.5,
-            opacity: 0.85,
-        },
-        // tables (rendered by remark-gfm)
-        "& table": {
-            borderCollapse: "collapse",
-            width: "100%",
-            fontSize: "0.9375rem",
-            my: 0.75,
-        },
-        "& th, & td": {
-            border: `1px solid ${isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.12)"}`,
-            px: 1,
-            py: 0.5,
-            textAlign: "left",
-        },
-        "& th": {
-            fontWeight: 700,
-            background: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
-        },
-        // horizontal rule
-        "& hr": {
-            border: "none",
-            borderTop: `1px solid ${isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)"}`,
-            my: 1,
-        },
-    };
 }
 
 // Fallback label for a still-pending tool call (no summary yet).
@@ -2204,7 +2118,7 @@ const HistoryArchiveTurn = ({ turn, isDark, ts, onPreview }: HistoryArchiveTurnP
                             {turn.error}
                         </Typography>
                     ) : (
-                        <Box sx={_markdownAnswerSx(isDark)}>
+                        <Box sx={markdownAnswerSx(isDark)}>
                             <ReactMarkdown
                                 remarkPlugins={[remarkGfm]}
                                 components={{

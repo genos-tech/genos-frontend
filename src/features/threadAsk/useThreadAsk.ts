@@ -20,6 +20,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { useSpotlightPreferences } from "../../hooks/common/useSpotlightPreferences";
 import {
     askAgentStream,
     fetchThreadSummary,
@@ -112,6 +113,12 @@ export interface UseThreadAskReturn {
 }
 
 export const useThreadAsk = ({ accessToken, teamId }: UseThreadAskArgs): UseThreadAskReturn => {
+    // Honour the same per-user Spotlight web-search toggle. Thread Q&A
+    // shares the agent tool set with Spotlight (the backend's thread
+    // branch no longer restricts tools), so the web-search gate should
+    // also follow the user's Settings preference rather than being
+    // hard-pinned off.
+    const { webSearch } = useSpotlightPreferences();
     const [isOpen, setIsOpen] = useState(false);
     const [threadContext, setThreadContext] = useState<ThreadContext | null>(null);
 
@@ -488,11 +495,10 @@ export const useThreadAsk = ({ accessToken, teamId }: UseThreadAskArgs): UseThre
             sessionId: ask.sessionId ?? undefined,
             threadContext,
             newConversation,
-            // Web search makes no sense inside a thread Q&A; the backend
-            // disables it anyway via the thread_context branch but
-            // setting `allowWebSearch=false` keeps the wire payload
-            // consistent with intent.
-            allowWebSearch: false,
+            // Honour the user's Spotlight web-search toggle. Thread Q&A
+            // shares Spotlight's tool surface now — if the user has web
+            // search enabled there, they likely want it here too.
+            allowWebSearch: webSearch,
             signal: controller.signal,
             ...buildStreamHandlers(askedTurnId),
         });
@@ -508,6 +514,7 @@ export const useThreadAsk = ({ accessToken, teamId }: UseThreadAskArgs): UseThre
         ask.pendingApproval,
         ask.turnId,
         ask.sessionId,
+        webSearch,
     ]);
 
     // ---- Cancel the in-flight answer. ----

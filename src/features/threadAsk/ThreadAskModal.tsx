@@ -30,9 +30,11 @@ import {
 } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 import { useTranslation } from "../../i18n";
 import { UserProps } from "../../types/admin";
+import { markdownAnswerSx } from "../spotlight/markdownAnswerSx";
 import { SpotlightResult } from "../spotlight/types";
 import { buildSourcesById, CITATION_HREF_PREFIX, rewriteCitations } from "./citationUtils";
 import { saveThreadAskAsNote } from "./saveThreadAskAsNote";
@@ -312,17 +314,16 @@ export const ThreadAskModal = ({
                 {state.summary ? (
                     <Box
                         sx={{
+                            ...markdownAnswerSx(isDark),
                             px: 1.25,
                             py: 1,
                             borderRadius: "md",
                             bgcolor: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
-                            "& p": { my: 0.5 },
-                            "& ul": { my: 0.5, pl: 2.5 },
-                            "& li": { my: 0.25 },
-                            "& strong": { fontWeight: 600 },
                         }}
                     >
-                        <ReactMarkdown>{state.summary.text}</ReactMarkdown>
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {state.summary.text}
+                        </ReactMarkdown>
                     </Box>
                 ) : null}
 
@@ -492,17 +493,12 @@ const TurnRow = ({
                     {aLabel}: {turn.askError}
                 </Typography>
             ) : (
-                <Box
-                    sx={{
-                        "& p": { my: 0.25 },
-                        "& ul": { my: 0.25, pl: 2.5 },
-                        "& li": { my: 0.1 },
-                    }}
-                >
+                <Box sx={markdownAnswerSx(isDark)}>
                     <Typography component="span" level="body-sm" sx={{ fontWeight: 600, mr: 0.5 }}>
                         {aLabel}:
                     </Typography>
                     <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
                         components={{
                             a: ({ href, children }) => (
                                 <CitationAnchor
@@ -569,17 +565,12 @@ const InFlightTurn = ({
                     {aLabel}: {askError}
                 </Typography>
             ) : (
-                <Box
-                    sx={{
-                        "& p": { my: 0.25 },
-                        "& ul": { my: 0.25, pl: 2.5 },
-                        "& li": { my: 0.1 },
-                    }}
-                >
+                <Box sx={markdownAnswerSx(isDark)}>
                     <Typography component="span" level="body-sm" sx={{ fontWeight: 600, mr: 0.5 }}>
                         {aLabel}:
                     </Typography>
                     <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
                         components={{
                             a: ({ href, children }) => (
                                 <CitationAnchor
